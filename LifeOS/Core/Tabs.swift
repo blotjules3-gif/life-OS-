@@ -359,6 +359,7 @@ struct ProfileView: View {
                     userCard
                     dailyProgressSection
                     quickLogSection
+                    wakeupSection
                     Button { showGoalEditor = true } label: { goalEditorRow }
                         .buttonStyle(.plain)
                     systemSection
