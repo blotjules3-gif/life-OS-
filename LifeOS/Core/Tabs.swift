@@ -540,6 +540,9 @@ struct ProfileView: View {
     @AppStorage("wakeupHour") private var wakeupHour = 7
     @AppStorage("wakeupMinute") private var wakeupMinute = 0
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
+    @AppStorage("profileHiddenRaw") private var profileHiddenRaw = ""
+    @AppStorage("lastBriefingDate") private var lastBriefingDate: Double = 0
+    @AppStorage("lastBriefingContent") private var lastBriefingContent = ""
 
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
@@ -547,10 +550,12 @@ struct ProfileView: View {
     @Environment(\.modelContext) private var ctx
 
     @State private var steps = 0
+    @State private var activeCalories = 0.0
     @State private var healthConnected = false
     @State private var showGoalEditor = false
     @State private var showWakeupDetail = false
     @State private var showBriefing = false
+    @State private var showCustomizer = false
     @State private var appeared = false
 
     private var recommendedModules: [AppCategory] {
