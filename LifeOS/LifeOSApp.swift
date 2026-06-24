@@ -49,22 +49,6 @@ struct LifeOSApp: App {
             }
             .animation(.easeInOut(duration: 0.35), value: container != nil)
             .task { await buildContainer() }
-            // Écran alarme (plein écran, prioritaire sur tout)
-            .fullScreenCover(isPresented: $alarm.showAlarmScreen) {
-                AlarmFullScreenView()
-                    .environmentObject(alarm)
-            }
-            // Briefing quotidien post-alarme (avec voix)
-            .fullScreenCover(isPresented: $alarm.showBriefing) {
-                DailyBriefingView(
-                    modules: recommendedModules,
-                    speakOnAppear: true,
-                    userName: userName,
-                    waterGoal: waterGoal,
-                    kcalGoal: kcalGoal
-                )
-                .environmentObject(alarm)
-            }
         }
     }
 
