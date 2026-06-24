@@ -642,6 +642,12 @@ struct ProfileView: View {
                             .animation(.spring(duration: 0.6, bounce: 0.25), value: appeared)
                     }
 
+                    if !healthConnected {
+                        healthConnectBanner
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 16)
+                            .animation(.spring(duration: 0.5, bounce: 0.2).delay(0.06), value: appeared)
+                    }
+
                     if !hiddenSections.contains("tasks") {
                         dailyTasksCard
                             .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
