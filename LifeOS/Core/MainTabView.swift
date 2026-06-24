@@ -264,7 +264,7 @@ struct FloatingTabBar: View {
         Button {
             withAnimation(.spring(duration: 0.28, bounce: 0.35)) { selected = t }
             inputFocused = false
-            Haptics.tap()
+            if t == .profile { Haptics.medium() } else { Haptics.tap() }
         } label: {
             ZStack {
                 if selected == t {
