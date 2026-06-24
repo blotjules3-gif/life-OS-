@@ -266,9 +266,9 @@ struct WakeUpView: View {
     }
 }
 
-// MARK: - Briefing du matin (plein écran)
+// MARK: - Briefing du jour (plein écran, lancé depuis Réveil)
 
-struct MorningBriefingView: View {
+struct DailyBriefingView: View {
     let modules: [AppCategory]
     @AppStorage("userName") private var userName = ""
     @AppStorage("kcalGoal") private var kcalGoal = 2200
