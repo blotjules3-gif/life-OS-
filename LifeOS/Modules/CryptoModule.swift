@@ -336,6 +336,7 @@ struct CryptoAppView: View {
                 case .market:  CryptoMarketTab(assets: assets, loading: loading)
                 case .suivi:   CryptoSuiviTab(assets: assets)
                 case .alertes: CryptoAlertesTab(assets: assets)
+                case .learn:   CryptoLearnTab()
                 case .info:    CryptoInfoTab()
                 }
             }
