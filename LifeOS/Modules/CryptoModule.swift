@@ -25,7 +25,7 @@ private struct PortfolioPosition: Identifiable {
     var quantity: Double
 }
 
-private struct PriceAlert: Identifiable {
+struct PriceAlert: Identifiable {
     var id: String { "\(assetId):\(direction):\(threshold)" }
     let assetId: String
     let direction: String   // "above" ou "below"
