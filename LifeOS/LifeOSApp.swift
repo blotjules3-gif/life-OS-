@@ -3,107 +3,172 @@ import SwiftData
 
 @main
 struct LifeOSApp: App {
-    let container: ModelContainer = {
-        let schema = Schema([
-            // Santé
-            DreamEntry.self, FoodEntry.self, FastingSession.self, WaterEntry.self,
-            Supplement.self, PantryItem.self, ShoppingItem.self, WorkoutSet.self, StepEntry.self,
-            // Vie
-            ProgressPhoto.self, WardrobeItem.self, MoodEntry.self, TodoItem.self,
-            Habit.self, HabitCompletion.self, Note.self,
-            Account.self, Txn.self, Envelope.self, Subscription.self, SavingsGoal.self, SplitExpense.self,
-            // Patrimoine & reste
-            Holding.self, NetWorthItem.self, Property.self, JobApplication.self, SkillGap.self,
-            Flashcard.self, BookSummary.self, Chore.self, Pet.self, PetCare.self, Maintenance.self,
-            Vehicle.self, FuelLog.self, Contact.self, SocialEvent.self, DocVault.self, Deadline.self,
-            Trip.self, PackingItem.self
-        ])
-        do {
-            return try ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)])
-        } catch {
-            return try! ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)])
-        }
-    }()
 
+    // Container optionnel — créé en background pour ne pas bloquer l'UI
+    @State private var container: ModelContainer? = nil
+    @State private var loadingStatus = "Démarrage…"
     @AppStorage("onboardingDone") private var onboardingDone = false
     @State private var ready = false
+
+    // Schéma déclaré statiquement (pas d'init au lancement)
+    private static let schema = Schema([
+        // Santé
+        DreamEntry.self, FoodEntry.self, FastingSession.self, WaterEntry.self,
+        Supplement.self, PantryItem.self, ShoppingItem.self, WorkoutSet.self, StepEntry.self,
+        // Vie
+        ProgressPhoto.self, WardrobeItem.self, MoodEntry.self, TodoItem.self,
+        Habit.self, HabitCompletion.self, Note.self,
+        Account.self, Txn.self, Envelope.self, Subscription.self, SavingsGoal.self, SplitExpense.self,
+        // Patrimoine & reste
+        Holding.self, NetWorthItem.self, Property.self, JobApplication.self, SkillGap.self,
+        Flashcard.self, BookSummary.self, Chore.self, Pet.self, PetCare.self, Maintenance.self,
+        Vehicle.self, FuelLog.self, Contact.self, SocialEvent.self, DocVault.self, Deadline.self,
+        Trip.self, PackingItem.self
+    ])
 
     var body: some Scene {
         WindowGroup {
             ZStack {
-                if !onboardingDone {
-                    // Première utilisation → onboarding
-                    OnboardingView()
-                        .transition(.opacity)
-                } else if !ready {
-                    // Retour dans l'app → splash de chargement
-                    SplashView()
-                        .transition(.opacity)
+                if let container {
+                    // Container prêt → navigation normale
+                    appContent(container: container)
                 } else {
-                    // App prête
-                    MainTabView()
-                        .tint(Theme.accent)
+                    // Container en cours de création → splash
+                    SplashView(status: loadingStatus)
                         .transition(.opacity)
                 }
             }
-            .animation(.easeInOut(duration: 0.45), value: onboardingDone)
-            .animation(.easeInOut(duration: 0.45), value: ready)
-            .task(id: onboardingDone) {
-                guard onboardingDone else { return }
-                _ = await NotificationManager.shared.requestAuthorization()
-                try? await Task.sleep(for: .milliseconds(1200))
-                ready = true
+            .animation(.easeInOut(duration: 0.35), value: container != nil)
+            // Création du container sur thread background au démarrage
+            .task {
+                await buildContainer()
+            }
+        }
+    }
+
+    // MARK: - Contenu principal (affiché une fois le container prêt)
+
+    @ViewBuilder
+    private func appContent(container: ModelContainer) -> some View {
+        ZStack {
+            if !onboardingDone {
+                OnboardingView()
+                    .transition(.opacity)
+            } else if !ready {
+                SplashView(status: loadingStatus)
+                    .transition(.opacity)
+            } else {
+                MainTabView()
+                    .tint(Theme.accent)
+                    .transition(.opacity)
             }
         }
         .modelContainer(container)
+        .animation(.easeInOut(duration: 0.4), value: onboardingDone)
+        .animation(.easeInOut(duration: 0.4), value: ready)
+        .task(id: onboardingDone) {
+            guard onboardingDone else { return }
+            loadingStatus = "Préparation de ton espace…"
+            _ = await NotificationManager.shared.requestAuthorization()
+            try? await Task.sleep(for: .milliseconds(500))
+            withAnimation { ready = true }
+        }
+    }
+
+    // MARK: - Création container en background (ne bloque pas le thread principal)
+
+    private func buildContainer() async {
+        loadingStatus = "Initialisation de la base…"
+
+        let built: ModelContainer = await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let schema = Self.schema
+                do {
+                    let mc = try ModelContainer(
+                        for: schema,
+                        configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)]
+                    )
+                    continuation.resume(returning: mc)
+                } catch {
+                    // Migration échouée → base en mémoire (mode dégradé)
+                    let mc = try! ModelContainer(
+                        for: schema,
+                        configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
+                    )
+                    continuation.resume(returning: mc)
+                }
+            }
+        }
+
+        // Retour sur le thread principal pour mettre à jour l'UI
+        await MainActor.run {
+            loadingStatus = "Chargement…"
+            container = built
+        }
     }
 }
 
 // MARK: - Écran de chargement
 
 struct SplashView: View {
+    var status: String = "Chargement…"
     @State private var pulse = false
+    @State private var dotCount = 0
+    private let timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ZStack {
             Theme.bg.ignoresSafeArea()
 
-            VStack(spacing: 28) {
+            VStack(spacing: 0) {
                 Spacer()
 
-                VStack(spacing: 10) {
+                VStack(spacing: 20) {
+                    // Logo animé
                     ZStack {
                         Circle()
-                            .fill(Color.accentColor.opacity(0.12))
+                            .fill(Color.accentColor.opacity(0.08))
+                            .frame(width: 110, height: 110)
+                            .scaleEffect(pulse ? 1.1 : 1.0)
+                            .animation(
+                                .easeInOut(duration: 1.4).repeatForever(autoreverses: true),
+                                value: pulse
+                            )
+                        Circle()
+                            .fill(Color.accentColor.opacity(0.14))
                             .frame(width: 88, height: 88)
-                            .scaleEffect(pulse ? 1.08 : 1.0)
-                            .animation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true), value: pulse)
-
                         Image(systemName: "sparkles")
                             .font(.system(size: 38, weight: .semibold))
                             .foregroundStyle(Color.accentColor)
                     }
 
-                    Text("LifeOS")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
-                        .foregroundStyle(.primary)
-
-                    Text("Ton système de vie")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(.secondary)
+                    VStack(spacing: 6) {
+                        Text("LifeOS")
+                            .font(.system(size: 34, weight: .bold, design: .rounded))
+                            .foregroundStyle(.primary)
+                        Text("Ton système de vie")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 Spacer()
 
-                VStack(spacing: 12) {
+                // Barre de progression indéterminée + statut
+                VStack(spacing: 14) {
                     ProgressView()
                         .controlSize(.regular)
                         .tint(Color.accentColor)
-                    Text("Chargement…")
-                        .font(.caption)
+
+                    Text(status + String(repeating: ".", count: dotCount))
+                        .font(.system(size: 13))
                         .foregroundStyle(.tertiary)
+                        .animation(.none, value: dotCount)
+                        .onReceive(timer) { _ in
+                            dotCount = (dotCount + 1) % 4
+                        }
                 }
-                .padding(.bottom, 52)
+                .padding(.bottom, 60)
             }
         }
         .onAppear { pulse = true }
