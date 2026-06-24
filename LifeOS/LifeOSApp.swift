@@ -41,7 +41,7 @@ struct LifeOSApp: App {
                         .transition(.opacity)
                 } else {
                     // App prête
-                    HoneycombCategoriesView()
+                    MainTabView()
                         .tint(Theme.accent)
                         .transition(.opacity)
                 }
