@@ -69,7 +69,7 @@ enum ShortcutTool: String, CaseIterable, Identifiable {
         switch self {
         case .dashboard: HomeDashboardContent()
         case .tabata: TabataView()
-        case .calories: MacroLogView()
+        case .calories: CalAIView()
         case .scan: BarcodeScaffold()
         case .todo: TodoView()
         case .fasting: FastingView()
