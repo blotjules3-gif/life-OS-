@@ -455,7 +455,79 @@ struct InterestChip: View {
     }
 }
 
-// MARK: - Étape 4 : Modules recommandés
+// MARK: - Étape 4 : Heure de réveil
+
+struct OnboardingWakeTime: View {
+    @Binding var hour: Int
+    @Binding var minute: Int
+    let onNext: () -> Void
+
+    private var timeDate: Binding<Date> {
+        Binding(
+            get: {
+                var c = Calendar.current.dateComponents([.year, .month, .day], from: .now)
+                c.hour = hour; c.minute = minute
+                return Calendar.current.date(from: c) ?? .now
+            },
+            set: { d in
+                let c = Calendar.current.dateComponents([.hour, .minute], from: d)
+                hour = c.hour ?? 7; minute = c.minute ?? 0
+            }
+        )
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(spacing: 32) {
+                VStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.orange.opacity(0.1))
+                            .frame(width: 80, height: 80)
+                        Image(systemName: "sunrise.fill")
+                            .font(.system(size: 36, weight: .semibold))
+                            .foregroundStyle(.orange)
+                    }
+
+                    VStack(spacing: 10) {
+                        Text("À quelle heure tu te lèves ?")
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .multilineTextAlignment(.center)
+                        Text("On activera ton réveil malin à cette heure.\nTu pourras le changer à tout moment.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(4)
+                    }
+                }
+
+                DatePicker("", selection: timeDate, displayedComponents: .hourAndMinute)
+                    .datePickerStyle(.wheel)
+                    .labelsHidden()
+                    .frame(maxWidth: .infinity)
+                    .environment(\.locale, Locale(identifier: "fr_FR"))
+            }
+
+            Spacer()
+
+            VStack(spacing: 12) {
+                OnboardingButton(label: "Activer mon réveil à \(String(format: "%02d:%02d", hour, minute))", enabled: true, action: onNext)
+                Button("Passer cette étape") {
+                    onNext()
+                }
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.secondary)
+                .buttonStyle(.plain)
+            }
+            .padding(.bottom, 52)
+        }
+        .padding(.horizontal, 28)
+    }
+}
+
+// MARK: - Étape 5 : Modules recommandés
 
 struct OnboardingResults: View {
     let name: String
