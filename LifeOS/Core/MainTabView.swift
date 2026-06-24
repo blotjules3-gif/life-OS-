@@ -2,36 +2,33 @@ import SwiftUI
 import SwiftData
 import Charts
 
-// MARK: - Onglets
+// MARK: - Onglets (chat retiré — input intégré dans la barre)
 
 enum AppTab: String, CaseIterable, Identifiable {
-    case home, categories, chat, camera, profile
+    case camera, home, categories, profile
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .home: return "Accueil"
+        case .camera:     return "Photo"
+        case .home:       return "Accueil"
         case .categories: return "Catégories"
-        case .chat: return "Chat"
-        case .camera: return "Photo"
-        case .profile: return "Profil"
+        case .profile:    return "Profil"
         }
     }
     var icon: String {
         switch self {
-        case .home: return "house"
+        case .camera:     return "camera"
+        case .home:       return "house"
         case .categories: return "square.grid.2x2"
-        case .chat: return "sparkles"
-        case .camera: return "camera"
-        case .profile: return "person"
+        case .profile:    return "person"
         }
     }
     var iconFill: String {
         switch self {
-        case .home: return "house.fill"
+        case .camera:     return "camera.fill"
+        case .home:       return "house.fill"
         case .categories: return "square.grid.2x2.fill"
-        case .chat: return "sparkles"
-        case .camera: return "camera.fill"
-        case .profile: return "person.fill"
+        case .profile:    return "person.fill"
         }
     }
 }
@@ -39,58 +36,242 @@ enum AppTab: String, CaseIterable, Identifiable {
 // MARK: - Conteneur principal
 
 struct MainTabView: View {
-    @State private var tab: AppTab = .categories
+    @State private var tab: AppTab = .home
+    @State private var chatInput = ""
+    @State private var chatMessages: [ChatMessage] = [
+        ChatMessage(fromUser: false, text: "Salut ! Je suis ton assistant LifeOS. Demande-moi par ex. « combien de calories aujourd'hui ? » ou « combien d'eau ? ».")
+    ]
+    @State private var showChat = false
+
+    @Query private var foods: [FoodEntry]
+    @Query private var waters: [WaterEntry]
+    @Query private var fasts: [FastingSession]
+    @Query private var habits: [Habit]
+    @AppStorage("kcalGoal") private var kcalGoal = 2200
+    @AppStorage("waterGoal") private var waterGoal = 2500
 
     var body: some View {
         ZStack(alignment: .bottom) {
             content
-                .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 74) }
-            FloatingTabBar(selected: $tab)
+                .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 90) }
+            FloatingTabBar(
+                selected: $tab,
+                chatInput: $chatInput,
+                onSend: sendChat
+            )
+        }
+        .sheet(isPresented: $showChat) {
+            ChatHistorySheet(messages: chatMessages)
         }
     }
 
     @ViewBuilder private var content: some View {
         switch tab {
-        case .home: HomeDashboardView()
+        case .camera:     CameraView()
+        case .home:       HomeDashboardView()
         case .categories: BubbleHomeView()
-        case .chat: ChatView()
-        case .camera: CameraView()
-        case .profile: ProfileView()
+        case .profile:    ProfileView()
+        }
+    }
+
+    // MARK: Envoi message
+
+    private func sendChat() {
+        let q = chatInput.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return }
+        chatMessages.append(ChatMessage(fromUser: true, text: q))
+        chatInput = ""
+        chatMessages.append(ChatMessage(fromUser: false, text: answer(for: q.lowercased())))
+        showChat = true
+    }
+
+    private func answer(for q: String) -> String {
+        let kcal  = foods.filter  { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.calories }
+        let water = waters.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML }
+        if q.contains("calor") || q.contains("manger") || q.contains("mangé") {
+            return "Tu es à \(kcal) kcal aujourd'hui, objectif \(kcalGoal). Il te reste \(max(0, kcalGoal - kcal)) kcal."
+        }
+        if q.contains("eau") || q.contains("hydrat") || q.contains("bois") || q.contains("bu") {
+            return "Tu as bu \(water) ml sur \(waterGoal) ml. \(water >= waterGoal ? "Objectif atteint !" : "Encore \(waterGoal - water) ml à boire.")"
+        }
+        if q.contains("jeûn") || q.contains("jeun") || q.contains("fast") {
+            if let a = fasts.first(where: { $0.isActive }) {
+                return "Jeûne en cours depuis \(Int(a.elapsed/3600))h\(Int(a.elapsed.truncatingRemainder(dividingBy: 3600)/60))min. Va dans Catégories › Nutrition › Jeûne."
+            }
+            return "Aucun jeûne en cours. Lance-le dans Catégories › Nutrition › Jeûne intermittent."
+        }
+        if q.contains("habitude") || q.contains("streak") {
+            let done = habits.filter { h in h.completions.contains { Calendar.current.isDateInToday($0.date) } }.count
+            return "Tu as validé \(done)/\(habits.count) habitudes aujourd'hui."
+        }
+        if q.contains("bonjour") || q.contains("salut") || q.contains("hello") || q.contains("hey") {
+            return "Hello ! Je peux te dire tes calories, ton eau, ton jeûne ou tes habitudes du jour."
+        }
+        if q.contains("merci") { return "Avec plaisir !" }
+        return "Je peux t'aider sur : calories, hydratation, jeûne, habitudes. Reformule avec un de ces mots."
+    }
+}
+
+// MARK: - Historique chat (sheet)
+
+struct ChatHistorySheet: View {
+    let messages: [ChatMessage]
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 10) {
+                        ForEach(messages) { m in
+                            HStack {
+                                if m.fromUser { Spacer(minLength: 40) }
+                                Text(m.text)
+                                    .padding(.horizontal, 14).padding(.vertical, 10)
+                                    .background(
+                                        m.fromUser ? Color.accentColor : Theme.card,
+                                        in: RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    )
+                                    .foregroundStyle(m.fromUser ? .white : .primary)
+                                if !m.fromUser { Spacer(minLength: 40) }
+                            }
+                            .id(m.id)
+                        }
+                    }
+                    .padding(Theme.pad)
+                }
+                .onAppear {
+                    if let last = messages.last {
+                        proxy.scrollTo(last.id, anchor: .bottom)
+                    }
+                }
+            }
+            .background(Theme.bg)
+            .navigationTitle("Assistant")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Fermer") { dismiss() }
+                }
+            }
         }
     }
 }
 
-// MARK: - Barre flottante
+// MARK: - Barre flottante avec chat intégré
 
 struct FloatingTabBar: View {
     @Binding var selected: AppTab
+    @Binding var chatInput: String
+    let onSend: () -> Void
+
+    private let leftTabs:  [AppTab] = [.camera, .home]
+    private let rightTabs: [AppTab] = [.categories, .profile]
+
+    @FocusState private var inputFocused: Bool
+    @State private var chatMode = false
+
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(AppTab.allCases) { t in
-                Button {
-                    withAnimation(.snappy(duration: 0.25)) { selected = t }
-                    Haptics.tap()
-                } label: {
-                    VStack(spacing: 4) {
-                        Image(systemName: selected == t ? t.iconFill : t.icon)
-                            .font(.system(size: 19, weight: .semibold))
-                            .symbolEffect(.bounce, value: selected == t)
-                        Text(t.label)
-                            .font(.system(size: 10, weight: .medium))
-                    }
-                    .foregroundStyle(selected == t ? Color.accentColor : Color.secondary)
-                    .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
+        HStack(spacing: 6) {
+
+            // Onglets gauche — disparaissent en mode chat
+            if !chatMode {
+                HStack(spacing: 0) {
+                    ForEach(leftTabs) { t in tabBtn(t) }
                 }
-                .buttonStyle(.plain)
+                .transition(.move(edge: .leading).combined(with: .opacity))
+            }
+
+            // Input chat central
+            HStack(spacing: 6) {
+                // Bouton retour visible seulement en mode chat
+                if chatMode {
+                    Button {
+                        withAnimation(.spring(duration: 0.4)) { chatMode = false }
+                        inputFocused = false
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 28, height: 28)
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.opacity)
+                }
+
+                TextField("Message…", text: $chatInput)
+                    .font(.system(size: 14))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .background(Theme.bg2, in: Capsule())
+                    .focused($inputFocused)
+                    .onSubmit(onSend)
+                    .submitLabel(.send)
+
+                if !chatInput.trimmingCharacters(in: .whitespaces).isEmpty {
+                    Button(action: onSend) {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundStyle(Color.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.scale.combined(with: .opacity))
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .animation(.spring(duration: 0.25), value: chatInput.isEmpty)
+            .animation(.spring(duration: 0.25), value: chatMode)
+
+            // Onglets droite — disparaissent en mode chat
+            if !chatMode {
+                HStack(spacing: 0) {
+                    ForEach(rightTabs) { t in tabBtn(t) }
+                }
+                .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
-        .padding(.vertical, 11)
-        .padding(.horizontal, 10)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 12)
         .background(.regularMaterial, in: Capsule())
         .overlay(Capsule().stroke(Color.primary.opacity(0.05), lineWidth: 1))
         .shadow(color: .black.opacity(0.14), radius: 14, y: 5)
-        .padding(.horizontal, 22)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+        // Focus → entre en mode chat
+        .onChange(of: inputFocused) { _, focused in
+            withAnimation(.spring(duration: 0.4)) { chatMode = focused }
+        }
+        // Slide haut ou bas → quitte le mode chat
+        .gesture(
+            DragGesture(minimumDistance: 30)
+                .onEnded { v in
+                    if abs(v.translation.height) > 40 {
+                        withAnimation(.spring(duration: 0.4)) { chatMode = false }
+                        inputFocused = false
+                    }
+                }
+        )
+    }
+
+    @ViewBuilder
+    private func tabBtn(_ t: AppTab) -> some View {
+        Button {
+            withAnimation(.snappy(duration: 0.25)) { selected = t }
+            inputFocused = false   // ferme le clavier si ouvert
+            Haptics.tap()
+        } label: {
+            VStack(spacing: 3) {
+                Image(systemName: selected == t ? t.iconFill : t.icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .symbolEffect(.bounce, value: selected == t)
+                Text(t.label)
+                    .font(.system(size: 9, weight: .medium))
+            }
+            .foregroundStyle(selected == t ? Color.accentColor : Color.secondary)
+            .frame(width: 52)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -189,7 +370,7 @@ struct HomeDashboardView: View {
 
     private var todayStart: Date { Calendar.current.startOfDay(for: .now) }
     private var waterToday: Int { waters.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML } }
-    private var kcalToday: Int { foods.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.calories } }
+    private var kcalToday: Int  { foods.filter  { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.calories } }
     private var fastHours: Double {
         guard let active = fasts.first(where: { $0.isActive }) else { return 0 }
         return active.elapsed / 3600
@@ -213,7 +394,7 @@ struct HomeDashboardView: View {
         case 5..<12: return "Bonjour"
         case 12..<18: return "Bon aprèm"
         case 18..<23: return "Bonsoir"
-        default: return "Bonne nuit"
+        default:      return "Bonne nuit"
         }
     }
 
