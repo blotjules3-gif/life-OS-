@@ -548,6 +548,17 @@ struct ProfileView: View {
     private var proteinToday: Double { foods.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.protein } }
     private var waterToday: Int { waters.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML } }
     private var habitsDone: Int { habits.filter { h in h.completions.contains { Calendar.current.isDateInToday($0.date) } }.count }
+
+    private var lifeScore: Int {
+        let w = min(1.0, Double(waterToday) / Double(max(1, waterGoal)))
+        let k = min(1.0, Double(min(kcalToday, kcalGoal)) / Double(max(1, kcalGoal)))
+        let h = habits.isEmpty ? 1.0 : min(1.0, Double(habitsDone) / Double(habits.count))
+        let s = min(1.0, Double(steps) / Double(max(1, stepGoal)))
+        return Int((w * 25 + k * 25 + h * 30 + s * 20).rounded())
+    }
+    private var scoreColor: Color {
+        lifeScore >= 75 ? Color(hex: 0x00D4B4) : lifeScore >= 50 ? Color(hex: 0xE0A23C) : Color(hex: 0xF1746C)
+    }
     private var greeting: String {
         switch Calendar.current.component(.hour, from: .now) {
         case 5..<12: return "Bonjour"
@@ -555,34 +566,52 @@ struct ProfileView: View {
         default: return "Bonsoir"
         }
     }
+    private let tips = [
+        "Chaque verre d'eau compte. L'hydratation est la base de tout.",
+        "Un pas de plus qu'hier. C'est tout ce qui compte.",
+        "Tes habitudes d'aujourd'hui sont ta santé de demain.",
+        "Le succès, c'est la somme de petits efforts répétés.",
+        "Discipline is choosing between what you want now and what you want most.",
+        "L'énergie suit l'attention. Mets-la au bon endroit.",
+        "Une journée complète commence par 5 min pour toi."
+    ]
+    private var todayTip: String { tips[Calendar.current.component(.day, from: .now) % tips.count] }
 
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 16) {
-                    heroSection
-                        .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                        .animation(.spring(duration: 0.5, bounce: 0.2), value: appeared)
+                VStack(spacing: 14) {
+                    heroDark
+                        .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 28)
+                        .animation(.spring(duration: 0.6, bounce: 0.25), value: appeared)
 
-                    progressSection
+                    statsRow
                         .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                        .animation(.spring(duration: 0.5, bounce: 0.2).delay(0.08), value: appeared)
+                        .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.07), value: appeared)
+
+                    habitsProteinsRow
+                        .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
+                        .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.14), value: appeared)
 
                     quickActionsSection
                         .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                        .animation(.spring(duration: 0.5, bounce: 0.2).delay(0.16), value: appeared)
+                        .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.21), value: appeared)
 
                     wakeupSection
                         .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                        .animation(.spring(duration: 0.5, bounce: 0.2).delay(0.24), value: appeared)
+                        .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.28), value: appeared)
+
+                    tipCard
+                        .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
+                        .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.35), value: appeared)
 
                     settingsSection
                         .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                        .animation(.spring(duration: 0.5, bounce: 0.2).delay(0.32), value: appeared)
+                        .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.42), value: appeared)
                 }
                 .padding(.horizontal, Theme.pad)
                 .padding(.top, 8)
-                .padding(.bottom, 40)
+                .padding(.bottom, 52)
             }
             .background(Theme.bg)
             .navigationTitle("Profil")
@@ -611,198 +640,269 @@ struct ProfileView: View {
         }
     }
 
-    // MARK: Hero
+    // MARK: - Hero dark card
 
-    private var heroSection: some View {
-        VStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(Color.accentColor.opacity(0.12))
-                    .frame(width: 84, height: 84)
-                Circle()
-                    .stroke(
-                        LinearGradient(
-                            colors: [Color.accentColor.opacity(0.55), Color.accentColor.opacity(0.12)],
-                            startPoint: .topLeading, endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 2.5
-                    )
-                    .frame(width: 84, height: 84)
-                let initial = String(name.prefix(1)).uppercased()
-                Text(initial.isEmpty ? "?" : initial)
-                    .font(.system(size: 36, weight: .black, design: .rounded))
-                    .foregroundStyle(Color.accentColor)
-            }
-            .shadow(color: Color.accentColor.opacity(0.2), radius: 14, x: 0, y: 6)
-            .padding(.top, 6)
+    private var heroDark: some View {
+        ZStack(alignment: .topLeading) {
+            // Fond sombre
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(LinearGradient(
+                    colors: [Color(hex: 0x0D1B2A), Color(hex: 0x14263A)],
+                    startPoint: .topLeading, endPoint: .bottomTrailing
+                ))
 
-            VStack(spacing: 5) {
-                if name.isEmpty {
-                    TextField("Entre ton prénom", text: $name)
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .multilineTextAlignment(.center)
-                } else {
-                    Text("\(greeting), \(name)")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+            // Blob lumineux couleur score (haut droite)
+            Circle()
+                .fill(RadialGradient(
+                    colors: [scoreColor.opacity(0.38), .clear],
+                    center: .center, startRadius: 0, endRadius: 110
+                ))
+                .frame(width: 220, height: 220)
+                .offset(x: 160, y: -60)
+                .blur(radius: 22)
+                .allowsHitTesting(false)
+
+            // Blob secondaire froid (bas gauche)
+            Circle()
+                .fill(RadialGradient(
+                    colors: [Color(hex: 0x3CB2E0).opacity(0.15), .clear],
+                    center: .center, startRadius: 0, endRadius: 80
+                ))
+                .frame(width: 160, height: 160)
+                .offset(x: -20, y: 120)
+                .blur(radius: 28)
+                .allowsHitTesting(false)
+
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .top, spacing: 0) {
+                    // Texte gauche
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(greeting)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.5))
+                            .padding(.top, 2)
+                        Group {
+                            if name.isEmpty {
+                                TextField("Ton prénom", text: $name)
+                                    .font(.system(size: 34, weight: .black, design: .rounded))
+                                    .foregroundStyle(.white)
+                            } else {
+                                Text(name)
+                                    .font(.system(size: 34, weight: .black, design: .rounded))
+                                    .foregroundStyle(.white)
+                            }
+                        }
+                        Text(Date.now.formatted(.dateTime.weekday(.wide).day().month()))
+                            .font(.system(size: 13))
+                            .foregroundStyle(.white.opacity(0.4))
+                    }
+
+                    Spacer(minLength: 12)
+
+                    // Score ring
+                    ZStack {
+                        Circle()
+                            .stroke(.white.opacity(0.07), lineWidth: 9)
+                            .frame(width: 96, height: 96)
+
+                        Circle()
+                            .trim(from: 0, to: appeared ? CGFloat(lifeScore) / 100.0 : 0)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [scoreColor, scoreColor.opacity(0.45)],
+                                    startPoint: .topLeading, endPoint: .bottomTrailing
+                                ),
+                                style: StrokeStyle(lineWidth: 9, lineCap: .round)
+                            )
+                            .frame(width: 96, height: 96)
+                            .rotationEffect(.degrees(-90))
+                            .animation(.spring(duration: 1.3, bounce: 0.08).delay(0.45), value: appeared)
+
+                        VStack(spacing: 0) {
+                            Text("\(lifeScore)")
+                                .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
+                                .foregroundStyle(.white)
+                            Text("/100")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.4))
+                        }
+                    }
                 }
-                Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide)))
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
 
-            if !onboardingGoals.isEmpty {
-                HStack(spacing: 6) {
-                    ForEach(onboardingGoals.prefix(3)) { g in
-                        Label(String(g.label.split(separator: " ").first ?? ""), systemImage: g.icon)
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(g.color)
-                            .padding(.horizontal, 10).padding(.vertical, 5)
-                            .background(g.color.opacity(0.12), in: Capsule())
+                Spacer().frame(height: 18)
+
+                // Statut score
+                HStack(spacing: 8) {
+                    Circle().fill(scoreColor).frame(width: 6, height: 6)
+                    Text(lifeScore >= 75 ? "Excellente journée" : lifeScore >= 50 ? "Bonne progression" : "Continue, tu peux mieux")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.65))
+                }
+
+                if !onboardingGoals.isEmpty {
+                    Spacer().frame(height: 16)
+                    HStack(spacing: 6) {
+                        ForEach(onboardingGoals.prefix(3)) { g in
+                            Label(String(g.label.split(separator: " ").first ?? ""), systemImage: g.icon)
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(.white.opacity(0.75))
+                                .padding(.horizontal, 9).padding(.vertical, 4)
+                                .background(.white.opacity(0.1), in: Capsule())
+                        }
                     }
                 }
             }
+            .padding(20)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 22)
-        .padding(.horizontal, 16)
-        .background(
-            LinearGradient(
-                colors: [Color.accentColor.opacity(0.1), Color.accentColor.opacity(0.02)],
-                startPoint: .top, endPoint: .bottom
-            ),
-            in: RoundedRectangle(cornerRadius: 22, style: .continuous)
-        )
     }
 
-    // MARK: Progression
+    // MARK: - Stats 3 colonnes
 
-    private var progressSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Text("Aujourd'hui").font(.headline)
-                Spacer()
-                Button { showGoalEditor = true } label: {
-                    Image(systemName: "slider.horizontal.3")
-                        .font(.system(size: 13))
-                        .foregroundStyle(Color.accentColor)
-                        .frame(width: 34, height: 34)
-                        .background(Color.accentColor.opacity(0.1), in: Circle())
-                }
-                .buttonStyle(.plain)
-            }
-
-            HStack(spacing: 10) {
-                ringCell(
-                    icon: "figure.walk",
-                    value: Double(steps), goal: Double(stepGoal),
-                    label: "Pas",
-                    displayValue: steps >= 1000 ? String(format: "%.1f", Double(steps) / 1000.0) + "k" : "\(steps)",
-                    color: Color(hex: 0xF1746C)
-                )
-                ringCell(
-                    icon: "drop.fill",
-                    value: Double(waterToday), goal: Double(waterGoal),
-                    label: "Eau",
-                    displayValue: "\(waterToday)",
-                    color: Color(hex: 0x3CB2E0)
-                )
-                ringCell(
-                    icon: "flame.fill",
-                    value: Double(kcalToday), goal: Double(kcalGoal),
-                    label: "Kcal",
-                    displayValue: "\(kcalToday)",
-                    color: Color(hex: 0x4CC38A)
-                )
-            }
-
-            HStack(spacing: 10) {
-                miniBar(
-                    label: "Habitudes", icon: "checkmark.seal.fill",
-                    value: Double(habitsDone), goal: Double(max(1, habits.count)),
-                    unit: "/ \(habits.count)", color: Color(hex: 0x9B6CF1)
-                )
-                miniBar(
-                    label: "Protéines", icon: "fork.knife",
-                    value: proteinToday, goal: Double(proteinGoal),
-                    unit: "g", color: Color(hex: 0xE0A23C)
-                )
-            }
+    private var statsRow: some View {
+        HStack(spacing: 10) {
+            statCard(
+                icon: "figure.walk",
+                value: steps >= 1000 ? String(format: "%.1fk", Double(steps) / 1000.0) : "\(steps)",
+                label: "Pas",
+                progress: Double(steps) / Double(max(1, stepGoal)),
+                color: Color(hex: 0xF1746C)
+            )
+            statCard(
+                icon: "drop.fill",
+                value: "\(waterToday)",
+                label: "ml eau",
+                progress: Double(waterToday) / Double(max(1, waterGoal)),
+                color: Color(hex: 0x3CB2E0)
+            )
+            statCard(
+                icon: "flame.fill",
+                value: "\(kcalToday)",
+                label: "kcal",
+                progress: Double(kcalToday) / Double(max(1, kcalGoal)),
+                color: Color(hex: 0x4CC38A)
+            )
         }
-        .padding(16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
-    private func ringCell(icon: String, value: Double, goal: Double, label: String, displayValue: String, color: Color) -> some View {
-        VStack(spacing: 7) {
-            ZStack {
-                ProgressRing(progress: goal > 0 ? min(1.0, value / goal) : 0, lineWidth: 7, tint: color)
-                    .frame(width: 68, height: 68)
-                VStack(spacing: 1) {
-                    Image(systemName: icon)
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(color)
-                    Text(displayValue)
-                        .font(.system(size: 12, weight: .bold).monospacedDigit())
-                        .foregroundStyle(Theme.textPrimary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                }
-            }
-            Text(label)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
-            let pct = goal > 0 ? min(100, Int(value / goal * 100)) : 0
-            Text("\(pct)%")
-                .font(.system(size: 10, weight: .bold).monospacedDigit())
-                .foregroundStyle(value >= goal ? color : Color(uiColor: .tertiaryLabel))
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(color.opacity(0.07), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-    }
+    private func statCard(icon: String, value: String, label: String, progress: Double, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 28, height: 28)
+                .background(color, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
 
-    private func miniBar(label: String, icon: String, value: Double, goal: Double, unit: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(color)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(value)
+                    .font(.system(size: 19, weight: .black).monospacedDigit())
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
                 Text(label)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(.secondary)
-                Spacer()
-                Text("\(Int(value)) \(unit)")
-                    .font(.system(size: 12, weight: .bold).monospacedDigit())
-                    .foregroundStyle(value >= goal ? color : Theme.textPrimary)
             }
+
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(color.opacity(0.12)).frame(height: 5)
-                    Capsule()
-                        .fill(color)
-                        .frame(width: geo.size.width * min(1.0, goal > 0 ? value / goal : 0), height: 5)
+                    Capsule().fill(color.opacity(0.12)).frame(height: 4)
+                    Capsule().fill(color)
+                        .frame(width: geo.size.width * min(1.0, max(0, progress)), height: 4)
                 }
             }
-            .frame(height: 5)
+            .frame(height: 4)
         }
-        .padding(12)
-        .frame(maxWidth: .infinity)
-        .background(color.opacity(0.07), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .padding(13)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
-    // MARK: Actions rapides
+    // MARK: - Habitudes + Protéines
+
+    private var habitsProteinsRow: some View {
+        HStack(spacing: 10) {
+            // Habitudes avec dot grid
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 5) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Color(hex: 0x9B6CF1))
+                    Text("Habitudes")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("\(habitsDone)/\(habits.count)")
+                        .font(.system(size: 11, weight: .black).monospacedDigit())
+                        .foregroundStyle(Color(hex: 0x9B6CF1))
+                }
+                if habits.isEmpty {
+                    Text("Aucune habitude")
+                        .font(.caption2).foregroundStyle(.tertiary)
+                } else {
+                    HStack(spacing: 5) {
+                        ForEach(Array(habits.prefix(8).enumerated()), id: \.offset) { _, h in
+                            let done = h.completions.contains { Calendar.current.isDateInToday($0.date) }
+                            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                                .fill(done ? Color(hex: 0x9B6CF1) : Color(hex: 0x9B6CF1).opacity(0.14))
+                                .frame(width: 13, height: 13)
+                        }
+                    }
+                }
+                Text(habitsDone == habits.count && !habits.isEmpty ? "Toutes complétées" : habits.isEmpty ? "" : "\(habits.count - habitsDone) restantes")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(habitsDone == habits.count && !habits.isEmpty ? Color(hex: 0x9B6CF1) : .secondary)
+            }
+            .padding(13)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+            // Protéines
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 5) {
+                    Image(systemName: "fork.knife")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Color(hex: 0xE0A23C))
+                    Text("Protéines")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                Text("\(Int(proteinToday))g")
+                    .font(.system(size: 22, weight: .black).monospacedDigit())
+                    .foregroundStyle(Theme.textPrimary)
+                Text("/ \(proteinGoal) g")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Color(hex: 0xE0A23C).opacity(0.12)).frame(height: 5)
+                        Capsule().fill(Color(hex: 0xE0A23C))
+                            .frame(width: geo.size.width * min(1.0, proteinToday / Double(max(1, proteinGoal))), height: 5)
+                    }
+                }
+                .frame(height: 5)
+            }
+            .padding(13)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+    }
+
+    // MARK: - Actions rapides
 
     private var quickActionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Actions rapides").font(.headline)
+            Text("Actions rapides")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 2)
+
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                 actionBtn(icon: "drop.fill", label: "+250 ml", sub: "Eau", color: Color(hex: 0x3CB2E0)) {
-                    ctx.insert(WaterEntry(amountML: 250))
-                    Haptics.tap()
+                    ctx.insert(WaterEntry(amountML: 250)); Haptics.tap()
                 }
                 actionBtn(icon: "drop.fill", label: "+500 ml", sub: "Eau", color: Color(hex: 0x3CB2E0)) {
-                    ctx.insert(WaterEntry(amountML: 500))
-                    Haptics.tap()
+                    ctx.insert(WaterEntry(amountML: 500)); Haptics.tap()
                 }
                 actionBtn(icon: "sunrise.fill", label: "Ma journée", sub: "Lancer le briefing", color: .orange) {
                     showBriefing = true
@@ -812,88 +912,123 @@ struct ProfileView: View {
                 }
             }
         }
-        .padding(16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     private func actionBtn(icon: String, label: String, sub: String, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 10) {
                 Image(systemName: icon)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.white)
-                    .frame(width: 36, height: 36)
-                    .background(color, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                VStack(alignment: .leading, spacing: 2) {
+                    .frame(width: 34, height: 34)
+                    .background(color, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                VStack(alignment: .leading, spacing: 1) {
                     Text(label)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
                     Text(sub)
-                        .font(.system(size: 11))
+                        .font(.system(size: 10))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
             }
             .padding(12)
-            .background(Theme.bg, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
     }
 
-    // MARK: Réveil
+    // MARK: - Réveil
 
     private var wakeupSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Label("Réveil", systemImage: "alarm.fill").font(.headline)
-                Spacer()
-                Toggle("", isOn: $wakeupEnabled)
-                    .tint(Color(hex: 0xE07B3C))
-                    .labelsHidden()
-                    .onChange(of: wakeupEnabled) { _, on in
-                        if on { scheduleWakeupAlarm() } else { NotificationManager.shared.cancel(id: "lifeos.wakeup") }
-                    }
-            }
-
-            HStack(alignment: .bottom) {
-                Text(String(format: "%02d:%02d", wakeupHour, wakeupMinute))
-                    .font(.system(size: 48, weight: .bold, design: .rounded).monospacedDigit())
-                    .foregroundStyle(wakeupEnabled ? Color(hex: 0xE07B3C) : .secondary)
-                    .animation(.spring(duration: 0.3), value: wakeupEnabled)
-                Spacer()
-                Button { showWakeupDetail = true } label: {
-                    Text("Personnaliser")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Color(hex: 0xE07B3C))
-                        .padding(.horizontal, 12).padding(.vertical, 8)
-                        .background(Color(hex: 0xE07B3C).opacity(0.1), in: Capsule())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Réveil")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                    Text(String(format: "%02d:%02d", wakeupHour, wakeupMinute))
+                        .font(.system(size: 44, weight: .black, design: .rounded).monospacedDigit())
+                        .foregroundStyle(wakeupEnabled ? Color(hex: 0xE07B3C) : Theme.textPrimary)
+                        .animation(.spring(duration: 0.3), value: wakeupEnabled)
                 }
-                .buttonStyle(.plain)
-                .padding(.bottom, 6)
+                Spacer()
+                VStack(alignment: .trailing, spacing: 8) {
+                    Toggle("", isOn: $wakeupEnabled)
+                        .tint(Color(hex: 0xE07B3C)).labelsHidden()
+                        .onChange(of: wakeupEnabled) { _, on in
+                            if on { scheduleWakeupAlarm() } else { NotificationManager.shared.cancel(id: "lifeos.wakeup") }
+                        }
+                    Button { showWakeupDetail = true } label: {
+                        Text("Personnaliser")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Color(hex: 0xE07B3C))
+                            .padding(.horizontal, 10).padding(.vertical, 6)
+                            .background(Color(hex: 0xE07B3C).opacity(0.1), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
             }
 
-            Text(wakeupEnabled ? "Réveil quotidien activé" : "Désactivé — active pour lancer le briefing auto")
-                .font(.caption)
-                .foregroundStyle(wakeupEnabled ? Color(hex: 0xE07B3C).opacity(0.8) : .secondary)
+            Divider()
+
+            Button { showBriefing = true } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "sunrise.fill")
+                        .font(.system(size: 15))
+                        .foregroundStyle(.orange)
+                        .frame(width: 34, height: 34)
+                        .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Lancer ma journée")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                        Text("Briefing + voix + priorités")
+                            .font(.system(size: 11)).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                }
+            }
+            .buttonStyle(.plain)
         }
         .padding(16)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(wakeupEnabled ? Color(hex: 0xE07B3C).opacity(0.25) : Color.clear, lineWidth: 1.5)
+                .stroke(wakeupEnabled ? Color(hex: 0xE07B3C).opacity(0.22) : Color.clear, lineWidth: 1.5)
         )
         .animation(.spring(duration: 0.3), value: wakeupEnabled)
     }
 
-    // MARK: Paramètres
+    // MARK: - Citation du jour
+
+    private var tipCard: some View {
+        HStack(spacing: 13) {
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                .fill(Color.accentColor)
+                .frame(width: 3, height: 42)
+            Text(todayTip)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer()
+        }
+        .padding(14)
+        .background(Color.accentColor.opacity(0.05), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.accentColor.opacity(0.12), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Paramètres
 
     private var settingsSection: some View {
         VStack(spacing: 14) {
             VStack(spacing: 0) {
-                settingsRow(
-                    icon: "heart.fill", iconColor: Color(hex: 0xF1746C),
-                    label: healthConnected ? "Apple Santé connecté" : "Connecter Apple Santé"
-                ) {
+                settingsRow(icon: "heart.fill", iconColor: Color(hex: 0xF1746C),
+                            label: healthConnected ? "Apple Santé connecté" : "Connecter Apple Santé") {
                     if healthConnected {
                         Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
                     } else {
@@ -902,24 +1037,14 @@ struct ProfileView: View {
                 } action: {
                     Task { healthConnected = await HealthService.shared.requestAuthorization() }
                 }
-
-                Divider().padding(.leading, 52)
-
-                settingsRow(
-                    icon: "bell.fill", iconColor: Color(hex: 0xE0A23C),
-                    label: "Activer les rappels"
-                ) {
+                Divider().padding(.leading, 50)
+                settingsRow(icon: "bell.fill", iconColor: Color(hex: 0xE0A23C), label: "Activer les rappels") {
                     Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
                 } action: {
                     Task { _ = await NotificationManager.shared.requestAuthorization() }
                 }
-
-                Divider().padding(.leading, 52)
-
-                settingsRow(
-                    icon: "slider.horizontal.3", iconColor: Color.accentColor,
-                    label: "Modifier mes objectifs"
-                ) {
+                Divider().padding(.leading, 50)
+                settingsRow(icon: "slider.horizontal.3", iconColor: Color.accentColor, label: "Modifier mes objectifs") {
                     Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
                 } action: {
                     showGoalEditor = true
@@ -928,36 +1053,28 @@ struct ProfileView: View {
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
 
             HStack {
-                Text("LifeOS 1.0 · Données locales")
+                Text("LifeOS 1.0 · Données stockées localement")
                     .font(.caption).foregroundStyle(.tertiary)
                 Spacer()
-                Text("15 modules")
-                    .font(.caption).foregroundStyle(.tertiary)
+                Text("15 modules").font(.caption).foregroundStyle(.tertiary)
             }
             .padding(.horizontal, 4)
         }
     }
 
-    private func settingsRow<T: View>(
-        icon: String, iconColor: Color, label: String,
-        @ViewBuilder trailing: () -> T,
-        action: @escaping () -> Void
-    ) -> some View {
+    private func settingsRow<T: View>(icon: String, iconColor: Color, label: String,
+                                      @ViewBuilder trailing: () -> T, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 14) {
+            HStack(spacing: 12) {
                 Image(systemName: icon)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 32, height: 32)
+                    .font(.system(size: 12, weight: .bold)).foregroundStyle(.white)
+                    .frame(width: 30, height: 30)
                     .background(iconColor, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                Text(label)
-                    .font(.subheadline)
-                    .foregroundStyle(.primary)
+                Text(label).font(.subheadline).foregroundStyle(.primary)
                 Spacer()
                 trailing()
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 13)
+            .padding(.horizontal, 14).padding(.vertical, 13)
         }
         .buttonStyle(.plain)
     }
@@ -969,8 +1086,7 @@ struct ProfileView: View {
                 id: "lifeos.wakeup",
                 title: "Bonjour \(name.isEmpty ? "" : name) !",
                 body: "C'est l'heure de lancer ta journée.",
-                hour: wakeupHour,
-                minute: wakeupMinute
+                hour: wakeupHour, minute: wakeupMinute
             )
         }
     }
