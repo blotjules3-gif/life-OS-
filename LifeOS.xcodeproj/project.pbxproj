@@ -247,7 +247,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = Y655DBVZT2;
+				DEVELOPMENT_TEAM = 54AUW2C78N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "LifeOS utilise l'appareil photo pour scanner les codes-barres, les documents et tes photos avant/apres.";
