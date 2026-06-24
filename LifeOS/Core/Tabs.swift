@@ -240,6 +240,9 @@ struct CameraView: View {
 
 struct DailyBriefingView: View {
     let modules: [AppCategory]
+    var speakOnAppear: Bool = false
+
+    @ObservedObject private var alarm = AlarmManager.shared
     @AppStorage("userName") private var userName = ""
     @AppStorage("kcalGoal") private var kcalGoal = 2200
     @AppStorage("waterGoal") private var waterGoal = 2500
@@ -248,6 +251,10 @@ struct DailyBriefingView: View {
     @Query private var habits: [Habit]
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var ctx
+
+    @State private var waveActive = false
+
+    private static let waveBars: [Double] = [8, 20, 12, 24, 10, 18, 8, 22, 14, 8]
 
     private var kcalToday: Int { foods.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.calories } }
     private var waterToday: Int { waters.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML } }
@@ -295,6 +302,7 @@ struct DailyBriefingView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 28) {
+
                     // Header
                     VStack(spacing: 10) {
                         Image(systemName: "sunrise.fill")
@@ -311,6 +319,9 @@ struct DailyBriefingView: View {
                             .foregroundStyle(.secondary)
                     }
 
+                    // Bandeau voix
+                    voiceBanner
+
                     // Progress rings
                     HStack(spacing: 10) {
                         briefingRing(value: Double(kcalToday), goal: Double(kcalGoal), label: "Kcal", color: Color(hex: 0x4CC38A), icon: "flame.fill")
@@ -321,9 +332,7 @@ struct DailyBriefingView: View {
                     // Task list
                     if !todayTasks.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("À faire aujourd'hui")
-                                .font(.headline)
-
+                            Text("À faire aujourd'hui").font(.headline)
                             ForEach(Array(todayTasks.enumerated()), id: \.offset) { _, task in
                                 HStack(spacing: 14) {
                                     Image(systemName: task.icon)
@@ -383,6 +392,93 @@ struct DailyBriefingView: View {
                 .padding(.horizontal, 22)
             }
         }
+        .onAppear {
+            if speakOnAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
+                    alarm.speakDailyPlan(
+                        userName: userName,
+                        modules: modules,
+                        waterGoal: waterGoal,
+                        kcalGoal: kcalGoal
+                    )
+                }
+            }
+        }
+        .onDisappear {
+            alarm.stopSpeaking()
+        }
+        .onChange(of: alarm.isSpeaking) { _, speaking in
+            waveActive = speaking
+        }
+    }
+
+    // MARK: Bandeau voix
+
+    @ViewBuilder private var voiceBanner: some View {
+        if alarm.isSpeaking {
+            HStack(spacing: 12) {
+                // Visualiseur
+                HStack(spacing: 3) {
+                    ForEach(Array(Self.waveBars.enumerated()), id: \.offset) { i, h in
+                        RoundedRectangle(cornerRadius: 2, style: .continuous)
+                            .fill(Color.orange)
+                            .frame(width: 3, height: waveActive ? h : h * 0.3)
+                            .animation(
+                                .easeInOut(duration: 0.28 + Double(i) * 0.04)
+                                    .repeatForever(autoreverses: true)
+                                    .delay(Double(i) * 0.06),
+                                value: waveActive
+                            )
+                    }
+                }
+                .frame(height: 28)
+
+                Text("Lecture vocale…")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Button {
+                    alarm.stopSpeaking()
+                } label: {
+                    Image(systemName: "stop.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundStyle(Color.orange.opacity(0.8))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Color.orange.opacity(0.18), lineWidth: 1)
+            )
+            .transition(.opacity.combined(with: .scale(scale: 0.96)))
+            .onAppear { waveActive = true }
+        } else if !speakOnAppear {
+            // Bouton relance manuelle
+            Button {
+                alarm.speakDailyPlan(userName: userName, modules: modules, waterGoal: waterGoal, kcalGoal: kcalGoal)
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "speaker.wave.2.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.orange)
+                    Text("Écouter mon plan du jour")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .transition(.opacity)
+        }
     }
 
     private func briefingRing(value: Double, goal: Double, label: String, color: Color, icon: String) -> some View {
@@ -390,9 +486,7 @@ struct DailyBriefingView: View {
             ZStack {
                 ProgressRing(progress: goal > 0 ? min(1, value / goal) : 0, lineWidth: 7, tint: color)
                     .frame(width: 64, height: 64)
-                Image(systemName: icon)
-                    .font(.system(size: 12))
-                    .foregroundStyle(color)
+                Image(systemName: icon).font(.system(size: 12)).foregroundStyle(color)
             }
             Text(label).font(.caption2).foregroundStyle(.secondary)
         }
@@ -404,11 +498,8 @@ struct DailyBriefingView: View {
     private func quickActionBtn(icon: String, label: String, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(color)
-                Text(label)
-                    .font(.system(size: 14, weight: .medium))
+                Image(systemName: icon).font(.system(size: 13, weight: .semibold)).foregroundStyle(color)
+                Text(label).font(.system(size: 14, weight: .medium))
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
