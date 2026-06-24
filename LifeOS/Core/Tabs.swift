@@ -1522,3 +1522,73 @@ struct GoalEditorSheet: View {
         }
     }
 }
+
+// MARK: - Personnalisateur de profil
+
+struct ProfileCustomizerSheet: View {
+    @Binding var hiddenRaw: String
+    @Environment(\.dismiss) private var dismiss
+
+    private var hiddenSections: Set<String> {
+        Set(hiddenRaw.split(separator: ",").map(String.init))
+    }
+
+    private func toggle(_ id: String) {
+        var current = Set(hiddenRaw.split(separator: ",").map(String.init))
+        if current.contains(id) { current.remove(id) } else { current.insert(id) }
+        hiddenRaw = current.joined(separator: ",")
+    }
+
+    private let sections: [(id: String, label: String, icon: String, color: Color)] = [
+        ("hero",     "Score du jour",         "star.fill",              Color(hex: 0x00D4B4)),
+        ("tasks",    "Tâches du jour",         "checklist",              Color(hex: 0x9B6CF1)),
+        ("briefing", "Rappel du briefing",     "sunrise.fill",           Color.orange),
+        ("stats",    "Statistiques",           "chart.bar.fill",         Color(hex: 0xF1746C)),
+        ("habits",   "Habitudes & protéines",  "checkmark.seal.fill",    Color(hex: 0x9B6CF1)),
+        ("actions",  "Actions rapides",        "bolt.fill",              Color(hex: 0x3CB2E0)),
+        ("wakeup",   "Réveil",                 "alarm.fill",             Color(hex: 0xE07B3C)),
+        ("tip",      "Citation du jour",       "quote.bubble.fill",      Color.accentColor),
+        ("settings", "Paramètres",             "slider.horizontal.3",    Color(hex: 0x8A93A8)),
+    ]
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(sections, id: \.id) { s in
+                        Button {
+                            withAnimation(.spring(duration: 0.2)) { toggle(s.id) }
+                            Haptics.tap()
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: s.icon)
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 30, height: 30)
+                                    .background(s.color, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                Text(s.label).foregroundStyle(.primary)
+                                Spacer()
+                                Image(systemName: hiddenSections.contains(s.id) ? "eye.slash" : "eye.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(hiddenSections.contains(s.id) ? Color.secondary.opacity(0.5) : Color.accentColor)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                } header: {
+                    Text("Sections du profil")
+                } footer: {
+                    Text("Appuie sur une section pour la masquer ou l'afficher dans ton profil.")
+                }
+            }
+            .navigationTitle("Personnaliser")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("OK") { dismiss() }
+                        .fontWeight(.semibold)
+                }
+            }
+        }
+    }
+}
