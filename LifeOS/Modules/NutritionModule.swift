@@ -11,7 +11,7 @@ struct NutritionHubView: View {
             ToolRow(icon: "timer", title: "Jeûne intermittent",
                     subtitle: "16:8, 18:6, OMAD — façon Zero", tint: .nutriTint) { FastingView() }
             ToolRow(icon: "chart.pie.fill", title: "Calories & macros",
-                    subtitle: "Journal du jour + objectifs", tint: .nutriTint) { MacroLogView() }
+                    subtitle: "Journal du jour + objectifs", tint: .nutriTint) { CalAIView() }
             ToolRow(icon: "refrigerator.fill", title: "Mon frigo",
                     subtitle: "Inventaire + idées repas", tint: .nutriTint) { FridgeView() }
             ToolRow(icon: "cart.fill", title: "Liste de courses",

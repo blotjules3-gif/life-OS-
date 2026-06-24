@@ -68,8 +68,8 @@ struct MainTabView: View {
     @ViewBuilder private var content: some View {
         switch tab {
         case .camera:     CameraView()
-        case .home:       HomeDashboardView()
-        case .categories: BubbleHomeView()
+        case .home:       ShortcutsHomeView()        // vue de ton pote
+        case .categories: HoneycombCategoriesView()  // vue de ton pote
         case .profile:    ProfileView()
         }
     }
@@ -277,7 +277,7 @@ struct FloatingTabBar: View {
 
 // MARK: - Tableau de bord du jour
 
-struct HomeDashboardView: View {
+struct HomeDashboardContent: View {
     @Query private var waters: [WaterEntry]
     @Query private var foods: [FoodEntry]
     @Query private var fasts: [FastingSession]
@@ -294,9 +294,8 @@ struct HomeDashboardView: View {
     private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
+        ScrollView {
+            VStack(spacing: 16) {
                     // Anneaux du jour
                     LazyVGrid(columns: cols, spacing: 12) {
                         MetricRing(value: Double(steps), goal: Double(stepGoal), label: "Pas", unit: "", color: Color(hex: 0xF1746C), icon: "figure.walk")
@@ -363,7 +362,6 @@ struct HomeDashboardView: View {
                     steps = await HealthService.shared.stepsToday()
                 }
             }
-        }
     }
 
     // MARK: Calculs
