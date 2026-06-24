@@ -394,6 +394,89 @@ struct ProfileView: View {
         }
     }
 
+    // MARK: Wakeup section
+
+    private var wakeupSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("Réveil & matin").font(.headline)
+                Spacer()
+                Button { showWakeupDetail = true } label: {
+                    Text("Personnaliser")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color(hex: 0xE07B3C))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color(hex: 0xE07B3C).opacity(0.1), in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+
+            HStack(spacing: 14) {
+                Image(systemName: "alarm.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 34, height: 34)
+                    .background(Color(hex: 0xE07B3C), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(String(format: "%02d:%02d", wakeupHour, wakeupMinute))
+                        .font(.system(size: 26, weight: .bold, design: .rounded).monospacedDigit())
+                    Text(wakeupEnabled ? "Réveil quotidien activé" : "Réveil désactivé")
+                        .font(.caption)
+                        .foregroundStyle(wakeupEnabled ? Color(hex: 0xE07B3C) : .secondary)
+                }
+                Spacer()
+                Toggle("", isOn: $wakeupEnabled)
+                    .tint(Color(hex: 0xE07B3C))
+                    .labelsHidden()
+                    .onChange(of: wakeupEnabled) { _, on in
+                        if on { scheduleWakeupAlarm() } else { NotificationManager.shared.cancel(id: "lifeos.wakeup") }
+                    }
+            }
+
+            Divider()
+
+            Button { showBriefing = true } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "sunrise.fill")
+                        .font(.system(size: 18))
+                        .foregroundStyle(.orange)
+                        .frame(width: 40, height: 40)
+                        .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Lancer ma journée")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text("Voir mon plan et mes priorités du matin")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.bold())
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(16)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private func scheduleWakeupAlarm() {
+        Task {
+            guard await NotificationManager.shared.requestAuthorization() else { return }
+            NotificationManager.shared.scheduleDaily(
+                id: "lifeos.wakeup",
+                title: "Bonjour \(name.isEmpty ? "" : name) !",
+                body: "C'est l'heure de lancer ta journée.",
+                hour: wakeupHour,
+                minute: wakeupMinute
+            )
+        }
+    }
+
     // MARK: User card
 
     private var userCard: some View {
