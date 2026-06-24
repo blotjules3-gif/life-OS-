@@ -1,40 +1,46 @@
 import SwiftUI
 
 // =====================================================================
-// MARK: - CONSTANTS  (tune everything here)
+// MARK: - CONSTANTS  (tout se règle ici)
 // =====================================================================
 
 private enum BC {
-    static let baseFrac: CGFloat = 0.32     // + dense : bulles plus grosses qui se chevauchent
+    static let baseFrac: CGFloat = 0.30          // baseDiameter = screenWidth * 0.30
 
-    // --- transparency (luminous jewel-tone glass, NOT washed-out ghosts) ---
-    static let coreOpacity: Double = 0.10    // centre : fenêtre claire (le fond traverse)
-    static let rimOpacity:  Double = 0.85    // bord : couleur riche et lumineuse
-    static let docsCore:    Double = 0.06    // Documents = nearly colourless, most transparent
-    static let docsRim:     Double = 0.34
-    static let fillerCore:  Double = 0.06
-    static let fillerRim:   Double = 0.40
+    // --- matériau (verre verni, couleur VIVE) ---
+    static let bodyOpacity:   Double = 0.92      // corps : couleur pleine et présente
+    static let docsOpacity:   Double = 0.42      // Documents = pâle translucide
+    static let fillerOpacity: Double = 0.26      // fillers = bulles de verre claires
+    static let litMix:        Double = 0.35      // côté éclairé : teinte + un peu de blanc
+    static let darkMix:       Double = 0.45      // côté ombre : teinte assombrie
+    static let glossOpacity:  Double = 0.95      // gros reflet blanc verni
 
-    // --- motion: gentle bob AROUND the anchor, going nowhere ---
-    static let bobAmount:       CGFloat = 4   // points
-    static let bobBigFactor:    CGFloat = 0.7 // big bubbles bob a touch less
-    static let bobFillerFactor: CGFloat = 1.4 // fillers bob a touch more
-    static let bigThreshold:    CGFloat = 1.10 // sizeMultiplier ≥ this → "big"
+    // --- glow néon (chaque bulle rayonne sa couleur) ---
+    static let glow1Op: Double = 0.70
+    static let glow1R:  CGFloat = 0.30
+    static let glow2Op: Double = 0.42
+    static let glow2R:  CGFloat = 0.58
+
+    // --- mouvement : léger bob autour de l'ancre, sans dérive ---
+    static let bobAmount:       CGFloat = 4
+    static let bobBigFactor:    CGFloat = 0.7
+    static let bobFillerFactor: CGFloat = 1.4
+    static let bigThreshold:    CGFloat = 1.10
 
     // --- interaction ---
-    static let tapThreshold: CGFloat = 10     // movement under this = tap, not drag
-    static let growPerTap:   CGFloat = 0.05   // most-used categories grow over time…
-    static let growMax:      CGFloat = 0.70   // …up to +70%
+    static let tapThreshold: CGFloat = 10
+    static let growPerTap:   CGFloat = 0.05
+    static let growMax:      CGFloat = 0.60
 }
 
 // =====================================================================
-// MARK: - Catégories : composition FIXE de bulles flottantes (zéro physique)
+// MARK: - Catégories : composition FIXE de bulles vernies (zéro physique)
 // =====================================================================
 
 struct HoneycombCategoriesView: View {
     @State private var path: [AppCategory] = []
     @AppStorage("bubbleWeights") private var weightsRaw = ""
-    @AppStorage("hiddenCats") private var hiddenRaw = ""   // catégories retirées (vide = tout affiché)
+    @AppStorage("hiddenCats") private var hiddenRaw = ""     // catégories retirées (vide = tout affiché)
     @State private var editing = false
     @State private var showAdd = false
 
@@ -65,7 +71,7 @@ struct HoneycombCategoriesView: View {
                     .contentShape(Rectangle())
                     .onTapGesture { exitEdit() }
                     .gesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in enterEdit() })
-                ForEach(bubbles) { b in     // sorted small→big ⇒ big drawn on top
+                ForEach(bubbles) { b in     // sorted small→big ⇒ gros dessinés au-dessus
                     bubbleView(b, t: t, c: c, maxD: maxD)
                 }
             }
@@ -84,13 +90,7 @@ struct HoneycombCategoriesView: View {
             onRemove: b.cat == nil ? nil : { remove(b.cat!) })
     }
 
-    private func enterEdit() {
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { editing = true }
-        Haptics.tap()
-    }
-    private func exitEdit() {
-        if editing { withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { editing = false } }
-    }
+    // MARK: édition
 
     private var editButton: some View {
         Button {
@@ -149,8 +149,15 @@ struct HoneycombCategoriesView: View {
         hiddenRaw = h.sorted().joined(separator: ",")
         if hiddenCats.isEmpty { showAdd = false }
     }
+    private func enterEdit() {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { editing = true }
+        Haptics.tap()
+    }
+    private func exitEdit() {
+        if editing { withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { editing = false } }
+    }
 
-    // MARK: persisted click weights  ("rawValue:count,…")
+    // MARK: poids de clics persistés ("rawValue:count,…")
     private func parseWeights() -> [String: Int] {
         var m: [String: Int] = [:]
         for pair in weightsRaw.split(separator: ",") {
@@ -167,14 +174,14 @@ struct HoneycombCategoriesView: View {
 }
 
 // =====================================================================
-// MARK: - One bubble : anchored, bobs in place, drag springs back
+// MARK: - Une bulle : ancrée, bob sur place, drag retour ressort
 // =====================================================================
 
 private struct FixedBubble: View {
     let spec: Layout.Spec
     let time: Double
     let bloomDelay: Double
-    let onTap: (() -> Void)?      // nil for fillers (non-interactive)
+    let onTap: (() -> Void)?
     var editing: Bool = false
     var onRemove: (() -> Void)? = nil
 
@@ -186,33 +193,20 @@ private struct FixedBubble: View {
     var body: some View {
         let r = spec.diameter / 2
 
-        // FIX 2 — gentle bob around the anchor (no velocity, no drift, always returns).
+        // bob doux autour de l'ancre (pas de vitesse, pas de dérive, revient toujours)
         let bob = BC.bobAmount * spec.bobFactor
         let bx = CGFloat(sin(time * 0.5  + spec.phase))       * bob
         let by = CGFloat(cos(time * 0.42 + spec.phase * 1.3)) * bob
         let dx = drag.width  + (dragging ? 0 : bx)
         let dy = drag.height + (dragging ? 0 : by)
-
         let wig: Double = (editing && spec.cat != nil) ? sin(time * 7 + spec.phase) * 2.0 : 0
 
         bubbleBody(r: r)
             .frame(width: spec.diameter, height: spec.diameter)
-            .rotationEffect(.degrees(wig))                                       // wiggle façon écran d'accueil iOS
-            .overlay(alignment: .topLeading) {
-                if editing, let onRemove {
-                    Button { onRemove() } label: {
-                        Image(systemName: "minus.circle.fill")
-                            .font(.system(size: max(20, r * 0.5)))
-                            .symbolRenderingMode(.palette)
-                            .foregroundStyle(.white, .red)
-                    }
-                    .buttonStyle(.plain)
-                    .offset(x: r * 0.22, y: r * 0.22)
-                    .transition(.scale.combined(with: .opacity))
-                }
-            }
-            .shadow(color: spec.tint.opacity(0.55), radius: r * 0.28)            // halo coloré qui rayonne
-            .shadow(color: .black.opacity(0.14), radius: r * 0.10, y: r * 0.10)  // ombre de contact
+            .rotationEffect(.degrees(wig))
+            .overlay(alignment: .topLeading) { removeBadge(r: r) }
+            .shadow(color: spec.tint.opacity(BC.glow1Op), radius: r * BC.glow1R)   // glow néon serré
+            .shadow(color: spec.tint.opacity(BC.glow2Op), radius: r * BC.glow2R)   // bloom large
             .scaleEffect(appeared ? 1 : 0.01)
             .opacity(appeared ? 1 : 0)
             .position(x: spec.anchor.x + dx, y: spec.anchor.y + dy)
@@ -226,72 +220,92 @@ private struct FixedBubble: View {
             }
     }
 
-    // The transparent soap-bubble layer stack.
+    @ViewBuilder private func removeBadge(r: CGFloat) -> some View {
+        if editing, let onRemove {
+            Button { onRemove() } label: {
+                Image(systemName: "minus.circle.fill")
+                    .font(.system(size: max(20, r * 0.5)))
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.white, .red)
+            }
+            .buttonStyle(.plain)
+            .offset(x: r * 0.22, y: r * 0.22)
+            .transition(.scale.combined(with: .opacity))
+        }
+    }
+
+    // Verre coloré verni : volume 3D + couleur vive + gros reflet blanc brillant.
     @ViewBuilder private func bubbleBody(r: CGFloat) -> some View {
         let t = spec.tint
+        let op = spec.bodyOp
+        let lit  = t.mix(with: .white, by: BC.litMix)
+        let dark = t.mix(with: .black, by: BC.darkMix)
+
         ZStack {
-            // A · VOLUME directionnel (haut-gauche CLAIR → bas-droite SOMBRE) = relief 3D
+            // A · VOLUME directionnel — cœur PLEINEMENT SATURÉ (clair haut-gauche → sombre bas-droite)
             Circle().fill(LinearGradient(
                 stops: [
-                    .init(color: t.mix(with: .white, by: 0.60).opacity(spec.rimOp),                  location: 0.00),
-                    .init(color: t.mix(with: .white, by: 0.18).opacity(spec.rimOp),                  location: 0.26),
-                    .init(color: t.opacity(spec.rimOp),                                              location: 0.52),
-                    .init(color: t.mix(with: .black, by: 0.40).opacity(spec.rimOp),                  location: 0.78),
-                    .init(color: t.mix(with: .black, by: 0.62).opacity(min(1, spec.rimOp + 0.10)),   location: 1.00)
+                    .init(color: lit.opacity(op),                  location: 0.00),
+                    .init(color: t.opacity(op),                    location: 0.45),
+                    .init(color: t.opacity(op),                    location: 0.62),
+                    .init(color: dark.opacity(min(1, op + 0.08)),  location: 1.00)
                 ],
                 startPoint: .topLeading, endPoint: .bottomTrailing))
 
-            // B · CŒUR lumineux interne (la bulle brille de l'intérieur), un peu au-dessus du centre
+            // B · cœur lumineux interne (lit from within)
             Circle().fill(RadialGradient(
-                colors: [t.mix(with: .white, by: 0.55).opacity(spec.rimOp * 0.85), .clear],
-                center: UnitPoint(x: 0.43, y: 0.36), startRadius: 0, endRadius: r * 0.72))
+                colors: [lit.opacity(op * 0.55), .clear],
+                center: UnitPoint(x: 0.42, y: 0.34), startRadius: 0, endRadius: r * 0.70))
 
-            // 3 · thin WHITE rim light (aucune couleur, AUCUN arc-en-ciel)
+            // C · GROS REFLET VERNI BLANC en haut (le look mouillé/brillant)
+            Ellipse()
+                .fill(LinearGradient(colors: [.white.opacity(BC.glossOpacity), .white.opacity(0.0)],
+                                     startPoint: .top, endPoint: .bottom))
+                .frame(width: r * 1.25, height: r * 0.95)
+                .offset(y: -r * 0.42)
+                .blur(radius: r * 0.04)
+
+            // D · hotspot blanc net
+            Ellipse().fill(.white)
+                .frame(width: r * 0.32, height: r * 0.20)
+                .rotationEffect(.degrees(-25))
+                .offset(x: -r * 0.30, y: -r * 0.46)
+                .blur(radius: r * 0.015)
+
+            // E · arc lumineux blanc sur le rebord haut
             Circle().strokeBorder(
-                LinearGradient(colors: [.white.opacity(0.6), .white.opacity(0.05)],
-                               startPoint: .topLeading, endPoint: .bottomTrailing),
-                lineWidth: max(0.8, r * 0.04))
+                LinearGradient(colors: [.white.opacity(0.9), .white.opacity(0.0)],
+                               startPoint: .top, endPoint: .center),
+                lineWidth: max(1, r * 0.05))
 
-            // 4 · reflets BLANCS nets répartis autour de la sphère (verre mouillé)
-            Ellipse().fill(.white.opacity(0.92))            // principal, haut-gauche
-                .frame(width: r * 0.42, height: r * 0.28)
-                .rotationEffect(.degrees(-32))
-                .offset(x: -r * 0.30, y: -r * 0.40)
-            Circle().fill(.white.opacity(0.85))             // haut-droite
-                .frame(width: r * 0.12, height: r * 0.12)
-                .offset(x: r * 0.30, y: -r * 0.26)
-            Circle().fill(.white.opacity(0.7))              // bas-gauche
-                .frame(width: r * 0.08, height: r * 0.08)
-                .offset(x: -r * 0.40, y: r * 0.30)
-            Circle().fill(.white.opacity(0.8))              // accroche bas-droite
-                .frame(width: r * 0.07, height: r * 0.07)
-                .offset(x: r * 0.34, y: r * 0.40)
-            Circle().fill(.white.opacity(0.9))              // minuscule près du principal
-                .frame(width: r * 0.05, height: r * 0.05)
-                .offset(x: -r * 0.14, y: -r * 0.52)
+            // F · accroche blanche douce sur le rebord bas (la lumière fait le tour)
+            Ellipse().fill(.white.opacity(0.5))
+                .frame(width: r * 0.55, height: r * 0.14)
+                .offset(y: r * 0.72)
+                .blur(radius: r * 0.06)
 
-            // 5 · glyph + label (main bubbles only)
+            // G · glyphe + label (bulles principales)
             if let icon = spec.icon {
                 VStack(spacing: r * 0.05) {
                     Image(systemName: icon)
-                        .font(.system(size: r * 0.46, weight: .semibold))
+                        .font(.system(size: r * 0.44, weight: .semibold))
                         .symbolEffect(.bounce, value: bounce)
                     if let label = spec.label, spec.showLabel, r > 30 {
                         Text(label)
-                            .font(.system(size: max(9, r * 0.20), weight: .semibold))
+                            .font(.system(size: max(9, r * 0.19), weight: .semibold))
                             .lineLimit(1).minimumScaleFactor(0.55)
                     }
                 }
                 .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.28), radius: 1.5, y: 1)
+                .shadow(color: .black.opacity(0.30), radius: 2, y: 1)
                 .padding(.horizontal, 4)
             }
         }
     }
 }
 
-/// Drag-to-rearrange (follows finger) + tap, only when interactive. On release the
-/// bubble springs back to its anchor; a move under the threshold counts as a tap.
+/// Drag-pour-réorganiser + tap, seulement quand interactif. Au relâché : retour ressort
+/// vers l'ancre ; un mouvement sous le seuil = tap.
 private struct DragIfNeeded: ViewModifier {
     let enabled: Bool
     let r: CGFloat
@@ -308,9 +322,9 @@ private struct DragIfNeeded: ViewModifier {
                     let moved = hypot(v.translation.width, v.translation.height)
                     if moved < BC.tapThreshold { onTap() }
                     withAnimation(.spring(response: 0.45, dampingFraction: 0.6)) {
-                        drag = .zero                 // snap back toward the anchor
+                        drag = .zero
                     } completion: {
-                        dragging = false             // resume bob from rest
+                        dragging = false
                     }
                 }
         ))
@@ -318,7 +332,7 @@ private struct DragIfNeeded: ViewModifier {
 }
 
 // =====================================================================
-// MARK: - Background : full-screen pastel mesh gradient
+// MARK: - Fond : dégradé pastel clair plein écran
 // =====================================================================
 
 struct BubbleMesh: View {
@@ -331,64 +345,65 @@ struct BubbleMesh: View {
                 SIMD2(0, 1),   SIMD2(0.5, 1),   SIMD2(1, 1)
             ],
             colors: [
-                .init(.sRGB, red: 0.80, green: 0.93, blue: 0.97), // TL pale cyan
-                .init(.sRGB, red: 0.95, green: 0.95, blue: 0.99), // top near-white
-                .init(.sRGB, red: 0.99, green: 0.92, blue: 0.94), // TR peach/lilac
-                .init(.sRGB, red: 0.93, green: 0.92, blue: 0.99), // L pale lilac
-                .init(.sRGB, red: 0.99, green: 0.99, blue: 1.00), // luminous centre
-                .init(.sRGB, red: 1.00, green: 0.95, blue: 0.92), // R pale peach
-                .init(.sRGB, red: 0.85, green: 0.91, blue: 0.99), // BL soft blue
-                .init(.sRGB, red: 0.88, green: 0.93, blue: 1.00), // bottom soft blue
-                .init(.sRGB, red: 0.93, green: 0.90, blue: 0.99)  // BR pale lilac
+                .init(.sRGB, red: 0.84, green: 0.92, blue: 0.99),
+                .init(.sRGB, red: 0.93, green: 0.95, blue: 1.00),
+                .init(.sRGB, red: 0.97, green: 0.93, blue: 0.97),
+                .init(.sRGB, red: 0.92, green: 0.94, blue: 1.00),
+                .init(.sRGB, red: 0.98, green: 0.99, blue: 1.00),
+                .init(.sRGB, red: 0.98, green: 0.95, blue: 0.96),
+                .init(.sRGB, red: 0.86, green: 0.92, blue: 1.00),
+                .init(.sRGB, red: 0.90, green: 0.94, blue: 1.00),
+                .init(.sRGB, red: 0.93, green: 0.92, blue: 0.99)
             ])
     }
 }
 
 // =====================================================================
-// MARK: - FIX 1 : hard-coded composition (anchors as fractions of screen)
+// MARK: - Composition codée en dur (grille serrée, Sport centré comme la réf)
 // =====================================================================
 
 private enum Layout {
 
     struct Spec: Identifiable {
         let id: Int
-        let cat: AppCategory?     // nil = filler
-        let anchor: CGPoint       // FIXED position in screen points
+        let cat: AppCategory?
+        let anchor: CGPoint
         let diameter: CGFloat
         let tint: Color
         let icon: String?
         let label: String?
-        let coreOp: Double
-        let rimOp: Double
+        let bodyOp: Double
         let bobFactor: CGFloat
         let phase: Double
-        let showLabel: Bool       // masqué si la bulle est recouverte par une plus grosse devant
+        let showLabel: Bool
     }
 
-    /// (category, x-fraction, y-fraction, sizeMultiplier) — origin top-left, y down.
+    /// (catégorie, x-fraction, y-fraction, multiplicateur de taille) — origine haut-gauche.
+    /// Grille 5×3 : colonne centrale plus grosse (Social, Sport héros, Bien-être, Voyage).
     private static let template: [(AppCategory, CGFloat, CGFloat, CGFloat)] = [
-        (.admin,        0.22, 0.14, 1.00),   // Documents (très transparent, incolore)
-        (.career,       0.50, 0.15, 0.95),   // Travail
-        (.social,       0.80, 0.19, 1.15),   // Social
-        (.finance,      0.16, 0.33, 0.85),   // Finance
-        (.mind,         0.46, 0.34, 1.10),   // Mental
-        (.looks,        0.77, 0.38, 1.10),   // Bien-être
-        (.invest,       0.13, 0.48, 0.75),   // Bourse (écartée de Sport/Finance)
-        (.learning,     0.90, 0.52, 0.78),   // Éducation
-        (.fitness,      0.36, 0.57, 1.34),   // Sport — HERO (un poil plus petit)
-        (.nutrition,    0.64, 0.58, 1.05),   // Alimentation
-        (.sleep,        0.87, 0.66, 0.92),   // Sommeil
-        (.productivity, 0.17, 0.71, 0.85),   // Tâches
-        (.travel,       0.42, 0.82, 1.10),   // Voyage
-        (.home,         0.66, 0.80, 0.85),   // Maison
-        (.mobility,     0.84, 0.85, 0.90)    // Transports
+        (.admin,        0.215, 0.160, 1.00),   // Documents
+        (.social,       0.500, 0.145, 1.20),   // Social (gros)
+        (.career,       0.785, 0.160, 1.02),   // Travail
+        (.finance,      0.200, 0.330, 1.00),   // Finance
+        (.fitness,      0.500, 0.350, 1.45),   // Sport — HÉROS centré
+        (.mind,         0.800, 0.330, 1.02),   // Mental
+        (.learning,     0.205, 0.500, 1.00),   // Éducation
+        (.looks,        0.500, 0.510, 1.10),   // Bien-être
+        (.nutrition,    0.795, 0.500, 1.05),   // Alimentation
+        (.productivity, 0.205, 0.665, 1.00),   // Tâches
+        (.travel,       0.500, 0.680, 1.15),   // Voyage (gros)
+        (.sleep,        0.795, 0.665, 1.02),   // Sommeil
+        (.invest,       0.215, 0.825, 0.82),   // Bourse (petite)
+        (.home,         0.470, 0.835, 1.00),   // Maison
+        (.mobility,     0.760, 0.825, 1.02)    // Transports
     ]
 
-    /// 6–8 sparse fillers in the gaps (x, y, sizeFractionOfBase).
+    /// Petits fillers blancs translucides dans les creux (x, y, fractionDeBase).
     private static let fillers: [(CGFloat, CGFloat, CGFloat)] = [
-        (0.55, 0.32, 0.22), (0.30, 0.50, 0.18), (0.70, 0.58, 0.27),
-        (0.50, 0.74, 0.20), (0.88, 0.78, 0.16), (0.27, 0.68, 0.24),
-        (0.62, 0.54, 0.15)
+        (0.345, 0.250, 0.26), (0.655, 0.245, 0.20),
+        (0.345, 0.430, 0.16), (0.660, 0.430, 0.24),
+        (0.350, 0.595, 0.18), (0.655, 0.590, 0.15),
+        (0.360, 0.760, 0.22), (0.640, 0.760, 0.16)
     ]
 
     static let allCats: [AppCategory] = template.map { $0.0 }
@@ -396,17 +411,15 @@ private enum Layout {
     static func build(in size: CGSize, weights: [String: Int], hidden: Set<String> = []) -> [Spec] {
         guard size.width > 0 else { return [] }
         let base = size.width * BC.baseFrac
-        let fillerPalette: [Color] = [.cyan, .mint, .pink, .purple, .blue, .teal, .indigo]
+        var out: [Spec] = []
+        var id = 0
 
-        // positions + diamètres des bulles principales (catégories non masquées)
+        // bulles principales (catégories non masquées)
         let active = template.filter { !hidden.contains($0.0.rawValue) }
         let mains: [(cat: AppCategory, center: CGPoint, dia: CGFloat, mult: CGFloat)] = active.map { (cat, fx, fy, mult) in
             let grown = mult * growth(weights[cat.rawValue] ?? 0)
             return (cat, CGPoint(x: fx * size.width, y: fy * size.height), base * grown, mult)
         }
-
-        var out: [Spec] = []
-        var id = 0
 
         for (i, m) in mains.enumerated() {
             // label masqué si le centre est recouvert par une bulle plus GROSSE
@@ -420,29 +433,28 @@ private enum Layout {
                 id: id, cat: m.cat,
                 anchor: m.center, diameter: m.dia,
                 tint: color(m.cat), icon: m.cat.icon, label: label(m.cat),
-                coreOp: isDocs ? BC.docsCore : BC.coreOpacity,
-                rimOp:  isDocs ? BC.docsRim  : BC.rimOpacity,
+                bodyOp: isDocs ? BC.docsOpacity : BC.bodyOpacity,
                 bobFactor: m.mult >= BC.bigThreshold ? BC.bobBigFactor : 1.0,
                 phase: Double(id) * 0.9,
                 showLabel: show))
             id += 1
         }
 
-        for (i, (fx, fy, frac)) in fillers.enumerated() {
+        for (fx, fy, frac) in fillers {
             out.append(Spec(
                 id: id, cat: nil,
                 anchor: CGPoint(x: fx * size.width, y: fy * size.height),
                 diameter: base * frac,
-                tint: fillerPalette[i % fillerPalette.count],
+                tint: .white,
                 icon: nil, label: nil,
-                coreOp: BC.fillerCore, rimOp: BC.fillerRim,
+                bodyOp: BC.fillerOpacity,
                 bobFactor: BC.bobFillerFactor,
                 phase: Double(id) * 0.9,
                 showLabel: false))
             id += 1
         }
 
-        // draw order: small first → big last (big on top)
+        // ordre de dessin : petites d'abord → grosses au-dessus
         return out.sorted { $0.diameter < $1.diameter }
     }
 
@@ -450,8 +462,25 @@ private enum Layout {
         1 + min(CGFloat(count) * BC.growPerTap, BC.growMax)
     }
 
+    /// Couleurs JEWEL TONES vives (comme la référence), pas les teintes système ternes.
     static func color(_ c: AppCategory) -> Color {
-        c == .admin ? Color(white: 0.78) : c.tint   // Documents = nearly colourless
+        switch c {
+        case .fitness:      return Color(red: 1.00, green: 0.20, blue: 0.22)   // rouge vif
+        case .social:       return Color(red: 1.00, green: 0.20, blue: 0.55)   // fuchsia
+        case .career:       return Color(red: 1.00, green: 0.72, blue: 0.24)   // ambre/or
+        case .finance:      return Color(red: 0.13, green: 0.52, blue: 1.00)   // bleu électrique
+        case .mind:         return Color(red: 0.66, green: 0.32, blue: 0.96)   // violet riche
+        case .looks:        return Color(red: 1.00, green: 0.54, blue: 0.10)   // orange vif
+        case .learning:     return Color(red: 1.00, green: 0.80, blue: 0.18)   // jaune/or
+        case .nutrition:    return Color(red: 0.28, green: 0.80, blue: 0.36)   // vert vif
+        case .sleep:        return Color(red: 0.56, green: 0.42, blue: 0.96)   // violet doux
+        case .productivity: return Color(red: 0.14, green: 0.78, blue: 0.74)   // teal
+        case .travel:       return Color(red: 0.20, green: 0.50, blue: 1.00)   // bleu électrique
+        case .home:         return Color(red: 0.24, green: 0.56, blue: 0.96)   // bleu
+        case .mobility:     return Color(red: 0.16, green: 0.74, blue: 0.78)   // teal
+        case .invest:       return Color(red: 0.18, green: 0.80, blue: 0.58)   // menthe
+        case .admin:        return Color(red: 0.74, green: 0.84, blue: 0.97)   // bleu pâle (verre)
+        }
     }
 
     static func label(_ c: AppCategory) -> String {
