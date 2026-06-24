@@ -12,9 +12,6 @@ struct LifeOSApp: App {
     @State private var loadingStatus = "Démarrage…"
     @AppStorage("onboardingDone") private var onboardingDone = false
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
-    @AppStorage("userName") private var userName = ""
-    @AppStorage("waterGoal") private var waterGoal = 2500
-    @AppStorage("kcalGoal") private var kcalGoal = 2200
     @State private var ready = false
 
     private var recommendedModules: [AppCategory] {
