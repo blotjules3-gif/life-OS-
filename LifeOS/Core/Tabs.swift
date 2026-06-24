@@ -518,6 +518,16 @@ struct DailyBriefingView: View {
 
 // MARK: - Profil utilisateur
 
+private struct ProfileTaskItem: Identifiable {
+    let id = UUID()
+    let icon: String
+    let title: String
+    let subtitle: String
+    let color: Color
+    let progress: Double
+    var done: Bool { progress >= 0.99 }
+}
+
 struct ProfileView: View {
     @AppStorage("userName") private var name = ""
     @AppStorage("stepGoal") private var stepGoal = 10000
