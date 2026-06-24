@@ -160,6 +160,13 @@ struct OnboardingView: View {
                             withAnimation(.spring(duration: 0.4)) { step = 4 }
                         }
                     case 4:
+                        OnboardingWakeTime(hour: $wakeHour, minute: $wakeMinute) {
+                            savedWakeupHour = wakeHour
+                            savedWakeupMinute = wakeMinute
+                            savedWakeupEnabled = true
+                            withAnimation(.spring(duration: 0.4)) { step = 5 }
+                        }
+                    case 5:
                         OnboardingResults(
                             name: savedName,
                             recommendations: recommendations,
