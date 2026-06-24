@@ -17,15 +17,15 @@ import SwiftUI
 
 struct BubbleStyle {
     /// Center translucency. LOWER = more see-through. (0.55 glassy ... 0.85 dense)
-    var coreAlpha: Double = 0.80        // dense & vif mais reste un peu translucide
+    var coreAlpha: Double = 0.90        // dense & saturé (réf), un soupçon de verre
     /// Color presence at the rim (Fresnel film). Higher = bolder edge color.
-    var rimAlpha: Double = 0.96
+    var rimAlpha: Double = 0.97
     /// Sharpness of the phong sparkle on the rim.
     var specStrength: Double = 1.0
     /// Outer colored bloom (neon glow of the bubble's own color).
-    var colorGlow: Double = 0.70        // glow néon plus fort
+    var colorGlow: Double = 0.50        // halo coloré subtil
     /// Outer soft white bloom.
-    var whiteGlow: Double = 0.26
+    var whiteGlow: Double = 0.10        // bloom blanc léger (évite le côté laiteux)
 }
 
 // MARK: - One bubble
