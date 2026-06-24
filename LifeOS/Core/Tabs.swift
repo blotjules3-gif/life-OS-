@@ -1467,7 +1467,7 @@ struct ProfileView: View {
                 }
             }
 
-            Divider()
+            Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1)
 
             Button { showBriefing = true } label: {
                 HStack(spacing: 10) {
