@@ -667,6 +667,12 @@ struct ProfileView: View {
                             .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.14), value: appeared)
                     }
 
+                    if !memories.isEmpty && !hiddenSections.contains("memories") {
+                        memoriesCard
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
+                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.18), value: appeared)
+                    }
+
                     if !hiddenSections.contains("habits") {
                         habitsProteinsRow
                             .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
