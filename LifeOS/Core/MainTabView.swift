@@ -67,7 +67,7 @@ struct MainTabView: View {
 
     @ViewBuilder private var content: some View {
         switch tab {
-        case .wakeup:     WakeUpView()
+        case .camera:     CameraView()
         case .home:       ShortcutsHomeView()
         case .categories: HoneycombCategoriesView()
         case .profile:    ProfileView()
