@@ -5,11 +5,11 @@ import Charts
 // MARK: - Onglets (chat retiré — input intégré dans la barre)
 
 enum AppTab: String, CaseIterable, Identifiable {
-    case camera, home, categories, profile
+    case wakeup, home, categories, profile
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .camera:     return "Photo"
+        case .wakeup:     return "Réveil"
         case .home:       return "Accueil"
         case .categories: return "Catégories"
         case .profile:    return "Profil"
@@ -17,7 +17,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     }
     var icon: String {
         switch self {
-        case .camera:     return "camera"
+        case .wakeup:     return "alarm"
         case .home:       return "house"
         case .categories: return "square.grid.2x2"
         case .profile:    return "person.crop.circle"
@@ -25,7 +25,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     }
     var iconFill: String {
         switch self {
-        case .camera:     return "camera.fill"
+        case .wakeup:     return "alarm.fill"
         case .home:       return "house.fill"
         case .categories: return "square.grid.2x2.fill"
         case .profile:    return "person.crop.circle.fill"
