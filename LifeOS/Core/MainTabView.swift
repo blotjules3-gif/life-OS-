@@ -37,6 +37,7 @@ enum AppTab: String, CaseIterable, Identifiable {
 
 struct MainTabView: View {
     @State private var tab: AppTab = .home
+    @State private var catPath: [AppCategory] = []
     @State private var chatInput = ""
     @State private var chatMessages: [ChatMessage] = [
         ChatMessage(fromUser: false, text: "Salut ! Je suis ton assistant LifeOS. Demande-moi par ex. « combien de calories aujourd'hui ? » ou « combien d'eau ? ».")
@@ -72,7 +73,14 @@ struct MainTabView: View {
         switch tab {
         case .wakeup:     WakeUpView()
         case .home:       ShortcutsHomeView()
-        case .categories: HoneycombCategoriesView()
+        case .categories:
+            NavigationStack(path: $catPath) {
+                BubbleCategoriesView(onSelect: { title in
+                    if let cat = AppCategory(bubbleTitle: title) { catPath.append(cat) }
+                })
+                .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(for: AppCategory.self) { $0.destination }
+            }
         case .profile:    ProfileView()
         }
     }

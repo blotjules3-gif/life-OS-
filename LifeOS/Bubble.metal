@@ -1,42 +1,105 @@
+//
+//  Bubble.metal
+//  Real soap-bubble shader. Used as a ShapeStyle fill on a SwiftUI Circle.
+//
+//  It paints, per pixel, a translucent tinted glass sphere with:
+//    - directional 3D volume (lit top-left, shadow bottom-right)
+//    - Fresnel film (rim more saturated + denser, like real soap)
+//    - a big soft glossy white highlight + a sharp hotspot (wet glass)
+//    - a phong sparkle on the rim
+//    - inner white rim glow + bottom light wrap
+//    - controlled alpha so the background shows through (real translucency)
+//
+//  Returns PREMULTIPLIED alpha (required by SwiftUI shaders).
+//
+
 #include <metal_stdlib>
-#include <SwiftUI/SwiftUI_Metal.h>
+#include <SwiftUI/SwiftUI.h>
 using namespace metal;
 
-// Sphère de gel/verre BRILLANTE et SATURÉE (comme le rendu 3D de la réf).
-// Corps coloré opaque + gros reflet haut + croissant lumineux en bas + bord net.
-[[ stitchable ]]
-half4 bubble(float2 position, float2 size, half4 tint, float2 light) {
-    float2 p = (position / size) * 2.0 - 1.0;        // -1..1, y vers le bas
-    float r = length(p);
-    if (r > 1.0) { return half4(0.0h); }
+[[stitchable]] half4 bubble(
+    float2 pos,          // pixel position in the shape's local space (0..size)
+    float2 size,         // bubble bounding box (square)
+    half4  tint,         // jewel-tone base color
+    float  coreAlpha,    // center translucency  (lower = more see-through)
+    float  rimAlpha,     // edge density / color presence at the rim
+    float  specStrength, // sharpness of the phong sparkle
+    float  time,         // seconds, for a subtle living shimmer
+    float  seed          // per-bubble random so they shimmer out of sync
+) {
+    // Normalized coords, center origin, range about -1..1
+    float2 uv = (pos / size) * 2.0 - 1.0;
+    float  r  = length(uv);
 
-    float z = sqrt(max(0.0, 1.0 - r * r));
-    float3 N = normalize(float3(p, z));
-    float3 L = normalize(float3(light, 0.8));
-    float3 V = float3(0.0, 0.0, 1.0);
-    float3 Hh = normalize(L + V);
+    // The Circle shape already clips + anti-aliases the outer edge,
+    // so we only need to guard against NaN past the rim.
+    if (r > 1.0) { return half4(0.0); }
 
-    float diff  = clamp(dot(N, L) * 0.55 + 0.52, 0.0, 1.0);  // éclairage enveloppant (haut clair)
-    float spec  = pow(max(0.0, dot(N, Hh)), 200.0);          // hotspot net
-    float broad = pow(max(0.0, dot(N, Hh)), 9.0) * 0.5;      // grand reflet doux
-    float fres  = pow(1.0 - z, 2.6);                          // bord (Fresnel)
+    // Fake hemisphere normal (gives the sphere its volume)
+    float  z      = sqrt(max(0.0, 1.0 - r * r));
+    float3 normal = normalize(float3(uv, z));
+    float3 viewDir = float3(0.0, 0.0, 1.0);
 
-    // Croissant lumineux EN BAS : la lumière traverse le verre et ressort en bas
-    float3 Lb = normalize(float3(0.05, 1.0, -0.25));
-    float back = pow(max(0.0, dot(N, Lb)), 3.0) * smoothstep(0.45, 1.0, r) * 1.4;
+    // Main light: top-left, slightly toward the viewer
+    float3 lightDir = normalize(float3(-0.5, -0.6, 0.85));
 
-    // Corps saturé avec volume 3D
-    half3 body = tint.rgb * half(0.60 + 0.65 * diff);
-    // bord éclairci (verre)
-    half3 rimc = mix(tint.rgb, half3(1.0h), 0.62h);
-    half3 col  = mix(body, rimc, half(fres * 0.55));
-    // reflets blancs
-    col += half3(half(spec + broad));
-    // croissant bas (teinte très claire/blanche)
-    col += mix(tint.rgb, half3(1.0h), 0.75h) * half(back);
+    // Directional shading so the bottom-right falls into shadow (3D volume)
+    float ndl     = dot(normal, lightDir);
+    float diffuse = ndl * 0.5 + 0.5;              // 0 = shadow side, 1 = lit side
 
-    // Saturé/opaque (un poil de translucidité au tout bord)
-    float a = clamp(0.92 + fres * 0.08, 0.0, 1.0);
-    half af = half(a);
-    return half4(col * af, af);
+    // Fresnel: the rim of a soap bubble is brighter and denser
+    float fres = pow(1.0 - z, 2.4);
+
+    // ---- Body color: keep the jewel tone vivid, shade for volume ----
+    float3 base    = float3(tint.rgb);
+    float3 litCol  = mix(base, float3(1.0), 0.32);   // lit side, a touch brighter
+    float3 shadow  = base * 0.52;                     // shadow side, still colorful
+    float3 body    = mix(shadow, litCol, diffuse);
+    body           = mix(body, base, 0.30);           // pull saturation back to the core
+
+    // Subtle inner luminosity so it glows from within
+    float centerGlow = smoothstep(0.0, 0.85, z) * 0.10;
+    body = mix(body, litCol, centerGlow);
+
+    float3 white = float3(1.0);
+
+    // ---- Glossy highlights (the wet-glass look) ----
+    // A slow shimmer so the highlight feels alive
+    float2 drift = float2(sin(time * 0.5 + seed) * 0.02,
+                          cos(time * 0.4 + seed) * 0.02);
+
+    // Big soft primary gloss, upper-left
+    float  primaryD    = length(uv - (float2(-0.30, -0.42) + drift));
+    float  primaryGloss = smoothstep(0.62, 0.0, primaryD) * 0.85;
+
+    // Sharp small hotspot near it
+    float  hotD  = length(uv - (float2(-0.16, -0.26) + drift));
+    float  hotspot = smoothstep(0.13, 0.0, hotD);
+
+    // Phong sparkle on the curved rim
+    float3 halfDir = normalize(lightDir + viewDir);
+    float  phong   = pow(max(0.0, dot(normal, halfDir)), 80.0) * specStrength;
+
+    // Light wrapping around the bottom rim
+    float bottomWrap = smoothstep(0.80, 1.0, r) * smoothstep(0.0, 1.0, uv.y) * 0.45;
+
+    // Inner white rim glow (glows white from the border inward)
+    float innerGlow = smoothstep(0.52, 0.96, r) * (1.0 - smoothstep(0.97, 1.0, r));
+
+    // ---- Compose color ----
+    float3 col = body;
+    col += white * (primaryGloss + hotspot + phong);
+    col += white * bottomWrap;
+    col  = mix(col, white, innerGlow * 0.32);
+    col  = mix(col, white, fres * 0.22);
+
+    // ---- Alpha: translucent core, denser Fresnel rim ----
+    float alpha = mix(coreAlpha, rimAlpha, fres);
+    // light features stay opaque so they read as real light, not tinted glass
+    alpha = max(alpha, (primaryGloss + hotspot + phong) * 0.9);
+    alpha = max(alpha, innerGlow * rimAlpha);
+    alpha = max(alpha, bottomWrap * 0.8);
+
+    // Premultiplied output
+    return half4(half3(col) * half(alpha), half(alpha));
 }
