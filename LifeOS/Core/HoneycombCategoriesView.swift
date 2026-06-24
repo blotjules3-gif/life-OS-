@@ -28,7 +28,7 @@ struct HoneycombCategoriesView: View {
         NavigationStack(path: $path) {
             GeometryReader { geo in
                 let focal = geo.size.width * Honey.FOCAL_RATIO
-                let slots = layout(in: geo.size, focal: focal)
+                let slots = layout(in: geo.size, safe: geo.safeAreaInsets, focal: focal)
                 ZStack {
                     meshBackground.ignoresSafeArea()
                     ForEach(slots) { s in
@@ -77,19 +77,20 @@ struct HoneycombCategoriesView: View {
         let isCenter: Bool
     }
 
-    private func layout(in size: CGSize, focal: CGFloat) -> [Slot] {
+    private func layout(in size: CGSize, safe: EdgeInsets, focal: CGFloat) -> [Slot] {
         let stepX = Honey.D + Honey.G
-        // span entre le centre de la 1re et de la dernière rangée (on retranche un diamètre)
-        let usableH = max(1, size.height - Honey.TOP_PAD - Honey.BOTTOM_PAD - Honey.D)
-        let stepY = usableH / CGFloat(Honey.ROWS - 1)
+        // zone réellement utilisable : on respecte la safe area (qui inclut la barre flottante)
+        let topY = safe.top + Honey.TOP_PAD + Honey.D / 2
+        let bottomY = size.height - safe.bottom - Honey.BOTTOM_PAD - Honey.D / 2
+        let stepY = (bottomY - topY) / CGFloat(Honey.ROWS - 1)
         let cx = size.width / 2
-        let screenCenter = CGPoint(x: size.width / 2, y: size.height / 2)
+        let screenCenter = CGPoint(x: cx, y: (topY + bottomY) / 2)
 
         var positions: [CGPoint] = []
         for row in 0..<Honey.ROWS {
             for col in 0..<Honey.COLS {
                 let x = cx + (CGFloat(col) - 1) * stepX + (row % 2 == 1 ? stepX / 2 : 0) - stepX / 4
-                let y = Honey.TOP_PAD + Honey.D / 2 + CGFloat(row) * stepY
+                let y = topY + CGFloat(row) * stepY
                 positions.append(CGPoint(x: x, y: y))
             }
         }
