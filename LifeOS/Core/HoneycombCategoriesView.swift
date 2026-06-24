@@ -1,26 +1,18 @@
 import SwiftUI
 import UIKit
 
-// MARK: - Constantes (à régler)
+// MARK: - Constantes
 
 private enum Bub {
-    static let baseR: CGFloat = 46
-    static let MIN_R: CGFloat = 34
-    static let MAX_R: CGFloat = 92
+    static let MIN_R: CGFloat = 30
+    static let MAX_R: CGFloat = 94
     static let GROWTH_K: CGFloat = 0.6
-    static let PAD: CGFloat = 6
-    static let CENTER_PULL: CGFloat = 0.004   // gravité très douce vers le centre
+    static let PAD: CGFloat = 5
+    static let CENTER_PULL: CGFloat = 0.004
     static let FLOAT_AMP: Double = 5
-    static let FS: Double = 0.6               // petit + lent = flottement subtil
-    static let TAP_THRESHOLD: CGFloat = 10    // < 10pt de déplacement = tap
-    static let FILLERS = 8
-    // Translucidité (régler ici) — bas = plus transparent
-    static let FILL_CENTER_OPACITY: Double = 0.10
-    static let FILL_MID_OPACITY: Double = 0.28
-    static let FILL_RIM_OPACITY: Double = 0.55
-    static let IRIDESCENCE_OPACITY: Double = 0.40
-    static let HALO_OPACITY: Double = 0.50
-    static let HALO_RADIUS_RATIO: CGFloat = 0.22
+    static let FS: Double = 0.6
+    static let TAP_THRESHOLD: CGFloat = 10
+    static let FILLERS = 9
 }
 
 // MARK: - Vue principale
@@ -39,9 +31,9 @@ struct HoneycombCategoriesView: View {
         NavigationStack(path: $path) {
             GeometryReader { geo in
                 let bounds = CGRect(
-                    x: 10, y: geo.safeAreaInsets.top + 6,
-                    width: geo.size.width - 20,
-                    height: geo.size.height - geo.safeAreaInsets.top - geo.safeAreaInsets.bottom - 12
+                    x: 8, y: geo.safeAreaInsets.top + 4,
+                    width: geo.size.width - 16,
+                    height: geo.size.height - geo.safeAreaInsets.top - geo.safeAreaInsets.bottom - 8
                 )
                 ZStack {
                     BubbleMesh().ignoresSafeArea()
@@ -76,14 +68,10 @@ struct HoneycombCategoriesView: View {
                 let travel = hypot(v.translation.width, v.translation.height)
                 sim.draggingID = nil
                 if travel < Bub.TAP_THRESHOLD, let cat = b.cat {
-                    bumpWeight(cat)
-                    Haptics.soft()
-                    path.append(cat)
+                    bumpWeight(cat); Haptics.soft(); path.append(cat)
                 }
             }
     }
-
-    // MARK: Usage persistant
 
     private func parseWeights() -> [String: Int] {
         var m: [String: Int] = [:]
@@ -94,14 +82,13 @@ struct HoneycombCategoriesView: View {
         return m
     }
     private func bumpWeight(_ cat: AppCategory) {
-        var m = parseWeights()
-        m[cat.rawValue, default: 0] += 1
+        var m = parseWeights(); m[cat.rawValue, default: 0] += 1
         weightsRaw = m.map { "\($0):\($1)" }.joined(separator: ",")
         sim.setWeight(id: cat.rawValue, weight: m[cat.rawValue]!)
     }
 }
 
-// MARK: - Fond mesh pastel
+// MARK: - Fond mesh (centre presque blanc, coins pastel très pâles)
 
 struct BubbleMesh: View {
     var body: some View {
@@ -113,21 +100,21 @@ struct BubbleMesh: View {
                 SIMD2(0, 1), SIMD2(0.5, 1), SIMD2(1, 1)
             ],
             colors: [
-                .init(.sRGB, red: 0.82, green: 0.90, blue: 1.00),
-                .init(.sRGB, red: 0.88, green: 0.95, blue: 1.00),
-                .init(.sRGB, red: 0.92, green: 0.88, blue: 1.00),
-                .init(.sRGB, red: 0.86, green: 0.98, blue: 0.95),
-                .init(.sRGB, red: 0.98, green: 0.97, blue: 1.00),
-                .init(.sRGB, red: 1.00, green: 0.93, blue: 0.90),
-                .init(.sRGB, red: 0.90, green: 0.95, blue: 1.00),
-                .init(.sRGB, red: 0.94, green: 0.98, blue: 0.96),
-                .init(.sRGB, red: 0.95, green: 0.90, blue: 1.00)
+                .init(.sRGB, red: 0.85, green: 0.95, blue: 0.99),   // cyan très pâle (haut-gauche)
+                .init(.sRGB, red: 0.95, green: 0.97, blue: 1.00),
+                .init(.sRGB, red: 0.96, green: 0.92, blue: 0.99),   // lilas/rose pâle (haut-droite)
+                .init(.sRGB, red: 0.93, green: 0.98, blue: 1.00),
+                .init(.sRGB, red: 0.99, green: 0.99, blue: 1.00),   // centre presque blanc
+                .init(.sRGB, red: 0.98, green: 0.95, blue: 1.00),
+                .init(.sRGB, red: 0.90, green: 0.95, blue: 1.00),   // bleu pâle (bas)
+                .init(.sRGB, red: 0.92, green: 0.96, blue: 1.00),
+                .init(.sRGB, red: 0.93, green: 0.94, blue: 1.00)
             ]
         )
     }
 }
 
-// MARK: - Bulle de savon TRANSLUCIDE (on voit le fond à travers)
+// MARK: - Bulle de savon (anatomie 11 couches)
 
 struct GelBubble: View {
     let b: BubbleSim.B
@@ -135,48 +122,35 @@ struct GelBubble: View {
     @State private var bump = 0
 
     private var D: CGFloat { b.radius * 2 }
-    private var R: CGFloat { b.radius }
+
+    // opacités du corps selon le type
+    private var stops: [Gradient.Stop] {
+        let c = b.color
+        if b.isFiller {
+            return [.init(color: c.opacity(0.12), location: 0), .init(color: c.opacity(0.16), location: 0.6),
+                    .init(color: c.opacity(0.28), location: 1)]
+        }
+        if b.cat == .admin {   // Documents : quasi incolore mais visible
+            return [.init(color: c.opacity(0.06), location: 0), .init(color: c.opacity(0.16), location: 0.45),
+                    .init(color: c.opacity(0.30), location: 0.80), .init(color: c.opacity(0.45), location: 1)]
+        }
+        // saturé au bord, plus clair au centre (garde la transparence mais la couleur ressort)
+        return [.init(color: c.opacity(0.22), location: 0), .init(color: c.opacity(0.48), location: 0.45),
+                .init(color: c.opacity(0.70), location: 0.80), .init(color: c.opacity(0.88), location: 1)]
+    }
+    private var iridOpacity: Double { b.cat == .admin ? 0.6 : (b.isFiller ? 0.45 : 0.4) }
 
     var body: some View {
         let c = b.color
-        // les bulles de remplissage sont encore plus transparentes
-        let f: Double = b.isFiller ? 0.6 : 1.0
-
         ZStack {
-            // halo coloré derrière (glow sur le fond, comme la réf)
-            Circle().stroke(c, lineWidth: R * 0.16)
-                .opacity((Bub.HALO_OPACITY * 0.55) * f)
-                .blur(radius: R * 0.18)
-
-            // BULLE = fragment shader Metal (éclairage sphérique + Fresnel + irisation + spéculaire)
-            Circle()
-                .fill(ShaderLibrary.bubble(
-                    .float2(Float(D), Float(D)),
-                    .color(c.opacity(f)),
-                    .float2(-0.45, -0.55)        // direction de lumière : haut-gauche
-                ))
-        }
-        .overlay {
-            // 6+7. glyphe + label (bulles principales uniquement)
-            if !b.isFiller, let icon = b.icon {
-                VStack(spacing: D * 0.02) {
-                    Image(systemName: icon)
-                        .font(.system(size: D * 0.36, weight: .semibold))
-                        .symbolEffect(.bounce, value: bump)
-                        .shadow(color: .black.opacity(0.22), radius: 2, y: 1)
-                    if let label = b.label, D > 70 {
-                        Text(label)
-                            .font(.system(size: D * 0.13, weight: .semibold))
-                            .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
-                            .lineLimit(1).minimumScaleFactor(0.6)
-                    }
-                }
-                .foregroundStyle(.white)
-            }
+            clippedBody
+            rimLayers
+            speculars
         }
         .frame(width: D, height: D)
-        .shadow(color: c.opacity(Bub.HALO_OPACITY), radius: R * Bub.HALO_RADIUS_RATIO)  // halo coloré
-        .shadow(color: .black.opacity(0.08), radius: 5, y: 4)                            // contact
+        .overlay { glyphLabel }
+        // Couche 0 : halo coloré qui bave sur le fond (centre transparent préservé)
+        .shadow(color: c.opacity(0.5), radius: D * 0.22)
         .scaleEffect(appeared ? 1 : 0.01)
         .opacity(appeared ? 1 : 0)
         .onAppear {
@@ -184,9 +158,89 @@ struct GelBubble: View {
         }
         .onChange(of: b.weight) { _, _ in bump += 1 }
     }
+
+    // Couches 1,2,3,7,8 (clippées au cercle)
+    private var clippedBody: some View {
+        let c = b.color
+        return ZStack {
+            // 1. corps transparent teinté (centre clair, bord saturé ≤ 0.58)
+            Circle().fill(RadialGradient(gradient: Gradient(stops: stops),
+                                         center: UnitPoint(x: 0.38, y: 0.32),
+                                         startRadius: 0, endRadius: D * 0.75))
+            // 2. glow de transmission (bas-droite, opposé au reflet)
+            Ellipse().fill(RadialGradient(colors: [.white.opacity(0.16), .clear],
+                                          center: .center, startRadius: 0, endRadius: D * 0.25))
+                .frame(width: D * 0.5, height: D * 0.5).blur(radius: D * 0.15)
+                .offset(x: D * 0.12, y: D * 0.24)
+            // 3. croissant d'ombre interne (bas-droite, volume)
+            Circle().trim(from: 0.04, to: 0.22)
+                .stroke(c.brightnessAdjusted(-0.35).opacity(0.15),
+                        style: StrokeStyle(lineWidth: D * 0.12, lineCap: .round))
+                .blur(radius: D * 0.03)
+            // 7. reflet spéculaire principal (doux mais lisible)
+            Ellipse().fill(RadialGradient(colors: [.white.opacity(0.9), .clear],
+                                          center: .center, startRadius: 0, endRadius: D * 0.17))
+                .frame(width: D * 0.34, height: D * 0.26).blur(radius: D * 0.04)
+                .offset(x: -D * 0.16, y: -D * 0.22)
+            // 8. points spéculaires nets (verre mouillé)
+            Circle().fill(.white).opacity(0.95).frame(width: D * 0.06, height: D * 0.06)
+                .offset(x: -D * 0.04, y: -D * 0.28)
+            Circle().fill(.white).opacity(0.85).frame(width: D * 0.04, height: D * 0.04)
+                .offset(x: -D * 0.23, y: -D * 0.10)
+            Circle().fill(.white).opacity(0.7).frame(width: D * 0.025, height: D * 0.025)
+                .offset(x: -D * 0.10, y: -D * 0.32)
+        }
+        .clipShape(Circle())
+    }
+
+    // Couches 4,5,6 (rebords)
+    private var rimLayers: some View {
+        ZStack {
+            // 4. rebord irisé (rainbow savon)
+            Circle().strokeBorder(
+                AngularGradient(colors: [Color(hue: 0.92, saturation: 0.7, brightness: 1),
+                                         .cyan, .yellow, .mint, .purple,
+                                         Color(hue: 0.92, saturation: 0.7, brightness: 1)],
+                                center: .center),
+                lineWidth: D * 0.015)
+                .opacity(iridOpacity).blur(radius: 0.5)
+            // 5. catch lumineux du rebord haut-gauche (glint net)
+            Circle().trim(from: 0.55, to: 0.72)
+                .stroke(LinearGradient(colors: [.white.opacity(0.9), .white.opacity(0.0)],
+                                       startPoint: .topTrailing, endPoint: .bottomLeading),
+                        style: StrokeStyle(lineWidth: D * 0.02, lineCap: .round))
+                .opacity(0.85)
+            // 6. catch faible du rebord bas-droit
+            Circle().trim(from: 0.05, to: 0.18)
+                .stroke(.white, style: StrokeStyle(lineWidth: D * 0.012, lineCap: .round))
+                .opacity(0.4)
+        }
+    }
+
+    @ViewBuilder private var speculars: some View { EmptyView() }
+
+    // Couches 9,10
+    @ViewBuilder private var glyphLabel: some View {
+        if !b.isFiller, let icon = b.icon {
+            VStack(spacing: D * 0.02) {
+                Image(systemName: icon)
+                    .font(.system(size: D * 0.40, weight: .semibold))
+                    .symbolEffect(.bounce, value: bump)
+                    .shadow(color: .black.opacity(0.3), radius: D * 0.02)
+                if let label = b.label, D > 64 {
+                    Text(label)
+                        .font(.system(size: D * 0.13, weight: .semibold))
+                        .shadow(color: .black.opacity(0.4), radius: D * 0.02)
+                        .lineLimit(1).minimumScaleFactor(0.6)
+                }
+            }
+            .foregroundStyle(.white)
+            .offset(y: -D * 0.02)
+        }
+    }
 }
 
-// MARK: - Simulation physique (classe simple : pilotée par TimelineView)
+// MARK: - Simulation physique
 
 final class BubbleSim {
     struct B: Identifiable {
@@ -212,7 +266,6 @@ final class BubbleSim {
     var dragTarget: CGPoint = .zero
     private var started = false
 
-    /// Ensure + tick + tri (gros au-dessus), renvoyé pour le rendu.
     func frame(t: TimeInterval, bounds: CGRect, weights: [String: Int], mains: [AppCategory]) -> [B] {
         self.bounds = bounds
         ensure(weights: weights, mains: mains)
@@ -225,13 +278,11 @@ final class BubbleSim {
         bubbles[i].weight = weight
         bubbles[i].targetRadius = radius(for: bubbles[i].seedR, weight: weight)
     }
-
     private func radius(for seed: CGFloat, weight: Int) -> CGFloat {
         min(Bub.MAX_R, max(Bub.MIN_R, seed * sqrt(1 + CGFloat(weight) * Bub.GROWTH_K)))
     }
 
     private func ensure(weights: [String: Int], mains: [AppCategory]) {
-        // n'initialise que quand le layout est valide (sinon random(in:) plante)
         guard !started, bounds.width > 120, bounds.height > 200 else { return }
         started = true
         let cx = bounds.midX, cy = bounds.midY
@@ -251,11 +302,11 @@ final class BubbleSim {
                          radius: r, targetRadius: r, weight: w, phase: .random(in: 0...6.28),
                          appearDelay: Double(d / max(bounds.width, bounds.height)) * 0.5, seedR: seed))
         }
-        let palette: [Color] = [.pink, .blue, .green, .orange, .purple, .mint, .cyan, .yellow]
+        let palette: [Color] = [.pink, .blue, .green, .orange, .purple, .mint, .cyan, .yellow, .teal]
         for k in 0..<Bub.FILLERS {
-            let x = CGFloat.random(in: bounds.minX + 20...bounds.maxX - 20)
-            let y = CGFloat.random(in: bounds.minY + 20...bounds.maxY - 20)
-            let r = CGFloat.random(in: 9...20)
+            let x = CGFloat.random(in: bounds.minX + 24...bounds.maxX - 24)
+            let y = CGFloat.random(in: bounds.minY + 24...bounds.maxY - 24)
+            let r = CGFloat.random(in: 14...28)
             arr.append(B(id: "filler\(k)", color: palette.randomElement()!, icon: nil, label: nil,
                          isFiller: true, cat: nil, anchor: CGPoint(x: x, y: y), pos: CGPoint(x: x, y: y),
                          radius: r, targetRadius: r, weight: 0, phase: .random(in: 0...6.28),
@@ -268,14 +319,11 @@ final class BubbleSim {
         guard started else { return }
         let cx = bounds.midX, cy = bounds.midY
         for i in bubbles.indices {
-            // croissance douce du rayon
             bubbles[i].radius += (bubbles[i].targetRadius - bubbles[i].radius) * 0.12
             if bubbles[i].id == draggingID { bubbles[i].anchor = dragTarget; continue }
-            // gravité très douce vers le centre
             bubbles[i].anchor.x += (cx - bubbles[i].anchor.x) * Bub.CENTER_PULL
             bubbles[i].anchor.y += (cy - bubbles[i].anchor.y) * Bub.CENTER_PULL
         }
-        // répulsion (packing organique, jamais de fusion)
         for _ in 0..<2 {
             for a in bubbles.indices {
                 for b in bubbles.indices where b > a {
@@ -292,7 +340,6 @@ final class BubbleSim {
                 }
             }
         }
-        // clamp + flottement subtil
         for i in bubbles.indices {
             let r = bubbles[i].radius
             bubbles[i].anchor.x = min(max(bubbles[i].anchor.x, bounds.minX + r), bounds.maxX - r)
@@ -303,40 +350,48 @@ final class BubbleSim {
         }
     }
 
-    // MARK: Données catégories
-
+    // Couleurs système Apple (mapping de la référence)
     static func color(_ c: AppCategory) -> Color {
         switch c {
-        case .fitness: return .red;        case .looks: return .orange
-        case .productivity: return .teal;  case .sleep: return .indigo
-        case .nutrition: return .green;    case .finance: return .blue
-        case .mobility: return .cyan;      case .travel: return .blue
-        case .career: return .brown;       case .home: return .blue
-        case .social: return .pink;        case .invest: return .mint
-        case .learning: return .yellow;    case .mind: return .purple
-        case .admin: return .gray
+        case .fitness: return .red
+        case .mind: return .purple
+        case .social: return .pink
+        case .looks: return .orange
+        case .finance: return .blue
+        case .travel: return .blue
+        case .nutrition: return .green
+        case .sleep: return .indigo
+        case .learning: return .yellow
+        case .home: return .blue
+        case .mobility: return .teal
+        case .productivity: return .teal
+        case .career: return .brown
+        case .invest: return .mint
+        case .admin: return Color(white: 0.7)   // Documents : gris très pâle
         }
     }
     static func label(_ c: AppCategory) -> String {
         switch c {
         case .sleep: return "Sommeil"; case .nutrition: return "Alimentation"; case .fitness: return "Sport"
-        case .looks: return "Beauté"; case .mind: return "Mental"; case .productivity: return "Tâches"
+        case .looks: return "Bien-être"; case .mind: return "Mental"; case .productivity: return "Tâches"
         case .finance: return "Finance"; case .invest: return "Bourse"; case .career: return "Travail"
         case .learning: return "Éducation"; case .home: return "Maison"; case .mobility: return "Transports"
         case .social: return "Social"; case .admin: return "Documents"; case .travel: return "Voyage"
         }
     }
+    // Hiérarchie de taille (Sport = hero MAX)
     static func seed(_ c: AppCategory) -> CGFloat {
         switch c {
-        case .fitness: return 66; case .social: return 58; case .nutrition: return 54; case .mind: return 54
-        case .looks: return 52; case .travel: return 52; case .finance: return 50; case .productivity: return 50
-        case .sleep: return 50; case .career: return 48; case .mobility: return 48; case .learning: return 46
-        case .home: return 46; case .admin: return 44; case .invest: return 42
+        case .fitness: return 94
+        case .social: return 80; case .mind: return 78; case .looks: return 78; case .travel: return 76
+        case .nutrition: return 62; case .finance: return 60; case .sleep: return 60; case .home: return 58
+        case .mobility: return 58; case .productivity: return 58; case .learning: return 56
+        case .career: return 58; case .admin: return 58; case .invest: return 50
         }
     }
 }
 
-// MARK: - Ajustement de luminosité
+// MARK: - Ajustement luminosité
 
 extension Color {
     func brightnessAdjusted(_ delta: CGFloat) -> Color {
