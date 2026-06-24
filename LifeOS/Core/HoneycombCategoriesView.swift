@@ -8,8 +8,8 @@ private enum BC {
     static let baseFrac: CGFloat = 0.30          // baseDiameter = screenWidth * 0.30
 
     // --- TRANSPARENCE : bulle de savon ~70% transparente (RÈGLE ICI) ---
-    static let coreOpacity: Double = 0.40        // centre : transparent (le fond traverse) mais coloré
-    static let rimOpacity:  Double = 0.72        // bord : film de savon, couleur bien présente
+    static let coreOpacity: Double = 0.35        // centre : ~70% transparent (le fond traverse)
+    static let rimOpacity:  Double = 0.60        // bord : film de savon (max ~0.6 = spec réf)
     static let docsCore:    Double = 0.12        // Documents = quasi incolore
     static let docsRim:     Double = 0.32
     static let fillerCore:  Double = 0.05        // micro-bulles = verre clair
