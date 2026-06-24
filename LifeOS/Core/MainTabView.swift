@@ -158,7 +158,7 @@ struct ChatHistorySheet: View {
     }
 }
 
-// MARK: - Barre flottante style pilule sombre
+// MARK: - Barre flottante : [2 onglets] [chat direct] [2 onglets]
 
 struct FloatingTabBar: View {
     @Binding var selected: AppTab
@@ -171,123 +171,113 @@ struct FloatingTabBar: View {
 
     private static let barBg = Color(red: 0.10, green: 0.10, blue: 0.11)
     private static let selBg = Color(white: 0.28)
+    private static let fieldBg = Color(white: 0.20)
+
+    private let leftTabs:  [AppTab] = [.camera, .home]
+    private let rightTabs: [AppTab] = [.categories, .profile]
 
     var body: some View {
-        ZStack {
-            if chatMode {
-                chatBar
-                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
-            } else {
-                tabBar
-                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
+        HStack(spacing: 6) {
+
+            // Onglets gauche — masqués quand clavier ouvert
+            if !chatMode {
+                HStack(spacing: 0) {
+                    ForEach(leftTabs) { t in tabBtn(t) }
+                }
+                .transition(.move(edge: .leading).combined(with: .opacity))
+            }
+
+            // Chat au centre — toujours visible
+            HStack(spacing: 8) {
+                if chatMode {
+                    Button {
+                        withAnimation(.spring(duration: 0.32)) { chatMode = false }
+                        inputFocused = false
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.7))
+                            .frame(width: 30, height: 30)
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.opacity.combined(with: .scale(scale: 0.7)))
+                }
+
+                TextField("Message…", text: $chatInput)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.white)
+                    .tint(Color.accentColor)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Self.fieldBg, in: Capsule())
+                    .focused($inputFocused)
+                    .onSubmit(onSend)
+                    .submitLabel(.send)
+
+                if !chatInput.trimmingCharacters(in: .whitespaces).isEmpty {
+                    Button(action: onSend) {
+                        Image(systemName: "arrow.up")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(.black)
+                            .frame(width: 30, height: 30)
+                            .background(.white, in: Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.scale(scale: 0.6).combined(with: .opacity))
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .animation(.spring(duration: 0.28), value: chatMode)
+            .animation(.spring(duration: 0.22), value: chatInput.isEmpty)
+
+            // Onglets droite — masqués quand clavier ouvert
+            if !chatMode {
+                HStack(spacing: 0) {
+                    ForEach(rightTabs) { t in tabBtn(t) }
+                }
+                .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
-        .animation(.spring(duration: 0.32, bounce: 0.25), value: chatMode)
+        .frame(height: 60)
+        .padding(.horizontal, 10)
+        .background(Self.barBg, in: Capsule())
+        .shadow(color: .black.opacity(0.40), radius: 24, x: 0, y: 10)
         .padding(.horizontal, 18)
         .padding(.bottom, 12)
-    }
-
-    // MARK: Barre onglets
-
-    private var tabBar: some View {
-        HStack(spacing: 0) {
-            tabBtn(.camera)
-            tabBtn(.home)
-            chatPill
-            tabBtn(.categories)
-            tabBtn(.profile)
+        .animation(.spring(duration: 0.32, bounce: 0.2), value: chatMode)
+        .onChange(of: inputFocused) { _, focused in
+            withAnimation(.spring(duration: 0.32)) { chatMode = focused }
         }
-        .frame(height: 60)
-        .padding(.horizontal, 8)
-        .background(Self.barBg, in: Capsule())
-        .shadow(color: .black.opacity(0.35), radius: 20, x: 0, y: 8)
-    }
-
-    // MARK: Barre chat
-
-    private var chatBar: some View {
-        HStack(spacing: 10) {
-            Button {
-                chatMode = false
-                inputFocused = false
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 42, height: 42)
-                    .background(Self.selBg, in: Circle())
-            }
-            .buttonStyle(.plain)
-
-            TextField("Message…", text: $chatInput)
-                .font(.system(size: 15))
-                .foregroundStyle(.white)
-                .tint(Color.accentColor)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .background(Color(white: 0.20), in: Capsule())
-                .focused($inputFocused)
-                .onSubmit(onSend)
-                .submitLabel(.send)
-
-            if !chatInput.trimmingCharacters(in: .whitespaces).isEmpty {
-                Button(action: onSend) {
-                    Image(systemName: "arrow.up")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(.black)
-                        .frame(width: 42, height: 42)
-                        .background(.white, in: Circle())
+        .gesture(
+            DragGesture(minimumDistance: 30)
+                .onEnded { v in
+                    if v.translation.height > 30 {
+                        withAnimation(.spring(duration: 0.32)) { chatMode = false }
+                        inputFocused = false
+                    }
                 }
-                .buttonStyle(.plain)
-                .transition(.scale(scale: 0.7).combined(with: .opacity))
-            }
-        }
-        .frame(height: 60)
-        .padding(.horizontal, 12)
-        .background(Self.barBg, in: Capsule())
-        .shadow(color: .black.opacity(0.35), radius: 20, x: 0, y: 8)
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { inputFocused = true }
-        }
+        )
     }
-
-    // MARK: Bouton chat dans la barre
-
-    private var chatPill: some View {
-        Button {
-            chatMode = true
-            Haptics.tap()
-        } label: {
-            Image(systemName: "bubble.left")
-                .font(.system(size: 21, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.80))
-                .frame(maxWidth: .infinity)
-                .frame(height: 60)
-        }
-        .buttonStyle(.plain)
-    }
-
-    // MARK: Bouton onglet
 
     private func tabBtn(_ t: AppTab) -> some View {
         Button {
             withAnimation(.spring(duration: 0.28, bounce: 0.35)) { selected = t }
+            inputFocused = false
             Haptics.tap()
         } label: {
             ZStack {
                 if selected == t {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .fill(Self.selBg)
-                        .frame(width: 58, height: 44)
+                        .frame(width: 54, height: 42)
                         .matchedGeometryEffect(id: "sel", in: ns)
                 }
                 Image(systemName: selected == t ? t.iconFill : t.icon)
-                    .font(.system(size: 21, weight: .semibold))
+                    .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(.white)
                     .animation(.spring(duration: 0.28), value: selected)
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 60)
+            .frame(width: 60, height: 60)
         }
         .buttonStyle(.plain)
     }
