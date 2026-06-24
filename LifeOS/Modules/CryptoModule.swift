@@ -279,7 +279,8 @@ struct CryptoAppView: View {
         }
         .padding(.horizontal, 10)
         .background(Self.barBg, in: Capsule())
-        .shadow(color: .black.opacity(0.45), radius: 24, x: 0, y: 10)
+        .shadow(color: .black.opacity(0.12), radius: 16, x: 0, y: 4)
+        .overlay(Capsule().stroke(Color(white: 0.88), lineWidth: 1))
         .padding(.horizontal, 18)
         .padding(.bottom, 12)
     }
