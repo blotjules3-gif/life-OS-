@@ -56,11 +56,16 @@ struct OnboardingView: View {
     @AppStorage("homeShortcuts") private var homeShortcuts = "tabata,calories,scan,todo,fasting,water,habits,mood"
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
     @AppStorage("onboardingGoalsRaw") private var onboardingGoalsRaw = ""
+    @AppStorage("wakeupHour") private var savedWakeupHour = 7
+    @AppStorage("wakeupMinute") private var savedWakeupMinute = 0
+    @AppStorage("wakeupEnabled") private var savedWakeupEnabled = false
 
     @State private var step = 0
     @State private var name = ""
     @State private var goals: Set<OnboardingGoal> = []
     @State private var interests: Set<AppCategory> = []
+    @State private var wakeHour = 7
+    @State private var wakeMinute = 0
 
     private var recommendations: [AppCategory] {
         var seen = Set<AppCategory>()
