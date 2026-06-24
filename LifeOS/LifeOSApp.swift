@@ -76,6 +76,14 @@ struct LifeOSApp: App {
             try? await Task.sleep(for: .milliseconds(500))
             withAnimation { ready = true }
         }
+        // Écran réveil iPhone-style — par dessus tout, avec modelContainer injecté
+        .fullScreenCover(isPresented: $alarm.showAlarmScreen) {
+            AlarmFullScreenView()
+        }
+        // Briefing quotidien avec voix — accède à @Query via modelContainer
+        .fullScreenCover(isPresented: $alarm.showBriefing) {
+            DailyBriefingView(modules: recommendedModules, speakOnAppear: true)
+        }
     }
 
     // MARK: - Création container en background (ne bloque pas le thread principal)
