@@ -547,6 +547,7 @@ struct ProfileView: View {
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
     @Query private var habits: [Habit]
+    @Query(sort: \MemoryEntry.created, order: .reverse) private var memories: [MemoryEntry]
     @Environment(\.modelContext) private var ctx
 
     @State private var steps = 0
