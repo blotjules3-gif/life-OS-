@@ -36,7 +36,7 @@ enum AppTab: String, CaseIterable, Identifiable {
 // MARK: - Conteneur principal
 
 struct MainTabView: View {
-    @State private var tab: AppTab = .home
+    @State private var tab: AppTab = .profile
     @State private var chatInput = ""
     @State private var chatMessages: [ChatMessage] = [
         ChatMessage(fromUser: false, text: "Salut ! Je suis ton assistant LifeOS. Demande-moi par ex. « combien de calories aujourd'hui ? » ou « combien d'eau ? ».")
