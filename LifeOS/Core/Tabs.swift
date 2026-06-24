@@ -564,10 +564,45 @@ struct ProfileView: View {
     private var onboardingGoals: [OnboardingGoal] {
         onboardingGoalsRaw.split(separator: ",").compactMap { OnboardingGoal(rawValue: String($0)) }
     }
+    private var hiddenSections: Set<String> {
+        Set(profileHiddenRaw.split(separator: ",").map(String.init))
+    }
+    private var hasTodayBriefing: Bool {
+        lastBriefingDate > 0 && Calendar.current.isDateInToday(Date(timeIntervalSince1970: lastBriefingDate))
+    }
     private var kcalToday: Int { foods.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.calories } }
     private var proteinToday: Double { foods.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.protein } }
     private var waterToday: Int { waters.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML } }
     private var habitsDone: Int { habits.filter { h in h.completions.contains { Calendar.current.isDateInToday($0.date) } }.count }
+
+    // Tâches du jour calculées depuis les modules actifs de l'utilisateur
+    private var todayTasks: [ProfileTaskItem] {
+        var tasks: [ProfileTaskItem] = []
+        let mods = recommendedModules.isEmpty ? [AppCategory.nutrition, .fitness, .productivity] : recommendedModules
+        for mod in mods {
+            switch mod {
+            case .nutrition:
+                let kp = min(1.0, Double(kcalToday) / Double(max(1, kcalGoal)))
+                tasks.append(ProfileTaskItem(icon: "flame.fill", title: "Calories", subtitle: "\(kcalToday) / \(kcalGoal) kcal", color: Color(hex: 0x4CC38A), progress: kp))
+                let wp = min(1.0, Double(waterToday) / Double(max(1, waterGoal)))
+                tasks.append(ProfileTaskItem(icon: "drop.fill", title: "Hydratation", subtitle: "\(waterToday) / \(waterGoal) ml", color: Color(hex: 0x3CB2E0), progress: wp))
+            case .fitness:
+                let sp = min(1.0, Double(steps) / Double(max(1, stepGoal)))
+                tasks.append(ProfileTaskItem(icon: "figure.run", title: "Activité", subtitle: "\(steps) / \(stepGoal) pas", color: Color(hex: 0xF1746C), progress: sp))
+            case .productivity:
+                let hp = habits.isEmpty ? 1.0 : min(1.0, Double(habitsDone) / Double(habits.count))
+                tasks.append(ProfileTaskItem(icon: "checklist", title: "Habitudes", subtitle: "\(habitsDone)/\(habits.count) complétées", color: Color(hex: 0x9B6CF1), progress: hp))
+            case .sleep:
+                tasks.append(ProfileTaskItem(icon: "moon.stars.fill", title: "Sommeil", subtitle: "Évaluer ta nuit", color: Color(hex: 0x6C7BF1), progress: 0))
+            case .mind:
+                tasks.append(ProfileTaskItem(icon: "brain.head.profile", title: "Focus", subtitle: "5 min de méditation", color: Color(hex: 0x9B6CF1), progress: 0))
+            case .finance:
+                tasks.append(ProfileTaskItem(icon: "creditcard.fill", title: "Budget", subtitle: "Vérifier mes dépenses", color: Color(hex: 0x4CC38A), progress: 0))
+            default: break
+            }
+        }
+        return Array(tasks.prefix(6))
+    }
 
     private var lifeScore: Int {
         let w = min(1.0, Double(waterToday) / Double(max(1, waterGoal)))
