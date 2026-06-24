@@ -39,7 +39,7 @@ enum AppTab: String, CaseIterable, Identifiable {
 // MARK: - Conteneur principal
 
 struct MainTabView: View {
-    @State private var tab: AppTab = .home
+    @State private var tab: AppTab = .categories
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -52,7 +52,7 @@ struct MainTabView: View {
     @ViewBuilder private var content: some View {
         switch tab {
         case .home: HomeDashboardView()
-        case .categories: CategoriesView()
+        case .categories: BubbleHomeView()
         case .chat: ChatView()
         case .camera: CameraView()
         case .profile: ProfileView()
