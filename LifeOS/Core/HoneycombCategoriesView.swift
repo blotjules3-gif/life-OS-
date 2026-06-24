@@ -8,8 +8,8 @@ private enum BC {
     static let baseFrac: CGFloat = 0.32     // + dense : bulles plus grosses qui se chevauchent
 
     // --- transparency (luminous jewel-tone glass, NOT washed-out ghosts) ---
-    static let coreOpacity: Double = 0.15
-    static let rimOpacity:  Double = 0.72
+    static let coreOpacity: Double = 0.10    // centre : fenêtre claire (le fond traverse)
+    static let rimOpacity:  Double = 0.85    // bord : couleur riche et lumineuse
     static let docsCore:    Double = 0.06    // Documents = nearly colourless, most transparent
     static let docsRim:     Double = 0.34
     static let fillerCore:  Double = 0.06
@@ -96,11 +96,6 @@ private struct FixedBubble: View {
     @State private var appeared = false
     @State private var bounce = 0
 
-    private var iris: [Color] {
-        let hues: [Color] = [.pink, .purple, .blue, .cyan, .green, .yellow, .orange, .pink]
-        return hues.map { $0.opacity(0.55) }
-    }
-
     var body: some View {
         let r = spec.diameter / 2
 
@@ -131,12 +126,12 @@ private struct FixedBubble: View {
     @ViewBuilder private func bubbleBody(r: CGFloat) -> some View {
         let t = spec.tint
         ZStack {
-            // 1 · see-through tinted body — clear centre, saturated rim (Fresnel)
+            // 1 · see-through tinted body — clear centre 0.10, mid 0.50, saturated rim 0.85
             Circle().fill(RadialGradient(
                 stops: [
-                    .init(color: t.opacity(spec.coreOp),       location: 0.00),
-                    .init(color: t.opacity(spec.rimOp * 0.40), location: 0.60),
-                    .init(color: t.opacity(spec.rimOp),        location: 1.00)
+                    .init(color: t.opacity(spec.coreOp),        location: 0.00),
+                    .init(color: t.opacity(spec.rimOp * 0.59),  location: 0.55),
+                    .init(color: t.opacity(spec.rimOp),         location: 1.00)
                 ],
                 center: UnitPoint(x: 0.42, y: 0.40), startRadius: 0, endRadius: r))
 
@@ -145,19 +140,29 @@ private struct FixedBubble: View {
                 colors: [.white.opacity(0.20), .clear],
                 center: UnitPoint(x: 0.40, y: 0.37), startRadius: 0, endRadius: r * 0.95))
 
-            // 3 · thin iridescent rainbow rim
-            Circle().strokeBorder(AngularGradient(colors: iris, center: .center),
-                                  lineWidth: max(0.8, r * 0.05))
-                .blur(radius: 0.4)
+            // 3 · thin WHITE rim light (aucune couleur, AUCUN arc-en-ciel)
+            Circle().strokeBorder(
+                LinearGradient(colors: [.white.opacity(0.6), .white.opacity(0.05)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing),
+                lineWidth: max(0.8, r * 0.04))
 
-            // 4 · crisp white specular highlights (sharp, not blurred)
-            Ellipse().fill(.white.opacity(0.92))
-                .frame(width: r * 0.40, height: r * 0.26)
+            // 4 · reflets BLANCS nets répartis autour de la sphère (verre mouillé)
+            Ellipse().fill(.white.opacity(0.92))            // principal, haut-gauche
+                .frame(width: r * 0.42, height: r * 0.28)
                 .rotationEffect(.degrees(-32))
                 .offset(x: -r * 0.30, y: -r * 0.40)
-            Circle().fill(.white.opacity(0.80))
-                .frame(width: r * 0.11, height: r * 0.11)
-                .offset(x: r * 0.22, y: -r * 0.28)
+            Circle().fill(.white.opacity(0.85))             // haut-droite
+                .frame(width: r * 0.12, height: r * 0.12)
+                .offset(x: r * 0.30, y: -r * 0.26)
+            Circle().fill(.white.opacity(0.7))              // bas-gauche
+                .frame(width: r * 0.08, height: r * 0.08)
+                .offset(x: -r * 0.40, y: r * 0.30)
+            Circle().fill(.white.opacity(0.8))              // accroche bas-droite
+                .frame(width: r * 0.07, height: r * 0.07)
+                .offset(x: r * 0.34, y: r * 0.40)
+            Circle().fill(.white.opacity(0.9))              // minuscule près du principal
+                .frame(width: r * 0.05, height: r * 0.05)
+                .offset(x: -r * 0.14, y: -r * 0.52)
 
             // 5 · glyph + label (main bubbles only)
             if let icon = spec.icon {
@@ -256,21 +261,21 @@ private enum Layout {
 
     /// (category, x-fraction, y-fraction, sizeMultiplier) — origin top-left, y down.
     private static let template: [(AppCategory, CGFloat, CGFloat, CGFloat)] = [
-        (.admin,        0.24, 0.18, 1.05),   // Documents (very transparent, colourless)
-        (.career,       0.50, 0.20, 1.00),   // Travail
-        (.social,       0.79, 0.24, 1.15),   // Social
-        (.finance,      0.17, 0.39, 0.85),   // Finance
-        (.mind,         0.44, 0.41, 1.10),   // Mental
-        (.looks,        0.72, 0.45, 1.10),   // Bien-être
-        (.learning,     0.88, 0.56, 0.80),   // Éducation
-        (.fitness,      0.31, 0.62, 1.40),   // Sport — HERO
-        (.nutrition,    0.60, 0.66, 1.05),   // Alimentation
-        (.sleep,        0.83, 0.67, 0.95),   // Sommeil
-        (.invest,       0.15, 0.60, 0.78),   // Bourse
-        (.productivity, 0.18, 0.78, 0.85),   // Tâches
-        (.home,         0.64, 0.81, 0.85),   // Maison
-        (.travel,       0.40, 0.87, 1.10),   // Voyage
-        (.mobility,     0.80, 0.89, 0.90)    // Transports
+        (.admin,        0.22, 0.14, 1.00),   // Documents (très transparent, incolore)
+        (.career,       0.50, 0.15, 0.95),   // Travail
+        (.social,       0.80, 0.19, 1.15),   // Social
+        (.finance,      0.16, 0.33, 0.85),   // Finance
+        (.mind,         0.46, 0.34, 1.10),   // Mental
+        (.looks,        0.77, 0.38, 1.10),   // Bien-être
+        (.invest,       0.13, 0.48, 0.75),   // Bourse (écartée de Sport/Finance)
+        (.learning,     0.90, 0.52, 0.78),   // Éducation
+        (.fitness,      0.36, 0.57, 1.34),   // Sport — HERO (un poil plus petit)
+        (.nutrition,    0.64, 0.58, 1.05),   // Alimentation
+        (.sleep,        0.87, 0.66, 0.92),   // Sommeil
+        (.productivity, 0.17, 0.71, 0.85),   // Tâches
+        (.travel,       0.42, 0.82, 1.10),   // Voyage
+        (.home,         0.66, 0.80, 0.85),   // Maison
+        (.mobility,     0.84, 0.85, 0.90)    // Transports
     ]
 
     /// 6–8 sparse fillers in the gaps (x, y, sizeFractionOfBase).
