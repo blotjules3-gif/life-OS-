@@ -34,35 +34,120 @@ private enum BC {
 struct HoneycombCategoriesView: View {
     @State private var path: [AppCategory] = []
     @AppStorage("bubbleWeights") private var weightsRaw = ""
+    @AppStorage("hiddenCats") private var hiddenRaw = ""   // catégories retirées (vide = tout affiché)
+    @State private var editing = false
+    @State private var showAdd = false
+
+    private var hidden: Set<String> { Set(hiddenRaw.split(separator: ",").map(String.init)) }
+    private var hiddenCats: [AppCategory] { Layout.allCats.filter { hidden.contains($0.rawValue) } }
 
     var body: some View {
         NavigationStack(path: $path) {
-            GeometryReader { geo in
-                let bubbles = Layout.build(in: geo.size, weights: parseWeights())
-                let c = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
-                let maxD = bubbles.map { hypot($0.anchor.x - c.x, $0.anchor.y - c.y) }.max() ?? 1
+            GeometryReader { geo in cluster(in: geo.size) }
+                .overlay(alignment: .topTrailing) { editButton }
+                .overlay(alignment: .bottomTrailing) { if editing { addButton } }
+                .background(BubbleMesh().ignoresSafeArea())
+                .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(for: AppCategory.self) { $0.destination }
+                .sheet(isPresented: $showAdd) { addSheet }
+        }
+    }
 
-                // .animation drives the calm bob; placement at rest is ALWAYS the anchor.
-                TimelineView(.animation) { tl in
-                    let t = tl.date.timeIntervalSinceReferenceDate
-                    ZStack {
-                        BubbleMesh().ignoresSafeArea()
-                        ForEach(bubbles) { b in     // sorted small→big ⇒ big drawn on top
-                            FixedBubble(
-                                spec: b, time: t,
-                                bloomDelay: Double(hypot(b.anchor.x - c.x, b.anchor.y - c.y) / max(1, maxD)) * 0.45,
-                                onTap: b.cat == nil ? nil : {
-                                    bump(b.cat!)
-                                    path.append(b.cat!)
-                                })
+    @ViewBuilder private func cluster(in size: CGSize) -> some View {
+        let bubbles = Layout.build(in: size, weights: parseWeights(), hidden: hidden)
+        let c = CGPoint(x: size.width / 2, y: size.height / 2)
+        let maxD = bubbles.map { hypot($0.anchor.x - c.x, $0.anchor.y - c.y) }.max() ?? 1
+
+        TimelineView(.animation) { tl in
+            let t = tl.date.timeIntervalSinceReferenceDate
+            ZStack {
+                BubbleMesh().ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .onTapGesture { exitEdit() }
+                    .gesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in enterEdit() })
+                ForEach(bubbles) { b in     // sorted small→big ⇒ big drawn on top
+                    bubbleView(b, t: t, c: c, maxD: maxD)
+                }
+            }
+        }
+    }
+
+    private func bubbleView(_ b: Layout.Spec, t: Double, c: CGPoint, maxD: CGFloat) -> some View {
+        let delay = Double(hypot(b.anchor.x - c.x, b.anchor.y - c.y) / max(1, maxD)) * 0.45
+        return FixedBubble(
+            spec: b, time: t, bloomDelay: delay,
+            onTap: b.cat == nil ? nil : {
+                if editing { return }
+                bump(b.cat!); path.append(b.cat!)
+            },
+            editing: editing,
+            onRemove: b.cat == nil ? nil : { remove(b.cat!) })
+    }
+
+    private func enterEdit() {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { editing = true }
+        Haptics.tap()
+    }
+    private func exitEdit() {
+        if editing { withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { editing = false } }
+    }
+
+    private var editButton: some View {
+        Button {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) { editing.toggle() }
+        } label: {
+            Text(editing ? "OK" : "Modifier")
+                .font(.subheadline.weight(.semibold))
+                .padding(.horizontal, 14).padding(.vertical, 8)
+                .background(.regularMaterial, in: Capsule())
+        }
+        .padding(.top, 8).padding(.trailing, 16)
+    }
+
+    private var addButton: some View {
+        Button { showAdd = true } label: {
+            Image(systemName: "plus").font(.title2.weight(.bold)).foregroundStyle(.white)
+                .frame(width: 54, height: 54)
+                .background(Color.accentColor, in: Circle())
+                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+        }
+        .padding(.trailing, 22).padding(.bottom, 110)
+        .transition(.scale.combined(with: .opacity))
+    }
+
+    private var addSheet: some View {
+        NavigationStack {
+            List {
+                if hiddenCats.isEmpty {
+                    Text("Toutes les catégories sont déjà affichées.").foregroundStyle(.secondary)
+                }
+                ForEach(hiddenCats, id: \.self) { cat in
+                    Button { add(cat) } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: cat.icon).foregroundStyle(.white)
+                                .frame(width: 30, height: 30)
+                                .background(Layout.color(cat), in: RoundedRectangle(cornerRadius: 8))
+                            Text(Layout.label(cat)).foregroundStyle(.primary)
+                            Spacer()
+                            Image(systemName: "plus.circle.fill").foregroundStyle(.green)
                         }
                     }
                 }
             }
-            .background(BubbleMesh().ignoresSafeArea())   // bleed behind the bars
-            .toolbar(.hidden, for: .navigationBar)         // no title, immersive
-            .navigationDestination(for: AppCategory.self) { $0.destination }
+            .navigationTitle("Ajouter une catégorie").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("OK") { showAdd = false } } }
         }
+    }
+
+    private func remove(_ cat: AppCategory) {
+        var h = hidden; h.insert(cat.rawValue)
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { hiddenRaw = h.sorted().joined(separator: ",") }
+        Haptics.tap()
+    }
+    private func add(_ cat: AppCategory) {
+        var h = hidden; h.remove(cat.rawValue)
+        hiddenRaw = h.sorted().joined(separator: ",")
+        if hiddenCats.isEmpty { showAdd = false }
     }
 
     // MARK: persisted click weights  ("rawValue:count,…")
@@ -90,6 +175,8 @@ private struct FixedBubble: View {
     let time: Double
     let bloomDelay: Double
     let onTap: (() -> Void)?      // nil for fillers (non-interactive)
+    var editing: Bool = false
+    var onRemove: (() -> Void)? = nil
 
     @State private var drag: CGSize = .zero
     @State private var dragging = false
@@ -106,13 +193,30 @@ private struct FixedBubble: View {
         let dx = drag.width  + (dragging ? 0 : bx)
         let dy = drag.height + (dragging ? 0 : by)
 
+        let wig: Double = (editing && spec.cat != nil) ? sin(time * 7 + spec.phase) * 2.0 : 0
+
         bubbleBody(r: r)
             .frame(width: spec.diameter, height: spec.diameter)
-            .shadow(color: spec.tint.opacity(0.34), radius: r * 0.22)   // coloured glow halo
+            .rotationEffect(.degrees(wig))                                       // wiggle façon écran d'accueil iOS
+            .overlay(alignment: .topLeading) {
+                if editing, let onRemove {
+                    Button { onRemove() } label: {
+                        Image(systemName: "minus.circle.fill")
+                            .font(.system(size: max(20, r * 0.5)))
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, .red)
+                    }
+                    .buttonStyle(.plain)
+                    .offset(x: r * 0.22, y: r * 0.22)
+                    .transition(.scale.combined(with: .opacity))
+                }
+            }
+            .shadow(color: spec.tint.opacity(0.55), radius: r * 0.28)            // halo coloré qui rayonne
+            .shadow(color: .black.opacity(0.14), radius: r * 0.10, y: r * 0.10)  // ombre de contact
             .scaleEffect(appeared ? 1 : 0.01)
             .opacity(appeared ? 1 : 0)
             .position(x: spec.anchor.x + dx, y: spec.anchor.y + dy)
-            .modifier(DragIfNeeded(enabled: onTap != nil, r: r,
+            .modifier(DragIfNeeded(enabled: onTap != nil && !editing, r: r,
                                    drag: $drag, dragging: $dragging,
                                    onTap: { bounce += 1; Haptics.soft(); onTap?() }))
             .onAppear {
@@ -126,19 +230,21 @@ private struct FixedBubble: View {
     @ViewBuilder private func bubbleBody(r: CGFloat) -> some View {
         let t = spec.tint
         ZStack {
-            // 1 · see-through tinted body — clear centre 0.10, mid 0.50, saturated rim 0.85
-            Circle().fill(RadialGradient(
+            // A · VOLUME directionnel (haut-gauche CLAIR → bas-droite SOMBRE) = relief 3D
+            Circle().fill(LinearGradient(
                 stops: [
-                    .init(color: t.opacity(spec.coreOp),        location: 0.00),
-                    .init(color: t.opacity(spec.rimOp * 0.59),  location: 0.55),
-                    .init(color: t.opacity(spec.rimOp),         location: 1.00)
+                    .init(color: t.mix(with: .white, by: 0.60).opacity(spec.rimOp),                  location: 0.00),
+                    .init(color: t.mix(with: .white, by: 0.18).opacity(spec.rimOp),                  location: 0.26),
+                    .init(color: t.opacity(spec.rimOp),                                              location: 0.52),
+                    .init(color: t.mix(with: .black, by: 0.40).opacity(spec.rimOp),                  location: 0.78),
+                    .init(color: t.mix(with: .black, by: 0.62).opacity(min(1, spec.rimOp + 0.10)),   location: 1.00)
                 ],
-                center: UnitPoint(x: 0.42, y: 0.40), startRadius: 0, endRadius: r))
+                startPoint: .topLeading, endPoint: .bottomTrailing))
 
-            // 2 · soft transmission glow (lit from within)
+            // B · CŒUR lumineux interne (la bulle brille de l'intérieur), un peu au-dessus du centre
             Circle().fill(RadialGradient(
-                colors: [.white.opacity(0.20), .clear],
-                center: UnitPoint(x: 0.40, y: 0.37), startRadius: 0, endRadius: r * 0.95))
+                colors: [t.mix(with: .white, by: 0.55).opacity(spec.rimOp * 0.85), .clear],
+                center: UnitPoint(x: 0.43, y: 0.36), startRadius: 0, endRadius: r * 0.72))
 
             // 3 · thin WHITE rim light (aucune couleur, AUCUN arc-en-ciel)
             Circle().strokeBorder(
@@ -285,13 +391,16 @@ private enum Layout {
         (0.62, 0.54, 0.15)
     ]
 
-    static func build(in size: CGSize, weights: [String: Int]) -> [Spec] {
+    static let allCats: [AppCategory] = template.map { $0.0 }
+
+    static func build(in size: CGSize, weights: [String: Int], hidden: Set<String> = []) -> [Spec] {
         guard size.width > 0 else { return [] }
         let base = size.width * BC.baseFrac
         let fillerPalette: [Color] = [.cyan, .mint, .pink, .purple, .blue, .teal, .indigo]
 
-        // positions + diamètres des bulles principales
-        let mains: [(cat: AppCategory, center: CGPoint, dia: CGFloat, mult: CGFloat)] = template.map { (cat, fx, fy, mult) in
+        // positions + diamètres des bulles principales (catégories non masquées)
+        let active = template.filter { !hidden.contains($0.0.rawValue) }
+        let mains: [(cat: AppCategory, center: CGPoint, dia: CGFloat, mult: CGFloat)] = active.map { (cat, fx, fy, mult) in
             let grown = mult * growth(weights[cat.rawValue] ?? 0)
             return (cat, CGPoint(x: fx * size.width, y: fy * size.height), base * grown, mult)
         }
@@ -310,7 +419,7 @@ private enum Layout {
             out.append(Spec(
                 id: id, cat: m.cat,
                 anchor: m.center, diameter: m.dia,
-                tint: tint(m.cat), icon: m.cat.icon, label: label(m.cat),
+                tint: color(m.cat), icon: m.cat.icon, label: label(m.cat),
                 coreOp: isDocs ? BC.docsCore : BC.coreOpacity,
                 rimOp:  isDocs ? BC.docsRim  : BC.rimOpacity,
                 bobFactor: m.mult >= BC.bigThreshold ? BC.bobBigFactor : 1.0,
@@ -341,11 +450,11 @@ private enum Layout {
         1 + min(CGFloat(count) * BC.growPerTap, BC.growMax)
     }
 
-    private static func tint(_ c: AppCategory) -> Color {
+    static func color(_ c: AppCategory) -> Color {
         c == .admin ? Color(white: 0.78) : c.tint   // Documents = nearly colourless
     }
 
-    private static func label(_ c: AppCategory) -> String {
+    static func label(_ c: AppCategory) -> String {
         switch c {
         case .sleep: return "Sommeil";   case .nutrition: return "Alimentation"; case .fitness: return "Sport"
         case .looks: return "Bien-être"; case .mind: return "Mental";            case .productivity: return "Tâches"
