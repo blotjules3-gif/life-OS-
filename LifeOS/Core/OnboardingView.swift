@@ -55,6 +55,7 @@ struct OnboardingView: View {
 
     @AppStorage("homeShortcuts") private var homeShortcuts = "tabata,calories,scan,todo,fasting,water,habits,mood"
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
+    @AppStorage("onboardingGoalsRaw") private var onboardingGoalsRaw = ""
 
     @State private var step = 0
     @State private var name = ""
