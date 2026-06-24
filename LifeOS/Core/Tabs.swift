@@ -397,6 +397,9 @@ struct DailyBriefingView: View {
             }
         }
         .onAppear {
+            // Stocker le contenu du briefing pour rappel dans le profil
+            lastBriefingDate = Date.now.timeIntervalSince1970
+            lastBriefingContent = todayTasks.prefix(4).map { $0.title }.joined(separator: "|||")
             if speakOnAppear {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
                     alarm.speakDailyPlan(
