@@ -5,7 +5,7 @@ import AVFoundation
 // MARK: - Réveil iPhone-style (plein écran)
 
 struct AlarmFullScreenView: View {
-    @EnvironmentObject private var alarm: AlarmManager
+    @ObservedObject private var alarm = AlarmManager.shared
     @AppStorage("snoozeMinutes") private var snoozeMinutes = 9
     @State private var bellPulse = false
     @State private var ringsPulse = false
