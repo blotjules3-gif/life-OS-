@@ -103,8 +103,12 @@ struct ShortcutsHomeView: View {
         enabledRaw.split(separator: ",").compactMap { ShortcutTool(rawValue: String($0)) }
     }
 
+    // Si l'onboarding n'a pas encore été fait → modules par défaut universels
+    private static let defaultModules: [AppCategory] = [.fitness, .nutrition, .sleep, .productivity, .mind, .finance]
+
     private var recommendedModules: [AppCategory] {
-        recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
+        let parsed = recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
+        return parsed.isEmpty ? Self.defaultModules : parsed
     }
 
     var body: some View {
@@ -115,41 +119,55 @@ struct ShortcutsHomeView: View {
                         .font(.largeTitle.bold())
                         .padding(.horizontal, 4)
 
-                    // Section "Pour toi" — modules recommandés depuis l'onboarding
-                    if !recommendedModules.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
+                    // Section "Pour toi" — modules recommandés (onboarding ou défaut)
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
                             Text("Pour toi")
-                                .font(.headline)
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 4)
+                                .font(.title3.bold())
+                            Spacer()
+                            if !recommendedModulesRaw.isEmpty {
+                                Text("Basé sur tes objectifs")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(.horizontal, 4)
 
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 12) {
-                                    ForEach(recommendedModules) { cat in
-                                        NavigationLink(destination: cat.destination) {
-                                            VStack(spacing: 10) {
-                                                Image(systemName: cat.icon)
-                                                    .font(.system(size: 22, weight: .semibold))
-                                                    .foregroundStyle(.white)
-                                                    .frame(width: 52, height: 52)
-                                                    .background(cat.tint, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                                                Text(cat.title
-                                                    .components(separatedBy: " & ").first?
-                                                    .components(separatedBy: " ").first ?? cat.title)
-                                                    .font(.system(size: 12, weight: .medium))
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(recommendedModules) { cat in
+                                    NavigationLink(destination: cat.destination) {
+                                        HStack(spacing: 12) {
+                                            Image(systemName: cat.icon)
+                                                .font(.system(size: 20, weight: .semibold))
+                                                .foregroundStyle(.white)
+                                                .frame(width: 44, height: 44)
+                                                .background(cat.tint, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(cat.title)
+                                                    .font(.system(size: 14, weight: .semibold))
                                                     .foregroundStyle(.primary)
                                                     .lineLimit(1)
+                                                Text(cat.subtitle)
+                                                    .font(.system(size: 11))
+                                                    .foregroundStyle(.secondary)
+                                                    .lineLimit(1)
                                             }
-                                            .frame(width: 76)
-                                            .padding(.vertical, 14)
-                                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                                         }
-                                        .buttonStyle(.plain)
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 12)
+                                        .frame(width: 220, alignment: .leading)
+                                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                                .stroke(cat.tint.opacity(0.2), lineWidth: 1)
+                                        )
                                     }
+                                    .buttonStyle(.plain)
                                 }
-                                .padding(.horizontal, 4)
-                                .padding(.vertical, 2)
                             }
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 2)
                         }
                     }
 
