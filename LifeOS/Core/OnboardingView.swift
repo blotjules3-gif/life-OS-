@@ -53,18 +53,46 @@ struct OnboardingView: View {
     @AppStorage("userName") private var savedName = ""
     @AppStorage("onboardingDone") private var onboardingDone = false
 
+    @AppStorage("homeShortcuts") private var homeShortcuts = "tabata,calories,scan,todo,fasting,water,habits,mood"
+    @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
+
     @State private var step = 0
     @State private var name = ""
-    @State private var goal: OnboardingGoal? = nil
+    @State private var goals: Set<OnboardingGoal> = []
     @State private var interests: Set<AppCategory> = []
 
     private var recommendations: [AppCategory] {
         var seen = Set<AppCategory>()
         var result: [AppCategory] = []
-        for cat in (goal?.modules ?? []) + Array(interests) {
+        let goalModules = OnboardingGoal.allCases
+            .filter { goals.contains($0) }
+            .flatMap { $0.modules }
+        for cat in goalModules + Array(interests) {
             if seen.insert(cat).inserted { result.append(cat) }
         }
-        return Array(result.prefix(6))
+        return Array(result.prefix(8))
+    }
+
+    private func buildShortcuts(from cats: [AppCategory]) -> String {
+        let mapping: [AppCategory: [ShortcutTool]] = [
+            .fitness:      [.tabata, .habits],
+            .nutrition:    [.calories, .fasting, .water, .scan],
+            .sleep:        [.bedtime, .nap],
+            .looks:        [.progressPhotos],
+            .mind:         [.focus, .mood, .breathing],
+            .productivity: [.todo, .focus],
+            .finance:      [.budget],
+            .invest:       [.portfolio],
+            .learning:     [.flashcards],
+        ]
+        var seen = Set<ShortcutTool>()
+        var tools: [ShortcutTool] = []
+        for cat in cats {
+            for tool in (mapping[cat] ?? []) where seen.insert(tool).inserted {
+                tools.append(tool)
+            }
+        }
+        return tools.prefix(8).map { $0.rawValue }.joined(separator: ",")
     }
 
     var body: some View {
@@ -118,7 +146,7 @@ struct OnboardingView: View {
                             withAnimation(.spring(duration: 0.4)) { step = 2 }
                         }
                     case 2:
-                        OnboardingGoalStep(selected: $goal) {
+                        OnboardingGoalStep(selected: $goals) {
                             withAnimation(.spring(duration: 0.4)) { step = 3 }
                         }
                     case 3:
@@ -129,7 +157,13 @@ struct OnboardingView: View {
                         OnboardingResults(
                             name: savedName,
                             recommendations: recommendations,
-                            onDone: { onboardingDone = true }
+                            onDone: {
+                                recommendedModulesRaw = recommendations.map { $0.rawValue }.joined(separator: ",")
+                                if !recommendations.isEmpty {
+                                    homeShortcuts = buildShortcuts(from: recommendations)
+                                }
+                                onboardingDone = true
+                            }
                         )
                     default:
                         EmptyView()
@@ -234,17 +268,17 @@ struct OnboardingName: View {
 // MARK: - Étape 2 : Objectif
 
 struct OnboardingGoalStep: View {
-    @Binding var selected: OnboardingGoal?
+    @Binding var selected: Set<OnboardingGoal>
     let onNext: () -> Void
     private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
         VStack(spacing: 0) {
             VStack(spacing: 10) {
-                Text("C'est quoi ton objectif\nprincipal ?")
+                Text("Quels sont tes objectifs ?")
                     .font(.system(size: 24, weight: .bold, design: .rounded))
                     .multilineTextAlignment(.center)
-                Text("On adapte LifeOS à ce qui compte pour toi.")
+                Text("Sélectionne tout ce qui te correspond.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -254,8 +288,10 @@ struct OnboardingGoalStep: View {
 
             LazyVGrid(columns: cols, spacing: 12) {
                 ForEach(OnboardingGoal.allCases) { g in
-                    GoalCard(goal: g, isSelected: selected == g) {
-                        withAnimation(.spring(duration: 0.2)) { selected = g }
+                    GoalCard(goal: g, isSelected: selected.contains(g)) {
+                        withAnimation(.spring(duration: 0.2)) {
+                            if selected.contains(g) { selected.remove(g) } else { selected.insert(g) }
+                        }
                         Haptics.tap()
                     }
                 }
@@ -264,9 +300,14 @@ struct OnboardingGoalStep: View {
 
             Spacer()
 
-            OnboardingButton(label: "Continuer", enabled: selected != nil, action: onNext)
-                .padding(.horizontal, 28)
-                .padding(.bottom, 52)
+            OnboardingButton(
+                label: selected.isEmpty ? "Continuer" : "Continuer (\(selected.count))",
+                enabled: !selected.isEmpty,
+                action: onNext
+            )
+            .padding(.horizontal, 28)
+            .padding(.bottom, 52)
+            .animation(.spring(duration: 0.2), value: selected.count)
         }
     }
 }

@@ -90,6 +90,8 @@ enum ShortcutTool: String, CaseIterable, Identifiable {
 
 struct ShortcutsHomeView: View {
     @AppStorage("homeShortcuts") private var enabledRaw = "tabata,calories,scan,todo,fasting,water,habits,mood"
+    @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
+    @AppStorage("userName") private var userName = ""
     @State private var editing = false
     @State private var showCatalog = false
     @State private var path: [ShortcutTool] = []
@@ -101,11 +103,57 @@ struct ShortcutsHomeView: View {
         enabledRaw.split(separator: ",").compactMap { ShortcutTool(rawValue: String($0)) }
     }
 
+    private var recommendedModules: [AppCategory] {
+        recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
+    }
+
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text(greeting).font(.largeTitle.bold()).padding(.horizontal, 4)
+                VStack(alignment: .leading, spacing: 20) {
+                    Text(userName.isEmpty ? greeting : "\(greeting), \(userName)")
+                        .font(.largeTitle.bold())
+                        .padding(.horizontal, 4)
+
+                    // Section "Pour toi" — modules recommandés depuis l'onboarding
+                    if !recommendedModules.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Pour toi")
+                                .font(.headline)
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 4)
+
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 12) {
+                                    ForEach(recommendedModules) { cat in
+                                        NavigationLink(destination: cat.destination) {
+                                            VStack(spacing: 10) {
+                                                Image(systemName: cat.icon)
+                                                    .font(.system(size: 22, weight: .semibold))
+                                                    .foregroundStyle(.white)
+                                                    .frame(width: 52, height: 52)
+                                                    .background(cat.tint, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                                Text(cat.title
+                                                    .components(separatedBy: " & ").first?
+                                                    .components(separatedBy: " ").first ?? cat.title)
+                                                    .font(.system(size: 12, weight: .medium))
+                                                    .foregroundStyle(.primary)
+                                                    .lineLimit(1)
+                                            }
+                                            .frame(width: 76)
+                                            .padding(.vertical, 14)
+                                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 2)
+                            }
+                        }
+                    }
+
+                    // Raccourcis
                     LazyVGrid(columns: cols, spacing: 14) {
                         ForEach(enabled) { tool in
                             tile(tool)
@@ -207,7 +255,7 @@ struct ShortcutsHomeView: View {
         case 5..<12: return "Bonjour"
         case 12..<18: return "Bon aprèm"
         case 18..<23: return "Bonsoir"
-        default: return "Bonne nuit"
+        default:      return "Bonne nuit"
         }
     }
 }
