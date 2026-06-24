@@ -93,6 +93,18 @@ struct AlarmFullScreenView: View {
             ringsPulse = true
         }
     }
+
+    private func alarmRing(index: Int, pulse: Bool) -> some View {
+        let size = CGFloat(180 + index * 70)
+        let opacity = pulse ? (0.06 - Double(index) * 0.015) : (0.12 - Double(index) * 0.03)
+        let duration = 0.8 + Double(index) * 0.15
+        let delay = Double(index) * 0.12
+        return Circle()
+            .stroke(Color.white.opacity(opacity), lineWidth: 1)
+            .frame(width: size, height: size)
+            .scaleEffect(pulse ? 1.06 : 0.96)
+            .animation(.easeInOut(duration: duration).repeatForever(autoreverses: true).delay(delay), value: pulse)
+    }
 }
 
 // MARK: - Chat / Assistant
