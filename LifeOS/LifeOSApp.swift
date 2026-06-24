@@ -64,9 +64,10 @@ struct LifeOSApp: App {
         .task(id: onboardingDone) {
             guard onboardingDone else { return }
             loadingStatus = "Préparation de ton espace…"
-            _ = await NotificationManager.shared.requestAuthorization()
-            try? await Task.sleep(for: .milliseconds(500))
-            withAnimation { ready = true }
+            try? await Task.sleep(for: .milliseconds(400))
+            withAnimation { ready = true }                  // l'app s'affiche tout de suite
+            try? await Task.sleep(for: .seconds(2))
+            _ = await NotificationManager.shared.requestAuthorization()  // notif NON bloquante, par-dessus l'UI
         }
     }
 
