@@ -752,13 +752,14 @@ struct ProfileView: View {
     private var dailyTasksCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Aujourd'hui")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(Theme.textPrimary)
-                    Text(Date.now.formatted(.dateTime.weekday(.wide).day().month()))
-                        .font(.system(size: 11, weight: .medium))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("AUJOURD'HUI")
+                        .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(.secondary)
+                        .kerning(1.2)
+                    Text(Date.now.formatted(.dateTime.weekday(.wide).day().month()))
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(Theme.textPrimary)
                 }
                 Spacer()
                 let doneCnt = todayTasks.filter { $0.done }.count
@@ -771,7 +772,9 @@ struct ProfileView: View {
                 .background(doneCnt == todayTasks.count ? Color(hex: 0x4CC38A) : Color.accentColor, in: Capsule())
             }
 
-            Divider()
+            Rectangle()
+                .fill(Color.primary.opacity(0.06))
+                .frame(height: 1)
 
             VStack(spacing: 12) {
                 ForEach(todayTasks) { task in
