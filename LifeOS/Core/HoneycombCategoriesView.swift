@@ -8,8 +8,8 @@ private enum BC {
     static let baseFrac: CGFloat = 0.30          // baseDiameter = screenWidth * 0.30
 
     // --- TRANSPARENCE : bulle de savon ~70% transparente (RÈGLE ICI) ---
-    static let coreOpacity: Double = 0.35        // centre : ~70% transparent (le fond traverse)
-    static let rimOpacity:  Double = 0.60        // bord : film de savon (max ~0.6 = spec réf)
+    static let coreOpacity: Double = 0.62        // centre : légèrement translucide, couleur franche
+    static let rimOpacity:  Double = 0.90        // bord : couleur jewel bien présente
     static let docsCore:    Double = 0.12        // Documents = quasi incolore
     static let docsRim:     Double = 0.32
     static let fillerCore:  Double = 0.05        // micro-bulles = verre clair
@@ -17,8 +17,8 @@ private enum BC {
 
     // --- reflets blancs & glow ---
     static let glossOpacity: Double = 0.95       // reflet verni (goutte de verre)
-    static let innerGlowOp:  Double = 0.42       // halo blanc INTÉRIEUR au bord
-    static let whiteBloomOp: Double = 0.38       // bloom blanc EXTÉRIEUR
+    static let innerGlowOp:  Double = 0.30       // halo blanc INTÉRIEUR au bord (réduit pour couleur franche)
+    static let whiteBloomOp: Double = 0.30       // bloom blanc EXTÉRIEUR
     static let glow1Op: Double = 0.62            // glow néon couleur (serré)
     static let glow1R:  CGFloat = 0.30
     static let glow2Op: Double = 0.40            // bloom couleur (large)
@@ -255,7 +255,7 @@ private struct FixedBubble: View {
 
             // B · VOLUME 3D : ombrage directionnel BLANC/NOIR (garde la translucidité)
             Circle().fill(LinearGradient(
-                colors: [.white.opacity(0.16), .clear, .black.opacity(0.18)],
+                colors: [.white.opacity(0.10), .clear, .black.opacity(0.18)],
                 startPoint: .topLeading, endPoint: .bottomTrailing))
 
             // C · GLOW BLANC INTÉRIEUR : halo doux juste à l'intérieur du bord
