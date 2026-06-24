@@ -60,6 +60,9 @@ struct MainTabView: View {
                 onSend: sendChat
             )
         }
+        // La barre est alignée en bas de ce ZStack : c'est ICI qu'il faut ignorer
+        // la safe area pour que le pill colle à 10pt du vrai bord (sinon +34pt d'inset).
+        .ignoresSafeArea(.container, edges: .bottom)
         .sheet(isPresented: $showChat) {
             ChatHistorySheet(messages: chatMessages)
         }
@@ -172,6 +175,7 @@ struct FloatingTabBar: View {
     private static let barBg  = Color.white
     private static let selBg  = Color(white: 0.92)
     private static let fieldBg = Color(white: 0.94)
+    private static let barInset: CGFloat = 10   // gauche = droite = bas, identiques
 
     private let leftTabs:  [AppTab] = [.wakeup, .home]
     private let rightTabs: [AppTab] = [.categories, .profile]
@@ -243,8 +247,11 @@ struct FloatingTabBar: View {
         .background(Self.barBg, in: Capsule())
         .overlay(Capsule().stroke(Color(white: 0.88), lineWidth: 1))
         .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 6)
-        .padding(.horizontal, 18)
-        .padding(.bottom, 18)   // même distance que sur les côtés
+        // une seule valeur pilote gauche = droite = bas (= 10pt). L'ignoresSafeArea
+        // est posé sur le ZStack parent (MainTabView) pour que ces 10pt soient mesurés
+        // depuis le vrai bord de l'écran, pas depuis la safe area.
+        .padding(.horizontal, Self.barInset)
+        .padding(.bottom, Self.barInset)
         .animation(.spring(duration: 0.32, bounce: 0.2), value: chatMode)
         .onChange(of: inputFocused) { _, focused in
             withAnimation(.spring(duration: 0.32)) { chatMode = focused }

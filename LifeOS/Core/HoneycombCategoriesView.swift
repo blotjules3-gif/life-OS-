@@ -1,159 +1,340 @@
 import SwiftUI
 
-// MARK: - Catégories : grille propre, symétrique, façon app Apple
+// =====================================================================
+// MARK: - CONSTANTS  (tune everything here)
+// =====================================================================
+
+private enum BC {
+    static let baseFrac: CGFloat = 0.26     // baseDiameter = screenWidth * 0.26
+
+    // --- transparency (luminous jewel-tone glass, NOT washed-out ghosts) ---
+    static let coreOpacity: Double = 0.12
+    static let rimOpacity:  Double = 0.62
+    static let docsCore:    Double = 0.06    // Documents = nearly colourless, most transparent
+    static let docsRim:     Double = 0.34
+    static let fillerCore:  Double = 0.06
+    static let fillerRim:   Double = 0.40
+
+    // --- motion: gentle bob AROUND the anchor, going nowhere ---
+    static let bobAmount:       CGFloat = 4   // points
+    static let bobBigFactor:    CGFloat = 0.7 // big bubbles bob a touch less
+    static let bobFillerFactor: CGFloat = 1.4 // fillers bob a touch more
+    static let bigThreshold:    CGFloat = 1.10 // sizeMultiplier ≥ this → "big"
+
+    // --- interaction ---
+    static let tapThreshold: CGFloat = 10     // movement under this = tap, not drag
+    static let growPerTap:   CGFloat = 0.05   // most-used categories grow over time…
+    static let growMax:      CGFloat = 0.70   // …up to +70%
+}
+
+// =====================================================================
+// MARK: - Catégories : composition FIXE de bulles flottantes (zéro physique)
+// =====================================================================
 
 struct HoneycombCategoriesView: View {
     @State private var path: [AppCategory] = []
     @AppStorage("bubbleWeights") private var weightsRaw = ""
 
-    private static let order: [AppCategory] = [
-        .fitness, .nutrition, .looks, .mind, .finance, .social,
-        .sleep, .productivity, .learning, .home, .mobility, .travel,
-        .career, .invest, .admin
-    ]
-    private let columns = [GridItem(.flexible(), spacing: 18),
-                           GridItem(.flexible(), spacing: 18),
-                           GridItem(.flexible(), spacing: 18)]
-
     var body: some View {
         NavigationStack(path: $path) {
-            ScrollView(showsIndicators: false) {
-                LazyVGrid(columns: columns, spacing: 26) {
-                    ForEach(Self.order, id: \.self) { cat in
-                        Button {
-                            bump(cat); Haptics.soft(); path.append(cat)
-                        } label: {
-                            GlossyBubble(color: BubbleStyle.color(cat),
-                                         icon: cat.icon,
-                                         label: BubbleStyle.label(cat))
+            GeometryReader { geo in
+                let bubbles = Layout.build(in: geo.size, weights: parseWeights())
+                let c = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
+                let maxD = bubbles.map { hypot($0.anchor.x - c.x, $0.anchor.y - c.y) }.max() ?? 1
+
+                // .animation drives the calm bob; placement at rest is ALWAYS the anchor.
+                TimelineView(.animation) { tl in
+                    let t = tl.date.timeIntervalSinceReferenceDate
+                    ZStack {
+                        BubbleMesh().ignoresSafeArea()
+                        ForEach(bubbles) { b in     // sorted small→big ⇒ big drawn on top
+                            FixedBubble(
+                                spec: b, time: t,
+                                bloomDelay: Double(hypot(b.anchor.x - c.x, b.anchor.y - c.y) / max(1, maxD)) * 0.45,
+                                onTap: b.cat == nil ? nil : {
+                                    bump(b.cat!)
+                                    path.append(b.cat!)
+                                })
                         }
-                        .buttonStyle(BubblePress())
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
-                .padding(.bottom, 24)
             }
-            .background(BubbleMesh().ignoresSafeArea())
-            .navigationTitle("Catégories")
+            .background(BubbleMesh().ignoresSafeArea())   // bleed behind the bars
+            .toolbar(.hidden, for: .navigationBar)         // no title, immersive
             .navigationDestination(for: AppCategory.self) { $0.destination }
         }
     }
 
-    private func bump(_ cat: AppCategory) {
+    // MARK: persisted click weights  ("rawValue:count,…")
+    private func parseWeights() -> [String: Int] {
         var m: [String: Int] = [:]
         for pair in weightsRaw.split(separator: ",") {
             let kv = pair.split(separator: ":")
             if kv.count == 2, let v = Int(kv[1]) { m[String(kv[0])] = v }
         }
+        return m
+    }
+    private func bump(_ cat: AppCategory) {
+        var m = parseWeights()
         m[cat.rawValue, default: 0] += 1
         weightsRaw = m.map { "\($0):\($1)" }.joined(separator: ",")
     }
 }
 
-// Petit effet d'appui propre (scale + ressort)
-private struct BubblePress: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.92 : 1)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: configuration.isPressed)
-    }
-}
+// =====================================================================
+// MARK: - One bubble : anchored, bobs in place, drag springs back
+// =====================================================================
 
-// MARK: - Bulle glossy (shader Metal), taille uniforme
+private struct FixedBubble: View {
+    let spec: Layout.Spec
+    let time: Double
+    let bloomDelay: Double
+    let onTap: (() -> Void)?      // nil for fillers (non-interactive)
 
-struct GlossyBubble: View {
-    let color: Color
-    let icon: String
-    let label: String
-    var size: CGFloat = 104
-
+    @State private var drag: CGSize = .zero
+    @State private var dragging = false
     @State private var appeared = false
+    @State private var bounce = 0
+
+    private var iris: [Color] {
+        let hues: [Color] = [.pink, .purple, .blue, .cyan, .green, .yellow, .orange, .pink]
+        return hues.map { $0.opacity(0.45) }
+    }
 
     var body: some View {
-        Circle()
-            .fill(ShaderLibrary.bubble(.float2(Float(size), Float(size)),
-                                       .color(color),
-                                       .float2(-0.42, -0.5)))
-            .frame(width: size, height: size)
-            .overlay {
-                VStack(spacing: size * 0.04) {
+        let r = spec.diameter / 2
+
+        // FIX 2 — gentle bob around the anchor (no velocity, no drift, always returns).
+        let bob = BC.bobAmount * spec.bobFactor
+        let bx = CGFloat(sin(time * 0.5  + spec.phase))       * bob
+        let by = CGFloat(cos(time * 0.42 + spec.phase * 1.3)) * bob
+        let dx = drag.width  + (dragging ? 0 : bx)
+        let dy = drag.height + (dragging ? 0 : by)
+
+        bubbleBody(r: r)
+            .frame(width: spec.diameter, height: spec.diameter)
+            .shadow(color: spec.tint.opacity(0.34), radius: r * 0.22)   // coloured glow halo
+            .scaleEffect(appeared ? 1 : 0.01)
+            .opacity(appeared ? 1 : 0)
+            .position(x: spec.anchor.x + dx, y: spec.anchor.y + dy)
+            .modifier(DragIfNeeded(enabled: onTap != nil, r: r,
+                                   drag: $drag, dragging: $dragging,
+                                   onTap: { bounce += 1; Haptics.soft(); onTap?() }))
+            .onAppear {
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.7).delay(bloomDelay)) {
+                    appeared = true
+                }
+            }
+    }
+
+    // The transparent soap-bubble layer stack.
+    @ViewBuilder private func bubbleBody(r: CGFloat) -> some View {
+        let t = spec.tint
+        ZStack {
+            // 1 · see-through tinted body — clear centre, saturated rim (Fresnel)
+            Circle().fill(RadialGradient(
+                stops: [
+                    .init(color: t.opacity(spec.coreOp),       location: 0.00),
+                    .init(color: t.opacity(spec.rimOp * 0.40), location: 0.60),
+                    .init(color: t.opacity(spec.rimOp),        location: 1.00)
+                ],
+                center: UnitPoint(x: 0.42, y: 0.40), startRadius: 0, endRadius: r))
+
+            // 2 · soft transmission glow (lit from within)
+            Circle().fill(RadialGradient(
+                colors: [.white.opacity(0.20), .clear],
+                center: UnitPoint(x: 0.40, y: 0.37), startRadius: 0, endRadius: r * 0.95))
+
+            // 3 · thin iridescent rainbow rim
+            Circle().strokeBorder(AngularGradient(colors: iris, center: .center),
+                                  lineWidth: max(0.8, r * 0.05))
+                .blur(radius: 0.4)
+
+            // 4 · crisp white specular highlights (sharp, not blurred)
+            Ellipse().fill(.white.opacity(0.92))
+                .frame(width: r * 0.40, height: r * 0.26)
+                .rotationEffect(.degrees(-32))
+                .offset(x: -r * 0.30, y: -r * 0.40)
+            Circle().fill(.white.opacity(0.80))
+                .frame(width: r * 0.11, height: r * 0.11)
+                .offset(x: r * 0.22, y: -r * 0.28)
+
+            // 5 · glyph + label (main bubbles only)
+            if let icon = spec.icon {
+                VStack(spacing: r * 0.05) {
                     Image(systemName: icon)
-                        .font(.system(size: size * 0.34, weight: .semibold))
-                        .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
-                    Text(label)
-                        .font(.system(size: size * 0.125, weight: .semibold))
-                        .lineLimit(1).minimumScaleFactor(0.6)
-                        .shadow(color: .black.opacity(0.3), radius: 2, y: 1)
+                        .font(.system(size: r * 0.46, weight: .semibold))
+                        .symbolEffect(.bounce, value: bounce)
+                    if let label = spec.label, r > 30 {
+                        Text(label)
+                            .font(.system(size: max(9, r * 0.20), weight: .semibold))
+                            .lineLimit(1).minimumScaleFactor(0.55)
+                    }
                 }
                 .foregroundStyle(.white)
-                .padding(.horizontal, 6)
+                .shadow(color: .black.opacity(0.28), radius: 1.5, y: 1)
+                .padding(.horizontal, 4)
             }
-            .shadow(color: color.opacity(0.45), radius: size * 0.13, y: size * 0.05)
-            .frame(maxWidth: .infinity)         // centre la bulle dans sa cellule
-            .scaleEffect(appeared ? 1 : 0.6)
-            .opacity(appeared ? 1 : 0)
-            .onAppear {
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) { appeared = true }
-            }
+        }
     }
 }
 
-// MARK: - Fond mesh pâle lumineux
+/// Drag-to-rearrange (follows finger) + tap, only when interactive. On release the
+/// bubble springs back to its anchor; a move under the threshold counts as a tap.
+private struct DragIfNeeded: ViewModifier {
+    let enabled: Bool
+    let r: CGFloat
+    @Binding var drag: CGSize
+    @Binding var dragging: Bool
+    let onTap: () -> Void
+
+    func body(content: Content) -> some View {
+        guard enabled else { return AnyView(content) }
+        return AnyView(content.gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { v in dragging = true; drag = v.translation }
+                .onEnded { v in
+                    let moved = hypot(v.translation.width, v.translation.height)
+                    if moved < BC.tapThreshold { onTap() }
+                    withAnimation(.spring(response: 0.45, dampingFraction: 0.6)) {
+                        drag = .zero                 // snap back toward the anchor
+                    } completion: {
+                        dragging = false             // resume bob from rest
+                    }
+                }
+        ))
+    }
+}
+
+// =====================================================================
+// MARK: - Background : full-screen pastel mesh gradient
+// =====================================================================
 
 struct BubbleMesh: View {
     var body: some View {
         MeshGradient(
             width: 3, height: 3,
             points: [
-                SIMD2(0, 0), SIMD2(0.5, 0), SIMD2(1, 0),
+                SIMD2(0, 0),   SIMD2(0.5, 0),   SIMD2(1, 0),
                 SIMD2(0, 0.5), SIMD2(0.5, 0.5), SIMD2(1, 0.5),
-                SIMD2(0, 1), SIMD2(0.5, 1), SIMD2(1, 1)
+                SIMD2(0, 1),   SIMD2(0.5, 1),   SIMD2(1, 1)
             ],
             colors: [
-                .init(.sRGB, red: 0.88, green: 0.95, blue: 1.00),
-                .init(.sRGB, red: 0.96, green: 0.97, blue: 1.00),
-                .init(.sRGB, red: 0.97, green: 0.94, blue: 1.00),
-                .init(.sRGB, red: 0.95, green: 0.99, blue: 1.00),
-                .init(.sRGB, red: 0.99, green: 0.99, blue: 1.00),
-                .init(.sRGB, red: 0.98, green: 0.96, blue: 1.00),
-                .init(.sRGB, red: 0.93, green: 0.97, blue: 1.00),
-                .init(.sRGB, red: 0.95, green: 0.98, blue: 1.00),
-                .init(.sRGB, red: 0.95, green: 0.96, blue: 1.00)
-            ]
-        )
+                .init(.sRGB, red: 0.80, green: 0.93, blue: 0.97), // TL pale cyan
+                .init(.sRGB, red: 0.95, green: 0.95, blue: 0.99), // top near-white
+                .init(.sRGB, red: 0.99, green: 0.92, blue: 0.94), // TR peach/lilac
+                .init(.sRGB, red: 0.93, green: 0.92, blue: 0.99), // L pale lilac
+                .init(.sRGB, red: 0.99, green: 0.99, blue: 1.00), // luminous centre
+                .init(.sRGB, red: 1.00, green: 0.95, blue: 0.92), // R pale peach
+                .init(.sRGB, red: 0.85, green: 0.91, blue: 0.99), // BL soft blue
+                .init(.sRGB, red: 0.88, green: 0.93, blue: 1.00), // bottom soft blue
+                .init(.sRGB, red: 0.93, green: 0.90, blue: 0.99)  // BR pale lilac
+            ])
     }
 }
 
-// MARK: - Couleurs & labels (mapping de la référence)
+// =====================================================================
+// MARK: - FIX 1 : hard-coded composition (anchors as fractions of screen)
+// =====================================================================
 
-enum BubbleStyle {
-    static func color(_ c: AppCategory) -> Color {
-        switch c {
-        case .fitness: return .red
-        case .mind: return .purple
-        case .social: return .pink
-        case .looks: return .orange
-        case .finance: return .blue
-        case .travel: return .blue
-        case .nutrition: return .green
-        case .sleep: return .indigo
-        case .learning: return .yellow
-        case .home: return .blue
-        case .mobility: return .teal
-        case .productivity: return .teal
-        case .career: return .brown
-        case .invest: return .mint
-        case .admin: return Color(white: 0.72)
-        }
+private enum Layout {
+
+    struct Spec: Identifiable {
+        let id: Int
+        let cat: AppCategory?     // nil = filler
+        let anchor: CGPoint       // FIXED position in screen points
+        let diameter: CGFloat
+        let tint: Color
+        let icon: String?
+        let label: String?
+        let coreOp: Double
+        let rimOp: Double
+        let bobFactor: CGFloat
+        let phase: Double
     }
-    static func label(_ c: AppCategory) -> String {
+
+    /// (category, x-fraction, y-fraction, sizeMultiplier) — origin top-left, y down.
+    private static let template: [(AppCategory, CGFloat, CGFloat, CGFloat)] = [
+        (.admin,        0.24, 0.18, 1.05),   // Documents (very transparent, colourless)
+        (.career,       0.50, 0.20, 1.00),   // Travail
+        (.social,       0.79, 0.24, 1.15),   // Social
+        (.finance,      0.17, 0.39, 0.85),   // Finance
+        (.mind,         0.44, 0.41, 1.10),   // Mental
+        (.looks,        0.72, 0.45, 1.10),   // Bien-être
+        (.learning,     0.88, 0.56, 0.80),   // Éducation
+        (.fitness,      0.31, 0.62, 1.40),   // Sport — HERO
+        (.nutrition,    0.60, 0.66, 1.05),   // Alimentation
+        (.sleep,        0.83, 0.67, 0.95),   // Sommeil
+        (.invest,       0.15, 0.60, 0.78),   // Bourse
+        (.productivity, 0.18, 0.78, 0.85),   // Tâches
+        (.home,         0.64, 0.81, 0.85),   // Maison
+        (.travel,       0.40, 0.87, 1.10),   // Voyage
+        (.mobility,     0.80, 0.89, 0.90)    // Transports
+    ]
+
+    /// 6–8 sparse fillers in the gaps (x, y, sizeFractionOfBase).
+    private static let fillers: [(CGFloat, CGFloat, CGFloat)] = [
+        (0.55, 0.32, 0.22), (0.30, 0.50, 0.18), (0.70, 0.58, 0.27),
+        (0.50, 0.74, 0.20), (0.88, 0.78, 0.16), (0.27, 0.68, 0.24),
+        (0.62, 0.54, 0.15)
+    ]
+
+    static func build(in size: CGSize, weights: [String: Int]) -> [Spec] {
+        guard size.width > 0 else { return [] }
+        let base = size.width * BC.baseFrac
+        let fillerPalette: [Color] = [.cyan, .mint, .pink, .purple, .blue, .teal, .indigo]
+        var out: [Spec] = []
+        var id = 0
+
+        for (cat, fx, fy, mult) in template {
+            let grown = mult * growth(weights[cat.rawValue] ?? 0)
+            let isDocs = (cat == .admin)
+            out.append(Spec(
+                id: id, cat: cat,
+                anchor: CGPoint(x: fx * size.width, y: fy * size.height),
+                diameter: base * grown,
+                tint: tint(cat),
+                icon: cat.icon,
+                label: label(cat),
+                coreOp: isDocs ? BC.docsCore : BC.coreOpacity,
+                rimOp:  isDocs ? BC.docsRim  : BC.rimOpacity,
+                bobFactor: mult >= BC.bigThreshold ? BC.bobBigFactor : 1.0,
+                phase: Double(id) * 0.9))
+            id += 1
+        }
+
+        for (i, (fx, fy, frac)) in fillers.enumerated() {
+            out.append(Spec(
+                id: id, cat: nil,
+                anchor: CGPoint(x: fx * size.width, y: fy * size.height),
+                diameter: base * frac,
+                tint: fillerPalette[i % fillerPalette.count],
+                icon: nil, label: nil,
+                coreOp: BC.fillerCore, rimOp: BC.fillerRim,
+                bobFactor: BC.bobFillerFactor,
+                phase: Double(id) * 0.9))
+            id += 1
+        }
+
+        // draw order: small first → big last (big on top, labels readable)
+        return out.sorted { $0.diameter < $1.diameter }
+    }
+
+    private static func growth(_ count: Int) -> CGFloat {
+        1 + min(CGFloat(count) * BC.growPerTap, BC.growMax)
+    }
+
+    private static func tint(_ c: AppCategory) -> Color {
+        c == .admin ? Color(white: 0.78) : c.tint   // Documents = nearly colourless
+    }
+
+    private static func label(_ c: AppCategory) -> String {
         switch c {
-        case .sleep: return "Sommeil"; case .nutrition: return "Alimentation"; case .fitness: return "Sport"
-        case .looks: return "Bien-être"; case .mind: return "Mental"; case .productivity: return "Tâches"
-        case .finance: return "Finance"; case .invest: return "Bourse"; case .career: return "Travail"
-        case .learning: return "Éducation"; case .home: return "Maison"; case .mobility: return "Transports"
-        case .social: return "Social"; case .admin: return "Documents"; case .travel: return "Voyage"
+        case .sleep: return "Sommeil";   case .nutrition: return "Alimentation"; case .fitness: return "Sport"
+        case .looks: return "Bien-être"; case .mind: return "Mental";            case .productivity: return "Tâches"
+        case .finance: return "Finance"; case .invest: return "Bourse";          case .career: return "Travail"
+        case .learning: return "Éducation"; case .home: return "Maison";         case .mobility: return "Transports"
+        case .social: return "Social";   case .admin: return "Documents";        case .travel: return "Voyage"
         }
     }
 }

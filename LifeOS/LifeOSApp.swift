@@ -30,19 +30,14 @@ struct LifeOSApp: App {
         WindowGroup {
             ZStack {
                 if let container {
-                    // Container prêt → navigation normale
                     appContent(container: container)
                 } else {
-                    // Container en cours de création → splash
                     SplashView(status: loadingStatus)
                         .transition(.opacity)
                 }
             }
             .animation(.easeInOut(duration: 0.35), value: container != nil)
-            // Création du container sur thread background au démarrage
-            .task {
-                await buildContainer()
-            }
+            .task { await buildContainer() }
         }
     }
 
