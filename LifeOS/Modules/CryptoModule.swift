@@ -1022,7 +1022,7 @@ struct CryptoAlertesTab: View {
 
 struct AddAlertSheet: View {
     let assets: [CryptoAsset]
-    let onAdd: (PriceAlert) -> Void
+    fileprivate let onAdd: (PriceAlert) -> Void
 
     @State private var selectedId = "bitcoin"
     @State private var direction = "above"
