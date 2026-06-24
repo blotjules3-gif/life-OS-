@@ -196,7 +196,7 @@ struct FloatingTabBar: View {
                     } label: {
                         Image(systemName: "chevron.down")
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.7))
+                            .foregroundStyle(.secondary)
                             .frame(width: 30, height: 30)
                     }
                     .buttonStyle(.plain)
