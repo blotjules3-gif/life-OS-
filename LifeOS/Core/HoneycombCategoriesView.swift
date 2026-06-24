@@ -1,24 +1,27 @@
 import SwiftUI
 
 // =====================================================================
-// MARK: - CONSTANTS  (tout se règle ici)
+// MARK: - CONSTANTS  (tout se règle ici — transparence en haut)
 // =====================================================================
 
 private enum BC {
     static let baseFrac: CGFloat = 0.30          // baseDiameter = screenWidth * 0.30
 
-    // --- matériau (verre verni, couleur VIVE) ---
-    static let bodyOpacity:   Double = 0.92      // corps : couleur pleine et présente
-    static let docsOpacity:   Double = 0.42      // Documents = pâle translucide
-    static let fillerOpacity: Double = 0.26      // fillers = bulles de verre claires
-    static let litMix:        Double = 0.35      // côté éclairé : teinte + un peu de blanc
-    static let darkMix:       Double = 0.45      // côté ombre : teinte assombrie
-    static let glossOpacity:  Double = 0.95      // gros reflet blanc verni
+    // --- TRANSPARENCE : bulle de savon ~70% transparente (RÈGLE ICI) ---
+    static let coreOpacity: Double = 0.40        // centre : transparent (le fond traverse) mais coloré
+    static let rimOpacity:  Double = 0.72        // bord : film de savon, couleur bien présente
+    static let docsCore:    Double = 0.12        // Documents = quasi incolore
+    static let docsRim:     Double = 0.32
+    static let fillerCore:  Double = 0.05        // micro-bulles = verre clair
+    static let fillerRim:   Double = 0.22
 
-    // --- glow néon (chaque bulle rayonne sa couleur) ---
-    static let glow1Op: Double = 0.70
+    // --- reflets blancs & glow ---
+    static let glossOpacity: Double = 0.95       // reflet verni (goutte de verre)
+    static let innerGlowOp:  Double = 0.42       // halo blanc INTÉRIEUR au bord
+    static let whiteBloomOp: Double = 0.38       // bloom blanc EXTÉRIEUR
+    static let glow1Op: Double = 0.62            // glow néon couleur (serré)
     static let glow1R:  CGFloat = 0.30
-    static let glow2Op: Double = 0.42
+    static let glow2Op: Double = 0.40            // bloom couleur (large)
     static let glow2R:  CGFloat = 0.58
 
     // --- mouvement : léger bob autour de l'ancre, sans dérive ---
@@ -34,7 +37,7 @@ private enum BC {
 }
 
 // =====================================================================
-// MARK: - Catégories : composition FIXE de bulles vernies (zéro physique)
+// MARK: - Catégories : composition FIXE de bulles de savon (zéro physique)
 // =====================================================================
 
 struct HoneycombCategoriesView: View {
@@ -205,8 +208,9 @@ private struct FixedBubble: View {
             .frame(width: spec.diameter, height: spec.diameter)
             .rotationEffect(.degrees(wig))
             .overlay(alignment: .topLeading) { removeBadge(r: r) }
-            .shadow(color: spec.tint.opacity(BC.glow1Op), radius: r * BC.glow1R)   // glow néon serré
-            .shadow(color: spec.tint.opacity(BC.glow2Op), radius: r * BC.glow2R)   // bloom large
+            .shadow(color: .white.opacity(BC.whiteBloomOp), radius: r * 0.20)        // bloom blanc doux
+            .shadow(color: spec.tint.opacity(BC.glow1Op), radius: r * BC.glow1R)     // glow néon couleur
+            .shadow(color: spec.tint.opacity(BC.glow2Op), radius: r * BC.glow2R)     // bloom couleur large
             .scaleEffect(appeared ? 1 : 0.01)
             .opacity(appeared ? 1 : 0)
             .position(x: spec.anchor.x + dx, y: spec.anchor.y + dy)
@@ -234,57 +238,58 @@ private struct FixedBubble: View {
         }
     }
 
-    // Verre coloré verni : volume 3D + couleur vive + gros reflet blanc brillant.
+    // Bulle de savon TRANSLUCIDE : centre transparent, film de savon au bord,
+    // volume 3D par ombrage blanc/noir, halo blanc intérieur, reflets blancs vernis.
     @ViewBuilder private func bubbleBody(r: CGFloat) -> some View {
         let t = spec.tint
-        let op = spec.bodyOp
-        let lit  = t.mix(with: .white, by: BC.litMix)
-        let dark = t.mix(with: .black, by: BC.darkMix)
 
         ZStack {
-            // A · VOLUME directionnel — cœur PLEINEMENT SATURÉ (clair haut-gauche → sombre bas-droite)
-            Circle().fill(LinearGradient(
+            // A · CORPS translucide : centre TRÈS transparent → bord film de savon (radial)
+            Circle().fill(RadialGradient(
                 stops: [
-                    .init(color: lit.opacity(op),                  location: 0.00),
-                    .init(color: t.opacity(op),                    location: 0.45),
-                    .init(color: t.opacity(op),                    location: 0.62),
-                    .init(color: dark.opacity(min(1, op + 0.08)),  location: 1.00)
+                    .init(color: t.opacity(spec.coreOp),        location: 0.00),
+                    .init(color: t.opacity(spec.rimOp * 0.66),  location: 0.60),
+                    .init(color: t.opacity(spec.rimOp),         location: 1.00)
                 ],
+                center: UnitPoint(x: 0.42, y: 0.38), startRadius: 0, endRadius: r))
+
+            // B · VOLUME 3D : ombrage directionnel BLANC/NOIR (garde la translucidité)
+            Circle().fill(LinearGradient(
+                colors: [.white.opacity(0.16), .clear, .black.opacity(0.18)],
                 startPoint: .topLeading, endPoint: .bottomTrailing))
 
-            // B · cœur lumineux interne (lit from within)
-            Circle().fill(RadialGradient(
-                colors: [lit.opacity(op * 0.55), .clear],
-                center: UnitPoint(x: 0.42, y: 0.34), startRadius: 0, endRadius: r * 0.70))
+            // C · GLOW BLANC INTÉRIEUR : halo doux juste à l'intérieur du bord
+            Circle().strokeBorder(.white.opacity(BC.innerGlowOp), lineWidth: r * 0.11)
+                .blur(radius: r * 0.09)
 
-            // C · REFLET VERNI BLANC concentré en haut (goutte de verre, net)
+            // D · REFLET VERNI concentré (goutte de verre, net)
             Ellipse()
                 .fill(RadialGradient(colors: [.white.opacity(BC.glossOpacity), .white.opacity(0.0)],
                                      center: .center, startRadius: 0, endRadius: r * 0.50))
-                .frame(width: r * 0.96, height: r * 0.72)
+                .frame(width: r * 0.90, height: r * 0.68)
                 .offset(x: -r * 0.10, y: -r * 0.40)
                 .blur(radius: r * 0.02)
 
-            // D · hotspot blanc net
+            // E · hotspot blanc net
             Ellipse().fill(.white)
-                .frame(width: r * 0.32, height: r * 0.20)
+                .frame(width: r * 0.28, height: r * 0.18)
                 .rotationEffect(.degrees(-25))
-                .offset(x: -r * 0.30, y: -r * 0.46)
+                .offset(x: -r * 0.30, y: -r * 0.45)
                 .blur(radius: r * 0.015)
 
-            // E · arc lumineux blanc sur le rebord haut
+            // F · arc lumineux blanc sur le rebord haut
             Circle().strokeBorder(
-                LinearGradient(colors: [.white.opacity(0.9), .white.opacity(0.0)],
+                LinearGradient(colors: [.white.opacity(0.85), .white.opacity(0.0)],
                                startPoint: .top, endPoint: .center),
-                lineWidth: max(1, r * 0.05))
+                lineWidth: max(1, r * 0.04))
 
-            // F · accroche blanche douce sur le rebord bas (la lumière fait le tour)
-            Ellipse().fill(.white.opacity(0.5))
-                .frame(width: r * 0.55, height: r * 0.14)
+            // G · accroche blanche douce sur le rebord bas
+            Ellipse().fill(.white.opacity(0.45))
+                .frame(width: r * 0.50, height: r * 0.13)
                 .offset(y: r * 0.72)
                 .blur(radius: r * 0.06)
 
-            // G · glyphe + label (bulles principales)
+            // H · glyphe + label (bulles principales)
             if let icon = spec.icon {
                 VStack(spacing: r * 0.05) {
                     Image(systemName: icon)
@@ -297,15 +302,14 @@ private struct FixedBubble: View {
                     }
                 }
                 .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.30), radius: 2, y: 1)
+                .shadow(color: .black.opacity(0.35), radius: 3, y: 1)   // lisible sur fond translucide
                 .padding(.horizontal, 4)
             }
         }
     }
 }
 
-/// Drag-pour-réorganiser + tap, seulement quand interactif. Au relâché : retour ressort
-/// vers l'ancre ; un mouvement sous le seuil = tap.
+/// Drag-pour-réorganiser + tap, seulement quand interactif. Au relâché : retour ressort.
 private struct DragIfNeeded: ViewModifier {
     let enabled: Bool
     let r: CGFloat
@@ -359,7 +363,7 @@ struct BubbleMesh: View {
 }
 
 // =====================================================================
-// MARK: - Composition codée en dur (grille serrée, Sport centré comme la réf)
+// MARK: - Composition codée en dur (cluster organique, espacé, tailles variées)
 // =====================================================================
 
 private enum Layout {
@@ -372,41 +376,41 @@ private enum Layout {
         let tint: Color
         let icon: String?
         let label: String?
-        let bodyOp: Double
+        let coreOp: Double
+        let rimOp: Double
         let bobFactor: CGFloat
         let phase: Double
         let showLabel: Bool
     }
 
-    /// (catégorie, x-fraction, y-fraction, multiplicateur de taille) — origine haut-gauche.
-    /// Grille 5×3 : colonne centrale plus grosse (Social, Sport héros, Bien-être, Voyage).
-    /// Cluster ORGANIQUE à tailles variées (mult = multiplicateur de taille, à régler).
-    /// Sport ~1.5 (héros) · grosses ~1.15-1.22 · moyennes ~0.92-0.95 · petites ~0.74-0.82.
+    /// Cluster ORGANIQUE espacé, tailles variées (3ᵉ nombre = multiplicateur de taille).
+    /// Sport ~1.40 (héros) · grosses ~1.12-1.18 · moyennes ~0.92-0.96 · petites ~0.78-0.86.
+    /// Positions écartées pour que CHAQUE bulle soit entièrement visible.
     private static let template: [(AppCategory, CGFloat, CGFloat, CGFloat)] = [
-        (.admin,        0.220, 0.165, 0.95),   // Documents (très transparent)
-        (.career,       0.470, 0.195, 0.92),   // Travail (moyenne)
-        (.social,       0.770, 0.220, 1.22),   // Social (grosse)
-        (.finance,      0.165, 0.350, 0.92),   // Finance (moyenne)
-        (.mind,         0.435, 0.370, 1.18),   // Mental (grosse)
-        (.looks,        0.715, 0.405, 1.20),   // Bien-être (grosse)
-        (.learning,     0.835, 0.520, 0.82),   // Éducation (petite-moyenne)
-        (.fitness,      0.315, 0.560, 1.50),   // Sport — HÉROS (la plus grosse)
-        (.nutrition,    0.590, 0.610, 1.15),   // Alimentation (grosse)
-        (.sleep,        0.820, 0.625, 0.95),   // Sommeil (moyenne)
-        (.productivity, 0.180, 0.720, 0.95),   // Tâches (moyenne)
-        (.home,         0.660, 0.740, 0.92),   // Maison (moyenne)
-        (.travel,       0.400, 0.805, 1.20),   // Voyage (grosse)
-        (.mobility,     0.795, 0.830, 0.95),   // Transports (moyenne)
-        (.invest,       0.140, 0.825, 0.74)    // Bourse (petite, coin bas-gauche)
+        (.admin,        0.215, 0.170, 0.96),   // Documents (très transparent)
+        (.career,       0.475, 0.185, 0.92),   // Travail
+        (.social,       0.785, 0.215, 1.18),   // Social (grosse)
+        (.finance,      0.160, 0.350, 0.92),   // Finance
+        (.mind,         0.445, 0.370, 1.14),   // Mental (grosse)
+        (.looks,        0.735, 0.405, 1.16),   // Bien-être (grosse)
+        (.learning,     0.870, 0.540, 0.86),   // Éducation (bien dégagée à droite)
+        (.fitness,      0.300, 0.560, 1.40),   // Sport — HÉROS
+        (.nutrition,    0.585, 0.625, 1.12),   // Alimentation (grosse)
+        (.sleep,        0.835, 0.665, 0.96),   // Sommeil
+        (.productivity, 0.170, 0.715, 0.96),   // Tâches
+        (.home,         0.625, 0.780, 0.96),   // Maison (bien dégagée)
+        (.travel,       0.390, 0.810, 1.16),   // Voyage (grosse)
+        (.mobility,     0.820, 0.835, 0.96),   // Transports
+        (.invest,       0.150, 0.850, 0.80)    // Bourse (visible, coin bas-gauche)
     ]
 
     /// ~9 micro-bulles blanches translucides dans les creux (x, y, fractionDeBase).
     private static let fillers: [(CGFloat, CGFloat, CGFloat)] = [
-        (0.345, 0.250, 0.20), (0.620, 0.150, 0.13),
-        (0.600, 0.470, 0.18), (0.130, 0.510, 0.13),
-        (0.880, 0.385, 0.12), (0.490, 0.695, 0.16),
-        (0.895, 0.730, 0.15), (0.270, 0.880, 0.14),
-        (0.620, 0.885, 0.13)
+        (0.350, 0.255, 0.20), (0.625, 0.150, 0.13),
+        (0.605, 0.475, 0.18), (0.120, 0.520, 0.13),
+        (0.905, 0.395, 0.12), (0.490, 0.705, 0.16),
+        (0.910, 0.745, 0.15), (0.265, 0.885, 0.14),
+        (0.625, 0.900, 0.13)
     ]
 
     static let allCats: [AppCategory] = template.map { $0.0 }
@@ -425,18 +429,19 @@ private enum Layout {
         }
 
         for (i, m) in mains.enumerated() {
-            // label masqué si le centre est recouvert par une bulle plus GROSSE
+            // label masqué seulement si le centre est recouvert par une bulle plus GROSSE
             var show = true
             for (j, o) in mains.enumerated() where j != i && o.dia > m.dia * 1.02 {
                 let d = hypot(m.center.x - o.center.x, m.center.y - o.center.y)
-                if d < o.dia / 2 * 0.9 { show = false; break }
+                if d < o.dia / 2 * 0.85 { show = false; break }
             }
             let isDocs = (m.cat == .admin)
             out.append(Spec(
                 id: id, cat: m.cat,
                 anchor: m.center, diameter: m.dia,
                 tint: color(m.cat), icon: m.cat.icon, label: label(m.cat),
-                bodyOp: isDocs ? BC.docsOpacity : BC.bodyOpacity,
+                coreOp: isDocs ? BC.docsCore : BC.coreOpacity,
+                rimOp:  isDocs ? BC.docsRim  : BC.rimOpacity,
                 bobFactor: m.mult >= BC.bigThreshold ? BC.bobBigFactor : 1.0,
                 phase: Double(id) * 0.9,
                 showLabel: show))
@@ -450,7 +455,7 @@ private enum Layout {
                 diameter: base * frac,
                 tint: .white,
                 icon: nil, label: nil,
-                bodyOp: BC.fillerOpacity,
+                coreOp: BC.fillerCore, rimOp: BC.fillerRim,
                 bobFactor: BC.bobFillerFactor,
                 phase: Double(id) * 0.9,
                 showLabel: false))
@@ -465,7 +470,7 @@ private enum Layout {
         1 + min(CGFloat(count) * BC.growPerTap, BC.growMax)
     }
 
-    /// Couleurs JEWEL TONES vives (comme la référence), pas les teintes système ternes.
+    /// Couleurs JEWEL TONES vives (comme la référence).
     static func color(_ c: AppCategory) -> Color {
         switch c {
         case .fitness:      return Color(red: 1.00, green: 0.20, blue: 0.22)   // rouge vif
