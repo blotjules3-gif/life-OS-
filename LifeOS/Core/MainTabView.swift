@@ -169,9 +169,9 @@ struct FloatingTabBar: View {
     @State private var chatMode = false
     @Namespace private var ns
 
-    private static let barBg = Color(red: 0.10, green: 0.10, blue: 0.11)
-    private static let selBg = Color(white: 0.28)
-    private static let fieldBg = Color(white: 0.20)
+    private static let barBg  = Color.white
+    private static let selBg  = Color(white: 0.92)
+    private static let fieldBg = Color(white: 0.94)
 
     private let leftTabs:  [AppTab] = [.camera, .home]
     private let rightTabs: [AppTab] = [.categories, .profile]
