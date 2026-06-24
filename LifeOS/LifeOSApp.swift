@@ -25,7 +25,7 @@ struct LifeOSApp: App {
         Supplement.self, PantryItem.self, ShoppingItem.self, WorkoutSet.self, StepEntry.self,
         // Vie
         ProgressPhoto.self, WardrobeItem.self, MoodEntry.self, TodoItem.self,
-        Habit.self, HabitCompletion.self, Note.self,
+        Habit.self, HabitCompletion.self, Note.self, MemoryEntry.self,
         Account.self, Txn.self, Envelope.self, Subscription.self, SavingsGoal.self, SplitExpense.self,
         // Patrimoine & reste
         Holding.self, NetWorthItem.self, Property.self, JobApplication.self, SkillGap.self,
