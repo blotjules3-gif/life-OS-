@@ -1073,6 +1073,232 @@ struct AddAlertSheet: View {
     }
 }
 
+// MARK: - Onglet Apprendre
+
+private struct CryptoLesson: Identifiable {
+    let id = UUID()
+    let icon: String
+    let title: String
+    let subtitle: String
+    let body: String
+    let duration: String
+    let color: Color
+}
+
+private struct CryptoNotion: Identifiable {
+    let id = UUID()
+    let term: String
+    let definition: String
+    let color: Color
+}
+
+private let cryptoLessons: [CryptoLesson] = [
+    CryptoLesson(
+        icon: "bitcoinsign.circle.fill",
+        title: "Bitcoin — L'or numérique",
+        subtitle: "La première crypto-monnaie décentralisée",
+        body: "Bitcoin (BTC) a été créé en 2009 par Satoshi Nakamoto. C'est la première monnaie numérique décentralisée : personne ne la contrôle. Il n'en existera jamais plus de 21 millions. Cette rareté programmée la distingue des monnaies traditionnelles.\n\nBitcoin fonctionne grâce à la blockchain : un registre public et immuable tenu par des milliers d'ordinateurs dans le monde. Chaque transaction est vérifiée par ce réseau, rendant la fraude pratiquement impossible.",
+        duration: "3 min",
+        color: Color(hex: 0xF7931A)
+    ),
+    CryptoLesson(
+        icon: "link.circle.fill",
+        title: "La Blockchain expliquée",
+        subtitle: "Comment fonctionne le registre décentralisé",
+        body: "Une blockchain est une base de données partagée entre des milliers d'ordinateurs. Les données sont regroupées en « blocs » chainés ensemble de façon cryptographique.\n\nUne fois validé, un bloc ne peut pas être modifié sans invalider tous les blocs suivants — c'est ce qui rend la blockchain infalsifiable. C'est la technologie sous-jacente à Bitcoin, Ethereum et la majorité des cryptos.",
+        duration: "4 min",
+        color: Color(hex: 0x627EEA)
+    ),
+    CryptoLesson(
+        icon: "building.columns.fill",
+        title: "DeFi — Finance sans banques",
+        subtitle: "Les protocoles financiers décentralisés",
+        body: "La finance décentralisée (DeFi) regroupe des services financiers (prêt, emprunt, trading) fonctionnant via des smart contracts — sans intermédiaire bancaire.\n\nExemples : Uniswap permet d'échanger des tokens sans bourse centralisée. Aave permet d'emprunter et de prêter des cryptos. Les fonds restent dans ton wallet : tu gardes le contrôle.\n\nLe risque : les bugs dans les smart contracts peuvent mener à des pertes importantes (« hacks »).",
+        duration: "5 min",
+        color: Color(hex: 0x9B6CF1)
+    ),
+    CryptoLesson(
+        icon: "exclamationmark.triangle.fill",
+        title: "Risque crypto — Lire un score R/P",
+        subtitle: "Comment interpréter Risque et Potentiel",
+        body: "Dans cette app, chaque crypto reçoit deux scores :\n\n• Risque (R/100) — Plus le score est élevé, plus la volatilité est importante. Un score >70 signifie un actif spéculatif qui peut perdre 80%+ de sa valeur rapidement.\n\n• Potentiel (P/100) — Évalue le potentiel de croissance à moyen terme basé sur la technologie, l'adoption et l'écosystème.\n\nUn bon profil d'investissement : R faible et P élevé. Exemple : BTC (R28, P72).",
+        duration: "3 min",
+        color: Color(hex: 0x008F6C)
+    ),
+    CryptoLesson(
+        icon: "chart.line.uptrend.xyaxis",
+        title: "Layer 1, Layer 2, DeFi",
+        subtitle: "Comprendre les catégories",
+        body: "• Layer 1 : blockchains de base (Bitcoin, Ethereum, Solana). Elles sécurisent et exécutent les transactions directement.\n\n• Layer 2 : solutions construites au-dessus d'un Layer 1 pour le rendre plus rapide et moins cher (Arbitrum, Optimism sur Ethereum).\n\n• DeFi : protocoles financiers décentralisés construits sur ces blockchains.\n\n• Stablecoins : cryptos dont la valeur est ancrée au dollar (USDT, USDC). Score risque très faible, potentiel faible aussi.",
+        duration: "4 min",
+        color: Color(hex: 0x3CB2E0)
+    ),
+    CryptoLesson(
+        icon: "wallet.pass.fill",
+        title: "Sécuriser son wallet",
+        subtitle: "Les bonnes pratiques indispensables",
+        body: "Ton wallet contient les clés d'accès à tes cryptos. Si tu perds ces clés, tu perds tout.\n\n• Seed phrase (12-24 mots) : note-la sur papier, jamais sur téléphone ni cloud.\n• Hardware wallet : la solution la plus sûre pour de grandes sommes (Ledger, Trezor).\n• Jamais partager ta clé privée, même avec le « support ».\n• Activer la 2FA sur les exchanges.\n\nRègle d'or : Not your keys, not your coins.",
+        duration: "3 min",
+        color: Color(hex: 0xE07B3C)
+    ),
+]
+
+private let cryptoNotions: [CryptoNotion] = [
+    CryptoNotion(term: "Blockchain", definition: "Registre décentralisé et immuable, partagé entre des milliers de nœuds.", color: Color(hex: 0x627EEA)),
+    CryptoNotion(term: "Smart Contract", definition: "Programme auto-exécutable sur blockchain qui remplace les intermédiaires.", color: Color(hex: 0x9B6CF1)),
+    CryptoNotion(term: "Wallet", definition: "Portefeuille numérique stockant tes clés privées pour accéder à tes cryptos.", color: Color(hex: 0x008F6C)),
+    CryptoNotion(term: "Seed Phrase", definition: "Suite de 12-24 mots permettant de restaurer ton wallet. Ne jamais partager.", color: Color(hex: 0xE84142)),
+    CryptoNotion(term: "Market Cap", definition: "Capitalisation = prix × offre en circulation. Indicateur de taille d'un actif.", color: Color(hex: 0x3CB2E0)),
+    CryptoNotion(term: "Halving", definition: "Division par 2 de la récompense des mineurs Bitcoin, tous les ~4 ans.", color: Color(hex: 0xF7931A)),
+    CryptoNotion(term: "DEX", definition: "Bourse décentralisée (Uniswap, Raydium). Trading pair à pair sans intermédiaire.", color: Color(hex: 0x9B6CF1)),
+    CryptoNotion(term: "CEX", definition: "Bourse centralisée (Binance, Coinbase). Pratique mais tu ne gardes pas les clés.", color: Color(hex: 0xE07B3C)),
+    CryptoNotion(term: "Gas Fee", definition: "Frais payés au réseau pour exécuter une transaction (élevés sur Ethereum en période chargée).", color: Color(hex: 0x627EEA)),
+    CryptoNotion(term: "Staking", definition: "Bloquer ses cryptos pour valider le réseau et recevoir des récompenses.", color: Color(hex: 0x008F6C)),
+    CryptoNotion(term: "HODL", definition: "Stratégie consistant à conserver ses cryptos à long terme malgré la volatilité.", color: Color(hex: 0x3CB2E0)),
+    CryptoNotion(term: "FUD", definition: "Fear, Uncertainty, Doubt — informations négatives (vraies ou fausses) qui font baisser les prix.", color: Color(hex: 0xE84142)),
+    CryptoNotion(term: "FOMO", definition: "Fear Of Missing Out — peur de rater une hausse. Pousse souvent à acheter au mauvais moment.", color: Color(hex: 0xE07B3C)),
+    CryptoNotion(term: "Whale", definition: "Investisseur détenant assez de cryptos pour influencer le marché par ses transactions.", color: Color(hex: 0x627EEA)),
+    CryptoNotion(term: "Airdrop", definition: "Distribution gratuite de tokens, souvent pour récompenser les premiers utilisateurs.", color: Color(hex: 0x9B6CF1)),
+    CryptoNotion(term: "Bull / Bear", definition: "Bull market = tendance haussière. Bear market = tendance baissière (baisse >20%).", color: Color(hex: 0x008F6C)),
+]
+
+struct CryptoLearnTab: View {
+    @State private var mode = 0
+    @State private var expandedId: UUID? = nil
+
+    private let tint = Color(hex: 0x46C9A8)
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
+                VStack(spacing: 0) {
+                    Picker("", selection: $mode) {
+                        Text("Leçons").tag(0)
+                        Text("Notions").tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+
+                    if mode == 0 {
+                        lessonsContent
+                    } else {
+                        notionsContent
+                    }
+                }
+            }
+            .navigationTitle("Apprendre")
+            .navigationBarTitleDisplayMode(.large)
+        }
+        .animation(.spring(duration: 0.28), value: mode)
+    }
+
+    private var lessonsContent: some View {
+        ScrollView {
+            VStack(spacing: 10) {
+                ForEach(cryptoLessons) { lesson in
+                    lessonCard(lesson)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
+        }
+    }
+
+    private func lessonCard(_ lesson: CryptoLesson) -> some View {
+        let isExpanded = expandedId == lesson.id
+        return VStack(alignment: .leading, spacing: 0) {
+            Button {
+                withAnimation(.spring(duration: 0.3, bounce: 0.2)) {
+                    expandedId = isExpanded ? nil : lesson.id
+                }
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            } label: {
+                HStack(spacing: 14) {
+                    Image(systemName: lesson.icon)
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(lesson.color)
+                        .frame(width: 44, height: 44)
+                        .background(lesson.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(lesson.title)
+                            .font(.system(.subheadline, weight: .semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                            .multilineTextAlignment(.leading)
+                        Text(lesson.subtitle)
+                            .font(.caption)
+                            .foregroundStyle(Theme.textSecondary)
+                            .multilineTextAlignment(.leading)
+                    }
+
+                    Spacer()
+
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.secondary)
+                        Text(lesson.duration)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(14)
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                Divider().padding(.horizontal, 14)
+                Text(lesson.body)
+                    .font(.system(size: 14))
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineSpacing(5)
+                    .padding(14)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(isExpanded ? lesson.color.opacity(0.3) : Color.clear, lineWidth: 1.5)
+        )
+        .animation(.spring(duration: 0.3), value: isExpanded)
+    }
+
+    private var notionsContent: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                ForEach(cryptoNotions) { notion in
+                    notionCard(notion)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
+        }
+    }
+
+    private func notionCard(_ notion: CryptoNotion) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(notion.term)
+                .font(.system(.subheadline, weight: .bold))
+                .foregroundStyle(notion.color)
+            Text(notion.definition)
+                .font(.system(size: 12))
+                .foregroundStyle(Theme.textSecondary)
+                .lineSpacing(3)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(notion.color.opacity(0.2), lineWidth: 1)
+        )
+    }
+}
+
 // MARK: - Onglet Info
 
 struct CryptoInfoTab: View {
