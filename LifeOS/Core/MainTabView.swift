@@ -275,7 +275,7 @@ struct FloatingTabBar: View {
                 }
                 Image(systemName: selected == t ? t.iconFill : t.icon)
                     .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(selected == t ? Color.primary : Color(white: 0.60))
                     .animation(.spring(duration: 0.28), value: selected)
             }
             .frame(width: 60, height: 60)
