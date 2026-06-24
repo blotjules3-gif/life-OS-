@@ -142,82 +142,21 @@ struct GelBubble: View {
 
     var body: some View {
         let c = b.color
-        ZStack {
-            clippedBody
-            rimLayers
-            speculars
-        }
-        .frame(width: D, height: D)
-        .overlay { glyphLabel }
-        // Couche 0 : halo coloré qui bave sur le fond (centre transparent préservé)
-        .shadow(color: c.opacity(0.5), radius: D * 0.22)
-        .scaleEffect(appeared ? 1 : 0.01)
-        .opacity(appeared ? 1 : 0)
-        .onAppear {
-            withAnimation(.spring(response: 0.55, dampingFraction: 0.7).delay(b.appearDelay)) { appeared = true }
-        }
-        .onChange(of: b.weight) { _, _ in bump += 1 }
+        Circle()
+            .fill(ShaderLibrary.bubble(
+                .float2(Float(D), Float(D)),
+                .color(c),
+                .float2(-0.42, -0.5)))          // lumière haut-gauche
+            .frame(width: D, height: D)
+            .overlay { glyphLabel }
+            .shadow(color: c.opacity(0.55), radius: D * 0.18)   // halo coloré sur le fond
+            .scaleEffect(appeared ? 1 : 0.01)
+            .opacity(appeared ? 1 : 0)
+            .onAppear {
+                withAnimation(.spring(response: 0.55, dampingFraction: 0.7).delay(b.appearDelay)) { appeared = true }
+            }
+            .onChange(of: b.weight) { _, _ in bump += 1 }
     }
-
-    // Couches 1,2,3,7,8 (clippées au cercle)
-    private var clippedBody: some View {
-        let c = b.color
-        return ZStack {
-            // 1. corps transparent teinté (centre clair, bord saturé ≤ 0.58)
-            Circle().fill(RadialGradient(gradient: Gradient(stops: stops),
-                                         center: UnitPoint(x: 0.38, y: 0.32),
-                                         startRadius: 0, endRadius: D * 0.75))
-            // 2. glow de transmission (bas-droite, opposé au reflet)
-            Ellipse().fill(RadialGradient(colors: [.white.opacity(0.16), .clear],
-                                          center: .center, startRadius: 0, endRadius: D * 0.25))
-                .frame(width: D * 0.5, height: D * 0.5).blur(radius: D * 0.15)
-                .offset(x: D * 0.12, y: D * 0.24)
-            // 3. croissant d'ombre interne (bas-droite, volume)
-            Circle().trim(from: 0.04, to: 0.22)
-                .stroke(c.brightnessAdjusted(-0.35).opacity(0.15),
-                        style: StrokeStyle(lineWidth: D * 0.12, lineCap: .round))
-                .blur(radius: D * 0.03)
-            // 7. reflet spéculaire principal (doux mais lisible)
-            Ellipse().fill(RadialGradient(colors: [.white.opacity(0.9), .clear],
-                                          center: .center, startRadius: 0, endRadius: D * 0.17))
-                .frame(width: D * 0.34, height: D * 0.26).blur(radius: D * 0.04)
-                .offset(x: -D * 0.16, y: -D * 0.22)
-            // 8. points spéculaires nets (verre mouillé)
-            Circle().fill(.white).opacity(0.95).frame(width: D * 0.06, height: D * 0.06)
-                .offset(x: -D * 0.04, y: -D * 0.28)
-            Circle().fill(.white).opacity(0.85).frame(width: D * 0.04, height: D * 0.04)
-                .offset(x: -D * 0.23, y: -D * 0.10)
-            Circle().fill(.white).opacity(0.7).frame(width: D * 0.025, height: D * 0.025)
-                .offset(x: -D * 0.10, y: -D * 0.32)
-        }
-        .clipShape(Circle())
-    }
-
-    // Couches 4,5,6 (rebords)
-    private var rimLayers: some View {
-        ZStack {
-            // 4. rebord irisé (rainbow savon)
-            Circle().strokeBorder(
-                AngularGradient(colors: [Color(hue: 0.92, saturation: 0.7, brightness: 1),
-                                         .cyan, .yellow, .mint, .purple,
-                                         Color(hue: 0.92, saturation: 0.7, brightness: 1)],
-                                center: .center),
-                lineWidth: D * 0.015)
-                .opacity(iridOpacity).blur(radius: 0.5)
-            // 5. catch lumineux du rebord haut-gauche (glint net)
-            Circle().trim(from: 0.55, to: 0.72)
-                .stroke(LinearGradient(colors: [.white.opacity(0.9), .white.opacity(0.0)],
-                                       startPoint: .topTrailing, endPoint: .bottomLeading),
-                        style: StrokeStyle(lineWidth: D * 0.02, lineCap: .round))
-                .opacity(0.85)
-            // 6. catch faible du rebord bas-droit
-            Circle().trim(from: 0.05, to: 0.18)
-                .stroke(.white, style: StrokeStyle(lineWidth: D * 0.012, lineCap: .round))
-                .opacity(0.4)
-        }
-    }
-
-    @ViewBuilder private var speculars: some View { EmptyView() }
 
     // Couches 9,10
     @ViewBuilder private var glyphLabel: some View {
