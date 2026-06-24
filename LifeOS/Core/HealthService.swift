@@ -55,6 +55,11 @@ final class HealthService {
         return await mostRecent(type, unit: .secondUnit(with: .milli))
     }
 
+    func activeCaloriesToday() async -> Double {
+        guard let type = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned) else { return 0 }
+        return await sumToday(type, unit: .kilocalorie())
+    }
+
     // MARK: - Requêtes bas niveau
 
     private func sumToday(_ type: HKQuantityType, unit: HKUnit) async -> Double {
