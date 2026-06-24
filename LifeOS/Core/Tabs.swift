@@ -1227,36 +1227,58 @@ struct ProfileView: View {
     }
 
     private func statCard(icon: String, value: String, label: String, progress: Double, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: icon)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(.white)
-                .frame(width: 28, height: 28)
-                .background(color, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-
-            VStack(alignment: .leading, spacing: 1) {
-                Text(value)
-                    .font(.system(size: 19, weight: .black).monospacedDigit())
-                    .foregroundStyle(Theme.textPrimary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-                Text(label)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top) {
+                Image(systemName: icon)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 26, height: 26)
+                    .background(color, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                Spacer()
+                ZStack {
+                    Circle()
+                        .stroke(color.opacity(0.12), lineWidth: 2.5)
+                        .frame(width: 22, height: 22)
+                    Circle()
+                        .trim(from: 0, to: appeared ? min(1.0, max(0, progress)) : 0)
+                        .stroke(color, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                        .frame(width: 22, height: 22)
+                        .rotationEffect(.degrees(-90))
+                        .animation(.spring(duration: 1.0, bounce: 0.05).delay(0.5), value: appeared)
+                }
             }
+
+            Text(value)
+                .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
+                .foregroundStyle(Theme.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
+
+            Text(label.uppercased())
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(color.opacity(0.8))
+                .kerning(0.5)
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(color.opacity(0.12)).frame(height: 4)
+                    Capsule().fill(color.opacity(0.1)).frame(height: 3)
                     Capsule().fill(color)
-                        .frame(width: geo.size.width * min(1.0, max(0, progress)), height: 4)
+                        .frame(width: geo.size.width * min(1.0, max(0, progress)), height: 3)
+                        .animation(.spring(duration: 1.0).delay(0.5), value: appeared)
                 }
             }
-            .frame(height: 4)
+            .frame(height: 3)
         }
-        .padding(13)
+        .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(color.opacity(0.07))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(color.opacity(0.18), lineWidth: 1)
+                )
+        )
     }
 
     // MARK: - Habitudes + Protéines
