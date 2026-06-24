@@ -81,6 +81,43 @@ import SwiftData
     }
 }
 
+// MARK: - Mémoire LifeOS
+
+@Model final class MemoryEntry {
+    var content: String        // "J'aime courir le matin", "Objectif : perdre 5kg"
+    var category: String       // "préférence", "objectif", "habitude", "fait"
+    var source: String         // "chat", "profil", "auto"
+    var created: Date
+    var isPinned: Bool
+
+    init(content: String, category: String = "fait", source: String = "chat", created: Date = .now, isPinned: Bool = false) {
+        self.content = content
+        self.category = category
+        self.source = source
+        self.created = created
+        self.isPinned = isPinned
+    }
+
+    var categoryIcon: String {
+        switch category {
+        case "objectif":    return "target"
+        case "préférence":  return "heart.fill"
+        case "habitude":    return "arrow.clockwise"
+        case "santé":       return "cross.fill"
+        default:            return "brain"
+        }
+    }
+    var categoryColor: Color {
+        switch category {
+        case "objectif":    return Color(hex: 0x00D4B4)
+        case "préférence":  return Color(hex: 0xF1746C)
+        case "habitude":    return Color(hex: 0x9B6CF1)
+        case "santé":       return Color(hex: 0x4CC38A)
+        default:            return Color(hex: 0x3CB2E0)
+        }
+    }
+}
+
 // MARK: - Finances
 
 @Model final class Account {
