@@ -83,13 +83,41 @@ struct MainTabView: View {
         guard !q.isEmpty else { return }
         chatMessages.append(ChatMessage(fromUser: true, text: q))
         chatInput = ""
-        chatMessages.append(ChatMessage(fromUser: false, text: answer(for: q.lowercased())))
+        let ql = q.lowercased()
+
+        // Détection mémorisation
+        let memPrefixes = ["retiens que ", "souviens-toi que ", "note que ", "mémorise que ", "remember that "]
+        if let prefix = memPrefixes.first(where: { ql.hasPrefix($0) }) {
+            let content = String(q.dropFirst(prefix.count))
+            let category = detectMemoryCategory(ql)
+            let entry = MemoryEntry(content: content, category: category, source: "chat")
+            ctx.insert(entry)
+            chatMessages.append(ChatMessage(fromUser: false, text: "Mémorisé ✓ — Je me souviendrai que \"\(content)\". Tu peux retrouver ça dans l'onglet Profil."))
+            showChat = true
+            return
+        }
+
+        chatMessages.append(ChatMessage(fromUser: false, text: answer(for: ql)))
         showChat = true
+    }
+
+    private func detectMemoryCategory(_ q: String) -> String {
+        if q.contains("objectif") || q.contains("but ") || q.contains("veux ") || q.contains("voudrais") { return "objectif" }
+        if q.contains("aime") || q.contains("préfère") || q.contains("adore") || q.contains("déteste") { return "préférence" }
+        if q.contains("habitude") || q.contains("chaque jour") || q.contains("tous les") { return "habitude" }
+        if q.contains("santé") || q.contains("allergie") || q.contains("médic") || q.contains("douleur") { return "santé" }
+        return "fait"
     }
 
     private func answer(for q: String) -> String {
         let kcal  = foods.filter  { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.calories }
         let water = waters.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML }
+
+        if q.contains("mémoire") || q.contains("souviens") || q.contains("retiens") || q.contains("mémorisé") {
+            if memories.isEmpty { return "Je n'ai encore rien mémorisé. Dis-moi « retiens que... » pour stocker quelque chose." }
+            let list = memories.prefix(5).map { "• \($0.content)" }.joined(separator: "\n")
+            return "Voici ce que je mémorise sur toi :\n\(list)"
+        }
         if q.contains("calor") || q.contains("manger") || q.contains("mangé") {
             return "Tu es à \(kcal) kcal aujourd'hui, objectif \(kcalGoal). Il te reste \(max(0, kcalGoal - kcal)) kcal."
         }
@@ -100,17 +128,17 @@ struct MainTabView: View {
             if let a = fasts.first(where: { $0.isActive }) {
                 return "Jeûne en cours depuis \(Int(a.elapsed/3600))h\(Int(a.elapsed.truncatingRemainder(dividingBy: 3600)/60))min. Va dans Catégories › Nutrition › Jeûne."
             }
-            return "Aucun jeûne en cours. Lance-le dans Catégories › Nutrition › Jeûne intermittent."
+            return "Aucun jeûne en cours. Lance-le dans Catégories › Nutrition › Jeûne."
         }
         if q.contains("habitude") || q.contains("streak") {
             let done = habits.filter { h in h.completions.contains { Calendar.current.isDateInToday($0.date) } }.count
             return "Tu as validé \(done)/\(habits.count) habitudes aujourd'hui."
         }
         if q.contains("bonjour") || q.contains("salut") || q.contains("hello") || q.contains("hey") {
-            return "Hello ! Je peux te dire tes calories, ton eau, ton jeûne ou tes habitudes du jour."
+            return "Hello ! Je peux te dire tes calories, ton eau, ton jeûne ou tes habitudes. Dis aussi « retiens que... » pour que je mémorise quelque chose."
         }
         if q.contains("merci") { return "Avec plaisir !" }
-        return "Je peux t'aider sur : calories, hydratation, jeûne, habitudes. Reformule avec un de ces mots."
+        return "Je peux t'aider sur : calories, hydratation, jeûne, habitudes — ou mémoriser quelque chose (« retiens que... »)."
     }
 }
 
