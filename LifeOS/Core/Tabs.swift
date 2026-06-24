@@ -19,16 +19,9 @@ struct AlarmFullScreenView: View {
 
                 // Anneaux + cloche animés
                 ZStack {
-                    ForEach([0, 1, 2], id: \.self) { i in
-                        Circle()
-                            .stroke(Color.white.opacity(ringsPulse ? 0.06 - Double(i)*0.015 : 0.12 - Double(i)*0.03), lineWidth: 1)
-                            .frame(width: CGFloat(180 + i*70), height: CGFloat(180 + i*70))
-                            .scaleEffect(ringsPulse ? 1.06 : 0.96)
-                            .animation(
-                                .easeInOut(duration: 0.8 + Double(i)*0.15).repeatForever(autoreverses: true).delay(Double(i)*0.12),
-                                value: ringsPulse
-                            )
-                    }
+                    alarmRing(index: 0, pulse: ringsPulse)
+                    alarmRing(index: 1, pulse: ringsPulse)
+                    alarmRing(index: 2, pulse: ringsPulse)
                     Circle()
                         .fill(Color.white.opacity(0.06))
                         .frame(width: 140, height: 140)
@@ -36,10 +29,7 @@ struct AlarmFullScreenView: View {
                         .font(.system(size: 52, weight: .medium))
                         .foregroundStyle(.white)
                         .rotationEffect(.degrees(bellPulse ? 18 : -18))
-                        .animation(
-                            .easeInOut(duration: 0.22).repeatForever(autoreverses: true),
-                            value: bellPulse
-                        )
+                        .animation(.easeInOut(duration: 0.22).repeatForever(autoreverses: true), value: bellPulse)
                 }
                 .frame(height: 320)
 
