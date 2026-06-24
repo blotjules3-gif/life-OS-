@@ -20,7 +20,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .camera:     return "camera"
         case .home:       return "house"
         case .categories: return "square.grid.2x2"
-        case .profile:    return "person"
+        case .profile:    return "person.crop.circle"
         }
     }
     var iconFill: String {
@@ -28,7 +28,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .camera:     return "camera.fill"
         case .home:       return "house.fill"
         case .categories: return "square.grid.2x2.fill"
-        case .profile:    return "person.fill"
+        case .profile:    return "person.crop.circle.fill"
         }
     }
 }
