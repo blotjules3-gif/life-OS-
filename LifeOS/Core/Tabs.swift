@@ -373,6 +373,18 @@ struct ProfileView: View {
                                 kcalGoal: $kcalGoal, proteinGoal: $proteinGoal,
                                 fastTarget: $fastTarget)
             }
+            .sheet(isPresented: $showWakeupDetail) {
+                WakeUpPersonalizationSheet(
+                    hour: $wakeupHour,
+                    minute: $wakeupMinute,
+                    enabled: $wakeupEnabled,
+                    modulesRaw: $recommendedModulesRaw,
+                    onSchedule: scheduleWakeupAlarm
+                )
+            }
+            .fullScreenCover(isPresented: $showBriefing) {
+                DailyBriefingView(modules: recommendedModules)
+            }
             .task {
                 if await HealthService.shared.requestAuthorization() {
                     steps = await HealthService.shared.stepsToday()
