@@ -636,33 +636,59 @@ struct ProfileView: View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 14) {
-                    heroDark
-                        .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 28)
-                        .animation(.spring(duration: 0.6, bounce: 0.25), value: appeared)
+                    if !hiddenSections.contains("hero") {
+                        heroDark
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 28)
+                            .animation(.spring(duration: 0.6, bounce: 0.25), value: appeared)
+                    }
 
-                    statsRow
-                        .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                        .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.07), value: appeared)
+                    if !hiddenSections.contains("tasks") {
+                        dailyTasksCard
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
+                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.07), value: appeared)
+                    }
 
-                    habitsProteinsRow
-                        .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                        .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.14), value: appeared)
+                    if hasTodayBriefing && !hiddenSections.contains("briefing") {
+                        briefingRecallCard
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
+                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.1), value: appeared)
+                    }
 
-                    quickActionsSection
-                        .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                        .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.21), value: appeared)
+                    if !hiddenSections.contains("stats") {
+                        statsRow
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
+                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.14), value: appeared)
+                    }
 
-                    wakeupSection
-                        .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                        .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.28), value: appeared)
+                    if !hiddenSections.contains("habits") {
+                        habitsProteinsRow
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
+                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.21), value: appeared)
+                    }
 
-                    tipCard
-                        .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                        .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.35), value: appeared)
+                    if !hiddenSections.contains("actions") {
+                        quickActionsSection
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
+                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.28), value: appeared)
+                    }
 
-                    settingsSection
-                        .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                        .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.42), value: appeared)
+                    if !hiddenSections.contains("wakeup") {
+                        wakeupSection
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
+                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.35), value: appeared)
+                    }
+
+                    if !hiddenSections.contains("tip") {
+                        tipCard
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
+                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.42), value: appeared)
+                    }
+
+                    if !hiddenSections.contains("settings") {
+                        settingsSection
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
+                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.49), value: appeared)
+                    }
                 }
                 .padding(.horizontal, Theme.pad)
                 .padding(.top, 8)
@@ -670,7 +696,23 @@ struct ProfileView: View {
             }
             .background(Theme.bg)
             .navigationTitle("Profil")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { showCustomizer = true } label: {
+                        Text("Modifier")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color.accentColor)
+                    }
+                }
+            }
             .onAppear { withAnimation { appeared = true } }
+            .task {
+                if await HealthService.shared.requestAuthorization() {
+                    healthConnected = true
+                    steps = await HealthService.shared.stepsToday()
+                    activeCalories = await HealthService.shared.activeCaloriesToday()
+                }
+            }
             .sheet(isPresented: $showGoalEditor) {
                 GoalEditorSheet(stepGoal: $stepGoal, waterGoal: $waterGoal,
                                 kcalGoal: $kcalGoal, proteinGoal: $proteinGoal,
