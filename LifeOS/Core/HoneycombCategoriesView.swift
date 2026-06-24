@@ -143,54 +143,18 @@ struct GelBubble: View {
         let f: Double = b.isFiller ? 0.6 : 1.0
 
         ZStack {
-            // 0. halo coloré (anneau flou DERRIÈRE → glow sans remplir le centre)
+            // halo coloré derrière (glow sur le fond, comme la réf)
             Circle().stroke(c, lineWidth: R * 0.16)
-                .opacity(Bub.HALO_OPACITY * 0.5)
-                .blur(radius: R * 0.16)
+                .opacity((Bub.HALO_OPACITY * 0.55) * f)
+                .blur(radius: R * 0.18)
 
-            // corps translucide + transmission + reflets (clippés au cercle)
-            ZStack {
-                // 1. CORPS TEINTÉ TRANSPARENT (le fix : centre quasi clair, bord saturé)
-                Circle().fill(RadialGradient(
-                    colors: [c.opacity(Bub.FILL_CENTER_OPACITY * f),
-                             c.opacity(Bub.FILL_MID_OPACITY * f),
-                             c.opacity(Bub.FILL_RIM_OPACITY * f)],
-                    center: UnitPoint(x: 0.35, y: 0.30),
-                    startRadius: D * 0.04, endRadius: D * 0.52))
-
-                // 2. transmission de lumière (bloom doux, opposé au reflet)
-                Circle().fill(RadialGradient(
-                    colors: [.white.opacity(0.22 * f), .clear],
-                    center: UnitPoint(x: 0.68, y: 0.72),
-                    startRadius: 0, endRadius: D * 0.40))
-
-                // 4a. reflet primaire net
-                Ellipse().fill(.white).opacity(0.9)
-                    .frame(width: D * 0.30, height: D * 0.20)
-                    .blur(radius: 0.5)
-                    .rotationEffect(.degrees(-25))
-                    .offset(x: -D * 0.17, y: -D * 0.20)
-                // 4b. petit point spéculaire net
-                Circle().fill(.white).opacity(0.95)
-                    .frame(width: D * 0.06, height: D * 0.06)
-                    .offset(x: -D * 0.07, y: -D * 0.28)
-            }
-            .clipShape(Circle())
-
-            // 3. liseré IRISÉ (film de savon arc-en-ciel)
-            Circle().strokeBorder(
-                AngularGradient(colors: [.pink, .cyan, .yellow, .mint, .purple, .pink], center: .center),
-                lineWidth: 1.5)
-                .opacity(Bub.IRIDESCENCE_OPACITY)
-                .blur(radius: 0.5)
-            // 4c. catch lumineux du haut
-            Circle().strokeBorder(.white, lineWidth: 1.6)
-                .mask(LinearGradient(colors: [.white, .clear], startPoint: .top, endPoint: .center))
-                .opacity(0.9)
-            // 4d. catch faible du bas (la lumière enveloppe la sphère)
-            Circle().strokeBorder(.white, lineWidth: 1.1)
-                .mask(LinearGradient(colors: [.clear, .white], startPoint: .center, endPoint: .bottom))
-                .opacity(0.4)
+            // BULLE = fragment shader Metal (éclairage sphérique + Fresnel + irisation + spéculaire)
+            Circle()
+                .fill(ShaderLibrary.bubble(
+                    .float2(Float(D), Float(D)),
+                    .color(c.opacity(f)),
+                    .float2(-0.45, -0.55)        // direction de lumière : haut-gauche
+                ))
         }
         .overlay {
             // 6+7. glyphe + label (bulles principales uniquement)
