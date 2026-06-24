@@ -644,33 +644,44 @@ struct ProfileView: View {
 
     private var heroDark: some View {
         ZStack(alignment: .topLeading) {
-            // Fond sombre
+            // Fond sombre plus profond
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .fill(LinearGradient(
-                    colors: [Color(hex: 0x0D1B2A), Color(hex: 0x14263A)],
+                    colors: [Color(hex: 0x09151F), Color(hex: 0x122030)],
                     startPoint: .topLeading, endPoint: .bottomTrailing
                 ))
 
-            // Blob lumineux couleur score (haut droite)
+            // Blob couleur score — grand, haut droite
             Circle()
                 .fill(RadialGradient(
-                    colors: [scoreColor.opacity(0.38), .clear],
-                    center: .center, startRadius: 0, endRadius: 110
+                    colors: [scoreColor.opacity(0.45), .clear],
+                    center: .center, startRadius: 0, endRadius: 130
                 ))
-                .frame(width: 220, height: 220)
-                .offset(x: 160, y: -60)
-                .blur(radius: 22)
+                .frame(width: 260, height: 260)
+                .offset(x: 150, y: -80)
+                .blur(radius: 26)
                 .allowsHitTesting(false)
 
-            // Blob secondaire froid (bas gauche)
+            // Blob froid bas gauche
             Circle()
                 .fill(RadialGradient(
-                    colors: [Color(hex: 0x3CB2E0).opacity(0.15), .clear],
-                    center: .center, startRadius: 0, endRadius: 80
+                    colors: [Color(hex: 0x3CB2E0).opacity(0.22), .clear],
+                    center: .center, startRadius: 0, endRadius: 90
                 ))
-                .frame(width: 160, height: 160)
-                .offset(x: -20, y: 120)
-                .blur(radius: 28)
+                .frame(width: 180, height: 180)
+                .offset(x: -30, y: 100)
+                .blur(radius: 30)
+                .allowsHitTesting(false)
+
+            // Ligne accent horizontale (trait lumineux subtil)
+            Rectangle()
+                .fill(LinearGradient(
+                    colors: [.clear, scoreColor.opacity(0.2), .clear],
+                    startPoint: .leading, endPoint: .trailing
+                ))
+                .frame(height: 1)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 68)
                 .allowsHitTesting(false)
 
             VStack(alignment: .leading, spacing: 0) {
@@ -684,47 +695,63 @@ struct ProfileView: View {
                         Group {
                             if name.isEmpty {
                                 TextField("Ton prénom", text: $name)
-                                    .font(.system(size: 34, weight: .black, design: .rounded))
+                                    .font(.system(size: 36, weight: .black, design: .rounded))
                                     .foregroundStyle(.white)
                             } else {
                                 Text(name)
-                                    .font(.system(size: 34, weight: .black, design: .rounded))
+                                    .font(.system(size: 36, weight: .black, design: .rounded))
                                     .foregroundStyle(.white)
                             }
                         }
                         Text(Date.now.formatted(.dateTime.weekday(.wide).day().month()))
                             .font(.system(size: 13))
-                            .foregroundStyle(.white.opacity(0.4))
+                            .foregroundStyle(.white.opacity(0.38))
                     }
 
                     Spacer(minLength: 12)
 
-                    // Score ring
+                    // Score ring avec glow
                     ZStack {
+                        // Track
                         Circle()
-                            .stroke(.white.opacity(0.07), lineWidth: 9)
-                            .frame(width: 96, height: 96)
+                            .stroke(.white.opacity(0.12), lineWidth: 10)
+                            .frame(width: 102, height: 102)
 
+                        // Glow derrière le ring (blurred)
+                        Circle()
+                            .trim(from: 0, to: appeared ? CGFloat(lifeScore) / 100.0 : 0)
+                            .stroke(scoreColor.opacity(0.4), style: StrokeStyle(lineWidth: 18, lineCap: .round))
+                            .frame(width: 102, height: 102)
+                            .rotationEffect(.degrees(-90))
+                            .blur(radius: 8)
+                            .animation(.spring(duration: 1.3, bounce: 0.08).delay(0.45), value: appeared)
+                            .allowsHitTesting(false)
+
+                        // Ring principal
                         Circle()
                             .trim(from: 0, to: appeared ? CGFloat(lifeScore) / 100.0 : 0)
                             .stroke(
                                 LinearGradient(
-                                    colors: [scoreColor, scoreColor.opacity(0.45)],
+                                    colors: [scoreColor, scoreColor.opacity(0.5)],
                                     startPoint: .topLeading, endPoint: .bottomTrailing
                                 ),
-                                style: StrokeStyle(lineWidth: 9, lineCap: .round)
+                                style: StrokeStyle(lineWidth: 10, lineCap: .round)
                             )
-                            .frame(width: 96, height: 96)
+                            .frame(width: 102, height: 102)
                             .rotationEffect(.degrees(-90))
                             .animation(.spring(duration: 1.3, bounce: 0.08).delay(0.45), value: appeared)
 
                         VStack(spacing: 0) {
+                            Text("SCORE")
+                                .font(.system(size: 7, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.38))
+                                .kerning(0.8)
                             Text("\(lifeScore)")
                                 .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
                                 .foregroundStyle(.white)
                             Text("/100")
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.4))
+                                .font(.system(size: 9, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.38))
                         }
                     }
                 }
