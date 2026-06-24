@@ -72,13 +72,12 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
     // MARK: - Arrêt / snooze
 
     func stopRinging() {
-        ringingActive = false
+        ringingActive = false   // interrompt la boucle de bips (completion guard)
         isRinging = false
         countdownTimer?.invalidate()
         countdownTimer = nil
         autoStopWorkItem?.cancel()
         autoStopWorkItem = nil
-        AudioServicesStopSystemSound(SystemSoundID(1005))
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
