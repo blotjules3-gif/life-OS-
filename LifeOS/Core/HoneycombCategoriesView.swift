@@ -3,147 +3,111 @@ import SwiftUI
 // MARK: - Constantes (à régler)
 
 private enum Honey {
-    static let D: CGFloat = 88            // diamètre de base d'une bulle
-    static let G: CGFloat = 16            // espacement
-    static let MAX_SCALE: Double = 1.25
-    static let MIN_SCALE: Double = 0.60   // les bords restent lisibles
-    static let FOCAL_RATIO: CGFloat = 0.60
-    static let OPACITY_DROP: Double = 0.25
-    static let COLS = 4
-    static let ROWS = 4                    // pair : les coutures hex s'alignent
+    static let D: CGFloat = 96
+    static let G: CGFloat = 26           // assez large pour que les glass ne fusionnent jamais
+    static let MAX_SCALE: Double = 1.15
+    static let MIN_SCALE: Double = 0.82
+    static let FOCAL_RATIO: CGFloat = 0.62
+    static let COLS = 3
+    static let ROWS = 5                  // 3 x 5 = 15, format vertical qui remplit l'écran
+    static let TOP_PAD: CGFloat = 34
+    static let BOTTOM_PAD: CGFloat = 20
 }
 
-/// Grille « ruche » façon Apple Watch, à **défilement infini** (tiling toroïdal).
-/// Le champ d'icônes se répète dans toutes les directions : jamais de vide.
+/// Ruche fixe et centrée, **vrai Liquid Glass iOS 26** posé sur un fond MeshGradient
+/// (le glass réfracte ce fond → vraies icônes d'app). Bulles rondes indépendantes, plein écran.
 struct HoneycombCategoriesView: View {
-    @State private var pan: CGSize = .zero
-    @State private var lastPan: CGSize = .zero
     @State private var path: [AppCategory] = []
 
-    private var stepX: CGFloat { Honey.D + Honey.G }
-    private var stepY: CGFloat { (Honey.D + Honey.G) * 0.8660254 }
-    private var tileW: CGFloat { CGFloat(Honey.COLS) * stepX }
-    private var tileH: CGFloat { CGFloat(Honey.ROWS) * stepY }
+    private static let order: [AppCategory] = [
+        .fitness, .nutrition, .looks, .productivity, .mind, .finance, .sleep,
+        .learning, .invest, .career, .home, .social, .mobility, .admin, .travel
+    ]
 
     var body: some View {
         NavigationStack(path: $path) {
             GeometryReader { geo in
-                let center = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
                 let focal = geo.size.width * Honey.FOCAL_RATIO
+                let slots = layout(in: geo.size, focal: focal)
                 ZStack {
-                    Theme.bg.ignoresSafeArea()
-                        .contentShape(Rectangle())
-                        .gesture(panGesture)
-                    ForEach(instances(in: geo.size, center: center)) { inst in
-                        lensedBubble(inst, center: center, focal: focal)
+                    meshBackground.ignoresSafeArea()
+                    ForEach(slots) { s in
+                        GlassBubble(
+                            cat: s.cat, color: color(s.cat), label: shortName(s.cat),
+                            baseScale: s.baseScale, delay: s.delay, isCenter: s.isCenter
+                        ) { path.append(s.cat) }
+                        .position(s.pos)
                     }
                 }
-                .clipped()
             }
             .navigationDestination(for: AppCategory.self) { $0.destination }
             .toolbar(.hidden, for: .navigationBar)
         }
     }
 
-    // MARK: Bulle + lentille
+    // MARK: Fond MeshGradient pastel (ce que le glass réfracte)
 
-    private func lensedBubble(_ inst: BubbleInstance, center: CGPoint, focal: CGFloat) -> some View {
-        let dx = inst.x - center.x
-        let dy = inst.y - center.y
-        let t = Double(min(hypot(dx, dy) / focal, 1))
-        let scale = Honey.MIN_SCALE + (Honey.MAX_SCALE - Honey.MIN_SCALE) * (cos(t * .pi) * 0.5 + 0.5)
-        let opacity = 1 - Honey.OPACITY_DROP * t
-        let labelOpacity = max(0, min(1, (scale - (Honey.MAX_SCALE - 0.12)) / 0.12))
-
-        return glassBubble(inst.cat, labelOpacity: labelOpacity)
-            .scaleEffect(CGFloat(scale))
-            .opacity(opacity)
-            .position(x: inst.x, y: inst.y)
-            .zIndex(scale)
-            .onTapGesture { path.append(inst.cat) }
+    private var meshBackground: some View {
+        MeshGradient(
+            width: 3, height: 3,
+            points: [
+                SIMD2(0, 0), SIMD2(0.5, 0), SIMD2(1, 0),
+                SIMD2(0, 0.5), SIMD2(0.5, 0.5), SIMD2(1, 0.5),
+                SIMD2(0, 1), SIMD2(0.5, 1), SIMD2(1, 1)
+            ],
+            colors: [
+                pastel(0.80, 0.88, 1.00), pastel(0.85, 0.95, 1.00), pastel(0.90, 0.86, 1.00),
+                pastel(0.84, 0.98, 0.92), pastel(0.97, 0.97, 1.00), pastel(1.00, 0.90, 0.85),
+                pastel(0.88, 0.93, 1.00), pastel(0.92, 0.98, 0.95), pastel(0.95, 0.88, 1.00)
+            ]
+        )
+    }
+    private func pastel(_ r: Double, _ g: Double, _ b: Double) -> Color {
+        Color(.sRGB, red: r, green: g, blue: b)
     }
 
-    /// Look liquid-glass, parfaitement rond.
-    private func glassBubble(_ cat: AppCategory, labelOpacity: Double) -> some View {
-        ZStack {
-            Circle().fill(color(cat))
-            Circle().fill(
-                LinearGradient(colors: [.white.opacity(0.5), .white.opacity(0.04)],
-                               startPoint: .top, endPoint: .bottom)
-            )
-            Circle().strokeBorder(.white.opacity(0.28), lineWidth: 1)
-            VStack(spacing: 2) {
-                Image(systemName: cat.icon).font(.system(size: Honey.D * 0.34, weight: .semibold))
-                Text(shortName(cat)).font(.system(size: Honey.D * 0.15, weight: .bold))
-                    .lineLimit(1).minimumScaleFactor(0.6).opacity(labelOpacity)
-            }
-            .foregroundStyle(.white)
-        }
-        .frame(width: Honey.D, height: Honey.D)
-        .shadow(color: .black.opacity(0.18), radius: 8, y: 5)
-    }
+    // MARK: Layout 3x5 plein écran + profondeur radiale
 
-    // MARK: Pan (infini + fling)
-
-    private var panGesture: some Gesture {
-        DragGesture()
-            .onChanged { v in
-                pan = CGSize(width: lastPan.width + v.translation.width,
-                             height: lastPan.height + v.translation.height)
-            }
-            .onEnded { v in
-                let flingX = (v.predictedEndTranslation.width - v.translation.width) * 0.28
-                let flingY = (v.predictedEndTranslation.height - v.translation.height) * 0.28
-                let target = CGSize(width: pan.width + flingX, height: pan.height + flingY)
-                lastPan = target
-                withAnimation(.easeOut(duration: 0.45)) { pan = target }
-            }
-    }
-
-    // MARK: Tiling toroïdal + culling
-
-    private struct BubbleInstance: Identifiable {
-        let id: String
+    private struct Slot: Identifiable {
+        let id: Int
         let cat: AppCategory
-        let x: CGFloat
-        let y: CGFloat
+        let pos: CGPoint
+        let baseScale: CGFloat
+        let delay: Double
+        let isCenter: Bool
     }
 
-    /// Une tuile honeycomb de toutes les catégories (16 mailles, la dernière reboucle).
-    private var tile: [(cat: AppCategory, bx: CGFloat, by: CGFloat)] {
-        let cats = Self.order
-        var out: [(AppCategory, CGFloat, CGFloat)] = []
+    private func layout(in size: CGSize, focal: CGFloat) -> [Slot] {
+        let stepX = Honey.D + Honey.G
+        // span entre le centre de la 1re et de la dernière rangée (on retranche un diamètre)
+        let usableH = max(1, size.height - Honey.TOP_PAD - Honey.BOTTOM_PAD - Honey.D)
+        let stepY = usableH / CGFloat(Honey.ROWS - 1)
+        let cx = size.width / 2
+        let screenCenter = CGPoint(x: size.width / 2, y: size.height / 2)
+
+        var positions: [CGPoint] = []
         for row in 0..<Honey.ROWS {
             for col in 0..<Honey.COLS {
-                let idx = row * Honey.COLS + col
-                let cat = cats[idx % cats.count]
-                let x = CGFloat(col) * stepX + (row % 2 == 1 ? stepX / 2 : 0) - tileW / 2
-                let y = CGFloat(row) * stepY - tileH / 2
-                out.append((cat, x, y))
+                let x = cx + (CGFloat(col) - 1) * stepX + (row % 2 == 1 ? stepX / 2 : 0) - stepX / 4
+                let y = Honey.TOP_PAD + Honey.D / 2 + CGFloat(row) * stepY
+                positions.append(CGPoint(x: x, y: y))
             }
         }
-        return out
-    }
+        let dists = positions.map { hypot($0.x - screenCenter.x, $0.y - screenCenter.y) }
+        // les catégories prioritaires vont aux emplacements les plus centraux
+        let byDist = (0..<positions.count).sorted { dists[$0] < dists[$1] }
+        var catFor = [AppCategory?](repeating: nil, count: positions.count)
+        for (k, idx) in byDist.enumerated() where k < Self.order.count { catFor[idx] = Self.order[k] }
+        let centerIdx = byDist.first ?? 0
+        let maxDist = max(dists.max() ?? 1, 1)
 
-    /// Toutes les copies visibles à l'écran (le reste est cullé).
-    private func instances(in size: CGSize, center: CGPoint) -> [BubbleInstance] {
-        let px = pan.width - (pan.width / tileW).rounded() * tileW
-        let py = pan.height - (pan.height / tileH).rounded() * tileH
-        let margin = Honey.D
-        var out: [BubbleInstance] = []
-        let slots = tile
-        for m in -2...2 {
-            for n in -2...2 {
-                for (i, slot) in slots.enumerated() {
-                    let x = center.x + slot.bx + px + CGFloat(m) * tileW
-                    let y = center.y + slot.by + py + CGFloat(n) * tileH
-                    if x > -margin && x < size.width + margin && y > -margin && y < size.height + margin {
-                        out.append(BubbleInstance(id: "\(i)_\(m)_\(n)", cat: slot.cat, x: x, y: y))
-                    }
-                }
-            }
+        return (0..<positions.count).compactMap { i in
+            guard let cat = catFor[i] else { return nil }
+            let t = Double(min(dists[i] / focal, 1))
+            let scale = Honey.MIN_SCALE + (Honey.MAX_SCALE - Honey.MIN_SCALE) * (cos(t * .pi) * 0.5 + 0.5)
+            return Slot(id: i, cat: cat, pos: positions[i], baseScale: CGFloat(scale),
+                        delay: Double(dists[i] / maxDist) * 0.45, isCenter: i == centerIdx)
         }
-        return out
     }
 
     // MARK: Couleurs système Apple
@@ -152,26 +116,21 @@ struct HoneycombCategoriesView: View {
         switch c {
         case .fitness: return .red
         case .looks: return .orange
-        case .learning: return .yellow
-        case .nutrition: return .green
-        case .invest: return .mint
-        case .finance: return .teal
-        case .home: return .cyan
-        case .productivity: return .blue
+        case .productivity: return .purple
         case .sleep: return .indigo
-        case .mind: return .purple
-        case .social: return .pink
+        case .nutrition: return .green
+        case .finance: return .blue
+        case .mobility: return .teal
+        case .travel: return .cyan
         case .career: return .brown
-        case .mobility: return Color(uiColor: .systemTeal)
+        case .home: return .blue
+        case .social: return .pink
+        case .invest: return .mint
+        case .learning: return .yellow
+        case .mind: return .purple
         case .admin: return .gray
-        case .travel: return Color(uiColor: .systemBlue)
         }
     }
-
-    private static let order: [AppCategory] = [
-        .fitness, .nutrition, .looks, .productivity, .mind, .finance, .sleep,
-        .learning, .invest, .career, .home, .social, .mobility, .admin, .travel
-    ]
 
     private func shortName(_ c: AppCategory) -> String {
         switch c {
@@ -181,5 +140,82 @@ struct HoneycombCategoriesView: View {
         case .learning: return "Skills"; case .home: return "Maison"; case .mobility: return "Mobilité"
         case .social: return "Social"; case .admin: return "Admin"; case .travel: return "Voyage"
         }
+    }
+}
+
+// MARK: - Bulle Liquid Glass (indépendante, ronde, glossy)
+
+private struct GlassBubble: View {
+    let cat: AppCategory
+    let color: Color
+    let label: String
+    let baseScale: CGFloat
+    let delay: Double
+    let isCenter: Bool
+    let onTap: () -> Void
+
+    @State private var appeared = false
+    @State private var breathe = false
+    @State private var pop = false
+    @State private var bump = 0
+
+    private var D: CGFloat { 96 }
+
+    var body: some View {
+        ZStack {
+            // 1) Vrai glass iOS 26 qui réfracte le fond
+            VStack(spacing: 3) {
+                Image(systemName: cat.icon)
+                    .font(.system(size: D * 0.42, weight: .semibold))
+                    .symbolEffect(.bounce, value: bump)
+                if isCenter {
+                    Text(label).font(.system(size: D * 0.15, weight: .semibold))
+                }
+            }
+            .foregroundStyle(.white)
+            .frame(width: D, height: D)
+            .glassEffect(.regular.tint(color).interactive(), in: .circle)
+
+            // 2) Gloss vertical (haut plus clair)
+            Circle()
+                .fill(LinearGradient(colors: [.white.opacity(0.30), .clear],
+                                     startPoint: .top, endPoint: .center))
+                .frame(width: D, height: D)
+                .allowsHitTesting(false)
+
+            // 3) Liseré spéculaire en haut
+            Circle()
+                .strokeBorder(LinearGradient(colors: [.white.opacity(0.75), .white.opacity(0.04)],
+                                             startPoint: .top, endPoint: .bottom), lineWidth: 1.2)
+                .frame(width: D, height: D)
+                .allowsHitTesting(false)
+        }
+        .frame(width: D, height: D)
+        .shadow(color: color.opacity(0.35), radius: 12, y: 7)   // décollement du fond
+        .scaleEffect(currentScale)
+        .opacity(appeared ? 1 : 0)
+        .contentShape(Circle())
+        .onAppear {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.72).delay(delay)) { appeared = true }
+            if isCenter {
+                withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true)) { breathe = true }
+            }
+        }
+        .onTapGesture {
+            Haptics.soft(); bump += 1
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.5)) { pop = true }
+            Task {
+                try? await Task.sleep(for: .milliseconds(170))
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) { pop = false }
+            }
+            onTap()
+        }
+    }
+
+    private var currentScale: CGFloat {
+        guard appeared else { return 0.01 }
+        let breatheF: CGFloat = (isCenter && breathe) ? 1.03 : 1.0
+        let popF: CGFloat = pop ? 1.12 : 1.0
+        return baseScale * breatheF * popF
     }
 }
