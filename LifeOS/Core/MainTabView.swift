@@ -39,7 +39,7 @@ struct MainTabView: View {
     @State private var tab: AppTab = .home
     @State private var chatInput = ""
     @State private var chatMessages: [ChatMessage] = [
-        ChatMessage(fromUser: false, text: "Salut ! Je suis ton assistant LifeOS. Demande-moi par ex. « combien de calories aujourd'hui ? » ou « combien d'eau ? ».")
+        ChatMessage(fromUser: false, text: "Salut ! Je suis ton assistant LifeOS. Dis-moi « retiens que... » pour que je mémorise quelque chose. Je peux aussi t'aider sur calories, eau, jeûne et habitudes.")
     ]
     @State private var showChat = false
 
@@ -47,6 +47,8 @@ struct MainTabView: View {
     @Query private var waters: [WaterEntry]
     @Query private var fasts: [FastingSession]
     @Query private var habits: [Habit]
+    @Query(sort: \MemoryEntry.created, order: .reverse) private var memories: [MemoryEntry]
+    @Environment(\.modelContext) private var ctx
     @AppStorage("kcalGoal") private var kcalGoal = 2200
     @AppStorage("waterGoal") private var waterGoal = 2500
 
