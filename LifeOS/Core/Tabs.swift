@@ -1289,18 +1289,20 @@ struct ProfileView: View {
     private var habitsProteinsRow: some View {
         HStack(spacing: 10) {
             // Habitudes avec dot grid
+            let habitColor = Color(hex: 0x9B6CF1)
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 5) {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Color(hex: 0x9B6CF1))
-                    Text("Habitudes")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(habitColor)
+                    Text("HABITUDES")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(habitColor.opacity(0.8))
+                        .kerning(0.5)
                     Spacer()
                     Text("\(habitsDone)/\(habits.count)")
-                        .font(.system(size: 11, weight: .black).monospacedDigit())
-                        .foregroundStyle(Color(hex: 0x9B6CF1))
+                        .font(.system(size: 13, weight: .black).monospacedDigit())
+                        .foregroundStyle(habitColor)
                 }
                 if habits.isEmpty {
                     Text("Aucune habitude")
@@ -1310,47 +1312,58 @@ struct ProfileView: View {
                         ForEach(Array(habits.prefix(8).enumerated()), id: \.offset) { _, h in
                             let done = h.completions.contains { Calendar.current.isDateInToday($0.date) }
                             RoundedRectangle(cornerRadius: 3, style: .continuous)
-                                .fill(done ? Color(hex: 0x9B6CF1) : Color(hex: 0x9B6CF1).opacity(0.14))
+                                .fill(done ? habitColor : habitColor.opacity(0.14))
                                 .frame(width: 13, height: 13)
                         }
                     }
                 }
                 Text(habitsDone == habits.count && !habits.isEmpty ? "Toutes complétées" : habits.isEmpty ? "" : "\(habits.count - habitsDone) restantes")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(habitsDone == habits.count && !habits.isEmpty ? Color(hex: 0x9B6CF1) : .secondary)
+                    .foregroundStyle(habitsDone == habits.count && !habits.isEmpty ? habitColor : .secondary)
             }
             .padding(13)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(habitColor.opacity(0.06))
+                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(habitColor.opacity(0.15), lineWidth: 1))
+            )
 
             // Protéines
-            VStack(alignment: .leading, spacing: 10) {
+            let protColor = Color(hex: 0xE0A23C)
+            VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 5) {
                     Image(systemName: "fork.knife")
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Color(hex: 0xE0A23C))
-                    Text("Protéines")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(protColor)
+                    Text("PROTÉINES")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(protColor.opacity(0.8))
+                        .kerning(0.5)
                 }
-                Text("\(Int(proteinToday))g")
-                    .font(.system(size: 22, weight: .black).monospacedDigit())
+                Text("\(Int(proteinToday))")
+                    .font(.system(size: 28, weight: .black, design: .rounded).monospacedDigit())
                     .foregroundStyle(Theme.textPrimary)
                 Text("/ \(proteinGoal) g")
-                    .font(.system(size: 10))
+                    .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(.secondary)
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Color(hex: 0xE0A23C).opacity(0.12)).frame(height: 5)
-                        Capsule().fill(Color(hex: 0xE0A23C))
-                            .frame(width: geo.size.width * min(1.0, proteinToday / Double(max(1, proteinGoal))), height: 5)
+                        Capsule().fill(protColor.opacity(0.1)).frame(height: 3)
+                        Capsule().fill(protColor)
+                            .frame(width: geo.size.width * min(1.0, proteinToday / Double(max(1, proteinGoal))), height: 3)
+                            .animation(.spring(duration: 1.0).delay(0.5), value: appeared)
                     }
                 }
-                .frame(height: 5)
+                .frame(height: 3)
             }
             .padding(13)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(protColor.opacity(0.06))
+                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(protColor.opacity(0.15), lineWidth: 1))
+            )
         }
     }
 
