@@ -160,6 +160,7 @@ struct OnboardingView: View {
                             recommendations: recommendations,
                             onDone: {
                                 recommendedModulesRaw = recommendations.map { $0.rawValue }.joined(separator: ",")
+                                onboardingGoalsRaw = Array(goals).map { $0.rawValue }.joined(separator: ",")
                                 if !recommendations.isEmpty {
                                     homeShortcuts = buildShortcuts(from: recommendations)
                                 }
