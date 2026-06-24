@@ -1097,15 +1097,22 @@ struct ProfileView: View {
     private var memoriesCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label("Mémoire", systemImage: "brain")
-                    .font(.system(size: 15, weight: .bold))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("MÉMOIRE")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(Color(hex: 0x9B6CF1).opacity(0.8))
+                        .kerning(1.2)
+                    Text("Ce que je retiens")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(Theme.textPrimary)
+                }
                 Spacer()
-                Text("\(memories.count) souvenir\(memories.count > 1 ? "s" : "")")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
+                Text("\(memories.count)")
+                    .font(.system(size: 18, weight: .black).monospacedDigit())
+                    .foregroundStyle(Color(hex: 0x9B6CF1))
             }
 
-            Divider()
+            Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1)
 
             ForEach(memories.prefix(4)) { m in
                 HStack(alignment: .top, spacing: 10) {
@@ -1139,7 +1146,7 @@ struct ProfileView: View {
                 }
 
                 if m.id != memories.prefix(4).last?.id {
-                    Divider().padding(.leading, 32)
+                    Rectangle().fill(Color.primary.opacity(0.05)).frame(height: 1).padding(.leading, 32)
                 }
             }
 
