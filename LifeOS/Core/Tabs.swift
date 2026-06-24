@@ -158,7 +158,7 @@ struct WakeUpView: View {
             .background(Theme.bg)
             .navigationTitle("Réveil")
             .fullScreenCover(isPresented: $showBriefing) {
-                MorningBriefingView(modules: recommendedModules)
+                DailyBriefingView(modules: recommendedModules)
             }
         }
     }
