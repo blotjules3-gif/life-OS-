@@ -19,7 +19,7 @@ struct CryptoMessage: Identifiable {
     let text: String
 }
 
-private struct PortfolioPosition: Identifiable {
+fileprivate struct PortfolioPosition: Identifiable {
     let id: String
     var buyPrice: Double
     var quantity: Double
