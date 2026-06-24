@@ -53,7 +53,7 @@ struct MainTabView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             content
-                .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 90) }
+                .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 56) }
             FloatingTabBar(
                 selected: $tab,
                 chatInput: $chatInput,
@@ -230,13 +230,13 @@ struct FloatingTabBar: View {
                 .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
-        .padding(.vertical, 10)
-        .padding(.horizontal, 12)
-        .background(.regularMaterial, in: Capsule())
-        .overlay(Capsule().stroke(Color.primary.opacity(0.05), lineWidth: 1))
-        .shadow(color: .black.opacity(0.14), radius: 14, y: 5)
+        .padding(.vertical, 8)
         .padding(.horizontal, 16)
-        .padding(.bottom, 8)
+        .background(.bar)                                          // fond plat comme Instagram
+        .overlay(alignment: .top) {
+            Divider()                                              // séparateur fin en haut
+        }
+        .padding(.bottom, 0)
         // Focus → entre en mode chat
         .onChange(of: inputFocused) { _, focused in
             withAnimation(.spring(duration: 0.4)) { chatMode = focused }
@@ -256,19 +256,21 @@ struct FloatingTabBar: View {
     @ViewBuilder
     private func tabBtn(_ t: AppTab) -> some View {
         Button {
-            withAnimation(.snappy(duration: 0.25)) { selected = t }
-            inputFocused = false   // ferme le clavier si ouvert
+            withAnimation(.spring(duration: 0.3, bounce: 0.5)) { selected = t }
+            inputFocused = false
             Haptics.tap()
         } label: {
             VStack(spacing: 3) {
                 Image(systemName: selected == t ? t.iconFill : t.icon)
-                    .font(.system(size: 18, weight: .semibold))
-                    .symbolEffect(.bounce, value: selected == t)
+                    .font(.system(size: selected == t ? 22 : 20, weight: .semibold))
+                    .scaleEffect(selected == t ? 1.18 : 1.0)
+                    .animation(.spring(duration: 0.3, bounce: 0.5), value: selected == t)
                 Text(t.label)
-                    .font(.system(size: 9, weight: .medium))
+                    .font(.system(size: 9, weight: selected == t ? .semibold : .regular))
             }
             .foregroundStyle(selected == t ? Color.accentColor : Color.secondary)
-            .frame(width: 52)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 4)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
