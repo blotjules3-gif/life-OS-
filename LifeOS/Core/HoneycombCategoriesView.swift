@@ -127,7 +127,7 @@ struct BubbleMesh: View {
     }
 }
 
-// MARK: - Sphère de gel glossy
+// MARK: - Bulle de savon TRANSLUCIDE (on voit le fond à travers)
 
 struct GelBubble: View {
     let b: BubbleSim.B
@@ -135,46 +135,71 @@ struct GelBubble: View {
     @State private var bump = 0
 
     private var D: CGFloat { b.radius * 2 }
+    private var R: CGFloat { b.radius }
 
     var body: some View {
         let c = b.color
+        // les bulles de remplissage sont encore plus transparentes
+        let f: Double = b.isFiller ? 0.6 : 1.0
+
         ZStack {
-            // 1. cœur gel translucide (volume, lumière en haut à gauche)
-            Circle()
-                .fill(RadialGradient(
-                    colors: [c.brightnessAdjusted(0.45), c, c.brightnessAdjusted(-0.28)],
-                    center: UnitPoint(x: 0.32, y: 0.28),
-                    startRadius: 1, endRadius: D * 0.72))
-                .opacity(b.isFiller ? 0.45 : 0.86)
-            // 2. ombre basse droite (rondeur)
-            Circle()
-                .fill(RadialGradient(colors: [.clear, .black.opacity(0.22)],
-                                     center: UnitPoint(x: 0.74, y: 0.8),
-                                     startRadius: D * 0.1, endRadius: D * 0.62))
-                .blendMode(.multiply)
-            // 3. reflet large diffus
-            Ellipse().fill(.white).opacity(0.7)
-                .frame(width: D * 0.5, height: D * 0.34)
-                .blur(radius: D * 0.05)
-                .offset(x: -D * 0.16, y: -D * 0.22)
-            // 4. point chaud net
-            Circle().fill(.white).opacity(0.9)
-                .frame(width: D * 0.1, height: D * 0.1)
+            // 0. halo coloré (anneau flou DERRIÈRE → glow sans remplir le centre)
+            Circle().stroke(c, lineWidth: R * 0.16)
+                .opacity(Bub.HALO_OPACITY * 0.5)
+                .blur(radius: R * 0.16)
+
+            // corps translucide + transmission + reflets (clippés au cercle)
+            ZStack {
+                // 1. CORPS TEINTÉ TRANSPARENT (le fix : centre quasi clair, bord saturé)
+                Circle().fill(RadialGradient(
+                    colors: [c.opacity(Bub.FILL_CENTER_OPACITY * f),
+                             c.opacity(Bub.FILL_MID_OPACITY * f),
+                             c.opacity(Bub.FILL_RIM_OPACITY * f)],
+                    center: UnitPoint(x: 0.35, y: 0.30),
+                    startRadius: D * 0.04, endRadius: D * 0.52))
+
+                // 2. transmission de lumière (bloom doux, opposé au reflet)
+                Circle().fill(RadialGradient(
+                    colors: [.white.opacity(0.22 * f), .clear],
+                    center: UnitPoint(x: 0.68, y: 0.72),
+                    startRadius: 0, endRadius: D * 0.40))
+
+                // 4a. reflet primaire net
+                Ellipse().fill(.white).opacity(0.9)
+                    .frame(width: D * 0.30, height: D * 0.20)
+                    .blur(radius: 0.5)
+                    .rotationEffect(.degrees(-25))
+                    .offset(x: -D * 0.17, y: -D * 0.20)
+                // 4b. petit point spéculaire net
+                Circle().fill(.white).opacity(0.95)
+                    .frame(width: D * 0.06, height: D * 0.06)
+                    .offset(x: -D * 0.07, y: -D * 0.28)
+            }
+            .clipShape(Circle())
+
+            // 3. liseré IRISÉ (film de savon arc-en-ciel)
+            Circle().strokeBorder(
+                AngularGradient(colors: [.pink, .cyan, .yellow, .mint, .purple, .pink], center: .center),
+                lineWidth: 1.5)
+                .opacity(Bub.IRIDESCENCE_OPACITY)
                 .blur(radius: 0.5)
-                .offset(x: -D * 0.22, y: -D * 0.26)
-            // 5. liseré
-            Circle().stroke(LinearGradient(colors: [.white.opacity(0.85), .white.opacity(0.05)],
-                                           startPoint: .top, endPoint: .bottom), lineWidth: 1.5)
+            // 4c. catch lumineux du haut
+            Circle().strokeBorder(.white, lineWidth: 1.6)
+                .mask(LinearGradient(colors: [.white, .clear], startPoint: .top, endPoint: .center))
+                .opacity(0.9)
+            // 4d. catch faible du bas (la lumière enveloppe la sphère)
+            Circle().strokeBorder(.white, lineWidth: 1.1)
+                .mask(LinearGradient(colors: [.clear, .white], startPoint: .center, endPoint: .bottom))
+                .opacity(0.4)
         }
-        .clipShape(Circle())
         .overlay {
-            // 7+8. glyphe + label (seulement bulles principales)
+            // 6+7. glyphe + label (bulles principales uniquement)
             if !b.isFiller, let icon = b.icon {
-                VStack(spacing: D * 0.03) {
+                VStack(spacing: D * 0.02) {
                     Image(systemName: icon)
-                        .font(.system(size: D * 0.4, weight: .semibold))
+                        .font(.system(size: D * 0.36, weight: .semibold))
                         .symbolEffect(.bounce, value: bump)
-                        .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
+                        .shadow(color: .black.opacity(0.22), radius: 2, y: 1)
                     if let label = b.label, D > 70 {
                         Text(label)
                             .font(.system(size: D * 0.13, weight: .semibold))
@@ -186,8 +211,8 @@ struct GelBubble: View {
             }
         }
         .frame(width: D, height: D)
-        .shadow(color: c.opacity(0.55), radius: D * 0.12, y: D * 0.04)   // bloom coloré
-        .shadow(color: .black.opacity(0.12), radius: 6, y: 4)             // décollement
+        .shadow(color: c.opacity(Bub.HALO_OPACITY), radius: R * Bub.HALO_RADIUS_RATIO)  // halo coloré
+        .shadow(color: .black.opacity(0.08), radius: 5, y: 4)                            // contact
         .scaleEffect(appeared ? 1 : 0.01)
         .opacity(appeared ? 1 : 0)
         .onAppear {
