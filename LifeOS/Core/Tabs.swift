@@ -1082,6 +1082,48 @@ struct ProfileView: View {
         }
     }
 
+    // MARK: - Bannière Apple Santé
+
+    private var healthConnectBanner: some View {
+        Button {
+            Task {
+                let ok = await HealthService.shared.requestAuthorization()
+                healthConnected = ok
+                if ok {
+                    steps = await HealthService.shared.stepsToday()
+                    activeCalories = await HealthService.shared.activeCaloriesToday()
+                }
+            }
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color(hex: 0xF1746C).opacity(0.15))
+                        .frame(width: 40, height: 40)
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(Color(hex: 0xF1746C))
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Connecter Apple Santé")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    Text("Pas, calories et fréquence cardiaque en temps réel")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
     // MARK: - Stats 3 colonnes
 
     private var statsRow: some View {
