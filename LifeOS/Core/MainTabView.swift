@@ -173,7 +173,7 @@ struct FloatingTabBar: View {
     private static let selBg  = Color(white: 0.92)
     private static let fieldBg = Color(white: 0.94)
 
-    private let leftTabs:  [AppTab] = [.camera, .home]
+    private let leftTabs:  [AppTab] = [.wakeup, .home]
     private let rightTabs: [AppTab] = [.categories, .profile]
 
     var body: some View {
