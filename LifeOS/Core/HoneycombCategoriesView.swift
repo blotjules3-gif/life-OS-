@@ -3,15 +3,15 @@ import SwiftUI
 // MARK: - Constantes (à régler)
 
 private enum Honey {
-    static let D: CGFloat = 96
-    static let G: CGFloat = 26           // assez large pour que les glass ne fusionnent jamais
-    static let MAX_SCALE: Double = 1.15
-    static let MIN_SCALE: Double = 0.82
+    static let D: CGFloat = 108          // plus gros = plus dense
+    static let G: CGFloat = 8            // serré (les glass indépendants ne fusionnent pas)
+    static let MAX_SCALE: Double = 1.12
+    static let MIN_SCALE: Double = 0.84
     static let FOCAL_RATIO: CGFloat = 0.62
     static let COLS = 3
     static let ROWS = 5                  // 3 x 5 = 15, format vertical qui remplit l'écran
-    static let TOP_PAD: CGFloat = 34
-    static let BOTTOM_PAD: CGFloat = 20
+    static let TOP_PAD: CGFloat = 2      // colle à la Dynamic Island (via safe area)
+    static let BOTTOM_PAD: CGFloat = 2   // colle au menu du bas (via safe area)
 }
 
 /// Ruche fixe et centrée, **vrai Liquid Glass iOS 26** posé sur un fond MeshGradient
@@ -160,7 +160,7 @@ private struct GlassBubble: View {
     @State private var pop = false
     @State private var bump = 0
 
-    private var D: CGFloat { 96 }
+    private var D: CGFloat { Honey.D }
 
     var body: some View {
         ZStack {
