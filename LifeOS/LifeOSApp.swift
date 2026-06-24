@@ -4,11 +4,22 @@ import SwiftData
 @main
 struct LifeOSApp: App {
 
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @StateObject private var alarm = AlarmManager.shared
+
     // Container optionnel — créé en background pour ne pas bloquer l'UI
     @State private var container: ModelContainer? = nil
     @State private var loadingStatus = "Démarrage…"
     @AppStorage("onboardingDone") private var onboardingDone = false
+    @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
+    @AppStorage("userName") private var userName = ""
+    @AppStorage("waterGoal") private var waterGoal = 2500
+    @AppStorage("kcalGoal") private var kcalGoal = 2200
     @State private var ready = false
+
+    private var recommendedModules: [AppCategory] {
+        recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
+    }
 
     // Schéma déclaré statiquement (pas d'init au lancement)
     private static let schema = Schema([
