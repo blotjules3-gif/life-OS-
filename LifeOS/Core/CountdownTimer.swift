@@ -89,4 +89,9 @@ enum Haptics {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         #endif
     }
+    static func soft() {
+        #if canImport(UIKit)
+        UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+        #endif
+    }
 }
