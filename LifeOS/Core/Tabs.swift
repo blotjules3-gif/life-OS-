@@ -1418,9 +1418,13 @@ struct ProfileView: View {
                 Spacer()
             }
             .padding(12)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(color.opacity(0.07))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(color.opacity(0.15), lineWidth: 1))
+            )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(LifeOSPressStyle())
     }
 
     // MARK: - Réveil
