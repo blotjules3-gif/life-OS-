@@ -9,6 +9,8 @@ extension ShapeStyle where Self == Color { static var investTint: Color { AppCat
 struct InvestHubView: View {
     var body: some View {
         HubScaffold(category: .invest) {
+            ToolRow(icon: "bitcoinsign.circle.fill", title: "Crypto",
+                    subtitle: "Marché, risque et potentiel en temps réel", tint: .investTint) { CryptoMarketView() }
             ToolRow(icon: "chart.pie.fill", title: "Portefeuille",
                     subtitle: "Actions + crypto en un dashboard", tint: .investTint) { PortfolioView() }
             ToolRow(icon: "chart.line.uptrend.xyaxis", title: "Net worth & FIRE",
