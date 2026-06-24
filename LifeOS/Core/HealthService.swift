@@ -23,6 +23,7 @@ final class HealthService {
         if let steps = HKObjectType.quantityType(forIdentifier: .stepCount) { set.insert(steps) }
         if let hr = HKObjectType.quantityType(forIdentifier: .restingHeartRate) { set.insert(hr) }
         if let hrv = HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN) { set.insert(hrv) }
+        if let cal = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) { set.insert(cal) }
         set.insert(HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!)
         return set
     }
