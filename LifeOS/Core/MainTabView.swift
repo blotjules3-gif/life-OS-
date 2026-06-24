@@ -244,8 +244,10 @@ struct FloatingTabBar: View {
         }
         .frame(height: 60)
         .padding(.horizontal, 10)
-        .background(Self.barBg, in: Capsule())
-        .overlay(Capsule().stroke(Color(white: 0.88), lineWidth: 1))
+        // iOS 26 : coins concentriques avec le coin de l'écran (style Safari)
+        .background(Self.barBg, in: ConcentricRectangle(corners: .concentric, isUniform: true))
+        .overlay(ConcentricRectangle(corners: .concentric, isUniform: true)
+            .stroke(Color(white: 0.88), lineWidth: 1))
         .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 6)
         // une seule valeur pilote gauche = droite = bas (= 10pt). L'ignoresSafeArea
         // est posé sur le ZStack parent (MainTabView) pour que ces 10pt soient mesurés
