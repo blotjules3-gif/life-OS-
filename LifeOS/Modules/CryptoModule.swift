@@ -221,8 +221,8 @@ struct CryptoAppView: View {
     ]
     @Namespace private var ns
 
-    private static let barBg  = Color(red:0.10, green:0.10, blue:0.11)
-    private static let selBg  = Color(white:0.26)
+    private static let barBg  = Color.white
+    private static let selBg  = Color(white:0.92)
 
     var body: some View {
         ZStack(alignment: .bottom) {
