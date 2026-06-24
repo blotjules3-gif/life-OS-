@@ -324,6 +324,10 @@ struct ProfileView: View {
     @AppStorage("proteinGoal") private var proteinGoal = 150
     @AppStorage("fastTarget") private var fastTarget = 16
     @AppStorage("onboardingGoalsRaw") private var onboardingGoalsRaw = ""
+    @AppStorage("wakeupEnabled") private var wakeupEnabled = false
+    @AppStorage("wakeupHour") private var wakeupHour = 7
+    @AppStorage("wakeupMinute") private var wakeupMinute = 0
+    @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
 
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
@@ -333,6 +337,12 @@ struct ProfileView: View {
     @State private var steps = 0
     @State private var healthConnected = false
     @State private var showGoalEditor = false
+    @State private var showWakeupDetail = false
+    @State private var showBriefing = false
+
+    private var recommendedModules: [AppCategory] {
+        recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
+    }
 
     private var onboardingGoals: [OnboardingGoal] {
         onboardingGoalsRaw.split(separator: ",").compactMap { OnboardingGoal(rawValue: String($0)) }
