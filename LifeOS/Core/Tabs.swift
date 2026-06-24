@@ -248,6 +248,8 @@ struct DailyBriefingView: View {
     @AppStorage("userName") private var userName = ""
     @AppStorage("kcalGoal") private var kcalGoal = 2200
     @AppStorage("waterGoal") private var waterGoal = 2500
+    @AppStorage("lastBriefingDate") private var lastBriefingDate: Double = 0
+    @AppStorage("lastBriefingContent") private var lastBriefingContent = ""
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
     @Query private var habits: [Habit]
