@@ -57,9 +57,12 @@ using namespace metal;
     float3 body    = mix(shadow, litCol, diffuse);
     body           = mix(body, base, 0.30);           // pull saturation back to the core
 
-    // Subtle inner luminosity so it glows from within
-    float centerGlow = smoothstep(0.0, 0.85, z) * 0.10;
+    // Subsurface scattering : la gélatine s'illumine de l'intérieur, plus clair vers le
+    // bas où la lumière du haut ressort du gel
+    float centerGlow = smoothstep(0.0, 0.90, z) * 0.15;
     body = mix(body, litCol, centerGlow);
+    float subsurface = smoothstep(-0.25, 1.0, uv.y) * smoothstep(1.0, 0.15, r) * 0.16;
+    body = mix(body, mix(base, float3(1.0), 0.55), subsurface);
 
     float3 white = float3(1.0);
 
@@ -68,17 +71,24 @@ using namespace metal;
     float2 drift = float2(sin(time * 0.5 + seed) * 0.02,
                           cos(time * 0.4 + seed) * 0.02);
 
-    // Big soft primary gloss, upper-left
-    float  primaryD    = length(uv - (float2(-0.30, -0.42) + drift));
-    float  primaryGloss = smoothstep(0.62, 0.0, primaryD) * 0.85;
+    // Gros reflet primaire doux, en haut à gauche — légèrement allongé (gel mouillé),
+    // avec un cœur plus net dans le halo doux = reflet plus réaliste
+    float2 primUV       = (uv - (float2(-0.28, -0.40) + drift)) * float2(1.0, 1.22);
+    float  primaryD     = length(primUV);
+    float  primaryGloss = smoothstep(0.50, 0.0, primaryD) * 0.55
+                        + smoothstep(0.20, 0.0, primaryD) * 0.45;
 
-    // Sharp small hotspot near it
-    float  hotD  = length(uv - (float2(-0.16, -0.26) + drift));
-    float  hotspot = smoothstep(0.13, 0.0, hotD);
+    // Petit hotspot net juste à côté
+    float  hotD  = length(uv - (float2(-0.14, -0.24) + drift));
+    float  hotspot = smoothstep(0.10, 0.0, hotD);
 
-    // Phong sparkle on the curved rim
+    // Reflet secondaire doux en bas à droite (rebond d'environnement → réalisme)
+    float  secD = length((uv - (float2(0.34, 0.32) - drift)) * float2(1.0, 1.18));
+    float  secondary = smoothstep(0.32, 0.0, secD) * 0.20;
+
+    // Phong un peu plus doux que du verre (rendu gélatine)
     float3 halfDir = normalize(lightDir + viewDir);
-    float  phong   = pow(max(0.0, dot(normal, halfDir)), 80.0) * specStrength;
+    float  phong   = pow(max(0.0, dot(normal, halfDir)), 55.0) * specStrength;
 
     // Light wrapping around the bottom rim
     float bottomWrap = smoothstep(0.80, 1.0, r) * smoothstep(0.0, 1.0, uv.y) * 0.45;
@@ -88,7 +98,7 @@ using namespace metal;
 
     // ---- Compose color ----
     float3 col = body;
-    col += white * (primaryGloss + hotspot + phong);
+    col += white * (primaryGloss + hotspot + phong + secondary);
     col += white * bottomWrap;
     col  = mix(col, white, innerGlow * 0.32);
     col  = mix(col, white, fres * 0.22);
@@ -96,7 +106,7 @@ using namespace metal;
     // ---- Alpha: translucent core, denser Fresnel rim ----
     float alpha = mix(coreAlpha, rimAlpha, fres);
     // light features stay opaque so they read as real light, not tinted glass
-    alpha = max(alpha, (primaryGloss + hotspot + phong) * 0.9);
+    alpha = max(alpha, (primaryGloss + hotspot + phong + secondary) * 0.9);
     alpha = max(alpha, innerGlow * rimAlpha);
     alpha = max(alpha, bottomWrap * 0.8);
 

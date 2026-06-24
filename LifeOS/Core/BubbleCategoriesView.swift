@@ -182,6 +182,7 @@ struct BubbleCategoriesView: View {
         let bx = (moving ? 0 : sin(t * 0.5 + phase) * amp) + dv.width
         let by = (moving ? 0 : cos(t * 0.42 + phase * 1.3) * amp) + dv.height
         let wig: Double = (editing && !cat.isFiller) ? sin(t * 7 + phase) * 2.0 : 0
+        let a = cat.isFiller ? cat.anchor : adjustedAnchor(cat)
 
         return BubbleView(
             title: cat.title,
@@ -209,9 +210,11 @@ struct BubbleCategoriesView: View {
         }
         .scaleEffect(tappedID == cat.id ? 1.12 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.45), value: tappedID)
-        .position(x: cat.anchor.x * w + bx, y: cat.anchor.y * h + by)
+        .position(x: a.x * w + bx, y: a.y * h + by)
+        .animation(.spring(response: 0.55, dampingFraction: 0.85), value: hiddenRaw)
         .zIndex(moving ? 100 : Double(cat.sizeMul))
         .allowsHitTesting(!cat.isFiller)
+        .transition(.scale.combined(with: .opacity))
         .gesture(dragTap(cat))
     }
 
@@ -234,6 +237,21 @@ struct BubbleCategoriesView: View {
                 }
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.6)) { drag[cat.id] = .zero }
             }
+    }
+
+    // MARK: combler le vide — décale légèrement vers les bulles retirées
+    private func adjustedAnchor(_ cat: BubbleCategory) -> CGPoint {
+        guard !hidden.isEmpty else { return cat.anchor }
+        var ox: CGFloat = 0, oy: CGFloat = 0
+        for h in BubbleLayout.categories where !h.isFiller && hidden.contains(h.title) {
+            let dx = h.anchor.x - cat.anchor.x
+            let dy = h.anchor.y - cat.anchor.y
+            let dist = max(0.001, hypot(dx, dy))
+            let pull = 0.22 * max(0, 1 - dist / 0.40)   // plus proche = plus attiré vers le vide
+            ox += dx * pull
+            oy += dy * pull
+        }
+        return CGPoint(x: cat.anchor.x + ox, y: cat.anchor.y + oy)
     }
 
     // MARK: compteur d'usage → taille
