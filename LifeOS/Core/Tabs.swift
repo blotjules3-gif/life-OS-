@@ -885,137 +885,160 @@ struct ProfileView: View {
 
     private var heroDark: some View {
         ZStack(alignment: .topLeading) {
-            // Fond sombre plus profond
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .fill(LinearGradient(
-                    colors: [Color(hex: 0x09151F), Color(hex: 0x122030)],
+                    colors: [Color(hex: 0x070F18), Color(hex: 0x0E1E2E)],
                     startPoint: .topLeading, endPoint: .bottomTrailing
                 ))
 
-            // Blob couleur score — grand, haut droite
+            // Blob score — haut droite
             Circle()
-                .fill(RadialGradient(
-                    colors: [scoreColor.opacity(0.45), .clear],
-                    center: .center, startRadius: 0, endRadius: 130
-                ))
-                .frame(width: 260, height: 260)
-                .offset(x: 150, y: -80)
-                .blur(radius: 26)
+                .fill(RadialGradient(colors: [scoreColor.opacity(0.38), .clear],
+                                     center: .center, startRadius: 0, endRadius: 150))
+                .frame(width: 300, height: 300)
+                .offset(x: 120, y: -120)
+                .blur(radius: 32)
                 .allowsHitTesting(false)
 
-            // Blob froid bas gauche
+            // Blob froid — bas gauche
             Circle()
-                .fill(RadialGradient(
-                    colors: [Color(hex: 0x3CB2E0).opacity(0.22), .clear],
-                    center: .center, startRadius: 0, endRadius: 90
-                ))
-                .frame(width: 180, height: 180)
-                .offset(x: -30, y: 100)
-                .blur(radius: 30)
-                .allowsHitTesting(false)
-
-            // Ligne accent horizontale (trait lumineux subtil)
-            Rectangle()
-                .fill(LinearGradient(
-                    colors: [.clear, scoreColor.opacity(0.2), .clear],
-                    startPoint: .leading, endPoint: .trailing
-                ))
-                .frame(height: 1)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 68)
+                .fill(RadialGradient(colors: [Color(hex: 0x3CB2E0).opacity(0.18), .clear],
+                                     center: .center, startRadius: 0, endRadius: 90))
+                .frame(width: 200, height: 200)
+                .offset(x: -50, y: 180)
+                .blur(radius: 36)
                 .allowsHitTesting(false)
 
             VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .top, spacing: 0) {
-                    // Texte gauche
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(greeting)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.5))
-                            .padding(.top, 2)
-                        Group {
-                            if name.isEmpty {
-                                TextField("Ton prénom", text: $name)
-                                    .font(.system(size: 36, weight: .black, design: .rounded))
-                                    .foregroundStyle(.white)
-                            } else {
-                                Text(name)
-                                    .font(.system(size: 36, weight: .black, design: .rounded))
-                                    .foregroundStyle(.white)
-                            }
-                        }
-                        Text(Date.now.formatted(.dateTime.weekday(.wide).day().month()))
-                            .font(.system(size: 13))
-                            .foregroundStyle(.white.opacity(0.38))
+
+                // — LIGNE 1 : greeting + date
+                HStack(alignment: .firstTextBaseline) {
+                    Text(greeting.uppercased())
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.35))
+                        .kerning(1.4)
+                    Spacer()
+                    Text(Date.now.formatted(.dateTime.weekday(.abbreviated).day().month()))
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.3))
+                }
+
+                // — LIGNE 2 : prénom
+                Group {
+                    if name.isEmpty {
+                        TextField("Ton prénom", text: $name)
+                            .font(.system(size: 34, weight: .black, design: .rounded))
+                            .foregroundStyle(.white)
+                    } else {
+                        Text(name)
+                            .font(.system(size: 34, weight: .black, design: .rounded))
+                            .foregroundStyle(.white)
                     }
+                }
+                .padding(.top, 4)
 
-                    Spacer(minLength: 12)
+                Spacer().frame(height: 20)
 
-                    // Score ring avec glow
+                // — LIGNE 3 : ring gauche + métriques droite
+                HStack(alignment: .center, spacing: 18) {
+
+                    // Score ring (plus grand)
                     ZStack {
-                        // Track
                         Circle()
-                            .stroke(.white.opacity(0.12), lineWidth: 10)
-                            .frame(width: 102, height: 102)
+                            .stroke(.white.opacity(0.09), lineWidth: 11)
+                            .frame(width: 126, height: 126)
 
-                        // Glow derrière le ring (blurred)
                         Circle()
                             .trim(from: 0, to: appeared ? CGFloat(lifeScore) / 100.0 : 0)
-                            .stroke(scoreColor.opacity(0.4), style: StrokeStyle(lineWidth: 18, lineCap: .round))
-                            .frame(width: 102, height: 102)
+                            .stroke(scoreColor.opacity(0.35),
+                                    style: StrokeStyle(lineWidth: 20, lineCap: .round))
+                            .frame(width: 126, height: 126)
                             .rotationEffect(.degrees(-90))
-                            .blur(radius: 8)
+                            .blur(radius: 9)
                             .animation(.spring(duration: 1.3, bounce: 0.08).delay(0.45), value: appeared)
                             .allowsHitTesting(false)
 
-                        // Ring principal
                         Circle()
                             .trim(from: 0, to: appeared ? CGFloat(lifeScore) / 100.0 : 0)
                             .stroke(
-                                LinearGradient(
-                                    colors: [scoreColor, scoreColor.opacity(0.5)],
-                                    startPoint: .topLeading, endPoint: .bottomTrailing
-                                ),
-                                style: StrokeStyle(lineWidth: 10, lineCap: .round)
+                                LinearGradient(colors: [scoreColor, scoreColor.opacity(0.55)],
+                                               startPoint: .topLeading, endPoint: .bottomTrailing),
+                                style: StrokeStyle(lineWidth: 11, lineCap: .round)
                             )
-                            .frame(width: 102, height: 102)
+                            .frame(width: 126, height: 126)
                             .rotationEffect(.degrees(-90))
                             .animation(.spring(duration: 1.3, bounce: 0.08).delay(0.45), value: appeared)
 
-                        VStack(spacing: 0) {
+                        VStack(spacing: 1) {
                             Text("SCORE")
-                                .font(.system(size: 7, weight: .bold))
-                                .foregroundStyle(.white.opacity(0.38))
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.32))
                                 .kerning(0.8)
                             Text("\(lifeScore)")
-                                .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
+                                .font(.system(size: 36, weight: .black, design: .rounded).monospacedDigit())
                                 .foregroundStyle(.white)
                             Text("/100")
-                                .font(.system(size: 9, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.38))
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(.white.opacity(0.32))
                         }
                     }
+
+                    // Métriques verticales
+                    VStack(alignment: .leading, spacing: 12) {
+                        heroMetricRow(
+                            icon: "figure.run",
+                            value: steps >= 1000 ? String(format: "%.1fk", Double(steps) / 1000.0) : "\(steps)",
+                            label: "pas",
+                            progress: min(1.0, Double(steps) / Double(max(1, stepGoal))),
+                            color: Color(hex: 0xF1746C)
+                        )
+                        heroMetricRow(
+                            icon: "drop.fill",
+                            value: "\(waterToday) ml",
+                            label: "eau",
+                            progress: min(1.0, Double(waterToday) / Double(max(1, waterGoal))),
+                            color: Color(hex: 0x3CB2E0)
+                        )
+                        heroMetricRow(
+                            icon: "flame.fill",
+                            value: "\(kcalToday) kcal",
+                            label: "calories",
+                            progress: min(1.0, Double(kcalToday) / Double(max(1, kcalGoal))),
+                            color: Color(hex: 0x4CC38A)
+                        )
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
-                Spacer().frame(height: 18)
+                Spacer().frame(height: 20)
 
-                // Statut score
-                HStack(spacing: 8) {
-                    Circle().fill(scoreColor).frame(width: 6, height: 6)
-                    Text(lifeScore >= 75 ? "Excellente journée" : lifeScore >= 50 ? "Bonne progression" : "Continue, tu peux mieux")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.65))
-                }
+                // — LIGNE 4 : barre de progression + statut
+                VStack(alignment: .leading, spacing: 7) {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(.white.opacity(0.08)).frame(height: 3)
+                            Capsule()
+                                .fill(LinearGradient(colors: [scoreColor, scoreColor.opacity(0.55)],
+                                                     startPoint: .leading, endPoint: .trailing))
+                                .frame(width: max(3, geo.size.width * CGFloat(lifeScore) / 100.0), height: 3)
+                                .animation(.spring(duration: 1.0).delay(0.5), value: appeared)
+                        }
+                    }
+                    .frame(height: 3)
 
-                if !onboardingGoals.isEmpty {
-                    Spacer().frame(height: 16)
                     HStack(spacing: 6) {
-                        ForEach(onboardingGoals.prefix(3)) { g in
-                            Label(String(g.label.split(separator: " ").first ?? ""), systemImage: g.icon)
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.75))
-                                .padding(.horizontal, 9).padding(.vertical, 4)
-                                .background(.white.opacity(0.1), in: Capsule())
+                        Circle().fill(scoreColor).frame(width: 5, height: 5)
+                        Text(lifeScore >= 75 ? "Excellente journée" :
+                             lifeScore >= 50 ? "Bonne progression" : "Continue, tu peux mieux")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.white.opacity(0.5))
+                        Spacer()
+                        if healthConnected {
+                            Label("Santé", systemImage: "heart.fill")
+                                .font(.system(size: 9, weight: .semibold))
+                                .foregroundStyle(Color(hex: 0xF1746C).opacity(0.85))
+                                .padding(.horizontal, 7).padding(.vertical, 3)
+                                .background(Color(hex: 0xF1746C).opacity(0.15), in: Capsule())
                         }
                     }
                 }
@@ -1023,6 +1046,34 @@ struct ProfileView: View {
             .padding(20)
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private func heroMetricRow(icon: String, value: String, label: String,
+                                progress: Double, color: Color) -> some View {
+        HStack(spacing: 9) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(color)
+                .frame(width: 24, height: 24)
+                .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(value)
+                    .font(.system(size: 13, weight: .bold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                GeometryReader { g in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(.white.opacity(0.08)).frame(height: 2)
+                        Capsule()
+                            .fill(color.opacity(0.7))
+                            .frame(width: max(2, g.size.width * CGFloat(progress)), height: 2)
+                            .animation(.spring(duration: 1.0).delay(0.5), value: appeared)
+                    }
+                }
+                .frame(height: 2)
+            }
+        }
     }
 
     // MARK: - Stats 3 colonnes
