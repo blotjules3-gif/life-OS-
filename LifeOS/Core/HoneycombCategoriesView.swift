@@ -5,11 +5,11 @@ import SwiftUI
 // =====================================================================
 
 private enum BC {
-    static let baseFrac: CGFloat = 0.26     // baseDiameter = screenWidth * 0.26
+    static let baseFrac: CGFloat = 0.32     // + dense : bulles plus grosses qui se chevauchent
 
     // --- transparency (luminous jewel-tone glass, NOT washed-out ghosts) ---
-    static let coreOpacity: Double = 0.12
-    static let rimOpacity:  Double = 0.62
+    static let coreOpacity: Double = 0.15
+    static let rimOpacity:  Double = 0.72
     static let docsCore:    Double = 0.06    // Documents = nearly colourless, most transparent
     static let docsRim:     Double = 0.34
     static let fillerCore:  Double = 0.06
@@ -98,7 +98,7 @@ private struct FixedBubble: View {
 
     private var iris: [Color] {
         let hues: [Color] = [.pink, .purple, .blue, .cyan, .green, .yellow, .orange, .pink]
-        return hues.map { $0.opacity(0.45) }
+        return hues.map { $0.opacity(0.55) }
     }
 
     var body: some View {
@@ -165,7 +165,7 @@ private struct FixedBubble: View {
                     Image(systemName: icon)
                         .font(.system(size: r * 0.46, weight: .semibold))
                         .symbolEffect(.bounce, value: bounce)
-                    if let label = spec.label, r > 30 {
+                    if let label = spec.label, spec.showLabel, r > 30 {
                         Text(label)
                             .font(.system(size: max(9, r * 0.20), weight: .semibold))
                             .lineLimit(1).minimumScaleFactor(0.55)
@@ -251,6 +251,7 @@ private enum Layout {
         let rimOp: Double
         let bobFactor: CGFloat
         let phase: Double
+        let showLabel: Bool       // masqué si la bulle est recouverte par une plus grosse devant
     }
 
     /// (category, x-fraction, y-fraction, sizeMultiplier) — origin top-left, y down.
@@ -283,23 +284,33 @@ private enum Layout {
         guard size.width > 0 else { return [] }
         let base = size.width * BC.baseFrac
         let fillerPalette: [Color] = [.cyan, .mint, .pink, .purple, .blue, .teal, .indigo]
+
+        // positions + diamètres des bulles principales
+        let mains: [(cat: AppCategory, center: CGPoint, dia: CGFloat, mult: CGFloat)] = template.map { (cat, fx, fy, mult) in
+            let grown = mult * growth(weights[cat.rawValue] ?? 0)
+            return (cat, CGPoint(x: fx * size.width, y: fy * size.height), base * grown, mult)
+        }
+
         var out: [Spec] = []
         var id = 0
 
-        for (cat, fx, fy, mult) in template {
-            let grown = mult * growth(weights[cat.rawValue] ?? 0)
-            let isDocs = (cat == .admin)
+        for (i, m) in mains.enumerated() {
+            // label masqué si le centre est recouvert par une bulle plus GROSSE
+            var show = true
+            for (j, o) in mains.enumerated() where j != i && o.dia > m.dia * 1.02 {
+                let d = hypot(m.center.x - o.center.x, m.center.y - o.center.y)
+                if d < o.dia / 2 * 0.9 { show = false; break }
+            }
+            let isDocs = (m.cat == .admin)
             out.append(Spec(
-                id: id, cat: cat,
-                anchor: CGPoint(x: fx * size.width, y: fy * size.height),
-                diameter: base * grown,
-                tint: tint(cat),
-                icon: cat.icon,
-                label: label(cat),
+                id: id, cat: m.cat,
+                anchor: m.center, diameter: m.dia,
+                tint: tint(m.cat), icon: m.cat.icon, label: label(m.cat),
                 coreOp: isDocs ? BC.docsCore : BC.coreOpacity,
                 rimOp:  isDocs ? BC.docsRim  : BC.rimOpacity,
-                bobFactor: mult >= BC.bigThreshold ? BC.bobBigFactor : 1.0,
-                phase: Double(id) * 0.9))
+                bobFactor: m.mult >= BC.bigThreshold ? BC.bobBigFactor : 1.0,
+                phase: Double(id) * 0.9,
+                showLabel: show))
             id += 1
         }
 
@@ -312,11 +323,12 @@ private enum Layout {
                 icon: nil, label: nil,
                 coreOp: BC.fillerCore, rimOp: BC.fillerRim,
                 bobFactor: BC.bobFillerFactor,
-                phase: Double(id) * 0.9))
+                phase: Double(id) * 0.9,
+                showLabel: false))
             id += 1
         }
 
-        // draw order: small first → big last (big on top, labels readable)
+        // draw order: small first → big last (big on top)
         return out.sorted { $0.diameter < $1.diameter }
     }
 
