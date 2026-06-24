@@ -270,12 +270,13 @@ private func encodeAlerts(_ alerts: [PriceAlert]) -> String {
 // MARK: - Onglets
 
 enum CryptoTab: String, CaseIterable {
-    case market, suivi, alertes, info
+    case market, suivi, alertes, learn, info
     var label: String {
         switch self {
         case .market:  return "Marché"
         case .suivi:   return "Suivi"
         case .alertes: return "Alertes"
+        case .learn:   return "Apprendre"
         case .info:    return "Info"
         }
     }
@@ -284,6 +285,7 @@ enum CryptoTab: String, CaseIterable {
         case .market:  return "chart.bar.xaxis"
         case .suivi:   return "eye"
         case .alertes: return "bell"
+        case .learn:   return "book.closed"
         case .info:    return "info.circle"
         }
     }
@@ -292,6 +294,7 @@ enum CryptoTab: String, CaseIterable {
         case .market:  return "chart.bar.xaxis.ascending"
         case .suivi:   return "eye.fill"
         case .alertes: return "bell.fill"
+        case .learn:   return "book.closed.fill"
         case .info:    return "info.circle.fill"
         }
     }
