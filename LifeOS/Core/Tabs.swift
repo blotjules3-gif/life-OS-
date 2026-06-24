@@ -1716,6 +1716,7 @@ struct ProfileCustomizerSheet: View {
         ("hero",     "Score",          "Carte principale",   "star.fill",           Color(hex: 0x00D4B4)),
         ("tasks",    "Tâches",         "Ce qu'il te reste",  "checklist",           Color(hex: 0x9B6CF1)),
         ("briefing", "Briefing",       "Rappel du matin",    "sunrise.fill",        Color.orange),
+        ("memories", "Mémoire",        "Ce que je retiens",  "brain",               Color(hex: 0x9B6CF1)),
         ("stats",    "Stats",          "Pas · eau · kcal",   "chart.bar.fill",      Color(hex: 0xF1746C)),
         ("habits",   "Habitudes",      "Suivi & protéines",  "checkmark.seal.fill", Color(hex: 0x9B6CF1)),
         ("actions",  "Actions",        "Raccourcis rapides", "bolt.fill",           Color(hex: 0x3CB2E0)),
