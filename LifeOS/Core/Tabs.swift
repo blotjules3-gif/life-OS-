@@ -1089,6 +1089,73 @@ struct ProfileView: View {
         }
     }
 
+    // MARK: - Mémoires
+
+    private var memoriesCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label("Mémoire", systemImage: "brain")
+                    .font(.system(size: 15, weight: .bold))
+                Spacer()
+                Text("\(memories.count) souvenir\(memories.count > 1 ? "s" : "")")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+            }
+
+            Divider()
+
+            ForEach(memories.prefix(4)) { m in
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: m.categoryIcon)
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(m.categoryColor)
+                        .frame(width: 22, height: 22)
+                        .background(m.categoryColor.opacity(0.12),
+                                    in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(m.content)
+                            .font(.system(size: 13, weight: .medium))
+                            .lineLimit(2)
+                        Text(m.category.capitalized + " · " + m.created.formatted(.relative(presentation: .named)))
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+
+                    Button {
+                        ctx.delete(m)
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .frame(width: 20, height: 20)
+                            .background(Color(.systemFill), in: Circle())
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                if m.id != memories.prefix(4).last?.id {
+                    Divider().padding(.leading, 32)
+                }
+            }
+
+            if memories.count > 4 {
+                Text("+ \(memories.count - 4) autre\(memories.count - 4 > 1 ? "s" : "") souvenir\(memories.count - 4 > 1 ? "s" : "")")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+
+            Text("Dis « retiens que... » dans le chat pour mémoriser.")
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
+                .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .padding(16)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
     // MARK: - Bannière Apple Santé
 
     private var healthConnectBanner: some View {
