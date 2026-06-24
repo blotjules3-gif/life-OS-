@@ -14,6 +14,13 @@ private enum Bub {
     static let FS: Double = 0.6               // petit + lent = flottement subtil
     static let TAP_THRESHOLD: CGFloat = 10    // < 10pt de déplacement = tap
     static let FILLERS = 8
+    // Translucidité (régler ici) — bas = plus transparent
+    static let FILL_CENTER_OPACITY: Double = 0.10
+    static let FILL_MID_OPACITY: Double = 0.28
+    static let FILL_RIM_OPACITY: Double = 0.55
+    static let IRIDESCENCE_OPACITY: Double = 0.40
+    static let HALO_OPACITY: Double = 0.50
+    static let HALO_RADIUS_RATIO: CGFloat = 0.22
 }
 
 // MARK: - Vue principale
