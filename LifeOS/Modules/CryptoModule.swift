@@ -264,11 +264,11 @@ struct CryptoAppView: View {
                         VStack(spacing: 3) {
                             Image(systemName: tab == t ? t.iconFill : t.icon)
                                 .font(.system(size: 19, weight: .semibold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(tab == t ? AppCategory.invest.tint : Color(white: 0.55))
                                 .animation(.spring(duration: 0.28), value: tab)
                             Text(t.label)
                                 .font(.system(size: 9, weight: tab == t ? .semibold : .regular))
-                                .foregroundStyle(.white.opacity(tab == t ? 1 : 0.55))
+                                .foregroundStyle(tab == t ? AppCategory.invest.tint : Color(white: 0.55))
                         }
                     }
                     .frame(maxWidth: .infinity)
