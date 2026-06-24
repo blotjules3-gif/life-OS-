@@ -247,6 +247,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = 54AUW2C78N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "LifeOS utilise l'appareil photo pour scanner les codes-barres, les documents et tes photos avant/apres.";
@@ -319,7 +320,7 @@
 				AA00000000000000000A000F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		AA00000000000000000A0009 /* Build configuration list for PBXProject "LifeOS" */ = {
 			isa = XCConfigurationList;
@@ -328,7 +329,7 @@
 				AA00000000000000000A000D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
