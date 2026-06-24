@@ -728,13 +728,157 @@ struct ProfileView: View {
             .fullScreenCover(isPresented: $showBriefing) {
                 DailyBriefingView(modules: recommendedModules)
             }
-            .task {
-                if await HealthService.shared.requestAuthorization() {
-                    steps = await HealthService.shared.stepsToday()
-                    healthConnected = true
+            .sheet(isPresented: $showCustomizer) {
+                ProfileCustomizerSheet(hiddenRaw: $profileHiddenRaw)
+            }
+        }
+    }
+
+    // MARK: - Daily Tasks Card
+
+    private var dailyTasksCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Aujourd'hui")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text(Date.now.formatted(.dateTime.weekday(.wide).day().month()))
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                let doneCnt = todayTasks.filter { $0.done }.count
+                HStack(spacing: 4) {
+                    Text("\(doneCnt)/\(todayTasks.count)")
+                        .font(.system(size: 12, weight: .black).monospacedDigit())
+                        .foregroundStyle(.white)
+                }
+                .padding(.horizontal, 10).padding(.vertical, 5)
+                .background(doneCnt == todayTasks.count ? Color(hex: 0x4CC38A) : Color.accentColor, in: Capsule())
+            }
+
+            Divider()
+
+            VStack(spacing: 12) {
+                ForEach(todayTasks) { task in
+                    taskRow(task)
+                }
+            }
+
+            Button { showGoalEditor = true } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "slider.horizontal.3").font(.system(size: 10, weight: .semibold)).foregroundStyle(.secondary)
+                    Text("Ajuster mes objectifs").font(.system(size: 11, weight: .medium)).foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 2)
+        }
+        .padding(16)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private func taskRow(_ task: ProfileTaskItem) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .stroke(task.done ? task.color : Color.secondary.opacity(0.18), lineWidth: 1.5)
+                    .frame(width: 24, height: 24)
+                if task.done {
+                    Circle().fill(task.color).frame(width: 24, height: 24)
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 9, weight: .black))
+                        .foregroundStyle(.white)
+                } else if task.progress > 0 {
+                    Circle()
+                        .trim(from: 0, to: CGFloat(task.progress))
+                        .stroke(task.color, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                        .frame(width: 24, height: 24)
+                        .rotationEffect(.degrees(-90))
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(task.title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(task.done ? .secondary : Theme.textPrimary)
+                        .strikethrough(task.done)
+                    Spacer()
+                    Text(task.subtitle)
+                        .font(.system(size: 10, weight: .medium).monospacedDigit())
+                        .foregroundStyle(task.done ? .secondary : task.color)
+                        .lineLimit(1)
+                }
+                if !task.done && task.progress > 0 {
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(task.color.opacity(0.1)).frame(height: 3)
+                            Capsule().fill(task.color)
+                                .frame(width: geo.size.width * CGFloat(task.progress), height: 3)
+                        }
+                    }
+                    .frame(height: 3)
                 }
             }
         }
+    }
+
+    // MARK: - Briefing Recall Card
+
+    private var briefingRecallCard: some View {
+        let tasks = lastBriefingContent.split(separator: "|||").map(String.init)
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "sunrise.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.orange)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Briefing du matin")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("Rappel de ce qui a été dit")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Text(Date(timeIntervalSince1970: lastBriefingDate).formatted(.dateTime.hour().minute()))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+
+            if !tasks.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(Array(tasks.prefix(4).enumerated()), id: \.offset) { _, task in
+                        HStack(spacing: 8) {
+                            Circle().fill(Color.orange.opacity(0.4)).frame(width: 5, height: 5)
+                            Text(task)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+
+            Button { showBriefing = true } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "speaker.wave.2.fill")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.orange)
+                    Text("Réécouter mon briefing")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.orange)
+                }
+                .padding(.horizontal, 10).padding(.vertical, 5)
+                .background(Color.orange.opacity(0.1), in: Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(14)
+        .background(Color.orange.opacity(0.05), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.orange.opacity(0.15), lineWidth: 1))
     }
 
     // MARK: - Hero dark card
