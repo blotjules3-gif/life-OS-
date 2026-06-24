@@ -41,18 +41,29 @@ struct LifeOSApp: App {
         WindowGroup {
             ZStack {
                 if let container {
-                    // Container prêt → navigation normale
                     appContent(container: container)
                 } else {
-                    // Container en cours de création → splash
                     SplashView(status: loadingStatus)
                         .transition(.opacity)
                 }
             }
             .animation(.easeInOut(duration: 0.35), value: container != nil)
-            // Création du container sur thread background au démarrage
-            .task {
-                await buildContainer()
+            .task { await buildContainer() }
+            // Écran alarme (plein écran, prioritaire sur tout)
+            .fullScreenCover(isPresented: $alarm.showAlarmScreen) {
+                AlarmFullScreenView()
+                    .environmentObject(alarm)
+            }
+            // Briefing quotidien post-alarme (avec voix)
+            .fullScreenCover(isPresented: $alarm.showBriefing) {
+                DailyBriefingView(
+                    modules: recommendedModules,
+                    speakOnAppear: true,
+                    userName: userName,
+                    waterGoal: waterGoal,
+                    kcalGoal: kcalGoal
+                )
+                .environmentObject(alarm)
             }
         }
     }
