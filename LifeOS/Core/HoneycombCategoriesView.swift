@@ -257,13 +257,13 @@ private struct FixedBubble: View {
                 colors: [lit.opacity(op * 0.55), .clear],
                 center: UnitPoint(x: 0.42, y: 0.34), startRadius: 0, endRadius: r * 0.70))
 
-            // C · GROS REFLET VERNI BLANC en haut (le look mouillé/brillant)
+            // C · REFLET VERNI BLANC concentré en haut (goutte de verre, net)
             Ellipse()
-                .fill(LinearGradient(colors: [.white.opacity(BC.glossOpacity), .white.opacity(0.0)],
-                                     startPoint: .top, endPoint: .bottom))
-                .frame(width: r * 1.25, height: r * 0.95)
-                .offset(y: -r * 0.42)
-                .blur(radius: r * 0.04)
+                .fill(RadialGradient(colors: [.white.opacity(BC.glossOpacity), .white.opacity(0.0)],
+                                     center: .center, startRadius: 0, endRadius: r * 0.50))
+                .frame(width: r * 0.96, height: r * 0.72)
+                .offset(x: -r * 0.10, y: -r * 0.40)
+                .blur(radius: r * 0.02)
 
             // D · hotspot blanc net
             Ellipse().fill(.white)
@@ -380,30 +380,33 @@ private enum Layout {
 
     /// (catégorie, x-fraction, y-fraction, multiplicateur de taille) — origine haut-gauche.
     /// Grille 5×3 : colonne centrale plus grosse (Social, Sport héros, Bien-être, Voyage).
+    /// Cluster ORGANIQUE à tailles variées (mult = multiplicateur de taille, à régler).
+    /// Sport ~1.5 (héros) · grosses ~1.15-1.22 · moyennes ~0.92-0.95 · petites ~0.74-0.82.
     private static let template: [(AppCategory, CGFloat, CGFloat, CGFloat)] = [
-        (.admin,        0.215, 0.160, 1.00),   // Documents
-        (.social,       0.500, 0.145, 1.20),   // Social (gros)
-        (.career,       0.785, 0.160, 1.02),   // Travail
-        (.finance,      0.200, 0.330, 1.00),   // Finance
-        (.fitness,      0.500, 0.350, 1.45),   // Sport — HÉROS centré
-        (.mind,         0.800, 0.330, 1.02),   // Mental
-        (.learning,     0.205, 0.500, 1.00),   // Éducation
-        (.looks,        0.500, 0.510, 1.10),   // Bien-être
-        (.nutrition,    0.795, 0.500, 1.05),   // Alimentation
-        (.productivity, 0.205, 0.665, 1.00),   // Tâches
-        (.travel,       0.500, 0.680, 1.15),   // Voyage (gros)
-        (.sleep,        0.795, 0.665, 1.02),   // Sommeil
-        (.invest,       0.215, 0.825, 0.82),   // Bourse (petite)
-        (.home,         0.470, 0.835, 1.00),   // Maison
-        (.mobility,     0.760, 0.825, 1.02)    // Transports
+        (.admin,        0.220, 0.165, 0.95),   // Documents (très transparent)
+        (.career,       0.470, 0.195, 0.92),   // Travail (moyenne)
+        (.social,       0.770, 0.220, 1.22),   // Social (grosse)
+        (.finance,      0.165, 0.350, 0.92),   // Finance (moyenne)
+        (.mind,         0.435, 0.370, 1.18),   // Mental (grosse)
+        (.looks,        0.715, 0.405, 1.20),   // Bien-être (grosse)
+        (.learning,     0.835, 0.520, 0.82),   // Éducation (petite-moyenne)
+        (.fitness,      0.315, 0.560, 1.50),   // Sport — HÉROS (la plus grosse)
+        (.nutrition,    0.590, 0.610, 1.15),   // Alimentation (grosse)
+        (.sleep,        0.820, 0.625, 0.95),   // Sommeil (moyenne)
+        (.productivity, 0.180, 0.720, 0.95),   // Tâches (moyenne)
+        (.home,         0.660, 0.740, 0.92),   // Maison (moyenne)
+        (.travel,       0.400, 0.805, 1.20),   // Voyage (grosse)
+        (.mobility,     0.795, 0.830, 0.95),   // Transports (moyenne)
+        (.invest,       0.140, 0.825, 0.74)    // Bourse (petite, coin bas-gauche)
     ]
 
-    /// Petits fillers blancs translucides dans les creux (x, y, fractionDeBase).
+    /// ~9 micro-bulles blanches translucides dans les creux (x, y, fractionDeBase).
     private static let fillers: [(CGFloat, CGFloat, CGFloat)] = [
-        (0.345, 0.250, 0.26), (0.655, 0.245, 0.20),
-        (0.345, 0.430, 0.16), (0.660, 0.430, 0.24),
-        (0.350, 0.595, 0.18), (0.655, 0.590, 0.15),
-        (0.360, 0.760, 0.22), (0.640, 0.760, 0.16)
+        (0.345, 0.250, 0.20), (0.620, 0.150, 0.13),
+        (0.600, 0.470, 0.18), (0.130, 0.510, 0.13),
+        (0.880, 0.385, 0.12), (0.490, 0.695, 0.16),
+        (0.895, 0.730, 0.15), (0.270, 0.880, 0.14),
+        (0.620, 0.885, 0.13)
     ]
 
     static let allCats: [AppCategory] = template.map { $0.0 }
