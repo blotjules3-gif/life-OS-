@@ -7,10 +7,35 @@ extension ShapeStyle where Self == Color { static var investTint: Color { AppCat
 // MARK: - Hub Investissement
 
 struct InvestHubView: View {
+    @State private var showCrypto = false
+
     var body: some View {
         HubScaffold(category: .invest) {
-            ToolRow(icon: "bitcoinsign.circle.fill", title: "Crypto",
-                    subtitle: "Marché, risque et potentiel en temps réel", tint: .investTint) { CryptoAppView() }
+            // Crypto — fullScreenCover pour cacher la barre LifeOS
+            Button { showCrypto = true } label: {
+                HStack(spacing: 14) {
+                    Image(systemName: "bitcoinsign.circle.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 30, height: 30)
+                        .background(Color.investTint, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Crypto")
+                            .font(.body)
+                            .foregroundStyle(.primary)
+                        Text("Marché, risque et potentiel en temps réel")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.bold())
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.vertical, 3)
+            }
+            .buttonStyle(.plain)
+
             ToolRow(icon: "chart.pie.fill", title: "Portefeuille",
                     subtitle: "Actions + crypto en un dashboard", tint: .investTint) { PortfolioView() }
             ToolRow(icon: "chart.line.uptrend.xyaxis", title: "Net worth & FIRE",
@@ -19,6 +44,9 @@ struct InvestHubView: View {
                     subtitle: "Biens, loyers, cashflow", tint: .investTint) { RealEstateView() }
             ToolRow(icon: "percent", title: "Simulateur fiscalité",
                     subtitle: "Impôt sur le revenu (FR)", tint: .investTint) { TaxSimulatorView() }
+        }
+        .fullScreenCover(isPresented: $showCrypto) {
+            CryptoAppView()
         }
     }
 }
