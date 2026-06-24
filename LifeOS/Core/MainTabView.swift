@@ -205,7 +205,7 @@ struct FloatingTabBar: View {
 
                 TextField("Message…", text: $chatInput)
                     .font(.system(size: 14))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
                     .tint(Color.accentColor)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
