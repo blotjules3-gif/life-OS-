@@ -1,10 +1,12 @@
 //
 //  Bubble.metal
-//  Glossy saturated glass-bubble shader (SwiftUI ShapeStyle fill on a Circle).
+//  TRANSLUCENT soap-bubble / glass shader (SwiftUI ShapeStyle fill on a Circle).
 //
-//  Goal = the reference: crisp, vivid, glossy spheres with a big clean white
-//  highlight, a bright top rim, a dark saturated bottom, and a soft colored glow.
-//  NOT milky / washed out.
+//  Reference look: glass spheres you can SEE THROUGH, vivid tint, a big crisp white
+//  glossy highlight, a bright thin rim line all around (soap film), bottom light wrap.
+//
+//  KEY: translucency comes from ALPHA (low center, high rim) — the colour RGB stays a
+//  vivid saturated tint (we do NOT mix white into the body, that's what washes it out).
 //
 //  Returns PREMULTIPLIED alpha (required by SwiftUI shaders).
 //
@@ -17,9 +19,9 @@ using namespace metal;
     float2 pos,
     float2 size,
     half4  tint,
-    float  coreAlpha,    // center opacity (higher = more solid/saturated)
-    float  rimAlpha,     // edge opacity
-    float  specStrength, // sharpness of the sparkle
+    float  coreAlpha,    // center opacity — LOW = see-through glass
+    float  rimAlpha,     // rim opacity — HIGH = dense soap-film edge
+    float  specStrength,
     float  time,
     float  seed
 ) {
@@ -35,51 +37,49 @@ using namespace metal;
     float3 base  = float3(tint.rgb);
     float3 white = float3(1.0);
 
-    // ---------- Volume: saturated color, dark bottom-right shadow, glossy lit pole ----------
-    float ndl   = dot(normal, lightDir);
-    float shade = clamp(ndl * 0.55 + 0.52, 0.0, 1.0);   // 0 = shadow side, 1 = lit side
-    float3 darkCol = base * 0.46;                        // shadow, still colored
-    float3 body = mix(darkCol, base, shade);             // -> pure saturated color in the light
-    // glossy bright sheen near the lit pole (top-left)
-    body = mix(body, mix(base, white, 0.55), smoothstep(0.72, 1.0, shade) * 0.55);
+    float  fres = pow(1.0 - z, 2.0);   // 0 at center .. 1 at the rim
+
+    // ---------- Colour: VIVID tint with directional volume (no white veil) ----------
+    float  ndl    = dot(normal, lightDir);
+    float  shade  = clamp(ndl * 0.5 + 0.5, 0.0, 1.0);   // 0 shadow .. 1 lit
+    float3 litCol = mix(base, white, 0.14);             // lit side just a touch brighter
+    float3 darkCol = base * 0.58;                        // shadow side, deep but still vivid
+    float3 col = mix(darkCol, litCol, shade);
+    col = mix(col, base, fres * 0.50);                   // rim more saturated (soap film)
 
     // ---------- Glossy white highlights ----------
-    float2 drift = float2(sin(time * 0.5 + seed) * 0.012,
-                          cos(time * 0.4 + seed) * 0.012);
+    float2 drift = float2(sin(time * 0.5 + seed) * 0.012, cos(time * 0.4 + seed) * 0.012);
 
-    // big primary gloss = soft halo + a BRIGHT crisp core (wet-glass reflection)
-    float2 pUV = (uv - (float2(-0.18, -0.40) + drift)) * float2(1.08, 1.30);
+    // big primary gloss = soft halo + crisp bright core (wet glass reflection)
+    float2 pUV = (uv - (float2(-0.20, -0.42) + drift)) * float2(1.05, 1.25);
     float  pd  = length(pUV);
-    float  primaryGloss = smoothstep(0.70, 0.10, pd) * 0.62
-                        + smoothstep(0.30, 0.02, pd) * 0.50;
+    float  primaryGloss = smoothstep(0.55, 0.06, pd) * 0.60
+                        + smoothstep(0.22, 0.00, pd) * 0.55;
 
-    // sharp small hotspot for the wet sparkle
-    float  hotspot = smoothstep(0.075, 0.0, length(uv - (float2(-0.30, -0.50) + drift))) * 1.1;
+    // sharp hotspot
+    float  hotspot = smoothstep(0.07, 0.0, length(uv - (float2(-0.30, -0.52) + drift)));
 
-    // bright thin rim catch along the top arc
-    float  rimBand = smoothstep(0.82, 0.995, r);
-    float  rimTop  = rimBand * smoothstep(0.35, -1.0, uv.y);
-
-    // phong sparkle on the curved rim
+    // phong sparkle
     float3 halfDir = normalize(lightDir + viewDir);
     float  phong   = pow(max(0.0, dot(normal, halfDir)), 90.0) * specStrength;
 
-    // bottom light wrap (light bends under the sphere)
-    float  bottomWrap = smoothstep(0.83, 1.0, r) * smoothstep(0.15, 1.0, uv.y) * 0.34;
+    // ---------- Bright thin rim line (soap-film edge), brightest at the top ----------
+    float  rimLine    = smoothstep(0.84, 0.985, r) * (1.0 - smoothstep(0.985, 1.0, r));
+    float  rimTopBias = 0.45 + 0.55 * smoothstep(0.7, -1.0, uv.y);
+    float  rimBright  = rimLine * rimTopBias;
 
-    // fine bright glass edge all around (brightest at the top via rimTop)
-    float  glassRim = smoothstep(0.88, 1.0, r) * 0.16;
+    // bottom light wrap (light bends under the glass)
+    float  bottomWrap = smoothstep(0.82, 1.0, r) * smoothstep(0.20, 1.0, uv.y) * 0.30;
 
-    // ---------- Compose ----------
-    float3 col = body;
+    // ---------- Compose colour ----------
     col += white * (primaryGloss + hotspot + phong);
-    col += white * (rimTop * 0.80 + bottomWrap + glassRim);
+    col += white * (rimBright * 0.85 + bottomWrap);
 
-    // ---------- Alpha: saturated bubbles fairly solid, light features opaque ----------
-    float fres  = pow(1.0 - z, 2.2);
+    // ---------- Alpha: TRANSLUCENT center, opaque vivid rim + opaque light features ----------
     float alpha = mix(coreAlpha, rimAlpha, fres);
-    alpha = max(alpha, (primaryGloss + hotspot + phong + rimTop) * 0.95);
-    alpha = max(alpha, bottomWrap * 0.8);
+    alpha = max(alpha, rimBright * 0.90);
+    alpha = max(alpha, (primaryGloss + hotspot + phong) * 0.95);
+    alpha = max(alpha, bottomWrap * 0.70);
     alpha = clamp(alpha, 0.0, 1.0);
 
     return half4(half3(col) * half(alpha), half(alpha));

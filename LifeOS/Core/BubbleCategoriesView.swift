@@ -17,15 +17,15 @@ import SwiftUI
 
 struct BubbleStyle {
     /// Center translucency. LOWER = more see-through. (0.55 glassy ... 0.85 dense)
-    var coreAlpha: Double = 0.90        // dense & saturé (réf), un soupçon de verre
+    var coreAlpha: Double = 0.80        // centre see-through (verre/savon) — RÈGLE LA TRANSPARENCE
     /// Color presence at the rim (Fresnel film). Higher = bolder edge color.
-    var rimAlpha: Double = 0.97
+    var rimAlpha: Double = 0.95         // bord dense & vif (film de savon)
     /// Sharpness of the phong sparkle on the rim.
     var specStrength: Double = 1.0
     /// Outer colored bloom (neon glow of the bubble's own color).
-    var colorGlow: Double = 0.50        // halo coloré subtil
+    var colorGlow: Double = 0.45        // halo coloré subtil
     /// Outer soft white bloom.
-    var whiteGlow: Double = 0.10        // bloom blanc léger (évite le côté laiteux)
+    var whiteGlow: Double = 0.16
 }
 
 // MARK: - One bubble
@@ -211,10 +211,8 @@ struct BubbleCategoriesView: View {
         .scaleEffect(tappedID == cat.id ? 1.12 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.45), value: tappedID)
         .position(x: a.x * w + bx, y: a.y * h + by)
-        .animation(.spring(response: 0.55, dampingFraction: 0.85), value: hiddenRaw)
         .zIndex(moving ? 100 : Double(cat.sizeMul))
         .allowsHitTesting(!cat.isFiller)
-        .transition(.scale.combined(with: .opacity))
         .gesture(dragTap(cat))
     }
 
@@ -353,9 +351,9 @@ struct BubbleCategoriesView: View {
                     [0.0, 1.0], [0.5, 1.0], [1.0, 1.0]
                 ],
                 colors: [
-                    Color(red: 0.86, green: 0.93, blue: 0.99), Color(red: 0.95, green: 0.95, blue: 0.99), Color(red: 0.99, green: 0.92, blue: 0.95),
-                    Color(red: 0.90, green: 0.96, blue: 0.97), Color.white,                                Color(red: 0.97, green: 0.93, blue: 0.99),
-                    Color(red: 0.88, green: 0.93, blue: 0.99), Color(red: 0.92, green: 0.95, blue: 0.99), Color(red: 0.90, green: 0.94, blue: 0.98)
+                    Color(red: 0.83, green: 0.91, blue: 0.99), Color(red: 0.92, green: 0.96, blue: 1.00), Color(red: 0.96, green: 0.93, blue: 0.98),
+                    Color(red: 0.88, green: 0.95, blue: 1.00), Color(red: 0.97, green: 0.98, blue: 1.00), Color(red: 0.90, green: 0.95, blue: 1.00),
+                    Color(red: 0.84, green: 0.92, blue: 1.00), Color(red: 0.87, green: 0.94, blue: 1.00), Color(red: 0.89, green: 0.94, blue: 1.00)
                 ]
             )
         } else {
