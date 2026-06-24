@@ -850,14 +850,17 @@ struct ProfileView: View {
             HStack(spacing: 8) {
                 Image(systemName: "sunrise.fill")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.orange)
-                VStack(alignment: .leading, spacing: 1) {
-                    Text("Briefing du matin")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(Theme.textPrimary)
+                    .foregroundStyle(.white)
+                    .frame(width: 32, height: 32)
+                    .background(Color.orange, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("BRIEFING DU MATIN")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(Color.orange.opacity(0.8))
+                        .kerning(1.0)
                     Text("Rappel de ce qui a été dit")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
                 }
                 Spacer()
                 Text(Date(timeIntervalSince1970: lastBriefingDate).formatted(.dateTime.hour().minute()))
