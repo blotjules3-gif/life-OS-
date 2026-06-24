@@ -10,7 +10,7 @@ struct InvestHubView: View {
     var body: some View {
         HubScaffold(category: .invest) {
             ToolRow(icon: "bitcoinsign.circle.fill", title: "Crypto",
-                    subtitle: "Marché, risque et potentiel en temps réel", tint: .investTint) { CryptoMarketView() }
+                    subtitle: "Marché, risque et potentiel en temps réel", tint: .investTint) { CryptoAppView() }
             ToolRow(icon: "chart.pie.fill", title: "Portefeuille",
                     subtitle: "Actions + crypto en un dashboard", tint: .investTint) { PortfolioView() }
             ToolRow(icon: "chart.line.uptrend.xyaxis", title: "Net worth & FIRE",
