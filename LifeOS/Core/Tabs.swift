@@ -677,6 +677,10 @@ struct ProfileView: View {
     @AppStorage("kcalGoal") private var kcalGoal = 2200
     @AppStorage("proteinGoal") private var proteinGoal = 150
     @AppStorage("fastTarget") private var fastTarget = 16
+    @AppStorage("budgetGoal") private var budgetGoal = 1500
+    @AppStorage("glassesGoal") private var glassesGoal = 8
+    @AppStorage("focusMinGoal") private var focusMinGoal = 90
+    @AppStorage("socialMaxMin") private var socialMaxMin = 60
     @AppStorage("onboardingGoalsRaw") private var onboardingGoalsRaw = ""
     @AppStorage("wakeupEnabled") private var wakeupEnabled = false
     @AppStorage("wakeupHour") private var wakeupHour = 7
