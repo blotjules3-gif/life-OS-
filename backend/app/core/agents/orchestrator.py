@@ -147,6 +147,19 @@ class AgentOrchestrator:
                         module_config_updated = True
                     if tool_name in ("create_goal", "delete_goal"):
                         goals_updated = True
+                    if tool_name == "create_todo" and isinstance(result, dict):
+                        pending_actions.append({
+                            "type": "create_todo",
+                            "title": result.get("title"),
+                            "module": result.get("module"),
+                            "priority": result.get("priority", 2),
+                        })
+                    if tool_name == "schedule_followup" and isinstance(result, dict):
+                        pending_actions.append({
+                            "type": "schedule_reminder",
+                            "reminder_body": result.get("message"),
+                            "module": result.get("module"),
+                        })
 
                 except ToolRejectedError as exc:
                     log.warning("tool_rejected", tool=tool_name, reason=str(exc))
