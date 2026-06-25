@@ -782,79 +782,25 @@ struct ProfileView: View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 14) {
-                    if !hiddenSections.contains("hero") {
-                        heroDark
-                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 28)
-                            .animation(.spring(duration: 0.6, bounce: 0.25), value: appeared)
-                    }
-
-                    if !healthConnected {
-                        healthConnectBanner
-                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 16)
-                            .animation(.spring(duration: 0.5, bounce: 0.2).delay(0.06), value: appeared)
-                    }
-
-                    if !hiddenSections.contains("tasks") {
-                        dailyTasksCard
-                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.07), value: appeared)
-                    }
-
-                    if hasTodayBriefing && !hiddenSections.contains("briefing") {
-                        briefingRecallCard
-                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.1), value: appeared)
-                    }
-
-                    if !hiddenSections.contains("stats") {
-                        statsRow
-                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.14), value: appeared)
-                    }
-
-                    if !memories.isEmpty && !hiddenSections.contains("memories") {
-                        memoriesCard
-                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.18), value: appeared)
-                    }
-
-                    if !hiddenSections.contains("habits") {
-                        habitsProteinsRow
-                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.21), value: appeared)
-                    }
-
-                    if !hiddenSections.contains("actions") {
-                        quickActionsSection
-                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.28), value: appeared)
-                    }
-
-                    if !hiddenSections.contains("wakeup") {
-                        wakeupSection
-                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.35), value: appeared)
-                    }
-
-                    if !hiddenSections.contains("tip") {
-                        tipCard
-                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.42), value: appeared)
-                    }
-
-                    if !hiddenSections.contains("settings") {
-                        settingsSection
-                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                            .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.49), value: appeared)
-                    }
-
+                    if !hiddenSections.contains("hero") { heroDark }
+                    if !healthConnected { healthConnectBanner }
+                    if !hiddenSections.contains("tasks") { dailyTasksCard }
+                    if hasTodayBriefing && !hiddenSections.contains("briefing") { briefingRecallCard }
+                    if !hiddenSections.contains("stats") { statsRow }
+                    if !memories.isEmpty && !hiddenSections.contains("memories") { memoriesCard }
+                    if !hiddenSections.contains("habits") { habitsProteinsRow }
+                    if !hiddenSections.contains("actions") { quickActionsSection }
+                    if !hiddenSections.contains("wakeup") { wakeupSection }
+                    if !hiddenSections.contains("tip") { tipCard }
+                    if !hiddenSections.contains("settings") { settingsSection }
                     appearanceSection
-                        .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
-                        .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.55), value: appeared)
                 }
                 .padding(.horizontal, Theme.pad)
                 .padding(.top, 8)
                 .padding(.bottom, 52)
+                .opacity(appeared ? 1 : 0)
+                .offset(y: appeared ? 0 : 22)
+                .animation(.spring(duration: 0.45, bounce: 0.18), value: appeared)
             }
             .background(Theme.bg)
             .navigationTitle("Profil")
