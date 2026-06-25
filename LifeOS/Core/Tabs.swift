@@ -514,10 +514,10 @@ struct DailyBriefingView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Actions rapides").font(.headline)
                         HStack(spacing: 10) {
-                            quickActionBtn(icon: "drop.fill", label: "+250 ml", color: Color(hex: 0x3CB2E0)) {
+                            quickActionBtn(icon: "drop.fill", label: "1 verre", color: Color(hex: 0x3CB2E0)) {
                                 ctx.insert(WaterEntry(amountML: 250))
                             }
-                            quickActionBtn(icon: "drop.fill", label: "+500 ml", color: Color(hex: 0x3CB2E0)) {
+                            quickActionBtn(icon: "drop.fill", label: "2 verres", color: Color(hex: 0x3CB2E0)) {
                                 ctx.insert(WaterEntry(amountML: 500))
                             }
                         }
