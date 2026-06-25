@@ -974,10 +974,10 @@ struct ProfileView: View {
         }
         .padding(.vertical, 22)
         .frame(maxWidth: .infinity)
-        .background(Color(hex: 0x111116), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(islandBg, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                .stroke(appTheme.accent.opacity(0.22), lineWidth: 1)
         )
     }
 
