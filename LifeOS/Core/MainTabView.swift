@@ -65,6 +65,7 @@ struct MainTabView: View {
         .sheet(isPresented: $showChat) {
             ChatHistorySheet(messages: chatMessages)
         }
+        .onAppear { tab = .profile }
     }
 
     @ViewBuilder private var content: some View {
