@@ -154,20 +154,8 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
 
     private func attemptWakeUpVoice() {
         guard ringingActive else { return }
-
-        if UIApplication.shared.applicationState == .active {
-            // Phone is unlocked and app is visible — play immediately
-            speakWakeUpMessage()
-        } else {
-            // Phone is locked — defer voice to unlock, show hint on Lock Screen
-            pendingVoiceOnUnlock = true
-            if #available(iOS 16.1, *) {
-                AlarmLiveActivityManager.shared.update(
-                    phase: .waitingUnlock,
-                    message: "Déverrouillez votre téléphone pour démarrer votre journée"
-                )
-            }
-        }
+        // Voice plays directly on Lock Screen — background audio (.playback category) allows this
+        speakWakeUpMessage()
     }
 
     private func speakWakeUpMessage() {
