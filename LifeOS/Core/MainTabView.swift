@@ -488,3 +488,18 @@ struct MetricRing: View {
         .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 }
+
+// MARK: - ConcentricRectangle (coins parallèles à l'écran — style iOS 26)
+
+enum ConcentricCorners { case concentric }
+
+struct ConcentricRectangle: Shape {
+    var corners: ConcentricCorners = .concentric
+    var isUniform: Bool = true
+    // Rayon écran iPhone ≈ 44pt ; inset barre = 10pt → rayon concentric = 44 − 10 = 34pt
+    private static let radius: CGFloat = 34
+
+    func path(in rect: CGRect) -> Path {
+        Path(RoundedRectangle(cornerRadius: Self.radius, style: .continuous).path(in: rect))
+    }
+}
