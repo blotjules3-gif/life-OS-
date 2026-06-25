@@ -142,15 +142,7 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
         try? AVAudioSession.sharedInstance().setActive(true)
 
-        let hour = Calendar.current.component(.hour, from: .now)
-        let greeting: String
-        switch hour {
-        case 5..<12: greeting = "Bonjour"
-        case 12..<18: greeting = "Bon après-midi"
-        default: greeting = "Bonsoir"
-        }
-        let text = "\(greeting) ! Il est \(timeSpoken()). C'est l'heure de te lever — ta journée commence maintenant."
-
+        let text = buildWakeUpText()
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = AVSpeechSynthesisVoice(language: "fr-FR")
         utterance.rate = 0.50
@@ -163,6 +155,46 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         if #available(iOS 16.1, *) {
             AlarmLiveActivityManager.shared.update(phase: .speakingMessage, message: text)
         }
+    }
+
+    private func buildWakeUpText() -> String {
+        let hour = Calendar.current.component(.hour, from: .now)
+        let greeting: String
+        switch hour {
+        case 5..<12: greeting = "Bonjour"
+        case 12..<18: greeting = "Bon après-midi"
+        default: greeting = "Bonsoir"
+        }
+
+        var parts: [String] = ["\(greeting) ! Il est \(timeSpoken())."]
+
+        // Read active modules from UserDefaults (same key as @AppStorage("recommendedModules"))
+        let rawModules = UserDefaults.standard.string(forKey: "recommendedModules") ?? ""
+        let modules = rawModules.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
+
+        for mod in modules.prefix(3) {
+            switch mod {
+            case .fitness:      parts.append("Ta séance de sport t'attend.")
+            case .nutrition:    parts.append("Pense à bien t'hydrater dès maintenant.")
+            case .mind:         parts.append("Commence par quelques minutes de calme.")
+            case .productivity: parts.append("Définis ta tâche prioritaire du jour.")
+            case .sleep:        parts.append("Note ta qualité de sommeil pour optimiser ta récupération.")
+            case .finance:      parts.append("Jette un œil rapide à tes dépenses d'hier.")
+            case .invest:       parts.append("Consulte l'état de tes investissements.")
+            case .learning:     parts.append("Avance dans ton programme d'apprentissage.")
+            case .career:       parts.append("Une action pour ta carrière, aujourd'hui.")
+            case .looks:        parts.append("Prends soin de toi — ta routine beauté t'attend.")
+            default: break
+            }
+        }
+
+        if modules.isEmpty {
+            parts.append("C'est l'heure de te lever — ta journée commence maintenant.")
+        } else {
+            parts.append("Allez, bonne journée !")
+        }
+
+        return parts.joined(separator: " ")
     }
 
     // MARK: - Synthèse vocale (AVSpeechSynthesizer)
