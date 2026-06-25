@@ -106,6 +106,53 @@ TOOL_DEFINITIONS: list[dict] = [
     {
         "type": "function",
         "function": {
+            "name": "create_todo",
+            "description": "Create a to-do task in the user's app. Use when the user wants to add something to their task list.",
+            "parameters": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                    "title": {"type": "string", "description": "Task title in French"},
+                    "module": {"type": "string", "description": "Related module if applicable"},
+                    "priority": {"type": "integer", "minimum": 1, "maximum": 5, "default": 2},
+                },
+            },
+        },
+    },
+
+    {
+        "type": "function",
+        "function": {
+            "name": "schedule_followup",
+            "description": "Schedule a follow-up notification to check in with the user. Use when the user commits to doing something (e.g. 'je vais courir demain').",
+            "parameters": {
+                "type": "object",
+                "required": ["message", "delay_hours"],
+                "properties": {
+                    "message": {"type": "string", "description": "Follow-up message in French, max 80 chars"},
+                    "delay_hours": {"type": "number", "minimum": 1, "maximum": 168, "description": "Hours until the follow-up"},
+                    "module": {"type": "string"},
+                },
+            },
+        },
+    },
+
+    {
+        "type": "function",
+        "function": {
+            "name": "get_user_context",
+            "description": "Get a summary of the user's current module configurations and active goals. Call this when you need to understand the user's current state before giving advice.",
+            "parameters": {
+                "type": "object",
+                "required": [],
+                "properties": {},
+            },
+        },
+    },
+
+    {
+        "type": "function",
+        "function": {
             "name": "ask_clarification",
             "description": "Ask the user a clarifying question when the request is ambiguous. Use ONLY when you genuinely cannot proceed without more information.",
             "parameters": {
