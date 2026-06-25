@@ -13,10 +13,11 @@ struct AlarmAttributes: ActivityAttributes {
         var message: String      // displayed in Lock Screen / Dynamic Island
 
         enum Phase: String, Codable, Hashable {
-            case ringing         // alarm beeping, app in foreground
-            case waitingUnlock   // alarm beeping, phone locked — waiting for unlock
-            case speakingMessage // TTS playing after unlock
-            case briefing        // daily briefing screen open
+            case scheduled       // alarm set, shows on lock screen all night
+            case ringing         // alarm beeping
+            case speakingMessage // TTS playing on lock screen
+            case waitingUnlock   // voice done, invite to unlock for full briefing
+            case briefing        // full briefing screen open (app foreground)
             case dismissed       // alarm ended
         }
     }
