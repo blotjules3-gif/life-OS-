@@ -43,6 +43,7 @@ struct MainTabView: View {
         ChatMessage(fromUser: false, text: "Salut ! Je suis ton assistant LifeOS. Dis-moi « retiens que... » pour que je mémorise quelque chose. Je peux aussi t'aider sur calories, eau, jeûne et habitudes.")
     ]
     @State private var showChat = false
+    @State private var showAIAssistant = false
 
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
