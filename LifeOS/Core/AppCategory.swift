@@ -109,6 +109,7 @@ enum AppCategory: String, CaseIterable, Identifiable {
         case .social: SocialHubView()
         case .admin: AdminHubView()
         case .travel: TravelHubView()
+        case .cycle: CycleHubView()
         }
     }
 }
