@@ -53,22 +53,42 @@ struct AlarmActivityWidget: Widget {
 struct LockScreenAlarmView: View {
     let state: AlarmAttributes.ContentState
 
-    var body: some View {
+    @ViewBuilder
+    private var phaseView: some View {
         switch state.phase {
-        case .scheduled:       ScheduledView(alarmTime: state.timeString)
-        case .ringing:         RingingView(timeString: state.timeString)
-        case .speakingMessage: SpeakingView(timeString: state.timeString, message: state.message)
-        case .waitingUnlock:   WaitingUnlockView(timeString: state.timeString)
-        case .briefing:        BriefingView(timeString: state.timeString)
-        case .dismissed:       DismissedView()
+        case .scheduled:
+            ScheduledView(
+                alarmTime: state.timeString,
+                temperature: state.temperature,
+                weatherSymbol: state.weatherSymbol
+            )
+        case .ringing:
+            RingingView(timeString: state.timeString)
+        case .speakingMessage:
+            SpeakingView(timeString: state.timeString, message: state.message)
+        case .waitingUnlock:
+            WaitingUnlockView(timeString: state.timeString)
+        case .briefing:
+            BriefingView(timeString: state.timeString)
+        case .dismissed:
+            DismissedView()
         }
+    }
+
+    var body: some View {
+        phaseView
+            .id(state.phase)
+            .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .center)))
+            .animation(.easeInOut(duration: 0.38), value: state.phase)
     }
 }
 
-// MARK: - Programmé
+// MARK: - Programmé (avec météo)
 
 struct ScheduledView: View {
     let alarmTime: String
+    let temperature: Double?
+    let weatherSymbol: String?
     private let accent = PhaseColor.scheduled
 
     var body: some View {
@@ -82,9 +102,20 @@ struct ScheduledView: View {
                     .foregroundStyle(accent.opacity(0.75))
                     .kerning(0.8)
                 Spacer()
-                Text("LifeOS")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                if let temp = temperature, let symbol = weatherSymbol {
+                    HStack(spacing: 4) {
+                        Image(systemName: symbol)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(accent.opacity(0.8))
+                        Text("\(Int(temp.rounded()))°")
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Text("LifeOS")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
             }
             .padding(.bottom, 10)
 
