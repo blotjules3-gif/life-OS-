@@ -86,6 +86,76 @@ async def handle_delete_goal(
     return await goal_svc.deactivate_goal(session, user_id, args["goal_id"])
 
 
+async def handle_create_todo(
+    args: dict[str, Any],
+    user_id: uuid.UUID,
+    session: AsyncSession,
+    context: dict[str, Any],
+) -> dict[str, Any]:
+    # Signal to iOS to create a local TodoItem
+    return {
+        "action": "create_todo",
+        "title": args["title"],
+        "module": args.get("module"),
+        "priority": args.get("priority", 2),
+        "created": True,
+    }
+
+
+async def handle_schedule_followup(
+    args: dict[str, Any],
+    user_id: uuid.UUID,
+    session: AsyncSession,
+    context: dict[str, Any],
+) -> dict[str, Any]:
+    from datetime import datetime, timedelta, timezone
+    from app.models.db import ScheduledNotification
+
+    delay_hours = float(args["delay_hours"])
+    scheduled_for = datetime.now(tz=timezone.utc) + timedelta(hours=delay_hours)
+
+    notif = ScheduledNotification(
+        user_id=user_id,
+        title="LifeOS — Suivi",
+        body=args["message"],
+        module_type=args.get("module"),
+        deep_link=f"lifeos://assistant",
+        scheduled_for=scheduled_for,
+    )
+    session.add(notif)
+    await session.flush()
+
+    return {
+        "scheduled": True,
+        "message": args["message"],
+        "delay_hours": delay_hours,
+        "notification_id": str(notif.id),
+    }
+
+
+async def handle_get_user_context(
+    args: dict[str, Any],
+    user_id: uuid.UUID,
+    session: AsyncSession,
+    context: dict[str, Any],
+) -> dict[str, Any]:
+    from sqlalchemy import select
+    from app.models.db import ModuleConfig
+
+    config_result = await session.execute(
+        select(ModuleConfig).where(ModuleConfig.user_id == user_id)
+    )
+    configs = {mc.module_type: mc.config for mc in config_result.scalars().all()}
+
+    goals = await goal_svc.list_goals(session, user_id, active_only=True)
+
+    return {
+        "module_configs": configs,
+        "active_goals": goals,
+        "goal_count": len(goals),
+    }
+
+
 async def handle_ask_clarification(
     args: dict[str, Any],
     user_id: uuid.UUID,
