@@ -51,6 +51,7 @@ enum OnboardingGoal: String, CaseIterable, Identifiable {
 
 struct OnboardingView: View {
     @AppStorage("userName") private var savedName = ""
+    @AppStorage("userGender") private var savedGender = ""
     @AppStorage("onboardingDone") private var onboardingDone = false
 
     @AppStorage("homeShortcuts") private var homeShortcuts = "tabata,calories,scan,todo,fasting,water,habits,mood"
@@ -62,6 +63,7 @@ struct OnboardingView: View {
 
     @State private var step = 0
     @State private var name = ""
+    @State private var gender = ""
     @State private var goals: Set<OnboardingGoal> = []
     @State private var interests: Set<AppCategory> = []
     @State private var wakeHour = 7
