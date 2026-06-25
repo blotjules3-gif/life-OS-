@@ -17,7 +17,7 @@ import SwiftUI
 
 struct BubbleStyle {
     /// Center translucency. LOWER = more see-through. (0.55 glassy ... 0.85 dense)
-    var coreAlpha: Double = 0.68        // centre see-through (sirop) — RÈGLE LA TRANSPARENCE
+    var coreAlpha: Double = 0.60        // centre see-through (savon) — RÈGLE LA TRANSPARENCE
     /// Color presence at the rim (Fresnel film). Higher = bolder edge color.
     var rimAlpha: Double = 0.95         // bord dense & vif (film de savon)
     /// Sharpness of the phong sparkle on the rim.

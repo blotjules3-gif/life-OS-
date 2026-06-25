@@ -50,6 +50,14 @@ using namespace metal;
     float lum = dot(col, float3(0.299, 0.587, 0.114));
     col = clamp(mix(float3(lum), col, 1.90), 0.0, 1.0);   // néon : saturation forte
 
+    // ---------- Irisation film mince (LA signature des bulles de savon) ----------
+    // bandes arc-en-ciel douces qui ondulent sur toute la surface, + marquées au bord
+    float swirl = length(uv * float2(1.0, 1.2)) * 6.0 + atan2(uv.y, uv.x) * 1.5;
+    float iband = fres * 7.0 + swirl + sin(time * 0.3 + seed) * 0.7 + seed * 2.0;
+    float3 iri  = cos(iband + float3(0.0, 2.094, 4.188));        // -1..1, déphasé RGB = arc-en-ciel
+    float  iristr = 0.16 + 0.45 * smoothstep(0.15, 1.0, fres);   // présent partout, fort au bord
+    col = clamp(col + iri * iristr * 0.34, 0.0, 1.0);
+
     // ---------- Glossy white highlights ----------
     float2 drift = float2(sin(time * 0.5 + seed) * 0.012, cos(time * 0.4 + seed) * 0.012);
 
