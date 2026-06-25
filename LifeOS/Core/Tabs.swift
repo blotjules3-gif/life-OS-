@@ -1411,12 +1411,12 @@ struct ProfileView: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 5) {
                     Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(habitColor)
                     Text("HABITUDES")
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(habitColor.opacity(0.8))
-                        .kerning(0.5)
+                        .foregroundStyle(habitColor)
+                        .kerning(0.4)
                     Spacer()
                     Text("\(habitsDone)/\(habits.count)")
                         .font(.system(size: 13, weight: .black).monospacedDigit())
