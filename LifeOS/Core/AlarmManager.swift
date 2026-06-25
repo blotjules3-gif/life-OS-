@@ -18,14 +18,29 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
     @Published var secondsLeft = 10
 
     private var ringingActive = false
+    private var pendingVoiceOnUnlock = false
     private var autoStopWorkItem: DispatchWorkItem?
     private var voiceWorkItem: DispatchWorkItem?
     private var countdownTimer: Timer?
     private let synthesizer = AVSpeechSynthesizer()
+    private var becameActiveObserver: NSObjectProtocol?
 
     private override init() {
         super.init()
         synthesizer.delegate = self
+        becameActiveObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.handleAppBecameActive() }
+        }
+    }
+
+    private func handleAppBecameActive() {
+        guard pendingVoiceOnUnlock, ringingActive else { return }
+        pendingVoiceOnUnlock = false
+        speakWakeUpMessage()
     }
 
     // MARK: - Déclenchement alarme
