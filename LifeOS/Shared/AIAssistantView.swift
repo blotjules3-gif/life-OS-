@@ -65,7 +65,11 @@ final class AIAssistantViewModel: ObservableObject {
     @AppStorage("aiConversationID") private var conversationID = ""
     @AppStorage("aiFirstLaunchDone") private var firstLaunchDone = false
     @AppStorage("userName") private var userName = ""
+    @AppStorage("userGender") private var userGender = ""
+    @AppStorage("onboardingGoalsRaw") private var onboardingGoalsRaw = ""
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
+    @AppStorage("wakeupHour") private var wakeupHour = 7
+    @AppStorage("wakeupMinute") private var wakeupMinute = 0
     @AppStorage("appTheme") private var appThemeRaw = "classic"
 
     var modelContext: ModelContext?
