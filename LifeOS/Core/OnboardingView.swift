@@ -240,20 +240,30 @@ struct OnboardingWelcome: View {
     }
 }
 
-// MARK: - Étape 1 : Prénom
+// MARK: - Étape 1 : Prénom + Genre
 
 struct OnboardingName: View {
     @Binding var name: String
+    @Binding var gender: String
     let onNext: () -> Void
     @FocusState private var focused: Bool
 
-    private var canContinue: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty }
+    private var canContinue: Bool {
+        !name.trimmingCharacters(in: .whitespaces).isEmpty && !gender.isEmpty
+    }
+
+    private let genderOptions: [(label: String, value: String, icon: String, color: Color)] = [
+        ("Femme",  "femme",  "person.fill",       Color(hex: 0xE85D9A)),
+        ("Homme",  "homme",  "person.fill",       Color(hex: 0x3CB2E0)),
+        ("Autre",  "autre",  "person.fill.questionmark", Color(hex: 0x9B6CF1)),
+    ]
 
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
 
-            VStack(spacing: 32) {
+            VStack(spacing: 28) {
+                // Prénom
                 VStack(spacing: 10) {
                     Text("Comment tu t'appelles ?")
                         .font(.system(size: 26, weight: .bold, design: .rounded))
@@ -272,6 +282,46 @@ struct OnboardingName: View {
                     .focused($focused)
                     .onSubmit { if canContinue { onNext() } }
                     .submitLabel(.done)
+
+                // Genre
+                VStack(spacing: 10) {
+                    Text("Tu es…")
+                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.secondary)
+
+                    HStack(spacing: 10) {
+                        ForEach(genderOptions, id: \.value) { opt in
+                            Button {
+                                withAnimation(.spring(duration: 0.2)) { gender = opt.value }
+                                Haptics.tap()
+                            } label: {
+                                VStack(spacing: 8) {
+                                    Image(systemName: opt.icon)
+                                        .font(.system(size: 22, weight: .semibold))
+                                        .foregroundStyle(gender == opt.value ? .white : opt.color)
+                                        .frame(width: 52, height: 52)
+                                        .background(
+                                            gender == opt.value ? opt.color : opt.color.opacity(0.12),
+                                            in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        )
+                                    Text(opt.label)
+                                        .font(.system(size: 13, weight: gender == opt.value ? .semibold : .regular))
+                                        .foregroundStyle(gender == opt.value ? .primary : .secondary)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                        .stroke(gender == opt.value ? opt.color : Color.clear, lineWidth: 2)
+                                )
+                                .scaleEffect(gender == opt.value ? 1.03 : 1.0)
+                                .animation(.spring(duration: 0.2), value: gender)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
             }
 
             Spacer()
