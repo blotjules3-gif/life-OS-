@@ -2024,7 +2024,7 @@ struct GoalEditorSheet: View {
                     // Sans limite
                     let noLimit = endDates[id] == nil
                     Button {
-                        withAnimation { endDates.removeValue(forKey: id) }
+                        withAnimation { _ = endDates.removeValue(forKey: id) }
                     } label: {
                         Text("Sans limite")
                             .font(.system(size: 13, weight: .semibold))
