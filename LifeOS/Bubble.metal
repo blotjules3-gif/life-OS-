@@ -84,22 +84,37 @@ static float fbm(float2 p) {
 
     // ============ MODE CHROME LIQUIDE (thème Argent) ============
     if (metal > 0.5) {
-        float up = -normal.y;                         // +1 au sommet, -1 en bas
-        // réflexion d'environnement façon miroir : ciel clair haut, bande NOIRE au milieu,
-        // sol clair en bas (fort contraste = chrome poli)
-        float sky    = smoothstep(0.18, 0.92, up);                 // reflet haut net
-        float ground = smoothstep(-0.92, -0.55, up) * (1.0 - smoothstep(-0.55, -0.22, up));
-        float ripple = 0.5 + 0.5 * sin(up * 6.0 + w * 3.0 + time * 0.2);
-        float3 chrome = float3(0.015);                // base quasi noire
-        chrome += float3(1.0) * sky * (0.78 + 0.22 * ripple);     // gros reflet blanc haut
-        chrome += float3(0.95) * ground;                          // reflet du sol
-        chrome += float3(1.0) * pow(fres, 1.35) * 1.05;           // rim chromé très brillant
-        // reflets spéculaires nets (source lumineuse)
-        float sphong = pow(max(0.0, dot(normal, normalize(lightDir + viewDir))), 220.0);
-        chrome += white * (primary * 1.25 + hotspot * 1.3 + sphong);
-        chrome *= float3(0.96, 0.98, 1.03);            // teinte argent froide
-        chrome = clamp(chrome, 0.0, 1.0);
-        return half4(half3(chrome), 1.0h);             // métal opaque
+        float2 dir = (r > 0.001) ? (uv / r) : float2(0.0, 1.0);
+
+        // ---- corps NOIR profond (quasi pur, très léger relief)
+        float3 col = float3(0.010) + float3(0.030) * (1.0 - r);
+
+        // ---- GRANDE réflexion de la source en haut-gauche, BRILLANTE et nette (miroir)
+        float kd  = length((uv - float2(-0.30, -0.40)) / float2(1.0, 1.06));
+        float key = smoothstep(0.92, 0.10, kd);
+        col += float3(1.0) * pow(key, 2.2) * 0.95;
+        // coeur quasi blanc de la réflexion
+        col += float3(1.0) * smoothstep(0.42, 0.0, kd) * 0.6;
+
+        // ---- croissant chromé NET et brillant sur la lèvre basse
+        float lip = smoothstep(0.55, 1.0, dot(dir, float2(0.0, 1.0))) * pow(1.0 - z, 1.3);
+        col += float3(1.0) * lip * 1.1;
+
+        // ---- rebord miroir : fin liseré très brillant tout au bord
+        col += float3(0.9) * pow(1.0 - z, 6.0);
+
+        // ---- reflet secondaire net (petite arche en bas-droite)
+        float arc = smoothstep(0.30, 1.0, dot(dir, normalize(float2(0.7, 0.7)))) * pow(1.0 - z, 2.2);
+        col += float3(0.55) * arc;
+
+        // ---- spéculaire ultra net (point chaud) + éclat
+        float spec  = pow(max(0.0, dot(normal, normalize(lightDir + viewDir))), 360.0);
+        float glint = smoothstep(0.045, 0.0, length(uv - float2(-0.42, -0.50)));
+        col += float3(1.0) * (spec + glint);
+
+        col *= float3(0.965, 0.985, 1.04);             // teinte argent froide
+        col = clamp(col, 0.0, 1.0);
+        return half4(half3(col), 1.0h);                // métal opaque lisse
     }
 
     float  gloss = primary + hotspot + phong;
