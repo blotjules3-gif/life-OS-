@@ -85,6 +85,8 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         countdownTimer = nil
         autoStopWorkItem?.cancel()
         autoStopWorkItem = nil
+        voiceWorkItem?.cancel()
+        voiceWorkItem = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
