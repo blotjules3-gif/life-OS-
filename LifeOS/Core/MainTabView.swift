@@ -233,45 +233,25 @@ struct FloatingTabBar: View {
                 .transition(.move(edge: .leading).combined(with: .opacity))
             }
 
-            // Chat au centre — toujours visible
-            HStack(spacing: 8) {
-                if chatMode {
-                    Button {
-                        withAnimation(.spring(duration: 0.32)) { chatMode = false }
-                        inputFocused = false
-                    } label: {
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 30, height: 30)
-                    }
-                    .buttonStyle(.plain)
-                    .transition(.opacity.combined(with: .scale(scale: 0.7)))
+            // Chat au centre — tap = ouvrir assistant IA plein écran
+            Button {
+                Haptics.tap()
+                onOpenAssistant()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Color.accentColor)
+                    Text("Message…")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Color(uiColor: .placeholderText))
+                    Spacer()
                 }
-
-                TextField("Message…", text: $chatInput)
-                    .font(.system(size: 14))
-                    .foregroundStyle(.primary)
-                    .tint(Color.accentColor)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Self.fieldBg, in: Capsule())
-                    .focused($inputFocused)
-                    .onSubmit(onSend)
-                    .submitLabel(.send)
-
-                if !chatInput.trimmingCharacters(in: .whitespaces).isEmpty {
-                    Button(action: onSend) {
-                        Image(systemName: "arrow.up")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(.black)
-                            .frame(width: 30, height: 30)
-                            .background(.white, in: Circle())
-                    }
-                    .buttonStyle(.plain)
-                    .transition(.scale(scale: 0.6).combined(with: .opacity))
-                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Self.fieldBg, in: Capsule())
             }
+            .buttonStyle(.plain)
             .frame(maxWidth: .infinity)
             .animation(.spring(duration: 0.28), value: chatMode)
             .animation(.spring(duration: 0.22), value: chatInput.isEmpty)
