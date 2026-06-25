@@ -181,7 +181,7 @@ class AgentOrchestrator:
 
 
 class AgentResult:
-    __slots__ = ("reply", "tools_executed", "module_config_updated", "goals_updated", "error")
+    __slots__ = ("reply", "tools_executed", "module_config_updated", "goals_updated", "actions", "error")
 
     def __init__(
         self,
@@ -189,10 +189,12 @@ class AgentResult:
         tools_executed: list[str],
         module_config_updated: bool,
         goals_updated: bool,
+        actions: list[dict[str, Any]] | None = None,
         error: str | None = None,
     ) -> None:
         self.reply = reply
         self.tools_executed = tools_executed
         self.module_config_updated = module_config_updated
         self.goals_updated = goals_updated
+        self.actions = actions or []
         self.error = error
