@@ -210,9 +210,9 @@ struct FloatingTabBar: View {
     @State private var chatMode = false
     @Namespace private var ns
 
-    private static let barBg  = Color.white
-    private static let selBg  = Color(white: 0.92)
-    private static let fieldBg = Color(white: 0.94)
+    private static let barBg  = Color(uiColor: .secondarySystemBackground)   // blanc en clair, sombre en dark
+    private static let selBg  = Color(uiColor: .systemGray5)
+    private static let fieldBg = Color(uiColor: .tertiarySystemFill)
     private static let barInset: CGFloat = 10   // gauche = droite = bas, identiques
 
     private let leftTabs:  [AppTab] = [.wakeup, .home]
@@ -285,7 +285,7 @@ struct FloatingTabBar: View {
         // iOS 26 : coins concentriques avec le coin de l'écran (style Safari)
         .background(Self.barBg, in: ConcentricRectangle(corners: .concentric, isUniform: true))
         .overlay(ConcentricRectangle(corners: .concentric, isUniform: true)
-            .stroke(Color(white: 0.88), lineWidth: 1))
+            .stroke(Color(uiColor: .separator).opacity(0.6), lineWidth: 1))
         .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 6)
         .padding(.horizontal, Self.barInset)
         .padding(.bottom, Self.barInset)
@@ -319,7 +319,7 @@ struct FloatingTabBar: View {
                 }
                 Image(systemName: selected == t ? t.iconFill : t.icon)
                     .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(selected == t ? Color.primary : Color(white: 0.60))
+                    .foregroundStyle(selected == t ? Color.primary : Color(uiColor: .systemGray))
                     .animation(.spring(duration: 0.28), value: selected)
             }
             .frame(width: 60, height: 60)

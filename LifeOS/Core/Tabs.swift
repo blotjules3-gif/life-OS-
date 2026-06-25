@@ -669,6 +669,7 @@ private struct ProfileTaskItem: Identifiable {
 
 struct ProfileView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("appDarkMode") private var appDarkMode = false
     @AppStorage("userName") private var name = ""
     @AppStorage("stepGoal") private var stepGoal = 10000
     @AppStorage("waterGoal") private var waterGoal = 2500
@@ -846,6 +847,10 @@ struct ProfileView: View {
                             .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
                             .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.49), value: appeared)
                     }
+
+                    appearanceSection
+                        .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 20)
+                        .animation(.spring(duration: 0.55, bounce: 0.2).delay(0.55), value: appeared)
                 }
                 .padding(.horizontal, Theme.pad)
                 .padding(.top, 8)
@@ -1656,6 +1661,27 @@ struct ProfileView: View {
                 Text("15 modules").font(.caption).foregroundStyle(.tertiary)
             }
             .padding(.horizontal, 4)
+        }
+    }
+
+    // Couleur de l'app — pour l'instant : Normal / Sombre (bascule toute l'app)
+    private var appearanceSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Couleur de l'app")
+                .font(.system(size: 15, weight: .semibold))
+                .padding(.horizontal, 4)
+            VStack(spacing: 12) {
+                Picker("", selection: $appDarkMode) {
+                    Label("Normal", systemImage: "sun.max.fill").tag(false)
+                    Label("Sombre", systemImage: "moon.fill").tag(true)
+                }
+                .pickerStyle(.segmented)
+                Text("Bascule toute l'app — menu, sections et fond — en mode sombre. Tu peux switcher à tout moment.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(16)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
     }
 

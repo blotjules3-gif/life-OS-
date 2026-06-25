@@ -17,7 +17,7 @@ import SwiftUI
 
 struct BubbleStyle {
     /// Center translucency. LOWER = more see-through. (0.55 glassy ... 0.85 dense)
-    var coreAlpha: Double = 0.60        // centre see-through (savon) — RÈGLE LA TRANSPARENCE
+    var coreAlpha: Double = 0.46        // centre see-through (goutte de grenadine) — TRANSPARENCE
     /// Color presence at the rim (Fresnel film). Higher = bolder edge color.
     var rimAlpha: Double = 0.95         // bord dense & vif (film de savon)
     /// Sharpness of the phong sparkle on the rim.
@@ -137,6 +137,7 @@ struct BubbleCategoriesView: View {
     @State private var showAdd = false
     @State private var tappedID: UUID?
     @State private var drag: [UUID: CGSize] = [:]
+    @Environment(\.colorScheme) private var scheme
 
     private var hidden: Set<String> { Set(hiddenRaw.split(separator: ",").map(String.init)) }
     private var visible: [BubbleCategory] {
@@ -342,7 +343,26 @@ struct BubbleCategoriesView: View {
     }
 
     @ViewBuilder private var background: some View {
-        if #available(iOS 18.0, *) {
+        if scheme == .dark {
+            // Dark mode : fond bleu nuit profond (les bulles ressortent dessus)
+            if #available(iOS 18.0, *) {
+                MeshGradient(
+                    width: 3, height: 3,
+                    points: [
+                        [0.0, 0.0], [0.5, 0.0], [1.0, 0.0],
+                        [0.0, 0.5], [0.5, 0.5], [1.0, 0.5],
+                        [0.0, 1.0], [0.5, 1.0], [1.0, 1.0]
+                    ],
+                    colors: [
+                        Color(red: 0.06, green: 0.07, blue: 0.13), Color(red: 0.05, green: 0.06, blue: 0.12), Color(red: 0.09, green: 0.06, blue: 0.13),
+                        Color(red: 0.05, green: 0.07, blue: 0.14), Color(red: 0.07, green: 0.08, blue: 0.15), Color(red: 0.06, green: 0.06, blue: 0.13),
+                        Color(red: 0.05, green: 0.06, blue: 0.12), Color(red: 0.06, green: 0.07, blue: 0.14), Color(red: 0.07, green: 0.06, blue: 0.12)
+                    ]
+                )
+            } else {
+                Color(red: 0.06, green: 0.07, blue: 0.13)
+            }
+        } else if #available(iOS 18.0, *) {
             MeshGradient(
                 width: 3, height: 3,
                 points: [

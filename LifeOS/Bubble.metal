@@ -37,15 +37,17 @@ using namespace metal;
     float  fres  = pow(1.0 - z, 2.0);
     float  ndl   = dot(normal, lightDir);
 
-    // ============ CŒUR COLORÉ 3D (ombre profonde = contraste glossy) ============
-    float  shade   = clamp(ndl * 0.62 + 0.40, 0.0, 1.0);
+    // ============ CŒUR COLORÉ 3D (sphère 360°, ombre profonde) ============
+    float  shade   = clamp(ndl * 0.74 + 0.32, 0.0, 1.0);   // fort dégradé lumière->ombre = volume
     float3 litCol  = mix(base, white, 0.04);
-    float3 darkCol = base * 0.34;                          // ombre profonde -> relief + brillance
+    float3 darkCol = base * 0.26;                          // ombre très profonde -> relief net
     float3 body = mix(darkCol, litCol, shade);
-    body = mix(body, base, fres * 0.45);
+    body = mix(body, base, fres * 0.42);
     float lum = dot(body, float3(0.299, 0.587, 0.114));
     body = clamp(mix(float3(lum), body, 1.95), 0.0, 1.0);  // néon
-    body *= 0.78 + 0.22 * smoothstep(-0.4, 0.95, ndl);      // terminateur 3D
+    body *= 0.74 + 0.26 * smoothstep(-0.5, 0.98, ndl);      // terminateur 3D
+    // occlusion ambiante en bas (ancrage de la sphère, dessous plus sombre)
+    body *= 1.0 - smoothstep(0.45, 1.0, r) * smoothstep(0.05, 1.0, uv.y) * 0.42;
 
     // film clair TRÈS FIN au bord : la couleur va presque jusqu'au bord
     float colorMask = smoothstep(0.99, 0.93, r);           // couleur jusqu'à ~0.93, film 0.93-1.0

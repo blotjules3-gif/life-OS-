@@ -10,6 +10,7 @@ struct LifeOSApp: App {
     @State private var container: ModelContainer? = nil
     @AppStorage("onboardingDone") private var onboardingDone = false
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
+    @AppStorage("appDarkMode") private var appDarkMode = false
     @State private var showBriefingFromWidget = false
     @State private var showSleepCheckFromWidget = false
 
@@ -48,6 +49,7 @@ struct LifeOSApp: App {
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: container != nil)
+            .preferredColorScheme(appDarkMode ? .dark : .light)   // toggle Couleur de l'app
             .task { await buildContainer() }
         }
     }
