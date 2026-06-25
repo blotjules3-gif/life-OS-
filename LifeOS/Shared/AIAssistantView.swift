@@ -29,12 +29,27 @@ struct AIAction: Codable, Identifiable {
         case scheduleReminder = "schedule_reminder"
         case updateConfig = "update_config"
     }
+
     var id: UUID = UUID()
     let type: ActionType
     let title: String?
     let module: String?
     let priority: Int?
     let reminderBody: String?
+
+    enum CodingKeys: String, CodingKey {
+        case type, title, module, priority
+        case reminderBody = "reminder_body"
+    }
+
+    init(type: ActionType, title: String? = nil, module: String? = nil, priority: Int? = nil, reminderBody: String? = nil) {
+        self.id = UUID()
+        self.type = type
+        self.title = title
+        self.module = module
+        self.priority = priority
+        self.reminderBody = reminderBody
+    }
 }
 
 // MARK: - ViewModel
