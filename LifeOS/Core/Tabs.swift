@@ -1832,6 +1832,8 @@ struct WakeUpPersonalizationSheet: View {
 // MARK: - Éditeur d'objectifs (sheet)
 
 struct GoalEditorSheet: View {
+
+    // MARK: - Valeurs (bindings existants)
     @Binding var stepGoal: Int
     @Binding var waterGoal: Int
     @Binding var kcalGoal: Int
@@ -1841,102 +1843,300 @@ struct GoalEditorSheet: View {
     @Binding var glassesGoal: Int
     @Binding var focusMinGoal: Int
     @Binding var socialMaxMin: Int
+
+    // MARK: - Nouveaux bindings
+    @Binding var hiddenGoalIDsRaw: String
+    @Binding var goalEndDatesRaw: String
+
     @Environment(\.dismiss) private var dismiss
+    @State private var endDates: [String: Date] = [:]
+    @State private var expandedID: String? = nil
+
+    // MARK: - Catalogue
+
+    struct GoalDef: Identifiable {
+        let id: String
+        let title: String
+        let icon: String
+        let colorHex: Int
+        let section: String
+    }
+
+    private let catalog: [GoalDef] = [
+        GoalDef(id: "steps",   title: "Pas quotidiens",     icon: "figure.run",          colorHex: 0xF1746C, section: "Activité"),
+        GoalDef(id: "glasses", title: "Verres d'eau",        icon: "cup.and.saucer.fill", colorHex: 0x3CB2E0, section: "Nutrition"),
+        GoalDef(id: "water",   title: "Volume eau",           icon: "drop.fill",           colorHex: 0x5BAED6, section: "Nutrition"),
+        GoalDef(id: "kcal",    title: "Calories",             icon: "flame.fill",          colorHex: 0x4CC38A, section: "Nutrition"),
+        GoalDef(id: "protein", title: "Protéines",            icon: "fork.knife",          colorHex: 0xE0A23C, section: "Nutrition"),
+        GoalDef(id: "fast",    title: "Jeûne intermittent",   icon: "clock",               colorHex: 0x9B6CF1, section: "Nutrition"),
+        GoalDef(id: "focus",   title: "Temps de focus",       icon: "brain.head.profile",  colorHex: 0x9B6CF1, section: "Focus"),
+        GoalDef(id: "social",  title: "Réseaux sociaux max",  icon: "iphone.slash",        colorHex: 0xF07060, section: "Focus"),
+        GoalDef(id: "budget",  title: "Budget mensuel",       icon: "creditcard.fill",     colorHex: 0x4CC38A, section: "Finances"),
+    ]
+
+    private var hiddenIDs: Set<String> {
+        Set(hiddenGoalIDsRaw.split(separator: ",").map(String.init).filter { !$0.isEmpty })
+    }
+    private var active: [GoalDef] { catalog.filter { !hiddenIDs.contains($0.id) } }
+    private var inactive: [GoalDef] { catalog.filter { hiddenIDs.contains($0.id) } }
+
+    // MARK: - Body
 
     var body: some View {
         NavigationStack {
             List {
-                // MARK: Activité
                 Section {
-                    goalRow(icon: "figure.run", color: Color(hex: 0xF1746C),
-                            label: "Pas quotidiens", value: "\(stepGoal) pas") {
-                        Stepper("", value: $stepGoal, in: 2000...30000, step: 500).labelsHidden()
-                    }
-                } header: { sectionHeader("Activité") }
+                    ForEach(active) { goal in goalRow(goal) }
+                        .onDelete { idx in
+                            var hidden = hiddenIDs
+                            idx.map { active[$0].id }.forEach { hidden.insert($0) }
+                            hiddenGoalIDsRaw = hidden.joined(separator: ",")
+                        }
+                } header: {
+                    Text("Objectifs actifs")
+                        .font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary).textCase(nil)
+                } footer: {
+                    Text("Glissez vers la gauche pour retirer un objectif.")
+                        .font(.system(size: 12)).foregroundStyle(.secondary)
+                }
 
-                // MARK: Nutrition
-                Section {
-                    goalRow(icon: "drop.fill", color: Color(hex: 0x3CB2E0),
-                            label: "Verres d'eau", value: "\(glassesGoal) verres / jour") {
-                        Stepper("", value: $glassesGoal, in: 1...20, step: 1).labelsHidden()
+                if !inactive.isEmpty {
+                    Section {
+                        ForEach(inactive) { goal in addRow(goal) }
+                    } header: {
+                        Text("Ajouter un objectif")
+                            .font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary).textCase(nil)
                     }
-                    goalRow(icon: "drop.fill", color: Color(hex: 0x3CB2E0).opacity(0.6),
-                            label: "Volume eau", value: "\(waterGoal) ml") {
-                        Stepper("", value: $waterGoal, in: 500...5000, step: 250).labelsHidden()
-                    }
-                    goalRow(icon: "flame.fill", color: Color(hex: 0x4CC38A),
-                            label: "Calories", value: "\(kcalGoal) kcal") {
-                        Stepper("", value: $kcalGoal, in: 1000...5000, step: 50).labelsHidden()
-                    }
-                    goalRow(icon: "fork.knife", color: Color(hex: 0xE0A23C),
-                            label: "Protéines", value: "\(proteinGoal) g") {
-                        Stepper("", value: $proteinGoal, in: 30...300, step: 5).labelsHidden()
-                    }
-                    goalRow(icon: "clock", color: Color(hex: 0x9B6CF1),
-                            label: "Jeûne intermittent", value: "\(fastTarget) h") {
-                        Stepper("", value: $fastTarget, in: 12...24, step: 1).labelsHidden()
-                    }
-                } header: { sectionHeader("Nutrition") }
-
-                // MARK: Focus & Mental
-                Section {
-                    goalRow(icon: "brain.head.profile", color: Color(hex: 0x9B6CF1),
-                            label: "Temps de focus", value: "\(focusMinGoal) min / jour") {
-                        Stepper("", value: $focusMinGoal, in: 15...480, step: 15).labelsHidden()
-                    }
-                    goalRow(icon: "iphone.slash", color: Color(hex: 0xF1746C),
-                            label: "Réseaux sociaux max", value: "\(socialMaxMin) min / jour") {
-                        Stepper("", value: $socialMaxMin, in: 5...300, step: 5).labelsHidden()
-                    }
-                } header: { sectionHeader("Focus & Mental") }
-
-                // MARK: Finances
-                Section {
-                    goalRow(icon: "creditcard.fill", color: Color(hex: 0x4CC38A),
-                            label: "Budget mensuel", value: "\(budgetGoal) €") {
-                        Stepper("", value: $budgetGoal, in: 100...20000, step: 50).labelsHidden()
-                    }
-                } header: { sectionHeader("Finances") }
+                }
             }
             .listStyle(.insetGrouped)
             .navigationTitle("Mes objectifs")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Valider") { dismiss() }
+                    Button("Valider") { persistEndDates(); dismiss() }
                         .fontWeight(.semibold)
                 }
             }
+            .onAppear { endDates = loadEndDates() }
         }
     }
 
-    private func sectionHeader(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundStyle(.secondary)
-            .textCase(nil)
-    }
+    // MARK: - Ligne objectif actif
 
-    private func goalRow<S: View>(icon: String, color: Color, label: String, value: String,
-                                   @ViewBuilder stepper: () -> S) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(color)
-                .frame(width: 28, height: 28)
-                .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-            VStack(alignment: .leading, spacing: 1) {
-                Text(label)
-                    .font(.system(size: 14))
-                    .foregroundStyle(.primary)
-                Text(value)
-                    .font(.system(size: 12, weight: .semibold).monospacedDigit())
+    @ViewBuilder
+    private func goalRow(_ goal: GoalDef) -> some View {
+        let color = Color(hex: goal.colorHex)
+        let isExpanded = expandedID == goal.id
+        let endDate = endDates[goal.id]
+        let expired = endDate.map { $0 < .now } ?? false
+
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 12) {
+                // Icône
+                Image(systemName: goal.icon)
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(color)
+                    .frame(width: 28, height: 28)
+                    .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+
+                // Labels
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(goal.title).font(.system(size: 14)).foregroundStyle(.primary)
+                    HStack(spacing: 4) {
+                        Text(valueText(for: goal.id))
+                            .font(.system(size: 12, weight: .semibold).monospacedDigit())
+                            .foregroundStyle(expired ? Color(hex: 0xF1746C) : color)
+                        if let d = endDate {
+                            Text("·")
+                                .font(.system(size: 12)).foregroundStyle(.tertiary)
+                            Text(expired ? "Expiré" : "jusqu'au \(d.formatted(.dateTime.day().month(.abbreviated)))")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(expired ? Color(hex: 0xF1746C) : color.opacity(0.75))
+                        }
+                    }
+                }
+
+                Spacer()
+
+                // Stepper
+                stepperView(for: goal.id)
+
+                // Bouton calendrier
+                Button {
+                    withAnimation(.spring(duration: 0.28, bounce: 0.2)) {
+                        expandedID = isExpanded ? nil : goal.id
+                    }
+                } label: {
+                    Image(systemName: isExpanded ? "calendar.badge.minus" : "calendar.badge.plus")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(isExpanded ? color : .secondary)
+                        .frame(width: 32, height: 32)
+                        .background(
+                            isExpanded ? color.opacity(0.12) : Color.clear,
+                            in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        )
+                }
+                .buttonStyle(.plain)
             }
-            Spacer()
-            stepper()
+            .padding(.vertical, 4)
+
+            // Panneau date
+            if isExpanded {
+                Divider().padding(.top, 10)
+                datePicker(for: goal.id, color: color)
+                    .padding(.bottom, 10)
+            }
         }
-        .padding(.vertical, 2)
+        .animation(.spring(duration: 0.28, bounce: 0.15), value: isExpanded)
+    }
+
+    // MARK: - Panneau choix de date
+
+    @ViewBuilder
+    private func datePicker(for id: String, color: Color) -> some View {
+        let presets: [(label: String, days: Int)] = [
+            ("1 sem", 7), ("2 sem", 14), ("1 mois", 30), ("3 mois", 90)
+        ]
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Durée de l'objectif")
+                .font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
+                .padding(.top, 10)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    // Presets
+                    ForEach(presets, id: \.days) { preset in
+                        let target = Calendar.current.date(byAdding: .day, value: preset.days, to: .now)!
+                        let selected = matchesPreset(endDates[id], days: preset.days)
+                        Button {
+                            withAnimation { endDates[id] = target }
+                        } label: {
+                            Text(preset.label)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(selected ? .white : color)
+                                .padding(.horizontal, 14).padding(.vertical, 7)
+                                .background(selected ? color : color.opacity(0.12), in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    // Sans limite
+                    let noLimit = endDates[id] == nil
+                    Button {
+                        withAnimation { endDates.removeValue(forKey: id) }
+                    } label: {
+                        Text("Sans limite")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(noLimit ? .white : .secondary)
+                            .padding(.horizontal, 14).padding(.vertical, 7)
+                            .background(noLimit ? Color.secondary : Color.secondary.opacity(0.12), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 2)
+            }
+
+            // DatePicker personnalisé (si une date est déjà choisie)
+            if endDates[id] != nil {
+                DatePicker(
+                    "Date précise",
+                    selection: Binding(
+                        get: { endDates[id] ?? Calendar.current.date(byAdding: .day, value: 7, to: .now)! },
+                        set: { endDates[id] = $0 }
+                    ),
+                    in: Calendar.current.date(byAdding: .day, value: 1, to: .now)!...,
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.compact)
+                .tint(color)
+            }
+        }
+    }
+
+    // MARK: - Ligne ajout
+
+    @ViewBuilder
+    private func addRow(_ goal: GoalDef) -> some View {
+        let color = Color(hex: goal.colorHex)
+        Button {
+            var hidden = hiddenIDs
+            hidden.remove(goal.id)
+            hiddenGoalIDsRaw = hidden.joined(separator: ",")
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: goal.icon)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(color)
+                    .frame(width: 28, height: 28)
+                    .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(goal.title).font(.system(size: 14)).foregroundStyle(.primary)
+                    Text(goal.section).font(.system(size: 11)).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 22)).foregroundStyle(color)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Stepper par ID
+
+    @ViewBuilder
+    private func stepperView(for id: String) -> some View {
+        switch id {
+        case "steps":   Stepper("", value: $stepGoal,    in: 1000...30000, step: 500).labelsHidden()
+        case "water":   Stepper("", value: $waterGoal,   in: 500...5000,   step: 250).labelsHidden()
+        case "kcal":    Stepper("", value: $kcalGoal,    in: 1000...5000,  step: 50).labelsHidden()
+        case "protein": Stepper("", value: $proteinGoal, in: 30...300,     step: 5).labelsHidden()
+        case "fast":    Stepper("", value: $fastTarget,  in: 12...24,      step: 1).labelsHidden()
+        case "budget":  Stepper("", value: $budgetGoal,  in: 100...20000,  step: 50).labelsHidden()
+        case "glasses": Stepper("", value: $glassesGoal, in: 1...20,       step: 1).labelsHidden()
+        case "focus":   Stepper("", value: $focusMinGoal,in: 15...480,     step: 15).labelsHidden()
+        case "social":  Stepper("", value: $socialMaxMin,in: 5...300,      step: 5).labelsHidden()
+        default:        EmptyView()
+        }
+    }
+
+    // MARK: - Texte valeur
+
+    private func valueText(for id: String) -> String {
+        switch id {
+        case "steps":   return "\(stepGoal) pas"
+        case "water":   return "\(waterGoal) ml"
+        case "kcal":    return "\(kcalGoal) kcal"
+        case "protein": return "\(proteinGoal) g"
+        case "fast":    return "\(fastTarget) h"
+        case "budget":  return "\(budgetGoal) €"
+        case "glasses": return "\(glassesGoal) verres/j"
+        case "focus":   return "\(focusMinGoal) min/j"
+        case "social":  return "\(socialMaxMin) min max"
+        default:        return ""
+        }
+    }
+
+    // MARK: - Persistence end dates
+
+    private func matchesPreset(_ date: Date?, days: Int) -> Bool {
+        guard let d = date else { return false }
+        let diff = d.timeIntervalSince(.now) / 86400
+        return abs(diff - Double(days)) < 1.0
+    }
+
+    private func loadEndDates() -> [String: Date] {
+        guard let data = goalEndDatesRaw.data(using: .utf8),
+              let dict = try? JSONDecoder().decode([String: Double].self, from: data) else { return [:] }
+        return dict.compactMapValues { $0 > 0 ? Date(timeIntervalSince1970: $0) : nil }
+    }
+
+    private func persistEndDates() {
+        let dict = endDates.mapValues { $0.timeIntervalSince1970 }
+        if let data = try? JSONEncoder().encode(dict),
+           let str = String(data: data, encoding: .utf8) {
+            goalEndDatesRaw = str
+        }
     }
 }
 
