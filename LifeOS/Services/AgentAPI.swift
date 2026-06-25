@@ -4,10 +4,11 @@ import UIKit
 // MARK: - Configuration
 
 enum AgentAPIConfig {
-    /// Set this to your deployed backend URL.
-    static let baseURL = URL(string: "https://your-backend.com")!
-    /// X-API-Key header value — store in .xcconfig or Keychain in production.
-    static let apiKey = "REPLACE_WITH_YOUR_INTERNAL_API_KEY"
+    // TODO: Set to deployed backend URL before shipping
+    // Use .xcconfig / Info.plist injection to avoid hardcoding in source
+    static let baseURL = URL(string: "http://localhost:8000")!
+    // INTERNAL_API_KEY from backend/.env — move to Keychain or .xcconfig in production
+    static let apiKey = "82d35e070ca086f995b84718054cfac5"
     static let timeoutInterval: TimeInterval = 30
 }
 
