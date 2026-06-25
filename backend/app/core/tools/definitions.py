@@ -153,6 +153,26 @@ TOOL_DEFINITIONS: list[dict] = [
     {
         "type": "function",
         "function": {
+            "name": "update_user_profile",
+            "description": "Update the user's profile (name and/or gender). Call this as soon as you learn the user's name or gender during the interview.",
+            "parameters": {
+                "type": "object",
+                "required": [],
+                "properties": {
+                    "name": {"type": "string", "description": "User's first name"},
+                    "gender": {
+                        "type": "string",
+                        "enum": ["homme", "femme", "autre"],
+                        "description": "User's gender — determines if cycle questions are shown",
+                    },
+                },
+            },
+        },
+    },
+
+    {
+        "type": "function",
+        "function": {
             "name": "ask_clarification",
             "description": "Ask the user a clarifying question when the request is ambiguous. Use ONLY when you genuinely cannot proceed without more information.",
             "parameters": {
