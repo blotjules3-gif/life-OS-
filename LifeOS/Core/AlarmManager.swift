@@ -2,6 +2,7 @@ import Foundation
 import AVFoundation
 import AudioToolbox
 import UserNotifications
+import ActivityKit
 
 // MARK: - Gestionnaire central du réveil
 
