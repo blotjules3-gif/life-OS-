@@ -181,21 +181,41 @@ struct ShortcutsHomeView: View {
         }
     }
 
-    // MARK: Section 2 — Objectifs du jour (anneaux + 3 objectifs)
+    // MARK: Section 2 — Objectifs du jour (anneaux + 3 objectifs) — tout est cliquable
     private var goalsSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             sectionHeader("Objectifs du jour")
             LazyVGrid(columns: cols, spacing: 12) {
-                MetricRing(value: Double(steps), goal: Double(stepGoal), label: "Pas", unit: "", color: Color(hex: 0xF1746C), icon: "figure.walk")
-                MetricRing(value: Double(waterToday), goal: Double(waterGoal), label: "Eau", unit: "ml", color: Color(hex: 0x3CB2E0), icon: "drop.fill")
-                MetricRing(value: Double(kcalToday), goal: Double(kcalGoal), label: "Calories", unit: "kcal", color: Color(hex: 0x4CC38A), icon: "flame.fill")
-                MetricRing(value: fastHours, goal: Double(fastTarget), label: "Jeûne", unit: "h", color: Color(hex: 0x9B6CF1), icon: "timer")
+                NavigationLink { StepsView() } label: {
+                    MetricRing(value: Double(steps), goal: Double(stepGoal), label: "Pas", unit: "", color: Color(hex: 0xF1746C), icon: "figure.walk")
+                }.buttonStyle(.plain)
+                NavigationLink { HydrationView() } label: {
+                    MetricRing(value: Double(waterToday), goal: Double(waterGoal), label: "Eau", unit: "ml", color: Color(hex: 0x3CB2E0), icon: "drop.fill")
+                }.buttonStyle(.plain)
+                NavigationLink { FoodSearchView() } label: {
+                    MetricRing(value: Double(kcalToday), goal: Double(kcalGoal), label: "Calories", unit: "kcal", color: Color(hex: 0x4CC38A), icon: "flame.fill")
+                }.buttonStyle(.plain)
+                NavigationLink { FastingView() } label: {
+                    MetricRing(value: fastHours, goal: Double(fastTarget), label: "Jeûne", unit: "h", color: Color(hex: 0x9B6CF1), icon: "timer")
+                }.buttonStyle(.plain)
             }
-            VStack(spacing: 12) {
-                ForEach(objectives, id: \.title) { o in objectiveRow(o) }
+            VStack(spacing: 4) {
+                ForEach(Array(objectives.enumerated()), id: \.element.title) { i, o in
+                    NavigationLink { objectiveDestination(o.title) } label: { objectiveRow(o) }
+                        .buttonStyle(.plain)
+                    if i < objectives.count - 1 { Divider().padding(.leading, 47) }
+                }
             }
             .padding(16)
             .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        }
+    }
+
+    @ViewBuilder private func objectiveDestination(_ title: String) -> some View {
+        switch title {
+        case "S'hydrater": HydrationView()
+        case "Habitudes":  HabitTrackerView()
+        default:           StepsView()
         }
     }
 
