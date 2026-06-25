@@ -71,7 +71,7 @@ enum ShortcutTool: String, CaseIterable, Identifiable {
         case .dashboard: HomeDashboardContent()
         case .tabata: TabataView()
         case .calories: CalAIView()
-        case .scan: BarcodeScaffold()
+        case .scan: ScanProductView()
         case .todo: TodoView()
         case .fasting: FastingView()
         case .water: HydrationView()

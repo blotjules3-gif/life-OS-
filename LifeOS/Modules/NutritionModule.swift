@@ -25,7 +25,7 @@ struct NutritionHubView: View {
             ToolRow(icon: "camera.viewfinder", title: "Calories par photo",
                     subtitle: "Cal AI — à brancher", tint: .nutriTint) { PhotoCalorieScaffold() }
             ToolRow(icon: "barcode.viewfinder", title: "Scan code-barres santé",
-                    subtitle: "Yuka + prix + alternative", tint: .nutriTint) { BarcodeScaffold() }
+                    subtitle: "Yuka + prix + alternative", tint: .nutriTint) { ScanProductView() }
         }
     }
 }
