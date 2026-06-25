@@ -42,13 +42,13 @@ using namespace metal;
     // ---------- Colour: VIVID tint with directional volume (no white veil) ----------
     float  ndl    = dot(normal, lightDir);
     float  shade  = clamp(ndl * 0.5 + 0.5, 0.0, 1.0);   // 0 shadow .. 1 lit
-    float3 litCol = mix(base, white, 0.08);             // lit side, very little white (reste vif)
-    float3 darkCol = base * 0.55;                        // shadow side, deep but still vivid
+    float3 litCol = mix(base, white, 0.05);             // lit side, presque pas de blanc (reste vif)
+    float3 darkCol = base * 0.50;                        // shadow side, profond mais coloré
     float3 col = mix(darkCol, litCol, shade);
-    col = mix(col, base, fres * 0.55);                   // rim more saturated (soap film)
-    // VIVIDNESS boost : on écarte la couleur du gris pour des teintes franches
+    col = mix(col, base, fres * 0.60);                   // rim plus saturé (film de savon)
+    // VIVIDNESS boost fort : on écarte la couleur du gris pour des teintes franches
     float lum = dot(col, float3(0.299, 0.587, 0.114));
-    col = clamp(mix(float3(lum), col, 1.38), 0.0, 1.0);
+    col = clamp(mix(float3(lum), col, 1.60), 0.0, 1.0);
 
     // ---------- Glossy white highlights ----------
     float2 drift = float2(sin(time * 0.5 + seed) * 0.012, cos(time * 0.4 + seed) * 0.012);
