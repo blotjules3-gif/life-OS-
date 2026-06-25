@@ -82,6 +82,14 @@ struct LifeOSApp: App {
         .fullScreenCover(isPresented: $alarm.showAlarmScreen) {
             AlarmFullScreenView()
         }
+        // Briefing ouvert depuis le widget (deeplink lifeos://briefing)
+        .fullScreenCover(isPresented: $showBriefingFromWidget) {
+            DailyBriefingView(modules: recommendedModules, speakOnAppear: false)
+        }
+        .onOpenURL { url in
+            guard url.scheme == "lifeos", url.host == "briefing" else { return }
+            showBriefingFromWidget = true
+        }
         // Briefing quotidien avec voix — accède à @Query via modelContainer
         .fullScreenCover(isPresented: $alarm.showBriefing) {
             DailyBriefingView(modules: recommendedModules, speakOnAppear: true)
