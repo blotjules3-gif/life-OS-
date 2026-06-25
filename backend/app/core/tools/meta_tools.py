@@ -156,6 +156,21 @@ async def handle_get_user_context(
     }
 
 
+async def handle_update_user_profile(
+    args: dict[str, Any],
+    user_id: uuid.UUID,
+    session: AsyncSession,
+    context: dict[str, Any],
+) -> dict[str, Any]:
+    from app.services.user import update_user_profile
+    return await update_user_profile(
+        session=session,
+        user_id=user_id,
+        name=args.get("name"),
+        gender=args.get("gender"),
+    )
+
+
 async def handle_ask_clarification(
     args: dict[str, Any],
     user_id: uuid.UUID,
