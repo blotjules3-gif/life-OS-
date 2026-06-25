@@ -1790,21 +1790,54 @@ struct GoalEditorSheet: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Stepper par ID
+    // MARK: - Boutons +/- personnalisés
 
     @ViewBuilder
     private func stepperView(for id: String) -> some View {
         switch id {
-        case "steps":   Stepper("", value: $stepGoal,    in: 1000...30000, step: 500).labelsHidden()
-        case "water":   Stepper("", value: $waterGoal,   in: 500...5000,   step: 250).labelsHidden()
-        case "kcal":    Stepper("", value: $kcalGoal,    in: 1000...5000,  step: 50).labelsHidden()
-        case "protein": Stepper("", value: $proteinGoal, in: 30...300,     step: 5).labelsHidden()
-        case "fast":    Stepper("", value: $fastTarget,  in: 12...24,      step: 1).labelsHidden()
-        case "budget":  Stepper("", value: $budgetGoal,  in: 100...20000,  step: 50).labelsHidden()
-        case "glasses": Stepper("", value: $glassesGoal, in: 1...20,       step: 1).labelsHidden()
-        case "focus":   Stepper("", value: $focusMinGoal,in: 15...480,     step: 15).labelsHidden()
-        case "social":  Stepper("", value: $socialMaxMin,in: 5...300,      step: 5).labelsHidden()
+        case "steps":   customStepper(value: $stepGoal,    min: 1000,  max: 30000, step: 500)
+        case "water":   customStepper(value: $waterGoal,   min: 500,   max: 5000,  step: 250)
+        case "kcal":    customStepper(value: $kcalGoal,    min: 1000,  max: 5000,  step: 50)
+        case "protein": customStepper(value: $proteinGoal, min: 30,    max: 300,   step: 5)
+        case "fast":    customStepper(value: $fastTarget,  min: 12,    max: 24,    step: 1)
+        case "budget":  customStepper(value: $budgetGoal,  min: 100,   max: 20000, step: 50)
+        case "glasses": customStepper(value: $glassesGoal, min: 1,     max: 20,    step: 1)
+        case "focus":   customStepper(value: $focusMinGoal,min: 15,    max: 480,   step: 15)
+        case "social":  customStepper(value: $socialMaxMin,min: 5,     max: 300,   step: 5)
         default:        EmptyView()
+        }
+    }
+
+    private func customStepper(value: Binding<Int>, min: Int, max: Int, step: Int) -> some View {
+        HStack(spacing: 0) {
+            Button {
+                if value.wrappedValue - step >= min {
+                    value.wrappedValue -= step
+                    Haptics.tap()
+                }
+            } label: {
+                Image(systemName: "minus")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(value.wrappedValue - step >= min ? .primary : .tertiary)
+                    .frame(width: 36, height: 36)
+                    .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                if value.wrappedValue + step <= max {
+                    value.wrappedValue += step
+                    Haptics.tap()
+                }
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(value.wrappedValue + step <= max ? .primary : .tertiary)
+                    .frame(width: 36, height: 36)
+                    .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .padding(.leading, 6)
         }
     }
 
