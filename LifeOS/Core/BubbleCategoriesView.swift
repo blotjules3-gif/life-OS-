@@ -489,7 +489,7 @@ struct BubbleCategoriesView: View {
     // Style des bulles principales selon le thème (chrome liquide en Argent)
     private var themedStyle: BubbleStyle {
         var s = style
-        if theme == .gothic { s.metal = 1 }
+        if theme == .gothic { s.metal = 1; s.colorGlow = 0; s.whiteGlow = 0 }
         return s
     }
     // Fillers are more transparent and almost colorless
@@ -498,7 +498,7 @@ struct BubbleCategoriesView: View {
         s.coreAlpha = 0.18
         s.rimAlpha = 0.40
         s.colorGlow = 0.20
-        if theme == .gothic { s.metal = 1 }
+        if theme == .gothic { s.metal = 1; s.colorGlow = 0; s.whiteGlow = 0 }
         return s
     }
 

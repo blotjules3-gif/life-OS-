@@ -84,33 +84,28 @@ static float fbm(float2 p) {
 
     // ============ MODE CHROME LIQUIDE (thème Argent) ============
     if (metal > 0.5) {
-        float2 dir = (r > 0.001) ? (uv / r) : float2(0.0, 1.0);
+        float up = -normal.y;                          // +1 au sommet, -1 en bas
 
-        // ---- corps NOIR profond (quasi pur, très léger relief)
-        float3 col = float3(0.010) + float3(0.030) * (1.0 - r);
+        // ---- corps NOIR PROFOND (le métal absorbe ; les reflets se posent dessus)
+        float3 col = float3(0.020);
 
-        // ---- GRANDE réflexion de la source en haut-gauche, BRILLANTE et nette (miroir)
-        float kd  = length((uv - float2(-0.30, -0.40)) / float2(1.0, 1.06));
-        float key = smoothstep(0.92, 0.10, kd);
-        col += float3(1.0) * pow(key, 2.2) * 0.95;
-        // coeur quasi blanc de la réflexion
-        col += float3(1.0) * smoothstep(0.42, 0.0, kd) * 0.6;
+        // ---- BANDES DE RÉFLEXION STUDIO concentrées (le secret du chrome) :
+        // softbox lumineuse en haut, rebond clair en bas, NOIR entre les deux
+        float topBand = exp(-pow((up - 0.52) / 0.24, 2.0));   // grande softbox haute
+        float lowBand = exp(-pow((up + 0.66) / 0.15, 2.0));   // rebond/sol étroit en bas
+        col += float3(0.95) * topBand;
+        col += float3(0.80) * lowBand;
 
-        // ---- croissant chromé NET et brillant sur la lèvre basse
-        float lip = smoothstep(0.55, 1.0, dot(dir, float2(0.0, 1.0))) * pow(1.0 - z, 1.3);
-        col += float3(1.0) * lip * 1.1;
+        // ---- REBORD CHROMÉ brillant et continu (signature métal liquide)
+        col += float3(1.0) * pow(1.0 - z, 3.2) * 0.95;
 
-        // ---- rebord miroir : fin liseré très brillant tout au bord
-        col += float3(0.9) * pow(1.0 - z, 6.0);
+        // ---- key light concentrée (la source) dans la softbox, haut-gauche -> quasi blanc
+        float key = smoothstep(0.42, 0.0, length(uv - float2(-0.28, -0.46)));
+        col += float3(1.0) * key * 0.55;
 
-        // ---- reflet secondaire net (petite arche en bas-droite)
-        float arc = smoothstep(0.30, 1.0, dot(dir, normalize(float2(0.7, 0.7)))) * pow(1.0 - z, 2.2);
-        col += float3(0.55) * arc;
-
-        // ---- spéculaire ultra net (point chaud) + éclat
-        float spec  = pow(max(0.0, dot(normal, normalize(lightDir + viewDir))), 360.0);
-        float glint = smoothstep(0.045, 0.0, length(uv - float2(-0.42, -0.50)));
-        col += float3(1.0) * (spec + glint);
+        // ---- spéculaire ultra net (point chaud)
+        float spec = pow(max(0.0, dot(normal, normalize(lightDir + viewDir))), 260.0);
+        col += float3(1.0) * spec;
 
         col *= float3(0.965, 0.985, 1.04);             // teinte argent froide
         col = clamp(col, 0.0, 1.0);
