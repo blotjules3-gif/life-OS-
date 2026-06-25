@@ -6,15 +6,68 @@
 	objectVersion = 70;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		992A118E2FECC22700B312FE /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 992A118D2FECC22700B312FE /* WidgetKit.framework */; };
+		992A11902FECC22700B312FE /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 992A118F2FECC22700B312FE /* SwiftUI.framework */; };
+		992A11A12FECC22700B312FE /* LifeOSWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 992A118B2FECC22700B312FE /* LifeOSWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		992A119F2FECC22700B312FE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA00000000000000000A0008 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 992A118A2FECC22700B312FE;
+			remoteInfo = LifeOSWidgetsExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		992A11A22FECC22700B312FE /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				992A11A12FECC22700B312FE /* LifeOSWidgetsExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		992A118B2FECC22700B312FE /* LifeOSWidgetsExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LifeOSWidgetsExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		992A118D2FECC22700B312FE /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		992A118F2FECC22700B312FE /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		AA00000000000000000A0007 /* LifeOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LifeOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		992A11A52FECC22700B312FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 992A118A2FECC22700B312FE /* LifeOSWidgetsExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		992A11912FECC22700B312FE /* LifeOSWidgets */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (992A11A52FECC22700B312FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = LifeOSWidgets; sourceTree = "<group>"; };
 		AA00000000000000000A0001 /* LifeOS */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = LifeOS; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		992A11882FECC22700B312FE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				992A11902FECC22700B312FE /* SwiftUI.framework in Frameworks */,
+				992A118E2FECC22700B312FE /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA00000000000000000A0002 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -25,10 +78,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		992A118C2FECC22700B312FE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				992A118D2FECC22700B312FE /* WidgetKit.framework */,
+				992A118F2FECC22700B312FE /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		AA00000000000000000A000A = {
 			isa = PBXGroup;
 			children = (
 				AA00000000000000000A0001 /* LifeOS */,
+				992A11912FECC22700B312FE /* LifeOSWidgets */,
+				992A118C2FECC22700B312FE /* Frameworks */,
 				AA00000000000000000A000B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -37,6 +101,7 @@
 			isa = PBXGroup;
 			children = (
 				AA00000000000000000A0007 /* LifeOS.app */,
+				992A118B2FECC22700B312FE /* LifeOSWidgetsExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -44,6 +109,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		992A118A2FECC22700B312FE /* LifeOSWidgetsExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 992A11A62FECC22700B312FE /* Build configuration list for PBXNativeTarget "LifeOSWidgetsExtension" */;
+			buildPhases = (
+				992A11872FECC22700B312FE /* Sources */,
+				992A11882FECC22700B312FE /* Frameworks */,
+				992A11892FECC22700B312FE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				992A11912FECC22700B312FE /* LifeOSWidgets */,
+			);
+			name = LifeOSWidgetsExtension;
+			packageProductDependencies = (
+			);
+			productName = LifeOSWidgetsExtension;
+			productReference = 992A118B2FECC22700B312FE /* LifeOSWidgetsExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		AA00000000000000000A0003 /* LifeOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AA00000000000000000A0004 /* Build configuration list for PBXNativeTarget "LifeOS" */;
@@ -51,10 +138,12 @@
 				AA00000000000000000A0005 /* Sources */,
 				AA00000000000000000A0002 /* Frameworks */,
 				AA00000000000000000A0006 /* Resources */,
+				992A11A22FECC22700B312FE /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				992A11A02FECC22700B312FE /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				AA00000000000000000A0001 /* LifeOS */,
@@ -71,9 +160,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1600;
+				LastSwiftUpdateCheck = 2650;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
+					992A118A2FECC22700B312FE = {
+						CreatedOnToolsVersion = 26.5;
+					};
 					AA00000000000000000A0003 = {
 						CreatedOnToolsVersion = 16.0;
 					};
@@ -95,11 +187,19 @@
 			projectRoot = "";
 			targets = (
 				AA00000000000000000A0003 /* LifeOS */,
+				992A118A2FECC22700B312FE /* LifeOSWidgetsExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		992A11892FECC22700B312FE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA00000000000000000A0006 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -110,6 +210,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		992A11872FECC22700B312FE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA00000000000000000A0005 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -119,7 +226,77 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		992A11A02FECC22700B312FE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 992A118A2FECC22700B312FE /* LifeOSWidgetsExtension */;
+			targetProxy = 992A119F2FECC22700B312FE /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		992A11A32FECC22700B312FE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 54AUW2C78N;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LifeOSWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LifeOSWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lifeos.app.LifeOSWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		992A11A42FECC22700B312FE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 54AUW2C78N;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LifeOSWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LifeOSWidgets;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lifeos.app.LifeOSWidgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		AA00000000000000000A000C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -317,6 +494,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		992A11A62FECC22700B312FE /* Build configuration list for PBXNativeTarget "LifeOSWidgetsExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				992A11A32FECC22700B312FE /* Debug */,
+				992A11A42FECC22700B312FE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		AA00000000000000000A0004 /* Build configuration list for PBXNativeTarget "LifeOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
