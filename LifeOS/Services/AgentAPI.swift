@@ -21,21 +21,13 @@ struct ChatRequest: Encodable {
     let apns_token: String?
 }
 
-struct ChatResponseAction: Decodable {
-    let type: String
-    let title: String?
-    let module: String?
-    let priority: Int?
-    let reminder_body: String?
-}
-
 struct ChatResponse: Decodable {
     let conversation_id: String
     let reply: String
     let tool_calls_executed: [String]
     let module_config_updated: Bool
     let goals_updated: Bool
-    let actions: [ChatResponseAction]?
+    let actions: [AIAction]?
 }
 
 struct ModuleConfig: Decodable {
