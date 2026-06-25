@@ -10,6 +10,16 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     ) -> Bool {
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
 
+        // Fond système immédiat sur toutes les fenêtres — évite le flash blanc en mode sombre.
+        // DispatchQueue.main.async s'exécute juste après le premier runloop, au moment où
+        // la scene SwiftUI a créé la UIWindow mais avant que l'utilisateur la voit.
+        DispatchQueue.main.async {
+            UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .flatMap { $0.windows }
+                .forEach { $0.backgroundColor = UIColor.systemBackground }
+        }
+
         // Catégorie alarme — action "Ouvrir" pour amener l'app en foreground immédiatement
         let openAction = UNNotificationAction(
             identifier: "OPEN_ALARM",
