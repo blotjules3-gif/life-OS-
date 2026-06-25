@@ -45,7 +45,9 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
 
         if alarmIds.contains(id) {
             await MainActor.run { AlarmManager.shared.triggerAlarm() }
-            return []
+            // Laisser le son système jouer aussi : assure que l'alarme sonne
+            // même si l'app est en foreground sur un autre écran
+            return [.sound]
         }
 
         if id == "lifeos.wakeup.preview" {
