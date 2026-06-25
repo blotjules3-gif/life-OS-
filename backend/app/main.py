@@ -1,0 +1,117 @@
+from __future__ import annotations
+
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from prometheus_fastapi_instrumentator import Instrumentator
+
+from app.api.v1.router import router as v1_router
+from app.config import get_settings
+from app.core.exceptions import LifeOSBaseError
+from app.core.logging import configure_logging, get_logger
+from app.core.tools.registry import registry
+
+settings = get_settings()
+configure_logging(debug=settings.debug)
+log = get_logger(__name__)
+
+
+def _register_all_tools() -> None:
+    """Wire every tool handler into the global registry.
+    Called once at startup — order doesn't matter.
+    """
+    from app.core.tools.meta_tools import (
+        handle_ask_clarification,
+        handle_create_goal,
+        handle_delete_goal,
+        handle_get_module_config,
+        handle_list_goals,
+        handle_update_module_config,
+    )
+    from app.modules.finance.tools import (
+        handle_analyze_cashflow,
+        handle_compute_investable_amount,
+        handle_simulate_allocation,
+    )
+    from app.modules.mobility.tools import handle_add_km, handle_estimate_fuel_remaining
+    from app.modules.nutrition.tools import handle_add_meal, handle_compute_calorie_balance
+    from app.modules.sport.tools import handle_analyze_sport_progress, handle_log_workout
+
+    registry.register("get_module_config", handle_get_module_config)
+    registry.register("update_module_config", handle_update_module_config)
+    registry.register("list_goals", handle_list_goals)
+    registry.register("create_goal", handle_create_goal)
+    registry.register("delete_goal", handle_delete_goal)
+    registry.register("ask_clarification", handle_ask_clarification)
+
+    registry.register("log_workout", handle_log_workout)
+    registry.register("analyze_sport_progress", handle_analyze_sport_progress)
+
+    registry.register("add_meal", handle_add_meal)
+    registry.register("compute_calorie_balance", handle_compute_calorie_balance)
+
+    registry.register("analyze_cashflow", handle_analyze_cashflow)
+    registry.register("compute_investable_amount", handle_compute_investable_amount)
+    registry.register("simulate_allocation", handle_simulate_allocation)
+
+    registry.register("add_km", handle_add_km)
+    registry.register("estimate_fuel_remaining", handle_estimate_fuel_remaining)
+
+    log.info("tools_registered", tools=registry.list_tools())
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    log.info("lifeos_agent_starting", version="1.0.0", debug=settings.debug)
+    _register_all_tools()
+    yield
+    log.info("lifeos_agent_shutdown")
+
+
+app = FastAPI(
+    title="LifeOS Agent Backend",
+    version="1.0.0",
+    description="AI agent backend for LifeOS personalization and module management.",
+    docs_url="/docs" if settings.debug else None,
+    redoc_url="/redoc" if settings.debug else None,
+    lifespan=lifespan,
+)
+
+# ── Middleware ────────────────────────────────────────────────────────────────
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.allowed_origins,
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
+    allow_headers=["*"],
+)
+
+# ── Metrics ───────────────────────────────────────────────────────────────────
+
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+
+# ── Routes ────────────────────────────────────────────────────────────────────
+
+app.include_router(v1_router)
+
+
+# ── Exception handlers ────────────────────────────────────────────────────────
+
+@app.exception_handler(LifeOSBaseError)
+async def lifeos_error_handler(request: Request, exc: LifeOSBaseError) -> JSONResponse:
+    log.error("lifeos_error", error=str(exc), path=request.url.path)
+    return JSONResponse(status_code=500, content={"detail": "Erreur interne. Réessaie."})
+
+
+@app.exception_handler(Exception)
+async def generic_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    log.error("unhandled_error", error=str(exc), path=request.url.path, exc_info=True)
+    return JSONResponse(status_code=500, content={"detail": "Erreur inattendue."})
+
+
+@app.get("/health")
+async def health() -> dict:
+    return {"status": "ok", "tools": len(registry.list_tools())}
