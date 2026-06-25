@@ -12,7 +12,7 @@ from app.core.exceptions import AgentMaxIterationsError
 from app.database import get_session
 from app.dependencies import get_orchestrator, verify_api_key
 from app.models.db import Conversation, Message
-from app.schemas.chat import ChatRequest, ChatResponse, ConversationOut
+from app.schemas.chat import ChatAction, ChatRequest, ChatResponse, ConversationOut
 from app.services import module_config as config_svc
 from app.services.user import get_or_create_user
 from app.core.logging import get_logger
