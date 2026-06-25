@@ -31,7 +31,9 @@ struct LifeOSApp: App {
         Holding.self, NetWorthItem.self, Property.self, JobApplication.self, SkillGap.self,
         Flashcard.self, BookSummary.self, Chore.self, Pet.self, PetCare.self, Maintenance.self,
         Vehicle.self, FuelLog.self, Contact.self, SocialEvent.self, DocVault.self, Deadline.self,
-        Trip.self, PackingItem.self
+        Trip.self, PackingItem.self,
+        // Cycle
+        CycleEntry.self
     ])
 
     var body: some Scene {
