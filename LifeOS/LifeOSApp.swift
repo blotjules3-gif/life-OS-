@@ -33,7 +33,9 @@ struct LifeOSApp: App {
         Vehicle.self, FuelLog.self, Contact.self, SocialEvent.self, DocVault.self, Deadline.self,
         Trip.self, PackingItem.self,
         // Cycle
-        CycleEntry.self
+        CycleEntry.self,
+        // Assistant IA
+        AIMessage.self
     ])
 
     var body: some Scene {
