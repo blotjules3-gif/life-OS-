@@ -105,6 +105,7 @@ class AgentOrchestrator:
                     tools_executed=tools_executed,
                     module_config_updated=module_config_updated,
                     goals_updated=goals_updated,
+                    actions=pending_actions,
                 )
 
             # ── Tool calls ────────────────────────────────────────────────────
