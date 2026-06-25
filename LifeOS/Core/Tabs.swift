@@ -1441,33 +1441,29 @@ struct ProfileView: View {
             }
             .padding(13)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(habitColor.opacity(0.06))
-                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(habitColor.opacity(0.15), lineWidth: 1))
-            )
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
 
             // Protéines
             let protColor = Color(hex: 0xE0A23C)
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 5) {
                     Image(systemName: "fork.knife")
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(protColor)
                     Text("PROTÉINES")
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(protColor.opacity(0.8))
-                        .kerning(0.5)
+                        .foregroundStyle(protColor)
+                        .kerning(0.4)
                 }
                 Text("\(Int(proteinToday))")
-                    .font(.system(size: 28, weight: .black, design: .rounded).monospacedDigit())
+                    .font(.system(size: 26, weight: .bold, design: .rounded).monospacedDigit())
                     .foregroundStyle(Theme.textPrimary)
                 Text("/ \(proteinGoal) g")
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(.secondary)
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(protColor.opacity(0.1)).frame(height: 3)
+                        Capsule().fill(Color.primary.opacity(0.06)).frame(height: 3)
                         Capsule().fill(protColor)
                             .frame(width: geo.size.width * min(1.0, proteinToday / Double(max(1, proteinGoal))), height: 3)
                             .animation(.spring(duration: 1.0).delay(0.5), value: appeared)
@@ -1477,11 +1473,7 @@ struct ProfileView: View {
             }
             .padding(13)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(protColor.opacity(0.06))
-                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(protColor.opacity(0.15), lineWidth: 1))
-            )
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 
