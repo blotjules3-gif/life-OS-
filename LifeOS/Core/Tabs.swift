@@ -238,6 +238,147 @@ struct CameraView: View {
 }
 
 
+// MARK: - Réveil (onglet dédié)
+
+struct WakeUpView: View {
+    @AppStorage("userName") private var userName = ""
+    @AppStorage("wakeupEnabled") private var wakeupEnabled = false
+    @AppStorage("wakeupHour") private var wakeupHour = 7
+    @AppStorage("wakeupMinute") private var wakeupMinute = 0
+    @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
+    @State private var alarmTime: Date = {
+        var c = Calendar.current
+        return c.date(bySettingHour: 7, minute: 0, second: 0, of: .now) ?? .now
+    }()
+    @State private var showBriefing = false
+
+    private var recommendedModules: [AppCategory] {
+        recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 20) {
+                    alarmCard
+                    planPreviewSection
+                }
+                .padding(Theme.pad)
+            }
+            .background(Theme.bg)
+            .navigationTitle("Réveil")
+            .fullScreenCover(isPresented: $showBriefing) {
+                DailyBriefingView(modules: recommendedModules)
+            }
+        }
+    }
+
+    private var alarmCard: some View {
+        VStack(spacing: 18) {
+            DatePicker("", selection: $alarmTime, displayedComponents: .hourAndMinute)
+                .datePickerStyle(.wheel)
+                .labelsHidden()
+                .frame(maxWidth: .infinity)
+                .onChange(of: alarmTime) { _, val in
+                    let c = Calendar.current
+                    wakeupHour = c.component(.hour, from: val)
+                    wakeupMinute = c.component(.minute, from: val)
+                    if wakeupEnabled { scheduleWakeupAlarm() }
+                }
+
+            Divider()
+
+            Toggle("Réveil quotidien activé", isOn: $wakeupEnabled)
+                .tint(Color.accentColor)
+                .onChange(of: wakeupEnabled) { _, on in
+                    if on { scheduleWakeupAlarm() } else { cancelAlarm() }
+                }
+        }
+        .padding(20)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private var planPreviewSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Plan du jour").font(.headline)
+
+            Button { showBriefing = true } label: {
+                HStack(spacing: 14) {
+                    Image(systemName: "sunrise.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(.orange)
+                        .frame(width: 42, height: 42)
+                        .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Lancer ma journée")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text("Voir mes priorités et objectifs du jour")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.bold())
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(14)
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .buttonStyle(.plain)
+
+            if !recommendedModules.isEmpty {
+                Text("Modules prioritaires")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 4)
+
+                ForEach(recommendedModules.prefix(5)) { cat in
+                    NavigationLink { cat.destination } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: cat.icon)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .frame(width: 30, height: 30)
+                                .background(cat.tint, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(cat.title).font(.subheadline.weight(.medium))
+                                Text(cat.subtitle).font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private func scheduleWakeupAlarm() {
+        Task {
+            guard await NotificationManager.shared.requestAuthorization() else { return }
+            NotificationManager.shared.scheduleAlarm(hour: wakeupHour, minute: wakeupMinute, userName: userName)
+            let timeString = String(format: "%02d:%02d", wakeupHour, wakeupMinute)
+            if #available(iOS 16.1, *) {
+                await MainActor.run {
+                    AlarmLiveActivityManager.shared.startScheduled(alarmTimeString: timeString)
+                }
+            }
+        }
+    }
+
+    private func cancelAlarm() {
+        NotificationManager.shared.cancel(id: "lifeos.wakeup")
+        if #available(iOS 16.1, *) {
+            AlarmLiveActivityManager.shared.end()
+        }
+    }
+}
+
 // MARK: - Briefing du jour (plein écran, lancé depuis Réveil)
 
 struct DailyBriefingView: View {
