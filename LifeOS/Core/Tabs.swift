@@ -780,41 +780,46 @@ struct ProfileView: View {
     ]
     private var todayTip: String { tips[Calendar.current.component(.day, from: .now) % tips.count] }
 
+    // MARK: - Computed helpers
+
+    private var dayProgress: Double {
+        let cal = Calendar.current
+        let now = Date()
+        let start = cal.startOfDay(for: now)
+        let end = cal.date(byAdding: .day, value: 1, to: start) ?? now
+        return (now.timeIntervalSince(start)) / (end.timeIntervalSince(start))
+    }
+
+    private func parseEndDates() -> [String: Date] {
+        guard let data = goalEndDatesRaw.data(using: .utf8),
+              let dict = try? JSONDecoder().decode([String: Double].self, from: data) else { return [:] }
+        return dict.mapValues { Date(timeIntervalSince1970: $0) }
+    }
+
+    // MARK: - Body
+
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 14) {
-                    if !hiddenSections.contains("hero") { heroDark }
-                    if !healthConnected { healthConnectBanner }
-                    if !hiddenSections.contains("tasks") { dailyTasksCard }
-                    if hasTodayBriefing && !hiddenSections.contains("briefing") { briefingRecallCard }
-                    if !hiddenSections.contains("stats") { statsRow }
-                    if !memories.isEmpty && !hiddenSections.contains("memories") { memoriesCard }
-                    if !hiddenSections.contains("habits") { habitsProteinsRow }
-                    if !hiddenSections.contains("actions") { quickActionsSection }
-                    if !hiddenSections.contains("wakeup") { wakeupSection }
-                    if !hiddenSections.contains("tip") { tipCard }
-                    if !hiddenSections.contains("settings") { settingsSection }
+                VStack(spacing: 16) {
+                    profileHeader
+                    scoreIsland
+                    nightIsland
+                    activeGoalsSection
+                    bentoRow
+                    tipCard
+                    settingsSection
                     appearanceSection
                 }
                 .padding(.horizontal, Theme.pad)
                 .padding(.top, 8)
-                .padding(.bottom, 52)
+                .padding(.bottom, 60)
                 .opacity(appeared ? 1 : 0)
                 .offset(y: appeared ? 0 : 22)
                 .animation(.spring(duration: 0.45, bounce: 0.18), value: appeared)
             }
             .background(Theme.bg)
             .navigationTitle("Profil")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { showCustomizer = true } label: {
-                        Text("Modifier")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(Color.accentColor)
-                    }
-                }
-            }
             .onAppear { withAnimation { appeared = true } }
             .task {
                 if await HealthService.shared.requestAuthorization() {
@@ -844,10 +849,540 @@ struct ProfileView: View {
             .fullScreenCover(isPresented: $showBriefing) {
                 DailyBriefingView(modules: recommendedModules)
             }
-            .sheet(isPresented: $showCustomizer) {
-                ProfileCustomizerSheet(hiddenRaw: $profileHiddenRaw)
+        }
+    }
+
+    // MARK: - Profile Header
+
+    private var profileHeader: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(greeting.uppercased())
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.secondary)
+                        .kerning(1.4)
+                    Text(name.isEmpty ? "Mon profil" : name)
+                        .font(.system(size: 28, weight: .black))
+                        .foregroundStyle(.primary)
+                }
+                Spacer()
+                // Day fraction badge
+                ZStack {
+                    Circle()
+                        .stroke(Color.primary.opacity(0.08), lineWidth: 3)
+                        .frame(width: 46, height: 46)
+                    Circle()
+                        .trim(from: 0, to: dayProgress)
+                        .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                        .frame(width: 46, height: 46)
+                        .animation(.spring(duration: 1.2), value: appeared)
+                    Text("\(Int(dayProgress * 100))%")
+                        .font(.system(size: 10, weight: .bold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(.primary)
+                }
+            }
+
+            // Day progress bar
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.primary.opacity(0.07)).frame(height: 4)
+                    Capsule()
+                        .fill(Color.accentColor.gradient)
+                        .frame(width: geo.size.width * dayProgress, height: 4)
+                        .animation(.spring(duration: 1.4).delay(0.2), value: appeared)
+                }
+            }
+            .frame(height: 4)
+
+            // Domain pills
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    domainPill(icon: "flame.fill", label: "\(kcalToday) kcal", color: Color(hex: 0xF1746C),
+                               progress: min(1, Double(kcalToday) / Double(max(1, kcalGoal))))
+                    domainPill(icon: "drop.fill", label: "\(waterToday) ml", color: Color(hex: 0x3CB2E0),
+                               progress: min(1, Double(waterToday) / Double(max(1, waterGoal))))
+                    domainPill(icon: "figure.run", label: "\(steps) pas", color: Color(hex: 0x4CC38A),
+                               progress: min(1, Double(steps) / Double(max(1, stepGoal))))
+                    domainPill(icon: "checkmark.seal.fill", label: "\(habitsDone)/\(habits.count)", color: Color(hex: 0x9B6CF1),
+                               progress: habits.isEmpty ? 1 : min(1, Double(habitsDone) / Double(habits.count)))
+                }
+                .padding(.vertical, 2)
             }
         }
+    }
+
+    private func domainPill(icon: String, label: String, color: Color, progress: Double) -> some View {
+        HStack(spacing: 6) {
+            ZStack {
+                Circle().fill(color.opacity(0.15)).frame(width: 24, height: 24)
+                Image(systemName: icon)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(color)
+            }
+            Text(label)
+                .font(.system(size: 12, weight: .semibold, design: .rounded).monospacedDigit())
+                .foregroundStyle(.primary)
+        }
+        .padding(.horizontal, 10).padding(.vertical, 6)
+        .background(
+            ZStack(alignment: .leading) {
+                Capsule().fill(Theme.card)
+                GeometryReader { g in
+                    Capsule().fill(color.opacity(0.12)).frame(width: g.size.width * progress)
+                }
+            }
+        )
+        .overlay(Capsule().stroke(color.opacity(progress > 0.95 ? 0.4 : 0.12), lineWidth: 1))
+    }
+
+    // MARK: - Score Island
+
+    private var scoreIsland: some View {
+        HStack(spacing: 0) {
+            // Score ring — left
+            ZStack {
+                Circle()
+                    .stroke(Color.white.opacity(0.1), lineWidth: 10)
+                    .frame(width: 100, height: 100)
+                Circle()
+                    .trim(from: 0, to: appeared ? Double(lifeScore) / 100 : 0)
+                    .stroke(scoreColor, style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .frame(width: 100, height: 100)
+                    .animation(.spring(duration: 1.4).delay(0.3), value: appeared)
+                VStack(spacing: 0) {
+                    Text("\(lifeScore)")
+                        .font(.system(size: 32, weight: .black, design: .rounded).monospacedDigit())
+                        .foregroundStyle(.white)
+                    Text("SCORE")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .kerning(1.2)
+                }
+            }
+            .padding(.leading, 20)
+
+            // Metrics — right
+            VStack(alignment: .leading, spacing: 0) {
+                scoreMetric(label: "Calories", value: "\(kcalToday)/\(kcalGoal)", color: Color(hex: 0xF1746C))
+                Divider().background(Color.white.opacity(0.1)).padding(.vertical, 8)
+                scoreMetric(label: "Eau", value: "\(waterToday)/\(waterGoal) ml", color: Color(hex: 0x3CB2E0))
+                Divider().background(Color.white.opacity(0.1)).padding(.vertical, 8)
+                scoreMetric(label: "Activité", value: "\(steps) pas", color: Color(hex: 0x4CC38A))
+            }
+            .padding(.leading, 24)
+            .padding(.trailing, 20)
+
+            Spacer()
+        }
+        .padding(.vertical, 22)
+        .frame(maxWidth: .infinity)
+        .background(Color(hex: 0x111116), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+        )
+    }
+
+    private func scoreMetric(label: String, value: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label.uppercased())
+                .font(.system(size: 8, weight: .bold))
+                .foregroundStyle(color.opacity(0.7))
+                .kerning(0.8)
+            Text(value)
+                .font(.system(size: 13, weight: .bold, design: .rounded).monospacedDigit())
+                .foregroundStyle(.white)
+        }
+    }
+
+    // MARK: - Night Island (Réveil)
+
+    private var nightIsland: some View {
+        VStack(spacing: 0) {
+            // Top row
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("RÉVEIL")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(Color(hex: 0xE07B3C).opacity(0.75))
+                        .kerning(1.4)
+                    Text(String(format: "%02d:%02d", wakeupHour, wakeupMinute))
+                        .font(.system(size: 52, weight: .black, design: .rounded).monospacedDigit())
+                        .foregroundStyle(wakeupEnabled ? Color(hex: 0xE07B3C) : .white)
+                        .animation(.spring(duration: 0.3), value: wakeupEnabled)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 10) {
+                    Toggle("", isOn: $wakeupEnabled)
+                        .tint(Color(hex: 0xE07B3C))
+                        .labelsHidden()
+                        .onChange(of: wakeupEnabled) { _, on in
+                            if on { scheduleWakeupAlarm() }
+                            else { NotificationManager.shared.cancel(id: "lifeos.wakeup") }
+                        }
+                    Button { showWakeupDetail = true } label: {
+                        Text("Personnaliser")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Color(hex: 0xE07B3C))
+                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .background(Color(hex: 0xE07B3C).opacity(0.14), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 20).padding(.top, 20).padding(.bottom, 16)
+
+            Divider().background(Color.white.opacity(0.1))
+
+            // Briefing row
+            Button { showBriefing = true } label: {
+                HStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Color.orange.opacity(0.18))
+                            .frame(width: 36, height: 36)
+                        Image(systemName: "sunrise.fill")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.orange)
+                    }
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Lancer ma journée")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.white)
+                        Text("Briefing vocal + priorités")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.white.opacity(0.45))
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.3))
+                }
+                .padding(.horizontal, 20).padding(.vertical, 14)
+            }
+            .buttonStyle(LifeOSPressStyle())
+        }
+        .background(Color(hex: 0x111116), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(
+                    wakeupEnabled ? Color(hex: 0xE07B3C).opacity(0.3) : Color.white.opacity(0.08),
+                    lineWidth: 1.5
+                )
+        )
+        .animation(.spring(duration: 0.3), value: wakeupEnabled)
+    }
+
+    // MARK: - Active Goals
+
+    private var activeGoalsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("MES OBJECTIFS")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .kerning(1.2)
+                Spacer()
+                Button { showGoalEditor = true } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 10, weight: .semibold))
+                        Text("Modifier")
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+                    .foregroundStyle(Color.accentColor)
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(Color.accentColor.opacity(0.1), in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+
+            let endDates = parseEndDates()
+            let tasks = todayTasks
+
+            if tasks.isEmpty {
+                Text("Aucun objectif actif")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 20)
+                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            } else {
+                VStack(spacing: 1) {
+                    ForEach(Array(tasks.enumerated()), id: \.offset) { idx, task in
+                        goalRow(task: task, endDate: endDates[task.icon + task.title], isLast: idx == tasks.count - 1)
+                    }
+                }
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            }
+        }
+    }
+
+    private func goalRow(task: ProfileTaskItem, endDate: Date?, isLast: Bool) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(task.color.opacity(0.15))
+                        .frame(width: 34, height: 34)
+                    Image(systemName: task.icon)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(task.color)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(task.title)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    Text(task.subtitle)
+                        .font(.system(size: 11, design: .rounded).monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 3) {
+                    // Progress bar
+                    GeometryReader { g in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(task.color.opacity(0.12)).frame(height: 5)
+                            Capsule().fill(task.color)
+                                .frame(width: g.size.width * task.progress, height: 5)
+                                .animation(.spring(duration: 1.0).delay(0.3), value: appeared)
+                        }
+                    }
+                    .frame(width: 64, height: 5)
+
+                    // End date badge
+                    if let end = endDate {
+                        let daysLeft = Calendar.current.dateComponents([.day], from: .now, to: end).day ?? 0
+                        Text(daysLeft > 0 ? "J-\(daysLeft)" : "Terminé")
+                            .font(.system(size: 9, weight: .bold, design: .rounded))
+                            .foregroundStyle(daysLeft > 3 ? task.color : Color(hex: 0xF1746C))
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(
+                                (daysLeft > 3 ? task.color : Color(hex: 0xF1746C)).opacity(0.12),
+                                in: Capsule()
+                            )
+                    }
+                }
+            }
+            .padding(.horizontal, 14).padding(.vertical, 12)
+
+            if !isLast {
+                Divider().padding(.leading, 60)
+            }
+        }
+    }
+
+    // MARK: - Bento Row (Habitudes + Eau rapide)
+
+    private var bentoRow: some View {
+        HStack(spacing: 12) {
+            // Habitudes bento
+            let habitColor = Color(hex: 0x9B6CF1)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 5) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(habitColor)
+                    Text("HABITUDES")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(habitColor)
+                        .kerning(0.4)
+                    Spacer()
+                    Text("\(habitsDone)/\(habits.count)")
+                        .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
+                        .foregroundStyle(habitColor)
+                }
+                if habits.isEmpty {
+                    Text("Aucune habitude")
+                        .font(.caption2).foregroundStyle(.tertiary)
+                    Spacer()
+                } else {
+                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 5), spacing: 5) {
+                        ForEach(Array(habits.prefix(10).enumerated()), id: \.offset) { _, h in
+                            let done = h.completions.contains { Calendar.current.isDateInToday($0.date) }
+                            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                .fill(done ? habitColor : habitColor.opacity(0.12))
+                                .frame(height: 13)
+                        }
+                    }
+                    Text(habitsDone == habits.count && !habits.isEmpty ? "Toutes" : "\(habits.count - habitsDone) restantes")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(habitsDone == habits.count ? habitColor : .secondary)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+            // Actions eau rapides
+            let waterColor = Color(hex: 0x3CB2E0)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 5) {
+                    Image(systemName: "drop.fill")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(waterColor)
+                    Text("EAU")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(waterColor)
+                        .kerning(0.4)
+                }
+                Text("\(waterToday)")
+                    .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.primary)
+                Text("/ \(waterGoal) ml")
+                    .font(.system(size: 10)).foregroundStyle(.secondary)
+
+                Spacer()
+
+                VStack(spacing: 6) {
+                    Button {
+                        ctx.insert(WaterEntry(amountML: 250)); Haptics.tap()
+                    } label: {
+                        Text("+250 ml")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(waterColor)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 7)
+                            .background(waterColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    }
+                    .buttonStyle(LifeOSPressStyle())
+                    Button {
+                        ctx.insert(WaterEntry(amountML: 500)); Haptics.tap()
+                    } label: {
+                        Text("+500 ml")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(waterColor)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 7)
+                            .background(waterColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    }
+                    .buttonStyle(LifeOSPressStyle())
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    // MARK: - Tip Card
+
+    private var tipCard: some View {
+        HStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                .fill(Color.accentColor.opacity(0.6))
+                .frame(width: 2.5, height: 36)
+            Text(todayTip)
+                .font(.system(size: 13, weight: .regular))
+                .foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer()
+        }
+        .padding(14)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    // MARK: - Paramètres
+
+    private var settingsSection: some View {
+        VStack(spacing: 14) {
+            VStack(spacing: 0) {
+                settingsRow(icon: "heart.fill", iconColor: Color(hex: 0xF1746C),
+                            label: healthConnected ? "Apple Santé connecté" : "Connecter Apple Santé") {
+                    if healthConnected {
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                    } else {
+                        Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                    }
+                } action: {
+                    Task { healthConnected = await HealthService.shared.requestAuthorization() }
+                }
+                Divider().padding(.leading, 50)
+                settingsRow(icon: "bell.fill", iconColor: Color(hex: 0xE0A23C), label: "Activer les rappels") {
+                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                } action: {
+                    Task { _ = await NotificationManager.shared.requestAuthorization() }
+                }
+                Divider().padding(.leading, 50)
+                settingsRow(icon: "slider.horizontal.3", iconColor: Color.accentColor, label: "Modifier mes objectifs") {
+                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                } action: {
+                    showGoalEditor = true
+                }
+            }
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+
+            HStack {
+                Text("LifeOS 1.0 · Données stockées localement")
+                    .font(.caption).foregroundStyle(.tertiary)
+                Spacer()
+                Text("15 modules").font(.caption).foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 4)
+        }
+    }
+
+    private var appearanceSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Couleur de l'app")
+                .font(.system(size: 15, weight: .semibold))
+                .padding(.horizontal, 4)
+            VStack(spacing: 12) {
+                HStack(spacing: 10) {
+                    ForEach(AppTheme.allCases) { th in
+                        let selected = appThemeRaw == th.rawValue
+                        Button {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { appThemeRaw = th.rawValue }
+                        } label: {
+                            VStack(spacing: 6) {
+                                ZStack {
+                                    Circle().fill(th.accent.gradient)
+                                        .frame(width: 42, height: 42)
+                                    Image(systemName: th.symbol)
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundStyle(.white)
+                                }
+                                .overlay(Circle().stroke(Color.primary, lineWidth: selected ? 2.5 : 0))
+                                .padding(2)
+                                Text(th.label)
+                                    .font(.system(size: 11, weight: selected ? .semibold : .regular))
+                                    .foregroundStyle(selected ? .primary : .secondary)
+                                    .lineLimit(1).minimumScaleFactor(0.7)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                Text("Tout l'app suit le thème : menu, sections, fond et bulles. Tu peux changer à tout moment.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(16)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        }
+    }
+
+    private func settingsRow<T: View>(icon: String, iconColor: Color, label: String,
+                                      @ViewBuilder trailing: () -> T, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .bold)).foregroundStyle(.white)
+                    .frame(width: 30, height: 30)
+                    .background(iconColor, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                Text(label).font(.subheadline).foregroundStyle(.primary)
+                Spacer()
+                trailing()
+            }
+            .padding(.horizontal, 14).padding(.vertical, 13)
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Daily Tasks Card
