@@ -1582,11 +1582,10 @@ struct ProfileView: View {
     private func scheduleWakeupAlarm() {
         Task {
             guard await NotificationManager.shared.requestAuthorization() else { return }
-            NotificationManager.shared.scheduleDaily(
-                id: "lifeos.wakeup",
-                title: "Bonjour \(name.isEmpty ? "" : name) !",
-                body: "C'est l'heure de lancer ta journée.",
-                hour: wakeupHour, minute: wakeupMinute
+            NotificationManager.shared.scheduleAlarm(
+                hour: wakeupHour,
+                minute: wakeupMinute,
+                userName: name
             )
         }
     }
