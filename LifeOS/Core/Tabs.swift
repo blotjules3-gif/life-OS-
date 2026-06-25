@@ -769,7 +769,7 @@ struct ProfileView: View {
     private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
     private var islandBg: some ShapeStyle {
         LinearGradient(
-            colors: [appTheme.accent.opacity(0.28), Color(hex: 0x0D0D12)],
+            colors: [appTheme.accent.opacity(0.72), Color(hex: 0x1A1A22).opacity(0.88)],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
