@@ -3,7 +3,7 @@ import SwiftUI
 /// Les 15 pôles de LifeOS. Pilotent la grille du tableau de bord et la navigation.
 enum AppCategory: String, CaseIterable, Identifiable {
     case sleep, nutrition, fitness, looks, mind, productivity, finance,
-         invest, career, learning, home, mobility, social, admin, travel
+         invest, career, learning, home, mobility, social, admin, travel, cycle
 
     var id: String { rawValue }
 
