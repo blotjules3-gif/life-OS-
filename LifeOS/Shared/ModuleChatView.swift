@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Chat Message Model
 
-struct ChatMessage: Identifiable {
+struct ModuleChatMessage: Identifiable {
     enum Role { case user, assistant }
     let id = UUID()
     let role: Role
@@ -28,7 +28,7 @@ struct ModuleChatView: View {
     @AppStorage("appTheme") private var appThemeRaw = "classic"
     private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
 
-    @State private var messages: [ChatMessage] = []
+    @State private var messages: [ModuleChatMessage] = []
     @State private var inputText = ""
     @State private var conversationID: String? = nil
     @State private var isLoading = false
@@ -180,10 +180,10 @@ struct ModuleChatView: View {
         inputFocused = false
         Haptics.tap()
 
-        messages.append(ChatMessage(role: .user, text: text))
+        messages.append(ModuleChatMessage(role: .user, text: text))
 
         // Add typing indicator
-        let thinking = ChatMessage(role: .assistant, text: "…", isThinking: true)
+        let thinking = ModuleChatMessage(role: .assistant, text: "…", isThinking: true)
         messages.append(thinking)
         isLoading = true
 
@@ -199,7 +199,7 @@ struct ModuleChatView: View {
                 // Replace thinking bubble
                 await MainActor.run {
                     messages.removeAll { $0.isThinking }
-                    messages.append(ChatMessage(role: .assistant, text: response.reply))
+                    messages.append(ModuleChatMessage(role: .assistant, text: response.reply))
 
                     if response.module_config_updated {
                         configBadge = true
@@ -221,7 +221,7 @@ struct ModuleChatView: View {
     }
 
     private func sendWelcomeMessage() {
-        let welcome = ChatMessage(
+        let welcome = ModuleChatMessage(
             role: .assistant,
             text: "Bonjour ! Je suis là pour t'aider à personnaliser ton module \(moduleTitle). Dis-moi tes objectifs, ta fréquence, ou ce que tu veux améliorer."
         )
@@ -274,7 +274,7 @@ struct ModuleChatView: View {
 // MARK: - MessageBubble
 
 private struct MessageBubble: View {
-    let message: ChatMessage
+    let message: ModuleChatMessage
     let accentColor: Color
 
     var body: some View {
