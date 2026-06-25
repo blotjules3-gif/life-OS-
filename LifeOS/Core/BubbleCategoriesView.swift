@@ -23,9 +23,9 @@ struct BubbleStyle {
     /// Sharpness of the phong sparkle on the rim.
     var specStrength: Double = 1.0
     /// Outer colored bloom (neon glow of the bubble's own color).
-    var colorGlow: Double = 0.45        // halo coloré subtil
+    var colorGlow: Double = 0.65        // halo néon de la couleur de la bulle
     /// Outer soft white bloom.
-    var whiteGlow: Double = 0.16
+    var whiteGlow: Double = 0.14
 }
 
 // MARK: - One bubble

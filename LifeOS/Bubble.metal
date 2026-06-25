@@ -48,19 +48,21 @@ using namespace metal;
     col = mix(col, base, fres * 0.60);                   // rim plus saturé (film de savon)
     // VIVIDNESS boost fort : on écarte la couleur du gris pour des teintes franches
     float lum = dot(col, float3(0.299, 0.587, 0.114));
-    col = clamp(mix(float3(lum), col, 1.60), 0.0, 1.0);
+    col = clamp(mix(float3(lum), col, 1.90), 0.0, 1.0);   // néon : saturation forte
 
     // ---------- Glossy white highlights ----------
     float2 drift = float2(sin(time * 0.5 + seed) * 0.012, cos(time * 0.4 + seed) * 0.012);
 
-    // big primary gloss = soft halo + crisp bright core (wet glass reflection)
-    float2 pUV = (uv - (float2(-0.20, -0.42) + drift)) * float2(1.05, 1.25);
-    float  pd  = length(pUV);
-    float  primaryGloss = smoothstep(0.55, 0.06, pd) * 0.60
-                        + smoothstep(0.22, 0.00, pd) * 0.55;
+    // Reflet réaliste : grand "softbox" doux allongé en haut-gauche (réflexion d'environnement)
+    float2 sUV = (uv - (float2(-0.26, -0.44) + drift)) * float2(1.45, 0.82);   // ovale vertical
+    float  softbox = smoothstep(0.52, 0.12, length(sUV)) * 0.78;
 
-    // sharp hotspot
-    float  hotspot = smoothstep(0.07, 0.0, length(uv - (float2(-0.30, -0.52) + drift)));
+    // reflet net de la source lumineuse, dans le softbox
+    float2 pUV = (uv - (float2(-0.30, -0.50) + drift)) * float2(1.10, 1.0);
+    float  primaryGloss = softbox + smoothstep(0.13, 0.0, length(pUV)) * 0.65;
+
+    // mini hotspot ultra net (étincelle mouillée)
+    float  hotspot = smoothstep(0.045, 0.0, length(uv - (float2(-0.33, -0.55) + drift)));
 
     // phong sparkle
     float3 halfDir = normalize(lightDir + viewDir);
