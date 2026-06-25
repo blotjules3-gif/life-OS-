@@ -62,7 +62,7 @@
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		992A11912FECC22700B312FE /* LifeOSWidgets */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (992A11A52FECC22700B312FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = LifeOSWidgets; sourceTree = "<group>"; };
-		AA00000000000000000A0001 /* LifeOS */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = LifeOS; sourceTree = "<group>"; };
+		AA00000000000000000A0001 /* LifeOS */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (AA00000000000000000A00EX /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = LifeOS; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
