@@ -67,9 +67,7 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                 let h = info["alarmHour"] as? Int ?? 7
                 let m = info["alarmMinute"] as? Int ?? 0
                 let timeString = String(format: "%02d:%02d", h, m)
-                await MainActor.run {
-                    AlarmLiveActivityManager.shared.startScheduled(alarmTimeString: timeString)
-                }
+                await AlarmLiveActivityManager.shared.startScheduled(alarmTimeString: timeString)
             }
             return [] // pas de bannière — le widget suffit
         }
