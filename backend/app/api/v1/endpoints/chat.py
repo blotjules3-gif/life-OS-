@@ -124,6 +124,7 @@ async def chat(
         tool_calls_executed=result.tools_executed,
         module_config_updated=result.module_config_updated,
         goals_updated=result.goals_updated,
+        actions=[ChatAction(**a) for a in result.actions],
     )
 
 
