@@ -94,6 +94,10 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         stopRinging()
         showAlarmScreen = false
         showBriefing = true
+        // Keep LA alive — user is in the briefing screen until dismissBriefing()
+        if #available(iOS 16.1, *) {
+            AlarmLiveActivityManager.shared.update(phase: .briefing, message: "Briefing quotidien en cours…")
+        }
     }
 
     func snooze(minutes: Int) {
