@@ -1,0 +1,553 @@
+import SwiftUI
+import SwiftData
+
+// MARK: - Persistent message model
+
+@Model
+final class AIMessage {
+    var id: UUID
+    var role: String  // "user" | "assistant"
+    var text: String
+    var date: Date
+    var actions: Data?  // JSON-encoded [AIAction]
+
+    init(role: String, text: String, date: Date = .now, actions: Data? = nil) {
+        self.id = UUID()
+        self.role = role
+        self.text = text
+        self.date = date
+        self.actions = actions
+    }
+}
+
+// MARK: - Action model (backend → iOS)
+
+struct AIAction: Codable, Identifiable {
+    enum ActionType: String, Codable {
+        case createTodo = "create_todo"
+        case openModule = "open_module"
+        case scheduleReminder = "schedule_reminder"
+        case updateConfig = "update_config"
+    }
+    var id: UUID = UUID()
+    let type: ActionType
+    let title: String?
+    let module: String?
+    let priority: Int?
+    let reminderBody: String?
+}
+
+// MARK: - ViewModel
+
+@MainActor
+final class AIAssistantViewModel: ObservableObject {
+
+    @Published var messages: [DisplayMessage] = []
+    @Published var inputText = ""
+    @Published var isLoading = false
+    @Published var errorBanner: String? = nil
+
+    @AppStorage("aiConversationID") private var conversationID = ""
+    @AppStorage("aiFirstLaunchDone") private var firstLaunchDone = false
+    @AppStorage("userName") private var userName = ""
+    @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
+    @AppStorage("appTheme") private var appThemeRaw = "classic"
+
+    var modelContext: ModelContext?
+
+    struct DisplayMessage: Identifiable {
+        let id: UUID
+        let role: String
+        let text: String
+        let date: Date
+        var isThinking: Bool = false
+        let actions: [AIAction]
+
+        init(from model: AIMessage) {
+            self.id = model.id
+            self.role = model.role
+            self.text = model.text
+            self.date = model.date
+            self.actions = (try? JSONDecoder().decode([AIAction].self, from: model.actions ?? Data())) ?? []
+            self.isThinking = false
+        }
+
+        static func thinking() -> DisplayMessage {
+            DisplayMessage(id: UUID(), role: "assistant", text: "…", date: .now, actions: [])
+        }
+
+        private init(id: UUID, role: String, text: String, date: Date, actions: [AIAction]) {
+            self.id = id
+            self.role = role
+            self.text = text
+            self.date = date
+            self.actions = actions
+        }
+    }
+
+    func loadHistory() {
+        guard let ctx = modelContext else { return }
+        let descriptor = FetchDescriptor<AIMessage>(sortBy: [SortDescriptor(\.date)])
+        let stored = (try? ctx.fetch(descriptor)) ?? []
+        messages = stored.map { DisplayMessage(from: $0) }
+
+        if !firstLaunchDone {
+            triggerWelcome()
+        }
+    }
+
+    func send(text: String? = nil, module: String? = nil) {
+        let content = (text ?? inputText).trimmingCharacters(in: .whitespaces)
+        guard !content.isEmpty, !isLoading else { return }
+        inputText = ""
+        Haptics.tap()
+
+        appendUserMessage(content)
+        appendThinking()
+        isLoading = true
+
+        Task {
+            do {
+                let response = try await AgentAPI.shared.chat(
+                    message: content,
+                    module: module,
+                    conversationID: conversationID.isEmpty ? nil : conversationID
+                )
+                conversationID = response.conversation_id
+                removeThinking()
+                appendAssistantMessage(response.reply, actions: response.actions ?? [])
+
+                // Execute local iOS actions
+                for action in (response.actions ?? []) {
+                    await execute(action: action)
+                }
+            } catch {
+                removeThinking()
+                errorBanner = (error as? AgentAPIError)?.errorDescription ?? error.localizedDescription
+            }
+            isLoading = false
+        }
+    }
+
+    private func triggerWelcome() {
+        let name = userName.isEmpty ? "" : " \(userName)"
+        let modules = recommendedModulesRaw
+            .split(separator: ",")
+            .map { String($0) }
+            .joined(separator: ", ")
+
+        let prompt = """
+        [PREMIER_LANCEMENT]
+        Nom: \(userName.isEmpty ? "non renseigné" : userName)
+        Modules recommandés: \(modules.isEmpty ? "aucun" : modules)
+
+        Génère un message de bienvenue chaleureux et personnalisé.
+        Fais un recap rapide des modules actifs.
+        Pose UNE question pour commencer à personnaliser le premier module.
+        Max 4 phrases.
+        """
+
+        appendThinking()
+        isLoading = true
+        firstLaunchDone = true
+
+        Task {
+            do {
+                let response = try await AgentAPI.shared.chat(
+                    message: prompt,
+                    module: nil,
+                    conversationID: nil
+                )
+                conversationID = response.conversation_id
+                removeThinking()
+                appendAssistantMessage(response.reply, actions: [])
+            } catch {
+                removeThinking()
+                let fallback = "Bonjour\(userName.isEmpty ? "" : " \(userName)") ! Je suis ton assistant LifeOS. Je peux personnaliser tes modules, créer des objectifs et t'envoyer des rappels. Par quoi on commence ?"
+                appendAssistantMessage(fallback, actions: [])
+            }
+            isLoading = false
+        }
+    }
+
+    // MARK: - iOS local action execution
+
+    private func execute(action: AIAction) async {
+        guard let ctx = modelContext else { return }
+        switch action.type {
+        case .createTodo:
+            if let title = action.title {
+                let todo = TodoItem(title: title, priority: action.priority ?? 1)
+                ctx.insert(todo)
+                try? ctx.save()
+            }
+        case .scheduleReminder:
+            if let body = action.reminderBody {
+                scheduleLocalNotification(title: "LifeOS", body: body, delay: 3600)
+            }
+        case .openModule, .updateConfig:
+            break  // handled by UI layer via published actions
+        }
+    }
+
+    private func scheduleLocalNotification(title: String, body: String, delay: TimeInterval) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: delay, repeats: false)
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request)
+    }
+
+    // MARK: - Message helpers
+
+    private func appendUserMessage(_ text: String) {
+        let msg = AIMessage(role: "user", text: text)
+        modelContext?.insert(msg)
+        try? modelContext?.save()
+        messages.append(DisplayMessage(from: msg))
+    }
+
+    private func appendAssistantMessage(_ text: String, actions: [AIAction]) {
+        let actionsData = try? JSONEncoder().encode(actions)
+        let msg = AIMessage(role: "assistant", text: text, actions: actionsData)
+        modelContext?.insert(msg)
+        try? modelContext?.save()
+        messages.append(DisplayMessage(from: msg))
+    }
+
+    private func appendThinking() {
+        messages.append(.thinking())
+    }
+
+    private func removeThinking() {
+        messages.removeAll { $0.isThinking }
+    }
+}
+
+// MARK: - Import for notifications
+
+import UserNotifications
+
+// MARK: - Main View
+
+struct AIAssistantView: View {
+    @Environment(\.modelContext) private var ctx
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var vm = AIAssistantViewModel()
+    @AppStorage("appTheme") private var appThemeRaw = "classic"
+    private var accent: Color { (AppTheme(rawValue: appThemeRaw) ?? .classic).accent }
+    @FocusState private var inputFocused: Bool
+    @State private var showClearConfirm = false
+
+    // Quick suggestions change per time of day
+    private var quickSuggestions: [(label: String, message: String, module: String?)] {
+        let hour = Calendar.current.component(.hour, from: .now)
+        switch hour {
+        case 5..<10:
+            return [
+                ("Objectif matin", "Qu'est-ce que je devrais faire ce matin ?", nil),
+                ("Nutrition", "Je veux définir mon objectif calorique", "nutrition"),
+                ("Sport", "Configurer mes séances de sport", "sport"),
+            ]
+        case 10..<14:
+            return [
+                ("Mes objectifs", "Montre-moi mes objectifs actifs", nil),
+                ("Finances", "Analyser mes finances du mois", "finance"),
+                ("Habitudes", "Comment améliorer mes habitudes ?", "productivity"),
+            ]
+        case 14..<19:
+            return [
+                ("Bilan du jour", "Comment je m'en sors aujourd'hui ?", nil),
+                ("Sport", "Logger ma séance du jour", "sport"),
+                ("Rappel", "Programme un rappel pour ce soir", nil),
+            ]
+        default:
+            return [
+                ("Bilan de la semaine", "Fais-moi un bilan de ma semaine", nil),
+                ("Objectifs demain", "Qu'est-ce que je dois faire demain ?", nil),
+                ("Sommeil", "Conseils pour mieux dormir", "sleep"),
+            ]
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Theme.bg.ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    messagesArea
+                    inputArea
+                }
+            }
+            .navigationTitle("Assistant IA")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Fermer") { dismiss() }
+                        .foregroundStyle(.secondary)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        showClearConfirm = true
+                    } label: {
+                        Image(systemName: "trash")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .confirmationDialog("Effacer la conversation ?", isPresented: $showClearConfirm, titleVisibility: .visible) {
+                Button("Effacer", role: .destructive) { clearHistory() }
+                Button("Annuler", role: .cancel) { }
+            }
+            .alert("Erreur", isPresented: .constant(vm.errorBanner != nil)) {
+                Button("OK") { vm.errorBanner = nil }
+            } message: {
+                Text(vm.errorBanner ?? "")
+            }
+        }
+        .onAppear {
+            vm.modelContext = ctx
+            vm.loadHistory()
+        }
+    }
+
+    // MARK: - Messages area
+
+    private var messagesArea: some View {
+        ScrollViewReader { proxy in
+            ScrollView(showsIndicators: false) {
+                LazyVStack(spacing: 0) {
+                    // Avatar header
+                    aiHeader
+                        .padding(.bottom, 20)
+
+                    // Messages
+                    ForEach(vm.messages) { msg in
+                        MessageRow(message: msg, accent: accent)
+                            .id(msg.id)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 8)
+                    }
+
+                    // Quick suggestions (only when no messages yet or after AI message)
+                    if vm.messages.isEmpty || (vm.messages.last?.role == "assistant" && !vm.isLoading) {
+                        quickSuggestionsRow
+                            .padding(.top, 12)
+                    }
+
+                    Color.clear.frame(height: 16).id("bottom")
+                }
+                .padding(.top, 16)
+            }
+            .onChange(of: vm.messages.count) { _, _ in
+                withAnimation(.easeOut(duration: 0.3)) {
+                    proxy.scrollTo("bottom", anchor: .bottom)
+                }
+            }
+        }
+    }
+
+    // MARK: - AI Header
+
+    private var aiHeader: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(accent.opacity(0.12))
+                    .frame(width: 72, height: 72)
+                Circle()
+                    .fill(accent.opacity(0.18))
+                    .frame(width: 56, height: 56)
+                Image(systemName: "sparkles")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(accent)
+            }
+            VStack(spacing: 3) {
+                Text("Assistant LifeOS")
+                    .font(.system(size: 16, weight: .semibold))
+                Text("Personnalise tes modules, crée des objectifs, suis tes habitudes")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+            }
+        }
+    }
+
+    // MARK: - Quick suggestions
+
+    private var quickSuggestionsRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(quickSuggestions, id: \.label) { s in
+                    Button {
+                        vm.send(text: s.message, module: s.module)
+                    } label: {
+                        Text(s.label)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(accent)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                    .fill(accent.opacity(0.1))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                    .stroke(accent.opacity(0.25), lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 16)
+        }
+    }
+
+    // MARK: - Input area
+
+    private var inputArea: some View {
+        VStack(spacing: 0) {
+            Divider().opacity(0.4)
+            HStack(spacing: 10) {
+                TextField("Dis-moi quelque chose…", text: $vm.inputText, axis: .vertical)
+                    .font(.system(size: 15))
+                    .lineLimit(1...5)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .focused($inputFocused)
+                    .onSubmit { vm.send() }
+
+                Button { vm.send() } label: {
+                    ZStack {
+                        Circle()
+                            .fill(canSend ? accent : Color.secondary.opacity(0.15))
+                            .frame(width: 36, height: 36)
+                        Image(systemName: vm.isLoading ? "ellipsis" : "arrow.up")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(canSend ? .white : .secondary)
+                    }
+                }
+                .buttonStyle(.plain)
+                .disabled(!canSend)
+                .animation(.spring(duration: 0.2), value: canSend)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(Theme.bg)
+        }
+    }
+
+    private var canSend: Bool {
+        !vm.inputText.trimmingCharacters(in: .whitespaces).isEmpty && !vm.isLoading
+    }
+
+    // MARK: - Clear
+
+    private func clearHistory() {
+        let descriptor = FetchDescriptor<AIMessage>()
+        let all = (try? ctx.fetch(descriptor)) ?? []
+        all.forEach { ctx.delete($0) }
+        try? ctx.save()
+        vm.messages = []
+        UserDefaults.standard.removeObject(forKey: "aiConversationID")
+        UserDefaults.standard.removeObject(forKey: "aiFirstLaunchDone")
+        vm.loadHistory()
+    }
+}
+
+// MARK: - MessageRow
+
+private struct MessageRow: View {
+    let message: AIAssistantViewModel.DisplayMessage
+    let accent: Color
+
+    var isUser: Bool { message.role == "user" }
+
+    var body: some View {
+        VStack(alignment: isUser ? .trailing : .leading, spacing: 6) {
+            HStack(alignment: .bottom, spacing: 8) {
+                if isUser { Spacer(minLength: 56) }
+
+                Group {
+                    if message.isThinking {
+                        ThinkingIndicator()
+                    } else {
+                        Text(message.text)
+                            .font(.system(size: 15))
+                            .foregroundStyle(isUser ? .white : .primary)
+                            .textSelection(.enabled)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(
+                    isUser ? accent : Color(uiColor: .secondarySystemBackground),
+                    in: RoundedRectangle(cornerRadius: 20, style: .continuous)
+                )
+
+                if !isUser { Spacer(minLength: 56) }
+            }
+
+            // Action chips (after assistant message)
+            if !isUser && !message.actions.isEmpty {
+                actionChips
+            }
+        }
+        .transition(.asymmetric(
+            insertion: .move(edge: isUser ? .trailing : .leading).combined(with: .opacity),
+            removal: .opacity
+        ))
+    }
+
+    private var actionChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(message.actions.filter { $0.title != nil }) { action in
+                    Label(action.title!, systemImage: iconFor(action.type))
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(accent)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+            }
+        }
+    }
+
+    private func iconFor(_ type: AIAction.ActionType) -> String {
+        switch type {
+        case .createTodo: return "checkmark.circle"
+        case .openModule: return "arrow.right.circle"
+        case .scheduleReminder: return "bell"
+        case .updateConfig: return "slider.horizontal.3"
+        }
+    }
+}
+
+// MARK: - Thinking indicator
+
+private struct ThinkingIndicator: View {
+    @State private var active = false
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(0..<3, id: \.self) { i in
+                Circle()
+                    .fill(Color.secondary.opacity(0.5))
+                    .frame(width: 6, height: 6)
+                    .scaleEffect(active ? 1.35 : 0.9)
+                    .animation(
+                        .easeInOut(duration: 0.45)
+                            .repeatForever(autoreverses: true)
+                            .delay(Double(i) * 0.15),
+                        value: active
+                    )
+            }
+        }
+        .onAppear { active = true }
+    }
+}
