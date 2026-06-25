@@ -39,6 +39,11 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         configureAudioSession()
         playBeepCycle()
         startCountdown()
+
+        if #available(iOS 16.1, *) {
+            AlarmLiveActivityManager.shared.start()
+        }
+        scheduleWakeUpVoice()
     }
 
     private func configureAudioSession() {
