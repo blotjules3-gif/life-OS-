@@ -1038,8 +1038,7 @@ struct ProfileView: View {
             .buttonStyle(.plain)
         }
         .padding(14)
-        .background(Color.orange.opacity(0.05), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.orange.opacity(0.15), lineWidth: 1))
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     // MARK: - Hero card
