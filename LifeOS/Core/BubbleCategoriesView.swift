@@ -268,16 +268,30 @@ struct BubbleCategoriesView: View {
         let wig: Double = (editing && !cat.isFiller) ? sin(t * 7 + phase) * 2.0 : 0
         let a = tidy ? tidyAnchor : (cat.isFiller ? cat.anchor : adjustedAnchor(cat))
 
-        return BubbleView(
-            title: cat.title,
-            systemImage: cat.systemImage,
-            tint: cat.isFiller ? cat.tint : themedTint(cat),
-            diameter: d,
-            showLabel: !cat.isFiller,
-            time: t,
-            seed: Double(index) * 2.1,
-            style: cat.isFiller ? fillerStyle : themedStyle
-        )
+        return Group {
+            if theme == .gothic {
+                // Thème Argent : goutte de CHROME basée sur un asset PNG réaliste
+                ChromeCategoryButton(
+                    title: cat.isFiller ? "" : cat.title,
+                    sfSymbolName: cat.isFiller ? "" : cat.systemImage,
+                    assetName: ChromeCategoryButton.asset(for: d, base: base, index: index),
+                    size: d,
+                    showLabel: !cat.isFiller,
+                    pressed: tappedID == cat.id
+                )
+            } else {
+                BubbleView(
+                    title: cat.title,
+                    systemImage: cat.systemImage,
+                    tint: cat.isFiller ? cat.tint : themedTint(cat),
+                    diameter: d,
+                    showLabel: !cat.isFiller,
+                    time: t,
+                    seed: Double(index) * 2.1,
+                    style: cat.isFiller ? fillerStyle : themedStyle
+                )
+            }
+        }
         .rotationEffect(.degrees(wig))
         .overlay(alignment: .topLeading) {
             if editing, !cat.isFiller {
@@ -292,7 +306,7 @@ struct BubbleCategoriesView: View {
                 .transition(.scale.combined(with: .opacity))
             }
         }
-        .scaleEffect(tappedID == cat.id ? 1.12 : 1.0)
+        .scaleEffect(theme == .gothic ? 1.0 : (tappedID == cat.id ? 1.12 : 1.0))
         .animation(.spring(response: 0.3, dampingFraction: 0.45), value: tappedID)
         .position(x: a.x * w + bx, y: a.y * h + by)
         .zIndex(moving ? 100 : Double(cat.sizeMul))
@@ -510,19 +524,26 @@ struct BubbleCategoriesView: View {
 
     @ViewBuilder private var background: some View {
         let cols = theme.bubbleBG
-        if #available(iOS 18.0, *) {
-            MeshGradient(
-                width: 3, height: 3,
-                points: [
-                    [0.0, 0.0], [0.5, 0.0], [1.0, 0.0],
-                    [0.0, 0.5], [0.5, 0.5], [1.0, 0.5],
-                    [0.0, 1.0], [0.5, 1.0], [1.0, 1.0]
-                ],
-                colors: cols
-            )
-        } else {
-            LinearGradient(colors: [cols[0], cols[4], cols[8]],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
+        ZStack {
+            if theme == .gothic {
+                // Thème Argent : noir pur + vignette radiale douce (le chrome ressort)
+                Color(hex: 0x050506)
+                RadialGradient(colors: [.clear, Color.black.opacity(0.7)],
+                               center: .center, startRadius: 60, endRadius: 520)
+            } else if #available(iOS 18.0, *) {
+                MeshGradient(
+                    width: 3, height: 3,
+                    points: [
+                        [0.0, 0.0], [0.5, 0.0], [1.0, 0.0],
+                        [0.0, 0.5], [0.5, 0.5], [1.0, 0.5],
+                        [0.0, 1.0], [0.5, 1.0], [1.0, 1.0]
+                    ],
+                    colors: cols
+                )
+            } else {
+                LinearGradient(colors: [cols[0], cols[4], cols[8]],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+            }
         }
     }
 }
