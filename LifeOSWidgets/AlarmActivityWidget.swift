@@ -7,6 +7,7 @@ struct AlarmActivityWidget: Widget {
         ActivityConfiguration(for: AlarmAttributes.self) { context in
             LockScreenAlarmView(state: context.state)
                 .activityBackgroundTint(Color(red: 0.05, green: 0.07, blue: 0.12))
+                .widgetURL(URL(string: "lifeos://briefing")!)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
