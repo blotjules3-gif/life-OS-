@@ -153,8 +153,9 @@ struct OnboardingView: View {
                             withAnimation(.spring(duration: 0.4)) { step = 1 }
                         }
                     case 1:
-                        OnboardingName(name: $name) {
+                        OnboardingName(name: $name, gender: $gender) {
                             savedName = name.trimmingCharacters(in: .whitespaces)
+                            savedGender = gender
                             withAnimation(.spring(duration: 0.4)) { step = 2 }
                         }
                     case 2:
