@@ -75,6 +75,7 @@ class AgentOrchestrator:
         tools_executed: list[str] = []
         module_config_updated = False
         goals_updated = False
+        pending_actions: list[dict[str, Any]] = []
 
         for iteration in range(self._max_iterations):
             log.info(
