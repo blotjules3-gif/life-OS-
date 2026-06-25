@@ -5,11 +5,15 @@ import Charts
 // MARK: - Onglets (chat retiré — input intégré dans la barre)
 
 enum AppTab: String, CaseIterable, Identifiable {
-    case camera, home, categories, profile
+    case wakeup, home, categories, profile
     var id: String { rawValue }
     var label: String {
         switch self {
+<<<<<<< HEAD
         case .camera:     return "Scanner"
+=======
+        case .wakeup:     return "Réveil"
+>>>>>>> origin/pote
         case .home:       return "Accueil"
         case .categories: return "Catégories"
         case .profile:    return "Profil"
@@ -17,7 +21,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     }
     var icon: String {
         switch self {
-        case .camera:     return "camera"
+        case .wakeup:     return "alarm"
         case .home:       return "house"
         case .categories: return "square.grid.2x2"
         case .profile:    return "person.crop.circle"
@@ -25,7 +29,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     }
     var iconFill: String {
         switch self {
-        case .camera:     return "camera.fill"
+        case .wakeup:     return "alarm.fill"
         case .home:       return "house.fill"
         case .categories: return "square.grid.2x2.fill"
         case .profile:    return "person.crop.circle.fill"
@@ -37,6 +41,7 @@ enum AppTab: String, CaseIterable, Identifiable {
 
 struct MainTabView: View {
     @State private var tab: AppTab = .home
+    @State private var catPath: [AppCategory] = []
     @State private var chatInput = ""
     @State private var chatMessages: [ChatMessage] = [
         ChatMessage(fromUser: false, text: "Salut ! Je suis ton assistant LifeOS. Dis-moi « retiens que... » pour que je mémorise quelque chose. Je peux aussi t'aider sur calories, eau, jeûne et habitudes.")
@@ -62,6 +67,9 @@ struct MainTabView: View {
                 onSend: sendChat
             )
         }
+        // La barre est alignée en bas de ce ZStack : c'est ICI qu'il faut ignorer
+        // la safe area pour que le pill colle à 10pt du vrai bord (sinon +34pt d'inset).
+        .ignoresSafeArea(.container, edges: .bottom)
         .sheet(isPresented: $showChat) {
             ChatHistorySheet(messages: chatMessages)
         }
@@ -69,9 +77,22 @@ struct MainTabView: View {
 
     @ViewBuilder private var content: some View {
         switch tab {
+<<<<<<< HEAD
         case .camera:     CameraView()
         case .home:       ShortcutsHomeView()
         case .categories: HoneycombCategoriesView()
+=======
+        case .wakeup:     WakeUpView()
+        case .home:       ShortcutsHomeView()
+        case .categories:
+            NavigationStack(path: $catPath) {
+                BubbleCategoriesView(onSelect: { title in
+                    if let cat = AppCategory(bubbleTitle: title) { catPath.append(cat) }
+                })
+                .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(for: AppCategory.self) { $0.destination }
+            }
+>>>>>>> origin/pote
         case .profile:    ProfileView()
         }
     }
@@ -202,8 +223,12 @@ struct FloatingTabBar: View {
     private static let barBg  = Color.white
     private static let selBg  = Color(white: 0.92)
     private static let fieldBg = Color(white: 0.94)
+<<<<<<< HEAD
+=======
+    private static let barInset: CGFloat = 10   // gauche = droite = bas, identiques
+>>>>>>> origin/pote
 
-    private let leftTabs:  [AppTab] = [.camera, .home]
+    private let leftTabs:  [AppTab] = [.wakeup, .home]
     private let rightTabs: [AppTab] = [.categories, .profile]
 
     var body: some View {
@@ -270,11 +295,24 @@ struct FloatingTabBar: View {
         }
         .frame(height: 60)
         .padding(.horizontal, 10)
+<<<<<<< HEAD
         .background(Self.barBg, in: Capsule())
         .overlay(Capsule().stroke(Color(white: 0.88), lineWidth: 1))
         .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 6)
         .padding(.horizontal, 18)
         .padding(.bottom, 12)
+=======
+        // iOS 26 : coins concentriques avec le coin de l'écran (style Safari)
+        .background(Self.barBg, in: ConcentricRectangle(corners: .concentric, isUniform: true))
+        .overlay(ConcentricRectangle(corners: .concentric, isUniform: true)
+            .stroke(Color(white: 0.88), lineWidth: 1))
+        .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 6)
+        // une seule valeur pilote gauche = droite = bas (= 10pt). L'ignoresSafeArea
+        // est posé sur le ZStack parent (MainTabView) pour que ces 10pt soient mesurés
+        // depuis le vrai bord de l'écran, pas depuis la safe area.
+        .padding(.horizontal, Self.barInset)
+        .padding(.bottom, Self.barInset)
+>>>>>>> origin/pote
         .animation(.spring(duration: 0.32, bounce: 0.2), value: chatMode)
         .onChange(of: inputFocused) { _, focused in
             withAnimation(.spring(duration: 0.32)) { chatMode = focused }

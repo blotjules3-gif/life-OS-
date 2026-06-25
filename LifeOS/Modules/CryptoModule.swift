@@ -19,13 +19,13 @@ struct CryptoMessage: Identifiable {
     let text: String
 }
 
-fileprivate struct PortfolioPosition: Identifiable {
+private struct PortfolioPosition: Identifiable {
     let id: String
     var buyPrice: Double
     var quantity: Double
 }
 
-fileprivate struct PriceAlert: Identifiable {
+struct PriceAlert: Identifiable {
     var id: String { "\(assetId):\(direction):\(threshold)" }
     let assetId: String
     let direction: String   // "above" ou "below"
