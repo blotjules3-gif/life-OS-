@@ -364,9 +364,7 @@ struct WakeUpView: View {
             NotificationManager.shared.scheduleAlarm(hour: wakeupHour, minute: wakeupMinute, userName: userName)
             let timeString = String(format: "%02d:%02d", wakeupHour, wakeupMinute)
             if #available(iOS 16.1, *) {
-                await MainActor.run {
-                    AlarmLiveActivityManager.shared.startScheduled(alarmTimeString: timeString)
-                }
+                await AlarmLiveActivityManager.shared.startScheduled(alarmTimeString: timeString)
             }
         }
     }
