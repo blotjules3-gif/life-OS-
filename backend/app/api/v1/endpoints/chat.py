@@ -92,6 +92,7 @@ async def chat(
             module_config=module_config,
             user_id=user.id,
             user_name=user.name,
+            user_gender=user.gender,
             conversation_id=conversation.id,
             session=session,
         )
