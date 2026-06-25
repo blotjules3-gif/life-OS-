@@ -7,19 +7,15 @@ struct LifeOSApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var alarm = AlarmManager.shared
 
-    // Container optionnel — créé en background pour ne pas bloquer l'UI
     @State private var container: ModelContainer? = nil
-    @State private var loadingStatus = "Démarrage…"
     @AppStorage("onboardingDone") private var onboardingDone = false
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
-    @State private var ready = false
     @State private var showBriefingFromWidget = false
 
     private var recommendedModules: [AppCategory] {
         recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
     }
 
-    // Schéma déclaré statiquement (pas d'init au lancement)
     private static let schema = Schema([
         // Santé
         DreamEntry.self, FoodEntry.self, FastingSession.self, WaterEntry.self,
@@ -41,25 +37,22 @@ struct LifeOSApp: App {
                 if let container {
                     appContent(container: container)
                 } else {
-                    SplashView(status: loadingStatus)
+                    SplashView()
                         .transition(.opacity)
                 }
             }
-            .animation(.easeInOut(duration: 0.35), value: container != nil)
+            .animation(.easeInOut(duration: 0.3), value: container != nil)
             .task { await buildContainer() }
         }
     }
 
-    // MARK: - Contenu principal (affiché une fois le container prêt)
+    // MARK: - Contenu principal
 
     @ViewBuilder
     private func appContent(container: ModelContainer) -> some View {
         ZStack {
             if !onboardingDone {
                 OnboardingView()
-                    .transition(.opacity)
-            } else if !ready {
-                SplashView(status: loadingStatus)
                     .transition(.opacity)
             } else {
                 MainTabView()
@@ -68,21 +61,16 @@ struct LifeOSApp: App {
             }
         }
         .modelContainer(container)
-        .animation(.easeInOut(duration: 0.4), value: onboardingDone)
-        .animation(.easeInOut(duration: 0.4), value: ready)
-        .task(id: onboardingDone) {
-            guard onboardingDone else { return }
-            loadingStatus = "Préparation de ton espace…"
-            try? await Task.sleep(for: .milliseconds(400))
-            withAnimation { ready = true }                  // l'app s'affiche tout de suite
-            try? await Task.sleep(for: .seconds(2))
-            _ = await NotificationManager.shared.requestAuthorization()  // notif NON bloquante, par-dessus l'UI
+        .animation(.easeInOut(duration: 0.35), value: onboardingDone)
+        .onAppear {
+            // Notification auth en arrière-plan — ne bloque rien
+            Task.detached(priority: .background) {
+                _ = await NotificationManager.shared.requestAuthorization()
+            }
         }
-        // Écran réveil iPhone-style — par dessus tout, avec modelContainer injecté
         .fullScreenCover(isPresented: $alarm.showAlarmScreen) {
             AlarmFullScreenView()
         }
-        // Briefing ouvert depuis le widget (deeplink lifeos://briefing)
         .fullScreenCover(isPresented: $showBriefingFromWidget) {
             DailyBriefingView(modules: recommendedModules, speakOnAppear: false)
         }
@@ -90,52 +78,37 @@ struct LifeOSApp: App {
             guard url.scheme == "lifeos", url.host == "briefing" else { return }
             showBriefingFromWidget = true
         }
-        // Briefing quotidien avec voix — accède à @Query via modelContainer
         .fullScreenCover(isPresented: $alarm.showBriefing) {
             DailyBriefingView(modules: recommendedModules, speakOnAppear: true)
         }
     }
 
-    // MARK: - Création container en background (ne bloque pas le thread principal)
+    // MARK: - Création container (thread de fond, Swift concurrency natif)
 
     private func buildContainer() async {
-        loadingStatus = "Initialisation de la base…"
-
-        let built: ModelContainer = await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async {
-                let schema = Self.schema
-                do {
-                    let mc = try ModelContainer(
-                        for: schema,
-                        configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)]
-                    )
-                    continuation.resume(returning: mc)
-                } catch {
-                    // Migration échouée → base en mémoire (mode dégradé)
-                    let mc = try! ModelContainer(
-                        for: schema,
-                        configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
-                    )
-                    continuation.resume(returning: mc)
-                }
+        let schema = Self.schema
+        let built = await Task.detached(priority: .userInitiated) {
+            if let mc = try? ModelContainer(
+                for: schema,
+                configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)]
+            ) {
+                return mc
             }
-        }
+            // Fallback mémoire si la migration échoue
+            return try! ModelContainer(
+                for: schema,
+                configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
+            )
+        }.value
 
-        // Retour sur le thread principal pour mettre à jour l'UI
-        await MainActor.run {
-            loadingStatus = "Chargement…"
-            container = built
-        }
+        container = built
     }
 }
 
 // MARK: - Écran de chargement
 
 struct SplashView: View {
-    var status: String = "Chargement…"
     @State private var pulse = false
-    @State private var dotCount = 0
-    private let timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ZStack {
@@ -145,27 +118,26 @@ struct SplashView: View {
                 Spacer()
 
                 VStack(spacing: 20) {
-                    // Logo animé
                     ZStack {
                         Circle()
                             .fill(Color.accentColor.opacity(0.08))
                             .frame(width: 110, height: 110)
-                            .scaleEffect(pulse ? 1.1 : 1.0)
+                            .scaleEffect(pulse ? 1.08 : 1.0)
                             .animation(
                                 .easeInOut(duration: 1.4).repeatForever(autoreverses: true),
                                 value: pulse
                             )
                         Circle()
-                            .fill(Color.accentColor.opacity(0.14))
+                            .fill(Color.accentColor.opacity(0.12))
                             .frame(width: 88, height: 88)
                         Image(systemName: "sparkles")
-                            .font(.system(size: 38, weight: .semibold))
+                            .font(.system(size: 36, weight: .semibold))
                             .foregroundStyle(Color.accentColor)
                     }
 
-                    VStack(spacing: 6) {
+                    VStack(spacing: 5) {
                         Text("LifeOS")
-                            .font(.system(size: 34, weight: .bold, design: .rounded))
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
                             .foregroundStyle(.primary)
                         Text("Ton système de vie")
                             .font(.system(size: 14, weight: .medium))
@@ -175,21 +147,10 @@ struct SplashView: View {
 
                 Spacer()
 
-                // Barre de progression indéterminée + statut
-                VStack(spacing: 14) {
-                    ProgressView()
-                        .controlSize(.regular)
-                        .tint(Color.accentColor)
-
-                    Text(status + String(repeating: ".", count: dotCount))
-                        .font(.system(size: 13))
-                        .foregroundStyle(.tertiary)
-                        .animation(.none, value: dotCount)
-                        .onReceive(timer) { _ in
-                            dotCount = (dotCount + 1) % 4
-                        }
-                }
-                .padding(.bottom, 60)
+                ProgressView()
+                    .controlSize(.regular)
+                    .tint(Color.accentColor)
+                    .padding(.bottom, 60)
             }
         }
         .onAppear { pulse = true }
