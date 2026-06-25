@@ -829,7 +829,9 @@ struct ProfileView: View {
                     kcalGoal: $kcalGoal, proteinGoal: $proteinGoal,
                     fastTarget: $fastTarget, budgetGoal: $budgetGoal,
                     glassesGoal: $glassesGoal, focusMinGoal: $focusMinGoal,
-                    socialMaxMin: $socialMaxMin
+                    socialMaxMin: $socialMaxMin,
+                    hiddenGoalIDsRaw: $hiddenGoalIDsRaw,
+                    goalEndDatesRaw: $goalEndDatesRaw
                 )
             }
             .sheet(isPresented: $showWakeupDetail) {
