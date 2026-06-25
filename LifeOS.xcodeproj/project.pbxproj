@@ -294,6 +294,7 @@
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "LifeOS utilise ta position pour le suivi running GPS et le partage de localisation.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "LifeOS enregistre ton journal de reves vocal.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "LifeOS importe tes photos pour la garde-robe et le suivi looksmaxx.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
