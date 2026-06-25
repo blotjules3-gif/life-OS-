@@ -766,6 +766,15 @@ struct ProfileView: View {
     ]
     private var todayTip: String { tips[Calendar.current.component(.day, from: .now) % tips.count] }
 
+    private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
+    private var islandBg: some ShapeStyle {
+        LinearGradient(
+            colors: [appTheme.accent.opacity(0.28), Color(hex: 0x0D0D12)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
     // MARK: - Computed helpers
 
     private var dayProgress: Double {
