@@ -70,6 +70,9 @@ struct MainTabView: View {
         .sheet(isPresented: $showChat) {
             ChatHistorySheet(messages: chatMessages)
         }
+        .fullScreenCover(isPresented: $showAIAssistant) {
+            AIAssistantView()
+        }
     }
 
     @ViewBuilder private var content: some View {
