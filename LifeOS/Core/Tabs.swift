@@ -768,6 +768,28 @@ struct ProfileView: View {
     private var todayTip: String { tips[Calendar.current.component(.day, from: .now) % tips.count] }
 
     private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
+
+    private var topModule: AppCategory? {
+        var weights: [String: Int] = [:]
+        for part in bubbleWeightsRaw.split(separator: ",") {
+            let kv = part.split(separator: ":")
+            if kv.count == 2, let v = Int(kv[1]) { weights[String(kv[0])] = v }
+        }
+        guard let topTitle = weights.max(by: { $0.value < $1.value })?.key else { return nil }
+        return AppCategory(bubbleTitle: topTitle)
+    }
+
+    private var hoursRemaining: Int {
+        let cal = Calendar.current
+        let end = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: .now)) ?? .now
+        return max(0, Int(end.timeIntervalSince(.now) / 3600))
+    }
+    private var minutesRemaining: Int {
+        let cal = Calendar.current
+        let end = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: .now)) ?? .now
+        let total = max(0, Int(end.timeIntervalSince(.now) / 60))
+        return total % 60
+    }
     private var islandBg: some ShapeStyle {
         LinearGradient(
             colors: [appTheme.accent.opacity(0.72), Color(hex: 0x1A1A22).opacity(0.88)],
