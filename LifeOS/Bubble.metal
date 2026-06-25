@@ -48,7 +48,7 @@ using namespace metal;
     col = mix(col, base, fres * 0.55);                   // rim more saturated (soap film)
     // VIVIDNESS boost : on écarte la couleur du gris pour des teintes franches
     float lum = dot(col, float3(0.299, 0.587, 0.114));
-    col = clamp(mix(float3(lum), col, 1.28), 0.0, 1.0);
+    col = clamp(mix(float3(lum), col, 1.38), 0.0, 1.0);
 
     // ---------- Glossy white highlights ----------
     float2 drift = float2(sin(time * 0.5 + seed) * 0.012, cos(time * 0.4 + seed) * 0.012);
