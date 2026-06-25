@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 /// Outils directs qu'on peut épingler en raccourci sur l'accueil.
 enum ShortcutTool: String, CaseIterable, Identifiable {
@@ -89,105 +90,52 @@ enum ShortcutTool: String, CaseIterable, Identifiable {
 }
 
 struct ShortcutsHomeView: View {
-    @AppStorage("homeShortcuts") private var enabledRaw = "tabata,calories,scan,todo,fasting,water,habits,mood"
-    @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
+    @AppStorage("homeShortcuts") private var enabledRaw = "tabata,calories,scan,todo"
     @AppStorage("userName") private var userName = ""
+    @AppStorage("stepGoal") private var stepGoal = 10000
+    @AppStorage("waterGoal") private var waterGoal = 2500
+    @AppStorage("kcalGoal") private var kcalGoal = 2200
+    @AppStorage("fastTarget") private var fastTarget = 16
+
+    @Query private var foods: [FoodEntry]
+    @Query private var waters: [WaterEntry]
+    @Query private var fasts: [FastingSession]
+    @Query private var habits: [Habit]
+    @Query(sort: \MoodEntry.date, order: .reverse) private var moods: [MoodEntry]
+    @Environment(\.modelContext) private var ctx
+
     @State private var editing = false
     @State private var showCatalog = false
     @State private var path: [ShortcutTool] = []
     @State private var fullScreenTool: ShortcutTool?
+    @State private var steps = 0
+    @State private var editingMood = false
 
     private let cols = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
+    private let maxShortcuts = 4
 
     private var enabled: [ShortcutTool] {
-        enabledRaw.split(separator: ",").compactMap { ShortcutTool(rawValue: String($0)) }
+        Array(enabledRaw.split(separator: ",").compactMap { ShortcutTool(rawValue: String($0)) }.prefix(maxShortcuts))
     }
 
-    // Si l'onboarding n'a pas encore été fait → modules par défaut universels
-    private static let defaultModules: [AppCategory] = [.fitness, .nutrition, .sleep, .productivity, .mind, .finance]
-
-    private var recommendedModules: [AppCategory] {
-        let parsed = recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
-        return parsed.isEmpty ? Self.defaultModules : parsed
-    }
+    // MARK: données du jour
+    private var kcalToday: Int { foods.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.calories } }
+    private var waterToday: Int { waters.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML } }
+    private var habitsDone: Int { habits.filter { h in h.completions.contains { Calendar.current.isDateInToday($0.date) } }.count }
+    private var fastHours: Double { fasts.first(where: { $0.isActive }).map { $0.elapsed / 3600 } ?? 0 }
+    private var todayMood: MoodEntry? { moods.first { Calendar.current.isDateInToday($0.date) } }
 
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 22) {
                     Text(userName.isEmpty ? greeting : "\(greeting), \(userName)")
                         .font(.largeTitle.bold())
                         .padding(.horizontal, 4)
 
-                    // Section "Pour toi" — modules recommandés (onboarding ou défaut)
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("Pour toi")
-                                .font(.title3.bold())
-                            Spacer()
-                            if !recommendedModulesRaw.isEmpty {
-                                Text("Basé sur tes objectifs")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .padding(.horizontal, 4)
-
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(recommendedModules) { cat in
-                                    NavigationLink(destination: cat.destination) {
-                                        HStack(spacing: 12) {
-                                            Image(systemName: cat.icon)
-                                                .font(.system(size: 20, weight: .semibold))
-                                                .foregroundStyle(.white)
-                                                .frame(width: 44, height: 44)
-                                                .background(cat.tint, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                            VStack(alignment: .leading, spacing: 2) {
-                                                Text(cat.title)
-                                                    .font(.system(size: 14, weight: .semibold))
-                                                    .foregroundStyle(.primary)
-                                                    .lineLimit(1)
-                                                Text(cat.subtitle)
-                                                    .font(.system(size: 11))
-                                                    .foregroundStyle(.secondary)
-                                                    .lineLimit(1)
-                                            }
-                                        }
-                                        .padding(.horizontal, 14)
-                                        .padding(.vertical, 12)
-                                        .frame(width: 220, alignment: .leading)
-                                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                                .stroke(cat.tint.opacity(0.2), lineWidth: 1)
-                                        )
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 2)
-                        }
-                    }
-
-                    // Raccourcis
-                    LazyVGrid(columns: cols, spacing: 14) {
-                        ForEach(enabled) { tool in
-                            tile(tool)
-                        }
-                        if editing {
-                            Button { showCatalog = true } label: {
-                                VStack(spacing: 10) {
-                                    Image(systemName: "plus").font(.title2.bold())
-                                    Text("Ajouter").font(.subheadline.weight(.medium))
-                                }
-                                .foregroundStyle(.secondary)
-                                .frame(maxWidth: .infinity).padding(.vertical, 26)
-                                .background(RoundedRectangle(cornerRadius: Theme.radius).stroke(style: StrokeStyle(lineWidth: 1.5, dash: [6])).foregroundStyle(.secondary.opacity(0.5)))
-                            }.buttonStyle(.plain)
-                        }
-                    }
+                    shortcutsSection
+                    goalsSection
+                    moodSection
                 }
                 .padding(Theme.pad)
             }
@@ -202,7 +150,135 @@ struct ShortcutsHomeView: View {
             .navigationDestination(for: ShortcutTool.self) { $0.destination }
             .fullScreenCover(item: $fullScreenTool) { $0.destination }
             .sheet(isPresented: $showCatalog) { catalog }
+            .task {
+                if await HealthService.shared.requestAuthorization() {
+                    steps = await HealthService.shared.stepsToday()
+                }
+            }
         }
+    }
+
+    // MARK: Section 1 — Raccourcis (4 max)
+    private var shortcutsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("Raccourcis", trailing: enabled.count < maxShortcuts && editing ? "Ajouter" : nil) {
+                showCatalog = true
+            }
+            LazyVGrid(columns: cols, spacing: 14) {
+                ForEach(enabled) { tool in tile(tool) }
+                if editing && enabled.count < maxShortcuts {
+                    Button { showCatalog = true } label: {
+                        VStack(spacing: 10) {
+                            Image(systemName: "plus").font(.title2.bold())
+                            Text("Ajouter").font(.subheadline.weight(.medium))
+                        }
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity).padding(.vertical, 26)
+                        .background(RoundedRectangle(cornerRadius: Theme.radius).stroke(style: StrokeStyle(lineWidth: 1.5, dash: [6])).foregroundStyle(.secondary.opacity(0.5)))
+                    }.buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    // MARK: Section 2 — Objectifs du jour (anneaux + 3 objectifs)
+    private var goalsSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            sectionHeader("Objectifs du jour")
+            LazyVGrid(columns: cols, spacing: 12) {
+                MetricRing(value: Double(steps), goal: Double(stepGoal), label: "Pas", unit: "", color: Color(hex: 0xF1746C), icon: "figure.walk")
+                MetricRing(value: Double(waterToday), goal: Double(waterGoal), label: "Eau", unit: "ml", color: Color(hex: 0x3CB2E0), icon: "drop.fill")
+                MetricRing(value: Double(kcalToday), goal: Double(kcalGoal), label: "Calories", unit: "kcal", color: Color(hex: 0x4CC38A), icon: "flame.fill")
+                MetricRing(value: fastHours, goal: Double(fastTarget), label: "Jeûne", unit: "h", color: Color(hex: 0x9B6CF1), icon: "timer")
+            }
+            VStack(spacing: 12) {
+                ForEach(objectives, id: \.title) { o in objectiveRow(o) }
+            }
+            .padding(16)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        }
+    }
+
+    private struct Objective { let icon: String; let title: String; let sub: String; let color: Color; let progress: Double; let done: Bool }
+    private var objectives: [Objective] {
+        let sp = min(1.0, Double(steps) / Double(max(1, stepGoal)))
+        let wp = min(1.0, Double(waterToday) / Double(max(1, waterGoal)))
+        let hp = habits.isEmpty ? 0 : min(1.0, Double(habitsDone) / Double(habits.count))
+        return [
+            Objective(icon: "figure.walk", title: "Bouger", sub: "\(steps) / \(stepGoal) pas", color: Color(hex: 0xF1746C), progress: sp, done: sp >= 1),
+            Objective(icon: "drop.fill", title: "S'hydrater", sub: "\(waterToday) / \(waterGoal) ml", color: Color(hex: 0x3CB2E0), progress: wp, done: wp >= 1),
+            Objective(icon: "checklist", title: "Habitudes", sub: habits.isEmpty ? "Aucune habitude" : "\(habitsDone) / \(habits.count) faites", color: Color(hex: 0x9B6CF1), progress: hp, done: hp >= 1 && !habits.isEmpty)
+        ]
+    }
+
+    private func objectiveRow(_ o: Objective) -> some View {
+        HStack(spacing: 13) {
+            Image(systemName: o.icon).font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
+                .frame(width: 34, height: 34)
+                .background(o.color.gradient, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(o.title).font(.system(size: 15, weight: .semibold)).foregroundStyle(.primary)
+                    Spacer()
+                    Text(o.sub).font(.caption).foregroundStyle(.secondary)
+                }
+                ProgressView(value: o.progress).tint(o.color).scaleEffect(x: 1, y: 1.1, anchor: .center)
+            }
+            Image(systemName: o.done ? "checkmark.circle.fill" : "circle")
+                .font(.system(size: 18)).foregroundStyle(o.done ? AnyShapeStyle(o.color) : AnyShapeStyle(Color.secondary.opacity(0.4)))
+        }
+    }
+
+    // MARK: Section 3 — Humeur du jour (check-in)
+    private var moodSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("Comment tu te sens ?")
+            if let m = todayMood, !editingMood {
+                HStack(spacing: 14) {
+                    Text(moodEmoji(m.score)).font(.system(size: 36))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Humeur enregistrée").font(.subheadline.weight(.semibold))
+                        Text("Bonne journée à toi ✨").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("Modifier") { withAnimation { editingMood = true } }
+                        .font(.subheadline).foregroundStyle(.secondary)
+                }
+                .padding(16)
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+            } else {
+                HStack(spacing: 8) {
+                    ForEach(1...5, id: \.self) { s in
+                        Button { logMood(s) } label: {
+                            Text(moodEmoji(s)).font(.system(size: 30))
+                                .frame(maxWidth: .infinity).padding(.vertical, 12)
+                                .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        }.buttonStyle(.plain)
+                    }
+                }
+                .padding(16)
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+            }
+        }
+    }
+
+    private func moodEmoji(_ s: Int) -> String { ["😞", "😕", "😐", "🙂", "😄"][max(0, min(4, s - 1))] }
+    private func logMood(_ s: Int) {
+        if let m = todayMood { m.score = s } else { ctx.insert(MoodEntry(score: s)) }
+        try? ctx.save()
+        Haptics.soft()
+        withAnimation { editingMood = false }
+    }
+
+    private func sectionHeader(_ title: String, trailing: String? = nil, action: @escaping () -> Void = {}) -> some View {
+        HStack {
+            Text(title).font(.title3.bold())
+            Spacer()
+            if let trailing {
+                Button(trailing, action: action).font(.subheadline).foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 4)
     }
 
     private func tile(_ tool: ShortcutTool) -> some View {
@@ -261,7 +337,7 @@ struct ShortcutsHomeView: View {
     }
 
     private func add(_ tool: ShortcutTool) {
-        guard !enabled.contains(tool) else { return }
+        guard !enabled.contains(tool), enabled.count < maxShortcuts else { return }
         enabledRaw = (enabled + [tool]).map { $0.rawValue }.joined(separator: ",")
     }
     private func remove(_ tool: ShortcutTool) {
