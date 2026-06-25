@@ -145,3 +145,13 @@ static float fbm(float2 p) {
 
     return half4(half3(col) * half(alpha), half(alpha));
 }
+
+// ============ Dérive liquide (distortionEffect SwiftUI) ============
+// Déplacement sinusoïdal MINUSCULE de la surface (< ~1.5 pt) pour donner une
+// impression de métal liquide vivant — surtout pas de "jelly".
+[[stitchable]] float2 liquidDrift(float2 pos, float time, float amp, float seed) {
+    float2 d;
+    d.x = amp * sin(pos.y * 0.022 + time * 0.55 + seed);
+    d.y = amp * sin(pos.x * 0.019 + time * 0.47 + seed * 1.7);
+    return pos + d;
+}
