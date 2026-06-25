@@ -25,12 +25,21 @@ class MessageOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ChatAction(BaseModel):
+    type: str  # "create_todo" | "open_module" | "schedule_reminder" | "update_config"
+    title: str | None = None
+    module: str | None = None
+    priority: int | None = None
+    reminder_body: str | None = None
+
+
 class ChatResponse(BaseModel):
     conversation_id: uuid.UUID
     reply: str
     tool_calls_executed: list[str] = Field(default_factory=list)
     module_config_updated: bool = False
     goals_updated: bool = False
+    actions: list[ChatAction] = Field(default_factory=list)
 
 
 class ConversationOut(BaseModel):
