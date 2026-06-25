@@ -298,7 +298,16 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
     // MARK: - AVSpeechSynthesizerDelegate
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        Task { @MainActor in self.isSpeaking = false }
+        Task { @MainActor in
+            self.isSpeaking = false
+            // Voice done on lock screen — invite user to unlock for full briefing
+            if #available(iOS 16.1, *), self.ringingActive {
+                AlarmLiveActivityManager.shared.update(
+                    phase: .waitingUnlock,
+                    message: "Déverouille ton téléphone pour le briefing visuel complet."
+                )
+            }
+        }
     }
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
