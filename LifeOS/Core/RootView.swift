@@ -3,7 +3,7 @@ import SwiftUI
 /// Onglet Catégories — liste groupée sobre des 15 pôles, organisée en rubriques (façon Réglages).
 struct CategoriesView: View {
     private let sections: [(String, [AppCategory])] = [
-        ("Santé & corps", [.sleep, .nutrition, .fitness, .looks]),
+        ("Santé & corps", [.sleep, .nutrition, .fitness, .looks, .cycle]),
         ("Esprit & focus", [.mind, .productivity, .learning]),
         ("Argent", [.finance, .invest, .career]),
         ("Quotidien", [.home, .mobility, .social, .admin, .travel])
