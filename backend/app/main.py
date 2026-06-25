@@ -49,6 +49,9 @@ def _register_all_tools() -> None:
     registry.register("create_goal", handle_create_goal)
     registry.register("delete_goal", handle_delete_goal)
     registry.register("ask_clarification", handle_ask_clarification)
+    registry.register("create_todo", handle_create_todo)
+    registry.register("schedule_followup", handle_schedule_followup)
+    registry.register("get_user_context", handle_get_user_context)
 
     registry.register("log_workout", handle_log_workout)
     registry.register("analyze_sport_progress", handle_analyze_sport_progress)
