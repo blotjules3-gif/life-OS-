@@ -276,18 +276,6 @@ struct FloatingTabBar: View {
         .padding(.horizontal, Self.barInset)
         .padding(.bottom, Self.barInset)
         .animation(.spring(duration: 0.32, bounce: 0.2), value: chatMode)
-        .onChange(of: inputFocused) { _, focused in
-            withAnimation(.spring(duration: 0.32)) { chatMode = focused }
-        }
-        .gesture(
-            DragGesture(minimumDistance: 30)
-                .onEnded { v in
-                    if v.translation.height > 30 {
-                        withAnimation(.spring(duration: 0.32)) { chatMode = false }
-                        inputFocused = false
-                    }
-                }
-        )
     }
 
     private func tabBtn(_ t: AppTab) -> some View {
