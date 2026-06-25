@@ -145,14 +145,32 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
     private func scheduleWakeUpVoice() {
         voiceWorkItem?.cancel()
         let item = DispatchWorkItem { [weak self] in
-            Task { @MainActor [weak self] in self?.speakWakeUpMessage() }
+            Task { @MainActor [weak self] in self?.attemptWakeUpVoice() }
         }
         voiceWorkItem = item
         DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: item)
     }
 
+    private func attemptWakeUpVoice() {
+        guard ringingActive else { return }
+
+        if UIApplication.shared.applicationState == .active {
+            // Phone is unlocked and app is visible — play immediately
+            speakWakeUpMessage()
+        } else {
+            // Phone is locked — defer voice to unlock, show hint on Lock Screen
+            pendingVoiceOnUnlock = true
+            if #available(iOS 16.1, *) {
+                AlarmLiveActivityManager.shared.update(
+                    phase: .waitingUnlock,
+                    message: "Déverrouillez votre téléphone pour démarrer votre journée"
+                )
+            }
+        }
+    }
+
     private func speakWakeUpMessage() {
-        guard ringingActive else { return } // alarm was silenced before 2s
+        guard ringingActive else { return } // alarm was silenced before TTS
 
         // Allow TTS to mix with the beep cycle
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
