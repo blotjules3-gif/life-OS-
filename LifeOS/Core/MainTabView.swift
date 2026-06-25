@@ -73,11 +73,6 @@ struct MainTabView: View {
 
     @ViewBuilder private var content: some View {
         switch tab {
-<<<<<<< HEAD
-        case .camera:     CameraView()
-        case .home:       ShortcutsHomeView()
-        case .categories: HoneycombCategoriesView()
-=======
         case .wakeup:     WakeUpView()
         case .home:       ShortcutsHomeView()
         case .categories:
@@ -88,7 +83,6 @@ struct MainTabView: View {
                 .toolbar(.hidden, for: .navigationBar)
                 .navigationDestination(for: AppCategory.self) { $0.destination }
             }
->>>>>>> origin/pote
         case .profile:    ProfileView()
         }
     }
