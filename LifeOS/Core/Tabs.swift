@@ -873,9 +873,13 @@ struct ProfileView: View {
                 }
             }
             .sheet(isPresented: $showGoalEditor) {
-                GoalEditorSheet(stepGoal: $stepGoal, waterGoal: $waterGoal,
-                                kcalGoal: $kcalGoal, proteinGoal: $proteinGoal,
-                                fastTarget: $fastTarget)
+                GoalEditorSheet(
+                    stepGoal: $stepGoal, waterGoal: $waterGoal,
+                    kcalGoal: $kcalGoal, proteinGoal: $proteinGoal,
+                    fastTarget: $fastTarget, budgetGoal: $budgetGoal,
+                    glassesGoal: $glassesGoal, focusMinGoal: $focusMinGoal,
+                    socialMaxMin: $socialMaxMin
+                )
             }
             .sheet(isPresented: $showWakeupDetail) {
                 WakeUpPersonalizationSheet(
