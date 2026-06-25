@@ -18,6 +18,7 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
 
     private var ringingActive = false
     private var autoStopWorkItem: DispatchWorkItem?
+    private var voiceWorkItem: DispatchWorkItem?
     private var countdownTimer: Timer?
     private let synthesizer = AVSpeechSynthesizer()
 
