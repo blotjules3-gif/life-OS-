@@ -247,9 +247,21 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         default: greeting = "Bonsoir"
         }
 
+        let sleepQuality = UserDefaults.standard.integer(forKey: "lastSleepQuality")
+        let sleepHours = UserDefaults.standard.integer(forKey: "lastSleepHours")
+        let sleepLine: String
+        switch sleepQuality {
+        case 5: sleepLine = "Tu as excellemment dormi\(sleepHours > 0 ? " — \(sleepHours) heures" : ""). Profites-en."
+        case 4: sleepLine = "Bonne nuit derrière toi. Tu es en forme."
+        case 3: sleepLine = "Nuit correcte. On y va."
+        case 2: sleepLine = "Tu n'as pas très bien dormi — reste à l'écoute de ton énergie."
+        case 1: sleepLine = "Nuit difficile. Sois indulgent avec toi-même aujourd'hui."
+        default: sleepLine = "Il est \(timeSpoken()) et voici ton plan."
+        }
+
         var parts: [String] = [
             "\(greeting)\(userName.isEmpty ? "" : ", \(userName)") !",
-            "Il est \(timeSpoken()) et voici ton plan pour aujourd'hui."
+            sleepLine
         ]
 
         for mod in modules.prefix(5) {
