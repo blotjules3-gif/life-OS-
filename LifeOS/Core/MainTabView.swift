@@ -500,6 +500,6 @@ struct ConcentricRectangle: Shape {
     private static let radius: CGFloat = 34
 
     func path(in rect: CGRect) -> Path {
-        Path(RoundedRectangle(cornerRadius: Self.radius, style: .continuous).path(in: rect))
+        RoundedRectangle(cornerRadius: Self.radius, style: .continuous).path(in: rect)
     }
 }
