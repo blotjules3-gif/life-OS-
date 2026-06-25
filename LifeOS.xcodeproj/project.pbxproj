@@ -51,6 +51,13 @@
 			);
 			target = 992A118A2FECC22700B312FE /* LifeOSWidgetsExtension */;
 		};
+		AA00000000000000000A00EX /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = AA00000000000000000A0003 /* LifeOS */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
