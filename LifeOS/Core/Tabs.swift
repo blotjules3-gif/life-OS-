@@ -955,64 +955,104 @@ struct ProfileView: View {
         .overlay(Capsule().stroke(color.opacity(progress > 0.95 ? 0.4 : 0.12), lineWidth: 1))
     }
 
-    // MARK: - Score Island
+    // MARK: - Top Module Island
 
-    private var scoreIsland: some View {
-        HStack(spacing: 0) {
-            // Score ring — left
+    private var topModuleIsland: some View {
+        let mod = topModule
+        let color: Color = mod?.tint ?? appTheme.accent
+        let timeStr = hoursRemaining > 0
+            ? "\(hoursRemaining)h\(minutesRemaining > 0 ? String(format: "%02d", minutesRemaining) : "") restantes"
+            : "Fin de journée"
+
+        return HStack(spacing: 0) {
+            // Icône module
             ZStack {
                 Circle()
-                    .stroke(Color.white.opacity(0.1), lineWidth: 10)
-                    .frame(width: 100, height: 100)
-                Circle()
-                    .trim(from: 0, to: appeared ? Double(lifeScore) / 100 : 0)
-                    .stroke(scoreColor, style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .frame(width: 100, height: 100)
-                    .animation(.spring(duration: 1.4).delay(0.3), value: appeared)
-                VStack(spacing: 0) {
-                    Text("\(lifeScore)")
-                        .font(.system(size: 32, weight: .black, design: .rounded).monospacedDigit())
-                        .foregroundStyle(.white)
-                    Text("SCORE")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.5))
-                        .kerning(1.2)
-                }
+                    .fill(color.opacity(0.18))
+                    .frame(width: 72, height: 72)
+                Image(systemName: mod?.icon ?? "star.fill")
+                    .font(.system(size: 30, weight: .semibold))
+                    .foregroundStyle(color)
             }
             .padding(.leading, 20)
 
-            // Metrics — right
-            VStack(alignment: .leading, spacing: 0) {
-                scoreMetric(label: "Calories", value: "\(kcalToday)/\(kcalGoal)", color: Color(hex: 0xF1746C))
-                Divider().background(Color.white.opacity(0.1)).padding(.vertical, 8)
-                scoreMetric(label: "Eau", value: "\(waterToday)/\(waterGoal) ml", color: Color(hex: 0x3CB2E0))
-                Divider().background(Color.white.opacity(0.1)).padding(.vertical, 8)
-                scoreMetric(label: "Activité", value: "\(steps) pas", color: Color(hex: 0x4CC38A))
+            VStack(alignment: .leading, spacing: 6) {
+                // Label
+                Text(mod == nil ? "MODULE FAVORI" : "TON MODULE #1")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .kerning(1.2)
+
+                // Nom du module
+                Text(mod?.title ?? "Ouvre un module")
+                    .font(.system(size: 19, weight: .black, design: .rounded))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+
+                // Phrase contextuelle
+                Text(moduleContextLine(mod))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.leading, 24)
-            .padding(.trailing, 20)
+            .padding(.leading, 16)
+            .padding(.trailing, 12)
 
             Spacer()
+
+            // Temps restant
+            VStack(alignment: .trailing, spacing: 4) {
+                ZStack {
+                    Circle()
+                        .stroke(Color.white.opacity(0.12), lineWidth: 4)
+                        .frame(width: 52, height: 52)
+                    Circle()
+                        .trim(from: 0, to: appeared ? 1 - dayProgress : 0)
+                        .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                        .frame(width: 52, height: 52)
+                        .animation(.spring(duration: 1.4).delay(0.3), value: appeared)
+                    Text("\(hoursRemaining)h")
+                        .font(.system(size: 11, weight: .bold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(.white)
+                }
+                Text(timeStr)
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .multilineTextAlignment(.trailing)
+            }
+            .padding(.trailing, 20)
         }
-        .padding(.vertical, 22)
+        .padding(.vertical, 20)
         .frame(maxWidth: .infinity)
         .background(islandBg, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(appTheme.accent.opacity(0.22), lineWidth: 1)
+                .stroke(color.opacity(0.3), lineWidth: 1)
         )
     }
 
-    private func scoreMetric(label: String, value: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label.uppercased())
-                .font(.system(size: 8, weight: .bold))
-                .foregroundStyle(color.opacity(0.7))
-                .kerning(0.8)
-            Text(value)
-                .font(.system(size: 13, weight: .bold, design: .rounded).monospacedDigit())
-                .foregroundStyle(.white)
+    private func moduleContextLine(_ mod: AppCategory?) -> String {
+        guard let mod else { return "Navigue pour personnaliser ton expérience." }
+        switch mod {
+        case .sleep:        return "Ton sommeil façonne ta journée. Évalue ta nuit."
+        case .nutrition:    return "\(kcalToday) kcal · \(waterToday) ml · tu avances bien."
+        case .fitness:      return "\(steps) pas aujourd'hui · continue sur ta lancée."
+        case .looks:        return "Ta routine beauté, c'est un investissement quotidien."
+        case .mind:         return "Quelques minutes de calme font toute la différence."
+        case .productivity: return "\(habitsDone)/\(habits.count) habitudes complétées aujourd'hui."
+        case .finance:      return "Garde un œil sur ton budget — chaque euro compte."
+        case .invest:       return "Les marchés n'attendent pas — consulte ton portef."
+        case .career:       return "Une action pour ta carrière aujourd'hui suffit."
+        case .learning:     return "La régularité bat l'intensité. Avance un peu."
+        case .home:         return "Maison organisée, esprit libéré."
+        case .mobility:     return "Optimise tes trajets et gagne du temps."
+        case .social:       return "Prends des nouvelles de quelqu'un aujourd'hui."
+        case .admin:        return "Une démarche réglée = une charge mentale en moins."
+        case .travel:       return "Prépare bien pour profiter encore mieux."
+        case .cycle:        return "Écoute ton corps — chaque phase a ses besoins."
         }
     }
 
