@@ -33,6 +33,7 @@ def _register_all_tools() -> None:
         handle_list_goals,
         handle_schedule_followup,
         handle_update_module_config,
+        handle_update_user_profile,
     )
     from app.modules.finance.tools import (
         handle_analyze_cashflow,
