@@ -97,6 +97,7 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
     func stopRinging() {
         ringingActive = false   // interrompt la boucle de bips (completion guard)
         isRinging = false
+        pendingVoiceOnUnlock = false
         countdownTimer?.invalidate()
         countdownTimer = nil
         autoStopWorkItem?.cancel()
