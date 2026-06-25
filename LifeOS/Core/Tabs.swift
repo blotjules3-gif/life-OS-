@@ -1844,29 +1844,106 @@ struct GoalEditorSheet: View {
     @Binding var kcalGoal: Int
     @Binding var proteinGoal: Int
     @Binding var fastTarget: Int
+    @Binding var budgetGoal: Int
+    @Binding var glassesGoal: Int
+    @Binding var focusMinGoal: Int
+    @Binding var socialMaxMin: Int
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Activité") {
-                    Stepper("Pas : \(stepGoal)", value: $stepGoal, in: 2000...30000, step: 500)
-                }
-                Section("Nutrition") {
-                    Stepper("Eau : \(waterGoal) ml", value: $waterGoal, in: 500...5000, step: 250)
-                    Stepper("Calories : \(kcalGoal) kcal", value: $kcalGoal, in: 1000...5000, step: 50)
-                    Stepper("Protéines : \(proteinGoal) g", value: $proteinGoal, in: 30...300, step: 5)
-                    Stepper("Jeûne : \(fastTarget) h", value: $fastTarget, in: 12...24, step: 1)
-                }
+            List {
+                // MARK: Activité
+                Section {
+                    goalRow(icon: "figure.run", color: Color(hex: 0xF1746C),
+                            label: "Pas quotidiens", value: "\(stepGoal) pas") {
+                        Stepper("", value: $stepGoal, in: 2000...30000, step: 500).labelsHidden()
+                    }
+                } header: { sectionHeader("Activité") }
+
+                // MARK: Nutrition
+                Section {
+                    goalRow(icon: "drop.fill", color: Color(hex: 0x3CB2E0),
+                            label: "Verres d'eau", value: "\(glassesGoal) verres / jour") {
+                        Stepper("", value: $glassesGoal, in: 1...20, step: 1).labelsHidden()
+                    }
+                    goalRow(icon: "drop.fill", color: Color(hex: 0x3CB2E0).opacity(0.6),
+                            label: "Volume eau", value: "\(waterGoal) ml") {
+                        Stepper("", value: $waterGoal, in: 500...5000, step: 250).labelsHidden()
+                    }
+                    goalRow(icon: "flame.fill", color: Color(hex: 0x4CC38A),
+                            label: "Calories", value: "\(kcalGoal) kcal") {
+                        Stepper("", value: $kcalGoal, in: 1000...5000, step: 50).labelsHidden()
+                    }
+                    goalRow(icon: "fork.knife", color: Color(hex: 0xE0A23C),
+                            label: "Protéines", value: "\(proteinGoal) g") {
+                        Stepper("", value: $proteinGoal, in: 30...300, step: 5).labelsHidden()
+                    }
+                    goalRow(icon: "clock", color: Color(hex: 0x9B6CF1),
+                            label: "Jeûne intermittent", value: "\(fastTarget) h") {
+                        Stepper("", value: $fastTarget, in: 12...24, step: 1).labelsHidden()
+                    }
+                } header: { sectionHeader("Nutrition") }
+
+                // MARK: Focus & Mental
+                Section {
+                    goalRow(icon: "brain.head.profile", color: Color(hex: 0x9B6CF1),
+                            label: "Temps de focus", value: "\(focusMinGoal) min / jour") {
+                        Stepper("", value: $focusMinGoal, in: 15...480, step: 15).labelsHidden()
+                    }
+                    goalRow(icon: "iphone.slash", color: Color(hex: 0xF1746C),
+                            label: "Réseaux sociaux max", value: "\(socialMaxMin) min / jour") {
+                        Stepper("", value: $socialMaxMin, in: 5...300, step: 5).labelsHidden()
+                    }
+                } header: { sectionHeader("Focus & Mental") }
+
+                // MARK: Finances
+                Section {
+                    goalRow(icon: "creditcard.fill", color: Color(hex: 0x4CC38A),
+                            label: "Budget mensuel", value: "\(budgetGoal) €") {
+                        Stepper("", value: $budgetGoal, in: 100...20000, step: 50).labelsHidden()
+                    }
+                } header: { sectionHeader("Finances") }
             }
+            .listStyle(.insetGrouped)
             .navigationTitle("Mes objectifs")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Valider") { dismiss() }
+                        .fontWeight(.semibold)
                 }
             }
         }
+    }
+
+    private func sectionHeader(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(.secondary)
+            .textCase(nil)
+    }
+
+    private func goalRow<S: View>(icon: String, color: Color, label: String, value: String,
+                                   @ViewBuilder stepper: () -> S) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(color)
+                .frame(width: 28, height: 28)
+                .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            VStack(alignment: .leading, spacing: 1) {
+                Text(label)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.primary)
+                Text(value)
+                    .font(.system(size: 12, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(color)
+            }
+            Spacer()
+            stepper()
+        }
+        .padding(.vertical, 2)
     }
 }
 
