@@ -26,9 +26,12 @@ def _register_all_tools() -> None:
     from app.core.tools.meta_tools import (
         handle_ask_clarification,
         handle_create_goal,
+        handle_create_todo,
         handle_delete_goal,
         handle_get_module_config,
+        handle_get_user_context,
         handle_list_goals,
+        handle_schedule_followup,
         handle_update_module_config,
     )
     from app.modules.finance.tools import (
