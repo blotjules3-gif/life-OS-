@@ -10,10 +10,34 @@ final class NotificationManager {
     func requestAuthorization() async -> Bool {
         do {
             return try await UNUserNotificationCenter.current()
-                .requestAuthorization(options: [.alert, .sound, .badge])
+                .requestAuthorization(options: [.alert, .sound, .badge, .criticalAlert])
         } catch {
-            return false
+            // Retry without criticalAlert (requires Apple entitlement)
+            return (try? await UNUserNotificationCenter.current()
+                .requestAuthorization(options: [.alert, .sound, .badge])) ?? false
         }
+    }
+
+    /// Alarme réveil — time-sensitive, perce le mode Ne pas déranger, déclenche l'app au tap.
+    func scheduleAlarm(hour: Int, minute: Int, userName: String) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["lifeos.wakeup"])
+
+        let content = UNMutableNotificationContent()
+        content.title = "Réveil LifeOS"
+        content.body = userName.isEmpty
+            ? "C'est l'heure. Lance ta journée."
+            : "Bonjour \(userName) ! C'est l'heure."
+        content.sound = .defaultCritical    // sonne même en silencieux si l'entitlement est accordé,
+                                            // sinon fallback sur le son système fort
+        content.interruptionLevel = .timeSensitive  // perce Focus / Ne pas déranger
+        content.categoryIdentifier = "LIFEOS_ALARM"
+
+        var comps = DateComponents()
+        comps.hour = hour
+        comps.minute = minute
+        let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
+        let request = UNNotificationRequest(identifier: "lifeos.wakeup", content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request)
     }
 
     /// Notification ponctuelle à une date précise.
