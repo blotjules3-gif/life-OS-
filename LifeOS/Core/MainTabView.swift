@@ -213,10 +213,7 @@ struct FloatingTabBar: View {
     private static let barBg  = Color.white
     private static let selBg  = Color(white: 0.92)
     private static let fieldBg = Color(white: 0.94)
-<<<<<<< HEAD
-=======
     private static let barInset: CGFloat = 10   // gauche = droite = bas, identiques
->>>>>>> origin/pote
 
     private let leftTabs:  [AppTab] = [.wakeup, .home]
     private let rightTabs: [AppTab] = [.categories, .profile]
