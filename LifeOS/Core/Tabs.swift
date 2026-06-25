@@ -670,6 +670,7 @@ private struct ProfileTaskItem: Identifiable {
 }
 
 struct ProfileView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("userName") private var name = ""
     @AppStorage("stepGoal") private var stepGoal = 10000
     @AppStorage("waterGoal") private var waterGoal = 2500
