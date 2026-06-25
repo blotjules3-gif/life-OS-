@@ -9,6 +9,21 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+
+        // Catégorie alarme — action "Ouvrir" pour amener l'app en foreground immédiatement
+        let openAction = UNNotificationAction(
+            identifier: "OPEN_ALARM",
+            title: "Ouvrir LifeOS",
+            options: [.foreground]
+        )
+        let alarmCategory = UNNotificationCategory(
+            identifier: "LIFEOS_ALARM",
+            actions: [openAction],
+            intentIdentifiers: [],
+            options: [.customDismissAction]
+        )
+        UNUserNotificationCenter.current().setNotificationCategories([alarmCategory])
+
         return true
     }
 }
