@@ -85,6 +85,7 @@ struct BubbleHomeView: View {
         case .social: return "Social"
         case .admin: return "Admin"
         case .travel: return "Voyage"
+        case .cycle: return "Cycle"
         }
     }
 
