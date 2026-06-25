@@ -189,7 +189,21 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         default: greeting = "Bonsoir"
         }
 
+        // Personnalisation selon la qualité de sommeil enregistrée hier soir / au réveil
+        let sleepQuality = UserDefaults.standard.integer(forKey: "lastSleepQuality")
+        let sleepHours = UserDefaults.standard.integer(forKey: "lastSleepHours")
+        let sleepIntro: String
+        switch sleepQuality {
+        case 5: sleepIntro = "Excellente nuit ! \(sleepHours > 0 ? "\(sleepHours) heures de sommeil, " : "")tu es au top ce matin."
+        case 4: sleepIntro = "Bonne nuit. Tu es bien reposé."
+        case 3: sleepIntro = sleepHours > 0 ? "Nuit correcte avec \(sleepHours) heures de sommeil." : "Nuit correcte."
+        case 2: sleepIntro = "Tu n'as pas bien dormi — prends soin de toi aujourd'hui."
+        case 1: sleepIntro = "Nuit difficile. Hydrate-toi bien et écoute ton corps."
+        default: sleepIntro = ""
+        }
+
         var parts: [String] = ["\(greeting) ! Il est \(timeSpoken())."]
+        if !sleepIntro.isEmpty { parts.append(sleepIntro) }
 
         // Read active modules from UserDefaults (same key as @AppStorage("recommendedModules"))
         let rawModules = UserDefaults.standard.string(forKey: "recommendedModules") ?? ""
