@@ -120,6 +120,47 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         }
     }
 
+    // MARK: - Message vocal au réveil
+
+    private func scheduleWakeUpVoice() {
+        voiceWorkItem?.cancel()
+        let item = DispatchWorkItem { [weak self] in
+            Task { @MainActor [weak self] in self?.speakWakeUpMessage() }
+        }
+        voiceWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: item)
+    }
+
+    private func speakWakeUpMessage() {
+        guard ringingActive else { return } // alarm was silenced before 2s
+
+        // Allow TTS to mix with the beep cycle
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+        try? AVAudioSession.sharedInstance().setActive(true)
+
+        let hour = Calendar.current.component(.hour, from: .now)
+        let greeting: String
+        switch hour {
+        case 5..<12: greeting = "Bonjour"
+        case 12..<18: greeting = "Bon après-midi"
+        default: greeting = "Bonsoir"
+        }
+        let text = "\(greeting) ! Il est \(timeSpoken()). C'est l'heure de te lever — ta journée commence maintenant."
+
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = AVSpeechSynthesisVoice(language: "fr-FR")
+        utterance.rate = 0.50
+        utterance.pitchMultiplier = 1.05
+        utterance.volume = 1.0
+
+        isSpeaking = true
+        synthesizer.speak(utterance)
+
+        if #available(iOS 16.1, *) {
+            AlarmLiveActivityManager.shared.update(phase: .speakingMessage, message: text)
+        }
+    }
+
     // MARK: - Synthèse vocale (AVSpeechSynthesizer)
 
     func speakDailyPlan(userName: String, modules: [AppCategory], waterGoal: Int, kcalGoal: Int) {
