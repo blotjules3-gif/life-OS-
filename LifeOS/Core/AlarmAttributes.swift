@@ -9,8 +9,10 @@ struct AlarmAttributes: ActivityAttributes {
 
     struct ContentState: Codable, Hashable {
         var phase: Phase
-        var timeString: String   // "07:30"
-        var message: String      // displayed in Lock Screen / Dynamic Island
+        var timeString: String    // "07:30"
+        var message: String       // displayed in Lock Screen / Dynamic Island
+        var temperature: Double?  // °C — nil si localisation non disponible
+        var weatherSymbol: String? // SF Symbol name, e.g. "sun.max.fill"
 
         enum Phase: String, Codable, Hashable {
             case scheduled       // alarm set, shows on lock screen all night
