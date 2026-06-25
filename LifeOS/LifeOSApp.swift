@@ -35,6 +35,11 @@ struct LifeOSApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
+                // Couche 0 — fond système rendu avant toute autre chose.
+                // Empêche le flash blanc sur iPhone en mode sombre.
+                Color(uiColor: .systemBackground)
+                    .ignoresSafeArea()
+
                 if let container {
                     appContent(container: container)
                 } else {
