@@ -64,7 +64,9 @@ final class AlarmLiveActivityManager {
             message: "Bonne journée !"
         )
         let content = ActivityContent(state: state, staleDate: nil)
-        Task { await act.end(content, dismissalPolicy: .after(.now.addingTimeInterval(5))) }
+        // Garde le widget visible 30 min — l'utilisateur peut taper pour ouvrir le briefing
+        // après s'être levé et habillé
+        Task { await act.end(content, dismissalPolicy: .after(.now.addingTimeInterval(30 * 60))) }
     }
 
     private func currentTimeString() -> String {

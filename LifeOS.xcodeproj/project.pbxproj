@@ -429,7 +429,8 @@
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 54AUW2C78N;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LifeOS/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "LifeOS utilise l'appareil photo pour scanner les codes-barres, les documents et tes photos avant/apres.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "LifeOS lit ton sommeil, ta frequence cardiaque et tes pas pour calculer ton score de recuperation.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "LifeOS peut enregistrer tes seances et donnees de sommeil dans Sante.";
@@ -468,7 +469,8 @@
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 54AUW2C78N;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LifeOS/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "LifeOS utilise l'appareil photo pour scanner les codes-barres, les documents et tes photos avant/apres.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "LifeOS lit ton sommeil, ta frequence cardiaque et tes pas pour calculer ton score de recuperation.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "LifeOS peut enregistrer tes seances et donnees de sommeil dans Sante.";
