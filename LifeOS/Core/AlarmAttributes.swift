@@ -15,6 +15,7 @@ struct AlarmAttributes: ActivityAttributes {
         enum Phase: String, Codable, Hashable {
             case ringing         // alarm beeping
             case speakingMessage // TTS playing
+            case briefing        // daily briefing screen open
             case dismissed       // alarm ended
         }
     }
