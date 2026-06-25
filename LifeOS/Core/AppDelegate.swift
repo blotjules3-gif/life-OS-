@@ -42,10 +42,26 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
         let id = notification.request.identifier
+
         if alarmIds.contains(id) {
             await MainActor.run { AlarmManager.shared.triggerAlarm() }
-            return []   // on gère nous-mêmes l'UI — pas de bannière système
+            return []
         }
+
+        if id == "lifeos.wakeup.preview" {
+            // App en foreground — démarre le widget si pas déjà actif
+            if #available(iOS 16.1, *) {
+                let info = notification.request.content.userInfo
+                let h = info["alarmHour"] as? Int ?? 7
+                let m = info["alarmMinute"] as? Int ?? 0
+                let timeString = String(format: "%02d:%02d", h, m)
+                await MainActor.run {
+                    AlarmLiveActivityManager.shared.startScheduled(alarmTimeString: timeString)
+                }
+            }
+            return [] // pas de bannière — le widget suffit
+        }
+
         return [.banner, .sound, .list]
     }
 
@@ -58,5 +74,7 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         if alarmIds.contains(id) {
             await MainActor.run { AlarmManager.shared.triggerAlarm() }
         }
+        // Pour preview : l'app s'ouvre via tap, le widget est déjà actif (startScheduled au moment
+        // de la programmation de l'alarme)
     }
 }
