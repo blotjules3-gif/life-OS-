@@ -149,21 +149,38 @@ final class AIAssistantViewModel: ObservableObject {
     }
 
     private func triggerWelcome() {
-        let name = userName.isEmpty ? "" : " \(userName)"
-        let modules = recommendedModulesRaw
-            .split(separator: ",")
-            .map { String($0) }
+        let goalLabels: [String: String] = [
+            "health": "Santé & forme",
+            "performance": "Performance",
+            "money": "Argent & carrière",
+            "mind": "Focus & bien-être",
+            "habits": "Meilleures habitudes",
+        ]
+        let moduleLabels: [String: String] = [
+            "fitness": "Sport", "nutrition": "Nutrition", "sleep": "Sommeil",
+            "looks": "Corps", "mind": "Bien-être mental", "productivity": "Productivité",
+            "finance": "Finance", "invest": "Investissement", "career": "Carrière",
+            "learning": "Apprentissage", "social": "Social", "home": "Maison",
+            "mobility": "Mobilité", "admin": "Admin", "travel": "Voyage", "cycle": "Cycle",
+        ]
+
+        let goals = onboardingGoalsRaw.split(separator: ",")
+            .compactMap { goalLabels[String($0)] }
             .joined(separator: ", ")
+
+        let modules = recommendedModulesRaw.split(separator: ",")
+            .compactMap { moduleLabels[String($0)] }
+            .joined(separator: ", ")
+
+        let wake = String(format: "%02d:%02d", wakeupHour, wakeupMinute)
 
         let prompt = """
         [PREMIER_LANCEMENT]
-        Nom: \(userName.isEmpty ? "non renseigné" : userName)
-        Modules recommandés: \(modules.isEmpty ? "aucun" : modules)
-
-        Génère un message de bienvenue chaleureux et personnalisé.
-        Fais un recap rapide des modules actifs.
-        Pose UNE question pour commencer à personnaliser le premier module.
-        Max 4 phrases.
+        Prénom: \(userName.isEmpty ? "non renseigné" : userName)
+        Genre: \(userGender.isEmpty ? "non renseigné" : userGender)
+        Objectifs déclarés: \(goals.isEmpty ? "non renseignés" : goals)
+        Modules activés: \(modules.isEmpty ? "aucun" : modules)
+        Heure de réveil: \(wake)
         """
 
         appendThinking()
@@ -179,11 +196,17 @@ final class AIAssistantViewModel: ObservableObject {
                 )
                 conversationID = response.conversation_id
                 removeThinking()
-                appendAssistantMessage(response.reply, actions: [])
+                appendAssistantMessage(response.reply, actions: response.actions ?? [])
+                for action in (response.actions ?? []) {
+                    await execute(action: action)
+                }
             } catch {
                 removeThinking()
-                let fallback = "Bonjour\(userName.isEmpty ? "" : " \(userName)") ! Je suis ton assistant LifeOS. Je peux personnaliser tes modules, créer des objectifs et t'envoyer des rappels. Par quoi on commence ?"
-                appendAssistantMessage(fallback, actions: [])
+                let name = userName.isEmpty ? "" : " \(userName)"
+                appendAssistantMessage(
+                    "Bonjour\(name) ! Je suis ton coach LifeOS. Je connais tes objectifs et je vais t'aider à les atteindre étape par étape. Dis-moi juste par où tu veux commencer.",
+                    actions: []
+                )
             }
             isLoading = false
         }
