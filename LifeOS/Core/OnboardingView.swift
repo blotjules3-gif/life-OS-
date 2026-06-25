@@ -78,7 +78,11 @@ struct OnboardingView: View {
         for cat in goalModules + Array(interests) {
             if seen.insert(cat).inserted { result.append(cat) }
         }
-        return Array(result.prefix(8))
+        var recs = Array(result.prefix(8))
+        if (gender == "femme" || gender == "autre") && !recs.contains(.cycle) {
+            recs.append(.cycle)
+        }
+        return recs
     }
 
     private func buildShortcuts(from cats: [AppCategory]) -> String {
