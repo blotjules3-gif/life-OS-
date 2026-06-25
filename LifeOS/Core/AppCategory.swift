@@ -45,6 +45,7 @@ enum AppCategory: String, CaseIterable, Identifiable {
         case .social: return "person.2.fill"
         case .admin: return "folder.fill"
         case .travel: return "airplane"
+        case .cycle: return "drop.fill"
         }
     }
 
