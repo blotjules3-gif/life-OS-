@@ -3,6 +3,7 @@ import AVFoundation
 import AudioToolbox
 import UserNotifications
 import ActivityKit
+import UIKit
 
 // MARK: - Gestionnaire central du réveil
 
