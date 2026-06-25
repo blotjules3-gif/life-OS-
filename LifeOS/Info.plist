@@ -32,6 +32,10 @@
     <key>NSMicrophoneUsageDescription</key><string>LifeOS enregistre ton journal de reves vocal.</string>
     <key>NSPhotoLibraryUsageDescription</key><string>LifeOS importe tes photos pour la garde-robe et le suivi looksmaxx.</string>
     <key>NSSupportsLiveActivities</key><true/>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>audio</string>
+    </array>
     <key>UIApplicationSceneManifest</key>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key><true/>
