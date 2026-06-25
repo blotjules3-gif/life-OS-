@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key><string>en</string>
+    <key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+    <key>CFBundleName</key><string>$(PRODUCT_NAME)</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleShortVersionString</key><string>1.0</string>
+    <key>CFBundleSupportedPlatforms</key><array><string>iPhoneOS</string></array>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>com.blotjules.lifeos</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>lifeos</string>
+            </array>
+        </dict>
+    </array>
+    <key>CFBundleVersion</key><string>1</string>
+    <key>LSRequiresIPhoneOS</key><true/>
+    <key>MinimumOSVersion</key><string>17.0</string>
+    <key>NSAccentColorName</key><string>AccentColor</string>
+    <key>NSCameraUsageDescription</key><string>LifeOS utilise l'appareil photo pour scanner les codes-barres, les documents et tes photos avant/apres.</string>
+    <key>NSHealthShareUsageDescription</key><string>LifeOS lit ton sommeil, ta frequence cardiaque et tes pas pour calculer ton score de recuperation.</string>
+    <key>NSHealthUpdateUsageDescription</key><string>LifeOS peut enregistrer tes seances et donnees de sommeil dans Sante.</string>
+    <key>NSLocationWhenInUseUsageDescription</key><string>LifeOS utilise ta position pour le suivi running GPS et le partage de localisation.</string>
+    <key>NSMicrophoneUsageDescription</key><string>LifeOS enregistre ton journal de reves vocal.</string>
+    <key>NSPhotoLibraryUsageDescription</key><string>LifeOS importe tes photos pour la garde-robe et le suivi looksmaxx.</string>
+    <key>NSSupportsLiveActivities</key><true/>
+    <key>UIApplicationSceneManifest</key>
+    <dict>
+        <key>UIApplicationSupportsMultipleScenes</key><true/>
+        <key>UISceneConfigurations</key><dict/>
+    </dict>
+    <key>UIApplicationSupportsIndirectInputEvents</key><true/>
+    <key>UIDeviceFamily</key>
+    <array>
+        <integer>1</integer>
+        <integer>2</integer>
+    </array>
+    <key>UILaunchScreen</key>
+    <dict>
+        <key>UILaunchScreen</key><dict/>
+    </dict>
+    <key>UIRequiredDeviceCapabilities</key>
+    <array>
+        <string>arm64</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~ipad</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+        <string>UIInterfaceOrientationPortraitUpsideDown</string>
+        <string>UIInterfaceOrientationLandscapeLeft</string>
+        <string>UIInterfaceOrientationLandscapeRight</string>
+    </array>
+    <key>UISupportedInterfaceOrientations~iphone</key>
+    <array>
+        <string>UIInterfaceOrientationPortrait</string>
+    </array>
+</dict>
+</plist>
