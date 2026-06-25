@@ -10,7 +10,8 @@ struct LifeOSApp: App {
     @State private var container: ModelContainer? = nil
     @AppStorage("onboardingDone") private var onboardingDone = false
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
-    @AppStorage("appDarkMode") private var appDarkMode = false
+    @AppStorage("appTheme") private var appThemeRaw = "classic"
+    private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
     @State private var showBriefingFromWidget = false
     @State private var showSleepCheckFromWidget = false
 
@@ -49,7 +50,8 @@ struct LifeOSApp: App {
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: container != nil)
-            .preferredColorScheme(appDarkMode ? .dark : .light)   // toggle Couleur de l'app
+            .preferredColorScheme(appTheme.scheme)   // thème : Couleur de l'app
+            .tint(appTheme.accent)
             .task { await buildContainer() }
         }
     }
@@ -64,7 +66,7 @@ struct LifeOSApp: App {
                     .transition(.opacity)
             } else {
                 MainTabView()
-                    .tint(Theme.accent)
+                    .tint(appTheme.accent)
                     .transition(.opacity)
             }
         }

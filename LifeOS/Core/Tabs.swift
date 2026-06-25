@@ -669,7 +669,7 @@ private struct ProfileTaskItem: Identifiable {
 
 struct ProfileView: View {
     @Environment(\.colorScheme) private var colorScheme
-    @AppStorage("appDarkMode") private var appDarkMode = false
+    @AppStorage("appTheme") private var appThemeRaw = "classic"
     @AppStorage("userName") private var name = ""
     @AppStorage("stepGoal") private var stepGoal = 10000
     @AppStorage("waterGoal") private var waterGoal = 2500
@@ -1664,19 +1664,40 @@ struct ProfileView: View {
         }
     }
 
-    // Couleur de l'app — pour l'instant : Normal / Sombre (bascule toute l'app)
+    // Couleur de l'app — 5 thèmes (toute l'app suit le thème)
     private var appearanceSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Couleur de l'app")
                 .font(.system(size: 15, weight: .semibold))
                 .padding(.horizontal, 4)
             VStack(spacing: 12) {
-                Picker("", selection: $appDarkMode) {
-                    Label("Normal", systemImage: "sun.max.fill").tag(false)
-                    Label("Sombre", systemImage: "moon.fill").tag(true)
+                HStack(spacing: 10) {
+                    ForEach(AppTheme.allCases) { th in
+                        let selected = appThemeRaw == th.rawValue
+                        Button {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { appThemeRaw = th.rawValue }
+                        } label: {
+                            VStack(spacing: 6) {
+                                ZStack {
+                                    Circle().fill(th.accent.gradient)
+                                        .frame(width: 42, height: 42)
+                                    Image(systemName: th.symbol)
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundStyle(.white)
+                                }
+                                .overlay(Circle().stroke(Color.primary, lineWidth: selected ? 2.5 : 0))
+                                .padding(2)
+                                Text(th.label)
+                                    .font(.system(size: 11, weight: selected ? .semibold : .regular))
+                                    .foregroundStyle(selected ? .primary : .secondary)
+                                    .lineLimit(1).minimumScaleFactor(0.7)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
-                .pickerStyle(.segmented)
-                Text("Bascule toute l'app — menu, sections et fond — en mode sombre. Tu peux switcher à tout moment.")
+                Text("Tout l'app suit le thème : menu, sections, fond et bulles. Tu peux changer à tout moment.")
                     .font(.caption).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }

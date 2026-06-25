@@ -156,6 +156,7 @@ struct BubbleCategoriesView: View {
     @AppStorage("bubbleWeights") private var weightsRaw = ""   // compteur d'usage  "titre:count,…"
     @AppStorage("hiddenCats")    private var hiddenRaw = ""    // bulles retirées (par titre)
     @AppStorage("catLayout")     private var layoutRaw = "organic"
+    @AppStorage("appTheme")      private var appThemeRaw = "classic"
     @State private var editing = false
     @State private var showAdd = false
     @State private var tappedID: UUID?
@@ -163,6 +164,7 @@ struct BubbleCategoriesView: View {
     @Environment(\.colorScheme) private var scheme
 
     private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .organic }
+    private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
 
     private var hidden: Set<String> { Set(hiddenRaw.split(separator: ",").map(String.init)) }
     private var visible: [BubbleCategory] {
@@ -199,24 +201,20 @@ struct BubbleCategoriesView: View {
         }
     }
 
-    // ===== Sélecteur de layout (haut-gauche) =====
+    // ===== Bouton display : un clic = layout SUIVANT (cycle, pas de dropdown) =====
     private var layoutSwitcher: some View {
-        Menu {
-            ForEach(CatLayout.allCases, id: \.self) { l in
-                Button {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { layoutRaw = l.rawValue }
-                    Haptics.tap()
-                } label: {
-                    Label(l.label, systemImage: l.symbol)
-                    if layout == l { Image(systemName: "checkmark") }
-                }
-            }
+        Button {
+            let all = CatLayout.allCases
+            let next = all[(all.firstIndex(of: layout).map { $0 + 1 } ?? 0) % all.count]
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { layoutRaw = next.rawValue }
+            Haptics.tap()
         } label: {
             Image(systemName: layout.symbol)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(.primary)
                 .frame(width: 38, height: 38)
                 .background(.regularMaterial, in: Circle())
+                .contentTransition(.symbolEffect(.replace))
         }
         .padding(.top, 8).padding(.leading, 16)
     }
@@ -475,26 +473,8 @@ struct BubbleCategoriesView: View {
     }
 
     @ViewBuilder private var background: some View {
-        if scheme == .dark {
-            // Dark mode : fond bleu nuit profond (les bulles ressortent dessus)
-            if #available(iOS 18.0, *) {
-                MeshGradient(
-                    width: 3, height: 3,
-                    points: [
-                        [0.0, 0.0], [0.5, 0.0], [1.0, 0.0],
-                        [0.0, 0.5], [0.5, 0.5], [1.0, 0.5],
-                        [0.0, 1.0], [0.5, 1.0], [1.0, 1.0]
-                    ],
-                    colors: [
-                        Color(red: 0.06, green: 0.07, blue: 0.13), Color(red: 0.05, green: 0.06, blue: 0.12), Color(red: 0.09, green: 0.06, blue: 0.13),
-                        Color(red: 0.05, green: 0.07, blue: 0.14), Color(red: 0.07, green: 0.08, blue: 0.15), Color(red: 0.06, green: 0.06, blue: 0.13),
-                        Color(red: 0.05, green: 0.06, blue: 0.12), Color(red: 0.06, green: 0.07, blue: 0.14), Color(red: 0.07, green: 0.06, blue: 0.12)
-                    ]
-                )
-            } else {
-                Color(red: 0.06, green: 0.07, blue: 0.13)
-            }
-        } else if #available(iOS 18.0, *) {
+        let cols = theme.bubbleBG
+        if #available(iOS 18.0, *) {
             MeshGradient(
                 width: 3, height: 3,
                 points: [
@@ -502,21 +482,11 @@ struct BubbleCategoriesView: View {
                     [0.0, 0.5], [0.5, 0.5], [1.0, 0.5],
                     [0.0, 1.0], [0.5, 1.0], [1.0, 1.0]
                 ],
-                colors: [
-                    Color(red: 0.83, green: 0.91, blue: 0.99), Color(red: 0.92, green: 0.96, blue: 1.00), Color(red: 0.96, green: 0.93, blue: 0.98),
-                    Color(red: 0.88, green: 0.95, blue: 1.00), Color(red: 0.97, green: 0.98, blue: 1.00), Color(red: 0.90, green: 0.95, blue: 1.00),
-                    Color(red: 0.84, green: 0.92, blue: 1.00), Color(red: 0.87, green: 0.94, blue: 1.00), Color(red: 0.89, green: 0.94, blue: 1.00)
-                ]
+                colors: cols
             )
         } else {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.88, green: 0.94, blue: 0.99),
-                    Color.white,
-                    Color(red: 0.95, green: 0.93, blue: 0.99)
-                ],
-                startPoint: .topLeading, endPoint: .bottomTrailing
-            )
+            LinearGradient(colors: [cols[0], cols[4], cols[8]],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
         }
     }
 }
