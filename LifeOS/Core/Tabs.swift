@@ -1178,26 +1178,34 @@ struct ProfileView: View {
                                 progress: Double, color: Color) -> some View {
         HStack(spacing: 9) {
             Image(systemName: icon)
-                .font(.system(size: 10, weight: .bold))
+                .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(color)
-                .frame(width: 24, height: 24)
-                .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                .frame(width: 26, height: 26)
+                .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(value)
-                    .font(.system(size: 13, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(.system(size: 13, weight: .semibold, design: .rounded).monospacedDigit())
                     .foregroundStyle(.white)
                     .lineLimit(1)
-                GeometryReader { g in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(.white.opacity(0.08)).frame(height: 2)
-                        Capsule()
-                            .fill(color.opacity(0.7))
-                            .frame(width: max(2, g.size.width * CGFloat(progress)), height: 2)
-                            .animation(.spring(duration: 1.0).delay(0.5), value: appeared)
-                    }
-                }
-                .frame(height: 2)
+                Text(label)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.28))
+            }
+
+            Spacer()
+
+            // Mini progress arc
+            ZStack {
+                Circle()
+                    .stroke(.white.opacity(0.07), lineWidth: 2)
+                    .frame(width: 18, height: 18)
+                Circle()
+                    .trim(from: 0, to: appeared ? min(1.0, max(0, progress)) : 0)
+                    .stroke(color, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                    .frame(width: 18, height: 18)
+                    .rotationEffect(.degrees(-90))
+                    .animation(.spring(duration: 1.0).delay(0.5), value: appeared)
             }
         }
     }
