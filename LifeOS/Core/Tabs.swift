@@ -1600,22 +1600,18 @@ struct ProfileView: View {
     // MARK: - Citation du jour
 
     private var tipCard: some View {
-        HStack(spacing: 13) {
+        HStack(spacing: 12) {
             RoundedRectangle(cornerRadius: 3, style: .continuous)
-                .fill(Color.accentColor)
-                .frame(width: 3, height: 42)
+                .fill(Color.accentColor.opacity(0.6))
+                .frame(width: 2.5, height: 36)
             Text(todayTip)
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 13, weight: .regular))
                 .foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer()
         }
         .padding(14)
-        .background(Color.accentColor.opacity(0.05), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color.accentColor.opacity(0.12), lineWidth: 1)
-        )
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     // MARK: - Paramètres
