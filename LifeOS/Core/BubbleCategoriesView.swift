@@ -105,34 +105,33 @@ struct BubbleCategory: Identifiable {
 enum BubbleLayout {
     // Diamètre de base = screenWidth * baseRatio, puis * sizeMul par bulle.
     // baseRatio plus petit = plus d'air entre les bulles.  ←  RÈGLE L'ESPACEMENT ICI
-    static let baseRatio: CGFloat = 0.27
+    static let baseRatio: CGFloat = 0.262
 
-    // Couleurs JEWEL TONES vives (réf). sizeMul = taille relative.
+    // Composition éditoriale : plus d'air, priorités dominantes (Sport/Social/Mental/Voyage),
+    // longs labels (Alimentation/Bien-être/Transports/Éducation) agrandis.
     static let categories: [BubbleCategory] = [
-        .init(title: "Documents",    systemImage: "folder.fill",               tint: Color(red: 0.74, green: 0.84, blue: 0.97), anchor: .init(x: 0.205, y: 0.150), sizeMul: 0.85),
-        .init(title: "Travail",      systemImage: "briefcase.fill",            tint: Color(red: 1.00, green: 0.72, blue: 0.24), anchor: .init(x: 0.460, y: 0.175), sizeMul: 0.95),
-        .init(title: "Social",       systemImage: "person.2.fill",             tint: Color(red: 1.00, green: 0.20, blue: 0.55), anchor: .init(x: 0.760, y: 0.215), sizeMul: 1.20),
-        .init(title: "Finance",      systemImage: "creditcard.fill",           tint: Color(red: 0.13, green: 0.52, blue: 1.00), anchor: .init(x: 0.165, y: 0.350), sizeMul: 0.95),
-        .init(title: "Mental",       systemImage: "brain.head.profile",        tint: Color(red: 0.66, green: 0.32, blue: 0.96), anchor: .init(x: 0.435, y: 0.370), sizeMul: 1.18),
-        .init(title: "Bien-être",    systemImage: "face.smiling",              tint: Color(red: 1.00, green: 0.54, blue: 0.10), anchor: .init(x: 0.720, y: 0.415), sizeMul: 1.18),
-        .init(title: "Éducation",    systemImage: "graduationcap.fill",        tint: Color(red: 1.00, green: 0.80, blue: 0.18), anchor: .init(x: 0.860, y: 0.560), sizeMul: 0.74),
-        .init(title: "Sport",        systemImage: "figure.run",                tint: Color(red: 1.00, green: 0.18, blue: 0.20), anchor: .init(x: 0.300, y: 0.575), sizeMul: 1.55),
-        .init(title: "Alimentation", systemImage: "fork.knife",                tint: Color(red: 0.28, green: 0.80, blue: 0.36), anchor: .init(x: 0.580, y: 0.620), sizeMul: 1.05),
-        .init(title: "Sommeil",      systemImage: "moon.stars.fill",           tint: Color(red: 0.42, green: 0.40, blue: 0.95), anchor: .init(x: 0.825, y: 0.660), sizeMul: 0.95),
-        .init(title: "Tâches",       systemImage: "checklist",                 tint: Color(red: 0.14, green: 0.78, blue: 0.80), anchor: .init(x: 0.165, y: 0.745), sizeMul: 0.95),
-        .init(title: "Voyage",       systemImage: "airplane",                  tint: Color(red: 0.20, green: 0.50, blue: 1.00), anchor: .init(x: 0.395, y: 0.815), sizeMul: 1.18),
-        .init(title: "Maison",       systemImage: "house.fill",                tint: Color(red: 0.24, green: 0.56, blue: 0.96), anchor: .init(x: 0.635, y: 0.790), sizeMul: 0.92),
-        .init(title: "Transports",   systemImage: "tram.fill",                 tint: Color(red: 0.16, green: 0.74, blue: 0.78), anchor: .init(x: 0.815, y: 0.850), sizeMul: 0.95),
-        .init(title: "Bourse",       systemImage: "chart.line.uptrend.xyaxis", tint: Color(red: 0.16, green: 0.80, blue: 0.62), anchor: .init(x: 0.150, y: 0.880), sizeMul: 0.72),
+        .init(title: "Documents",    systemImage: "folder.fill",               tint: Color(red: 0.74, green: 0.84, blue: 0.97), anchor: .init(x: 0.200, y: 0.115), sizeMul: 0.86),
+        .init(title: "Travail",      systemImage: "briefcase.fill",            tint: Color(red: 1.00, green: 0.72, blue: 0.24), anchor: .init(x: 0.470, y: 0.140), sizeMul: 0.92),
+        .init(title: "Social",       systemImage: "person.2.fill",             tint: Color(red: 1.00, green: 0.20, blue: 0.55), anchor: .init(x: 0.775, y: 0.200), sizeMul: 1.24),
+        .init(title: "Finance",      systemImage: "creditcard.fill",           tint: Color(red: 0.13, green: 0.52, blue: 1.00), anchor: .init(x: 0.170, y: 0.330), sizeMul: 0.92),
+        .init(title: "Mental",       systemImage: "brain.head.profile",        tint: Color(red: 0.66, green: 0.32, blue: 0.96), anchor: .init(x: 0.460, y: 0.350), sizeMul: 1.22),
+        .init(title: "Bien-être",    systemImage: "face.smiling",              tint: Color(red: 1.00, green: 0.54, blue: 0.10), anchor: .init(x: 0.775, y: 0.420), sizeMul: 1.16),
+        .init(title: "Sport",        systemImage: "figure.run",                tint: Color(red: 1.00, green: 0.18, blue: 0.20), anchor: .init(x: 0.275, y: 0.585), sizeMul: 1.55),
+        .init(title: "Alimentation", systemImage: "fork.knife",                tint: Color(red: 0.28, green: 0.80, blue: 0.36), anchor: .init(x: 0.585, y: 0.615), sizeMul: 1.16),
+        .init(title: "Éducation",    systemImage: "graduationcap.fill",        tint: Color(red: 1.00, green: 0.80, blue: 0.18), anchor: .init(x: 0.870, y: 0.585), sizeMul: 0.86),
+        .init(title: "Sommeil",      systemImage: "moon.stars.fill",           tint: Color(red: 0.42, green: 0.40, blue: 0.95), anchor: .init(x: 0.825, y: 0.730), sizeMul: 0.92),
+        .init(title: "Tâches",       systemImage: "checklist",                 tint: Color(red: 0.14, green: 0.78, blue: 0.80), anchor: .init(x: 0.165, y: 0.770), sizeMul: 0.92),
+        .init(title: "Voyage",       systemImage: "airplane",                  tint: Color(red: 0.20, green: 0.50, blue: 1.00), anchor: .init(x: 0.420, y: 0.840), sizeMul: 1.18),
+        .init(title: "Maison",       systemImage: "house.fill",                tint: Color(red: 0.24, green: 0.56, blue: 0.96), anchor: .init(x: 0.660, y: 0.795), sizeMul: 0.90),
+        .init(title: "Transports",   systemImage: "tram.fill",                 tint: Color(red: 0.16, green: 0.74, blue: 0.78), anchor: .init(x: 0.850, y: 0.885), sizeMul: 1.02),
+        .init(title: "Bourse",       systemImage: "chart.line.uptrend.xyaxis", tint: Color(red: 0.16, green: 0.80, blue: 0.62), anchor: .init(x: 0.155, y: 0.915), sizeMul: 0.74),
 
-        // Micro-bulles blanches (sans glyphe ni label) dans les creux
-        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.585, y: 0.300), sizeMul: 0.18, isFiller: true),
-        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.300, y: 0.480), sizeMul: 0.15, isFiller: true),
-        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.625, y: 0.500), sizeMul: 0.17, isFiller: true),
-        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.470, y: 0.700), sizeMul: 0.16, isFiller: true),
-        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.930, y: 0.430), sizeMul: 0.13, isFiller: true),
-        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.690, y: 0.910), sizeMul: 0.13, isFiller: true),
-        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.290, y: 0.905), sizeMul: 0.12, isFiller: true),
+        // Micro-gouttes (sans glyphe ni label) dans les creux — discrètes, pour le rythme
+        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.610, y: 0.300), sizeMul: 0.16, isFiller: true),
+        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.305, y: 0.460), sizeMul: 0.14, isFiller: true),
+        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.945, y: 0.440), sizeMul: 0.12, isFiller: true),
+        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.480, y: 0.720), sizeMul: 0.14, isFiller: true),
+        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.655, y: 0.930), sizeMul: 0.12, isFiller: true),
     ]
 }
 
@@ -277,7 +276,9 @@ struct BubbleCategoriesView: View {
                     assetName: ChromeCategoryButton.asset(for: d, base: base, index: index),
                     size: d,
                     showLabel: !cat.isFiller,
-                    pressed: tappedID == cat.id
+                    pressed: tappedID == cat.id,
+                    time: t,
+                    phase: Double(index) * 1.7
                 )
             } else {
                 BubbleView(
