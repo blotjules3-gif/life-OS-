@@ -1513,11 +1513,11 @@ struct ProfileView: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(color)
                     .frame(width: 34, height: 34)
-                    .background(color, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                VStack(alignment: .leading, spacing: 1) {
+                    .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
                     Text(label)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
@@ -1528,11 +1528,7 @@ struct ProfileView: View {
                 Spacer()
             }
             .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(color.opacity(0.07))
-                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(color.opacity(0.15), lineWidth: 1))
-            )
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(LifeOSPressStyle())
     }
