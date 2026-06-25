@@ -127,7 +127,7 @@ struct SplashView: View {
 
     var body: some View {
         ZStack {
-            Theme.bg.ignoresSafeArea()
+            Color(uiColor: .systemBackground).ignoresSafeArea()
 
             VStack(spacing: 0) {
                 Spacer()
