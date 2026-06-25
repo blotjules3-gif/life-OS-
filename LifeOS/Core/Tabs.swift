@@ -1355,17 +1355,17 @@ struct ProfileView: View {
     }
 
     private func statCard(icon: String, value: String, label: String, progress: Double, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
                 Image(systemName: icon)
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 26, height: 26)
-                    .background(color, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(color)
+                    .frame(width: 28, height: 28)
+                    .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 Spacer()
                 ZStack {
                     Circle()
-                        .stroke(color.opacity(0.12), lineWidth: 2.5)
+                        .stroke(Color.primary.opacity(0.06), lineWidth: 2.5)
                         .frame(width: 22, height: 22)
                     Circle()
                         .trim(from: 0, to: appeared ? min(1.0, max(0, progress)) : 0)
@@ -1377,19 +1377,19 @@ struct ProfileView: View {
             }
 
             Text(value)
-                .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
+                .font(.system(size: 24, weight: .bold, design: .rounded).monospacedDigit())
                 .foregroundStyle(Theme.textPrimary)
                 .lineLimit(1)
-                .minimumScaleFactor(0.72)
+                .minimumScaleFactor(0.75)
 
             Text(label.uppercased())
                 .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(color.opacity(0.8))
-                .kerning(0.5)
+                .foregroundStyle(color)
+                .kerning(0.4)
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(color.opacity(0.1)).frame(height: 3)
+                    Capsule().fill(Color.primary.opacity(0.06)).frame(height: 3)
                     Capsule().fill(color)
                         .frame(width: geo.size.width * min(1.0, max(0, progress)), height: 3)
                         .animation(.spring(duration: 1.0).delay(0.5), value: appeared)
@@ -1399,14 +1399,7 @@ struct ProfileView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(color.opacity(0.07))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(color.opacity(0.18), lineWidth: 1)
-                )
-        )
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     // MARK: - Habitudes + Protéines
