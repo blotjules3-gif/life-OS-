@@ -209,6 +209,7 @@ struct FloatingTabBar: View {
     @Binding var selected: AppTab
     @Binding var chatInput: String
     let onSend: () -> Void
+    var onOpenAssistant: () -> Void = {}
 
     @FocusState private var inputFocused: Bool
     @State private var chatMode = false
