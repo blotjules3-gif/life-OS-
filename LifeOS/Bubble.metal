@@ -43,7 +43,8 @@ static float fbm(float2 p) {
     float  rimAlpha,     // opacité du FILM au bord (la couleur vit ici)
     float  specStrength,
     float  time,
-    float  seed
+    float  seed,
+    float  metal         // 0 = bulle de savon colorée ; 1 = chrome liquide (thème Argent)
 ) {
     float2 uv = (pos / size) * 2.0 - 1.0;
     float  r  = length(uv);
@@ -80,6 +81,26 @@ static float fbm(float2 p) {
     // liseré fin brillant du bord
     float  rimLine   = smoothstep(0.90, 0.99, r) * (1.0 - smoothstep(0.99, 1.0, r));
     float  rimBright = rimLine * (0.6 + 0.4 * smoothstep(0.7, -1.0, uv.y));
+
+    // ============ MODE CHROME LIQUIDE (thème Argent) ============
+    if (metal > 0.5) {
+        float up = -normal.y;                         // +1 au sommet, -1 en bas
+        // réflexion d'environnement façon miroir : ciel clair haut, bande NOIRE au milieu,
+        // sol clair en bas (fort contraste = chrome poli)
+        float sky    = smoothstep(0.18, 0.92, up);                 // reflet haut net
+        float ground = smoothstep(-0.92, -0.55, up) * (1.0 - smoothstep(-0.55, -0.22, up));
+        float ripple = 0.5 + 0.5 * sin(up * 6.0 + w * 3.0 + time * 0.2);
+        float3 chrome = float3(0.015);                // base quasi noire
+        chrome += float3(1.0) * sky * (0.78 + 0.22 * ripple);     // gros reflet blanc haut
+        chrome += float3(0.95) * ground;                          // reflet du sol
+        chrome += float3(1.0) * pow(fres, 1.35) * 1.05;           // rim chromé très brillant
+        // reflets spéculaires nets (source lumineuse)
+        float sphong = pow(max(0.0, dot(normal, normalize(lightDir + viewDir))), 220.0);
+        chrome += white * (primary * 1.25 + hotspot * 1.3 + sphong);
+        chrome *= float3(0.96, 0.98, 1.03);            // teinte argent froide
+        chrome = clamp(chrome, 0.0, 1.0);
+        return half4(half3(chrome), 1.0h);             // métal opaque
+    }
 
     float  gloss = primary + hotspot + phong;
     float3 col = film;

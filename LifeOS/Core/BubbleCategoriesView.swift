@@ -26,6 +26,8 @@ struct BubbleStyle {
     var colorGlow: Double = 0.65        // halo néon de la couleur de la bulle
     /// Outer soft white bloom.
     var whiteGlow: Double = 0.14
+    /// 1 = rendu chrome liquide (thème Argent), 0 = bulle de savon.
+    var metal: Double = 0
 }
 
 // MARK: - One bubble
@@ -48,7 +50,8 @@ struct BubbleView: View {
             .float(Float(style.rimAlpha)),
             .float(Float(style.specStrength)),
             .float(Float(time)),
-            .float(Float(seed))
+            .float(Float(seed)),
+            .float(Float(style.metal))
         )
 
         return ZStack {
@@ -267,7 +270,7 @@ struct BubbleCategoriesView: View {
             showLabel: !cat.isFiller,
             time: t,
             seed: Double(index) * 2.1,
-            style: cat.isFiller ? fillerStyle : style
+            style: cat.isFiller ? fillerStyle : themedStyle
         )
         .rotationEffect(.degrees(wig))
         .overlay(alignment: .topLeading) {
@@ -483,12 +486,19 @@ struct BubbleCategoriesView: View {
         }
     }
 
+    // Style des bulles principales selon le thème (chrome liquide en Argent)
+    private var themedStyle: BubbleStyle {
+        var s = style
+        if theme == .gothic { s.metal = 1 }
+        return s
+    }
     // Fillers are more transparent and almost colorless
     private var fillerStyle: BubbleStyle {
         var s = style
         s.coreAlpha = 0.18
         s.rimAlpha = 0.40
         s.colorGlow = 0.20
+        if theme == .gothic { s.metal = 1 }
         return s
     }
 

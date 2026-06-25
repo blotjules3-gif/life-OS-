@@ -96,9 +96,9 @@ enum AppTheme: String, CaseIterable, Identifiable {
                      Color(hex: 0xFFEAF4), Color(hex: 0xFFF6FB), Color(hex: 0xFCE7FF),
                      Color(hex: 0xFFDCEF), Color(hex: 0xFFE6F5), Color(hex: 0xF8E3FF) ]
         case .gothic:
-            return [ Color(hex: 0x15171C), Color(hex: 0x101216), Color(hex: 0x1A1C22),
-                     Color(hex: 0x121419), Color(hex: 0x1E2128), Color(hex: 0x141519),
-                     Color(hex: 0x0E0F12), Color(hex: 0x16181D), Color(hex: 0x191B20) ]
+            return [ Color(hex: 0x070708), Color(hex: 0x050506), Color(hex: 0x0A0A0C),
+                     Color(hex: 0x060607), Color(hex: 0x0C0C0F), Color(hex: 0x060608),
+                     Color(hex: 0x040405), Color(hex: 0x080809), Color(hex: 0x0A0A0D) ]
         case .cloud:
             return [ Color(hex: 0xF2F5FA), Color(hex: 0xFAFCFF), Color(hex: 0xEFF3F9),
                      Color(hex: 0xF6F9FE), Color(hex: 0xFFFFFF), Color(hex: 0xF1F5FB),
