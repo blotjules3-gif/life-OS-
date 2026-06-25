@@ -20,16 +20,18 @@ final class NotificationManager {
 
     /// Alarme réveil — time-sensitive, perce le mode Ne pas déranger, déclenche l'app au tap.
     func scheduleAlarm(hour: Int, minute: Int, userName: String) {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["lifeos.wakeup"])
+        UNUserNotificationCenter.current().removePendingNotificationRequests(
+            withIdentifiers: ["lifeos.wakeup", "lifeos.wakeup.preview"]
+        )
 
+        // Alarme principale
         let content = UNMutableNotificationContent()
         content.title = "Réveil LifeOS"
         content.body = userName.isEmpty
             ? "C'est l'heure. Lance ta journée."
             : "Bonjour \(userName) ! C'est l'heure."
-        content.sound = .defaultCritical    // sonne même en silencieux si l'entitlement est accordé,
-                                            // sinon fallback sur le son système fort
-        content.interruptionLevel = .timeSensitive  // perce Focus / Ne pas déranger
+        content.sound = .defaultCritical
+        content.interruptionLevel = .timeSensitive
         content.categoryIdentifier = "LIFEOS_ALARM"
 
         var comps = DateComponents()
@@ -38,6 +40,28 @@ final class NotificationManager {
         let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
         let request = UNNotificationRequest(identifier: "lifeos.wakeup", content: content, trigger: trigger)
         UNUserNotificationCenter.current().add(request)
+
+        // Preview H-5 min — prépare le widget si l'app est ouverte, sinon montre une bannière
+        let previewContent = UNMutableNotificationContent()
+        previewContent.title = "Réveil dans 5 minutes"
+        previewContent.body = "Ton briefing du matin est prêt."
+        previewContent.sound = .default
+        previewContent.interruptionLevel = .timeSensitive
+        previewContent.categoryIdentifier = "LIFEOS_ALARM"
+        previewContent.userInfo = ["type": "wakeup_preview", "alarmHour": hour, "alarmMinute": minute,
+                                   "userName": userName]
+
+        let totalMinutes = hour * 60 + minute - 5
+        var preComps = DateComponents()
+        preComps.hour = ((totalMinutes / 60) % 24 + 24) % 24
+        preComps.minute = ((totalMinutes % 60) + 60) % 60
+        let preTrigger = UNCalendarNotificationTrigger(dateMatching: preComps, repeats: true)
+        let preRequest = UNNotificationRequest(
+            identifier: "lifeos.wakeup.preview",
+            content: previewContent,
+            trigger: preTrigger
+        )
+        UNUserNotificationCenter.current().add(preRequest)
     }
 
     /// Notification ponctuelle à une date précise.
