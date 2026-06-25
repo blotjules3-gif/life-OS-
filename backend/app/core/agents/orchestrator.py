@@ -161,6 +161,9 @@ class AgentOrchestrator:
                             "reminder_body": result.get("message"),
                             "module": result.get("module"),
                         })
+                    if tool_name == "update_user_profile" and isinstance(result, dict):
+                        if result.get("gender"):
+                            tool_context["user_gender"] = result["gender"]
 
                 except ToolRejectedError as exc:
                     log.warning("tool_rejected", tool=tool_name, reason=str(exc))
