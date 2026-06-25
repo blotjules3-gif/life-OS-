@@ -13,6 +13,7 @@ struct LifeOSApp: App {
     @AppStorage("onboardingDone") private var onboardingDone = false
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
     @State private var ready = false
+    @State private var showBriefingFromWidget = false
 
     private var recommendedModules: [AppCategory] {
         recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
