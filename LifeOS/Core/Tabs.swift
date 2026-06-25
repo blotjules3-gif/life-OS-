@@ -1858,7 +1858,7 @@ struct GoalEditorSheet: View {
         let id: String
         let title: String
         let icon: String
-        let colorHex: Int
+        let colorHex: UInt
         let section: String
     }
 
