@@ -821,7 +821,7 @@ struct ProfileView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
                     profileHeader
-                    scoreIsland
+                    topModuleIsland
                     nightIsland
                     activeGoalsSection
                     bentoRow
