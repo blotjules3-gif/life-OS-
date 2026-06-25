@@ -1060,11 +1060,11 @@ struct ProfileView: View {
             }
             .buttonStyle(LifeOSPressStyle())
         }
-        .background(Color(hex: 0x111116), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(islandBg, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(
-                    wakeupEnabled ? Color(hex: 0xE07B3C).opacity(0.3) : Color.white.opacity(0.08),
+                    wakeupEnabled ? Color(hex: 0xE07B3C).opacity(0.45) : appTheme.accent.opacity(0.22),
                     lineWidth: 1.5
                 )
         )
