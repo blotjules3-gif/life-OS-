@@ -49,6 +49,7 @@ class AgentOrchestrator:
         module_config: dict[str, Any],
         user_id: uuid.UUID,
         user_name: str | None,
+        user_gender: str | None,
         conversation_id: uuid.UUID,
         session: AsyncSession,
     ) -> AgentResult:
@@ -56,7 +57,7 @@ class AgentOrchestrator:
 
         Returns AgentResult containing the final text reply and metadata.
         """
-        system_prompt = build_system_prompt(module_type, module_config, user_name)
+        system_prompt = build_system_prompt(module_type, module_config, user_name, user_gender)
         tools = get_tools_for_module(module_type)
 
         messages: list[dict[str, Any]] = [
