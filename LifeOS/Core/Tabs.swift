@@ -1643,32 +1643,32 @@ struct GoalEditorSheet: View {
             HStack(spacing: 12) {
                 // Icône
                 Image(systemName: goal.icon)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(color)
-                    .frame(width: 28, height: 28)
-                    .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .frame(width: 32, height: 32)
+                    .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
 
-                // Labels
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(goal.title).font(.system(size: 14)).foregroundStyle(.primary)
-                    HStack(spacing: 4) {
-                        Text(valueText(for: goal.id))
-                            .font(.system(size: 12, weight: .semibold).monospacedDigit())
-                            .foregroundStyle(expired ? Color(hex: 0xF1746C) : color)
-                        if let d = endDate {
-                            Text("·")
-                                .font(.system(size: 12)).foregroundStyle(.tertiary)
-                            Text(expired ? "Expiré" : "jusqu'au \(d.formatted(.dateTime.day().month(.abbreviated)))")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(expired ? Color(hex: 0xF1746C) : color.opacity(0.75))
-                        }
+                // Titre + date fin
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(goal.title)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.primary)
+                    if let d = endDate {
+                        Text(expired ? "Expiré" : "Jusqu'au \(d.formatted(.dateTime.day().month(.abbreviated)))")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(expired ? Color(hex: 0xF1746C) : color.opacity(0.8))
                     }
                 }
 
                 Spacer()
 
-                // Stepper
-                stepperView(for: goal.id)
+                // Valeur + boutons +/-
+                VStack(alignment: .trailing, spacing: 6) {
+                    Text(valueText(for: goal.id))
+                        .font(.system(size: 15, weight: .bold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(expired ? Color(hex: 0xF1746C) : color)
+                    stepperView(for: goal.id)
+                }
 
                 // Bouton calendrier
                 Button {
@@ -1677,23 +1677,23 @@ struct GoalEditorSheet: View {
                     }
                 } label: {
                     Image(systemName: isExpanded ? "calendar.badge.minus" : "calendar.badge.plus")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(isExpanded ? color : .secondary)
-                        .frame(width: 32, height: 32)
+                        .frame(width: 34, height: 34)
                         .background(
                             isExpanded ? color.opacity(0.12) : Color.clear,
-                            in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            in: RoundedRectangle(cornerRadius: 9, style: .continuous)
                         )
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, 6)
 
             // Panneau date
             if isExpanded {
-                Divider().padding(.top, 10)
+                Divider().padding(.top, 8)
                 datePicker(for: goal.id, color: color)
-                    .padding(.bottom, 10)
+                    .padding(.bottom, 8)
             }
         }
         .animation(.spring(duration: 0.28, bounce: 0.15), value: isExpanded)
