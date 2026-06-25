@@ -115,6 +115,9 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         stopSpeaking()
         showBriefing = false
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        if #available(iOS 16.1, *) {
+            AlarmLiveActivityManager.shared.end()
+        }
     }
 
     // MARK: - Synthèse vocale (AVSpeechSynthesizer)
