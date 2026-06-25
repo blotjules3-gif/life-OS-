@@ -1534,10 +1534,10 @@ struct ProfileView: View {
             .padding(.horizontal, 2)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                actionBtn(icon: "drop.fill", label: "+250 ml", sub: "Eau", color: Color(hex: 0x3CB2E0)) {
+                actionBtn(icon: "drop.fill", label: "1 verre", sub: "250 ml d'eau", color: Color(hex: 0x3CB2E0)) {
                     ctx.insert(WaterEntry(amountML: 250)); Haptics.tap()
                 }
-                actionBtn(icon: "drop.fill", label: "+500 ml", sub: "Eau", color: Color(hex: 0x3CB2E0)) {
+                actionBtn(icon: "drop.fill", label: "2 verres", sub: "500 ml d'eau", color: Color(hex: 0x3CB2E0)) {
                     ctx.insert(WaterEntry(amountML: 500)); Haptics.tap()
                 }
                 actionBtn(icon: "sunrise.fill", label: "Ma journée", sub: "Lancer le briefing", color: .orange) {
