@@ -61,7 +61,8 @@ struct MainTabView: View {
             FloatingTabBar(
                 selected: $tab,
                 chatInput: $chatInput,
-                onSend: sendChat
+                onSend: sendChat,
+                onOpenAssistant: { showAIAssistant = true }
             )
         }
         // La barre est alignée en bas de ce ZStack : c'est ICI qu'il faut ignorer
