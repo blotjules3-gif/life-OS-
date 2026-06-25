@@ -739,16 +739,6 @@ struct ProfileView: View {
         return Array(tasks.prefix(6))
     }
 
-    private var lifeScore: Int {
-        let w = min(1.0, Double(waterToday) / Double(max(1, waterGoal)))
-        let k = min(1.0, Double(min(kcalToday, kcalGoal)) / Double(max(1, kcalGoal)))
-        let h = habits.isEmpty ? 1.0 : min(1.0, Double(habitsDone) / Double(habits.count))
-        let s = min(1.0, Double(steps) / Double(max(1, stepGoal)))
-        return Int((w * 25 + k * 25 + h * 30 + s * 20).rounded())
-    }
-    private var scoreColor: Color {
-        lifeScore >= 75 ? Color(hex: 0x00D4B4) : lifeScore >= 50 ? Color(hex: 0xE0A23C) : Color(hex: 0xF1746C)
-    }
     private var greeting: String {
         switch Calendar.current.component(.hour, from: .now) {
         case 5..<12: return "Bonjour"
