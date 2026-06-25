@@ -54,25 +54,31 @@ struct BubbleView: View {
             .float(Float(style.metal))
         )
 
+        let isMetal = style.metal > 0
+        let glyphGlow = isMetal ? Color.black : tint     // halo noir sur chrome (lisibilité)
+
         return ZStack {
             Circle()
                 .fill(shader)
                 .shadow(color: tint.opacity(style.colorGlow), radius: diameter * 0.16)
                 .shadow(color: .white.opacity(style.whiteGlow), radius: diameter * 0.10)
+                // ombre de contact réaliste sous la goutte de métal
+                .shadow(color: .black.opacity(isMetal ? 0.55 : 0),
+                        radius: diameter * 0.06, y: diameter * 0.05)
 
             if !title.isEmpty {
                 VStack(spacing: diameter * 0.04) {
                     Image(systemName: systemImage)
                         .font(.system(size: diameter * 0.30, weight: .semibold))
                         .foregroundStyle(.white)
-                        .shadow(color: tint.opacity(0.9), radius: diameter * 0.03)
-                        .shadow(color: .black.opacity(0.35), radius: diameter * 0.03, y: diameter * 0.005)
+                        .shadow(color: glyphGlow.opacity(0.9), radius: diameter * 0.03)
+                        .shadow(color: .black.opacity(isMetal ? 0.7 : 0.35), radius: diameter * 0.025, y: diameter * 0.005)
                     if showLabel {
                         Text(title)
                             .font(.system(size: diameter * 0.12, weight: .bold))
                             .foregroundStyle(.white)
-                            .shadow(color: tint.opacity(0.9), radius: diameter * 0.025)
-                            .shadow(color: .black.opacity(0.4), radius: diameter * 0.03, y: diameter * 0.005)
+                            .shadow(color: glyphGlow.opacity(0.9), radius: diameter * 0.025)
+                            .shadow(color: .black.opacity(isMetal ? 0.75 : 0.4), radius: diameter * 0.025, y: diameter * 0.005)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                     }

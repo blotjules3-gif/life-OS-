@@ -82,34 +82,55 @@ static float fbm(float2 p) {
     float  rimLine   = smoothstep(0.90, 0.99, r) * (1.0 - smoothstep(0.99, 1.0, r));
     float  rimBright = rimLine * (0.6 + 0.4 * smoothstep(0.7, -1.0, uv.y));
 
-    // ============ MODE CHROME LIQUIDE (thème Argent) ============
+    // ============ CHROME LIQUIDE — réflexion d'environnement (thème Argent) ============
+    // Vraie matière chrome : on dérive la normale d'une GOUTTE organique bombée, on calcule
+    // le vecteur de réflexion, et on échantillonne un STUDIO procédural (softbox brillantes,
+    // colonnes, noir profond) déformé par la courbure. Le rebord (Fresnel) reflète fort.
     if (metal > 0.5) {
-        float up = -normal.y;                          // +1 au sommet, -1 en bas
+        // ---- forme ORGANIQUE : on déforme le disque en goutte (pas un cercle parfait)
+        float ang = atan2(uv.y, uv.x);
+        float wob = 1.0
+                  - 0.045 * sin(ang * 2.0 + seed * 1.7)
+                  - 0.030 * cos(ang * 3.0 - seed * 2.3)
+                  - 0.022 * sin(ang * 5.0 + seed * 0.9);
+        if (r > wob) { return half4(0.0); }            // hors de la goutte (bord net, pas de stroke)
 
-        // ---- corps NOIR PROFOND (le métal absorbe ; les reflets se posent dessus)
-        float3 col = float3(0.020);
+        // ---- surface bombée : normale recalculée sur la goutte
+        float rr = clamp(r / wob, 0.0, 1.0);           // 0 centre .. 1 bord
+        float zz = sqrt(max(0.0, 1.0 - rr * rr));
+        float3 N = normalize(float3(uv / wob, zz));
+        float3 V = float3(0.0, 0.0, 1.0);
+        float3 Rf = reflect(-V, N);                    // direction miroir
+        float  t  = time * 0.10;                       // dérive lente des reflets
 
-        // ---- BANDES DE RÉFLEXION STUDIO concentrées (le secret du chrome) :
-        // softbox lumineuse en haut, rebond clair en bas, NOIR entre les deux
-        float topBand = exp(-pow((up - 0.52) / 0.24, 2.0));   // grande softbox haute
-        float lowBand = exp(-pow((up + 0.66) / 0.15, 2.0));   // rebond/sol étroit en bas
-        col += float3(0.95) * topBand;
-        col += float3(0.80) * lowBand;
+        // ---- ENVIRONNEMENT STUDIO échantillonné par la réflexion (mostly black + softboxes)
+        float elev = -Rf.y;                            // +1 vers le haut de la goutte
+        float azim = atan2(Rf.x, Rf.z) + t;
+        float env  = 0.015;                            // studio NOIR profond
+        // softbox brillante (bande en haut) — concentrée, pas étalée
+        env += smoothstep(0.22, 0.50, elev) * (1.0 - smoothstep(0.78, 1.04, elev)) * 0.98;
+        // reflet de sol étroit (bas)
+        env += smoothstep(-0.94, -0.66, elev) * (1.0 - smoothstep(-0.50, -0.28, elev)) * 0.72;
+        // colonnes lumineuses verticales (bords de softbox), seulement vers le haut
+        float cols = pow(max(0.0, cos(azim * 1.5)), 10.0)
+                   + pow(max(0.0, cos(azim * 1.5 + 3.14159)), 10.0);
+        env += cols * 0.30 * smoothstep(0.05, 0.55, elev);
 
-        // ---- REBORD CHROMÉ brillant et continu (signature métal liquide)
-        col += float3(1.0) * pow(1.0 - z, 3.2) * 0.95;
+        // ---- Fresnel : le rebord reflète -> liseré chromé (pas un anneau blanc plein)
+        float fres = pow(1.0 - max(0.0, dot(N, V)), 3.6);
+        env += fres * 0.80;
 
-        // ---- key light concentrée (la source) dans la softbox, haut-gauche -> quasi blanc
-        float key = smoothstep(0.42, 0.0, length(uv - float2(-0.28, -0.46)));
-        col += float3(1.0) * key * 0.55;
+        // ---- spéculaire net (key light studio en haut-gauche)
+        float3 L = normalize(float3(-0.45, 0.72, 0.55));   // (uv y vers le bas -> +y = haut)
+        float spec = pow(max(0.0, dot(Rf, L)), 240.0);
+        env += spec * 1.3;
 
-        // ---- spéculaire ultra net (point chaud)
-        float spec = pow(max(0.0, dot(normal, normalize(lightDir + viewDir))), 260.0);
-        col += float3(1.0) * spec;
-
-        col *= float3(0.965, 0.985, 1.04);             // teinte argent froide
+        // ---- CONTRASTE fort vers le noir (le chrome est sombre + reflets francs)
+        float3 col = float3(env);
+        col = pow(clamp(col, 0.0, 1.4), float3(1.55));     // assombrit les mid-tones -> plus de noir
+        col *= float3(0.95, 0.97, 1.05);                   // argent froid
         col = clamp(col, 0.0, 1.0);
-        return half4(half3(col), 1.0h);                // métal opaque lisse
+        return half4(half3(col), 1.0h);                    // métal OPAQUE
     }
 
     float  gloss = primary + hotspot + phong;
