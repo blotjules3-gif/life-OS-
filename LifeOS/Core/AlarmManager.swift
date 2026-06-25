@@ -97,6 +97,7 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
     }
 
     func snooze(minutes: Int) {
+        stopSpeaking()           // stop TTS if playing (user is snoozing back)
         stopRinging()
         showAlarmScreen = false
         NotificationManager.shared.scheduleAfter(
@@ -105,6 +106,9 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
             body: "C'est reparti ! Ta journée t'attend.",
             seconds: TimeInterval(minutes * 60)
         )
+        if #available(iOS 16.1, *) {
+            AlarmLiveActivityManager.shared.end()
+        }
     }
 
     func dismissBriefing() {
