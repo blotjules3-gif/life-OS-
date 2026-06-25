@@ -52,6 +52,17 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         secondsLeft = 10
         showAlarmScreen = true
 
+        // Haptic pattern au déclenchement — senti même si le son est coupé
+        let generator = UINotificationFeedbackGenerator()
+        generator.prepare()
+        generator.notificationOccurred(.warning)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        }
+
         configureAudioSession()
         playBeepCycle()
         startCountdown()
