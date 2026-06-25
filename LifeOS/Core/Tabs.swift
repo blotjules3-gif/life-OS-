@@ -1687,9 +1687,7 @@ struct ProfileView: View {
             // Start Live Activity NOW so the widget appears on Lock Screen immediately
             let timeString = String(format: "%02d:%02d", wakeupHour, wakeupMinute)
             if #available(iOS 16.1, *) {
-                await MainActor.run {
-                    AlarmLiveActivityManager.shared.startScheduled(alarmTimeString: timeString)
-                }
+                await AlarmLiveActivityManager.shared.startScheduled(alarmTimeString: timeString)
             }
         }
     }
