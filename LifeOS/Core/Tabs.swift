@@ -680,7 +680,6 @@ struct ProfileView: View {
     @AppStorage("glassesGoal") private var glassesGoal = 8
     @AppStorage("focusMinGoal") private var focusMinGoal = 90
     @AppStorage("socialMaxMin") private var socialMaxMin = 60
-    @AppStorage("onboardingGoalsRaw") private var onboardingGoalsRaw = ""
     @AppStorage("hiddenGoalIDsRaw") private var hiddenGoalIDsRaw = ""
     @AppStorage("goalEndDatesRaw") private var goalEndDatesRaw = "{}"
     @AppStorage("wakeupEnabled") private var wakeupEnabled = false
