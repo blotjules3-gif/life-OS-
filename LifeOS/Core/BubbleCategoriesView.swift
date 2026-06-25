@@ -262,7 +262,7 @@ struct BubbleCategoriesView: View {
         return BubbleView(
             title: cat.title,
             systemImage: cat.systemImage,
-            tint: cat.tint,
+            tint: cat.isFiller ? cat.tint : themedTint(cat),
             diameter: d,
             showLabel: !cat.isFiller,
             time: t,
@@ -413,6 +413,26 @@ struct BubbleCategoriesView: View {
         onSelect(cat.title)
     }
 
+    // Couleur des bulles selon le thème : Clair/Sombre = multicolore (couleur de catégorie),
+    // les 3 autres thèmes = teinte unique déclinée (rose / argent / nuage).
+    func themedTint(_ cat: BubbleCategory) -> Color {
+        if theme == .classic || theme == .dark { return cat.tint }
+        let idx = BubbleLayout.categories.firstIndex { $0.id == cat.id } ?? 0
+        switch theme {
+        case .pinky:
+            return [Color(hex: 0xFF4F9D), Color(hex: 0xFF77B5), Color(hex: 0xF06EA9),
+                    Color(hex: 0xFF8AC4), Color(hex: 0xE85C9E)][idx % 5]
+        case .gothic:
+            return [Color(hex: 0xAEB7C4), Color(hex: 0xC6CED9), Color(hex: 0x99A3B2),
+                    Color(hex: 0xD2D8E1), Color(hex: 0xB4BCC8)][idx % 5]
+        case .cloud:
+            return [Color(hex: 0xC3D2E8), Color(hex: 0xD2DEEE), Color(hex: 0xB7C8E2),
+                    Color(hex: 0xCBD8EC), Color(hex: 0xDCE5F2)][idx % 5]
+        default:
+            return cat.tint
+        }
+    }
+
     // ===== Mode 3 : icônes pro alignées par ligne =====
     private var iconGrid: some View {
         ScrollView(showsIndicators: false) {
@@ -424,8 +444,8 @@ struct BubbleCategoriesView: View {
                                 .font(.system(size: 26, weight: .semibold))
                                 .foregroundStyle(.white)
                                 .frame(width: 66, height: 66)
-                                .background(cat.tint.gradient, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
-                                .shadow(color: cat.tint.opacity(0.4), radius: 8, y: 4)
+                                .background(themedTint(cat).gradient, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
+                                .shadow(color: themedTint(cat).opacity(0.4), radius: 8, y: 4)
                             Text(cat.title)
                                 .font(.system(size: 12, weight: .medium)).foregroundStyle(.primary)
                                 .lineLimit(1).minimumScaleFactor(0.8)
@@ -448,7 +468,7 @@ struct BubbleCategoriesView: View {
                             Image(systemName: cat.systemImage)
                                 .font(.system(size: 17, weight: .semibold)).foregroundStyle(.white)
                                 .frame(width: 40, height: 40)
-                                .background(cat.tint.gradient, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                                .background(themedTint(cat).gradient, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
                             Text(cat.title).font(.system(size: 16, weight: .medium)).foregroundStyle(.primary)
                             Spacer()
                             Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(.tertiary)
