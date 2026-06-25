@@ -1042,110 +1042,86 @@ struct ProfileView: View {
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.orange.opacity(0.15), lineWidth: 1))
     }
 
-    // MARK: - Hero dark card
+    // MARK: - Hero card
+
+    private var heroCardBg: Color {
+        colorScheme == .dark
+            ? Color(hex: 0x0C1118)
+            : Color(hex: 0x141C28)
+    }
 
     private var heroDark: some View {
         ZStack(alignment: .topLeading) {
+            // Fond principal adaptatif — toujours sombre, mais différent selon le thème
             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .fill(LinearGradient(
-                    colors: [Color(hex: 0x070F18), Color(hex: 0x0E1E2E)],
-                    startPoint: .topLeading, endPoint: .bottomTrailing
-                ))
+                .fill(heroCardBg)
 
-            // Blob score — haut droite
+            // Lueur douce derrière le ring — une seule, très subtile
             Circle()
-                .fill(RadialGradient(colors: [scoreColor.opacity(0.38), .clear],
-                                     center: .center, startRadius: 0, endRadius: 150))
-                .frame(width: 300, height: 300)
-                .offset(x: 120, y: -120)
-                .blur(radius: 32)
-                .allowsHitTesting(false)
-
-            // Blob froid — bas gauche
-            Circle()
-                .fill(RadialGradient(colors: [Color(hex: 0x3CB2E0).opacity(0.18), .clear],
-                                     center: .center, startRadius: 0, endRadius: 90))
-                .frame(width: 200, height: 200)
-                .offset(x: -50, y: 180)
-                .blur(radius: 36)
+                .fill(scoreColor.opacity(colorScheme == .dark ? 0.12 : 0.16))
+                .frame(width: 220, height: 220)
+                .offset(x: -30, y: 60)
+                .blur(radius: 70)
                 .allowsHitTesting(false)
 
             VStack(alignment: .leading, spacing: 0) {
 
-                // — LIGNE 1 : greeting + date
+                // — Ligne 1 : greeting + date
                 HStack(alignment: .firstTextBaseline) {
                     Text(greeting.uppercased())
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.35))
-                        .kerning(1.4)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.28))
+                        .kerning(1.2)
                     Spacer()
                     Text(Date.now.formatted(.dateTime.weekday(.abbreviated).day().month()))
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.3))
+                        .foregroundStyle(.white.opacity(0.25))
                 }
 
-                // — LIGNE 2 : prénom
+                // — Ligne 2 : prénom
                 Group {
                     if name.isEmpty {
                         TextField("Ton prénom", text: $name)
-                            .font(.system(size: 34, weight: .black, design: .rounded))
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
                             .foregroundStyle(.white)
                     } else {
                         Text(name)
-                            .font(.system(size: 34, weight: .black, design: .rounded))
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
                             .foregroundStyle(.white)
                     }
                 }
-                .padding(.top, 4)
+                .padding(.top, 3)
 
-                Spacer().frame(height: 20)
+                Spacer().frame(height: 22)
 
-                // — LIGNE 3 : ring gauche + métriques droite
-                HStack(alignment: .center, spacing: 18) {
+                // — Ligne 3 : ring + métriques
+                HStack(alignment: .center, spacing: 20) {
 
-                    // Score ring (plus grand)
+                    // Score ring
                     ZStack {
                         Circle()
-                            .stroke(.white.opacity(0.09), lineWidth: 11)
-                            .frame(width: 126, height: 126)
+                            .stroke(.white.opacity(0.07), lineWidth: 10)
+                            .frame(width: 118, height: 118)
 
                         Circle()
                             .trim(from: 0, to: appeared ? CGFloat(lifeScore) / 100.0 : 0)
-                            .stroke(scoreColor.opacity(0.35),
-                                    style: StrokeStyle(lineWidth: 20, lineCap: .round))
-                            .frame(width: 126, height: 126)
+                            .stroke(scoreColor, style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                            .frame(width: 118, height: 118)
                             .rotationEffect(.degrees(-90))
-                            .blur(radius: 9)
-                            .animation(.spring(duration: 1.3, bounce: 0.08).delay(0.45), value: appeared)
-                            .allowsHitTesting(false)
+                            .animation(.spring(duration: 1.2, bounce: 0.06).delay(0.4), value: appeared)
 
-                        Circle()
-                            .trim(from: 0, to: appeared ? CGFloat(lifeScore) / 100.0 : 0)
-                            .stroke(
-                                LinearGradient(colors: [scoreColor, scoreColor.opacity(0.55)],
-                                               startPoint: .topLeading, endPoint: .bottomTrailing),
-                                style: StrokeStyle(lineWidth: 11, lineCap: .round)
-                            )
-                            .frame(width: 126, height: 126)
-                            .rotationEffect(.degrees(-90))
-                            .animation(.spring(duration: 1.3, bounce: 0.08).delay(0.45), value: appeared)
-
-                        VStack(spacing: 1) {
-                            Text("SCORE")
-                                .font(.system(size: 8, weight: .bold))
-                                .foregroundStyle(.white.opacity(0.32))
-                                .kerning(0.8)
+                        VStack(spacing: 0) {
                             Text("\(lifeScore)")
-                                .font(.system(size: 36, weight: .black, design: .rounded).monospacedDigit())
+                                .font(.system(size: 34, weight: .bold, design: .rounded).monospacedDigit())
                                 .foregroundStyle(.white)
                             Text("/100")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.32))
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.28))
                         }
                     }
 
                     // Métriques verticales
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 13) {
                         heroMetricRow(
                             icon: "figure.run",
                             value: steps >= 1000 ? String(format: "%.1fk", Double(steps) / 1000.0) : "\(steps)",
@@ -1163,7 +1139,7 @@ struct ProfileView: View {
                         heroMetricRow(
                             icon: "flame.fill",
                             value: "\(kcalToday) kcal",
-                            label: "calories",
+                            label: "cal",
                             progress: min(1.0, Double(kcalToday) / Double(max(1, kcalGoal))),
                             color: Color(hex: 0x4CC38A)
                         )
@@ -1171,42 +1147,31 @@ struct ProfileView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
-                Spacer().frame(height: 20)
+                Spacer().frame(height: 22)
 
-                // — LIGNE 4 : barre de progression + statut
-                VStack(alignment: .leading, spacing: 7) {
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(.white.opacity(0.08)).frame(height: 3)
-                            Capsule()
-                                .fill(LinearGradient(colors: [scoreColor, scoreColor.opacity(0.55)],
-                                                     startPoint: .leading, endPoint: .trailing))
-                                .frame(width: max(3, geo.size.width * CGFloat(lifeScore) / 100.0), height: 3)
-                                .animation(.spring(duration: 1.0).delay(0.5), value: appeared)
-                        }
-                    }
-                    .frame(height: 3)
-
-                    HStack(spacing: 6) {
-                        Circle().fill(scoreColor).frame(width: 5, height: 5)
-                        Text(lifeScore >= 75 ? "Excellente journée" :
-                             lifeScore >= 50 ? "Bonne progression" : "Continue, tu peux mieux")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.white.opacity(0.5))
-                        Spacer()
-                        if healthConnected {
-                            Label("Santé", systemImage: "heart.fill")
-                                .font(.system(size: 9, weight: .semibold))
-                                .foregroundStyle(Color(hex: 0xF1746C).opacity(0.85))
-                                .padding(.horizontal, 7).padding(.vertical, 3)
-                                .background(Color(hex: 0xF1746C).opacity(0.15), in: Capsule())
-                        }
+                // — Ligne 4 : statut + badge santé
+                HStack(spacing: 6) {
+                    Text(lifeScore >= 75 ? "Excellente journée" :
+                         lifeScore >= 50 ? "Bonne progression" : "Continue, tu peux mieux")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.38))
+                    Spacer()
+                    if healthConnected {
+                        Label("Santé", systemImage: "heart.fill")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(Color(hex: 0xF1746C).opacity(0.9))
+                            .padding(.horizontal, 7).padding(.vertical, 3)
+                            .background(Color(hex: 0xF1746C).opacity(0.12), in: Capsule())
                     }
                 }
             }
             .padding(20)
         }
         .frame(maxWidth: .infinity)
+        .shadow(
+            color: Color.black.opacity(colorScheme == .dark ? 0.35 : 0.22),
+            radius: 20, x: 0, y: 6
+        )
     }
 
     private func heroMetricRow(icon: String, value: String, label: String,
