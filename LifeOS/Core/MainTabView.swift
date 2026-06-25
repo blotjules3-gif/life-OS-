@@ -9,11 +9,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-<<<<<<< HEAD
-        case .camera:     return "Scanner"
-=======
         case .wakeup:     return "Réveil"
->>>>>>> origin/pote
         case .home:       return "Accueil"
         case .categories: return "Catégories"
         case .profile:    return "Profil"
