@@ -72,12 +72,21 @@ struct LifeOSApp: App {
         .fullScreenCover(isPresented: $alarm.showAlarmScreen) {
             AlarmFullScreenView()
         }
+        .sheet(isPresented: $showSleepCheckFromWidget) {
+            SleepCheckSheet {
+                showSleepCheckFromWidget = false
+                // Bref délai pour laisser la sheet se fermer avant d'ouvrir le briefing
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    showBriefingFromWidget = true
+                }
+            }
+        }
         .fullScreenCover(isPresented: $showBriefingFromWidget) {
             DailyBriefingView(modules: recommendedModules, speakOnAppear: false)
         }
         .onOpenURL { url in
             guard url.scheme == "lifeos", url.host == "briefing" else { return }
-            showBriefingFromWidget = true
+            showSleepCheckFromWidget = true
         }
         .fullScreenCover(isPresented: $alarm.showBriefing) {
             DailyBriefingView(modules: recommendedModules, speakOnAppear: true)
