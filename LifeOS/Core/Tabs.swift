@@ -2073,3 +2073,218 @@ struct ProfileCustomizerSheet: View {
         }
     }
 }
+
+// MARK: - Check sommeil (widget tap au réveil)
+
+struct SleepCheckSheet: View {
+    let onContinue: () -> Void
+
+    @Environment(\.modelContext) private var ctx
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
+
+    @State private var quality: Int = 0       // 0 = non sélectionné, 1…5
+    @State private var hours: Int = 7
+    @State private var note: String = ""
+    @State private var appeared = false
+
+    private let qualities: [(label: String, icon: String, color: Color)] = [
+        ("Terrible",   "cloud.rain.fill",    Color(hex: 0xF1746C)),
+        ("Mauvais",    "cloud.fill",          Color(hex: 0xE0A23C)),
+        ("Correct",    "cloud.sun.fill",      Color(hex: 0x4CC38A).opacity(0.7)),
+        ("Bien",       "sun.max.fill",        Color(hex: 0x4CC38A)),
+        ("Excellent",  "sparkles",            Color(hex: 0x3CB2E0)),
+    ]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 32) {
+                    // Header
+                    VStack(spacing: 10) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(hex: 0x6C7BF1).opacity(0.1))
+                                .frame(width: 72, height: 72)
+                            Image(systemName: "moon.stars.fill")
+                                .font(.system(size: 30, weight: .semibold))
+                                .foregroundStyle(Color(hex: 0x6C7BF1))
+                        }
+                        .scaleEffect(appeared ? 1 : 0.6)
+                        .opacity(appeared ? 1 : 0)
+                        .animation(.spring(duration: 0.5, bounce: 0.4), value: appeared)
+
+                        Text("Comment tu as dormi ?")
+                            .font(.system(size: 22, weight: .bold))
+                            .multilineTextAlignment(.center)
+                            .opacity(appeared ? 1 : 0)
+                            .offset(y: appeared ? 0 : 8)
+                            .animation(.spring(duration: 0.45).delay(0.08), value: appeared)
+
+                        Text("Cette info personalise ton briefing")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.secondary)
+                            .opacity(appeared ? 1 : 0)
+                            .animation(.spring(duration: 0.45).delay(0.12), value: appeared)
+                    }
+                    .padding(.top, 8)
+
+                    // Qualité (5 boutons)
+                    VStack(spacing: 10) {
+                        HStack(spacing: 8) {
+                            ForEach(1...5, id: \.self) { i in
+                                let q = qualities[i - 1]
+                                let selected = quality == i
+                                Button {
+                                    withAnimation(.spring(duration: 0.25, bounce: 0.35)) { quality = i }
+                                    Haptics.tap()
+                                } label: {
+                                    VStack(spacing: 6) {
+                                        Image(systemName: q.icon)
+                                            .font(.system(size: 20))
+                                            .foregroundStyle(selected ? q.color : Color.secondary.opacity(0.4))
+                                            .scaleEffect(selected ? 1.15 : 1)
+                                        Text(q.label)
+                                            .font(.system(size: 9, weight: selected ? .semibold : .regular))
+                                            .foregroundStyle(selected ? q.color : .secondary)
+                                            .multilineTextAlignment(.center)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                            .fill(selected ? q.color.opacity(0.1) : Theme.card)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                            .stroke(selected ? q.color.opacity(0.5) : Color.clear, lineWidth: 1.5)
+                                    )
+                                }
+                                .buttonStyle(LifeOSPressStyle())
+                            }
+                        }
+                        .opacity(appeared ? 1 : 0)
+                        .offset(y: appeared ? 0 : 12)
+                        .animation(.spring(duration: 0.5).delay(0.16), value: appeared)
+                    }
+                    .padding(.horizontal, 20)
+
+                    // Heures de sommeil
+                    VStack(alignment: .leading, spacing: 12) {
+                        Label("Heures de sommeil", systemImage: "clock.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.secondary)
+
+                        HStack(spacing: 0) {
+                            Button {
+                                if hours > 1 { hours -= 1; Haptics.tap() }
+                            } label: {
+                                Image(systemName: "minus")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .frame(width: 48, height: 48)
+                                    .contentShape(Rectangle())
+                            }
+                            .foregroundStyle(.primary)
+
+                            Text("\(hours)h")
+                                .font(.system(size: 28, weight: .bold, design: .rounded).monospacedDigit())
+                                .frame(maxWidth: .infinity)
+
+                            Button {
+                                if hours < 14 { hours += 1; Haptics.tap() }
+                            } label: {
+                                Image(systemName: "plus")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .frame(width: 48, height: 48)
+                                    .contentShape(Rectangle())
+                            }
+                            .foregroundStyle(.primary)
+                        }
+                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .padding(.horizontal, 20)
+                    .opacity(appeared ? 1 : 0)
+                    .animation(.spring(duration: 0.5).delay(0.22), value: appeared)
+
+                    // Note optionnelle
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Note rapide (optionnel)", systemImage: "text.alignleft")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                        TextField("Cauchemar, réveil nocturne, rêve…", text: $note, axis: .vertical)
+                            .font(.system(size: 14))
+                            .lineLimit(3)
+                            .padding(12)
+                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .padding(.horizontal, 20)
+                    .opacity(appeared ? 1 : 0)
+                    .animation(.spring(duration: 0.5).delay(0.28), value: appeared)
+
+                    // Boutons
+                    VStack(spacing: 10) {
+                        Button {
+                            save()
+                            onContinue()
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "sunrise.fill")
+                                    .font(.system(size: 14))
+                                Text("Lancer mon briefing")
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(quality > 0 ? Color.accentColor : Color.secondary.opacity(0.2),
+                                        in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .foregroundStyle(quality > 0 ? .white : .secondary)
+                        }
+                        .buttonStyle(LifeOSPressStyle())
+                        .disabled(quality == 0)
+
+                        Button {
+                            onContinue()
+                        } label: {
+                            Text("Passer")
+                                .font(.system(size: 14))
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 20)
+                    .opacity(appeared ? 1 : 0)
+                    .animation(.spring(duration: 0.5).delay(0.34), value: appeared)
+
+                    Spacer(minLength: 20)
+                }
+                .padding(.top, 20)
+            }
+            .background(Theme.bg.ignoresSafeArea())
+            .onAppear { withAnimation { appeared = true } }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Fermer") { onContinue() }
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
+
+    private func save() {
+        guard quality > 0 else { return }
+        // Sauvegarde en MoodEntry (score 1-5) + DreamEntry si note
+        let mood = MoodEntry(score: quality, note: note)
+        ctx.insert(mood)
+        if !note.isEmpty {
+            let dream = DreamEntry(title: "Nuit du \(Date.now.formatted(.dateTime.day().month()))",
+                                   text: note, mood: quality)
+            ctx.insert(dream)
+        }
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: "lastSleepCheckDate")
+        UserDefaults.standard.set(quality, forKey: "lastSleepQuality")
+        UserDefaults.standard.set(hours, forKey: "lastSleepHours")
+    }
+}
