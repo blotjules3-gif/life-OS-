@@ -17,9 +17,9 @@ import SwiftUI
 
 struct BubbleStyle {
     /// Center translucency. LOWER = more see-through. (0.55 glassy ... 0.85 dense)
-    var coreAlpha: Double = 0.46        // centre see-through (goutte de grenadine) — TRANSPARENCE
+    var coreAlpha: Double = 0.22        // centre TRÈS transparent (vraie bulle de savon)
     /// Color presence at the rim (Fresnel film). Higher = bolder edge color.
-    var rimAlpha: Double = 0.95         // bord dense & vif (film de savon)
+    var rimAlpha: Double = 0.62         // film coloré au bord
     /// Sharpness of the phong sparkle on the rim.
     var specStrength: Double = 1.0
     /// Outer colored bloom (neon glow of the bubble's own color).
@@ -62,12 +62,14 @@ struct BubbleView: View {
                     Image(systemName: systemImage)
                         .font(.system(size: diameter * 0.30, weight: .semibold))
                         .foregroundStyle(.white)
-                        .shadow(color: .black.opacity(0.18), radius: diameter * 0.02)
+                        .shadow(color: tint.opacity(0.9), radius: diameter * 0.03)
+                        .shadow(color: .black.opacity(0.35), radius: diameter * 0.03, y: diameter * 0.005)
                     if showLabel {
                         Text(title)
-                            .font(.system(size: diameter * 0.12, weight: .semibold))
+                            .font(.system(size: diameter * 0.12, weight: .bold))
                             .foregroundStyle(.white)
-                            .shadow(color: .black.opacity(0.22), radius: diameter * 0.02)
+                            .shadow(color: tint.opacity(0.9), radius: diameter * 0.025)
+                            .shadow(color: .black.opacity(0.4), radius: diameter * 0.03, y: diameter * 0.005)
                             .lineLimit(1)
                             .minimumScaleFactor(0.7)
                     }
@@ -127,17 +129,40 @@ enum BubbleLayout {
 
 // MARK: - The screen (+ features LifeOS : édition, drag, compteur d'usage)
 
+enum CatLayout: String, CaseIterable {
+    case organic, tidy, icons, list
+    var label: String {
+        switch self {
+        case .organic: return "Bulles libres"
+        case .tidy:    return "Bulles rangées"
+        case .icons:   return "Icônes"
+        case .list:    return "Liste"
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .organic: return "circle.hexagonpath"
+        case .tidy:    return "circle.grid.3x3.fill"
+        case .icons:   return "square.grid.2x2.fill"
+        case .list:    return "list.bullet"
+        }
+    }
+}
+
 struct BubbleCategoriesView: View {
     var onSelect: (String) -> Void = { print("tapped \($0)") }
     var style: BubbleStyle = BubbleStyle()
 
     @AppStorage("bubbleWeights") private var weightsRaw = ""   // compteur d'usage  "titre:count,…"
     @AppStorage("hiddenCats")    private var hiddenRaw = ""    // bulles retirées (par titre)
+    @AppStorage("catLayout")     private var layoutRaw = "organic"
     @State private var editing = false
     @State private var showAdd = false
     @State private var tappedID: UUID?
     @State private var drag: [UUID: CGSize] = [:]
     @Environment(\.colorScheme) private var scheme
+
+    private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .organic }
 
     private var hidden: Set<String> { Set(hiddenRaw.split(separator: ",").map(String.init)) }
     private var visible: [BubbleCategory] {
@@ -146,36 +171,87 @@ struct BubbleCategoriesView: View {
     private var hiddenList: [BubbleCategory] {
         BubbleLayout.categories.filter { !$0.isFiller && hidden.contains($0.title) }
     }
+    // catégories (sans fillers) pour les modes rangé/icônes/liste
+    private var mains: [BubbleCategory] {
+        BubbleLayout.categories.filter { !$0.isFiller && !hidden.contains($0.title) }
+    }
+    private var mainsByImportance: [BubbleCategory] {
+        mains.sorted { (parseWeights()[$0.title] ?? 0) > (parseWeights()[$1.title] ?? 0) }
+    }
 
     var body: some View {
+        ZStack {
+            background.ignoresSafeArea()
+            layoutContent
+        }
+        .overlay(alignment: .topLeading) { layoutSwitcher }
+        .overlay(alignment: .topTrailing) { editButton }
+        .overlay(alignment: .bottomTrailing) { if editing && (layout == .organic || layout == .tidy) { addButton } }
+        .sheet(isPresented: $showAdd) { addSheet }
+    }
+
+    @ViewBuilder private var layoutContent: some View {
+        switch layout {
+        case .organic: bubbleCluster(tidy: false)
+        case .tidy:    bubbleCluster(tidy: true)
+        case .icons:   iconGrid
+        case .list:    listLayout
+        }
+    }
+
+    // ===== Sélecteur de layout (haut-gauche) =====
+    private var layoutSwitcher: some View {
+        Menu {
+            ForEach(CatLayout.allCases, id: \.self) { l in
+                Button {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { layoutRaw = l.rawValue }
+                    Haptics.tap()
+                } label: {
+                    Label(l.label, systemImage: l.symbol)
+                    if layout == l { Image(systemName: "checkmark") }
+                }
+            }
+        } label: {
+            Image(systemName: layout.symbol)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 38, height: 38)
+                .background(.regularMaterial, in: Circle())
+        }
+        .padding(.top, 8).padding(.leading, 16)
+    }
+
+    // ===== Mode 1 & 2 : bulles (libres / rangées) =====
+    private func bubbleCluster(tidy: Bool) -> some View {
         GeometryReader { geo in
             let w = geo.size.width
             let h = geo.size.height
             let base = w * BubbleLayout.baseRatio
+            let items = tidy ? mains : visible
 
             TimelineView(.animation) { context in
                 let t = context.date.timeIntervalSinceReferenceDate
                 ZStack {
-                    background.ignoresSafeArea()
-                        .contentShape(Rectangle())
+                    Color.clear.contentShape(Rectangle())
                         .onTapGesture { if editing { setEditing(false) } }
                         .gesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in setEditing(true) })
 
-                    ForEach(Array(visible.enumerated()), id: \.element.id) { index, cat in
-                        bubble(cat, index: index, base: base, w: w, h: h, t: t)
+                    ForEach(Array(items.enumerated()), id: \.element.id) { index, cat in
+                        bubble(cat, index: index, base: base, w: w, h: h, t: t, tidy: tidy)
                     }
                 }
             }
         }
-        .overlay(alignment: .topTrailing) { editButton }
-        .overlay(alignment: .bottomTrailing) { if editing { addButton } }
-        .sheet(isPresented: $showAdd) { addSheet }
     }
 
     // Une bulle : compteur d'usage (taille), bob, drag + tap, badge − en édition.
-    private func bubble(_ cat: BubbleCategory, index: Int, base: CGFloat, w: CGFloat, h: CGFloat, t: Double) -> some View {
+    private func bubble(_ cat: BubbleCategory, index: Int, base: CGFloat, w: CGFloat, h: CGFloat, t: Double, tidy: Bool) -> some View {
         let grow = cat.isFiller ? 1.0 : growth(cat.title)
-        let d = base * cat.sizeMul * grow
+        // rangé : grille 3 colonnes, taille uniforme ; libre : ancres organiques + tailles variées
+        let cols = 3
+        let gx: [CGFloat] = [0.21, 0.50, 0.79]
+        let tidyAnchor = CGPoint(x: gx[index % cols], y: 0.12 + CGFloat(index / cols) * 0.158)
+        let d = tidy ? base * 0.92 * grow : base * cat.sizeMul * grow
         let phase = Double(index) * 1.37
         let amp: Double = cat.isFiller ? 6 : 4
         let dv = drag[cat.id] ?? .zero
@@ -183,7 +259,7 @@ struct BubbleCategoriesView: View {
         let bx = (moving ? 0 : sin(t * 0.5 + phase) * amp) + dv.width
         let by = (moving ? 0 : cos(t * 0.42 + phase * 1.3) * amp) + dv.height
         let wig: Double = (editing && !cat.isFiller) ? sin(t * 7 + phase) * 2.0 : 0
-        let a = cat.isFiller ? cat.anchor : adjustedAnchor(cat)
+        let a = tidy ? tidyAnchor : (cat.isFiller ? cat.anchor : adjustedAnchor(cat))
 
         return BubbleView(
             title: cat.title,
@@ -330,6 +406,62 @@ struct BubbleCategoriesView: View {
             }
             .navigationTitle("Ajouter une catégorie").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("OK") { showAdd = false } } }
+        }
+    }
+
+    private func tapCategory(_ cat: BubbleCategory) {
+        bump(cat.title)
+        Haptics.soft()
+        onSelect(cat.title)
+    }
+
+    // ===== Mode 3 : icônes pro alignées par ligne =====
+    private var iconGrid: some View {
+        ScrollView(showsIndicators: false) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 3), spacing: 20) {
+                ForEach(mains) { cat in
+                    Button { tapCategory(cat) } label: {
+                        VStack(spacing: 8) {
+                            Image(systemName: cat.systemImage)
+                                .font(.system(size: 26, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .frame(width: 66, height: 66)
+                                .background(cat.tint.gradient, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
+                                .shadow(color: cat.tint.opacity(0.4), radius: 8, y: 4)
+                            Text(cat.title)
+                                .font(.system(size: 12, weight: .medium)).foregroundStyle(.primary)
+                                .lineLimit(1).minimumScaleFactor(0.8)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 18).padding(.top, 58).padding(.bottom, 110)
+        }
+    }
+
+    // ===== Mode 4 : liste, plus importantes en haut =====
+    private var listLayout: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 10) {
+                ForEach(mainsByImportance) { cat in
+                    Button { tapCategory(cat) } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: cat.systemImage)
+                                .font(.system(size: 17, weight: .semibold)).foregroundStyle(.white)
+                                .frame(width: 40, height: 40)
+                                .background(cat.tint.gradient, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                            Text(cat.title).font(.system(size: 16, weight: .medium)).foregroundStyle(.primary)
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(.tertiary)
+                        }
+                        .padding(.horizontal, 14).padding(.vertical, 12)
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 16).padding(.top, 58).padding(.bottom, 110)
         }
     }
 
