@@ -433,6 +433,29 @@ TOOL_DEFINITIONS: list[dict] = [
         },
     },
 
+    {
+        "type": "function",
+        "function": {
+            "name": "check_in_challenge",
+            "description": (
+                "Mark today as completed for a life challenge and update the streak. "
+                "Call when the user confirms they completed their daily challenge task. "
+                "Use list_goals to find the challenge_id if not known."
+            ),
+            "parameters": {
+                "type": "object",
+                "required": ["challenge_id"],
+                "properties": {
+                    "challenge_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "ID of the challenge to check in",
+                    },
+                },
+            },
+        },
+    },
+
     # ── Finance (STRICT SAFETY MODE) ──────────────────────────────────────────
 
     {
