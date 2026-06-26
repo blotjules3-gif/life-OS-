@@ -166,21 +166,29 @@ struct OnboardingView: View {
                             withAnimation(.spring(duration: 0.4)) { step = 2 }
                         }
                     case 2:
-                        OnboardingGoalStep(selected: $goals) {
+                        OnboardingLifeProfile(selected: $lifeProfile) {
+                            savedLifeProfile = lifeProfile?.rawValue ?? ""
+                            if let p = lifeProfile {
+                                UserDefaults.standard.set(p.sportHour, forKey: "sportHour")
+                            }
                             withAnimation(.spring(duration: 0.4)) { step = 3 }
                         }
                     case 3:
-                        OnboardingInterests(selected: $interests) {
+                        OnboardingGoalStep(selected: $goals) {
                             withAnimation(.spring(duration: 0.4)) { step = 4 }
                         }
                     case 4:
+                        OnboardingInterests(selected: $interests) {
+                            withAnimation(.spring(duration: 0.4)) { step = 5 }
+                        }
+                    case 5:
                         OnboardingWakeTime(hour: $wakeHour, minute: $wakeMinute) {
                             savedWakeupHour = wakeHour
                             savedWakeupMinute = wakeMinute
                             savedWakeupEnabled = true
-                            withAnimation(.spring(duration: 0.4)) { step = 5 }
+                            withAnimation(.spring(duration: 0.4)) { step = 6 }
                         }
-                    case 5:
+                    case 6:
                         OnboardingResults(
                             name: savedName,
                             recommendations: recommendations,
