@@ -298,6 +298,27 @@ struct ShortcutsHomeView: View {
         withAnimation { editingMood = false }
     }
 
+    private var energyBadge: some View {
+        let scoreColor: Color = {
+            switch todayEnergyScore {
+            case 85...100: return Color(hex: 0x34C759)
+            case 70..<85:  return Color(hex: 0x30D158)
+            case 50..<70:  return Color(hex: 0xFF9F0A)
+            case 30..<50:  return Color(hex: 0xFF6B35)
+            default:       return Color(hex: 0xFF3B30)
+            }
+        }()
+        return VStack(alignment: .trailing, spacing: 1) {
+            Text("\(todayEnergyScore)")
+                .font(.system(size: 28, weight: .black, design: .rounded))
+                .foregroundStyle(scoreColor)
+                .contentTransition(.numericText())
+            Text(todayEnergyLabel.isEmpty ? "Énergie" : todayEnergyLabel)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(scoreColor.opacity(0.8))
+        }
+    }
+
     private func sectionHeader(_ title: String, trailing: String? = nil, action: @escaping () -> Void = {}) -> some View {
         HStack {
             Text(title).font(.title3.bold())
