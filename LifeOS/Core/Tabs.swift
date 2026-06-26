@@ -1468,6 +1468,37 @@ struct ProfileView: View {
         .animation(.spring(duration: 0.3), value: wakeupEnabled)
     }
 
+    // MARK: - Section picker (Aujourd'hui / Objectifs)
+
+    private var sectionPicker: some View {
+        HStack(spacing: 0) {
+            ForEach([(0, "Aujourd'hui"), (1, "Objectifs")], id: \.0) { idx, label in
+                Button {
+                    withAnimation(.spring(duration: 0.25)) { profileSection = idx }
+                } label: {
+                    Text(label)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(profileSection == idx ? .primary : .secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(
+                            profileSection == idx
+                                ? neoCard.shadow(
+                                    .inner(color: neoShadowDark.opacity(0.3), radius: 2, x: 1, y: 1))
+                                : Color.clear,
+                            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(5)
+        .background(neoBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
+        .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
+    }
+
     // MARK: - API Goals (objectifs posés avec l'assistant)
 
     private var apiGoalsSection: some View {
