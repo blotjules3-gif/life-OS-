@@ -169,6 +169,8 @@ struct ShortcutsHomeView: View {
                 if await HealthService.shared.requestAuthorization() {
                     steps = await HealthService.shared.stepsToday()
                 }
+                reengageMessage    = EngagementTracker.shared.reengagementMessage
+                reengageSuggestion = EngagementTracker.shared.simplificationSuggestion
             }
         }
     }
