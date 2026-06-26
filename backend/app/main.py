@@ -61,6 +61,7 @@ def _register_all_tools() -> None:
     registry.register("update_user_profile", handle_update_user_profile)
     registry.register("remember_user_info", handle_remember_user_info)
     registry.register("create_life_challenge", handle_create_life_challenge)
+    registry.register("check_in_challenge", handle_check_in_challenge)
     registry.register("add_module", handle_add_module)
     registry.register("remove_module", handle_remove_module)
 
