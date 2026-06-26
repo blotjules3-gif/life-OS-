@@ -1436,23 +1436,23 @@ struct ProfileView: View {
     // MARK: - Night Island (Réveil)
 
     private var nightIsland: some View {
-        VStack(spacing: 0) {
-            // Top row
+        let accentColor = Color(hex: 0xE07B3C)
+        return VStack(spacing: 0) {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("RÉVEIL")
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(Color(hex: 0xE07B3C).opacity(0.75))
+                        .foregroundStyle(accentColor.opacity(0.75))
                         .kerning(1.4)
                     Text(String(format: "%02d:%02d", wakeupHour, wakeupMinute))
-                        .font(.system(size: 52, weight: .black, design: .rounded).monospacedDigit())
-                        .foregroundStyle(wakeupEnabled ? Color(hex: 0xE07B3C) : .white)
+                        .font(.system(size: 48, weight: .black, design: .rounded).monospacedDigit())
+                        .foregroundStyle(wakeupEnabled ? accentColor : .primary)
                         .animation(.spring(duration: 0.3), value: wakeupEnabled)
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 10) {
                     Toggle("", isOn: $wakeupEnabled)
-                        .tint(Color(hex: 0xE07B3C))
+                        .tint(accentColor)
                         .labelsHidden()
                         .onChange(of: wakeupEnabled) { _, on in
                             if on { scheduleWakeupAlarm() }
@@ -1461,23 +1461,22 @@ struct ProfileView: View {
                     Button { showWakeupDetail = true } label: {
                         Text("Personnaliser")
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(Color(hex: 0xE07B3C))
+                            .foregroundStyle(accentColor)
                             .padding(.horizontal, 10).padding(.vertical, 5)
-                            .background(Color(hex: 0xE07B3C).opacity(0.14), in: Capsule())
+                            .background(accentColor.opacity(0.12), in: Capsule())
                     }
                     .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 20).padding(.top, 20).padding(.bottom, 16)
 
-            Divider().background(Color.white.opacity(0.1))
+            Divider().opacity(0.12)
 
-            // Briefing row
             Button { showBriefing = true } label: {
                 HStack(spacing: 12) {
                     ZStack {
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(Color.orange.opacity(0.18))
+                            .fill(Color.orange.opacity(0.14))
                             .frame(width: 36, height: 36)
                         Image(systemName: "sunrise.fill")
                             .font(.system(size: 15, weight: .semibold))
@@ -1486,27 +1485,27 @@ struct ProfileView: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text("Lancer ma journée")
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(.primary)
                         Text("Briefing vocal + priorités")
                             .font(.system(size: 11))
-                            .foregroundStyle(.white.opacity(0.45))
+                            .foregroundStyle(.secondary)
                     }
                     Spacer()
                     Image(systemName: "chevron.right")
                         .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.3))
+                        .foregroundStyle(.tertiary)
                 }
                 .padding(.horizontal, 20).padding(.vertical, 14)
             }
             .buttonStyle(LifeOSPressStyle())
         }
-        .background(islandBg, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(neoCard)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: neoShadowLight, radius: 10, x: -5, y: -5)
+        .shadow(color: neoShadowDark, radius: 10, x: 5, y: 5)
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(
-                    wakeupEnabled ? Color(hex: 0xE07B3C).opacity(0.45) : appTheme.accent.opacity(0.22),
-                    lineWidth: 1.5
-                )
+                .stroke(wakeupEnabled ? accentColor.opacity(0.3) : Color.clear, lineWidth: 1.5)
         )
         .animation(.spring(duration: 0.3), value: wakeupEnabled)
     }
