@@ -549,6 +549,32 @@ struct DailyBriefingView: View {
                         }
                     }
 
+                    // Insights comportementaux
+                    if !behavioralInsights.isEmpty {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Ce qu'on a appris sur toi")
+                                .font(.headline)
+                            VStack(spacing: 8) {
+                                ForEach(behavioralInsights, id: \.self) { insight in
+                                    HStack(alignment: .top, spacing: 10) {
+                                        Image(systemName: "lightbulb.fill")
+                                            .font(.system(size: 12, weight: .semibold))
+                                            .foregroundStyle(Color(hex: 0xFFBF00))
+                                            .frame(width: 22, height: 22)
+                                            .background(Color(hex: 0xFFBF00).opacity(0.12), in: Circle())
+                                        Text(insight)
+                                            .font(.subheadline)
+                                            .foregroundStyle(.primary)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                    .padding(12)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                }
+                            }
+                        }
+                    }
+
                     Button { dismiss() } label: {
                         Text("Commencer la journée")
                             .font(.system(size: 17, weight: .semibold))
