@@ -1151,7 +1151,7 @@ struct ProfileView: View {
         guard let mod else { return "Navigue pour personnaliser ton expérience." }
         switch mod {
         case .sleep:        return "Ton sommeil façonne ta journée. Évalue ta nuit."
-        case .nutrition:    return "\(kcalToday) kcal · \(waterToday) ml · tu avances bien."
+        case .nutrition:    return "\(kcalToday) kcal · \(glassesToday)/\(glassesGoalCalc) verres · tu avances."
         case .fitness:      return "\(steps) pas aujourd'hui · continue sur ta lancée."
         case .looks:        return "Ta routine beauté, c'est un investissement quotidien."
         case .mind:         return "Quelques minutes de calme font toute la différence."
