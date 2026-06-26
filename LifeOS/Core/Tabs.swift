@@ -1203,10 +1203,8 @@ struct ProfileView: View {
                     activeCalories = await HealthService.shared.activeCaloriesToday()
                 }
                 async let challengesTask = (try? await AgentAPI.shared.fetchChallenges()) ?? []
-                async let goalsTask = (try? await AgentAPI.shared.listGoals()) ?? []
-                let (ch, gl) = await (challengesTask, goalsTask)
+                let ch = await challengesTask
                 challenges = ch
-                apiGoals = gl
                 saveChallengesForWidget(challenges)
             }
             .sheet(isPresented: $showGoalEditor) {
