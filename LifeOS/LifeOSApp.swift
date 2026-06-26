@@ -119,6 +119,9 @@ struct LifeOSApp: App {
             guard url.scheme == "lifeos", url.host == "briefing" else { return }
             showSleepCheckFromWidget = true
         }
+        .sheet(isPresented: $alarm.showSleepCheck) {
+            SleepCheckSheet { alarm.sleepCheckDone() }
+        }
         .fullScreenCover(isPresented: $alarm.showBriefing) {
             DailyBriefingView(modules: recommendedModules, speakOnAppear: true)
         }
