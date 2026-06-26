@@ -1411,10 +1411,26 @@ struct ProfileView: View {
 
     // MARK: - Active Goals
 
+    private var hiddenGoals: Set<String> {
+        Set(profileHiddenRaw.split(separator: ",").map(String.init))
+    }
+
+    private func toggleHideGoal(_ key: String) {
+        var hidden = hiddenGoals
+        if hidden.contains(key) { hidden.remove(key) } else { hidden.insert(key) }
+        profileHiddenRaw = hidden.joined(separator: ",")
+    }
+
+    private func pinGoal(_ key: String) {
+        var pinned = Set(profilePinnedRaw.split(separator: ",").map(String.init))
+        if pinned.contains(key) { pinned.remove(key) } else { pinned.insert(key) }
+        profilePinnedRaw = pinned.joined(separator: ",")
+    }
+
     private var activeGoalsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("MES OBJECTIFS")
+                Text("MES MODULES AUJOURD'HUI")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(.secondary)
                     .kerning(1.2)
@@ -1434,22 +1450,68 @@ struct ProfileView: View {
             }
 
             let endDates = parseEndDates()
+            let pinned = Set(profilePinnedRaw.split(separator: ",").map(String.init))
+            let hidden = hiddenGoals
             let tasks = todayTasks
+                .sorted { a, _ in pinned.contains(a.icon + a.title) }
+                .filter { !hidden.contains($0.icon + $0.title) }
 
             if tasks.isEmpty {
-                Text("Aucun objectif actif")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 20)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                VStack(spacing: 8) {
+                    Text("Aucun module à suivre aujourd'hui.")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    if !hiddenGoals.isEmpty {
+                        Button {
+                            profileHiddenRaw = ""
+                        } label: {
+                            Text("Afficher tous les modules masqués")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(Color.accentColor)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.vertical, 20)
+                .frame(maxWidth: .infinity)
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             } else {
                 VStack(spacing: 1) {
                     ForEach(Array(tasks.enumerated()), id: \.offset) { idx, task in
-                        goalRow(task: task, endDate: endDates[task.icon + task.title], isLast: idx == tasks.count - 1)
+                        let key = task.icon + task.title
+                        let isPinned = pinned.contains(key)
+                        goalRow(task: task, endDate: endDates[key], isLast: idx == tasks.count - 1)
+                            .contextMenu {
+                                Button {
+                                    withAnimation { pinGoal(key) }
+                                } label: {
+                                    Label(isPinned ? "Désépingler" : "Épingler en haut",
+                                          systemImage: isPinned ? "pin.slash" : "pin.fill")
+                                }
+                                Button(role: .destructive) {
+                                    withAnimation { toggleHideGoal(key) }
+                                } label: {
+                                    Label("Masquer ce module", systemImage: "eye.slash")
+                                }
+                            }
                     }
                 }
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+                if !hiddenGoals.isEmpty {
+                    Button {
+                        withAnimation { profileHiddenRaw = "" }
+                    } label: {
+                        Text("Afficher \(hiddenGoals.count) module\(hiddenGoals.count > 1 ? "s" : "") masqué\(hiddenGoals.count > 1 ? "s" : "")")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
     }
