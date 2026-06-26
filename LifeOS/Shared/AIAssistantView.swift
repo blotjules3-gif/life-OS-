@@ -462,7 +462,7 @@ struct AIAssistantView: View {
                 Text(vm.errorBanner ?? "")
             }
         }
-        .onAppear {
+        .task {
             vm.modelContext = ctx
             vm.loadHistory()
         }
