@@ -75,7 +75,7 @@ struct LifeOSApp: App {
                     .transition(.opacity)
                     .zIndex(0)
             } else {
-                MainTabView()
+                ProfileView()
                     .tint(appTheme.accent)
                     .transition(.opacity)
                     .zIndex(1)
