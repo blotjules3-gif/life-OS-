@@ -1334,72 +1334,80 @@ struct ProfileView: View {
             : "Fin de journée"
 
         return HStack(spacing: 0) {
-            // Icône module
+            // Module icon in soft colored circle
             ZStack {
                 Circle()
-                    .fill(color.opacity(0.18))
-                    .frame(width: 72, height: 72)
+                    .fill(neoCard)
+                    .frame(width: 68, height: 68)
+                    .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
+                    .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
+                Circle()
+                    .fill(color.opacity(0.15))
+                    .frame(width: 56, height: 56)
                 Image(systemName: mod?.icon ?? "star.fill")
-                    .font(.system(size: 30, weight: .semibold))
+                    .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(color)
             }
             .padding(.leading, 20)
 
-            VStack(alignment: .leading, spacing: 6) {
-                // Label
+            VStack(alignment: .leading, spacing: 4) {
                 Text(mod == nil ? "MODULE FAVORI" : "TON MODULE #1")
                     .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(.secondary)
                     .kerning(1.2)
-
-                // Nom du module
                 Text(mod?.title ?? "Ouvre un module")
-                    .font(.system(size: 19, weight: .black, design: .rounded))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 18, weight: .black, design: .rounded))
+                    .foregroundStyle(.primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
-
-                // Phrase contextuelle
                 Text(moduleContextLine(mod))
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.6))
+                    .foregroundStyle(.secondary)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.leading, 16)
+            .padding(.leading, 14)
             .padding(.trailing, 12)
 
             Spacer()
 
-            // Temps restant
+            // Time remaining ring
             VStack(alignment: .trailing, spacing: 4) {
                 ZStack {
                     Circle()
-                        .stroke(Color.white.opacity(0.12), lineWidth: 4)
-                        .frame(width: 52, height: 52)
+                        .fill(neoCard)
+                        .frame(width: 58, height: 58)
+                        .shadow(color: neoShadowLight, radius: 4, x: -2, y: -2)
+                        .shadow(color: neoShadowDark, radius: 4, x: 2, y: 2)
+                    Circle()
+                        .stroke(Color.primary.opacity(0.06), lineWidth: 4)
+                        .frame(width: 44, height: 44)
                     Circle()
                         .trim(from: 0, to: appeared ? 1 - dayProgress : 0)
                         .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                         .rotationEffect(.degrees(-90))
-                        .frame(width: 52, height: 52)
+                        .frame(width: 44, height: 44)
                         .animation(.spring(duration: 1.4).delay(0.3), value: appeared)
                     Text("\(hoursRemaining)h")
                         .font(.system(size: 11, weight: .bold, design: .rounded).monospacedDigit())
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
                 }
                 Text(timeStr)
                     .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.trailing)
             }
             .padding(.trailing, 20)
         }
-        .padding(.vertical, 20)
+        .padding(.vertical, 18)
         .frame(maxWidth: .infinity)
-        .background(islandBg, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(neoCard)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: neoShadowLight, radius: 10, x: -5, y: -5)
+        .shadow(color: neoShadowDark, radius: 10, x: 5, y: 5)
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(color.opacity(0.3), lineWidth: 1)
+                .stroke(color.opacity(0.18), lineWidth: 1)
         )
     }
 
