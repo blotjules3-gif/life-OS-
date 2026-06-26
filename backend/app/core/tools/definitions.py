@@ -324,6 +324,67 @@ TOOL_DEFINITIONS: list[dict] = [
         },
     },
 
+    # ── Module management ──────────────────────────────────────────────────────
+
+    {
+        "type": "function",
+        "function": {
+            "name": "add_module",
+            "description": (
+                "Add a new module to the user's active profile. "
+                "ONLY call after the user has explicitly agreed to add it. "
+                "Never add a module without clear confirmation."
+            ),
+            "parameters": {
+                "type": "object",
+                "required": ["module"],
+                "properties": {
+                    "module": {
+                        "type": "string",
+                        "description": "Module key: fitness | nutrition | sleep | finance | productivity | mind | learning | mobility | career | invest | social | home | admin | travel | cycle | looks | pets",
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Brief reason why this module was added, in French",
+                    },
+                },
+            },
+        },
+    },
+
+    {
+        "type": "function",
+        "function": {
+            "name": "remove_module",
+            "description": (
+                "Remove a module from the user's active profile. "
+                "Use when: (1) the module adds friction without value, "
+                "(2) the user says they don't use it, "
+                "(3) the habit is formed and the module is no longer needed. "
+                "ONLY call after explicit user agreement."
+            ),
+            "parameters": {
+                "type": "object",
+                "required": ["module", "reason_type"],
+                "properties": {
+                    "module": {
+                        "type": "string",
+                        "description": "Module key to remove",
+                    },
+                    "reason_type": {
+                        "type": "string",
+                        "enum": ["too_constraining", "habit_formed", "not_relevant", "user_request"],
+                        "description": "Why the module is being removed",
+                    },
+                    "reason": {
+                        "type": "string",
+                        "description": "Brief explanation in French",
+                    },
+                },
+            },
+        },
+    },
+
     # ── Life Challenges (heavy behaviour changes) ──────────────────────────────
 
     {
