@@ -2063,20 +2063,23 @@ struct ProfileView: View {
                 } action: {
                     Task { healthConnected = await HealthService.shared.requestAuthorization() }
                 }
-                Divider().padding(.leading, 50)
+                Divider().opacity(0.1).padding(.leading, 50)
                 settingsRow(icon: "bell.fill", iconColor: Color(hex: 0xE0A23C), label: "Activer les rappels") {
                     Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
                 } action: {
                     Task { _ = await NotificationManager.shared.requestAuthorization() }
                 }
-                Divider().padding(.leading, 50)
+                Divider().opacity(0.1).padding(.leading, 50)
                 settingsRow(icon: "slider.horizontal.3", iconColor: Color.accentColor, label: "Modifier mes objectifs") {
                     Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
                 } action: {
                     showGoalEditor = true
                 }
             }
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .background(neoCard)
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+            .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
 
             Button {
                 UserDefaults.standard.removeObject(forKey: "onboardingDone")
@@ -2092,7 +2095,10 @@ struct ProfileView: View {
                     .foregroundStyle(.red)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(Color.red.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
+                    .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
             }
             .buttonStyle(.plain)
 
@@ -2122,6 +2128,7 @@ struct ProfileView: View {
                                 ZStack {
                                     Circle().fill(th.accent.gradient)
                                         .frame(width: 42, height: 42)
+                                        .shadow(color: selected ? th.accent.opacity(0.35) : .clear, radius: 6, x: 2, y: 3)
                                     Image(systemName: th.symbol)
                                         .font(.system(size: 16, weight: .semibold))
                                         .foregroundStyle(.white)
@@ -2143,7 +2150,10 @@ struct ProfileView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(16)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .background(neoCard)
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+            .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
         }
     }
 
