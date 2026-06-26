@@ -119,10 +119,10 @@ struct OnboardingView: View {
             Theme.bg.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Barre de progression (steps 1–4)
-                if step >= 1 && step <= 4 {
+                // Barre de progression (steps 1–5)
+                if step >= 1 && step <= 5 {
                     HStack(spacing: 6) {
-                        ForEach(1...4, id: \.self) { s in
+                        ForEach(1...5, id: \.self) { s in
                             Capsule()
                                 .fill(step >= s ? Color.accentColor : Color.primary.opacity(0.1))
                                 .frame(height: 4)
@@ -134,8 +134,8 @@ struct OnboardingView: View {
                     .animation(.spring(duration: 0.35), value: step)
                 }
 
-                // Bouton retour (steps 2–4)
-                if step >= 2 && step <= 4 {
+                // Bouton retour (steps 2–5)
+                if step >= 2 && step <= 5 {
                     HStack {
                         Button {
                             withAnimation(.spring(duration: 0.35)) { step -= 1 }
