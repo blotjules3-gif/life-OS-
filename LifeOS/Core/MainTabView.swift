@@ -36,7 +36,7 @@ enum AppTab: String, CaseIterable, Identifiable {
 // MARK: - Conteneur principal
 
 struct MainTabView: View {
-    @State private var tab: AppTab = .profile
+    @State private var tab: AppTab = .home
     @State private var catPath: [AppCategory] = []
     @State private var chatInput = ""
     @State private var chatMessages: [ChatMessage] = [
