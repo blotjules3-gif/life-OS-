@@ -75,11 +75,12 @@ struct OnboardingView: View {
     private var recommendations: [AppCategory] {
         var seen = Set<AppCategory>()
         var result: [AppCategory] = []
+        let profileModules = lifeProfile?.priorityModules ?? []
         let goalModules = OnboardingGoal.allCases
             .filter { goals.contains($0) }
             .flatMap { $0.modules }
-        // Intérêts explicites EN PREMIER, puis modules dérivés des objectifs
-        for cat in Array(interests) + goalModules {
+        // Intérêts explicites EN PREMIER, puis profil de vie, puis objectifs
+        for cat in Array(interests) + profileModules + goalModules {
             if seen.insert(cat).inserted { result.append(cat) }
         }
         var recs = Array(result.prefix(8))
