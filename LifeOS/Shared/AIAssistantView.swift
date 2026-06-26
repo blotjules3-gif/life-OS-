@@ -252,6 +252,7 @@ final class AIAssistantViewModel: ObservableObject {
         appendThinking()
         isLoading = true
         firstLaunchDone = true
+        aiKnownModulesRaw = recommendedModulesRaw
 
         Task {
             do {
