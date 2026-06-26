@@ -61,9 +61,12 @@ struct OnboardingView: View {
     @AppStorage("wakeupMinute") private var savedWakeupMinute = 0
     @AppStorage("wakeupEnabled") private var savedWakeupEnabled = false
 
+    @AppStorage("lifeProfile") private var savedLifeProfile = ""
+
     @State private var step = 0
     @State private var name = ""
     @State private var gender = ""
+    @State private var lifeProfile: LifeProfile? = nil
     @State private var goals: Set<OnboardingGoal> = []
     @State private var interests: Set<AppCategory> = []
     @State private var wakeHour = 7
