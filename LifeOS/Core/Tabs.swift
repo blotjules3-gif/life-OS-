@@ -393,6 +393,8 @@ struct DailyBriefingView: View {
     @AppStorage("lastSleepHours") private var sleepHours = 0
     @AppStorage("wakeupHour") private var wakeupHour = 7
     @AppStorage("wakeupMinute") private var wakeupMinute = 0
+    @AppStorage("todayEnergyScore") private var todayEnergyScore = 0
+    @AppStorage("todayEnergyLabel") private var todayEnergyLabel = ""
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
     @Query private var habits: [Habit]
@@ -404,6 +406,10 @@ struct DailyBriefingView: View {
     @State private var briefingLoading = false
     @State private var briefingGoals: [GoalOut] = []
     @State private var briefingChallenges: [ChallengeOut] = []
+    @State private var morningMood = 0
+    @State private var morningFatigue = 0
+    @State private var checkinSubmitting = false
+    @State private var checkinDone = false
 
     private static let waveBars: [Double] = [8, 20, 12, 24, 10, 18, 8, 22, 14, 8]
 
