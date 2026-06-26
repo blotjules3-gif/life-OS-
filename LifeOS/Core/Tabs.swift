@@ -815,6 +815,7 @@ struct ProfileView: View {
                     topModuleIsland
                     nightIsland
                     activeGoalsSection
+                    if !challenges.isEmpty { activeChallengesSection }
                     bentoRow
                     tipCard
                     settingsSection
