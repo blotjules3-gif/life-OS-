@@ -411,6 +411,11 @@ struct DailyBriefingView: View {
     private var waterToday: Int { waters.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML } }
     private var habitsDone: Int { habits.filter { h in h.completions.contains { Calendar.current.isDateInToday($0.date) } }.count }
 
+    private var yesterday: Date { Calendar.current.date(byAdding: .day, value: -1, to: .now) ?? .now }
+    private var kcalYesterday: Int { foods.filter { Calendar.current.isDate($0.date, inSameDayAs: yesterday) }.reduce(0) { $0 + $1.calories } }
+    private var waterYesterday: Int { waters.filter { Calendar.current.isDate($0.date, inSameDayAs: yesterday) }.reduce(0) { $0 + $1.amountML } }
+    private var habitsDoneYesterday: Int { habits.filter { h in h.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: yesterday) } }.count }
+
     private var greeting: String {
         switch Calendar.current.component(.hour, from: .now) {
         case 5..<12: return "Bonjour"
