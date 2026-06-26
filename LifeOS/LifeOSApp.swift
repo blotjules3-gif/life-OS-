@@ -131,6 +131,21 @@ struct LifeOSApp: App {
         }
     }
 
+    // MARK: - Reset journalier à minuit
+
+    private func resetDailyValuesIfNeeded() {
+        let key = "lifeos.daily.lastReset"
+        let today = Calendar.current.startOfDay(for: Date())
+        let last = UserDefaults.standard.object(forKey: key) as? Date ?? .distantPast
+        guard !Calendar.current.isDate(last, inSameDayAs: today) else { return }
+        UserDefaults.standard.set(0,    forKey: "todayEnergyScore")
+        UserDefaults.standard.set("",   forKey: "todayEnergyLabel")
+        UserDefaults.standard.set(0,    forKey: "lastSleepQuality")
+        UserDefaults.standard.set(0,    forKey: "lastSleepHours")
+        UserDefaults.standard.set(0.0,  forKey: "lastSleepCheckDate")
+        UserDefaults.standard.set(today, forKey: key)
+    }
+
     // MARK: - Création container (thread de fond, Swift concurrency natif)
 
     private func buildContainer() async {
