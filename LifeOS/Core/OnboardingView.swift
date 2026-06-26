@@ -75,7 +75,8 @@ struct OnboardingView: View {
         let goalModules = OnboardingGoal.allCases
             .filter { goals.contains($0) }
             .flatMap { $0.modules }
-        for cat in goalModules + Array(interests) {
+        // Intérêts explicites EN PREMIER, puis modules dérivés des objectifs
+        for cat in Array(interests) + goalModules {
             if seen.insert(cat).inserted { result.append(cat) }
         }
         var recs = Array(result.prefix(8))
