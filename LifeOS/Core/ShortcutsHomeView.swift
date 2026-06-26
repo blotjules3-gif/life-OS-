@@ -149,6 +149,10 @@ struct ShortcutsHomeView: View {
                         reengageBanner(message: msg, suggestion: reengageSuggestion)
                     }
 
+                    if let module = weeklyModuleSuggestion {
+                        weeklyModuleCard(module)
+                    }
+
                     shortcutsSection
                     goalsSection
                     moodSection
