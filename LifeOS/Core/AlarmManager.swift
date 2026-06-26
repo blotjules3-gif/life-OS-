@@ -122,10 +122,19 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
     func stopAndShowBriefing() {
         stopRinging()
         showAlarmScreen = false
-        showBriefing = true
-        // Keep LA alive — user is in the briefing screen until dismissBriefing()
+        showSleepCheck = true
         if #available(iOS 16.1, *) {
-            AlarmLiveActivityManager.shared.update(phase: .briefing, message: "Briefing quotidien en cours…")
+            AlarmLiveActivityManager.shared.update(phase: .briefing, message: "Bilan du matin en cours…")
+        }
+    }
+
+    func sleepCheckDone() {
+        showSleepCheck = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.showBriefing = true
+            if #available(iOS 16.1, *) {
+                AlarmLiveActivityManager.shared.update(phase: .briefing, message: "Briefing quotidien en cours…")
+            }
         }
     }
 
