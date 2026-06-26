@@ -175,6 +175,25 @@ class FinanceLog(Base):
     logged_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class LifeChallenge(Base):
+    __tablename__ = "life_challenges"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
+    title: Mapped[str] = mapped_column(Text, nullable=False)
+    challenge_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    daily_target: Mapped[Optional[float]] = mapped_column(Numeric)
+    unit: Mapped[Optional[str]] = mapped_column(Text)
+    duration_days: Mapped[Optional[int]] = mapped_column(Integer)
+    streak_days: Mapped[int] = mapped_column(Integer, default=0)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    user: Mapped[User] = relationship(back_populates="life_challenges")
+
+
 class ScheduledNotification(Base):
     __tablename__ = "scheduled_notifications"
 
