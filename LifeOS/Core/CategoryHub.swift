@@ -277,6 +277,7 @@ extension AppCategory {
         case .social:       return socialTools
         case .admin:        return adminTools
         case .travel:       return travelTools
+        case .cycle:        return []
         }
     }
 }
