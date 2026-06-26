@@ -346,7 +346,138 @@ struct OnboardingName: View {
     }
 }
 
-// MARK: - Étape 2 : Objectif
+// MARK: - Profil de vie
+
+enum LifeProfile: String, CaseIterable, Identifiable {
+    case student, employee, entrepreneur, athlete, retired, jobseeker, custom
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .student:      return "Étudiant"
+        case .employee:     return "Salarié"
+        case .entrepreneur: return "Entrepreneur"
+        case .athlete:      return "Sportif"
+        case .retired:      return "Retraité"
+        case .jobseeker:    return "En recherche"
+        case .custom:       return "Personnalisé"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .student:      return "graduationcap.fill"
+        case .employee:     return "briefcase.fill"
+        case .entrepreneur: return "flame.fill"
+        case .athlete:      return "figure.run"
+        case .retired:      return "sun.max.fill"
+        case .jobseeker:    return "magnifyingglass"
+        case .custom:       return "slider.horizontal.3"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .student:      return Color(hex: 0x9B6CF1)
+        case .employee:     return Color(hex: 0x3CB2E0)
+        case .entrepreneur: return Color(hex: 0xE0A23C)
+        case .athlete:      return Color(hex: 0xF1746C)
+        case .retired:      return Color(hex: 0x4CC38A)
+        case .jobseeker:    return Color(hex: 0x618EF1)
+        case .custom:       return Color(hex: 0x6D6A63)
+        }
+    }
+
+    // Modules prioritaires selon le profil
+    var priorityModules: [AppCategory] {
+        switch self {
+        case .student:      return [.learning, .productivity, .sleep, .fitness, .mind]
+        case .employee:     return [.productivity, .fitness, .finance, .sleep, .mind]
+        case .entrepreneur: return [.productivity, .finance, .invest, .career, .fitness]
+        case .athlete:      return [.fitness, .nutrition, .sleep, .mind]
+        case .retired:      return [.mind, .fitness, .social, .sleep, .looks]
+        case .jobseeker:    return [.career, .learning, .productivity, .mind, .finance]
+        case .custom:       return []
+        }
+    }
+
+    // Heure de sport recommandée (pour notifications)
+    var sportHour: Int {
+        switch self {
+        case .student:      return 17
+        case .employee:     return 18
+        case .entrepreneur: return 7
+        case .athlete:      return 9
+        case .retired:      return 10
+        case .jobseeker:    return 16
+        case .custom:       return 18
+        }
+    }
+}
+
+// MARK: - Étape 2 : Profil de vie
+
+struct OnboardingLifeProfile: View {
+    @Binding var selected: LifeProfile?
+    let onNext: () -> Void
+    private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+            VStack(spacing: 24) {
+                VStack(spacing: 10) {
+                    Text("Ton profil de vie")
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.center)
+                    Text("Ça aide à adapter les recommandations et les horaires à ta réalité.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+
+                LazyVGrid(columns: cols, spacing: 12) {
+                    ForEach(LifeProfile.allCases) { profile in
+                        Button { selected = profile } label: {
+                            VStack(spacing: 10) {
+                                Image(systemName: profile.icon)
+                                    .font(.system(size: 24, weight: .semibold))
+                                    .foregroundStyle(selected == profile ? .white : profile.color)
+                                Text(profile.label)
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(selected == profile ? .white : .primary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 20)
+                            .background(
+                                selected == profile
+                                ? profile.color
+                                : profile.color.opacity(0.08),
+                                in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .stroke(
+                                        selected == profile ? Color.clear : profile.color.opacity(0.2),
+                                        lineWidth: 1.5
+                                    )
+                            )
+                            .scaleEffect(selected == profile ? 0.97 : 1.0)
+                            .animation(.spring(response: 0.2), value: selected)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            Spacer()
+            OnboardingButton(label: "Continuer", enabled: selected != nil, action: onNext)
+                .padding(.bottom, 52)
+        }
+        .padding(.horizontal, 28)
+    }
+}
+
+// MARK: - Étape 3 : Objectif (ancienne étape 2)
 
 struct OnboardingGoalStep: View {
     @Binding var selected: Set<OnboardingGoal>
