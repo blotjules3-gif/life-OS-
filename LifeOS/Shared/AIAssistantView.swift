@@ -128,6 +128,56 @@ final class AIAssistantViewModel: ObservableObject {
 
         if !firstLaunchDone {
             triggerWelcome()
+        } else {
+            checkForNewModules()
+        }
+    }
+
+    private func checkForNewModules() {
+        guard !recommendedModulesRaw.isEmpty else { return }
+        let current = Set(recommendedModulesRaw.split(separator: ",").map(String.init))
+        let known = Set(aiKnownModulesRaw.split(separator: ",").map(String.init))
+        let newModules = current.subtracting(known)
+        guard !newModules.isEmpty else { return }
+
+        aiKnownModulesRaw = current.joined(separator: ",")
+
+        let moduleLabels: [String: String] = [
+            "fitness": "Sport", "nutrition": "Nutrition", "sleep": "Sommeil",
+            "looks": "Corps", "mind": "Bien-être mental", "productivity": "Productivité",
+            "finance": "Finance", "invest": "Investissement", "career": "Carrière",
+            "learning": "Apprentissage", "social": "Social", "home": "Maison",
+            "mobility": "Mobilité", "admin": "Admin", "travel": "Voyage", "cycle": "Cycle",
+        ]
+        let labels = newModules.compactMap { moduleLabels[$0] }.sorted().joined(separator: ", ")
+        let moduleKey = newModules.first ?? ""
+
+        let prompt = "[NOUVEAU_MODULE] Module(s) ajouté(s) par l'utilisateur : \(labels) (\(moduleKey))"
+        triggerProactive(prompt: prompt)
+    }
+
+    private func triggerProactive(prompt: String) {
+        guard !isLoading else { return }
+        appendThinking()
+        isLoading = true
+
+        Task {
+            do {
+                let response = try await AgentAPI.shared.chat(
+                    message: prompt,
+                    module: nil,
+                    conversationID: conversationID.isEmpty ? nil : conversationID
+                )
+                conversationID = response.conversation_id
+                removeThinking()
+                appendAssistantMessage(response.reply, actions: response.actions ?? [])
+                for action in (response.actions ?? []) {
+                    await execute(action: action)
+                }
+            } catch {
+                removeThinking()
+            }
+            isLoading = false
         }
     }
 
