@@ -1128,6 +1128,54 @@ struct ProfileView: View {
         .animation(.spring(duration: 0.3), value: wakeupEnabled)
     }
 
+    // MARK: - Active Challenges
+
+    private func saveChallengesForWidget(_ list: [ChallengeOut]) {
+        guard let top = list.first else { return }
+        let defaults = UserDefaults(suiteName: "group.lifeos.app") ?? .standard
+        defaults.set(top.title, forKey: "widget_challenge_title")
+        defaults.set(top.streak_days, forKey: "widget_challenge_streak")
+        defaults.set(top.duration_days ?? 30, forKey: "widget_challenge_duration")
+        defaults.set(top.days_elapsed, forKey: "widget_challenge_elapsed")
+        defaults.set(top.challenge_type, forKey: "widget_challenge_type")
+    }
+
+    private var activeChallengesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Mes défis")
+                    .font(.system(size: 17, weight: .semibold))
+                Spacer()
+                Text("\(challenges.count) actif\(challenges.count > 1 ? "s" : "")")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+
+            ForEach(challenges) { challenge in
+                ChallengeCard(challenge: challenge, onCheckin: {
+                    Task {
+                        if let result = try? await AgentAPI.shared.checkinChallenge(id: challenge.id),
+                           let idx = challenges.firstIndex(where: { $0.id == challenge.id }) {
+                            let newStreak = (result["streak_days"]?.value as? Int) ?? challenges[idx].streak_days + 1
+                            var updated = challenges[idx]
+                            challenges[idx] = ChallengeOut(
+                                id: updated.id, title: updated.title,
+                                challenge_type: updated.challenge_type,
+                                daily_target: updated.daily_target, unit: updated.unit,
+                                duration_days: updated.duration_days, streak_days: newStreak,
+                                days_elapsed: updated.days_elapsed, days_since_checkin: 0,
+                                last_checkin_at: ISO8601DateFormatter().string(from: .now),
+                                notes: updated.notes, is_active: updated.is_active,
+                                started_at: updated.started_at
+                            )
+                            saveChallengesForWidget(challenges)
+                        }
+                    }
+                })
+            }
+        }
+    }
+
     // MARK: - Active Goals
 
     private var activeGoalsSection: some View {
