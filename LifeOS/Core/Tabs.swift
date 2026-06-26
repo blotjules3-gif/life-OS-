@@ -800,6 +800,8 @@ struct ProfileView: View {
     @AppStorage("socialMaxMin") private var socialMaxMin = 60
     @AppStorage("hiddenGoalIDsRaw") private var hiddenGoalIDsRaw = ""
     @AppStorage("goalEndDatesRaw") private var goalEndDatesRaw = "{}"
+    @AppStorage("profileHiddenRaw") private var profileHiddenRaw = ""
+    @AppStorage("profilePinnedRaw") private var profilePinnedRaw = ""
     @AppStorage("wakeupEnabled") private var wakeupEnabled = false
     @AppStorage("wakeupHour") private var wakeupHour = 7
     @AppStorage("wakeupMinute") private var wakeupMinute = 0
