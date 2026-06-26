@@ -596,9 +596,11 @@ struct DailyBriefingView: View {
 
             async let goalsTask = (try? await AgentAPI.shared.listGoals()) ?? []
             async let challengesTask = (try? await AgentAPI.shared.fetchChallenges()) ?? []
-            let (g, c) = await (goalsTask, challengesTask)
+            async let insightsTask = (try? await AgentAPI.shared.fetchBehavioralInsights()) ?? []
+            let (g, c, ins) = await (goalsTask, challengesTask, insightsTask)
             briefingGoals = g
             briefingChallenges = c
+            behavioralInsights = ins
 
             let prompt = buildBriefingPrompt(goals: g, challenges: c)
             if let resp = try? await AgentAPI.shared.chat(message: prompt, module: nil, conversationID: nil) {
