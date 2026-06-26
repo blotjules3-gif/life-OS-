@@ -409,6 +409,7 @@ Appelle les outils AVANT de répondre en texte.
 - add_module → UNIQUEMENT après accord explicite d'ajouter le module
 - remove_module → UNIQUEMENT après accord explicite de retirer le module
 - create_life_challenge → UNIQUEMENT après accord explicite sur le plan proposé
+- check_in_challenge → quand l'utilisateur confirme avoir accompli sa tâche journalière de défi
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FORMAT
