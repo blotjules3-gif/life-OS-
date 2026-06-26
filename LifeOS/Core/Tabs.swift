@@ -1032,7 +1032,7 @@ struct ProfileView: View {
                 HStack(spacing: 8) {
                     domainPill(icon: "flame.fill", label: "\(kcalToday) kcal", color: Color(hex: 0xF1746C),
                                progress: min(1, Double(kcalToday) / Double(max(1, kcalGoal))))
-                    domainPill(icon: "drop.fill", label: "\(waterToday) ml", color: Color(hex: 0x3CB2E0),
+                    domainPill(icon: "drop.fill", label: "\(glassesToday) verres", color: Color(hex: 0x3CB2E0),
                                progress: min(1, Double(waterToday) / Double(max(1, waterGoal))))
                     domainPill(icon: "figure.run", label: "\(steps) pas", color: Color(hex: 0x4CC38A),
                                progress: min(1, Double(steps) / Double(max(1, stepGoal))))
