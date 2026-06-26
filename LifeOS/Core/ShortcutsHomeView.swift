@@ -144,6 +144,10 @@ struct ShortcutsHomeView: View {
                     }
                     .padding(.horizontal, 4)
 
+                    if showReengage, let msg = reengageMessage {
+                        reengageBanner(message: msg, suggestion: reengageSuggestion)
+                    }
+
                     shortcutsSection
                     goalsSection
                     moodSection
