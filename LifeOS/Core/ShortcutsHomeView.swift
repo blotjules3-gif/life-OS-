@@ -179,6 +179,13 @@ struct ShortcutsHomeView: View {
                 weeklyModuleSuggestion = WeeklyModuleSuggester.shared.currentSuggestion()
                 WeeklyModuleSuggester.shared.scheduleWeeklyNotification()
             }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                Task {
+                    if await HealthService.shared.requestAuthorization() {
+                        steps = await HealthService.shared.stepsToday()
+                    }
+                }
+            }
         }
     }
 
