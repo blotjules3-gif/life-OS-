@@ -173,6 +173,33 @@ TOOL_DEFINITIONS: list[dict] = [
     {
         "type": "function",
         "function": {
+            "name": "remember_user_info",
+            "description": "Save an important fact about the user that must be remembered in ALL future conversations. Call this as soon as you learn something significant: a health condition, a physical constraint, a strong preference, a recurring failure, a major life context. Do NOT call for trivial info.",
+            "parameters": {
+                "type": "object",
+                "required": ["key", "value", "category"],
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Unique snake_case key for this fact. Ex: 'health_diabetes', 'hates_running', 'works_night_shift', 'has_back_pain', 'is_vegetarian'",
+                    },
+                    "value": {
+                        "type": "string",
+                        "description": "The fact to remember, in French, max 200 chars. Ex: 'Diabète de type 2 — surveiller les pics glycémiques, éviter le sucre rapide à jeun'",
+                    },
+                    "category": {
+                        "type": "string",
+                        "enum": ["health", "lifestyle", "preference", "constraint", "goal_context"],
+                        "description": "Category of the fact",
+                    },
+                },
+            },
+        },
+    },
+
+    {
+        "type": "function",
+        "function": {
             "name": "ask_clarification",
             "description": "Ask the user a clarifying question when the request is ambiguous. Use ONLY when you genuinely cannot proceed without more information.",
             "parameters": {
