@@ -34,6 +34,8 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+    life_challenges: Mapped[list["LifeChallenge"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+
     module_configs: Mapped[list[ModuleConfig]] = relationship(back_populates="user", cascade="all, delete-orphan")
     goals: Mapped[list[Goal]] = relationship(back_populates="user", cascade="all, delete-orphan")
     conversations: Mapped[list[Conversation]] = relationship(back_populates="user", cascade="all, delete-orphan")
