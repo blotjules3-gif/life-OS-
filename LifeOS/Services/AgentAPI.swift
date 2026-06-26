@@ -293,6 +293,13 @@ actor AgentAPI {
         return result.history
     }
 
+    func fetchBehavioralInsights() async throws -> [String] {
+        let result: [String: [String]] = try await get(path: "/api/v1/energy/insights", queryItems: [
+            URLQueryItem(name: "device_id", value: deviceID)
+        ])
+        return result["insights"] ?? []
+    }
+
     // MARK: - Goals (delete)
 
     func deleteGoal(id: String) async throws {
