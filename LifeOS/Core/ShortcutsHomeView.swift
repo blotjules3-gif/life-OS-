@@ -305,6 +305,44 @@ struct ShortcutsHomeView: View {
         withAnimation { editingMood = false }
     }
 
+    private func reengageBanner(message: String, suggestion: String?) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top) {
+                Image(systemName: "hand.wave.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color(hex: 0xFF9F0A))
+                Text(message)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 8)
+                Button { withAnimation(.easeOut(duration: 0.2)) { showReengage = false } } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 24, height: 24)
+                        .background(Color.secondary.opacity(0.1), in: Circle())
+                }
+                .buttonStyle(.plain)
+            }
+            if let s = suggestion {
+                Text(s)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 26)
+            }
+        }
+        .padding(14)
+        .background(
+            Color(hex: 0xFF9F0A).opacity(0.08),
+            in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+                .stroke(Color(hex: 0xFF9F0A).opacity(0.2), lineWidth: 1)
+        )
+    }
+
     private var energyBadge: some View {
         let scoreColor: Color = {
             switch todayEnergyScore {
