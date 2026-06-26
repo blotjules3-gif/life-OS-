@@ -401,27 +401,31 @@ struct AIAssistantView: View {
         switch hour {
         case 5..<10:
             return [
-                ("Objectif matin", "Qu'est-ce que je devrais faire ce matin ?", nil),
-                ("Nutrition", "Je veux définir mon objectif calorique", "nutrition"),
-                ("Sport", "Configurer mes séances de sport", "sport"),
+                ("Plan du matin", "C'est quoi ma priorité ce matin ?", nil),
+                ("Calories", "Mon objectif calories pour aujourd'hui", "nutrition"),
+                ("Sport", "Créer une séance pour aujourd'hui", "fitness"),
+                ("Humeur", "Je ne suis pas en forme ce matin", "mind"),
             ]
         case 10..<14:
             return [
-                ("Mes objectifs", "Montre-moi mes objectifs actifs", nil),
-                ("Finances", "Analyser mes finances du mois", "finance"),
-                ("Habitudes", "Comment améliorer mes habitudes ?", "productivity"),
+                ("Check objectifs", "Où j'en suis sur mes objectifs ?", nil),
+                ("Budget", "Analyser mes dépenses ce mois", "finance"),
+                ("Focus", "J'arrive pas à me concentrer", "productivity"),
+                ("Repas", "Que manger ce midi ?", "nutrition"),
             ]
         case 14..<19:
             return [
                 ("Bilan du jour", "Comment je m'en sors aujourd'hui ?", nil),
-                ("Sport", "Logger ma séance du jour", "sport"),
-                ("Rappel", "Programme un rappel pour ce soir", nil),
+                ("Séance", "Logger ma séance de sport", "fitness"),
+                ("Rappel soir", "Mets-moi un rappel ce soir", nil),
+                ("Stress", "Je suis stressé cet après-midi", "mind"),
             ]
         default:
             return [
-                ("Bilan de la semaine", "Fais-moi un bilan de ma semaine", nil),
-                ("Objectifs demain", "Qu'est-ce que je dois faire demain ?", nil),
-                ("Sommeil", "Conseils pour mieux dormir", "sleep"),
+                ("Bilan semaine", "Bilan rapide de ma semaine", nil),
+                ("Sommeil", "Conseils pour mieux dormir ce soir", "sleep"),
+                ("Demain", "Ma priorité pour demain", nil),
+                ("Habitude", "Créer une nouvelle habitude", "productivity"),
             ]
         }
     }
