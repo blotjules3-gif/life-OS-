@@ -484,6 +484,9 @@ struct DailyBriefingView: View {
                     // Bandeau voix
                     voiceBanner
 
+                    // Check-in matin → Score d'Énergie
+                    morningCheckinCard
+
                     // Brief IA personnalisé
                     aiBriefingCard
                         .animation(.easeOut(duration: 0.3), value: aiBriefing != nil)
