@@ -30,35 +30,104 @@ struct SkincareView: View {
     @AppStorage("skincareReminders") private var reminders = false
     @AppStorage("skincareDoneAM") private var doneAMDate = ""
     @AppStorage("skincareDonePM") private var donePMDate = ""
+    @AppStorage("skinType") private var skinType = ""
+    @AppStorage("skinConcernsRaw") private var skinConcernsRaw = ""
 
+    @State private var showProfile = false
     private var today: String { ISO8601DateFormatter().string(from: Calendar.current.startOfDay(for: .now)) }
+    private var hasProfile: Bool { !skinType.isEmpty }
 
     var body: some View {
         ZStack {
             Theme.background
             ScrollView {
                 VStack(spacing: 16) {
-                    routineCard("Matin ☀️", steps: amRaw.split(separator: "|").map(String.init),
+                    // Profil peau
+                    if hasProfile {
+                        skinProfileBadge
+                    } else {
+                        Button { showProfile = true } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "person.crop.square.fill")
+                                    .font(.system(size: 20)).foregroundStyle(.looksTint)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Configure ton profil peau")
+                                        .font(.subheadline.weight(.semibold))
+                                    Text("Obtiens une routine adaptée à ton type de peau")
+                                        .font(.caption).foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right").foregroundStyle(.secondary)
+                            }
+                            .padding(14)
+                            .background(Color.looksTint.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.looksTint.opacity(0.2), lineWidth: 1))
+                        }.buttonStyle(.plain)
+                    }
+
+                    routineCard("Matin", steps: amSteps,
                                 done: doneAMDate == today) { doneAMDate = doneAMDate == today ? "" : today }
-                    routineCard("Soir 🌙", steps: pmRaw.split(separator: "|").map(String.init),
+                    routineCard("Soir", steps: pmSteps,
                                 done: donePMDate == today) { donePMDate = donePMDate == today ? "" : today }
+
                     Toggle("Rappels matin (8h) & soir (22h)", isOn: $reminders)
                         .tint(.looksTint)
                         .onChange(of: reminders) { _, on in
                             if on {
-                                NotificationManager.shared.scheduleDaily(id: "skinAM", title: "Routine skincare ☀️", body: "Nettoyant + sérum + SPF", hour: 8, minute: 0)
-                                NotificationManager.shared.scheduleDaily(id: "skinPM", title: "Routine skincare 🌙", body: "Démaquille et hydrate avant de dormir", hour: 22, minute: 0)
-                            } else { NotificationManager.shared.cancel(id: "skinAM"); NotificationManager.shared.cancel(id: "skinPM") }
+                                NotificationManager.shared.scheduleDaily(id: "skinAM", title: "Routine skincare matin", body: "Nettoyant + sérum + SPF", hour: 8, minute: 0)
+                                NotificationManager.shared.scheduleDaily(id: "skinPM", title: "Routine skincare soir", body: "Démaquille et hydrate avant de dormir", hour: 22, minute: 0)
+                            } else {
+                                NotificationManager.shared.cancel(id: "skinAM")
+                                NotificationManager.shared.cancel(id: "skinPM")
+                            }
                         }.card()
+
                     NavigationLink { ProgressPhotoGalleryView() } label: {
-                        Label("Voir mes photos avant/après", systemImage: "camera").foregroundStyle(.looksTint)
+                        Label("Photos avant/après", systemImage: "camera").foregroundStyle(.looksTint)
                             .frame(maxWidth: .infinity).card(padding: 12)
                     }.buttonStyle(.plain)
                 }.padding(Theme.pad)
             }
         }
-        .navigationTitle("Routine skincare").navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Skincare").navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showProfile) { SkinProfileSetupView() }
     }
+
+    // Routine adaptée au profil ou générique
+    private var amSteps: [String] {
+        guard !skinType.isEmpty else {
+            return amRaw.split(separator: "|").map(String.init)
+        }
+        return SkinRoutineEngine.morningSteps(skinType: skinType, concerns: skinConcernsRaw)
+    }
+    private var pmSteps: [String] {
+        guard !skinType.isEmpty else {
+            return pmRaw.split(separator: "|").map(String.init)
+        }
+        return SkinRoutineEngine.eveningSteps(skinType: skinType, concerns: skinConcernsRaw)
+    }
+
+    private var skinProfileBadge: some View {
+        Button { showProfile = true } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "checkmark.shield.fill")
+                    .font(.system(size: 18)).foregroundStyle(.green)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Profil peau : \(skinType.capitalized)")
+                        .font(.subheadline.weight(.semibold))
+                    if !skinConcernsRaw.isEmpty {
+                        Text(skinConcernsRaw.replacingOccurrences(of: ",", with: " · "))
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+                Spacer()
+                Text("Modifier").font(.caption).foregroundStyle(.secondary)
+            }
+            .padding(12)
+            .background(Color.green.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }.buttonStyle(.plain)
+    }
+
     private func routineCard(_ title: String, steps: [String], done: Bool, toggle: @escaping () -> Void) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
@@ -77,6 +146,188 @@ struct SkincareView: View {
                 }
             }
         }.card()
+    }
+}
+
+// MARK: - Moteur de routine skincare personnalisée
+
+enum SkinRoutineEngine {
+    static func morningSteps(skinType: String, concerns: String) -> [String] {
+        let hasAcne    = concerns.contains("acné")
+        let hasTaches  = concerns.contains("taches")
+        let isSensible = skinType == "sensible"
+        let isGrasse   = skinType == "grasse"
+        let isSèche    = skinType == "sèche"
+        let hasTreat   = concerns.contains("traitement")
+
+        var steps = [String]()
+        steps.append(isGrasse || hasAcne ? "Nettoyant gel purifiant" : isSensible ? "Eau micellaire (sans rinçage)" : "Nettoyant doux")
+        if hasAcne && !hasTreat    { steps.append("Sérum niacinamide 10%") }
+        if hasTaches               { steps.append("Sérum vitamine C") }
+        if !hasAcne && !hasTaches  { steps.append("Sérum hydratant") }
+        steps.append(isSèche ? "Crème riche hydratante" : isSensible ? "Crème barrière légère" : "Crème hydratante non comédogène")
+        steps.append(isSensible ? "SPF 50 minéral" : "SPF 50")
+        return steps
+    }
+
+    static func eveningSteps(skinType: String, concerns: String) -> [String] {
+        let hasAcne    = concerns.contains("acné")
+        let isGrasse   = skinType == "grasse"
+        let isSensible = skinType == "sensible"
+        let isSèche    = skinType == "sèche"
+        let hasTreat   = concerns.contains("traitement")
+
+        var steps = [String]()
+        steps.append("Démaquillant (huile ou baume)")
+        steps.append(isGrasse || hasAcne ? "Nettoyant gel purifiant" : "Nettoyant doux")
+        if hasTreat                    { steps.append("Traitement prescrit (appliquer sur peau sèche)") }
+        else if hasAcne                { steps.append("Acide salicylique 1% (3× par semaine)") }
+        else if !isSensible            { steps.append("Rétinol 0,1% (2× par semaine)") }
+        steps.append(isSèche ? "Crème de nuit riche" : isSensible ? "Crème barrière réparatrice" : "Crème de nuit légère")
+        return steps
+    }
+}
+
+// MARK: - Setup profil peau
+
+struct SkinProfileSetupView: View {
+    @AppStorage("skinType") private var skinType = ""
+    @AppStorage("skinConcernsRaw") private var skinConcernsRaw = ""
+    @AppStorage("skinTreatment") private var skinTreatment = ""
+    @AppStorage("userGender") private var gender = ""
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var selectedType = ""
+    @State private var concerns: Set<String> = []
+    @State private var hasTreatment = false
+    @State private var treatmentText = ""
+    @State private var step = 0
+
+    private let skinTypes = ["normale", "sèche", "grasse", "mixte", "sensible"]
+    private let skinConcerns = ["acné", "taches", "rides", "pores", "teint terne", "rougeurs"]
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                HStack(spacing: 6) {
+                    ForEach(0..<3, id: \.self) { s in
+                        Capsule().fill(step >= s ? Color.looksTint : Color.secondary.opacity(0.15)).frame(height: 4)
+                    }
+                }
+                .padding(.horizontal, 24).padding(.top, 20).padding(.bottom, 24)
+
+                Group {
+                    switch step {
+                    case 0: typeStep
+                    case 1: concernsStep
+                    case 2: treatmentStep
+                    default: EmptyView()
+                    }
+                }
+                .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
+                                        removal:   .move(edge: .leading).combined(with: .opacity)))
+                .id(step)
+
+                Spacer()
+            }
+            .navigationTitle("Profil peau")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } }
+            }
+        }
+    }
+
+    private var typeStep: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Ton type de peau").font(.title2.bold()).padding(.horizontal, 24)
+            VStack(spacing: 10) {
+                ForEach(skinTypes, id: \.self) { t in
+                    Button { selectedType = t } label: {
+                        HStack {
+                            Text(t.capitalized).font(.body)
+                            Spacer()
+                            if selectedType == t {
+                                Image(systemName: "checkmark.circle.fill").foregroundStyle(.looksTint)
+                            }
+                        }
+                        .padding(14)
+                        .background(selectedType == t ? Color.looksTint.opacity(0.1) : Theme.card,
+                                    in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }.buttonStyle(.plain)
+                }
+            }.padding(.horizontal, 24)
+            Spacer()
+            Button { withAnimation { step = 1 } } label: {
+                Text("Continuer").font(.headline).foregroundStyle(.white)
+                    .frame(maxWidth: .infinity).padding(.vertical, 14)
+                    .background(selectedType.isEmpty ? Color.secondary.opacity(0.3) : Color.looksTint,
+                                in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain).disabled(selectedType.isEmpty).padding(.horizontal, 24).padding(.bottom, 32)
+        }
+    }
+
+    private var concernsStep: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Tes préoccupations").font(.title2.bold()).padding(.horizontal, 24)
+            Text("Plusieurs choix possibles").font(.subheadline).foregroundStyle(.secondary).padding(.horizontal, 24)
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                ForEach(skinConcerns, id: \.self) { c in
+                    Button { if concerns.contains(c) { concerns.remove(c) } else { concerns.insert(c) } } label: {
+                        Text(c.capitalized).font(.subheadline.weight(.medium))
+                            .foregroundStyle(concerns.contains(c) ? Color.looksTint : .primary)
+                            .frame(maxWidth: .infinity).padding(.vertical, 12)
+                            .background(concerns.contains(c) ? Color.looksTint.opacity(0.12) : Theme.card,
+                                        in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(concerns.contains(c) ? Color.looksTint.opacity(0.4) : Color.clear, lineWidth: 1.5))
+                    }.buttonStyle(.plain)
+                }
+            }.padding(.horizontal, 24)
+            Spacer()
+            Button { withAnimation { step = 2 } } label: {
+                Text("Continuer").font(.headline).foregroundStyle(.white)
+                    .frame(maxWidth: .infinity).padding(.vertical, 14)
+                    .background(Color.looksTint, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain).padding(.horizontal, 24).padding(.bottom, 32)
+        }
+    }
+
+    private var treatmentStep: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Traitement en cours ?").font(.title2.bold()).padding(.horizontal, 24)
+            Text("Tretinoin, adapalène, acide azélaïque, isotrétinoïne...").font(.subheadline).foregroundStyle(.secondary).padding(.horizontal, 24)
+            VStack(spacing: 10) {
+                Button { hasTreatment = false } label: {
+                    HStack { Text("Non, aucun traitement"); Spacer(); if !hasTreatment { Image(systemName: "checkmark.circle.fill").foregroundStyle(.looksTint) } }
+                        .padding(14).background(!hasTreatment ? Color.looksTint.opacity(0.1) : Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }.buttonStyle(.plain)
+                Button { hasTreatment = true } label: {
+                    HStack { Text("Oui, j'ai un traitement"); Spacer(); if hasTreatment { Image(systemName: "checkmark.circle.fill").foregroundStyle(.looksTint) } }
+                        .padding(14).background(hasTreatment ? Color.looksTint.opacity(0.1) : Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }.buttonStyle(.plain)
+                if hasTreatment {
+                    TextField("Nom du traitement (ex: tretinoin 0,025%)", text: $treatmentText)
+                        .textFieldStyle(.roundedBorder).padding(.top, 4)
+                }
+            }.padding(.horizontal, 24)
+            Spacer()
+            Button {
+                skinType = selectedType
+                var c = Array(concerns)
+                if hasTreatment { c.append("traitement") }
+                skinConcernsRaw = c.joined(separator: ",")
+                skinTreatment = hasTreatment ? treatmentText : ""
+                dismiss()
+            } label: {
+                Text("Enregistrer mon profil").font(.headline).foregroundStyle(.white)
+                    .frame(maxWidth: .infinity).padding(.vertical, 14)
+                    .background(Color.looksTint, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain).padding(.horizontal, 24).padding(.bottom, 32)
+        }
     }
 }
 
