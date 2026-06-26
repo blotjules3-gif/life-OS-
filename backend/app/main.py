@@ -26,6 +26,7 @@ def _register_all_tools() -> None:
     from app.core.tools.meta_tools import (
         handle_ask_clarification,
         handle_create_goal,
+        handle_create_life_challenge,
         handle_create_todo,
         handle_delete_goal,
         handle_get_module_config,
