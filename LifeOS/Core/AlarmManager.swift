@@ -13,6 +13,7 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
 
     @Published var isRinging = false
     @Published var showAlarmScreen = false
+    @Published var showSleepCheck = false
     @Published var showBriefing = false
     @Published var isSpeaking = false
     @Published var secondsLeft = 10
