@@ -1248,37 +1248,14 @@ struct ProfileView: View {
                         .foregroundStyle(.primary)
                 }
                 Spacer()
-                // Neomorphic circular day dial
-                ZStack {
-                    Circle()
-                        .fill(neoCard)
-                        .frame(width: 68, height: 68)
-                        .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
-                        .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
-                    Circle()
-                        .stroke(Color.primary.opacity(0.06), lineWidth: 5)
-                        .frame(width: 54, height: 54)
-                    Circle()
-                        .trim(from: 0, to: appeared ? dayProgress : 0)
-                        .stroke(
-                            AngularGradient(
-                                colors: [Color.accentColor.opacity(0.5), Color.accentColor],
-                                center: .center,
-                                startAngle: .degrees(-90), endAngle: .degrees(270)
-                            ),
-                            style: StrokeStyle(lineWidth: 5, lineCap: .round)
-                        )
-                        .rotationEffect(.degrees(-90))
-                        .frame(width: 54, height: 54)
-                        .animation(.spring(duration: 1.2), value: appeared)
-                    VStack(spacing: 0) {
-                        Text("\(Int(dayProgress * 100))")
-                            .font(.system(size: 14, weight: .black, design: .rounded).monospacedDigit())
-                            .foregroundStyle(.primary)
-                        Text("%")
-                            .font(.system(size: 8, weight: .bold))
-                            .foregroundStyle(.secondary)
-                    }
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(Date(), format: .dateTime.hour().minute())
+                        .font(.system(size: 22, weight: .black, design: .rounded).monospacedDigit())
+                        .foregroundStyle(.primary)
+                    Text(Date(), format: .dateTime.weekday(.wide).day().month(.abbreviated))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.trailing)
                 }
             }
 
