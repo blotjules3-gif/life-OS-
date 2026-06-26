@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_session
 from app.dependencies import verify_api_key
 from app.models.db import DailyCheckin
+from app.services.behavioral_insights import compute_insights
 from app.services.energy import compute_energy_score, score_color, score_label
 from app.services.user import get_or_create_user
 
