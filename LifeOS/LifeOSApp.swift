@@ -84,10 +84,20 @@ struct LifeOSApp: App {
         .modelContainer(container)
         .animation(.easeInOut(duration: 0.35), value: onboardingDone)
         .onAppear {
-            // Notification auth en arrière-plan — ne bloque rien
             Task.detached(priority: .background) {
-                _ = await NotificationManager.shared.requestAuthorization()
+                let granted = await NotificationManager.shared.requestAuthorization()
+                if granted {
+                    await MainActor.run {
+                        ContextualNotifications.shared.reschedule()
+                    }
+                }
             }
+        }
+        .onChange(of: onboardingDone) { _, done in
+            if done { ContextualNotifications.shared.reschedule() }
+        }
+        .onChange(of: recommendedModulesRaw) { _, _ in
+            ContextualNotifications.shared.reschedule()
         }
         .fullScreenCover(isPresented: $alarm.showAlarmScreen) {
             AlarmFullScreenView()
