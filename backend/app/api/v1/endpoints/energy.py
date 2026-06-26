@@ -124,6 +124,16 @@ async def get_score(
     return _to_dict(checkin)
 
 
+@router.get("/insights", dependencies=[Depends(verify_api_key)])
+async def get_insights(
+    device_id: str,
+    session: AsyncSession = Depends(get_session),
+) -> dict:
+    user = await get_or_create_user(session, device_id)
+    insights = await compute_insights(session, user.id)
+    return {"insights": insights}
+
+
 @router.get("/history", dependencies=[Depends(verify_api_key)])
 async def get_history(
     device_id: str,
