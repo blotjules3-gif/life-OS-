@@ -1252,6 +1252,115 @@ struct ProfileView: View {
         .animation(.spring(duration: 0.3), value: wakeupEnabled)
     }
 
+    // MARK: - API Goals (objectifs posés avec l'assistant)
+
+    private var apiGoalsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("OBJECTIFS IA")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.secondary)
+                .kerning(1.2)
+
+            VStack(spacing: 1) {
+                ForEach(Array(apiGoals.enumerated()), id: \.element.id) { idx, goal in
+                    apiGoalRow(goal: goal, isLast: idx == apiGoals.count - 1)
+                }
+            }
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+    }
+
+    private func apiGoalRow(goal: GoalOut, isLast: Bool) -> some View {
+        let color: Color = moduleColor(for: goal.module)
+        let pct = min(1.0, goal.progress_pct / 100.0)
+
+        return VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(color.opacity(0.15))
+                        .frame(width: 34, height: 34)
+                    Image(systemName: moduleIcon(for: goal.module))
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(color)
+                }
+                .padding(.top, 2)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(goal.title)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    if let target = goal.target_value, let unit = goal.unit {
+                        let remaining = max(0, target - goal.current_value)
+                        let direction = remaining > 0 ? "\(Int(remaining)) \(unit) restants" : "Objectif atteint"
+                        Text(direction)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(remaining <= 0 ? color : .secondary)
+                    }
+
+                    if let freq = goal.frequency, !freq.isEmpty {
+                        Text(freq)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    GeometryReader { g in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(color.opacity(0.12)).frame(height: 5)
+                            Capsule().fill(color)
+                                .frame(width: g.size.width * pct, height: 5)
+                                .animation(.spring(duration: 1.0).delay(0.3), value: appeared)
+                        }
+                    }
+                    .frame(width: 64, height: 5)
+
+                    Text("\(Int(goal.progress_pct))%")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(pct >= 1 ? color : .secondary)
+                        .monospacedDigit()
+                }
+                .padding(.top, 2)
+            }
+            .padding(.horizontal, 14).padding(.vertical, 14)
+
+            if !isLast { Divider().padding(.leading, 60) }
+        }
+    }
+
+    private func moduleColor(for module: String) -> Color {
+        switch module {
+        case "fitness":     return Color(hex: 0xF1746C)
+        case "nutrition":   return Color(hex: 0x4CC38A)
+        case "sleep":       return Color(hex: 0x6C7BF1)
+        case "mind":        return Color(hex: 0x9B6CF1)
+        case "productivity": return Color(hex: 0x3CB2E0)
+        case "finance":     return Color(hex: 0x4CC38A)
+        case "invest":      return Color(hex: 0xE0A23C)
+        default:            return Color.accentColor
+        }
+    }
+
+    private func moduleIcon(for module: String) -> String {
+        switch module {
+        case "fitness":     return "figure.run"
+        case "nutrition":   return "fork.knife"
+        case "sleep":       return "moon.stars.fill"
+        case "mind":        return "brain.head.profile"
+        case "productivity": return "checklist"
+        case "finance":     return "creditcard.fill"
+        case "invest":      return "chart.line.uptrend.xyaxis"
+        case "career":      return "briefcase.fill"
+        case "learning":    return "book.fill"
+        default:            return "star.fill"
+        }
+    }
+
     // MARK: - Active Challenges
 
     private func saveChallengesForWidget(_ list: [ChallengeOut]) {
