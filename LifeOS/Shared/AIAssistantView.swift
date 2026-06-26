@@ -29,6 +29,8 @@ struct AIAction: Codable, Identifiable {
         case scheduleReminder = "schedule_reminder"
         case updateConfig = "update_config"
         case createChallenge = "create_challenge"
+        case addModule = "add_module"
+        case removeModule = "remove_module"
     }
 
     var id: UUID = UUID()
