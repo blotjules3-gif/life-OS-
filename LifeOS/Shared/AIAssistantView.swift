@@ -28,6 +28,7 @@ struct AIAction: Codable, Identifiable {
         case openModule = "open_module"
         case scheduleReminder = "schedule_reminder"
         case updateConfig = "update_config"
+        case createChallenge = "create_challenge"
     }
 
     var id: UUID = UUID()
@@ -37,14 +38,21 @@ struct AIAction: Codable, Identifiable {
     let priority: Int?
     let reminderBody: String?
     let delaySeconds: Int?
+    let challengeId: String?
+    let dailyTarget: Double?
+    let unit: String?
+    let durationDays: Int?
 
     enum CodingKeys: String, CodingKey {
-        case type, title, module, priority
+        case type, title, module, priority, unit
         case reminderBody = "reminder_body"
         case delaySeconds = "delay_seconds"
+        case challengeId = "challenge_id"
+        case dailyTarget = "daily_target"
+        case durationDays = "duration_days"
     }
 
-    init(type: ActionType, title: String? = nil, module: String? = nil, priority: Int? = nil, reminderBody: String? = nil, delaySeconds: Int? = nil) {
+    init(type: ActionType, title: String? = nil, module: String? = nil, priority: Int? = nil, reminderBody: String? = nil, delaySeconds: Int? = nil, challengeId: String? = nil, dailyTarget: Double? = nil, unit: String? = nil, durationDays: Int? = nil) {
         self.id = UUID()
         self.type = type
         self.title = title
@@ -52,6 +60,10 @@ struct AIAction: Codable, Identifiable {
         self.priority = priority
         self.reminderBody = reminderBody
         self.delaySeconds = delaySeconds
+        self.challengeId = challengeId
+        self.dailyTarget = dailyTarget
+        self.unit = unit
+        self.durationDays = durationDays
     }
 }
 
