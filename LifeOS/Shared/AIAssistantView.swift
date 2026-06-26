@@ -538,30 +538,37 @@ struct AIAssistantView: View {
     // MARK: - Quick suggestions
 
     private var quickSuggestionsRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(quickSuggestions, id: \.label) { s in
-                    Button {
-                        vm.send(text: s.message, module: s.module)
-                    } label: {
-                        Text(s.label)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(accent)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                    .fill(accent.opacity(0.1))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                    .stroke(accent.opacity(0.25), lineWidth: 1)
-                            )
+        VStack(alignment: .leading, spacing: 8) {
+            Text("SUGGESTIONS")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.secondary)
+                .kerning(1.2)
+                .padding(.horizontal, 16)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(quickSuggestions, id: \.label) { s in
+                        Button {
+                            vm.send(text: s.message, module: s.module)
+                        } label: {
+                            Text(s.label)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.primary)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                        .fill(Color(uiColor: .secondarySystemBackground))
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                        .stroke(Color(uiColor: .separator).opacity(0.5), lineWidth: 1)
+                                )
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
+                .padding(.horizontal, 16)
             }
-            .padding(.horizontal, 16)
         }
     }
 
