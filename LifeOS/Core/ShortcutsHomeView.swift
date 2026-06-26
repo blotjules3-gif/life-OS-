@@ -96,6 +96,8 @@ struct ShortcutsHomeView: View {
     @AppStorage("waterGoal") private var waterGoal = 2500
     @AppStorage("kcalGoal") private var kcalGoal = 2200
     @AppStorage("fastTarget") private var fastTarget = 16
+    @AppStorage("todayEnergyScore") private var todayEnergyScore = 0
+    @AppStorage("todayEnergyLabel") private var todayEnergyLabel = ""
 
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
