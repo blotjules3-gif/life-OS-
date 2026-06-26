@@ -339,8 +339,9 @@ struct OnboardingName: View {
                 .padding(.bottom, 52)
         }
         .padding(.horizontal, 28)
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { focused = true }
+        .task {
+            try? await Task.sleep(for: .milliseconds(250))
+            focused = true
         }
     }
 }
