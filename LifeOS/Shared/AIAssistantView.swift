@@ -294,8 +294,16 @@ final class AIAssistantViewModel: ObservableObject {
                 let delay = TimeInterval(action.delaySeconds ?? 3600)
                 scheduleLocalNotification(title: "LifeOS", body: body, delay: delay)
             }
+        case .createChallenge:
+            if let title = action.title, let days = action.durationDays {
+                scheduleLocalNotification(
+                    title: "Défi démarré",
+                    body: "\(title) — \(days) jours. Tu peux le faire !",
+                    delay: 2
+                )
+            }
         case .openModule, .updateConfig:
-            break  // handled by UI layer via published actions
+            break
         }
     }
 
