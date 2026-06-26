@@ -822,6 +822,7 @@ struct ProfileView: View {
     @State private var showBriefing = false
     @State private var appeared = false
     @State private var challenges: [ChallengeOut] = []
+    @State private var apiGoals: [GoalOut] = []
 
     private var recommendedModules: [AppCategory] {
         recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
