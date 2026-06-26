@@ -521,30 +521,8 @@ struct BubbleCategoriesView: View {
         return s
     }
 
-    @ViewBuilder private var background: some View {
-        let cols = theme.bubbleBG
-        ZStack {
-            if theme == .gothic {
-                // Thème Argent : noir pur + vignette radiale douce (le chrome ressort)
-                Color(hex: 0x050506)
-                RadialGradient(colors: [.clear, Color.black.opacity(0.7)],
-                               center: .center, startRadius: 60, endRadius: 520)
-            } else if #available(iOS 18.0, *) {
-                MeshGradient(
-                    width: 3, height: 3,
-                    points: [
-                        [0.0, 0.0], [0.5, 0.0], [1.0, 0.0],
-                        [0.0, 0.5], [0.5, 0.5], [1.0, 0.5],
-                        [0.0, 1.0], [0.5, 1.0], [1.0, 1.0]
-                    ],
-                    colors: cols
-                )
-            } else {
-                LinearGradient(colors: [cols[0], cols[4], cols[8]],
-                               startPoint: .topLeading, endPoint: .bottomTrailing)
-            }
-        }
-    }
+    // Fond partagé avec les hubs de catégorie (voir CategoryHub.swift) pour rester cohérent.
+    private var background: some View { ThemedBubbleBackground(theme: theme) }
 }
 
 // MARK: - Routing : titre de bulle → pôle AppCategory (navigation existante)

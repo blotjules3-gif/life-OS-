@@ -250,7 +250,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 54AUW2C78N;
+				DEVELOPMENT_TEAM = Y655DBVZT2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LifeOSWidgets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LifeOSWidgets;
@@ -262,7 +262,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.blotjules.lifeos.LifeOSWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.blotjules.lifeosapp.LifeOSWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
@@ -282,7 +282,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 54AUW2C78N;
+				DEVELOPMENT_TEAM = Y655DBVZT2;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LifeOSWidgets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LifeOSWidgets;
@@ -294,7 +294,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.blotjules.lifeos.LifeOSWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.blotjules.lifeosapp.LifeOSWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -434,7 +434,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = 54AUW2C78N;
+				DEVELOPMENT_TEAM = Y655DBVZT2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LifeOS/Info.plist;
@@ -457,7 +457,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.blotjules.lifeos;
+				PRODUCT_BUNDLE_IDENTIFIER = com.blotjules.lifeosapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -474,7 +474,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
-				DEVELOPMENT_TEAM = 54AUW2C78N;
+				DEVELOPMENT_TEAM = Y655DBVZT2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LifeOS/Info.plist;
@@ -497,7 +497,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.blotjules.lifeos;
+				PRODUCT_BUNDLE_IDENTIFIER = com.blotjules.lifeosapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
