@@ -2033,16 +2033,19 @@ struct ProfileView: View {
     private var tipCard: some View {
         HStack(spacing: 12) {
             RoundedRectangle(cornerRadius: 3, style: .continuous)
-                .fill(Color.accentColor.opacity(0.6))
-                .frame(width: 2.5, height: 36)
+                .fill(Color.accentColor.opacity(0.7))
+                .frame(width: 3, height: 36)
             Text(todayTip)
                 .font(.system(size: 13, weight: .regular))
-                .foregroundStyle(Theme.textSecondary)
+                .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer()
         }
-        .padding(14)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .padding(16)
+        .background(neoCard)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+        .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
     }
 
     // MARK: - Paramètres
