@@ -538,37 +538,48 @@ struct AIAssistantView: View {
     // MARK: - Quick suggestions
 
     private var quickSuggestionsRow: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("SUGGESTIONS")
-                .font(.system(size: 10, weight: .bold))
-                .foregroundStyle(.secondary)
-                .kerning(1.2)
-                .padding(.horizontal, 16)
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(quickSuggestions, id: \.label) { s in
-                        Button {
-                            vm.send(text: s.message, module: s.module)
-                        } label: {
-                            Text(s.label)
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.primary)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 10)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                        .fill(Color(uiColor: .secondarySystemBackground))
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                        .stroke(Color(uiColor: .separator).opacity(0.5), lineWidth: 1)
-                                )
-                        }
-                        .buttonStyle(.plain)
+        VStack(spacing: 10) {
+            // Header avec bouton effacer
+            HStack {
+                Text("SUGGESTIONS")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .kerning(1.2)
+                Spacer()
+                if !vm.messages.isEmpty {
+                    Button {
+                        showClearConfirm = true
+                    } label: {
+                        Text("Effacer")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.secondary)
                     }
+                    .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 16)
             }
+            .padding(.horizontal, 16)
+
+            // Grille 2×2
+            let cols = Array(quickSuggestions.prefix(4))
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                ForEach(cols, id: \.label) { s in
+                    Button {
+                        vm.send(text: s.message, module: s.module)
+                    } label: {
+                        Text(s.label)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color(uiColor: .secondarySystemBackground),
+                                        in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(Color(uiColor: .separator).opacity(0.4), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 16)
         }
     }
 
