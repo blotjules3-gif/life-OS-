@@ -324,6 +324,54 @@ TOOL_DEFINITIONS: list[dict] = [
         },
     },
 
+    # ── Life Challenges (heavy behaviour changes) ──────────────────────────────
+
+    {
+        "type": "function",
+        "function": {
+            "name": "create_life_challenge",
+            "description": (
+                "Create a life challenge for a heavy, long-term behaviour change "
+                "(drink more water, start sport, stop smoking, etc.). "
+                "ONLY call this after the user has explicitly agreed to the proposed plan. "
+                "Never create a challenge unilaterally — always propose first."
+            ),
+            "parameters": {
+                "type": "object",
+                "required": ["title", "challenge_type"],
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "description": "Short challenge title in French. Ex: 'Boire 8 verres d'eau par jour'",
+                    },
+                    "challenge_type": {
+                        "type": "string",
+                        "enum": ["water", "sport", "smoking", "nutrition", "sleep", "meditation", "custom"],
+                        "description": "Category of the life challenge",
+                    },
+                    "daily_target": {
+                        "type": "number",
+                        "description": "Daily numeric target. Ex: 8 for 8 glasses, 30 for 30 min sport",
+                    },
+                    "unit": {
+                        "type": "string",
+                        "description": "Unit for the daily target. Ex: 'verres', 'minutes', 'séances', 'cigarettes restantes'",
+                    },
+                    "duration_days": {
+                        "type": "integer",
+                        "minimum": 7,
+                        "maximum": 90,
+                        "description": "Duration in days. 21 = 3 weeks habit formation, 30 = 1 month, 90 = 3 months",
+                    },
+                    "notes": {
+                        "type": "string",
+                        "description": "Optional strategy or first-step notes to store with the challenge",
+                    },
+                },
+            },
+        },
+    },
+
     # ── Finance (STRICT SAFETY MODE) ──────────────────────────────────────────
 
     {
