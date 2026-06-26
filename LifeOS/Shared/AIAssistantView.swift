@@ -36,19 +36,22 @@ struct AIAction: Codable, Identifiable {
     let module: String?
     let priority: Int?
     let reminderBody: String?
+    let delaySeconds: Int?
 
     enum CodingKeys: String, CodingKey {
         case type, title, module, priority
         case reminderBody = "reminder_body"
+        case delaySeconds = "delay_seconds"
     }
 
-    init(type: ActionType, title: String? = nil, module: String? = nil, priority: Int? = nil, reminderBody: String? = nil) {
+    init(type: ActionType, title: String? = nil, module: String? = nil, priority: Int? = nil, reminderBody: String? = nil, delaySeconds: Int? = nil) {
         self.id = UUID()
         self.type = type
         self.title = title
         self.module = module
         self.priority = priority
         self.reminderBody = reminderBody
+        self.delaySeconds = delaySeconds
     }
 }
 
