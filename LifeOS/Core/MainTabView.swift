@@ -74,6 +74,9 @@ struct MainTabView: View {
         .fullScreenCover(isPresented: $showAIAssistant) {
             AIAssistantView()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenAIChat)) { _ in
+            showAIAssistant = true
+        }
     }
 
     @ViewBuilder private var content: some View {
