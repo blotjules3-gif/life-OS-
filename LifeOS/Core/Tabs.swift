@@ -389,6 +389,10 @@ struct DailyBriefingView: View {
     @AppStorage("waterGoal") private var waterGoal = 2500
     @AppStorage("lastBriefingDate") private var lastBriefingDate: Double = 0
     @AppStorage("lastBriefingContent") private var lastBriefingContent = ""
+    @AppStorage("lastSleepQuality") private var sleepQuality = 0
+    @AppStorage("lastSleepHours") private var sleepHours = 0
+    @AppStorage("wakeupHour") private var wakeupHour = 7
+    @AppStorage("wakeupMinute") private var wakeupMinute = 0
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
     @Query private var habits: [Habit]
@@ -396,6 +400,10 @@ struct DailyBriefingView: View {
     @Environment(\.modelContext) private var ctx
 
     @State private var waveActive = false
+    @State private var aiBriefing: String? = nil
+    @State private var briefingLoading = false
+    @State private var briefingGoals: [GoalOut] = []
+    @State private var briefingChallenges: [ChallengeOut] = []
 
     private static let waveBars: [Double] = [8, 20, 12, 24, 10, 18, 8, 22, 14, 8]
 
