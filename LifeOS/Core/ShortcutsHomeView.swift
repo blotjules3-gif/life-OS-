@@ -131,9 +131,15 @@ struct ShortcutsHomeView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    Text(userName.isEmpty ? greeting : "\(greeting), \(userName)")
-                        .font(.largeTitle.bold())
-                        .padding(.horizontal, 4)
+                    HStack(alignment: .bottom) {
+                        Text(userName.isEmpty ? greeting : "\(greeting), \(userName)")
+                            .font(.largeTitle.bold())
+                        Spacer()
+                        if todayEnergyScore > 0 {
+                            energyBadge
+                        }
+                    }
+                    .padding(.horizontal, 4)
 
                     shortcutsSection
                     goalsSection
