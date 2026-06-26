@@ -57,6 +57,7 @@ def _register_all_tools() -> None:
     registry.register("get_user_context", handle_get_user_context)
     registry.register("update_user_profile", handle_update_user_profile)
     registry.register("remember_user_info", handle_remember_user_info)
+    registry.register("create_life_challenge", handle_create_life_challenge)
 
     registry.register("log_workout", handle_log_workout)
     registry.register("analyze_sport_progress", handle_analyze_sport_progress)
