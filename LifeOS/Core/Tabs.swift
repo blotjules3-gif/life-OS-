@@ -553,18 +553,30 @@ struct DailyBriefingView: View {
                 .padding(.horizontal, 22)
             }
         }
-        .onAppear {
-            // Stocker le contenu du briefing pour rappel dans le profil
+        .task {
             lastBriefingDate = Date.now.timeIntervalSince1970
             lastBriefingContent = todayTasks.prefix(4).map { $0.title }.joined(separator: "|||")
+            briefingLoading = true
+
+            async let goalsTask = (try? await AgentAPI.shared.listGoals()) ?? []
+            async let challengesTask = (try? await AgentAPI.shared.fetchChallenges()) ?? []
+            let (g, c) = await (goalsTask, challengesTask)
+            briefingGoals = g
+            briefingChallenges = c
+
+            let prompt = buildBriefingPrompt(goals: g, challenges: c)
+            if let resp = try? await AgentAPI.shared.chat(message: prompt, module: nil, conversationID: nil) {
+                aiBriefing = resp.reply
+                UserDefaults.standard.set(resp.reply, forKey: "lastAIBriefing")
+            }
+            briefingLoading = false
+
             if speakOnAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
-                    alarm.speakDailyPlan(
-                        userName: userName,
-                        modules: modules,
-                        waterGoal: waterGoal,
-                        kcalGoal: kcalGoal
-                    )
+                try? await Task.sleep(for: .milliseconds(400))
+                if let text = aiBriefing {
+                    alarm.speakText(text)
+                } else {
+                    alarm.speakDailyPlan(userName: userName, modules: modules, waterGoal: waterGoal, kcalGoal: kcalGoal)
                 }
             }
         }
