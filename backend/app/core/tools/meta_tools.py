@@ -199,6 +199,51 @@ async def handle_update_user_profile(
     )
 
 
+async def handle_check_in_challenge(
+    args: dict[str, Any],
+    user_id: uuid.UUID,
+    session: AsyncSession,
+    context: dict[str, Any],
+) -> dict[str, Any]:
+    from datetime import datetime, timezone
+    from sqlalchemy import select
+    from app.models.db import LifeChallenge
+
+    challenge_id = args["challenge_id"]
+    result = await session.execute(
+        select(LifeChallenge).where(
+            LifeChallenge.id == uuid.UUID(challenge_id),
+            LifeChallenge.user_id == user_id,
+        )
+    )
+    challenge = result.scalar_one_or_none()
+    if not challenge:
+        return {"error": "Challenge not found"}
+
+    now = datetime.now(tz=timezone.utc)
+    if challenge.last_checkin_at:
+        last = challenge.last_checkin_at.replace(tzinfo=timezone.utc) if challenge.last_checkin_at.tzinfo is None else challenge.last_checkin_at
+        days_since = (now - last).days
+        if days_since == 0:
+            return {"already_checked_in": True, "streak_days": challenge.streak_days}
+        elif days_since == 1:
+            challenge.streak_days += 1
+        else:
+            challenge.streak_days = 1
+    else:
+        challenge.streak_days = 1
+
+    challenge.last_checkin_at = now
+    await session.flush()
+
+    log.info("challenge_checkin", user_id=str(user_id), challenge_id=challenge_id, streak=challenge.streak_days)
+    return {
+        "checked_in": True,
+        "streak_days": challenge.streak_days,
+        "title": challenge.title,
+    }
+
+
 async def handle_add_module(
     args: dict[str, Any],
     user_id: uuid.UUID,
