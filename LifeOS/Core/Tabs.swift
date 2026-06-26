@@ -1348,31 +1348,14 @@ struct ProfileView: View {
 
             Spacer()
 
-            // Time remaining ring
-            VStack(alignment: .trailing, spacing: 4) {
-                ZStack {
-                    Circle()
-                        .fill(neoCard)
-                        .frame(width: 58, height: 58)
-                        .shadow(color: neoShadowLight, radius: 4, x: -2, y: -2)
-                        .shadow(color: neoShadowDark, radius: 4, x: 2, y: 2)
-                    Circle()
-                        .stroke(Color.primary.opacity(0.06), lineWidth: 4)
-                        .frame(width: 44, height: 44)
-                    Circle()
-                        .trim(from: 0, to: appeared ? 1 - dayProgress : 0)
-                        .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                        .rotationEffect(.degrees(-90))
-                        .frame(width: 44, height: 44)
-                        .animation(.spring(duration: 1.4).delay(0.3), value: appeared)
-                    Text("\(hoursRemaining)h")
-                        .font(.system(size: 11, weight: .bold, design: .rounded).monospacedDigit())
-                        .foregroundStyle(.primary)
-                }
-                Text(timeStr)
-                    .font(.system(size: 9, weight: .semibold))
+            // Temps restant
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(hoursRemaining > 0 ? "\(hoursRemaining)h\(minutesRemaining > 0 ? String(format: "%02d", minutesRemaining) : "")" : "—")
+                    .font(.system(size: 20, weight: .black, design: .rounded).monospacedDigit())
+                    .foregroundStyle(color)
+                Text("restantes")
+                    .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
             }
             .padding(.trailing, 20)
         }
