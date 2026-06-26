@@ -1236,9 +1236,9 @@ struct ProfileView: View {
     // MARK: - Profile Header
 
     private var profileHeader: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(spacing: 16) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(greeting.uppercased())
                         .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(.secondary)
@@ -1248,36 +1248,41 @@ struct ProfileView: View {
                         .foregroundStyle(.primary)
                 }
                 Spacer()
-                // Day fraction badge
+                // Neomorphic circular day dial
                 ZStack {
                     Circle()
-                        .stroke(Color.primary.opacity(0.08), lineWidth: 3)
-                        .frame(width: 46, height: 46)
+                        .fill(neoCard)
+                        .frame(width: 68, height: 68)
+                        .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
+                        .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
                     Circle()
-                        .trim(from: 0, to: dayProgress)
-                        .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                        .stroke(Color.primary.opacity(0.06), lineWidth: 5)
+                        .frame(width: 54, height: 54)
+                    Circle()
+                        .trim(from: 0, to: appeared ? dayProgress : 0)
+                        .stroke(
+                            AngularGradient(
+                                colors: [Color.accentColor.opacity(0.5), Color.accentColor],
+                                center: .center,
+                                startAngle: .degrees(-90), endAngle: .degrees(270)
+                            ),
+                            style: StrokeStyle(lineWidth: 5, lineCap: .round)
+                        )
                         .rotationEffect(.degrees(-90))
-                        .frame(width: 46, height: 46)
+                        .frame(width: 54, height: 54)
                         .animation(.spring(duration: 1.2), value: appeared)
-                    Text("\(Int(dayProgress * 100))%")
-                        .font(.system(size: 10, weight: .bold, design: .rounded).monospacedDigit())
-                        .foregroundStyle(.primary)
+                    VStack(spacing: 0) {
+                        Text("\(Int(dayProgress * 100))")
+                            .font(.system(size: 14, weight: .black, design: .rounded).monospacedDigit())
+                            .foregroundStyle(.primary)
+                        Text("%")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
 
-            // Day progress bar
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.primary.opacity(0.07)).frame(height: 4)
-                    Capsule()
-                        .fill(Color.accentColor.gradient)
-                        .frame(width: geo.size.width * dayProgress, height: 4)
-                        .animation(.spring(duration: 1.4).delay(0.2), value: appeared)
-                }
-            }
-            .frame(height: 4)
-
-            // Domain pills
+            // Stats pills
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     domainPill(icon: "flame.fill", label: "\(kcalToday) kcal", color: Color(hex: 0xF1746C),
@@ -1292,6 +1297,11 @@ struct ProfileView: View {
                 .padding(.vertical, 2)
             }
         }
+        .padding(20)
+        .background(neoCard)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: neoShadowLight, radius: 10, x: -5, y: -5)
+        .shadow(color: neoShadowDark, radius: 10, x: 5, y: 5)
     }
 
     private func domainPill(icon: String, label: String, color: Color, progress: Double) -> some View {
@@ -1306,16 +1316,12 @@ struct ProfileView: View {
                 .font(.system(size: 12, weight: .semibold, design: .rounded).monospacedDigit())
                 .foregroundStyle(.primary)
         }
-        .padding(.horizontal, 10).padding(.vertical, 6)
-        .background(
-            ZStack(alignment: .leading) {
-                Capsule().fill(Theme.card)
-                GeometryReader { g in
-                    Capsule().fill(color.opacity(0.12)).frame(width: g.size.width * progress)
-                }
-            }
-        )
-        .overlay(Capsule().stroke(color.opacity(progress > 0.95 ? 0.4 : 0.12), lineWidth: 1))
+        .padding(.horizontal, 10).padding(.vertical, 7)
+        .background(neoCard)
+        .clipShape(Capsule())
+        .shadow(color: neoShadowLight, radius: 4, x: -2, y: -2)
+        .shadow(color: neoShadowDark, radius: 4, x: 2, y: 2)
+        .overlay(Capsule().stroke(progress >= 0.95 ? color.opacity(0.4) : Color.clear, lineWidth: 1.5))
     }
 
     // MARK: - Top Module Island
