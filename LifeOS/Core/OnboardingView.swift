@@ -592,7 +592,9 @@ struct OnboardingWakeTime: View {
 struct OnboardingResults: View {
     let name: String
     let recommendations: [AppCategory]
-    let onDone: () -> Void
+    let onDone: ([AppCategory]) -> Void
+
+    @State private var selected: Set<AppCategory> = []
 
     var body: some View {
         VStack(spacing: 0) {
@@ -604,7 +606,7 @@ struct OnboardingResults: View {
                         Text(name.isEmpty ? "Parfait !" : "Parfait, \(name) !")
                             .font(.system(size: 28, weight: .bold, design: .rounded))
                             .multilineTextAlignment(.center)
-                        Text("Voici tes modules pour démarrer.\nTu pourras tout explorer ensuite dans Catégories.")
+                        Text("Voici tes modules pour démarrer.\nCoche ou décoche selon tes envies.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -614,27 +616,38 @@ struct OnboardingResults: View {
 
                     VStack(spacing: 10) {
                         ForEach(recommendations) { cat in
-                            HStack(spacing: 14) {
-                                Image(systemName: cat.icon)
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundStyle(.white)
-                                    .frame(width: 38, height: 38)
-                                    .background(cat.tint, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(cat.title)
-                                        .font(.system(size: 15, weight: .semibold))
-                                    Text(cat.subtitle)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                            let isOn = selected.contains(cat)
+                            Button {
+                                withAnimation(.spring(duration: 0.2)) {
+                                    if isOn { selected.remove(cat) } else { selected.insert(cat) }
                                 }
-                                Spacer()
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(Color.accentColor)
-                                    .font(.system(size: 18))
+                            } label: {
+                                HStack(spacing: 14) {
+                                    Image(systemName: cat.icon)
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundStyle(.white)
+                                        .frame(width: 38, height: 38)
+                                        .background(isOn ? cat.tint : Color.primary.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(cat.title)
+                                            .font(.system(size: 15, weight: .semibold))
+                                            .foregroundStyle(isOn ? .primary : .secondary)
+                                        Text(cat.subtitle)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
+                                        .foregroundStyle(isOn ? Color.accentColor : Color.secondary.opacity(0.4))
+                                        .font(.system(size: 22))
+                                        .contentTransition(.symbolEffect(.replace))
+                                }
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 12)
+                                .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .opacity(isOn ? 1 : 0.6)
                             }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 12)
-                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .buttonStyle(.plain)
                         }
                     }
                     .padding(.horizontal, 22)
@@ -643,9 +656,16 @@ struct OnboardingResults: View {
                 }
             }
 
-            OnboardingButton(label: "Commencer LifeOS", enabled: true, action: onDone)
-                .padding(.horizontal, 28)
-                .padding(.bottom, 52)
+            OnboardingButton(
+                label: selected.isEmpty ? "Sélectionne au moins un module" : "Commencer LifeOS",
+                enabled: !selected.isEmpty,
+                action: { onDone(recommendations.filter { selected.contains($0) }) }
+            )
+            .padding(.horizontal, 28)
+            .padding(.bottom, 52)
+        }
+        .onAppear {
+            selected = Set(recommendations)
         }
     }
 }
