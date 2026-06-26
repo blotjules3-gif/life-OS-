@@ -156,10 +156,12 @@ class AgentOrchestrator:
                             "priority": result.get("priority", 2),
                         })
                     if tool_name == "schedule_followup" and isinstance(result, dict):
+                        delay_h = float(result.get("delay_hours", 1))
                         pending_actions.append({
                             "type": "schedule_reminder",
                             "reminder_body": result.get("message"),
                             "module": result.get("module"),
+                            "delay_seconds": int(delay_h * 3600),
                         })
                     if tool_name == "update_user_profile" and isinstance(result, dict):
                         if result.get("gender"):
