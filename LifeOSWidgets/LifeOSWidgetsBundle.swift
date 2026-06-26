@@ -5,5 +5,6 @@ import SwiftUI
 struct LifeOSWidgetsBundle: WidgetBundle {
     var body: some Widget {
         AlarmActivityWidget()
+        ChallengeStreakWidget()
     }
 }
