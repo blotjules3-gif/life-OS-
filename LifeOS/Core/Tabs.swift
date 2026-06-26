@@ -1519,12 +1519,15 @@ struct ProfileView: View {
                 .foregroundStyle(.secondary)
                 .kerning(1.2)
 
-            VStack(spacing: 1) {
+            VStack(spacing: 0) {
                 ForEach(Array(apiGoals.enumerated()), id: \.element.id) { idx, goal in
                     apiGoalRow(goal: goal, isLast: idx == apiGoals.count - 1)
                 }
             }
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .background(neoCard)
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+            .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
         }
     }
 
@@ -1587,7 +1590,7 @@ struct ProfileView: View {
             }
             .padding(.horizontal, 14).padding(.vertical, 14)
 
-            if !isLast { Divider().padding(.leading, 60) }
+            if !isLast { Divider().opacity(0.1).padding(.leading, 60) }
         }
     }
 
