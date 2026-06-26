@@ -31,6 +31,7 @@ def _register_all_tools() -> None:
         handle_get_module_config,
         handle_get_user_context,
         handle_list_goals,
+        handle_remember_user_info,
         handle_schedule_followup,
         handle_update_module_config,
         handle_update_user_profile,
