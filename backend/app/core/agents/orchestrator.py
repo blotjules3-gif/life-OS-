@@ -163,6 +163,18 @@ class AgentOrchestrator:
                             "module": result.get("module"),
                             "delay_seconds": int(delay_h * 3600),
                         })
+                    if tool_name == "add_module" and isinstance(result, dict):
+                        pending_actions.append({
+                            "type": "add_module",
+                            "module": result.get("module"),
+                            "title": result.get("reason") or "Module ajouté",
+                        })
+                    if tool_name == "remove_module" and isinstance(result, dict):
+                        pending_actions.append({
+                            "type": "remove_module",
+                            "module": result.get("module"),
+                            "title": result.get("reason") or "Module retiré",
+                        })
                     if tool_name == "create_life_challenge" and isinstance(result, dict):
                         pending_actions.append({
                             "type": "create_challenge",
