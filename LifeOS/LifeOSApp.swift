@@ -50,10 +50,12 @@ struct LifeOSApp: App {
                 if let container {
                     appContent(container: container)
                         .transition(.opacity)
+                        .zIndex(1)
                 } else {
                     SplashView()
                         .transition(.opacity)
                         .allowsHitTesting(false)
+                        .zIndex(0)
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: container != nil)
