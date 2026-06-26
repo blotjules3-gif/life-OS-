@@ -79,8 +79,10 @@ struct OnboardingView: View {
             if seen.insert(cat).inserted { result.append(cat) }
         }
         var recs = Array(result.prefix(8))
-        if (gender == "femme" || gender == "autre") && !recs.contains(.cycle) {
-            recs.append(.cycle)
+        if gender == "femme" || gender == "autre" {
+            recs.removeAll { $0 == .cycle }
+            recs = Array(recs.prefix(7))
+            recs.insert(.cycle, at: 0)
         }
         return recs
     }
