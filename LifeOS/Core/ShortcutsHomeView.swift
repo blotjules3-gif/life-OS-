@@ -223,8 +223,7 @@ struct ShortcutsHomeView: View {
             ctx.delete(completion)
         } else {
             let c = HabitCompletion(date: .now)
-            c.habit = habit
-            ctx.insert(c)
+            habit.completions.append(c)
         }
         try? ctx.save()
         Haptics.soft()
