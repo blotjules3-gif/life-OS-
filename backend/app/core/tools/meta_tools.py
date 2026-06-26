@@ -199,6 +199,31 @@ async def handle_update_user_profile(
     )
 
 
+async def handle_add_module(
+    args: dict[str, Any],
+    user_id: uuid.UUID,
+    session: AsyncSession,
+    context: dict[str, Any],
+) -> dict[str, Any]:
+    module = args["module"]
+    reason = args.get("reason", "")
+    log.info("module_added", user_id=str(user_id), module=module)
+    return {"action": "add_module", "module": module, "reason": reason, "added": True}
+
+
+async def handle_remove_module(
+    args: dict[str, Any],
+    user_id: uuid.UUID,
+    session: AsyncSession,
+    context: dict[str, Any],
+) -> dict[str, Any]:
+    module = args["module"]
+    reason_type = args["reason_type"]
+    reason = args.get("reason", "")
+    log.info("module_removed", user_id=str(user_id), module=module, reason_type=reason_type)
+    return {"action": "remove_module", "module": module, "reason_type": reason_type, "reason": reason, "removed": True}
+
+
 async def handle_create_life_challenge(
     args: dict[str, Any],
     user_id: uuid.UUID,
