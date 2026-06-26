@@ -661,6 +661,90 @@ struct DailyBriefingView: View {
         }
     }
 
+    @ViewBuilder private var aiBriefingCard: some View {
+        if briefingLoading {
+            HStack(spacing: 12) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.orange)
+                    .frame(width: 32, height: 32)
+                    .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                VStack(alignment: .leading, spacing: 7) {
+                    ForEach(0..<3, id: \.self) { i in
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .fill(Color.primary.opacity(0.07))
+                            .frame(maxWidth: i == 2 ? .infinity * 0.6 : .infinity)
+                            .frame(height: 11)
+                    }
+                }
+            }
+            .padding(14)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        } else if let text = aiBriefing {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.orange)
+                    .frame(width: 32, height: 32)
+                    .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                Text(text)
+                    .font(.system(size: 15))
+                    .foregroundStyle(.primary)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(14)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
+        }
+    }
+
+    private func buildBriefingPrompt(goals: [GoalOut], challenges: [ChallengeOut]) -> String {
+        var lines = ["[BRIEFING_MATIN]"]
+        lines.append("Heure du réveil : \(String(format: "%02d:%02d", wakeupHour, wakeupMinute))")
+        if !userName.isEmpty { lines.append("Utilisateur : \(userName)") }
+
+        var yesterday: [String] = []
+        if sleepQuality > 0 {
+            let q = ["", "mauvaise", "passable", "correcte", "bonne", "excellente"][sleepQuality]
+            yesterday.append("Sommeil : qualité \(q)\(sleepHours > 0 ? ", \(sleepHours)h" : "")")
+        }
+        if kcalYesterday > 0 {
+            let pct = kcalGoal > 0 ? Int(100 * Double(kcalYesterday) / Double(kcalGoal)) : 0
+            yesterday.append("Calories : \(kcalYesterday)/\(kcalGoal) kcal (\(pct)%)")
+        }
+        if waterYesterday > 0 {
+            let pct = waterGoal > 0 ? Int(100 * Double(waterYesterday) / Double(waterGoal)) : 0
+            yesterday.append("Eau : \(waterYesterday)/\(waterGoal) ml (\(pct)%)")
+        }
+        if !habits.isEmpty {
+            yesterday.append("Habitudes : \(habitsDoneYesterday)/\(habits.count) complétées")
+        }
+        if !yesterday.isEmpty {
+            lines.append("Données d'hier :")
+            lines.append(contentsOf: yesterday.map { "- \($0)" })
+        }
+
+        if !challenges.isEmpty {
+            lines.append("Défis actifs :")
+            for ch in challenges.prefix(3) {
+                var info = "- \"\(ch.title)\" — streak \(ch.streak_days) jour\(ch.streak_days > 1 ? "s" : "")"
+                if let dur = ch.duration_days { info += ", J\(ch.days_elapsed)/\(dur)" }
+                if ch.checkedInToday { info += " (validé aujourd'hui)" }
+                lines.append(info)
+            }
+        }
+
+        if !goals.isEmpty {
+            lines.append("Objectifs en cours :")
+            for g in goals.prefix(3) {
+                lines.append("- \(g.title) (\(Int(g.progress_pct))%)")
+            }
+        }
+
+        return lines.joined(separator: "\n")
+    }
+
     private func briefingRing(value: Double, goal: Double, label: String, color: Color, icon: String) -> some View {
         VStack(spacing: 6) {
             ZStack {
