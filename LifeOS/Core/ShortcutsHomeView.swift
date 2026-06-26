@@ -176,6 +176,8 @@ struct ShortcutsHomeView: View {
                 }
                 reengageMessage    = EngagementTracker.shared.reengagementMessage
                 reengageSuggestion = EngagementTracker.shared.simplificationSuggestion
+                weeklyModuleSuggestion = WeeklyModuleSuggester.shared.currentSuggestion()
+                WeeklyModuleSuggester.shared.scheduleWeeklyNotification()
             }
         }
     }
