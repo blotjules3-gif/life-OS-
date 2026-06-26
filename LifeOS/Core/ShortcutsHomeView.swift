@@ -314,6 +314,61 @@ struct ShortcutsHomeView: View {
         withAnimation { editingMood = false }
     }
 
+    private func weeklyModuleCard(_ module: AppCategory) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                Image(systemName: module.icon)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 34, height: 34)
+                    .background(module.tint, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Nouveau module cette semaine ?")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    Text(module.title)
+                        .font(.subheadline.weight(.semibold))
+                }
+                Spacer()
+            }
+            Text(module.subtitle)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            HStack(spacing: 10) {
+                Button {
+                    WeeklyModuleSuggester.shared.accept(module)
+                    withAnimation { weeklyModuleSuggestion = nil }
+                } label: {
+                    Text("Ajouter")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(module.tint, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                Button {
+                    WeeklyModuleSuggester.shared.dismiss(module)
+                    withAnimation { weeklyModuleSuggestion = nil }
+                } label: {
+                    Text("Pas maintenant")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.secondary.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(14)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+                .stroke(module.tint.opacity(0.2), lineWidth: 1)
+        )
+    }
+
     private func reengageBanner(message: String, suggestion: String?) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top) {
