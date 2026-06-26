@@ -574,6 +574,7 @@ struct AIAssistantView: View {
         vm.messages = []
         UserDefaults.standard.removeObject(forKey: "aiConversationID")
         UserDefaults.standard.removeObject(forKey: "aiFirstLaunchDone")
+        UserDefaults.standard.removeObject(forKey: "aiKnownModulesRaw")
         vm.loadHistory()
     }
 }
