@@ -31,6 +31,7 @@ class ChatAction(BaseModel):
     module: str | None = None
     priority: int | None = None
     reminder_body: str | None = None
+    delay_seconds: int | None = None  # pour schedule_reminder : délai réel en secondes
 
 
 class ChatResponse(BaseModel):
