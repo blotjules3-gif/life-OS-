@@ -252,6 +252,47 @@ actor AgentAPI {
         return try decode([String: AnyCodable].self, from: data)
     }
 
+    // MARK: - Energy Score
+
+    func logCheckin(
+        sleepQuality: Int? = nil,
+        sleepHours: Double? = nil,
+        mood: Int? = nil,
+        fatigue: Int? = nil,
+        waterML: Int? = nil,
+        habitsDone: Int? = nil,
+        habitsTotal: Int? = nil,
+        sportMinutes: Int? = nil
+    ) async throws -> EnergyScoreOut {
+        let body = EnergyCheckinRequest(
+            device_id: deviceID,
+            checkin_date: nil,
+            sleep_quality: sleepQuality,
+            sleep_hours: sleepHours,
+            mood: mood,
+            fatigue: fatigue,
+            water_ml: waterML,
+            habits_done: habitsDone,
+            habits_total: habitsTotal,
+            sport_minutes: sportMinutes
+        )
+        return try await post(path: "/api/v1/energy/checkin", body: body)
+    }
+
+    func fetchEnergyScore() async throws -> EnergyScoreOut {
+        return try await get(path: "/api/v1/energy/score", queryItems: [
+            URLQueryItem(name: "device_id", value: deviceID)
+        ])
+    }
+
+    func fetchEnergyHistory(days: Int = 7) async throws -> [EnergyScoreOut] {
+        let result: EnergyHistoryOut = try await get(path: "/api/v1/energy/history", queryItems: [
+            URLQueryItem(name: "device_id", value: deviceID),
+            URLQueryItem(name: "days", value: "\(days)"),
+        ])
+        return result.history
+    }
+
     // MARK: - Goals (delete)
 
     func deleteGoal(id: String) async throws {
