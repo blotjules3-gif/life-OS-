@@ -1135,6 +1135,21 @@ struct ProfileView: View {
         )
     }
 
+    // MARK: - Neomorphism helpers
+
+    private var neoBackground: Color {
+        colorScheme == .dark ? Color(hex: 0x1C1C1F) : Color(hex: 0xECEBE8)
+    }
+    private var neoCard: Color {
+        colorScheme == .dark ? Color(hex: 0x252528) : Color(hex: 0xECEBE8)
+    }
+    private var neoShadowLight: Color {
+        colorScheme == .dark ? Color.white.opacity(0.04) : Color.white.opacity(0.85)
+    }
+    private var neoShadowDark: Color {
+        colorScheme == .dark ? Color.black.opacity(0.45) : Color(hex: 0xB0ADA8).opacity(0.6)
+    }
+
     // MARK: - Computed helpers
 
     private var dayProgress: Double {
