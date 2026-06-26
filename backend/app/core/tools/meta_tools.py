@@ -140,7 +140,7 @@ async def handle_get_user_context(
     context: dict[str, Any],
 ) -> dict[str, Any]:
     from sqlalchemy import select
-    from app.models.db import ModuleConfig
+    from app.models.db import ModuleConfig, User
 
     config_result = await session.execute(
         select(ModuleConfig).where(ModuleConfig.user_id == user_id)
@@ -149,11 +149,39 @@ async def handle_get_user_context(
 
     goals = await goal_svc.list_goals(session, user_id, active_only=True)
 
+    user_result = await session.execute(select(User).where(User.id == user_id))
+    user = user_result.scalar_one_or_none()
+    user_notes = user.user_notes if user else {}
+
     return {
         "module_configs": configs,
         "active_goals": goals,
         "goal_count": len(goals),
+        "user_notes": user_notes,
     }
+
+
+async def handle_remember_user_info(
+    args: dict[str, Any],
+    user_id: uuid.UUID,
+    session: AsyncSession,
+    context: dict[str, Any],
+) -> dict[str, Any]:
+    from sqlalchemy import select
+    from app.models.db import User
+
+    result = await session.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        return {"saved": False, "error": "User not found"}
+
+    notes = dict(user.user_notes or {})
+    notes[args["key"]] = {"value": args["value"], "category": args["category"]}
+    user.user_notes = notes
+    await session.flush()
+
+    log.info("user_info_remembered", user_id=str(user_id), key=args["key"], category=args["category"])
+    return {"saved": True, "key": args["key"], "total_notes": len(notes)}
 
 
 async def handle_update_user_profile(
