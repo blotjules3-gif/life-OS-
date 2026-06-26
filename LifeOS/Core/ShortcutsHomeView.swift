@@ -464,69 +464,6 @@ struct ShortcutsHomeView: View {
         .padding(.horizontal, 4)
     }
 
-    private func tile(_ tool: ShortcutTool) -> some View {
-        Button {
-            if editing { return }
-            if tool.isFullScreen { fullScreenTool = tool } else { path.append(tool) }
-        } label: {
-            VStack(spacing: 12) {
-                ZStack {
-                    Circle().fill(tool.tint.opacity(0.16)).frame(width: 52, height: 52)
-                    Image(systemName: tool.icon).font(.title3.weight(.semibold)).foregroundStyle(tool.tint)
-                }
-                Text(tool.label).font(.subheadline.weight(.medium)).foregroundStyle(.primary)
-                    .lineLimit(1).minimumScaleFactor(0.8)
-            }
-            .frame(maxWidth: .infinity).padding(.vertical, 20)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-            .overlay(alignment: .topTrailing) {
-                if editing {
-                    Button { remove(tool) } label: {
-                        Image(systemName: "minus.circle.fill").font(.title2)
-                            .symbolRenderingMode(.palette)
-                            .foregroundStyle(.white, .red)
-                    }
-                    .offset(x: 8, y: -8)
-                }
-            }
-            .scaleEffect(editing ? 0.97 : 1)
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var catalog: some View {
-        NavigationStack {
-            List {
-                ForEach(ShortcutTool.allCases) { tool in
-                    Button {
-                        if enabled.contains(tool) { remove(tool) } else { add(tool) }
-                    } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: tool.icon).foregroundStyle(.white)
-                                .frame(width: 30, height: 30)
-                                .background(tool.tint, in: RoundedRectangle(cornerRadius: 7))
-                            Text(tool.label).foregroundStyle(.primary)
-                            Spacer()
-                            Image(systemName: enabled.contains(tool) ? "checkmark.circle.fill" : "plus.circle")
-                                .foregroundStyle(enabled.contains(tool) ? .green : .secondary)
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Raccourcis")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("OK") { showCatalog = false } } }
-        }
-    }
-
-    private func add(_ tool: ShortcutTool) {
-        guard !enabled.contains(tool), enabled.count < maxShortcuts else { return }
-        enabledRaw = (enabled + [tool]).map { $0.rawValue }.joined(separator: ",")
-    }
-    private func remove(_ tool: ShortcutTool) {
-        enabledRaw = enabled.filter { $0 != tool }.map { $0.rawValue }.joined(separator: ",")
-    }
-
     private var greeting: String {
         switch Calendar.current.component(.hour, from: .now) {
         case 5..<12: return "Bonjour"
