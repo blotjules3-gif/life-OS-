@@ -1512,7 +1512,7 @@ struct ProfileView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
 
-            // Actions eau rapides
+            // Actions eau rapides (en verres)
             let waterColor = Color(hex: 0x3CB2E0)
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 5) {
@@ -1523,12 +1523,26 @@ struct ProfileView: View {
                         .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(waterColor)
                         .kerning(0.4)
+                    Spacer()
+                    Text("\(glassesToday)/\(glassesGoalCalc)")
+                        .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
+                        .foregroundStyle(waterColor)
                 }
-                Text("\(waterToday)")
-                    .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
-                    .foregroundStyle(.primary)
-                Text("/ \(waterGoal) ml")
-                    .font(.system(size: 10)).foregroundStyle(.secondary)
+
+                HStack(alignment: .lastTextBaseline, spacing: 4) {
+                    Text("\(glassesToday)")
+                        .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
+                        .foregroundStyle(.primary)
+                    Text("verres")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+
+                Text(String(format: "1 bouteille 1,5L = 6 verres · objectif %.1f bout.", bottlesEquivalent))
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Spacer()
 
@@ -1536,7 +1550,7 @@ struct ProfileView: View {
                     Button {
                         ctx.insert(WaterEntry(amountML: 250)); Haptics.tap()
                     } label: {
-                        Text("+250 ml")
+                        Text("+1 verre (250 ml)")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(waterColor)
                             .frame(maxWidth: .infinity)
@@ -1545,9 +1559,9 @@ struct ProfileView: View {
                     }
                     .buttonStyle(LifeOSPressStyle())
                     Button {
-                        ctx.insert(WaterEntry(amountML: 500)); Haptics.tap()
+                        ctx.insert(WaterEntry(amountML: 750)); Haptics.tap()
                     } label: {
-                        Text("+500 ml")
+                        Text("+½ bouteille (750 ml)")
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(waterColor)
                             .frame(maxWidth: .infinity)
