@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     mistral_model: str = "mistral-large-latest"
     llm_max_retries: int = 3
     llm_timeout_seconds: int = 30
-    llm_max_agent_iterations: int = 5  # prevent infinite loops
+    llm_max_agent_iterations: int = 12  # enough for first-launch bulk config
 
     # ── Redis ─────────────────────────────────────────────────────────────────
     redis_url: str = "redis://localhost:6379/0"
