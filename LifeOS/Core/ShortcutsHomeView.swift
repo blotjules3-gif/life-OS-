@@ -101,6 +101,7 @@ struct ShortcutsHomeView: View {
     @State private var reengageMessage: String? = nil
     @State private var reengageSuggestion: String? = nil
     @State private var showReengage = true
+    @State private var weeklyModuleSuggestion: AppCategory? = nil
 
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
