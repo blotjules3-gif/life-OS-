@@ -1340,9 +1340,70 @@ struct ProfileView: View {
         }
     }
 
+    private func remainingText(for task: ProfileTaskItem) -> String? {
+        switch task.icon {
+        case "flame.fill":
+            let rem = kcalGoal - kcalToday
+            if rem > 0 { return "\(rem) kcal restantes" }
+            if rem < 0 { return "\(abs(rem)) kcal au-dessus" }
+            return "Objectif atteint"
+        case "drop.fill":
+            let rem = glassesGoalCalc - glassesToday
+            if rem > 0 { return "\(rem) verre\(rem > 1 ? "s" : "") restant\(rem > 1 ? "s" : "")" }
+            return "Objectif atteint"
+        case "figure.run":
+            let rem = stepGoal - steps
+            if rem > 0 { return "\(rem) pas restants" }
+            return "Objectif atteint"
+        case "checklist":
+            let rem = habits.count - habitsDone
+            if rem > 0 { return "\(rem) habitude\(rem > 1 ? "s" : "") restante\(rem > 1 ? "s" : "")" }
+            if !habits.isEmpty { return "Tout validé" }
+            return nil
+        default: return nil
+        }
+    }
+
+    private func suggestionText(for task: ProfileTaskItem) -> String? {
+        switch task.icon {
+        case "flame.fill":
+            if task.progress > 1.05 { return "Tu as dépassé ton objectif." }
+            if task.progress < 0.2 { return "Commence par noter ton repas du matin." }
+            if task.progress < 0.6 {
+                let meal = kcalGoal / 3
+                return "Pense à un repas d'environ \(meal) kcal."
+            }
+            return nil
+        case "drop.fill":
+            let rem = glassesGoalCalc - glassesToday
+            if rem <= 0 { return nil }
+            let bottles = Double(rem) * Double(glassML) / 1500.0
+            if bottles >= 0.5 {
+                return String(format: "≈ %.1f bouteille de 1,5L (6 verres = 1 bouteille)", bottles)
+            }
+            return "\(rem) verre\(rem > 1 ? "s" : "") = \(rem * glassML) ml"
+        case "figure.run":
+            let rem = stepGoal - steps
+            if rem <= 0 { return nil }
+            let minutes = rem / 120
+            if minutes > 5 { return "~\(minutes) min de marche pour compléter." }
+            return nil
+        case "checklist":
+            if task.done { return "Toutes tes habitudes du jour sont faites." }
+            return nil
+        case "moon.stars.fill":
+            return "Note ta qualité de sommeil dans le module Sommeil."
+        case "brain.head.profile":
+            return "5 min de respiration = moins de cortisol maintenant."
+        case "creditcard.fill":
+            return "Ouvre Finance pour suivre tes dépenses du jour."
+        default: return nil
+        }
+    }
+
     private func goalRow(task: ProfileTaskItem, endDate: Date?, isLast: Bool) -> some View {
         VStack(spacing: 0) {
-            HStack(spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
                         .fill(task.color.opacity(0.15))
@@ -1351,47 +1412,61 @@ struct ProfileView: View {
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(task.color)
                 }
-                VStack(alignment: .leading, spacing: 2) {
+                .padding(.top, 2)
+
+                VStack(alignment: .leading, spacing: 3) {
                     Text(task.title)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.primary)
                     Text(task.subtitle)
-                        .font(.system(size: 11, design: .rounded).monospacedDigit())
+                        .font(.system(size: 12, design: .rounded).monospacedDigit())
                         .foregroundStyle(.secondary)
+                    if let rem = remainingText(for: task) {
+                        Text(rem)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(task.progress >= 1 ? task.color : task.progress < 0.3 ? Color(hex: 0xF1746C) : .secondary)
+                    }
+                    if let sug = suggestionText(for: task) {
+                        Text(sug)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 1)
+                    }
                 }
+
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: 3) {
-                    // Progress bar
+                VStack(alignment: .trailing, spacing: 4) {
                     GeometryReader { g in
                         ZStack(alignment: .leading) {
                             Capsule().fill(task.color.opacity(0.12)).frame(height: 5)
                             Capsule().fill(task.color)
-                                .frame(width: g.size.width * task.progress, height: 5)
+                                .frame(width: g.size.width * min(1, task.progress), height: 5)
                                 .animation(.spring(duration: 1.0).delay(0.3), value: appeared)
                         }
                     }
                     .frame(width: 64, height: 5)
 
-                    // End date badge
+                    Text("\(Int(task.progress * 100))%")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(task.progress >= 1 ? task.color : .secondary)
+                        .monospacedDigit()
+
                     if let end = endDate {
                         let daysLeft = Calendar.current.dateComponents([.day], from: .now, to: end).day ?? 0
-                        Text(daysLeft > 0 ? "J-\(daysLeft)" : "Terminé")
+                        let urgent = daysLeft <= 3
+                        Text(daysLeft > 0 ? "J-\(daysLeft)" : "Échéance")
                             .font(.system(size: 9, weight: .bold, design: .rounded))
-                            .foregroundStyle(daysLeft > 3 ? task.color : Color(hex: 0xF1746C))
+                            .foregroundStyle(urgent ? Color(hex: 0xF1746C) : task.color)
                             .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(
-                                (daysLeft > 3 ? task.color : Color(hex: 0xF1746C)).opacity(0.12),
-                                in: Capsule()
-                            )
+                            .background((urgent ? Color(hex: 0xF1746C) : task.color).opacity(0.12), in: Capsule())
                     }
                 }
+                .padding(.top, 2)
             }
-            .padding(.horizontal, 14).padding(.vertical, 12)
+            .padding(.horizontal, 14).padding(.vertical, 14)
 
-            if !isLast {
-                Divider().padding(.leading, 60)
-            }
+            if !isLast { Divider().padding(.leading, 60) }
         }
     }
 
