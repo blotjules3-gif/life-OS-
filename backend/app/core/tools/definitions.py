@@ -516,7 +516,7 @@ TOOL_DEFINITIONS: list[dict] = [
 
 def get_tools_for_module(module: str | None) -> list[dict]:
     """Return only the tools relevant for a given module (+ always-available meta tools)."""
-    meta_tools = {"get_module_config", "update_module_config", "list_goals", "create_goal", "delete_goal", "ask_clarification", "create_todo", "schedule_followup", "get_user_context", "update_user_profile", "remember_user_info", "create_life_challenge", "add_module", "remove_module"}
+    meta_tools = {"get_module_config", "update_module_config", "list_goals", "create_goal", "delete_goal", "ask_clarification", "create_todo", "schedule_followup", "get_user_context", "update_user_profile", "remember_user_info", "create_life_challenge", "add_module", "remove_module", "check_in_challenge"}
     module_tool_map: dict[str, set[str]] = {
         "sport": {"log_workout", "analyze_sport_progress"},
         "nutrition": {"add_meal", "compute_calorie_balance"},
