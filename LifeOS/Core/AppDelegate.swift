@@ -84,7 +84,14 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         if alarmIds.contains(id) {
             await MainActor.run { AlarmManager.shared.triggerAlarm() }
         }
-        // Pour preview : l'app s'ouvre via tap, le widget est déjà actif (startScheduled au moment
-        // de la programmation de l'alarme)
+        if id == "lifeos.ai.welcome" {
+            await MainActor.run {
+                NotificationCenter.default.post(name: .lifeOSOpenAIChat, object: nil)
+            }
+        }
     }
+}
+
+extension Notification.Name {
+    static let lifeOSOpenAIChat = Notification.Name("lifeOSOpenAIChat")
 }
