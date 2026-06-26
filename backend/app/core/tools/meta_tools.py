@@ -199,6 +199,38 @@ async def handle_update_user_profile(
     )
 
 
+async def handle_create_life_challenge(
+    args: dict[str, Any],
+    user_id: uuid.UUID,
+    session: AsyncSession,
+    context: dict[str, Any],
+) -> dict[str, Any]:
+    from app.models.db import LifeChallenge
+
+    challenge = LifeChallenge(
+        user_id=user_id,
+        title=args["title"],
+        challenge_type=args["challenge_type"],
+        daily_target=args.get("daily_target"),
+        unit=args.get("unit"),
+        duration_days=args.get("duration_days"),
+        notes=args.get("notes"),
+    )
+    session.add(challenge)
+    await session.flush()
+
+    log.info("life_challenge_created", user_id=str(user_id), title=args["title"], type=args["challenge_type"])
+    return {
+        "created": True,
+        "challenge_id": str(challenge.id),
+        "title": args["title"],
+        "challenge_type": args["challenge_type"],
+        "daily_target": args.get("daily_target"),
+        "unit": args.get("unit"),
+        "duration_days": args.get("duration_days"),
+    }
+
+
 async def handle_ask_clarification(
     args: dict[str, Any],
     user_id: uuid.UUID,
