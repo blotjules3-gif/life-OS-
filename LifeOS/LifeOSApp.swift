@@ -84,6 +84,7 @@ struct LifeOSApp: App {
         .modelContainer(container)
         .animation(.easeInOut(duration: 0.35), value: onboardingDone)
         .onAppear {
+            EngagementTracker.shared.recordOpen()
             Task.detached(priority: .background) {
                 let granted = await NotificationManager.shared.requestAuthorization()
                 if granted {
