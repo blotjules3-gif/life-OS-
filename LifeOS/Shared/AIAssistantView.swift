@@ -490,10 +490,10 @@ struct AIAssistantView: View {
                             .padding(.bottom, 8)
                     }
 
-                    // Quick suggestions (only when no messages yet or after AI message)
-                    if vm.messages.isEmpty || (vm.messages.last?.role == "assistant" && !vm.isLoading) {
+                    // Quick suggestions — toujours visibles sauf pendant le chargement
+                    if !vm.isLoading {
                         quickSuggestionsRow
-                            .padding(.top, 12)
+                            .padding(.top, 8)
                     }
 
                     Color.clear.frame(height: 16).id("bottom")
