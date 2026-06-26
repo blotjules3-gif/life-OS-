@@ -114,11 +114,6 @@ struct ShortcutsHomeView: View {
     @State private var editingMood = false
 
     private let cols = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
-    private let maxShortcuts = 4
-
-    private var enabled: [ShortcutTool] {
-        Array(enabledRaw.split(separator: ",").compactMap { ShortcutTool(rawValue: String($0)) }.prefix(maxShortcuts))
-    }
 
     // MARK: données du jour
     private var kcalToday: Int { foods.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.calories } }
