@@ -228,7 +228,8 @@ final class AIAssistantViewModel: ObservableObject {
             }
         case .scheduleReminder:
             if let body = action.reminderBody {
-                scheduleLocalNotification(title: "LifeOS", body: body, delay: 3600)
+                let delay = TimeInterval(action.delaySeconds ?? 3600)
+                scheduleLocalNotification(title: "LifeOS", body: body, delay: delay)
             }
         case .openModule, .updateConfig:
             break  // handled by UI layer via published actions
