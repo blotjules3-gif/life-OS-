@@ -59,6 +59,39 @@ struct GoalCreate: Encodable {
     let priority: Int
 }
 
+struct ChallengeOut: Decodable, Identifiable {
+    let id: String
+    let title: String
+    let challenge_type: String
+    let daily_target: Double?
+    let unit: String?
+    let duration_days: Int?
+    let streak_days: Int
+    let days_elapsed: Int
+    let days_since_checkin: Int?
+    let last_checkin_at: String?
+    let notes: String?
+    let is_active: Bool
+    let started_at: String
+
+    var isAbandoned: Bool {
+        guard let days = days_since_checkin else {
+            return days_elapsed >= 3
+        }
+        return days >= 3
+    }
+
+    var progressFraction: Double {
+        guard let total = duration_days, total > 0 else { return 0 }
+        return min(1.0, Double(days_elapsed) / Double(total))
+    }
+
+    var checkedInToday: Bool {
+        guard let days = days_since_checkin else { return false }
+        return days == 0
+    }
+}
+
 // MARK: - AnyCodable helper
 
 struct AnyCodable: Codable {
