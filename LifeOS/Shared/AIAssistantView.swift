@@ -305,9 +305,33 @@ final class AIAssistantViewModel: ObservableObject {
                     delay: 2
                 )
             }
+        case .addModule:
+            if let module = action.module {
+                addModuleToProfile(module)
+            }
+        case .removeModule:
+            if let module = action.module {
+                removeModuleFromProfile(module)
+            }
         case .openModule, .updateConfig:
             break
         }
+    }
+
+    private func addModuleToProfile(_ module: String) {
+        var current = Set(recommendedModulesRaw.split(separator: ",").map(String.init))
+        guard !current.contains(module) else { return }
+        current.insert(module)
+        recommendedModulesRaw = current.joined(separator: ",")
+        aiKnownModulesRaw = recommendedModulesRaw
+    }
+
+    private func removeModuleFromProfile(_ module: String) {
+        var current = Set(recommendedModulesRaw.split(separator: ",").map(String.init))
+        guard current.contains(module) else { return }
+        current.remove(module)
+        recommendedModulesRaw = current.joined(separator: ",")
+        aiKnownModulesRaw = recommendedModulesRaw
     }
 
     private func scheduleLocalNotification(title: String, body: String, delay: TimeInterval) {
