@@ -45,12 +45,15 @@ struct LifeOSApp: App {
                 // Empêche le flash blanc sur iPhone en mode sombre.
                 Color(uiColor: .systemBackground)
                     .ignoresSafeArea()
+                    .allowsHitTesting(false)
 
                 if let container {
                     appContent(container: container)
+                        .transition(.opacity)
                 } else {
                     SplashView()
                         .transition(.opacity)
+                        .allowsHitTesting(false)
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: container != nil)
