@@ -1912,7 +1912,7 @@ struct ProfileView: View {
             }
             .padding(.horizontal, 14).padding(.vertical, 14)
 
-            if !isLast { Divider().padding(.leading, 60) }
+            if !isLast { Divider().opacity(0.1).padding(.leading, 60) }
         }
     }
 
