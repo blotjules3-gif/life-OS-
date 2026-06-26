@@ -71,6 +71,7 @@ struct LifeOSApp: App {
             if !onboardingDone {
                 OnboardingView()
                     .transition(.opacity)
+                    .allowsHitTesting(!onboardingDone)
             } else {
                 MainTabView()
                     .tint(appTheme.accent)
