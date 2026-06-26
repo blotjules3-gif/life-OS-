@@ -98,6 +98,9 @@ struct ShortcutsHomeView: View {
     @AppStorage("fastTarget") private var fastTarget = 16
     @AppStorage("todayEnergyScore") private var todayEnergyScore = 0
     @AppStorage("todayEnergyLabel") private var todayEnergyLabel = ""
+    @State private var reengageMessage: String? = nil
+    @State private var reengageSuggestion: String? = nil
+    @State private var showReengage = true
 
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
