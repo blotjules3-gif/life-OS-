@@ -172,27 +172,62 @@ struct ShortcutsHomeView: View {
         }
     }
 
-    // MARK: Section 1 — Raccourcis (4 max)
-    private var shortcutsSection: some View {
+    // MARK: Section 1 — Habitudes
+
+    private var habitsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Raccourcis", trailing: enabled.count < maxShortcuts && editing ? "Ajouter" : nil) {
-                showCatalog = true
-            }
-            LazyVGrid(columns: cols, spacing: 14) {
-                ForEach(enabled) { tool in tile(tool) }
-                if editing && enabled.count < maxShortcuts {
-                    Button { showCatalog = true } label: {
-                        VStack(spacing: 10) {
-                            Image(systemName: "plus").font(.title2.bold())
-                            Text("Ajouter").font(.subheadline.weight(.medium))
-                        }
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity).padding(.vertical, 26)
-                        .background(RoundedRectangle(cornerRadius: Theme.radius).stroke(style: StrokeStyle(lineWidth: 1.5, dash: [6])).foregroundStyle(.secondary.opacity(0.5)))
-                    }.buttonStyle(.plain)
+            sectionHeader("Habitudes")
+            if habits.isEmpty {
+                Text("Aucune habitude — crée-en une via l'assistant IA")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(habits.enumerated()), id: \.element.id) { idx, habit in
+                        habitRow(habit, isLast: idx == habits.count - 1)
+                    }
                 }
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
             }
         }
+    }
+
+    private func habitRow(_ habit: Habit, isLast: Bool) -> some View {
+        let done = habit.completions.contains { Calendar.current.isDateInToday($0.date) }
+        return Button { toggleHabit(habit) } label: {
+            HStack(spacing: 14) {
+                Image(systemName: done ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 22))
+                    .foregroundStyle(done ? Color(hex: 0x4CC38A) : Color.secondary.opacity(0.4))
+                Text(habit.name)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(done ? .secondary : .primary)
+                    .strikethrough(done, color: .secondary)
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .overlay(alignment: .bottom) {
+            if !isLast { Divider().padding(.leading, 52) }
+        }
+    }
+
+    private func toggleHabit(_ habit: Habit) {
+        if let completion = habit.completions.first(where: { Calendar.current.isDateInToday($0.date) }) {
+            ctx.delete(completion)
+        } else {
+            let c = HabitCompletion(date: .now)
+            c.habit = habit
+            ctx.insert(c)
+        }
+        try? ctx.save()
+        Haptics.soft()
     }
 
     // MARK: Section 2 — Objectifs du jour (anneaux + 3 objectifs) — tout est cliquable
