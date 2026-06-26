@@ -132,6 +132,7 @@ final class AIAssistantViewModel: ObservableObject {
             triggerWelcome()
         } else {
             checkForNewModules()
+            checkAbandonedChallenges()
         }
     }
 
