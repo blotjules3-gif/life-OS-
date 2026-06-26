@@ -123,7 +123,7 @@ struct ShortcutsHomeView: View {
     private var todayMood: MoodEntry? { moods.first { Calendar.current.isDateInToday($0.date) } }
 
     var body: some View {
-        NavigationStack(path: $path) {
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     HStack(alignment: .bottom) {
@@ -144,7 +144,7 @@ struct ShortcutsHomeView: View {
                         weeklyModuleCard(module)
                     }
 
-                    shortcutsSection
+                    habitsSection
                     goalsSection
                     moodSection
                 }
@@ -153,14 +153,6 @@ struct ShortcutsHomeView: View {
             .background(Theme.bg)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(editing ? "OK" : "Modifier") { withAnimation { editing.toggle() } }
-                }
-            }
-            .navigationDestination(for: ShortcutTool.self) { $0.destination }
-            .fullScreenCover(item: $fullScreenTool) { $0.destination }
-            .sheet(isPresented: $showCatalog) { catalog }
             .task {
                 if await HealthService.shared.requestAuthorization() {
                     steps = await HealthService.shared.stepsToday()
