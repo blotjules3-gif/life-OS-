@@ -30,6 +30,7 @@ class User(Base):
     name: Mapped[Optional[str]] = mapped_column(Text)
     gender: Mapped[Optional[str]] = mapped_column(String(10))
     apns_token: Mapped[Optional[str]] = mapped_column(Text)
+    user_notes: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
