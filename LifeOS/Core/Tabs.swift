@@ -597,6 +597,195 @@ struct DailyBriefingView: View {
         }
     }
 
+    // MARK: Check-in matin
+
+    @ViewBuilder private var morningCheckinCard: some View {
+        if checkinDone || todayEnergyScore > 0 {
+            energyScoreDisplayCard
+        } else {
+            VStack(alignment: .leading, spacing: 18) {
+                Text("Bilan du matin")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.secondary)
+
+                // Sommeil
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Qualité du sommeil")
+                        .font(.subheadline.weight(.medium))
+                    HStack(spacing: 6) {
+                        ForEach(1...5, id: \.self) { s in
+                            Button {
+                                sleepQuality = s
+                                Haptics.soft()
+                            } label: {
+                                Image(systemName: s <= sleepQuality ? "moon.stars.fill" : "moon.stars")
+                                    .font(.system(size: 24))
+                                    .foregroundStyle(s <= sleepQuality ? Color(hex: 0x6B7FD4) : Color.secondary.opacity(0.4))
+                                    .frame(maxWidth: .infinity)
+                            }.buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                Divider()
+
+                // Humeur
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Humeur")
+                        .font(.subheadline.weight(.medium))
+                    HStack(spacing: 6) {
+                        ForEach(1...5, id: \.self) { s in
+                            Button {
+                                morningMood = s
+                                Haptics.soft()
+                            } label: {
+                                VStack(spacing: 4) {
+                                    Text(["😞", "😕", "😐", "🙂", "😄"][s - 1])
+                                        .font(.system(size: 26))
+                                    Circle()
+                                        .fill(s == morningMood ? Color.accentColor : Color.clear)
+                                        .frame(width: 6, height: 6)
+                                }
+                                .frame(maxWidth: .infinity)
+                            }.buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                Divider()
+
+                // Énergie / fatigue
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Niveau d'énergie")
+                        .font(.subheadline.weight(.medium))
+                    HStack(spacing: 0) {
+                        ForEach(1...5, id: \.self) { s in
+                            Button {
+                                morningFatigue = 6 - s   // 1=épuisé → fatigue=5, 5=énergique → fatigue=1
+                                Haptics.soft()
+                            } label: {
+                                VStack(spacing: 6) {
+                                    Image(systemName: energyIcon(s))
+                                        .font(.system(size: 20, weight: .medium))
+                                        .foregroundStyle((6 - s) == morningFatigue ? Color(hex: 0x4CC38A) : Color.secondary.opacity(0.4))
+                                    Text(energyLabel(s))
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(.secondary)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(
+                                    (6 - s) == morningFatigue
+                                    ? Color(hex: 0x4CC38A).opacity(0.12)
+                                    : Color.clear,
+                                    in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                )
+                            }.buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                Button {
+                    submitCheckin()
+                } label: {
+                    Group {
+                        if checkinSubmitting {
+                            ProgressView().tint(.white)
+                        } else {
+                            Text("Calculer mon score")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 13)
+                    .background(
+                        sleepQuality > 0 && morningMood > 0 && morningFatigue > 0
+                        ? Color.accentColor
+                        : Color.secondary.opacity(0.3),
+                        in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    )
+                }
+                .buttonStyle(.plain)
+                .disabled(sleepQuality == 0 || morningMood == 0 || morningFatigue == 0 || checkinSubmitting)
+            }
+            .padding(18)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        }
+    }
+
+    @ViewBuilder private var energyScoreDisplayCard: some View {
+        let scoreColor: Color = {
+            switch todayEnergyScore {
+            case 85...100: return Color(hex: 0x34C759)
+            case 70..<85:  return Color(hex: 0x30D158)
+            case 50..<70:  return Color(hex: 0xFF9F0A)
+            case 30..<50:  return Color(hex: 0xFF6B35)
+            default:       return Color(hex: 0xFF3B30)
+            }
+        }()
+
+        VStack(spacing: 14) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("\(todayEnergyScore)")
+                    .font(.system(size: 56, weight: .black, design: .rounded))
+                    .foregroundStyle(scoreColor)
+                    .contentTransition(.numericText())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Score d'Énergie").font(.headline)
+                    Text(todayEnergyLabel.isEmpty ? "—" : todayEnergyLabel)
+                        .font(.subheadline)
+                        .foregroundStyle(scoreColor)
+                }
+                Spacer()
+            }
+            ProgressView(value: Double(todayEnergyScore) / 100)
+                .tint(scoreColor)
+                .scaleEffect(x: 1, y: 1.4, anchor: .center)
+        }
+        .padding(18)
+        .background(
+            scoreColor.opacity(0.07),
+            in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+                .stroke(scoreColor.opacity(0.2), lineWidth: 1)
+        )
+    }
+
+    private func energyIcon(_ s: Int) -> String {
+        ["bolt.slash", "minus.circle", "equal.circle", "bolt", "bolt.fill"][s - 1]
+    }
+
+    private func energyLabel(_ s: Int) -> String {
+        ["Épuisé", "Faible", "Correct", "Bien", "Plein"][s - 1]
+    }
+
+    private func submitCheckin() {
+        checkinSubmitting = true
+        Task {
+            if let result = try? await AgentAPI.shared.logCheckin(
+                sleepQuality: sleepQuality > 0 ? sleepQuality : nil,
+                sleepHours: sleepHours > 0 ? Double(sleepHours) : nil,
+                mood: morningMood > 0 ? morningMood : nil,
+                fatigue: morningFatigue > 0 ? morningFatigue : nil,
+                waterML: waterToday > 0 ? waterToday : nil,
+                habitsDone: habitsDone,
+                habitsTotal: habits.count > 0 ? habits.count : nil
+            ) {
+                await MainActor.run {
+                    todayEnergyScore = result.energy_score ?? 0
+                    todayEnergyLabel = result.label ?? ""
+                }
+            }
+            await MainActor.run {
+                checkinSubmitting = false
+                withAnimation(.spring(response: 0.4)) { checkinDone = true }
+            }
+        }
+    }
+
     // MARK: Bandeau voix
 
     @ViewBuilder private var voiceBanner: some View {
