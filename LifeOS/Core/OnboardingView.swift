@@ -186,6 +186,12 @@ struct OnboardingView: View {
                                 if !finalModules.isEmpty {
                                     homeShortcuts = buildShortcuts(from: finalModules)
                                 }
+                                NotificationManager.shared.scheduleAfter(
+                                    id: "lifeos.ai.welcome",
+                                    title: "LifeOS",
+                                    body: "Ton assistant t'a envoyé un message",
+                                    seconds: 5
+                                )
                                 onboardingDone = true
                             }
                         )
