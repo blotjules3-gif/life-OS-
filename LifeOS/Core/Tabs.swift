@@ -1170,28 +1170,31 @@ struct ProfileView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 16) {
-                    profileHeader
-                    topModuleIsland
-                    nightIsland
-                    activeGoalsSection
-                    if !apiGoals.isEmpty { apiGoalsSection }
-                    if !challenges.isEmpty { activeChallengesSection }
-                    bentoRow
-                    tipCard
-                    settingsSection
-                    appearanceSection
+            ZStack {
+                neoBackground.ignoresSafeArea()
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 20) {
+                        profileHeader
+                        topModuleIsland
+                        nightIsland
+                        activeGoalsSection
+                        if !apiGoals.isEmpty { apiGoalsSection }
+                        if !challenges.isEmpty { activeChallengesSection }
+                        bentoRow
+                        tipCard
+                        settingsSection
+                        appearanceSection
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 80)
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 22)
+                    .animation(.spring(duration: 0.45, bounce: 0.18), value: appeared)
                 }
-                .padding(.horizontal, Theme.pad)
-                .padding(.top, 8)
-                .padding(.bottom, 60)
-                .opacity(appeared ? 1 : 0)
-                .offset(y: appeared ? 0 : 22)
-                .animation(.spring(duration: 0.45, bounce: 0.18), value: appeared)
             }
-            .background(Theme.bg)
             .navigationTitle("Profil")
+            .toolbarBackground(neoBackground, for: .navigationBar)
             .onAppear { withAnimation { appeared = true } }
             .task {
                 if await HealthService.shared.requestAuthorization() {
