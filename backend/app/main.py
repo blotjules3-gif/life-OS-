@@ -24,6 +24,7 @@ def _register_all_tools() -> None:
     Called once at startup — order doesn't matter.
     """
     from app.core.tools.meta_tools import (
+        handle_add_module,
         handle_ask_clarification,
         handle_create_goal,
         handle_create_life_challenge,
@@ -33,6 +34,7 @@ def _register_all_tools() -> None:
         handle_get_user_context,
         handle_list_goals,
         handle_remember_user_info,
+        handle_remove_module,
         handle_schedule_followup,
         handle_update_module_config,
         handle_update_user_profile,
