@@ -83,6 +83,7 @@ final class AIAssistantViewModel: ObservableObject {
     @AppStorage("userGender") private var userGender = ""
     @AppStorage("onboardingGoalsRaw") private var onboardingGoalsRaw = ""
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
+    @AppStorage("aiKnownModulesRaw") private var aiKnownModulesRaw = ""
     @AppStorage("wakeupHour") private var wakeupHour = 7
     @AppStorage("wakeupMinute") private var wakeupMinute = 0
     @AppStorage("appTheme") private var appThemeRaw = "classic"
