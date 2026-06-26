@@ -73,11 +73,12 @@ struct LifeOSApp: App {
             if !onboardingDone {
                 OnboardingView()
                     .transition(.opacity)
-                    .allowsHitTesting(!onboardingDone)
+                    .zIndex(0)
             } else {
                 MainTabView()
                     .tint(appTheme.accent)
                     .transition(.opacity)
+                    .zIndex(1)
             }
         }
         .modelContainer(container)
