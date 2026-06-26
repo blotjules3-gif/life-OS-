@@ -1651,7 +1651,7 @@ struct ProfileView: View {
                         if let result = try? await AgentAPI.shared.checkinChallenge(id: challenge.id),
                            let idx = challenges.firstIndex(where: { $0.id == challenge.id }) {
                             let newStreak = (result["streak_days"]?.value as? Int) ?? challenges[idx].streak_days + 1
-                            var updated = challenges[idx]
+                            let updated = challenges[idx]
                             challenges[idx] = ChallengeOut(
                                 id: updated.id, title: updated.title,
                                 challenge_type: updated.challenge_type,
