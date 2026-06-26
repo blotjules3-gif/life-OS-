@@ -636,7 +636,11 @@ struct DailyBriefingView: View {
         } else if !speakOnAppear {
             // Bouton relance manuelle
             Button {
-                alarm.speakDailyPlan(userName: userName, modules: modules, waterGoal: waterGoal, kcalGoal: kcalGoal)
+                if let text = aiBriefing {
+                    alarm.speakText(text)
+                } else {
+                    alarm.speakDailyPlan(userName: userName, modules: modules, waterGoal: waterGoal, kcalGoal: kcalGoal)
+                }
             } label: {
                 HStack(spacing: 10) {
                     Image(systemName: "speaker.wave.2.fill")
