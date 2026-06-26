@@ -1736,9 +1736,12 @@ struct ProfileView: View {
                 }
                 .padding(.vertical, 20)
                 .frame(maxWidth: .infinity)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .background(neoCard)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+                .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
             } else {
-                VStack(spacing: 1) {
+                VStack(spacing: 0) {
                     ForEach(Array(tasks.enumerated()), id: \.offset) { idx, task in
                         let key = task.icon + task.title
                         let isPinned = pinned.contains(key)
@@ -1758,7 +1761,10 @@ struct ProfileView: View {
                             }
                     }
                 }
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .background(neoCard)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+                .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
 
                 if !hiddenGoals.isEmpty {
                     Button {
@@ -1769,7 +1775,10 @@ struct ProfileView: View {
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
-                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .background(neoCard)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
+                            .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
                     }
                     .buttonStyle(.plain)
                 }
