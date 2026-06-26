@@ -1919,8 +1919,7 @@ struct ProfileView: View {
     // MARK: - Bento Row (Habitudes + Eau rapide)
 
     private var bentoRow: some View {
-        HStack(spacing: 12) {
-            // Habitudes bento
+        HStack(spacing: 14) {
             let habitColor = Color(hex: 0x9B6CF1)
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 5) {
@@ -1956,9 +1955,11 @@ struct ProfileView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .background(neoCard)
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+            .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
 
-            // Actions eau rapides (en verres)
             let waterColor = Color(hex: 0x3CB2E0)
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 5) {
@@ -2019,7 +2020,10 @@ struct ProfileView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .background(neoCard)
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+            .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
         }
         .fixedSize(horizontal: false, vertical: true)
     }
