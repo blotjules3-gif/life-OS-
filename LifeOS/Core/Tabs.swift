@@ -1365,6 +1365,24 @@ struct ProfileView: View {
             }
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
 
+            Button {
+                UserDefaults.standard.removeObject(forKey: "onboardingDone")
+                UserDefaults.standard.removeObject(forKey: "userName")
+                UserDefaults.standard.removeObject(forKey: "userGender")
+                UserDefaults.standard.removeObject(forKey: "onboardingGoalsRaw")
+                UserDefaults.standard.removeObject(forKey: "recommendedModules")
+                UserDefaults.standard.removeObject(forKey: "wakeupHour")
+                UserDefaults.standard.removeObject(forKey: "wakeupMinute")
+            } label: {
+                Text("Refaire l'onboarding")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.red)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+
             HStack {
                 Text("LifeOS 1.0 · Données stockées localement")
                     .font(.caption).foregroundStyle(.tertiary)
