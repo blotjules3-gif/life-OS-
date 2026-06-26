@@ -199,6 +199,27 @@ actor AgentAPI {
         )
     }
 
+    // MARK: - Challenges
+
+    func fetchChallenges(activeOnly: Bool = true) async throws -> [ChallengeOut] {
+        let items: [URLQueryItem] = [
+            URLQueryItem(name: "device_id", value: deviceID),
+            URLQueryItem(name: "active_only", value: activeOnly ? "true" : "false"),
+        ]
+        let result: [String: [ChallengeOut]] = try await get(path: "/api/v1/challenges", queryItems: items)
+        return result["challenges"] ?? []
+    }
+
+    func checkinChallenge(id: String) async throws -> [String: AnyCodable] {
+        var req = makeRequest(path: "/api/v1/challenges/\(id)/checkin?device_id=\(deviceID)")
+        req.httpMethod = "POST"
+        let (data, response) = try await session.data(for: req)
+        try validateResponse(data: data, response: response)
+        return try decode([String: AnyCodable].self, from: data)
+    }
+
+    // MARK: - Goals (delete)
+
     func deleteGoal(id: String) async throws {
         var req = makeRequest(path: "/api/v1/goals/\(id)?device_id=\(deviceID)")
         req.httpMethod = "DELETE"
