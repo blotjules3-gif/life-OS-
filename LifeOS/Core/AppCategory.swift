@@ -89,23 +89,9 @@ enum AppCategory: String, CaseIterable, Identifiable {
 
     @ViewBuilder
     var destination: some View {
-        switch self {
-        case .sleep: SleepHubView()
-        case .nutrition: NutritionHubView()
-        case .fitness: FitnessHubView()
-        case .looks: LooksHubView()
-        case .mind: MindHubView()
-        case .productivity: ProductivityHubView()
-        case .finance: FinanceHubView()
-        case .invest: InvestHubView()
-        case .career: CareerHubView()
-        case .learning: LearningHubView()
-        case .home: HomeHubView()
-        case .mobility: MobilityHubView()
-        case .social: SocialHubView()
-        case .admin: AdminHubView()
-        case .travel: TravelHubView()
-        }
+        // Hub data-driven : rend les outils dans le mode d'affichage actif
+        // (bulles / icônes / liste), comme la grille de catégories. Voir CategoryHub.swift.
+        CategoryHubView(category: self)
     }
 }
 
