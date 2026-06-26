@@ -247,7 +247,7 @@ struct FloatingTabBar: View {
                     Image(systemName: "sparkles")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(Color.accentColor)
-                    Text("Message…")
+                    Text("Ton assistant…")
                         .font(.system(size: 14))
                         .foregroundStyle(Color(uiColor: .placeholderText))
                     Spacer()
