@@ -1177,9 +1177,12 @@ struct ProfileView: View {
                         profileHeader
                         topModuleIsland
                         nightIsland
-                        activeGoalsSection
-                        if !apiGoals.isEmpty { apiGoalsSection }
-                        if !challenges.isEmpty { activeChallengesSection }
+                        sectionPicker
+                        if profileSection == 0 {
+                            activeGoalsSection
+                        } else {
+                            if !challenges.isEmpty { activeChallengesSection }
+                        }
                         bentoRow
                         tipCard
                         settingsSection
