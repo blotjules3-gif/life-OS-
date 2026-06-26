@@ -141,6 +141,7 @@ async def handle_get_user_context(
 ) -> dict[str, Any]:
     from sqlalchemy import select
     from app.models.db import ModuleConfig, User
+    from app.services.behavioral_insights import compute_insights
 
     config_result = await session.execute(
         select(ModuleConfig).where(ModuleConfig.user_id == user_id)
@@ -153,11 +154,14 @@ async def handle_get_user_context(
     user = user_result.scalar_one_or_none()
     user_notes = user.user_notes if user else {}
 
+    behavioral_insights = await compute_insights(session, user_id)
+
     return {
         "module_configs": configs,
         "active_goals": goals,
         "goal_count": len(goals),
         "user_notes": user_notes,
+        "behavioral_insights": behavioral_insights,
     }
 
 
