@@ -1188,14 +1188,11 @@ struct ProfileView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                     .padding(.bottom, 80)
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 22)
-                    .animation(.spring(duration: 0.45, bounce: 0.18), value: appeared)
                 }
             }
             .navigationTitle("Profil")
             .toolbarBackground(neoBackground, for: .navigationBar)
-            .onAppear { withAnimation { appeared = true } }
+            .onAppear { appeared = true }
             .task {
                 if await HealthService.shared.requestAuthorization() {
                     healthConnected = true
