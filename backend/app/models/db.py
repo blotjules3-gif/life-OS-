@@ -194,6 +194,32 @@ class LifeChallenge(Base):
     user: Mapped[User] = relationship(back_populates="life_challenges")
 
 
+class DailyCheckin(Base):
+    __tablename__ = "daily_checkins"
+    __table_args__ = (UniqueConstraint("user_id", "checkin_date"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
+    checkin_date: Mapped[datetime] = mapped_column(DateTime(timezone=False), nullable=False)
+
+    sleep_quality: Mapped[Optional[int]] = mapped_column(Integer)
+    sleep_hours: Mapped[Optional[float]] = mapped_column(Numeric(4, 1))
+    mood: Mapped[Optional[int]] = mapped_column(Integer)
+    fatigue: Mapped[Optional[int]] = mapped_column(Integer)
+
+    water_ml: Mapped[Optional[int]] = mapped_column(Integer)
+    habits_done: Mapped[Optional[int]] = mapped_column(Integer)
+    habits_total: Mapped[Optional[int]] = mapped_column(Integer)
+    sport_minutes: Mapped[Optional[int]] = mapped_column(Integer)
+
+    energy_score: Mapped[Optional[int]] = mapped_column(Integer)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    user: Mapped["User"] = relationship()
+
+
 class ScheduledNotification(Base):
     __tablename__ = "scheduled_notifications"
 
