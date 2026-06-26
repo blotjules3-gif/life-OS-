@@ -92,6 +92,40 @@ struct ChallengeOut: Decodable, Identifiable {
     }
 }
 
+// MARK: - Energy Score
+
+struct EnergyCheckinRequest: Encodable {
+    let device_id: String
+    let checkin_date: String?
+    let sleep_quality: Int?
+    let sleep_hours: Double?
+    let mood: Int?
+    let fatigue: Int?
+    let water_ml: Int?
+    let habits_done: Int?
+    let habits_total: Int?
+    let sport_minutes: Int?
+}
+
+struct EnergyScoreOut: Decodable {
+    let checkin_date: String
+    let sleep_quality: Int?
+    let sleep_hours: Double?
+    let mood: Int?
+    let fatigue: Int?
+    let water_ml: Int?
+    let habits_done: Int?
+    let habits_total: Int?
+    let sport_minutes: Int?
+    let energy_score: Int?
+    let label: String?
+    let color: String?
+}
+
+struct EnergyHistoryOut: Decodable {
+    let history: [EnergyScoreOut]
+}
+
 // MARK: - AnyCodable helper
 
 struct AnyCodable: Codable {
