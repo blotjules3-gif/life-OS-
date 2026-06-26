@@ -319,6 +319,20 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         synthesizer.speak(utterance)
     }
 
+    func speakText(_ text: String) {
+        stopSpeaking()
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+        try? AVAudioSession.sharedInstance().setActive(true)
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = AVSpeechSynthesisVoice(language: "fr-FR")
+        utterance.rate = 0.50
+        utterance.pitchMultiplier = 1.05
+        utterance.volume = 1.0
+        utterance.preUtteranceDelay = 0.3
+        isSpeaking = true
+        synthesizer.speak(utterance)
+    }
+
     func stopSpeaking() {
         synthesizer.stopSpeaking(at: .immediate)
         isSpeaking = false
