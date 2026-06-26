@@ -1,7 +1,7 @@
 import WidgetKit
 import SwiftUI
 
-// MARK: - Shared data from App Group
+// MARK: - Shared data (App Groups: group.lifeos.app)
 
 struct WidgetChallengeData {
     let title: String
@@ -84,7 +84,6 @@ struct ChallengeProvider: TimelineProvider {
 
 struct ChallengeStreakWidgetView: View {
     let entry: ChallengeEntry
-    @Environment(\.widgetFamily) private var family
 
     var body: some View {
         if let data = entry.data {
@@ -98,7 +97,7 @@ struct ChallengeStreakWidgetView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 Image(systemName: data.icon)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(data.color)
                 Text("Défi en cours")
                     .font(.system(size: 10, weight: .medium))
@@ -110,19 +109,17 @@ struct ChallengeStreakWidgetView: View {
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(.primary)
                 .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
 
             Spacer()
 
             HStack(alignment: .bottom) {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 1) {
                     HStack(spacing: 3) {
                         Image(systemName: "flame.fill")
-                            .font(.system(size: 14, weight: .bold))
+                            .font(.system(size: 13, weight: .bold))
                             .foregroundStyle(.orange)
                         Text("\(data.streak)")
-                            .font(.system(size: 24, weight: .black, design: .rounded).monospacedDigit())
-                            .foregroundStyle(.primary)
+                            .font(.system(size: 22, weight: .black, design: .rounded).monospacedDigit())
                     }
                     Text("jour\(data.streak != 1 ? "s" : "") de suite")
                         .font(.system(size: 9, weight: .medium))
@@ -132,19 +129,23 @@ struct ChallengeStreakWidgetView: View {
                 Spacer()
 
                 if data.durationDays > 0 {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("J\(data.daysElapsed)/\(data.durationDays)")
-                            .font(.system(size: 11, weight: .bold, design: .rounded).monospacedDigit())
+                    ZStack {
+                        Circle()
+                            .stroke(data.color.opacity(0.15), lineWidth: 3)
+                        Circle()
+                            .trim(from: 0, to: data.progressFraction)
+                            .stroke(data.color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                        Text("J\(data.daysElapsed)")
+                            .font(.system(size: 8, weight: .bold, design: .rounded))
                             .foregroundStyle(data.color)
-                        ProgressRingMini(progress: data.progressFraction, color: data.color)
-                            .frame(width: 28, height: 28)
                     }
+                    .frame(width: 30, height: 30)
                 }
             }
 
             ProgressView(value: data.progressFraction)
                 .tint(data.color)
-                .scaleEffect(x: 1, y: 1.4, anchor: .center)
         }
         .padding(14)
         .containerBackground(for: .widget) {
@@ -155,10 +156,10 @@ struct ChallengeStreakWidgetView: View {
     private var emptyView: some View {
         VStack(spacing: 8) {
             Image(systemName: "flame")
-                .font(.system(size: 24))
+                .font(.system(size: 22))
                 .foregroundStyle(.secondary)
             Text("Aucun défi actif")
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
@@ -169,25 +170,7 @@ struct ChallengeStreakWidgetView: View {
     }
 }
 
-// MARK: - Mini progress ring for widget
-
-private struct ProgressRingMini: View {
-    let progress: Double
-    let color: Color
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .stroke(color.opacity(0.15), lineWidth: 3)
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-        }
-    }
-}
-
-// MARK: - Widget Declaration
+// MARK: - Widget
 
 struct ChallengeStreakWidget: Widget {
     let kind = "ChallengeStreakWidget"
