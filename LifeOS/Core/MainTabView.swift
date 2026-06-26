@@ -80,10 +80,13 @@ struct MainTabView: View {
     }
 
     @ViewBuilder private var content: some View {
-        switch tab {
-        case .wakeup:     WakeUpView()
-        case .home:       ShortcutsHomeView()
-        case .categories:
+        ZStack {
+            ShortcutsHomeView()
+                .opacity(tab == .home ? 1 : 0)
+                .allowsHitTesting(tab == .home)
+            WakeUpView()
+                .opacity(tab == .wakeup ? 1 : 0)
+                .allowsHitTesting(tab == .wakeup)
             NavigationStack(path: $catPath) {
                 BubbleCategoriesView(onSelect: { title in
                     if let cat = AppCategory(bubbleTitle: title) { catPath.append(cat) }
@@ -91,7 +94,11 @@ struct MainTabView: View {
                 .toolbar(.hidden, for: .navigationBar)
                 .navigationDestination(for: AppCategory.self) { $0.destination }
             }
-        case .profile:    ProfileView()
+            .opacity(tab == .categories ? 1 : 0)
+            .allowsHitTesting(tab == .categories)
+            ProfileView()
+                .opacity(tab == .profile ? 1 : 0)
+                .allowsHitTesting(tab == .profile)
         }
     }
 
