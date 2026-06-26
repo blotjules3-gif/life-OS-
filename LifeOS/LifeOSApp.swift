@@ -84,6 +84,7 @@ struct LifeOSApp: App {
         .modelContainer(container)
         .animation(.easeInOut(duration: 0.35), value: onboardingDone)
         .onAppear {
+            resetDailyValuesIfNeeded()
             EngagementTracker.shared.recordOpen()
             Task.detached(priority: .background) {
                 let granted = await NotificationManager.shared.requestAuthorization()
@@ -93,6 +94,9 @@ struct LifeOSApp: App {
                     }
                 }
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            resetDailyValuesIfNeeded()
         }
         .onChange(of: onboardingDone) { _, done in
             if done { ContextualNotifications.shared.reschedule() }
