@@ -410,6 +410,7 @@ struct DailyBriefingView: View {
     @State private var morningFatigue = 0
     @State private var checkinSubmitting = false
     @State private var checkinDone = false
+    @State private var behavioralInsights: [String] = []
 
     private static let waveBars: [Double] = [8, 20, 12, 24, 10, 18, 8, 22, 14, 8]
 
