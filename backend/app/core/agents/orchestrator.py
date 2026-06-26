@@ -163,6 +163,16 @@ class AgentOrchestrator:
                             "module": result.get("module"),
                             "delay_seconds": int(delay_h * 3600),
                         })
+                    if tool_name == "create_life_challenge" and isinstance(result, dict):
+                        pending_actions.append({
+                            "type": "create_challenge",
+                            "title": result.get("title"),
+                            "module": result.get("challenge_type"),
+                            "challenge_id": result.get("challenge_id"),
+                            "daily_target": result.get("daily_target"),
+                            "unit": result.get("unit"),
+                            "duration_days": result.get("duration_days"),
+                        })
                     if tool_name == "update_user_profile" and isinstance(result, dict):
                         if result.get("gender"):
                             tool_context["user_gender"] = result["gender"]
