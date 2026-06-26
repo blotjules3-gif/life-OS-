@@ -110,10 +110,6 @@ struct ShortcutsHomeView: View {
     @Query(sort: \MoodEntry.date, order: .reverse) private var moods: [MoodEntry]
     @Environment(\.modelContext) private var ctx
 
-    @State private var editing = false
-    @State private var showCatalog = false
-    @State private var path: [ShortcutTool] = []
-    @State private var fullScreenTool: ShortcutTool?
     @State private var steps = 0
     @State private var editingMood = false
 
