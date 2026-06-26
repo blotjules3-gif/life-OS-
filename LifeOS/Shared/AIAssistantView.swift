@@ -643,6 +643,7 @@ private struct MessageRow: View {
         case .openModule: return "arrow.right.circle"
         case .scheduleReminder: return "bell"
         case .updateConfig: return "slider.horizontal.3"
+        case .createChallenge: return "flame"
         }
     }
 }
