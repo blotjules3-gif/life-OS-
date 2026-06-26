@@ -478,6 +478,11 @@ struct DailyBriefingView: View {
                     // Bandeau voix
                     voiceBanner
 
+                    // Brief IA personnalisé
+                    aiBriefingCard
+                        .animation(.easeOut(duration: 0.3), value: aiBriefing != nil)
+                        .animation(.easeOut(duration: 0.3), value: briefingLoading)
+
                     // Progress rings
                     HStack(spacing: 10) {
                         briefingRing(value: Double(kcalToday), goal: Double(kcalGoal), label: "Kcal", color: Color(hex: 0x4CC38A), icon: "flame.fill")
