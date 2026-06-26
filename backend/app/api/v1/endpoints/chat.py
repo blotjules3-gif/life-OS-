@@ -56,7 +56,9 @@ async def chat(
         session.add(conversation)
         await session.flush()
 
-    # ── 3. Build conversation history (last 20 messages) ──────────────────────
+    is_system_init = "[PREMIER_LANCEMENT]" in body.message
+
+    # ── 3. Build conversation history (last 20 messages, skip system init) ────
     history_result = await session.execute(
         select(Message)
         .where(Message.conversation_id == conversation.id)
@@ -67,6 +69,7 @@ async def chat(
     conversation_history = [
         {"role": m.role, "content": m.content}
         for m in history_messages
+        if "[PREMIER_LANCEMENT]" not in m.content  # hide init signal from future history
     ]
 
     # ── 4. Get current module config ──────────────────────────────────────────
@@ -74,7 +77,7 @@ async def chat(
     if body.module:
         module_config = await config_svc.get_config(session, user.id, body.module)
 
-    # ── 5. Persist user message ───────────────────────────────────────────────
+    # ── 5. Persist user message (system init stored but filtered from history) ─
     user_msg = Message(
         conversation_id=conversation.id,
         role="user",
