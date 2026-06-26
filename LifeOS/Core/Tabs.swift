@@ -878,15 +878,13 @@ struct ProfileView: View {
 
     private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
 
-    private var topModule: AppCategory? {
-        var weights: [String: Int] = [:]
-        for part in bubbleWeightsRaw.split(separator: ",") {
-            let kv = part.split(separator: ":")
-            if kv.count == 2, let v = Int(kv[1]) { weights[String(kv[0])] = v }
-        }
-        guard let topTitle = weights.max(by: { $0.value < $1.value })?.key else { return nil }
-        return AppCategory(bubbleTitle: topTitle)
-    }
+    private var topModule: AppCategory? { recommendedModules.first }
+
+    private let glassML = 250
+    private var glassesToday: Int { waterToday / glassML }
+    private var glassesGoalCalc: Int { max(1, waterGoal / glassML) }
+    private var bottlesEquivalent: Double { Double(waterGoal) / 1500.0 }
+    private var bottlesToday: Double { Double(waterToday) / 1500.0 }
 
     private var hoursRemaining: Int {
         let cal = Calendar.current
