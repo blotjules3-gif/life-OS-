@@ -1473,20 +1473,22 @@ struct ProfileView: View {
         HStack(spacing: 0) {
             ForEach([(0, "Aujourd'hui"), (1, "Objectifs")], id: \.0) { idx, label in
                 Button {
-                    withAnimation(.spring(duration: 0.25)) { profileSection = idx }
+                    withAnimation(.spring(duration: 0.3, bounce: 0.15)) { profileSection = idx }
                 } label: {
-                    Text(label)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(profileSection == idx ? .primary : .secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(
-                            profileSection == idx
-                                ? neoCard.shadow(
-                                    .inner(color: neoShadowDark.opacity(0.3), radius: 2, x: 1, y: 1))
-                                : Color.clear,
-                            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        )
+                    ZStack {
+                        if profileSection == idx {
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(neoCard)
+                                .shadow(color: neoShadowLight, radius: 5, x: -2, y: -2)
+                                .shadow(color: neoShadowDark, radius: 5, x: 2, y: 2)
+                                .matchedGeometryEffect(id: "pickerPill", in: pickerNS)
+                        }
+                        Text(label)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(profileSection == idx ? .primary : .secondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 11)
+                    }
                 }
                 .buttonStyle(.plain)
             }
