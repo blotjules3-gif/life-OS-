@@ -1050,6 +1050,7 @@ struct ProfileView: View {
     @State private var appeared = false
     @State private var challenges: [ChallengeOut] = []
     @State private var profileSection = 0
+    @Namespace private var pickerNS
 
     private var recommendedModules: [AppCategory] {
         recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
@@ -1234,69 +1235,86 @@ struct ProfileView: View {
     // MARK: - Profile Header
 
     private var profileHeader: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 0) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(greeting.uppercased())
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.secondary)
-                        .kerning(1.4)
+                        .kerning(2)
                     Text(name.isEmpty ? "Mon profil" : name)
-                        .font(.system(size: 28, weight: .black))
+                        .font(.system(size: 32, weight: .black, design: .rounded))
                         .foregroundStyle(.primary)
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
+                VStack(alignment: .trailing, spacing: 1) {
                     Text(Date(), format: .dateTime.hour().minute())
-                        .font(.system(size: 22, weight: .black, design: .rounded).monospacedDigit())
+                        .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
                         .foregroundStyle(.primary)
-                    Text(Date(), format: .dateTime.weekday(.wide).day().month(.abbreviated))
-                        .font(.system(size: 10, weight: .medium))
+                    Text(Date(), format: .dateTime.weekday(.abbreviated).day().month(.abbreviated))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.trailing)
                 }
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 18)
+            .padding(.bottom, 14)
 
-            // Stats pills
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    domainPill(icon: "flame.fill", label: "\(kcalToday) kcal", color: Color(hex: 0xF1746C),
-                               progress: min(1, Double(kcalToday) / Double(max(1, kcalGoal))))
-                    domainPill(icon: "drop.fill", label: "\(glassesToday) verres", color: Color(hex: 0x3CB2E0),
-                               progress: min(1, Double(waterToday) / Double(max(1, waterGoal))))
-                    domainPill(icon: "figure.run", label: "\(steps) pas", color: Color(hex: 0x4CC38A),
-                               progress: min(1, Double(steps) / Double(max(1, stepGoal))))
-                    domainPill(icon: "checkmark.seal.fill", label: "\(habitsDone)/\(habits.count)", color: Color(hex: 0x9B6CF1),
-                               progress: habits.isEmpty ? 1 : min(1, Double(habitsDone) / Double(habits.count)))
-                }
-                .padding(.vertical, 2)
+            Rectangle()
+                .fill(Color.primary.opacity(0.06))
+                .frame(height: 1)
+
+            HStack(spacing: 0) {
+                quickStat(icon: "flame.fill", value: "\(kcalToday)", unit: "kcal",
+                          color: Color(hex: 0xF1746C),
+                          progress: min(1, Double(kcalToday) / Double(max(1, kcalGoal))))
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(width: 1, height: 40)
+                quickStat(icon: "drop.fill", value: "\(glassesToday)", unit: "verres",
+                          color: Color(hex: 0x3CB2E0),
+                          progress: min(1, Double(waterToday) / Double(max(1, waterGoal))))
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(width: 1, height: 40)
+                quickStat(icon: "figure.run", value: "\(steps)", unit: "pas",
+                          color: Color(hex: 0x4CC38A),
+                          progress: min(1, Double(steps) / Double(max(1, stepGoal))))
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(width: 1, height: 40)
+                quickStat(icon: "checkmark.seal.fill", value: "\(habitsDone)/\(habits.count)", unit: "habits",
+                          color: Color(hex: 0x9B6CF1),
+                          progress: habits.isEmpty ? 1 : min(1, Double(habitsDone) / Double(habits.count)))
             }
+            .padding(.vertical, 14)
         }
-        .padding(20)
         .background(neoCard)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: neoShadowLight, radius: 10, x: -5, y: -5)
         .shadow(color: neoShadowDark, radius: 10, x: 5, y: 5)
     }
 
-    private func domainPill(icon: String, label: String, color: Color, progress: Double) -> some View {
-        HStack(spacing: 6) {
+    private func quickStat(icon: String, value: String, unit: String, color: Color, progress: Double) -> some View {
+        VStack(spacing: 6) {
             ZStack {
-                Circle().fill(color.opacity(0.15)).frame(width: 24, height: 24)
+                Circle()
+                    .stroke(color.opacity(0.12), lineWidth: 3)
+                    .frame(width: 36, height: 36)
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .frame(width: 36, height: 36)
+                    .rotationEffect(.degrees(-90))
+                    .animation(.spring(duration: 1.2).delay(0.15), value: appeared)
                 Image(systemName: icon)
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(color)
             }
-            Text(label)
-                .font(.system(size: 12, weight: .semibold, design: .rounded).monospacedDigit())
-                .foregroundStyle(.primary)
+            VStack(spacing: 1) {
+                Text(value)
+                    .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.primary)
+                Text(unit)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
         }
-        .padding(.horizontal, 10).padding(.vertical, 7)
-        .background(neoCard)
-        .clipShape(Capsule())
-        .shadow(color: neoShadowLight, radius: 4, x: -2, y: -2)
-        .shadow(color: neoShadowDark, radius: 4, x: 2, y: 2)
-        .overlay(Capsule().stroke(progress >= 0.95 ? color.opacity(0.4) : Color.clear, lineWidth: 1.5))
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Top Module Island
@@ -1304,68 +1322,49 @@ struct ProfileView: View {
     private var topModuleIsland: some View {
         let mod = topModule
         let color: Color = mod?.tint ?? appTheme.accent
-        let timeStr = hoursRemaining > 0
-            ? "\(hoursRemaining)h\(minutesRemaining > 0 ? String(format: "%02d", minutesRemaining) : "") restantes"
-            : "Fin de journée"
 
-        return HStack(spacing: 0) {
-            // Module icon in soft colored circle
+        return HStack(spacing: 16) {
             ZStack {
-                Circle()
-                    .fill(neoCard)
-                    .frame(width: 68, height: 68)
-                    .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
-                    .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
-                Circle()
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(color.opacity(0.15))
-                    .frame(width: 56, height: 56)
+                    .frame(width: 52, height: 52)
                 Image(systemName: mod?.icon ?? "star.fill")
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(color)
             }
-            .padding(.leading, 20)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(mod == nil ? "MODULE FAVORI" : "TON MODULE #1")
+            VStack(alignment: .leading, spacing: 3) {
+                Text((mod?.title ?? "Module").uppercased())
                     .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(color.opacity(0.8))
                     .kerning(1.2)
-                Text(mod?.title ?? "Ouvre un module")
-                    .font(.system(size: 18, weight: .black, design: .rounded))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
                 Text(moduleContextLine(mod))
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.leading, 14)
-            .padding(.trailing, 12)
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            // Temps restant
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(hoursRemaining > 0 ? "\(hoursRemaining)h\(minutesRemaining > 0 ? String(format: "%02d", minutesRemaining) : "")" : "—")
-                    .font(.system(size: 20, weight: .black, design: .rounded).monospacedDigit())
+            VStack(alignment: .trailing, spacing: 0) {
+                Text(hoursRemaining > 0 ? "\(hoursRemaining)h" : "—")
+                    .font(.system(size: 30, weight: .black, design: .rounded).monospacedDigit())
                     .foregroundStyle(color)
                 Text("restantes")
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
-            .padding(.trailing, 20)
         }
-        .padding(.vertical, 18)
-        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
         .background(neoCard)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: neoShadowLight, radius: 10, x: -5, y: -5)
         .shadow(color: neoShadowDark, radius: 10, x: 5, y: 5)
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(color.opacity(0.18), lineWidth: 1)
+                .stroke(color.opacity(0.22), lineWidth: 1.5)
         )
     }
 
@@ -1474,20 +1473,22 @@ struct ProfileView: View {
         HStack(spacing: 0) {
             ForEach([(0, "Aujourd'hui"), (1, "Objectifs")], id: \.0) { idx, label in
                 Button {
-                    withAnimation(.spring(duration: 0.25)) { profileSection = idx }
+                    withAnimation(.spring(duration: 0.3, bounce: 0.15)) { profileSection = idx }
                 } label: {
-                    Text(label)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(profileSection == idx ? .primary : .secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(
-                            profileSection == idx
-                                ? AnyShapeStyle(neoCard.shadow(
-                                    .inner(color: neoShadowDark.opacity(0.3), radius: 2, x: 1, y: 1)))
-                                : AnyShapeStyle(Color.clear),
-                            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        )
+                    ZStack {
+                        if profileSection == idx {
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(neoCard)
+                                .shadow(color: neoShadowLight, radius: 5, x: -2, y: -2)
+                                .shadow(color: neoShadowDark, radius: 5, x: 2, y: 2)
+                                .matchedGeometryEffect(id: "pickerPill", in: pickerNS)
+                        }
+                        Text(label)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(profileSection == idx ? .primary : .secondary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 11)
+                    }
                 }
                 .buttonStyle(.plain)
             }
@@ -1596,7 +1597,7 @@ struct ProfileView: View {
     private var activeGoalsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("MES MODULES AUJOURD'HUI")
+                Text("MES MODULES")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(.secondary)
                     .kerning(1.2)
@@ -1617,10 +1618,9 @@ struct ProfileView: View {
 
             let endDates = parseEndDates()
             let pinned = Set(profilePinnedRaw.split(separator: ",").map(String.init))
-            let hidden = hiddenGoals
             let tasks = todayTasks
                 .sorted { a, _ in pinned.contains(a.icon + a.title) }
-                .filter { !hidden.contains($0.icon + $0.title) }
+                .filter { !hiddenGoals.contains($0.icon + $0.title) }
 
             if tasks.isEmpty {
                 VStack(spacing: 8) {
@@ -1629,9 +1629,7 @@ struct ProfileView: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .center)
                     if !hiddenGoals.isEmpty {
-                        Button {
-                            profileHiddenRaw = ""
-                        } label: {
+                        Button { profileHiddenRaw = "" } label: {
                             Text("Afficher tous les modules masqués")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(Color.accentColor)
@@ -1639,18 +1637,21 @@ struct ProfileView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.vertical, 20)
+                .padding(.vertical, 24)
                 .frame(maxWidth: .infinity)
                 .background(neoCard)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
                 .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
             } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(tasks.enumerated()), id: \.offset) { idx, task in
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
+                    spacing: 12
+                ) {
+                    ForEach(Array(tasks.enumerated()), id: \.offset) { _, task in
                         let key = task.icon + task.title
                         let isPinned = pinned.contains(key)
-                        goalRow(task: task, endDate: endDates[key], isLast: idx == tasks.count - 1)
+                        goalCard(task: task, endDate: endDates[key])
                             .contextMenu {
                                 Button {
                                     withAnimation { pinGoal(key) }
@@ -1661,15 +1662,11 @@ struct ProfileView: View {
                                 Button(role: .destructive) {
                                     withAnimation { toggleHideGoal(key) }
                                 } label: {
-                                    Label("Masquer ce module", systemImage: "eye.slash")
+                                    Label("Masquer", systemImage: "eye.slash")
                                 }
                             }
                     }
                 }
-                .background(neoCard)
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-                .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
 
                 if !hiddenGoals.isEmpty {
                     Button {
@@ -1689,6 +1686,63 @@ struct ProfileView: View {
                 }
             }
         }
+    }
+
+    private func goalCard(task: ProfileTaskItem, endDate: Date?) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        .fill(task.color.opacity(0.14))
+                        .frame(width: 40, height: 40)
+                    Image(systemName: task.icon)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(task.color)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("\(Int(task.progress * 100))%")
+                        .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
+                        .foregroundStyle(task.progress >= 1 ? task.color : .secondary)
+                    if let end = endDate {
+                        let days = max(0, Calendar.current.dateComponents([.day], from: .now, to: end).day ?? 0)
+                        Text(days > 0 ? "J-\(days)" : "Échu")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(days <= 3 ? Color(hex: 0xF1746C) : task.color)
+                            .padding(.horizontal, 5).padding(.vertical, 2)
+                            .background((days <= 3 ? Color(hex: 0xF1746C) : task.color).opacity(0.12), in: Capsule())
+                    }
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(task.title)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.primary)
+                Text(task.subtitle)
+                    .font(.system(size: 11, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            GeometryReader { g in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(task.color.opacity(0.12))
+                        .frame(height: 4)
+                    Capsule()
+                        .fill(task.color)
+                        .frame(width: g.size.width * min(1, max(0, task.progress)), height: 4)
+                        .animation(.spring(duration: 1.0).delay(0.2), value: appeared)
+                }
+            }
+            .frame(height: 4)
+        }
+        .padding(14)
+        .background(neoCard)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .shadow(color: neoShadowLight, radius: 7, x: -3, y: -3)
+        .shadow(color: neoShadowDark, radius: 7, x: 3, y: 3)
     }
 
     private func remainingText(for task: ProfileTaskItem) -> String? {
