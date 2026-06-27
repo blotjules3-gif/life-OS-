@@ -1483,9 +1483,9 @@ struct ProfileView: View {
                         .padding(.vertical, 10)
                         .background(
                             profileSection == idx
-                                ? neoCard.shadow(
-                                    .inner(color: neoShadowDark.opacity(0.3), radius: 2, x: 1, y: 1))
-                                : Color.clear,
+                                ? AnyShapeStyle(neoCard.shadow(
+                                    .inner(color: neoShadowDark.opacity(0.3), radius: 2, x: 1, y: 1)))
+                                : AnyShapeStyle(Color.clear),
                             in: RoundedRectangle(cornerRadius: 16, style: .continuous)
                         )
                 }

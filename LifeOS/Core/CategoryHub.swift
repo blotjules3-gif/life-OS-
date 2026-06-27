@@ -277,10 +277,16 @@ extension AppCategory {
         case .social:       return socialTools
         case .admin:        return adminTools
         case .travel:       return travelTools
-        case .cycle:        return []
+        case .cycle:        return cycleTools
         }
     }
 }
+
+private let cycleTools: [CategoryTool] = [
+    .init("calendar.badge.clock", "Suivi du cycle", "Règles · durée · prédiction", tint: .cycleTint) { CycleTrackerView() },
+    .init("waveform.path.ecg", "Symptômes", "Crampes, humeur, énergie, peau", tint: .cycleTint) { CycleSymptomsView() },
+    .init("chart.bar.fill", "Historique", "Régularité · durée moyenne", tint: .cycleTint) { CycleHistoryView() },
+]
 
 private let sleepTools: [CategoryTool] = [
     .init("bed.double.fill", "Heure de coucher optimale", "Cycles de 90 min · réveil léger", tint: .sleepTint) { BedtimeCalculatorView() },
