@@ -163,7 +163,8 @@ struct BubbleCategoriesView: View {
     @AppStorage("hiddenCats")    private var hiddenRaw = ""    // bulles retirées (par titre)
     @AppStorage("catLayout")     private var layoutRaw = "organic"
     @AppStorage("appTheme")      private var appThemeRaw = "classic"
-    @AppStorage("bubbleSize")    private var bubbleSizeRaw = "medium"
+    @AppStorage("catSizes")      private var catSizesRaw = ""    // "titre:s|m|l,…" — taille par catégorie
+    @AppStorage("catOffsets")    private var catOffsetsRaw = ""  // "titre:dx:dy,…" — bulle déplacée
     @State private var editing = false
     @State private var showAdd = false
     @State private var tappedID: UUID?
@@ -172,7 +173,40 @@ struct BubbleCategoriesView: View {
 
     private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .organic }
     private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
-    private var bubbleSize: BubbleSize { BubbleSize(rawValue: bubbleSizeRaw) ?? .medium }
+    // Taille INDIVIDUELLE par catégorie (défaut Moyenne)
+    private func catSize(_ title: String) -> BubbleSize {
+        for p in catSizesRaw.split(separator: ",") {
+            let kv = p.split(separator: ":")
+            if kv.count == 2, String(kv[0]) == title { return BubbleSize(rawValue: String(kv[1])) ?? .medium }
+        }
+        return .medium
+    }
+    private func setCatSize(_ title: String, _ size: BubbleSize) {
+        var m: [String: String] = [:]
+        for p in catSizesRaw.split(separator: ",") { let kv = p.split(separator: ":"); if kv.count == 2 { m[String(kv[0])] = String(kv[1]) } }
+        m[title] = size.rawValue
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { catSizesRaw = m.map { "\($0):\($1)" }.joined(separator: ",") }
+        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+    }
+    // Position déplacée (offset px) par catégorie
+    private func offsetsMap() -> [String: CGSize] {
+        var m: [String: CGSize] = [:]
+        for p in catOffsetsRaw.split(separator: ",") {
+            let f = p.split(separator: ":")
+            if f.count == 3, let dx = Double(f[1]), let dy = Double(f[2]) { m[String(f[0])] = CGSize(width: dx, height: dy) }
+        }
+        return m
+    }
+    private func catOffset(_ title: String) -> CGSize { offsetsMap()[title] ?? .zero }
+    private func writeOffsets(_ m: [String: CGSize]) {
+        catOffsetsRaw = m.map { "\($0.key):\(Int($0.value.width)):\(Int($0.value.height))" }.joined(separator: ",")
+    }
+    private func addCatOffset(_ title: String, _ delta: CGSize) {
+        var m = offsetsMap(); let cur = m[title] ?? .zero
+        m[title] = CGSize(width: cur.width + delta.width, height: cur.height + delta.height)
+        writeOffsets(m)
+    }
+    private func resetCatOffset(_ title: String) { var m = offsetsMap(); m[title] = nil; writeOffsets(m) }
 
     private var hidden: Set<String> { Set(hiddenRaw.split(separator: ",").map(String.init)) }
     private var visible: [BubbleCategory] {
@@ -195,7 +229,6 @@ struct BubbleCategoriesView: View {
             layoutContent
         }
         .overlay(alignment: .topLeading) { layoutSwitcher }
-        .overlay(alignment: .topLeading) { if layout == .organic || layout == .tidy { sizeSwitcher } }
         .overlay(alignment: .topTrailing) { editButton }
         .overlay(alignment: .bottomTrailing) { if editing && (layout == .organic || layout == .tidy) { addButton } }
         .sheet(isPresented: $showAdd) { addSheet }
@@ -208,22 +241,6 @@ struct BubbleCategoriesView: View {
         case .icons:   iconGrid
         case .list:    listLayout
         }
-    }
-
-    // ===== Bouton TAILLE des bulles : Petite → Moyenne → Grande (cycle) =====
-    private var sizeSwitcher: some View {
-        Button {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { bubbleSizeRaw = bubbleSize.next.rawValue }
-            Haptics.tap()
-        } label: {
-            Image(systemName: bubbleSize.symbol)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(.primary)
-                .frame(width: 38, height: 38)
-                .background(.regularMaterial, in: Circle())
-                .contentTransition(.symbolEffect(.replace))
-        }
-        .padding(.top, 8).padding(.leading, 64)
     }
 
     // ===== Bouton display : un clic = layout SUIVANT (cycle, pas de dropdown) =====
@@ -274,7 +291,7 @@ struct BubbleCategoriesView: View {
         let cols = 3
         let gx: [CGFloat] = [0.21, 0.50, 0.79]
         let tidyAnchor = CGPoint(x: gx[index % cols], y: 0.12 + CGFloat(index / cols) * 0.158)
-        let d = (tidy ? base * 0.92 * grow : base * cat.sizeMul * grow) * bubbleSize.factor
+        let d = (tidy ? base * 0.92 * grow : base * cat.sizeMul * grow) * catSize(cat.title).factor
         let phase = Double(index) * 1.37
         let amp: Double = cat.isFiller ? 6 : 4
         let dv = drag[cat.id] ?? .zero
@@ -326,31 +343,43 @@ struct BubbleCategoriesView: View {
         }
         .scaleEffect(theme == .gothic ? 1.0 : (tappedID == cat.id ? 1.12 : 1.0))
         .animation(.spring(response: 0.3, dampingFraction: 0.45), value: tappedID)
-        .position(x: a.x * w + bx, y: a.y * h + by)
+        // Bande verticale : on descend sous les boutons (haut) et on laisse de l'air en bas.
+        .position(
+            x: a.x * w + bx + (cat.isFiller ? 0 : catOffset(cat.title).width),
+            y: (76 + a.y * (h - 94)) + by + (cat.isFiller ? 0 : catOffset(cat.title).height)
+        )
         .zIndex(moving ? 100 : Double(cat.sizeMul))
         .allowsHitTesting(!cat.isFiller)
-        .gesture(dragTap(cat))
-    }
-
-    // Drag-suit-le-doigt + tap. Au relâché : retour ressort vers l'ancre. <10pt = tap.
-    private func dragTap(_ cat: BubbleCategory) -> some Gesture {
-        DragGesture(minimumDistance: 0)
-            .onChanged { v in drag[cat.id] = v.translation }
-            .onEnded { v in
-                let moved = hypot(v.translation.width, v.translation.height)
-                if moved < 10 {
-                    if !editing {
-                        tappedID = cat.id
-                        UIImpactFeedbackGenerator(style: .soft).impactOccurred()
-                        bump(cat.title)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
-                            tappedID = nil
-                            onSelect(cat.title)
-                        }
-                    }
+        .onTapGesture {
+            guard !cat.isFiller, !editing else { return }
+            tappedID = cat.id
+            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+            bump(cat.title)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) { tappedID = nil; onSelect(cat.title) }
+        }
+        .gesture(
+            DragGesture(minimumDistance: 12)
+                .onChanged { v in if !cat.isFiller { drag[cat.id] = v.translation } }
+                .onEnded { v in
+                    guard !cat.isFiller else { return }
+                    addCatOffset(cat.title, v.translation)   // déplacement persistant
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { drag[cat.id] = .zero }
+                    UIImpactFeedbackGenerator(style: .soft).impactOccurred()
                 }
-                withAnimation(.spring(response: 0.45, dampingFraction: 0.6)) { drag[cat.id] = .zero }
+        )
+        .contextMenu {
+            if !cat.isFiller {
+                Menu {
+                    Button { setCatSize(cat.title, .large) }  label: { Label("Grande",  systemImage: "circle.fill") }
+                    Button { setCatSize(cat.title, .medium) } label: { Label("Moyenne", systemImage: "circle.lefthalf.filled") }
+                    Button { setCatSize(cat.title, .small) }  label: { Label("Petite",  systemImage: "circle") }
+                } label: { Label("Taille", systemImage: "arrow.up.left.and.arrow.down.right") }
+                if catOffset(cat.title) != .zero {
+                    Button { withAnimation { resetCatOffset(cat.title) } } label: { Label("Replacer", systemImage: "arrow.counterclockwise") }
+                }
+                Button(role: .destructive) { remove(cat.title) } label: { Label("Supprimer", systemImage: "trash") }
             }
+        }
     }
 
     // MARK: combler le vide — décale légèrement vers les bulles retirées
