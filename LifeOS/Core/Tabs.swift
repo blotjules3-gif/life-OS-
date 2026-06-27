@@ -1322,68 +1322,49 @@ struct ProfileView: View {
     private var topModuleIsland: some View {
         let mod = topModule
         let color: Color = mod?.tint ?? appTheme.accent
-        let timeStr = hoursRemaining > 0
-            ? "\(hoursRemaining)h\(minutesRemaining > 0 ? String(format: "%02d", minutesRemaining) : "") restantes"
-            : "Fin de journée"
 
-        return HStack(spacing: 0) {
-            // Module icon in soft colored circle
+        return HStack(spacing: 16) {
             ZStack {
-                Circle()
-                    .fill(neoCard)
-                    .frame(width: 68, height: 68)
-                    .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
-                    .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
-                Circle()
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(color.opacity(0.15))
-                    .frame(width: 56, height: 56)
+                    .frame(width: 52, height: 52)
                 Image(systemName: mod?.icon ?? "star.fill")
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(color)
             }
-            .padding(.leading, 20)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(mod == nil ? "MODULE FAVORI" : "TON MODULE #1")
+            VStack(alignment: .leading, spacing: 3) {
+                Text((mod?.title ?? "Module").uppercased())
                     .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(color.opacity(0.8))
                     .kerning(1.2)
-                Text(mod?.title ?? "Ouvre un module")
-                    .font(.system(size: 18, weight: .black, design: .rounded))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
                 Text(moduleContextLine(mod))
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.leading, 14)
-            .padding(.trailing, 12)
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            // Temps restant
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(hoursRemaining > 0 ? "\(hoursRemaining)h\(minutesRemaining > 0 ? String(format: "%02d", minutesRemaining) : "")" : "—")
-                    .font(.system(size: 20, weight: .black, design: .rounded).monospacedDigit())
+            VStack(alignment: .trailing, spacing: 0) {
+                Text(hoursRemaining > 0 ? "\(hoursRemaining)h" : "—")
+                    .font(.system(size: 30, weight: .black, design: .rounded).monospacedDigit())
                     .foregroundStyle(color)
                 Text("restantes")
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
-            .padding(.trailing, 20)
         }
-        .padding(.vertical, 18)
-        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
         .background(neoCard)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: neoShadowLight, radius: 10, x: -5, y: -5)
         .shadow(color: neoShadowDark, radius: 10, x: 5, y: 5)
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(color.opacity(0.18), lineWidth: 1)
+                .stroke(color.opacity(0.22), lineWidth: 1.5)
         )
     }
 
