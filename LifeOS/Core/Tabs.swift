@@ -1235,69 +1235,86 @@ struct ProfileView: View {
     // MARK: - Profile Header
 
     private var profileHeader: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 0) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(greeting.uppercased())
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.secondary)
-                        .kerning(1.4)
+                        .kerning(2)
                     Text(name.isEmpty ? "Mon profil" : name)
-                        .font(.system(size: 28, weight: .black))
+                        .font(.system(size: 32, weight: .black, design: .rounded))
                         .foregroundStyle(.primary)
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
+                VStack(alignment: .trailing, spacing: 1) {
                     Text(Date(), format: .dateTime.hour().minute())
-                        .font(.system(size: 22, weight: .black, design: .rounded).monospacedDigit())
+                        .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
                         .foregroundStyle(.primary)
-                    Text(Date(), format: .dateTime.weekday(.wide).day().month(.abbreviated))
-                        .font(.system(size: 10, weight: .medium))
+                    Text(Date(), format: .dateTime.weekday(.abbreviated).day().month(.abbreviated))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.trailing)
                 }
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 18)
+            .padding(.bottom, 14)
 
-            // Stats pills
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    domainPill(icon: "flame.fill", label: "\(kcalToday) kcal", color: Color(hex: 0xF1746C),
-                               progress: min(1, Double(kcalToday) / Double(max(1, kcalGoal))))
-                    domainPill(icon: "drop.fill", label: "\(glassesToday) verres", color: Color(hex: 0x3CB2E0),
-                               progress: min(1, Double(waterToday) / Double(max(1, waterGoal))))
-                    domainPill(icon: "figure.run", label: "\(steps) pas", color: Color(hex: 0x4CC38A),
-                               progress: min(1, Double(steps) / Double(max(1, stepGoal))))
-                    domainPill(icon: "checkmark.seal.fill", label: "\(habitsDone)/\(habits.count)", color: Color(hex: 0x9B6CF1),
-                               progress: habits.isEmpty ? 1 : min(1, Double(habitsDone) / Double(habits.count)))
-                }
-                .padding(.vertical, 2)
+            Rectangle()
+                .fill(Color.primary.opacity(0.06))
+                .frame(height: 1)
+
+            HStack(spacing: 0) {
+                quickStat(icon: "flame.fill", value: "\(kcalToday)", unit: "kcal",
+                          color: Color(hex: 0xF1746C),
+                          progress: min(1, Double(kcalToday) / Double(max(1, kcalGoal))))
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(width: 1, height: 40)
+                quickStat(icon: "drop.fill", value: "\(glassesToday)", unit: "verres",
+                          color: Color(hex: 0x3CB2E0),
+                          progress: min(1, Double(waterToday) / Double(max(1, waterGoal))))
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(width: 1, height: 40)
+                quickStat(icon: "figure.run", value: "\(steps)", unit: "pas",
+                          color: Color(hex: 0x4CC38A),
+                          progress: min(1, Double(steps) / Double(max(1, stepGoal))))
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(width: 1, height: 40)
+                quickStat(icon: "checkmark.seal.fill", value: "\(habitsDone)/\(habits.count)", unit: "habits",
+                          color: Color(hex: 0x9B6CF1),
+                          progress: habits.isEmpty ? 1 : min(1, Double(habitsDone) / Double(habits.count)))
             }
+            .padding(.vertical, 14)
         }
-        .padding(20)
         .background(neoCard)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: neoShadowLight, radius: 10, x: -5, y: -5)
         .shadow(color: neoShadowDark, radius: 10, x: 5, y: 5)
     }
 
-    private func domainPill(icon: String, label: String, color: Color, progress: Double) -> some View {
-        HStack(spacing: 6) {
+    private func quickStat(icon: String, value: String, unit: String, color: Color, progress: Double) -> some View {
+        VStack(spacing: 6) {
             ZStack {
-                Circle().fill(color.opacity(0.15)).frame(width: 24, height: 24)
+                Circle()
+                    .stroke(color.opacity(0.12), lineWidth: 3)
+                    .frame(width: 36, height: 36)
+                Circle()
+                    .trim(from: 0, to: progress)
+                    .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .frame(width: 36, height: 36)
+                    .rotationEffect(.degrees(-90))
+                    .animation(.spring(duration: 1.2).delay(0.15), value: appeared)
                 Image(systemName: icon)
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(color)
             }
-            Text(label)
-                .font(.system(size: 12, weight: .semibold, design: .rounded).monospacedDigit())
-                .foregroundStyle(.primary)
+            VStack(spacing: 1) {
+                Text(value)
+                    .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.primary)
+                Text(unit)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
         }
-        .padding(.horizontal, 10).padding(.vertical, 7)
-        .background(neoCard)
-        .clipShape(Capsule())
-        .shadow(color: neoShadowLight, radius: 4, x: -2, y: -2)
-        .shadow(color: neoShadowDark, radius: 4, x: 2, y: 2)
-        .overlay(Capsule().stroke(progress >= 0.95 ? color.opacity(0.4) : Color.clear, lineWidth: 1.5))
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Top Module Island
