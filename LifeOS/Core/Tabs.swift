@@ -1050,6 +1050,7 @@ struct ProfileView: View {
     @State private var appeared = false
     @State private var challenges: [ChallengeOut] = []
     @State private var profileSection = 0
+    @Namespace private var pickerNS
 
     private var recommendedModules: [AppCategory] {
         recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
