@@ -194,11 +194,11 @@ struct CategoryHubView: View {
         let availH = geo.size.height
         let n = max(tools.count, 1)
         let golden = 2.399963229728653            // angle d'or (137.5°)
-        // Diamètre qui remplit joliment, ajusté par la taille choisie.
-        let R = min(w, availH) / 2 * 0.92
-        let dBase = R / (0.92 * sqrt(Double(max(n - 1, 1))) + 0.7)
-        let d0 = min(max(dBase, 46), w * 0.34) * sizeFactor
-        let spacing = d0 * 0.95
+        // Diamètre généreux (léger chevauchement = aspect bulles, comme l'écran principal).
+        let R = min(w, availH) / 2 * 0.94
+        let dBase = R / (0.66 * sqrt(Double(max(n - 1, 1))) + 0.55)
+        let d0 = min(max(dBase, 64), w * 0.42) * sizeFactor
+        let spacing = d0 * 0.74
         let maxR = spacing * CGFloat(sqrt(Double(max(n - 1, 0))))
         let contentH = max(availH, 2 * (maxR + d0) + 60)
 
@@ -206,7 +206,7 @@ struct CategoryHubView: View {
             TimelineView(.animation) { ctx in
                 let t = ctx.date.timeIntervalSinceReferenceDate
                 let cx = w / 2
-                let cy = contentH / 2
+                let cy = contentH / 2 - 16
                 ZStack(alignment: .topLeading) {
                     ForEach(Array(tools.enumerated()), id: \.element.id) { i, tool in
                         let angle = Double(i) * golden
