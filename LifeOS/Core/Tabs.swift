@@ -1597,7 +1597,7 @@ struct ProfileView: View {
     private var activeGoalsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("MES MODULES AUJOURD'HUI")
+                Text("MES MODULES")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(.secondary)
                     .kerning(1.2)
@@ -1618,10 +1618,9 @@ struct ProfileView: View {
 
             let endDates = parseEndDates()
             let pinned = Set(profilePinnedRaw.split(separator: ",").map(String.init))
-            let hidden = hiddenGoals
             let tasks = todayTasks
                 .sorted { a, _ in pinned.contains(a.icon + a.title) }
-                .filter { !hidden.contains($0.icon + $0.title) }
+                .filter { !hiddenGoals.contains($0.icon + $0.title) }
 
             if tasks.isEmpty {
                 VStack(spacing: 8) {
@@ -1630,9 +1629,7 @@ struct ProfileView: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .center)
                     if !hiddenGoals.isEmpty {
-                        Button {
-                            profileHiddenRaw = ""
-                        } label: {
+                        Button { profileHiddenRaw = "" } label: {
                             Text("Afficher tous les modules masqués")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(Color.accentColor)
@@ -1640,18 +1637,21 @@ struct ProfileView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.vertical, 20)
+                .padding(.vertical, 24)
                 .frame(maxWidth: .infinity)
                 .background(neoCard)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
                 .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
             } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(tasks.enumerated()), id: \.offset) { idx, task in
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
+                    spacing: 12
+                ) {
+                    ForEach(Array(tasks.enumerated()), id: \.offset) { _, task in
                         let key = task.icon + task.title
                         let isPinned = pinned.contains(key)
-                        goalRow(task: task, endDate: endDates[key], isLast: idx == tasks.count - 1)
+                        goalCard(task: task, endDate: endDates[key])
                             .contextMenu {
                                 Button {
                                     withAnimation { pinGoal(key) }
@@ -1662,15 +1662,11 @@ struct ProfileView: View {
                                 Button(role: .destructive) {
                                     withAnimation { toggleHideGoal(key) }
                                 } label: {
-                                    Label("Masquer ce module", systemImage: "eye.slash")
+                                    Label("Masquer", systemImage: "eye.slash")
                                 }
                             }
                     }
                 }
-                .background(neoCard)
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-                .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
 
                 if !hiddenGoals.isEmpty {
                     Button {
@@ -1690,6 +1686,63 @@ struct ProfileView: View {
                 }
             }
         }
+    }
+
+    private func goalCard(task: ProfileTaskItem, endDate: Date?) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        .fill(task.color.opacity(0.14))
+                        .frame(width: 40, height: 40)
+                    Image(systemName: task.icon)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(task.color)
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("\(Int(task.progress * 100))%")
+                        .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
+                        .foregroundStyle(task.progress >= 1 ? task.color : .secondary)
+                    if let end = endDate {
+                        let days = max(0, Calendar.current.dateComponents([.day], from: .now, to: end).day ?? 0)
+                        Text(days > 0 ? "J-\(days)" : "Échu")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(days <= 3 ? Color(hex: 0xF1746C) : task.color)
+                            .padding(.horizontal, 5).padding(.vertical, 2)
+                            .background((days <= 3 ? Color(hex: 0xF1746C) : task.color).opacity(0.12), in: Capsule())
+                    }
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(task.title)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.primary)
+                Text(task.subtitle)
+                    .font(.system(size: 11, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+
+            GeometryReader { g in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(task.color.opacity(0.12))
+                        .frame(height: 4)
+                    Capsule()
+                        .fill(task.color)
+                        .frame(width: g.size.width * min(1, max(0, task.progress)), height: 4)
+                        .animation(.spring(duration: 1.0).delay(0.2), value: appeared)
+                }
+            }
+            .frame(height: 4)
+        }
+        .padding(14)
+        .background(neoCard)
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .shadow(color: neoShadowLight, radius: 7, x: -3, y: -3)
+        .shadow(color: neoShadowDark, radius: 7, x: 3, y: 3)
     }
 
     private func remainingText(for task: ProfileTaskItem) -> String? {
