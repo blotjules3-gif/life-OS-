@@ -163,6 +163,7 @@ struct BubbleCategoriesView: View {
     @AppStorage("hiddenCats")    private var hiddenRaw = ""    // bulles retirées (par titre)
     @AppStorage("catLayout")     private var layoutRaw = "organic"
     @AppStorage("appTheme")      private var appThemeRaw = "classic"
+    @AppStorage("bubbleSize")    private var bubbleSizeRaw = "medium"
     @State private var editing = false
     @State private var showAdd = false
     @State private var tappedID: UUID?
@@ -171,6 +172,7 @@ struct BubbleCategoriesView: View {
 
     private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .organic }
     private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
+    private var bubbleSize: BubbleSize { BubbleSize(rawValue: bubbleSizeRaw) ?? .medium }
 
     private var hidden: Set<String> { Set(hiddenRaw.split(separator: ",").map(String.init)) }
     private var visible: [BubbleCategory] {
@@ -193,6 +195,7 @@ struct BubbleCategoriesView: View {
             layoutContent
         }
         .overlay(alignment: .topLeading) { layoutSwitcher }
+        .overlay(alignment: .topLeading) { if layout == .organic || layout == .tidy { sizeSwitcher } }
         .overlay(alignment: .topTrailing) { editButton }
         .overlay(alignment: .bottomTrailing) { if editing && (layout == .organic || layout == .tidy) { addButton } }
         .sheet(isPresented: $showAdd) { addSheet }
@@ -205,6 +208,22 @@ struct BubbleCategoriesView: View {
         case .icons:   iconGrid
         case .list:    listLayout
         }
+    }
+
+    // ===== Bouton TAILLE des bulles : Petite → Moyenne → Grande (cycle) =====
+    private var sizeSwitcher: some View {
+        Button {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { bubbleSizeRaw = bubbleSize.next.rawValue }
+            Haptics.tap()
+        } label: {
+            Image(systemName: bubbleSize.symbol)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 38, height: 38)
+                .background(.regularMaterial, in: Circle())
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .padding(.top, 8).padding(.leading, 64)
     }
 
     // ===== Bouton display : un clic = layout SUIVANT (cycle, pas de dropdown) =====
@@ -255,7 +274,7 @@ struct BubbleCategoriesView: View {
         let cols = 3
         let gx: [CGFloat] = [0.21, 0.50, 0.79]
         let tidyAnchor = CGPoint(x: gx[index % cols], y: 0.12 + CGFloat(index / cols) * 0.158)
-        let d = tidy ? base * 0.92 * grow : base * cat.sizeMul * grow
+        let d = (tidy ? base * 0.92 * grow : base * cat.sizeMul * grow) * bubbleSize.factor
         let phase = Double(index) * 1.37
         let amp: Double = cat.isFiller ? 6 : 4
         let dv = drag[cat.id] ?? .zero

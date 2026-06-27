@@ -63,18 +63,31 @@ struct ThemedBubbleBackground: View {
     }
 }
 
+// MARK: - Taille des bulles (réglable, partagée grille + sous-catégories)
+
+enum BubbleSize: String, CaseIterable {
+    case small, medium, large
+    var factor: CGFloat { self == .small ? 0.80 : (self == .large ? 1.22 : 1.0) }
+    var label: String { self == .small ? "Petite" : (self == .large ? "Grande" : "Moyenne") }
+    var symbol: String { self == .small ? "circle" : (self == .large ? "circle.fill" : "circle.lefthalf.filled") }
+    var next: BubbleSize { self == .small ? .medium : (self == .medium ? .large : .small) }
+}
+
 // MARK: - Hub générique : rend les outils dans le mode d'affichage actif
 
 struct CategoryHubView: View {
     let category: AppCategory
 
-    @AppStorage("catLayout") private var layoutRaw = "organic"
-    @AppStorage("appTheme")  private var appThemeRaw = "classic"
+    @AppStorage("catLayout")  private var layoutRaw = "organic"
+    @AppStorage("appTheme")   private var appThemeRaw = "classic"
+    @AppStorage("bubbleSize") private var bubbleSizeRaw = "medium"
     @State private var cover: CategoryTool?
 
     private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .organic }
     private var theme: AppTheme   { AppTheme(rawValue: appThemeRaw) ?? .classic }
     private var tools: [CategoryTool] { category.tools }
+    // Petite / Moyenne / Grande — partagé avec la grille de catégories.
+    private var sizeFactor: CGFloat { BubbleSize(rawValue: bubbleSizeRaw)?.factor ?? 1.0 }
 
     var body: some View {
         content
@@ -165,47 +178,88 @@ struct CategoryHubView: View {
     }
 
     // ===== Modes Bulles (libres / rangées) =====
+    @ViewBuilder
     private func bubbleCluster(tidy: Bool) -> some View {
         ZStack {
             ThemedBubbleBackground(theme: theme).ignoresSafeArea()
             GeometryReader { geo in
-                let w = geo.size.width
-                let availH = geo.size.height
-                let cols = tools.count <= 4 ? 2 : 3
-                let rows = Int(ceil(Double(tools.count) / Double(cols)))
-                let cellW = w / CGFloat(cols)
-                let base = cellW * 0.84
-                let rowH = cellW * 1.02
-                let blockH = CGFloat(rows) * rowH
-                // Centre verticalement le bloc quand il tient ; sinon laisse défiler.
-                let contentH = max(availH, blockH + 110)
-                let startY = max(30, (contentH - blockH) / 2 - 24)
-
-                ScrollView(showsIndicators: false) {
-                    TimelineView(.animation) { ctx in
-                        let t = ctx.date.timeIntervalSinceReferenceDate
-                        ZStack(alignment: .topLeading) {
-                            ForEach(Array(tools.enumerated()), id: \.element.id) { i, tool in
-                                let col = i % cols
-                                let row = i / cols
-                                let sizeMul: CGFloat = tidy ? 1.0 : [1.14, 0.9, 1.05, 0.86, 1.0, 0.94][i % 6]
-                                let d = base * sizeMul
-                                let jx: CGFloat = tidy ? 0 : CGFloat(sin(Double(i) * 2.1)) * cellW * 0.10
-                                let jy: CGFloat = tidy ? 0 : CGFloat(cos(Double(i) * 1.7)) * rowH * 0.05
-                                let bob: CGFloat = tidy ? 0 : CGFloat(sin(t * 0.5 + Double(i) * 1.3) * 4)
-                                let x = (CGFloat(col) + 0.5) * cellW + jx
-                                let y = startY + (CGFloat(row) + 0.5) * rowH + jy + bob
-                                toolLink(tool) {
-                                    toolBubble(tool, diameter: d, index: i, base: base, t: t)
-                                }
-                                .position(x: x, y: y)
-                            }
-                        }
-                        .frame(width: w, height: contentH)
-                    }
-                    .frame(width: w, height: contentH)
-                }
+                if tidy { tidyGrid(geo) } else { organicCluster(geo) }
             }
+        }
+    }
+
+    // Cercle organique (phyllotaxie / spirale dorée) — PAS de rangées.
+    private func organicCluster(_ geo: GeometryProxy) -> some View {
+        let w = geo.size.width
+        let availH = geo.size.height
+        let n = max(tools.count, 1)
+        let golden = 2.399963229728653            // angle d'or (137.5°)
+        // Diamètre qui remplit joliment, ajusté par la taille choisie.
+        let R = min(w, availH) / 2 * 0.92
+        let dBase = R / (0.92 * sqrt(Double(max(n - 1, 1))) + 0.7)
+        let d0 = min(max(dBase, 46), w * 0.34) * sizeFactor
+        let spacing = d0 * 0.95
+        let maxR = spacing * CGFloat(sqrt(Double(max(n - 1, 0))))
+        let contentH = max(availH, 2 * (maxR + d0) + 60)
+
+        return ScrollView(showsIndicators: false) {
+            TimelineView(.animation) { ctx in
+                let t = ctx.date.timeIntervalSinceReferenceDate
+                let cx = w / 2
+                let cy = contentH / 2
+                ZStack(alignment: .topLeading) {
+                    ForEach(Array(tools.enumerated()), id: \.element.id) { i, tool in
+                        let angle = Double(i) * golden
+                        let radius = spacing * CGFloat(sqrt(Double(i)))
+                        // Variation de taille pseudo-aléatoire → aspect organique.
+                        let rnd = (sin(Double(i) * 12.9898) * 43758.5453).truncatingRemainder(dividingBy: 1)
+                        let dv = d0 * (0.88 + 0.12 * CGFloat(abs(rnd)))
+                        let bobx = CGFloat(sin(t * 0.5 + Double(i) * 1.3)) * 3
+                        let boby = CGFloat(cos(t * 0.42 + Double(i) * 1.1)) * 3
+                        let x = cx + CGFloat(cos(angle)) * radius + bobx
+                        let y = cy + CGFloat(sin(angle)) * radius + boby
+                        toolLink(tool) {
+                            toolBubble(tool, diameter: dv, index: i, base: d0, t: t)
+                        }
+                        .position(x: x, y: y)
+                        .zIndex(Double(n - i))   // bulles centrales au-dessus
+                    }
+                }
+                .frame(width: w, height: contentH)
+            }
+            .frame(width: w, height: contentH)
+        }
+    }
+
+    // Disposition rangée (mode "Bulles rangées").
+    private func tidyGrid(_ geo: GeometryProxy) -> some View {
+        let w = geo.size.width
+        let availH = geo.size.height
+        let cols = tools.count <= 4 ? 2 : 3
+        let rows = Int(ceil(Double(tools.count) / Double(cols)))
+        let cellW = w / CGFloat(cols)
+        let d = cellW * 0.84 * sizeFactor
+        let rowH = cellW * 1.02
+        let blockH = CGFloat(rows) * rowH
+        let contentH = max(availH, blockH + 110)
+        let startY = max(30, (contentH - blockH) / 2 - 24)
+
+        return ScrollView(showsIndicators: false) {
+            TimelineView(.animation) { ctx in
+                let t = ctx.date.timeIntervalSinceReferenceDate
+                ZStack(alignment: .topLeading) {
+                    ForEach(Array(tools.enumerated()), id: \.element.id) { i, tool in
+                        let x = (CGFloat(i % cols) + 0.5) * cellW
+                        let y = startY + (CGFloat(i / cols) + 0.5) * rowH
+                        toolLink(tool) {
+                            toolBubble(tool, diameter: d, index: i, base: cellW * 0.84, t: t)
+                        }
+                        .position(x: x, y: y)
+                    }
+                }
+                .frame(width: w, height: contentH)
+            }
+            .frame(width: w, height: contentH)
         }
     }
 
