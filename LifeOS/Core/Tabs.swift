@@ -1628,6 +1628,8 @@ struct ProfileView: View {
                                 Text("\(challenges.count)")
                                     .font(.system(size: 10, weight: .bold))
                                     .foregroundStyle(.white)
+                                    .contentTransition(.numericText())
+                                    .animation(.spring(duration: 0.38, bounce: 0.1), value: challenges.count)
                                     .padding(.horizontal, 5)
                                     .padding(.vertical, 2)
                                     .background(Color.accentColor, in: Capsule())
