@@ -1047,6 +1047,7 @@ struct ProfileView: View {
     @State private var showBriefing = false
     @State private var appeared = false
     @State private var challenges: [ChallengeOut] = []
+    @State private var challengesLoading = true
     @State private var profileSection = 0
     @State private var showOnboardingReset = false
     @Namespace private var pickerNS
