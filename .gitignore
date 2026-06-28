@@ -19,3 +19,7 @@ Packages/
 # macOS
 .DS_Store
 *.swp
+
+# Secrets — ne jamais commiter
+Config.xcconfig
+!Config.xcconfig.example
