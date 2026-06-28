@@ -1117,17 +1117,6 @@ struct ProfileView: View {
     private var bottlesEquivalent: Double { Double(waterGoal) / 1500.0 }
     private var bottlesToday: Double { Double(waterToday) / 1500.0 }
 
-    private var hoursRemaining: Int {
-        let cal = Calendar.current
-        let end = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: .now)) ?? .now
-        return max(0, Int(end.timeIntervalSince(.now) / 3600))
-    }
-    private var minutesRemaining: Int {
-        let cal = Calendar.current
-        let end = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: .now)) ?? .now
-        let total = max(0, Int(end.timeIntervalSince(.now) / 60))
-        return total % 60
-    }
     private var alarmRingsNextDay: Bool {
         guard wakeupEnabled else { return false }
         let cal = Calendar.current
