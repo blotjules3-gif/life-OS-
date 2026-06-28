@@ -347,7 +347,7 @@ struct WakeUpView: View {
                                 Text(cat.subtitle).font(.system(size: 12)).foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                            Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
@@ -889,7 +889,7 @@ struct DailyBriefingView: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(.primary)
                     Spacer()
-                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
@@ -2084,7 +2084,7 @@ struct ProfileView: View {
                     if healthConnected {
                         Image(systemName: "checkmark.circle.fill").foregroundStyle(Color(hex: 0x4CC38A))
                     } else {
-                        Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
                     }
                 } action: {
                     Task {
@@ -2094,13 +2094,13 @@ struct ProfileView: View {
                 }
                 Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
                 settingsRow(icon: "bell.fill", iconColor: Color(hex: 0xE0A23C), label: "Activer les rappels") {
-                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
                 } action: {
                     Task { _ = await NotificationManager.shared.requestAuthorization() }
                 }
                 Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
                 settingsRow(icon: "slider.horizontal.3", iconColor: Color.accentColor, label: "Modifier mes objectifs") {
-                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
                 } action: {
                     showGoalEditor = true
                 }
