@@ -564,7 +564,7 @@ struct DailyBriefingView: View {
                                             .font(.system(size: 12, weight: .semibold))
                                             .foregroundStyle(Color(hex: 0xE0A23C))
                                             .frame(width: 22, height: 22)
-                                            .background(Color(hex: 0xE0A23C).opacity(0.12), in: Circle())
+                                            .background(Color(hex: 0xE0A23C).opacity(0.14), in: Circle())
                                         Text(insight)
                                             .font(.system(size: 14, weight: .regular))
                                             .foregroundStyle(.primary)
