@@ -1410,14 +1410,21 @@ struct ProfileView: View {
 
             Spacer(minLength: 8)
 
-            VStack(alignment: .trailing, spacing: 0) {
-                Text(hoursRemaining > 0 ? "\(hoursRemaining)h" : minutesRemaining > 0 ? "\(minutesRemaining)m" : "0h")
-                    .font(.system(size: 30, weight: .black, design: .rounded).monospacedDigit())
-                    .foregroundStyle(color)
-                    .contentTransition(.numericText())
-                Text("restantes")
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(.secondary)
+            TimelineView(.everyMinute) { ctx in
+                let cal = Calendar.current
+                let end = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: ctx.date)) ?? ctx.date
+                let totalMin = max(0, Int(end.timeIntervalSince(ctx.date) / 60))
+                let h = totalMin / 60
+                let m = totalMin % 60
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text(h > 0 ? "\(h)h" : m > 0 ? "\(m)m" : "0h")
+                        .font(.system(size: 30, weight: .black, design: .rounded).monospacedDigit())
+                        .foregroundStyle(color)
+                        .contentTransition(.numericText())
+                    Text("restantes")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .padding(.horizontal, 20)
