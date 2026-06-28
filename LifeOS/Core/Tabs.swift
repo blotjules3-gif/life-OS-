@@ -1824,7 +1824,7 @@ struct ProfileView: View {
     private var tipCard: some View {
         HStack(spacing: 14) {
             RoundedRectangle(cornerRadius: 2, style: .continuous)
-                .fill(Color.accentColor.opacity(0.6))
+                .fill(Color.accentColor)
                 .frame(width: 3)
             Text(todayTip)
                 .font(.system(size: 13, weight: .regular))
