@@ -2432,7 +2432,7 @@ struct GoalEditorSheet: View {
                         let target = Calendar.current.date(byAdding: .day, value: preset.days, to: .now)!
                         let selected = matchesPreset(endDates[id], days: preset.days)
                         Button {
-                            withAnimation { endDates[id] = target }
+                            withAnimation(.spring(duration: 0.38, bounce: 0.1)) { endDates[id] = target }
                         } label: {
                             Text(preset.label)
                                 .font(.system(size: 13, weight: .semibold))
@@ -2446,7 +2446,7 @@ struct GoalEditorSheet: View {
                     // Sans limite
                     let noLimit = endDates[id] == nil
                     Button {
-                        withAnimation { _ = endDates.removeValue(forKey: id) }
+                        withAnimation(.spring(duration: 0.38, bounce: 0.1)) { _ = endDates.removeValue(forKey: id) }
                     } label: {
                         Text("Sans limite")
                             .font(.system(size: 13, weight: .semibold))
