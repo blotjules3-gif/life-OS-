@@ -1016,6 +1016,8 @@ struct ProfileView: View {
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage("appTheme") private var appThemeRaw = "classic"
     @AppStorage("userName") private var name = ""
+    @State private var showRename = false
+    @State private var draftName = ""
     @AppStorage("stepGoal") private var stepGoal = 10000
     @AppStorage("waterGoal") private var waterGoal = 2500
     @AppStorage("kcalGoal") private var kcalGoal = 2200
@@ -1193,8 +1195,15 @@ struct ProfileView: View {
                     .padding(.bottom, 80)
                 }
             }
-            .navigationTitle("Profil")
+            .navigationTitle("")
             .toolbarBackground(.hidden, for: .navigationBar)
+            .alert("Ton prénom", isPresented: $showRename) {
+                TextField("Prénom", text: $draftName)
+                Button("Enregistrer") { name = draftName.trimmingCharacters(in: .whitespaces) }
+                Button("Annuler", role: .cancel) {}
+            } message: {
+                Text("Il s'affiche dans ton accueil (« Bonjour … ») et ton profil.")
+            }
             .onAppear { appeared = true }
             .task {
                 if await HealthService.shared.requestAuthorization() {
@@ -1241,9 +1250,19 @@ struct ProfileView: View {
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.secondary)
                         .kerning(2)
-                    Text(name.isEmpty ? "Mon profil" : name)
-                        .font(.system(size: 32, weight: .black, design: .rounded))
-                        .foregroundStyle(.primary)
+                    Button {
+                        draftName = name; showRename = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(name.isEmpty ? "Ton prénom" : name)
+                                .font(.system(size: 32, weight: .black, design: .rounded))
+                                .foregroundStyle(name.isEmpty ? .secondary : .primary)
+                            Image(systemName: "pencil")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .buttonStyle(.plain)
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 1) {
