@@ -1145,16 +1145,27 @@ struct ProfileView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
                         profileHeader
-                        if let mod = topModule {
-                            NavigationLink(value: mod) {
+                        Group {
+                            if let mod = topModule {
+                                NavigationLink(value: mod) {
+                                    topModuleIsland
+                                }
+                                .buttonStyle(.plain)
+                            } else {
                                 topModuleIsland
                             }
-                            .buttonStyle(.plain)
-                        } else {
-                            topModuleIsland
                         }
+                        .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 10)
+                        .animation(.spring(duration: 0.45, bounce: 0.1).delay(0.05), value: appeared)
+
                         nightIsland
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 10)
+                            .animation(.spring(duration: 0.45, bounce: 0.1).delay(0.12), value: appeared)
+
                         sectionPicker
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 10)
+                            .animation(.spring(duration: 0.45, bounce: 0.1).delay(0.18), value: appeared)
+
                         Group {
                             if profileSection == 0 {
                                 activeGoalsSection
@@ -1176,10 +1187,22 @@ struct ProfileView: View {
                         }
                         .animation(.easeInOut(duration: 0.18), value: profileSection)
                         .animation(.easeInOut(duration: 0.25), value: challengesLoading)
+
                         bentoRow
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 10)
+                            .animation(.spring(duration: 0.45, bounce: 0.1).delay(0.24), value: appeared)
+
                         tipCard
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 10)
+                            .animation(.spring(duration: 0.45, bounce: 0.1).delay(0.30), value: appeared)
+
                         settingsSection
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 10)
+                            .animation(.spring(duration: 0.45, bounce: 0.1).delay(0.36), value: appeared)
+
                         appearanceSection
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 10)
+                            .animation(.spring(duration: 0.45, bounce: 0.1).delay(0.40), value: appeared)
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
