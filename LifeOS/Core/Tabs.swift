@@ -1515,34 +1515,6 @@ struct ProfileView: View {
         .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
     }
 
-    private func moduleColor(for module: String) -> Color {
-        switch module {
-        case "fitness":     return Color(hex: 0xF1746C)
-        case "nutrition":   return Color(hex: 0x4CC38A)
-        case "sleep":       return Color(hex: 0x6C7BF1)
-        case "mind":        return Color(hex: 0x9B6CF1)
-        case "productivity": return Color(hex: 0x3CB2E0)
-        case "finance":     return Color(hex: 0x4CC38A)
-        case "invest":      return Color(hex: 0xE0A23C)
-        default:            return Color.accentColor
-        }
-    }
-
-    private func moduleIcon(for module: String) -> String {
-        switch module {
-        case "fitness":     return "figure.run"
-        case "nutrition":   return "fork.knife"
-        case "sleep":       return "moon.stars.fill"
-        case "mind":        return "brain.head.profile"
-        case "productivity": return "checklist"
-        case "finance":     return "creditcard.fill"
-        case "invest":      return "chart.line.uptrend.xyaxis"
-        case "career":      return "briefcase.fill"
-        case "learning":    return "book.fill"
-        default:            return "star.fill"
-        }
-    }
-
     // MARK: - Active Challenges
 
     private func saveChallengesForWidget(_ list: [ChallengeOut]) {
