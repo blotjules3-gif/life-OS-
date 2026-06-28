@@ -642,7 +642,8 @@ struct DailyBriefingView: View {
                 // Sommeil
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Qualité du sommeil")
-                        .font(.subheadline.weight(.medium))
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.secondary)
                     HStack(spacing: 6) {
                         ForEach(1...5, id: \.self) { s in
                             Button {
@@ -663,7 +664,8 @@ struct DailyBriefingView: View {
                 // Humeur
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Humeur")
-                        .font(.subheadline.weight(.medium))
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.secondary)
                     HStack(spacing: 6) {
                         ForEach(1...5, id: \.self) { s in
                             Button {
