@@ -1449,7 +1449,7 @@ struct ProfileView: View {
         case .mind:         return "Quelques minutes de calme font toute la différence."
         case .productivity: return habits.isEmpty ? "Crée tes premières habitudes pour les suivre ici." : "\(habitsDone)/\(habits.count) habitudes complétées aujourd'hui."
         case .finance:      return "Garde un œil sur ton budget — chaque euro compte."
-        case .invest:       return "Les marchés n'attendent pas — consulte ton portef."
+        case .invest:       return "Les marchés n'attendent pas — consulte ton portefeuille."
         case .career:       return "Une action pour ta carrière aujourd'hui suffit."
         case .learning:     return "La régularité bat l'intensité. Avance un peu."
         case .home:         return "Maison organisée, esprit libéré."
