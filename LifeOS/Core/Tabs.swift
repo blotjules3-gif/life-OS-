@@ -352,7 +352,7 @@ struct WakeUpView: View {
                         .padding(.vertical, 10)
                         .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(LifeOSPressStyle())
                 }
             }
         }
