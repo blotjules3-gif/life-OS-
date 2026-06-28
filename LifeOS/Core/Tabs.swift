@@ -1086,13 +1086,6 @@ struct ProfileView: View {
         return Array(tasks.prefix(6))
     }
 
-    private var greeting: String {
-        switch Calendar.current.component(.hour, from: .now) {
-        case 5..<12: return "Bonjour"
-        case 12..<18: return "Bon après-midi"
-        default: return "Bonsoir"
-        }
-    }
     private let tips = [
         "Chaque verre d'eau compte. L'hydratation est la base de tout.",
         "Un pas de plus qu'hier. C'est tout ce qui compte.",
