@@ -68,6 +68,10 @@ struct ThemedBubbleBackground: View {
 enum BubbleSize: String, CaseIterable {
     case small, medium, large
     var factor: CGFloat { self == .small ? 0.80 : (self == .large ? 1.22 : 1.0) }
+    // Diamètre absolu (fraction de la largeur d'écran) pour la grille de catégories :
+    // 3 tailles NETTES. Petite/Moyenne/Grande — rien entre les deux.
+    var widthFraction: CGFloat { self == .small ? 0.235 : (self == .large ? 0.355 : 0.295) }
+    var rank: Double { self == .small ? 0 : (self == .large ? 2 : 1) }
     var label: String { self == .small ? "Petite" : (self == .large ? "Grande" : "Moyenne") }
     var symbol: String { self == .small ? "circle" : (self == .large ? "circle.fill" : "circle.lefthalf.filled") }
     var next: BubbleSize { self == .small ? .medium : (self == .medium ? .large : .small) }
