@@ -1908,7 +1908,7 @@ struct ProfileView: View {
                             .animation(.spring(duration: 0.38, bounce: 0.1), value: task.progress)
                     } else {
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(.tertiary)
                     }
                     if let end = endDate {
