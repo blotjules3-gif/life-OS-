@@ -1325,8 +1325,8 @@ struct ProfileView: View {
                     sportHour: $sportHour,
                     bedHour: $bedHour,
                     bedMinute: $bedMinute,
-                    wakeupHour: wakeupHour,
-                    wakeupMinute: wakeupMinute
+                    wakeupHour: $wakeupHour,
+                    wakeupMinute: $wakeupMinute
                 )
             }
             .sheet(isPresented: $showWakeupDetail) {
