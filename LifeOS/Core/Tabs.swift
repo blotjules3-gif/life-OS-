@@ -3207,10 +3207,13 @@ struct ChallengeCard: View {
                 .padding(.bottom, 12)
             }
         }
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .background(neoCard)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+        .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
         .overlay(
-            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                .stroke(challenge.isAbandoned ? Color.orange.opacity(0.4) : Color.clear, lineWidth: 1.5)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(challenge.isAbandoned ? typeColor.opacity(0.35) : Color.clear, lineWidth: 1.5)
         )
     }
 }
