@@ -1583,8 +1583,8 @@ struct ProfileView: View {
         .padding(5)
         .background(neoBackground)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
         .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
+        .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
     }
 
     // MARK: - Active Challenges
