@@ -129,6 +129,22 @@ final class NotificationManager {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
     }
 
+    func scheduleWeeklyBilan() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["lifeos.weekly_bilan"])
+        let content = UNMutableNotificationContent()
+        content.title = "Bilan de semaine"
+        content.body = "Tes habitudes, ton humeur, tes objectifs — tout est la."
+        content.sound = .default
+        content.interruptionLevel = .active
+        var comps = DateComponents()
+        comps.weekday = 1 // dimanche
+        comps.hour = 20
+        comps.minute = 0
+        let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
+        let req = UNNotificationRequest(identifier: "lifeos.weekly_bilan", content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(req)
+    }
+
     func schedulePendingHabitNotification(pendingCount: Int) {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["lifeos.pending_habits"])
         guard pendingCount > 0 else { return }
