@@ -1305,9 +1305,11 @@ struct ProfileView: View {
                           color: Color(hex: 0x4CC38A),
                           progress: min(1, Double(steps) / Double(max(1, stepGoal))))
                 Rectangle().fill(Color.primary.opacity(0.06)).frame(width: 1, height: 40)
-                quickStat(icon: "checkmark.seal.fill", value: "\(habitsDone)/\(habits.count)", unit: "habitudes",
+                quickStat(icon: "checkmark.seal.fill",
+                          value: habits.isEmpty ? "--" : "\(habitsDone)/\(habits.count)",
+                          unit: "habitudes",
                           color: Color(hex: 0x9B6CF1),
-                          progress: habits.isEmpty ? 1 : min(1, Double(habitsDone) / Double(habits.count)))
+                          progress: habits.isEmpty ? 0 : min(1, Double(habitsDone) / Double(habits.count)))
             }
             .padding(.vertical, 14)
 
