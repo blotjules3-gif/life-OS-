@@ -1885,6 +1885,7 @@ struct ProfileView: View {
                             .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
                             .foregroundStyle(task.progress >= 1 ? task.color : .secondary)
                             .contentTransition(.numericText())
+                            .animation(.spring(duration: 0.38, bounce: 0.1), value: task.progress)
                     } else {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 11, weight: .semibold))
