@@ -1484,6 +1484,7 @@ struct ProfileView: View {
                         .font(.system(size: 30, weight: .black, design: .rounded).monospacedDigit())
                         .foregroundStyle(color)
                         .contentTransition(.numericText())
+                        .animation(.spring(duration: 0.38, bounce: 0.1), value: ctx.date)
                     Text("restantes")
                         .font(.system(size: 9, weight: .semibold))
                         .foregroundStyle(.secondary)
