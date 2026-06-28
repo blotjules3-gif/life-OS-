@@ -2989,13 +2989,13 @@ struct SleepCheckSheet: View {
                         .stroke(sc, style: StrokeStyle(lineWidth: 12, lineCap: .round))
                         .frame(width: 180, height: 180)
                         .rotationEffect(.degrees(-90))
-                        .animation(.easeOut(duration: 1.2), value: displayScore)
+                        .animation(.spring(duration: 1.2, bounce: 0.0), value: displayScore)
                     VStack(spacing: 2) {
                         Text("\(displayScore)")
                             .font(.system(size: 64, weight: .black, design: .rounded))
                             .foregroundStyle(sc)
                             .contentTransition(.numericText())
-                            .animation(.easeOut(duration: 1.2), value: displayScore)
+                            .animation(.spring(duration: 1.2, bounce: 0.0), value: displayScore)
                         Text("/ 100").font(.system(size: 15)).foregroundStyle(.secondary)
                     }
                 }
