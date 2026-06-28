@@ -182,6 +182,7 @@ final class AIAssistantViewModel: ObservableObject {
                     conversationID: conversationID.isEmpty ? nil : conversationID
                 )
                 conversationID = response.conversation_id
+                isServerOffline = false
                 removeThinking()
                 appendAssistantMessage(response.reply, actions: response.actions ?? [])
                 for action in (response.actions ?? []) {
@@ -189,6 +190,9 @@ final class AIAssistantViewModel: ObservableObject {
                 }
             } catch {
                 removeThinking()
+                if let apiErr = error as? AgentAPIError, case .networkError = apiErr {
+                    isServerOffline = true
+                }
             }
             isLoading = false
         }
