@@ -1934,7 +1934,7 @@ struct ProfileView: View {
                 .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(.secondary)
                 .kerning(1.2)
-            HStack(spacing: 14) {
+            HStack(alignment: .top, spacing: 14) {
                 RoundedRectangle(cornerRadius: 2, style: .continuous)
                     .fill(Color.accentColor)
                     .frame(width: 3)
@@ -1942,7 +1942,7 @@ struct ProfileView: View {
                     .font(.system(size: 13, weight: .regular))
                     .foregroundStyle(Color.primary.opacity(0.72))
                     .fixedSize(horizontal: false, vertical: true)
-                Spacer()
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding(18)
