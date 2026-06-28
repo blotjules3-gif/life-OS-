@@ -10,9 +10,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
     ) -> Bool {
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
 
+        // Enregistrement APNs — nécessaire pour les push distantes depuis le backend.
+        // Le token est capturé dans didRegisterForRemoteNotificationsWithDeviceToken.
+        application.registerForRemoteNotifications()
+
         // Fond système immédiat sur toutes les fenêtres — évite le flash blanc en mode sombre.
-        // DispatchQueue.main.async s'exécute juste après le premier runloop, au moment où
-        // la scene SwiftUI a créé la UIWindow mais avant que l'utilisateur la voit.
         DispatchQueue.main.async {
             UIApplication.shared.connectedScenes
                 .compactMap { $0 as? UIWindowScene }
