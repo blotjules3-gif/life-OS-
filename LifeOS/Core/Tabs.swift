@@ -2388,6 +2388,207 @@ struct WakeUpPersonalizationSheet: View {
     }
 }
 
+// MARK: - Rappels (sheet)
+
+struct NotificationSettingsSheet: View {
+    let modules: [AppCategory]
+    @Binding var sportHour: Int
+    @Binding var bedHour: Int
+    @Binding var bedMinute: Int
+    let wakeupHour: Int
+    let wakeupMinute: Int
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var authorized = false
+
+    private var morningTime: String {
+        let total = (wakeupHour * 60 + wakeupMinute + 30) % (24 * 60)
+        return String(format: "%02d:%02d", total / 60, total % 60)
+    }
+    private var bedtimeNotifTime: String {
+        let total = ((bedHour * 60 + bedMinute) - 30 + 1440) % 1440
+        return String(format: "%02d:%02d", total / 60, total % 60)
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    HStack(spacing: 12) {
+                        Image(systemName: authorized ? "bell.badge.fill" : "bell.slash.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(authorized ? Color(hex: 0x4CC38A) : Color(hex: 0xF1746C))
+                            .frame(width: 32, height: 32)
+                            .background(
+                                (authorized ? Color(hex: 0x4CC38A) : Color(hex: 0xF1746C)).opacity(0.14),
+                                in: RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            )
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(authorized ? "Notifications activées" : "Notifications désactivées")
+                                .font(.system(size: 15, weight: .medium))
+                            Text(authorized ? "Les rappels sont actifs." : "Appuie pour autoriser les notifications.")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        if !authorized {
+                            Button("Activer") {
+                                Task {
+                                    let granted = await NotificationManager.shared.requestAuthorization()
+                                    withAnimation { authorized = granted }
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+
+                Section("Rappels programmés") {
+                    if modules.contains(.sleep) || modules.contains(.fitness) || modules.contains(.mind) {
+                        notifRow(
+                            icon: "sunrise.fill", color: Color(hex: 0xE0A23C),
+                            title: "Bilan du matin",
+                            subtitle: "À \(morningTime) — 30 min après le réveil",
+                            editable: false
+                        )
+                    }
+
+                    if modules.contains(.fitness) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "figure.run")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Color(hex: 0x4CC38A))
+                                .frame(width: 32, height: 32)
+                                .background(Color(hex: 0x4CC38A).opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Sport")
+                                    .font(.system(size: 15, weight: .medium))
+                                Text("Rappel pour bouger")
+                                    .font(.system(size: 12)).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Picker("", selection: $sportHour) {
+                                ForEach(6..<23) { h in
+                                    Text(String(format: "%02d:00", h)).tag(h)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            .tint(Color(hex: 0x4CC38A))
+                            .onChange(of: sportHour) { _, _ in
+                                ContextualNotifications.shared.reschedule()
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+
+                    if modules.contains(.nutrition) {
+                        notifRow(
+                            icon: "fork.knife", color: Color(hex: 0xE0A23C),
+                            title: "Nutrition soir",
+                            subtitle: "À 19:30 — noter le dîner",
+                            editable: false
+                        )
+                    }
+
+                    if modules.contains(.productivity) || modules.contains(.fitness) || modules.contains(.mind) || modules.contains(.sleep) {
+                        notifRow(
+                            icon: "checklist", color: Color(hex: 0x9B6CF1),
+                            title: "Habitudes du soir",
+                            subtitle: "À 20:00 — bilan de journée",
+                            editable: false
+                        )
+                    }
+
+                    if modules.contains(.sleep) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "moon.stars.fill")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Color(hex: 0x6C7BF1))
+                                .frame(width: 32, height: 32)
+                                .background(Color(hex: 0x6C7BF1).opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Coucher")
+                                    .font(.system(size: 15, weight: .medium))
+                                Text("Rappel 30 min avant (notif à \(bedtimeNotifTime))")
+                                    .font(.system(size: 12)).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            DatePicker(
+                                "",
+                                selection: Binding(
+                                    get: {
+                                        var c = DateComponents()
+                                        c.hour = bedHour; c.minute = bedMinute
+                                        return Calendar.current.date(from: c) ?? Date()
+                                    },
+                                    set: { d in
+                                        bedHour = Calendar.current.component(.hour, from: d)
+                                        bedMinute = Calendar.current.component(.minute, from: d)
+                                        ContextualNotifications.shared.reschedule()
+                                    }
+                                ),
+                                displayedComponents: .hourAndMinute
+                            )
+                            .labelsHidden()
+                            .tint(Color(hex: 0x6C7BF1))
+                        }
+                        .padding(.vertical, 4)
+                    }
+
+                    if modules.isEmpty {
+                        Text("Aucun module actif — aucun rappel planifié.")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.secondary)
+                            .padding(.vertical, 8)
+                    }
+                }
+
+                Section {
+                    notifRow(
+                        icon: "calendar.badge.clock", color: Color.accentColor,
+                        title: "Bilan de semaine",
+                        subtitle: "Dimanche à 20:00",
+                        editable: false
+                    )
+                } header: {
+                    Text("Récurrents")
+                }
+            }
+            .navigationTitle("Mes rappels")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("OK") { dismiss() }.fontWeight(.semibold)
+                }
+            }
+            .task {
+                let center = UNUserNotificationCenter.current()
+                let settings = await center.notificationSettings()
+                authorized = settings.authorizationStatus == .authorized
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func notifRow(icon: String, color: Color, title: String, subtitle: String, editable: Bool) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(color)
+                .frame(width: 32, height: 32)
+                .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.system(size: 15, weight: .medium))
+                Text(subtitle).font(.system(size: 12)).foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+        .padding(.vertical, 4)
+    }
+}
+
 // MARK: - Éditeur d'objectifs (sheet)
 
 struct GoalEditorSheet: View {
