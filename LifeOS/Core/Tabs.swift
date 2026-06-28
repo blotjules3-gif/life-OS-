@@ -1439,6 +1439,7 @@ struct ProfileView: View {
                     Text(String(format: "%02d:%02d", wakeupHour, wakeupMinute))
                         .font(.system(size: 48, weight: .black, design: .rounded).monospacedDigit())
                         .foregroundStyle(wakeupEnabled ? accentColor : .primary)
+                        .opacity(wakeupEnabled ? 1.0 : 0.35)
                         .animation(.spring(duration: 0.3), value: wakeupEnabled)
                 }
                 Spacer()
