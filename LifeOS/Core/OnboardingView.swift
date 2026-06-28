@@ -933,7 +933,7 @@ struct ModuleOption: Identifiable {
     }
 }
 
-private let moduleSetupQuestions: [AppCategory: [ModuleQuestion]] = [
+let moduleSetupQuestions: [AppCategory: [ModuleQuestion]] = [
     .fitness: [
         ModuleQuestion("location", "Ou tu t'entraines ?", [
             ModuleOption("gym",     "En salle",    "building.2"),
