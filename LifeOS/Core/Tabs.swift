@@ -1187,8 +1187,15 @@ struct ProfileView: View {
                         sectionPicker
                         if profileSection == 0 {
                             activeGoalsSection
+                                .transition(.opacity)
                         } else {
-                            if !challenges.isEmpty { activeChallengesSection }
+                            if challenges.isEmpty {
+                                challengesEmptyState
+                                    .transition(.opacity)
+                            } else {
+                                activeChallengesSection
+                                    .transition(.opacity)
+                            }
                         }
                         bentoRow
                         tipCard
