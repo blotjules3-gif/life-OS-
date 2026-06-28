@@ -1044,6 +1044,9 @@ struct ProfileView: View {
     @AppStorage("wakeupEnabled") private var wakeupEnabled = false
     @AppStorage("wakeupHour") private var wakeupHour = 7
     @AppStorage("wakeupMinute") private var wakeupMinute = 0
+    @AppStorage("sportHour") private var sportHour = 18
+    @AppStorage("bedHour") private var bedHour = 23
+    @AppStorage("bedMinute") private var bedMinute = 0
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
