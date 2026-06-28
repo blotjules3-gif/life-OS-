@@ -1454,6 +1454,12 @@ struct ProfileView: View {
                         .foregroundStyle(wakeupEnabled ? accentColor : .primary)
                         .opacity(wakeupEnabled ? 1.0 : 0.35)
                         .animation(.spring(duration: 0.3), value: wakeupEnabled)
+                    if alarmRingsNextDay {
+                        Text("demain")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(accentColor.opacity(0.75))
+                            .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                    }
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 10) {
