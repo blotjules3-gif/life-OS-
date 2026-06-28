@@ -1992,6 +1992,7 @@ struct ProfileView: View {
                     Capsule()
                         .fill(waterColor)
                         .frame(width: g.size.width * waterProgress, height: 3)
+                        .animation(.spring(duration: 1.0).delay(0.2), value: appeared)
                         .animation(.spring(duration: 0.6), value: waterProgress)
                 }
             }
