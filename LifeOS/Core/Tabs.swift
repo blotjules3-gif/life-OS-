@@ -2620,7 +2620,7 @@ struct GoalEditorSheet: View {
                     .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 VStack(alignment: .leading, spacing: 1) {
                     Text(goal.title).font(.system(size: 14)).foregroundStyle(.primary)
-                    Text(goal.section).font(.system(size: 11)).foregroundStyle(.secondary)
+                    Text(goal.section).font(.system(size: 12)).foregroundStyle(.secondary)
                 }
                 Spacer()
                 Image(systemName: "plus.circle.fill")
