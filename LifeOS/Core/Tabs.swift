@@ -2275,10 +2275,10 @@ struct GoalEditorSheet: View {
     }
 
     private let catalog: [GoalDef] = [
-        GoalDef(id: "steps",   title: "Pas quotidiens",     icon: "figure.run",          colorHex: 0xF1746C, section: "Activité"),
+        GoalDef(id: "steps",   title: "Pas quotidiens",     icon: "figure.run",          colorHex: 0x4CC38A, section: "Activité"),
         GoalDef(id: "glasses", title: "Verres d'eau",        icon: "cup.and.saucer.fill", colorHex: 0x3CB2E0, section: "Nutrition"),
-        GoalDef(id: "water",   title: "Volume eau",           icon: "drop.fill",           colorHex: 0x5BAED6, section: "Nutrition"),
-        GoalDef(id: "kcal",    title: "Calories",             icon: "flame.fill",          colorHex: 0x4CC38A, section: "Nutrition"),
+        GoalDef(id: "water",   title: "Volume eau",           icon: "drop.fill",           colorHex: 0x3CB2E0, section: "Nutrition"),
+        GoalDef(id: "kcal",    title: "Calories",             icon: "flame.fill",          colorHex: 0xF1746C, section: "Nutrition"),
         GoalDef(id: "protein", title: "Protéines",            icon: "fork.knife",          colorHex: 0xE0A23C, section: "Nutrition"),
         GoalDef(id: "fast",    title: "Jeûne intermittent",   icon: "clock",               colorHex: 0x9B6CF1, section: "Nutrition"),
         GoalDef(id: "focus",   title: "Temps de focus",       icon: "brain.head.profile",  colorHex: 0x9B6CF1, section: "Focus"),
