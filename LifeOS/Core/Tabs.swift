@@ -2023,12 +2023,12 @@ struct ProfileView: View {
                 .foregroundStyle(.secondary)
                 .kerning(1.2)
             HStack(alignment: .top, spacing: 14) {
-                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                Capsule()
                     .fill(Color.accentColor)
                     .frame(width: 3)
                 Text(todayTip)
                     .font(.system(size: 13, weight: .regular))
-                    .foregroundStyle(Color.primary.opacity(0.72))
+                    .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
