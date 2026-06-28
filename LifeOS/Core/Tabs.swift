@@ -734,7 +734,7 @@ struct DailyBriefingView: View {
                         sleepQuality > 0 && morningMood > 0 && morningFatigue > 0
                         ? Color.accentColor
                         : Color.secondary.opacity(0.3),
-                        in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous)
                     )
                 }
                 .buttonStyle(LifeOSPressStyle())
