@@ -1854,15 +1854,21 @@ struct ProfileView: View {
     // MARK: - Tip Card
 
     private var tipCard: some View {
-        HStack(spacing: 14) {
-            RoundedRectangle(cornerRadius: 2, style: .continuous)
-                .fill(Color.accentColor)
-                .frame(width: 3)
-            Text(todayTip)
-                .font(.system(size: 13, weight: .regular))
+        VStack(alignment: .leading, spacing: 10) {
+            Text("CONSEIL DU JOUR")
+                .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer()
+                .kerning(1.2)
+            HStack(spacing: 14) {
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(Color.accentColor)
+                    .frame(width: 3)
+                Text(todayTip)
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundStyle(Color.primary.opacity(0.72))
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+            }
         }
         .padding(18)
         .background(neoCard)
