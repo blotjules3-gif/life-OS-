@@ -1112,8 +1112,6 @@ struct ProfileView: View {
     private let glassML = 250
     private var glassesToday: Int { waterToday / glassML }
     private var glassesGoalCalc: Int { max(1, waterGoal / glassML) }
-    private var bottlesEquivalent: Double { Double(waterGoal) / 1500.0 }
-    private var bottlesToday: Double { Double(waterToday) / 1500.0 }
 
     private var alarmRingsNextDay: Bool {
         guard wakeupEnabled else { return false }
