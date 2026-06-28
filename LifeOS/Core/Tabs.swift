@@ -1065,12 +1065,12 @@ struct ProfileView: View {
             switch mod {
             case .nutrition:
                 let kp = min(1.0, Double(kcalToday) / Double(max(1, kcalGoal)))
-                tasks.append(ProfileTaskItem(icon: "flame.fill", title: "Calories", subtitle: "\(kcalToday) / \(kcalGoal) kcal", color: Color(hex: 0x4CC38A), progress: kp))
+                tasks.append(ProfileTaskItem(icon: "flame.fill", title: "Calories", subtitle: "\(kcalToday) / \(kcalGoal) kcal", color: Color(hex: 0xF1746C), progress: kp))
                 let wp = min(1.0, Double(waterToday) / Double(max(1, waterGoal)))
                 tasks.append(ProfileTaskItem(icon: "drop.fill", title: "Hydratation", subtitle: "\(glassesToday) / \(glassesGoalCalc) verres", color: Color(hex: 0x3CB2E0), progress: wp))
             case .fitness:
                 let sp = min(1.0, Double(steps) / Double(max(1, stepGoal)))
-                tasks.append(ProfileTaskItem(icon: "figure.run", title: "Activité", subtitle: "\(steps) / \(stepGoal) pas", color: Color(hex: 0xF1746C), progress: sp))
+                tasks.append(ProfileTaskItem(icon: "figure.run", title: "Activité", subtitle: "\(steps) / \(stepGoal) pas", color: Color(hex: 0x4CC38A), progress: sp))
             case .productivity:
                 let hp = habits.isEmpty ? 1.0 : min(1.0, Double(habitsDone) / Double(habits.count))
                 tasks.append(ProfileTaskItem(icon: "checklist", title: "Habitudes", subtitle: "\(habitsDone)/\(habits.count) complétées", color: Color(hex: 0x9B6CF1), progress: hp))
