@@ -2617,7 +2617,7 @@ struct GoalEditorSheet: View {
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(color)
                     .frame(width: 28, height: 28)
-                    .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 VStack(alignment: .leading, spacing: 1) {
                     Text(goal.title).font(.system(size: 14)).foregroundStyle(.primary)
                     Text(goal.section).font(.system(size: 11)).foregroundStyle(.secondary)
