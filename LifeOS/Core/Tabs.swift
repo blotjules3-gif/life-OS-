@@ -2142,9 +2142,9 @@ struct ProfileView: View {
 
             HStack {
                 Text("LifeOS \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0") · Données stockées localement")
-                    .font(.caption).foregroundStyle(.tertiary)
+                    .font(.system(size: 12)).foregroundStyle(.tertiary)
                 Spacer()
-                Text("\(AppCategory.allCases.count) modules").font(.caption).foregroundStyle(.tertiary)
+                Text("\(AppCategory.allCases.count) modules").font(.system(size: 12)).foregroundStyle(.tertiary)
             }
             .padding(.horizontal, 4)
         }
