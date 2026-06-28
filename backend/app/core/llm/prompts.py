@@ -508,7 +508,7 @@ def build_system_prompt(
             "career": "Carrière",
             "cycle": "Cycle menstruel",
             "looks": "Corps",
-            "pets": "Animaux",
+            "pets": "Maison (animaux)",  # redirige vers home
         }
         label = module_labels.get(module_type, module_type)
         config_str = ", ".join(f"{k}={v}" for k, v in module_config.items()) if module_config else "non configuré"
