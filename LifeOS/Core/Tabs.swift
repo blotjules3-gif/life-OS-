@@ -1820,6 +1820,7 @@ struct ProfileView: View {
                         .fill(task.color)
                         .frame(width: g.size.width * min(1, max(0, task.progress)), height: 4)
                         .animation(.spring(duration: 1.0).delay(0.2), value: appeared)
+                        .animation(.spring(duration: 0.5), value: task.progress)
                 }
             }
             .frame(height: 4)
