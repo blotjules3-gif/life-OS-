@@ -1964,12 +1964,14 @@ struct ProfileView: View {
                     HStack(alignment: .lastTextBaseline, spacing: 3) {
                         Text("\(glassesToday)")
                             .font(.system(size: 22, weight: .black, design: .rounded).monospacedDigit())
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(waterProgress >= 1 ? waterColor : .primary)
                             .contentTransition(.numericText())
                             .animation(.spring(duration: 0.38, bounce: 0.1), value: glassesToday)
+                            .animation(.spring(duration: 0.5, bounce: 0.1), value: waterProgress >= 1)
                         Text("/ \(glassesGoalCalc) verres")
                             .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(waterProgress >= 1 ? waterColor.opacity(0.7) : .secondary)
+                            .animation(.spring(duration: 0.5, bounce: 0.1), value: waterProgress >= 1)
                     }
                 }
                 Spacer()
