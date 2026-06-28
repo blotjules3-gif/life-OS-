@@ -1816,6 +1816,7 @@ struct ProfileView: View {
 
     private var bentoRow: some View {
         let waterColor = Color(hex: 0x3CB2E0)
+        let waterProgress = min(1.0, Double(waterToday) / Double(max(1, waterGoal)))
         return VStack(spacing: 0) {
             HStack(spacing: 14) {
                 ZStack {
@@ -1866,7 +1867,21 @@ struct ProfileView: View {
                 }
             }
             .padding(.horizontal, 18)
-            .padding(.vertical, 14)
+            .padding(.top, 14)
+            .padding(.bottom, 10)
+
+            GeometryReader { g in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(waterColor.opacity(0.10)).frame(height: 3)
+                    Capsule()
+                        .fill(waterColor)
+                        .frame(width: g.size.width * waterProgress, height: 3)
+                        .animation(.spring(duration: 0.6), value: waterProgress)
+                }
+            }
+            .frame(height: 3)
+            .padding(.horizontal, 18)
+            .padding(.bottom, 14)
         }
         .background(neoCard)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
