@@ -1554,7 +1554,7 @@ struct ProfileView: View {
                 } label: {
                     ZStack {
                         if profileSection == idx {
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            RoundedRectangle(cornerRadius: 15, style: .continuous)
                                 .fill(neoCard)
                                 .shadow(color: neoShadowLight, radius: 5, x: -2, y: -2)
                                 .shadow(color: neoShadowDark, radius: 5, x: 2, y: 2)
