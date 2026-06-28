@@ -132,11 +132,40 @@ final class AIAssistantViewModel: ObservableObject {
         messages = stored.map { DisplayMessage(from: $0) }
 
         if !firstLaunchDone {
+            prefillPendingHabits()
             triggerWelcome()
         } else {
             checkForNewModules()
             checkAbandonedChallenges()
         }
+    }
+
+    private func prefillPendingHabits() {
+        guard let ctx = modelContext else { return }
+        let habitModules = habitModulesRaw.split(separator: ",").map(String.init)
+        guard !habitModules.isEmpty else { return }
+
+        let defaults: [String: (name: String, icon: String, colorHex: Int)] = [
+            "fitness":      ("Seance de sport",             "figure.run",                0xF1746C),
+            "nutrition":    ("Objectif calories du jour",    "fork.knife",                0x4CC38A),
+            "sleep":        ("Coucher a l'heure cible",     "moon.stars.fill",           0x6C7BF1),
+            "productivity": ("Valider mes habitudes",        "checklist",                 0x3CB2E0),
+            "mind":         ("5 min de meditation",          "brain.head.profile",        0x9B6CF1),
+            "looks":        ("Routine soin du soir",         "face.smiling",              0xE0A23C),
+            "learning":     ("15 min d'apprentissage",       "book.fill",                 0xE0C13C),
+            "social":       ("Contacter quelqu'un",          "person.2.fill",             0xF16CB0),
+            "finance":      ("Verifier mon budget",          "creditcard.fill",           0x4CC38A),
+            "career":       ("Avancer sur mes objectifs",    "briefcase.fill",            0xE07B3C),
+            "invest":       ("Suivre mon portefeuille",      "chart.line.uptrend.xyaxis", 0x46C9A8),
+            "home":         ("Tache maison du jour",         "house.fill",                0x6CA0F1),
+        ]
+
+        for module in habitModules {
+            guard let d = defaults[module] else { continue }
+            let habit = Habit(name: d.name, icon: d.icon, colorHex: d.colorHex, isPending: true, moduleTag: module)
+            ctx.insert(habit)
+        }
+        try? ctx.save()
     }
 
     private func checkForNewModules() {
