@@ -2041,7 +2041,10 @@ struct ProfileView: View {
                         Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
                     }
                 } action: {
-                    Task { healthConnected = await HealthService.shared.requestAuthorization() }
+                    Task {
+                        let result = await HealthService.shared.requestAuthorization()
+                        withAnimation(.spring(duration: 0.38, bounce: 0.1)) { healthConnected = result }
+                    }
                 }
                 Divider().opacity(0.1).padding(.leading, 50)
                 settingsRow(icon: "bell.fill", iconColor: Color(hex: 0xE0A23C), label: "Activer les rappels") {
