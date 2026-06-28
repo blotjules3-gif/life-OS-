@@ -1417,12 +1417,13 @@ struct ProfileView: View {
                         }
                     Button { showWakeupDetail = true } label: {
                         Text("Personnaliser")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(accentColor)
-                            .padding(.horizontal, 10).padding(.vertical, 5)
+                            .frame(minHeight: 44)
+                            .padding(.horizontal, 14)
                             .background(accentColor.opacity(0.12), in: Capsule())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(LifeOSPressStyle())
                 }
             }
             .padding(.horizontal, 20).padding(.top, 20).padding(.bottom, 16)
