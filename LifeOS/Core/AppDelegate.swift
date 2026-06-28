@@ -129,8 +129,9 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     }
 }
 
-    // MARK: - APNs Token
+// MARK: - APNs Token
 
+extension AppDelegate {
     func application(_ application: UIApplication,
                      didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         let token = deviceToken.map { String(format: "%02x", $0) }.joined()
@@ -139,7 +140,6 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
 
     func application(_ application: UIApplication,
                      didFailToRegisterForRemoteNotificationsWithError error: Error) {
-        // Silencieux en dev (simulateur ne supporte pas les APNs)
         #if DEBUG
         print("[APNs] Registration failed: \(error.localizedDescription)")
         #endif
