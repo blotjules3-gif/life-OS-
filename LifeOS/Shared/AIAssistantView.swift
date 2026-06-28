@@ -144,6 +144,8 @@ final class AIAssistantViewModel: ObservableObject {
         guard let ctx = modelContext else { return }
         let habitModules = habitModulesRaw.split(separator: ",").map(String.init)
         guard !habitModules.isEmpty else { return }
+        let existingTags = Set((try? ctx.fetch(FetchDescriptor<Habit>()))?.map { $0.moduleTag } ?? [])
+        guard existingTags.isEmpty else { return }
 
         let defaults: [String: (name: String, icon: String, colorHex: Int)] = [
             "fitness":      ("Seance de sport",             "figure.run",                0xF1746C),
