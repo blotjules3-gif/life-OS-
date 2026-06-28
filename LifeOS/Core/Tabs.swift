@@ -1937,7 +1937,7 @@ struct ProfileView: View {
                                         .font(.system(size: 16, weight: .semibold))
                                         .foregroundStyle(.white)
                                 }
-                                .overlay(Circle().stroke(Color.primary, lineWidth: selected ? 2.5 : 0))
+                                .overlay(Circle().stroke(th.accent, lineWidth: selected ? 2.5 : 0))
                                 .padding(2)
                                 Text(th.label)
                                     .font(.system(size: 11, weight: selected ? .semibold : .regular))
