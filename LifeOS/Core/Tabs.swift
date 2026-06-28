@@ -1519,11 +1519,21 @@ struct ProfileView: View {
                                 .shadow(color: neoShadowDark, radius: 5, x: 2, y: 2)
                                 .matchedGeometryEffect(id: "pickerPill", in: pickerNS)
                         }
-                        Text(label)
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(profileSection == idx ? .primary : .secondary)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 11)
+                        HStack(spacing: 5) {
+                            Text(label)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(profileSection == idx ? .primary : .secondary)
+                            if idx == 1 && !challenges.isEmpty {
+                                Text("\(challenges.count)")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 2)
+                                    .background(Color.accentColor, in: Capsule())
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 11)
                     }
                 }
                 .buttonStyle(.plain)
