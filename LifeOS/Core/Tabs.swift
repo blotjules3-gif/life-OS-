@@ -735,7 +735,7 @@ struct DailyBriefingView: View {
                         in: RoundedRectangle(cornerRadius: 12, style: .continuous)
                     )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(LifeOSPressStyle())
                 .disabled(sleepQuality == 0 || morningMood == 0 || morningFatigue == 0 || checkinSubmitting)
             }
             .padding(18)
