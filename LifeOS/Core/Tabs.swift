@@ -2209,7 +2209,7 @@ struct ProfileView: View {
                     .font(.system(size: 12, weight: .bold)).foregroundStyle(iconColor)
                     .frame(width: 30, height: 30)
                     .background(iconColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-                Text(label).font(.subheadline).foregroundStyle(.primary)
+                Text(label).font(.system(size: 15, weight: .regular)).foregroundStyle(.primary)
                 Spacer()
                 trailing()
             }
