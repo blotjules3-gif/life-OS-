@@ -2213,7 +2213,7 @@ struct ProfileView: View {
                 Spacer()
                 trailing()
             }
-            .padding(.horizontal, 14).padding(.vertical, 13)
+            .padding(.horizontal, 14).padding(.vertical, 12)
         }
         .buttonStyle(LifeOSPressStyle())
     }
