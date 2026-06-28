@@ -1192,7 +1192,10 @@ struct ProfileView: View {
                         Group {
                             if profileSection == 0 {
                                 activeGoalsSection
-                                    .transition(.opacity)
+                                    .transition(.asymmetric(
+                                        insertion: .scale(scale: 0.94, anchor: .top).combined(with: .opacity),
+                                        removal: .opacity
+                                    ))
                             } else {
                                 VStack(alignment: .leading, spacing: 12) {
                                     HStack {
