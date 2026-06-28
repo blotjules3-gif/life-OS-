@@ -556,7 +556,7 @@ struct DailyBriefingView: View {
                     if !behavioralInsights.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Ce qu'on a appris sur toi")
-                                .font(.headline)
+                                .font(.system(size: 15, weight: .semibold))
                             VStack(spacing: 8) {
                                 ForEach(behavioralInsights, id: \.self) { insight in
                                     HStack(alignment: .top, spacing: 10) {
