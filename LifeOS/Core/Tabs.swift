@@ -2087,13 +2087,13 @@ struct ProfileView: View {
                         withAnimation(.spring(duration: 0.38, bounce: 0.1)) { healthConnected = result }
                     }
                 }
-                Divider().opacity(0.1).padding(.leading, 50)
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
                 settingsRow(icon: "bell.fill", iconColor: Color(hex: 0xE0A23C), label: "Activer les rappels") {
                     Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
                 } action: {
                     Task { _ = await NotificationManager.shared.requestAuthorization() }
                 }
-                Divider().opacity(0.1).padding(.leading, 50)
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
                 settingsRow(icon: "slider.horizontal.3", iconColor: Color.accentColor, label: "Modifier mes objectifs") {
                     Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
                 } action: {
