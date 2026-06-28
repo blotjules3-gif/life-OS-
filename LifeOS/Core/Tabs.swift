@@ -2865,7 +2865,8 @@ struct SleepCheckSheet: View {
 
                     Button { onContinue() } label: {
                         Text("Passer").font(.system(size: 14)).foregroundStyle(.secondary)
-                    }.buttonStyle(.plain)
+                            .frame(minHeight: 44)
+                    }.buttonStyle(LifeOSPressStyle())
                 }
                 .padding(.horizontal, 20)
                 .opacity(appeared ? 1 : 0).animation(.spring(duration: 0.5).delay(0.34), value: appeared)
