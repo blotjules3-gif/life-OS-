@@ -1330,6 +1330,7 @@ struct ProfileView: View {
                             ))
                             .frame(width: geo.size.width * progress, height: 3)
                             .animation(.spring(duration: 1.4).delay(0.2), value: appeared)
+                            .animation(.easeInOut(duration: 0.8), value: progress)
                     }
                 }
                 .frame(height: 3)
