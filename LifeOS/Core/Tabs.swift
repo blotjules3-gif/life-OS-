@@ -709,7 +709,7 @@ struct DailyBriefingView: View {
                                     : Color.clear,
                                     in: RoundedRectangle(cornerRadius: 10, style: .continuous)
                                 )
-                            }.buttonStyle(.plain)
+                            }.buttonStyle(LifeOSPressStyle())
                         }
                     }
                 }
