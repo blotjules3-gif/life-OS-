@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import AVFoundation
+import UserNotifications
 
 // MARK: - Réveil iPhone-style (plein écran)
 
