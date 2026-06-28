@@ -1072,8 +1072,9 @@ struct ProfileView: View {
                 let sp = min(1.0, Double(steps) / Double(max(1, stepGoal)))
                 tasks.append(ProfileTaskItem(icon: "figure.run", title: "Activité", subtitle: "\(steps) / \(stepGoal) pas", color: Color(hex: 0x4CC38A), progress: sp))
             case .productivity:
-                let hp = habits.isEmpty ? 1.0 : min(1.0, Double(habitsDone) / Double(habits.count))
-                tasks.append(ProfileTaskItem(icon: "checklist", title: "Habitudes", subtitle: "\(habitsDone)/\(habits.count) complétées", color: Color(hex: 0x9B6CF1), progress: hp))
+                let hp = habits.isEmpty ? 0.0 : min(1.0, Double(habitsDone) / Double(habits.count))
+                let hSub = habits.isEmpty ? "Aucune habitude active" : "\(habitsDone)/\(habits.count) complétées"
+                tasks.append(ProfileTaskItem(icon: "checklist", title: "Habitudes", subtitle: hSub, color: Color(hex: 0x9B6CF1), progress: hp))
             case .sleep:
                 tasks.append(ProfileTaskItem(icon: "moon.stars.fill", title: "Sommeil", subtitle: "Évaluer ta nuit", color: Color(hex: 0x6C7BF1), progress: 0))
             case .mind:
