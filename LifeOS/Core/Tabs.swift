@@ -1965,7 +1965,7 @@ struct ProfileView: View {
             }
 
             HStack {
-                Text("LifeOS 1.0 · Données stockées localement")
+                Text("LifeOS \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0") · Données stockées localement")
                     .font(.caption).foregroundStyle(.tertiary)
                 Spacer()
                 Text("\(AppCategory.allCases.count) modules").font(.caption).foregroundStyle(.tertiary)
