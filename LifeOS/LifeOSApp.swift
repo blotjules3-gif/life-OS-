@@ -61,9 +61,15 @@ struct LifeOSApp: App {
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: container != nil)
-            .preferredColorScheme(appTheme.scheme)   // thème : Couleur de l'app
+            .preferredColorScheme(appTheme.scheme)
             .tint(appTheme.accent)
             .task { await buildContainer() }
+            .alert("Problème de données", isPresented: $migrationFailed) {
+                Button("Réessayer") { Task { await buildContainer() } }
+                Button("Continuer (données perdues)", role: .destructive) { migrationFailed = false }
+            } message: {
+                Text("LifeOS n'a pas pu charger ta base de données. Tes données sont en sécurité — réessaie ou contacte le support.")
+            }
         }
     }
 
