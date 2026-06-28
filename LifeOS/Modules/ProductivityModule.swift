@@ -168,18 +168,47 @@ struct TimeBlockView: View {
 
 struct HabitTrackerView: View {
     @Environment(\.modelContext) private var ctx
-    @Query(sort: \Habit.createdAt) private var habits: [Habit]
+    @Query(sort: \Habit.createdAt) private var allHabits: [Habit]
     @State private var showAdd = false
+
+    private var pendingHabits: [Habit] { allHabits.filter { $0.isPending } }
+    private var activeHabits: [Habit] { allHabits.filter { !$0.isPending } }
 
     var body: some View {
         ZStack {
             Theme.background
             ScrollView {
                 VStack(spacing: 14) {
-                    if habits.isEmpty {
+                    if !pendingHabits.isEmpty {
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack(spacing: 6) {
+                                Circle()
+                                    .fill(Color.orange)
+                                    .frame(width: 6, height: 6)
+                                Text("PROPOSEES PAR LIFEOS")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(.secondary)
+                                    .kerning(1.2)
+                            }
+                            ForEach(pendingHabits) { h in
+                                PendingHabitRow(habit: h)
+                            }
+                        }
+                        Divider().opacity(0.4)
+                    }
+
+                    if activeHabits.isEmpty && pendingHabits.isEmpty {
                         EmptyState(icon: "square.grid.3x3", title: "Aucune habitude", message: "Crée ta première habitude à suivre.")
-                    } else {
-                        ForEach(habits) { h in HabitRow(habit: h) }
+                    } else if !activeHabits.isEmpty {
+                        VStack(alignment: .leading, spacing: 10) {
+                            if !pendingHabits.isEmpty {
+                                Text("MES HABITUDES")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(.secondary)
+                                    .kerning(1.2)
+                            }
+                            ForEach(activeHabits) { h in HabitRow(habit: h) }
+                        }
                     }
                 }.padding(Theme.pad)
             }
@@ -187,6 +216,64 @@ struct HabitTrackerView: View {
         .navigationTitle("Habit tracker").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
         .sheet(isPresented: $showAdd) { HabitEditor() }
+    }
+}
+
+struct PendingHabitRow: View {
+    @Environment(\.modelContext) private var ctx
+    let habit: Habit
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: habit.icon)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Color(hex: UInt(habit.colorHex)))
+                .frame(width: 36, height: 36)
+                .background(Color(hex: UInt(habit.colorHex)).opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+            Text(habit.name)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+
+            Spacer()
+
+            Button {
+                withAnimation(.spring(duration: 0.25)) {
+                    habit.isPending = false
+                    try? ctx.save()
+                }
+                Haptics.tap()
+            } label: {
+                Text("Activer")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(hex: UInt(habit.colorHex)), in: Capsule())
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                ctx.delete(habit)
+                try? ctx.save()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(
+            Color.orange.opacity(0.06),
+            in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Color.orange.opacity(0.2), lineWidth: 1)
+        )
     }
 }
 
