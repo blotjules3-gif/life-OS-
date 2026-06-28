@@ -122,6 +122,43 @@ struct ShortcutsHomeView: View {
     private var fastHours: Double { fasts.first(where: { $0.isActive }).map { $0.elapsed / 3600 } ?? 0 }
     private var todayMood: MoodEntry? { moods.first { Calendar.current.isDateInToday($0.date) } }
 
+    // MARK: données hebdo
+    private var activeHabits: [Habit] { habits.filter { !$0.isPending } }
+    private var weekDays: [Date] {
+        let cal = Calendar.current
+        return (0..<7).reversed().map { cal.date(byAdding: .day, value: -$0, to: cal.startOfDay(for: .now))! }
+    }
+    private func completionRatio(for day: Date) -> Double {
+        guard !activeHabits.isEmpty else { return 0 }
+        let done = activeHabits.filter { h in h.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: day) } }.count
+        return Double(done) / Double(activeHabits.count)
+    }
+    private var weeklyScore: Double {
+        guard !activeHabits.isEmpty else { return 0 }
+        let total = weekDays.reduce(0.0) { $0 + completionRatio(for: $1) }
+        return total / 7.0
+    }
+    private var perfectDaysCount: Int {
+        weekDays.filter { completionRatio(for: $0) >= 1.0 && !activeHabits.isEmpty }.count
+    }
+    private var bestHabitWeek: Habit? {
+        activeHabits.max { a, b in
+            let ca = weekDays.filter { d in a.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: d) } }.count
+            let cb = weekDays.filter { d in b.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: d) } }.count
+            return ca < cb
+        }
+    }
+    private var weeklyMotivation: String {
+        let pct = Int(weeklyScore * 100)
+        switch pct {
+        case 90...100: return "Semaine exceptionnelle. Continue comme ca."
+        case 70..<90:  return "Bonne semaine. Tu progresses."
+        case 50..<70:  return "Mi-chemin. Un effort de plus demain."
+        case 1..<50:   return "La regularite s'installe peu a peu."
+        default:       return "La semaine commence maintenant."
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
