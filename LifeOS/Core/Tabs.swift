@@ -274,7 +274,7 @@ struct WakeUpView: View {
     }
 
     private var alarmCard: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 16) {
             DatePicker("", selection: $alarmTime, displayedComponents: .hourAndMinute)
                 .datePickerStyle(.wheel)
                 .labelsHidden()
