@@ -343,7 +343,7 @@ struct WakeUpView: View {
                                 .frame(width: 30, height: 30)
                                 .background(cat.tint, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                             VStack(alignment: .leading, spacing: 1) {
-                                Text(cat.title).font(.subheadline.weight(.medium))
+                                Text(cat.title).font(.system(size: 14, weight: .medium))
                                 Text(cat.subtitle).font(.caption).foregroundStyle(.secondary)
                             }
                             Spacer()
