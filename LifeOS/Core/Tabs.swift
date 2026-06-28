@@ -813,7 +813,7 @@ struct DailyBriefingView: View {
             }
             await MainActor.run {
                 checkinSubmitting = false
-                withAnimation(.spring(response: 0.4)) { checkinDone = true }
+                withAnimation(.spring(duration: 0.4, bounce: 0.1)) { checkinDone = true }
             }
         }
     }
