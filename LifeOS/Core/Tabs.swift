@@ -631,6 +631,7 @@ struct DailyBriefingView: View {
     @ViewBuilder private var morningCheckinCard: some View {
         if checkinDone || todayEnergyScore > 0 {
             energyScoreDisplayCard
+                .transition(.scale(scale: 0.88, anchor: .top).combined(with: .opacity))
         } else {
             VStack(alignment: .leading, spacing: 18) {
                 Text("Bilan du matin")
