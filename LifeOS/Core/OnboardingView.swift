@@ -1288,7 +1288,7 @@ struct OnboardingModuleSetup: View {
         if currentIndex < modulesWithQuestions.count - 1 {
             withAnimation(.spring(duration: 0.35)) { currentIndex += 1 }
         } else {
-            onNext(answers)
+            withAnimation(.spring(duration: 0.35)) { showHabitPicker = true }
         }
     }
 }
