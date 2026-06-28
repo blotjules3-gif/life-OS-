@@ -531,6 +531,7 @@ private let careerTools: [CategoryTool] = [
 ]
 
 private let learningTools: [CategoryTool] = [
+    .init("character.bubble.fill", "Langues", "Vocabulaire en répétition espacée", tint: .learnTint) { LanguagesView() },
     .init("rectangle.on.rectangle.angled", "Flashcards", "Répétition espacée (SM-2)", tint: .learnTint) { FlashcardsView() },
     .init("lightbulb.max.fill", "Micro-learning du jour", "Une pépite par jour", tint: .learnTint) { MicroLearningView() },
     .init("books.vertical.fill", "Résumés de livres", "Tes idées clés — Blinkist", tint: .learnTint) { BookSummariesView() },
