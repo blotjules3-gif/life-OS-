@@ -1127,6 +1127,14 @@ struct ProfileView: View {
         let total = max(0, Int(end.timeIntervalSince(.now) / 60))
         return total % 60
     }
+    private var alarmRingsNextDay: Bool {
+        guard wakeupEnabled else { return false }
+        let cal = Calendar.current
+        let h = cal.component(.hour, from: .now)
+        let m = cal.component(.minute, from: .now)
+        return wakeupHour < h || (wakeupHour == h && wakeupMinute <= m)
+    }
+
     private var islandBg: some ShapeStyle {
         LinearGradient(
             colors: [appTheme.accent.opacity(0.72), Color(hex: 0x1A1A22).opacity(0.88)],
