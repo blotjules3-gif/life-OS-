@@ -2007,7 +2007,7 @@ struct ProfileView: View {
                             }
                             .frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(LifeOSPressStyle())
                     }
                 }
                 Text("Thème actif dans toute l'app — modifiable à tout moment.")
