@@ -659,7 +659,7 @@ struct DailyBriefingView: View {
                     }
                 }
 
-                Divider()
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1)
 
                 // Humeur
                 VStack(alignment: .leading, spacing: 8) {
