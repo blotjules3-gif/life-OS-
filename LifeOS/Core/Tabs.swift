@@ -1443,7 +1443,7 @@ struct ProfileView: View {
 
         return HStack(spacing: 16) {
             ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(color.opacity(0.15))
                     .frame(width: 52, height: 52)
                 Image(systemName: mod?.icon ?? "star.fill")
