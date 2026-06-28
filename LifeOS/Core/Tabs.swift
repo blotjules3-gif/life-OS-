@@ -1672,9 +1672,14 @@ struct ProfileView: View {
 
     private var challengesEmptyState: some View {
         VStack(spacing: 16) {
-            Image(systemName: "flag.checkered")
-                .font(.system(size: 32, weight: .semibold))
-                .foregroundStyle(Color.accentColor.opacity(0.5))
+            ZStack {
+                Circle()
+                    .fill(Color.accentColor.opacity(0.10))
+                    .frame(width: 64, height: 64)
+                Image(systemName: "flag.checkered")
+                    .font(.system(size: 26, weight: .semibold))
+                    .foregroundStyle(Color.accentColor.opacity(0.75))
+            }
             VStack(spacing: 6) {
                 Text("Aucun défi actif")
                     .font(.system(size: 15, weight: .semibold))
@@ -1694,7 +1699,8 @@ struct ProfileView: View {
                         .font(.system(size: 13, weight: .semibold))
                 }
                 .foregroundStyle(Color.accentColor)
-                .padding(.horizontal, 18).padding(.vertical, 9)
+                .frame(minHeight: 44)
+                .padding(.horizontal, 20)
                 .background(Color.accentColor.opacity(0.1), in: Capsule())
             }
             .buttonStyle(LifeOSPressStyle())
