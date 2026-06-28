@@ -8,6 +8,7 @@ struct LifeOSApp: App {
     @StateObject private var alarm = AlarmManager.shared
 
     @State private var container: ModelContainer? = nil
+    @State private var migrationFailed = false
     @AppStorage("onboardingDone") private var onboardingDone = false
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
     @AppStorage("appTheme") private var appThemeRaw = "classic"
