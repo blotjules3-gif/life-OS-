@@ -60,8 +60,10 @@ struct OnboardingView: View {
     @AppStorage("wakeupHour") private var savedWakeupHour = 7
     @AppStorage("wakeupMinute") private var savedWakeupMinute = 0
     @AppStorage("wakeupEnabled") private var savedWakeupEnabled = false
+    @AppStorage("habitModulesRaw") private var habitModulesRaw = ""
 
     @AppStorage("lifeProfile") private var savedLifeProfile = ""
+    @Environment(\.modelContext) private var ctx
 
     @State private var step = 0
     @State private var name = ""
