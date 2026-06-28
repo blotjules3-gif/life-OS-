@@ -2261,12 +2261,12 @@ struct WakeUpPersonalizationSheet: View {
                             } label: {
                                 Text(name)
                                     .font(.system(size: 12, weight: .semibold))
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 8)
+                                    .frame(maxWidth: .infinity, minHeight: 44)
                                     .background(on ? Color(hex: 0xE07B3C) : Theme.bg, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                                     .foregroundStyle(on ? .white : .secondary)
+                                    .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(LifeOSPressStyle())
                         }
                     }
                     .padding(.vertical, 4)
