@@ -49,10 +49,10 @@ final class WeeklyModuleSuggester {
         content.sound = .default
         content.interruptionLevel = .passive
 
-        // Chaque lundi à 9h
+        // Chaque lundi à 10h (décalé par rapport aux pending_habits à 9h — évite la collision)
         var comps = DateComponents()
         comps.weekday = 2  // Lundi
-        comps.hour = 9
+        comps.hour = 10
         comps.minute = 0
         let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
         let request = UNNotificationRequest(
