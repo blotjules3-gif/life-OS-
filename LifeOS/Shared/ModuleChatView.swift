@@ -175,6 +175,30 @@ struct ModuleChatView: View {
 
     private var canSend: Bool { !inputText.trimmingCharacters(in: .whitespaces).isEmpty && !isLoading }
 
+    private var moduleChatOfflineBanner: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(Color.orange)
+                .frame(width: 6, height: 6)
+            Text("Serveur inaccessible")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.primary)
+            Spacer()
+            Button {
+                isServerOffline = false
+                sendMessage()
+            } label: {
+                Text("Reessayer")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(appTheme.accent)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 9)
+        .background(Color.orange.opacity(0.1))
+    }
+
     // MARK: - Send Logic
 
     private func sendMessage() {
