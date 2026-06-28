@@ -151,12 +151,14 @@ final class NotificationManager {
         let content = UNMutableNotificationContent()
         content.title = "Habitudes en attente"
         content.body = pendingCount == 1
-            ? "1 habitude proposée t'attend. Quelques secondes pour l'activer."
+            ? "1 habitude proposée t'attend."
             : "\(pendingCount) habitudes proposées t'attendent."
         content.sound = .default
         content.interruptionLevel = .active
+        // Une seule fois par semaine (lundi 9h) — pas tous les jours
         var comps = DateComponents()
-        comps.hour = 10
+        comps.weekday = 2 // lundi
+        comps.hour = 9
         comps.minute = 0
         let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
         let req = UNNotificationRequest(identifier: "lifeos.pending_habits", content: content, trigger: trigger)
