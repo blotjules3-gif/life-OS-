@@ -1069,6 +1069,10 @@ struct ProfileView: View {
                 tasks.append(ProfileTaskItem(icon: "flame.fill", title: "Calories", subtitle: "\(kcalToday) / \(kcalGoal) kcal", color: Color(hex: 0xF1746C), progress: kp))
                 let wp = min(1.0, Double(waterToday) / Double(max(1, waterGoal)))
                 tasks.append(ProfileTaskItem(icon: "drop.fill", title: "Hydratation", subtitle: "\(glassesToday) / \(glassesGoalCalc) verres", color: Color(hex: 0x3CB2E0), progress: wp))
+                if proteinGoal > 0 {
+                    let pp = min(1.0, Double(proteinToday) / Double(proteinGoal))
+                    tasks.append(ProfileTaskItem(icon: "fork.knife", title: "Protéines", subtitle: "\(proteinToday) / \(proteinGoal) g", color: Color(hex: 0xE0A23C), progress: pp))
+                }
             case .fitness:
                 let sp = min(1.0, Double(steps) / Double(max(1, stepGoal)))
                 tasks.append(ProfileTaskItem(icon: "figure.run", title: "Activité", subtitle: "\(steps) / \(stepGoal) pas", color: Color(hex: 0x4CC38A), progress: sp))
