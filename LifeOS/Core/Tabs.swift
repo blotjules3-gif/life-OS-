@@ -315,7 +315,7 @@ struct WakeUpView: View {
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(.primary)
                         Text("Voir mes priorités et objectifs du jour")
-                            .font(.caption)
+                            .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
