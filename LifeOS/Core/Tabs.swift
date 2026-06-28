@@ -1291,22 +1291,27 @@ struct ProfileView: View {
                                         ForEach(challenges) { challenge in
                                             ChallengeCard(challenge: challenge, onCheckin: {
                                                 Task {
-                                                    if let result = try? await AgentAPI.shared.checkinChallenge(id: challenge.id),
-                                                       let idx = challenges.firstIndex(where: { $0.id == challenge.id }) {
-                                                        let newStreak = (result["streak_days"]?.value as? Int) ?? challenges[idx].streak_days + 1
-                                                        let updated = challenges[idx]
-                                                        challenges[idx] = ChallengeOut(
-                                                            id: updated.id, title: updated.title,
-                                                            challenge_type: updated.challenge_type,
-                                                            daily_target: updated.daily_target, unit: updated.unit,
-                                                            duration_days: updated.duration_days, streak_days: newStreak,
-                                                            days_elapsed: updated.days_elapsed, days_since_checkin: 0,
-                                                            last_checkin_at: ISO8601DateFormatter().string(from: .now),
-                                                            notes: updated.notes, is_active: updated.is_active,
-                                                            started_at: updated.started_at
-                                                        )
-                                                        saveChallengesForWidget(challenges)
-                                                    }
+                                                    guard let result = try? await AgentAPI.shared.checkinChallenge(id: challenge.id),
+                                                          let idx = challenges.firstIndex(where: { $0.id == challenge.id })
+                                                    else { return }
+
+                                                    // Ignorer si le serveur signale un double check-in
+                                                    let status = result["status"]?.value as? String ?? ""
+                                                    guard status != "already_checked_in" else { return }
+
+                                                    let newStreak = (result["streak_days"]?.value as? Int) ?? challenges[idx].streak_days + 1
+                                                    let updated = challenges[idx]
+                                                    challenges[idx] = ChallengeOut(
+                                                        id: updated.id, title: updated.title,
+                                                        challenge_type: updated.challenge_type,
+                                                        daily_target: updated.daily_target, unit: updated.unit,
+                                                        duration_days: updated.duration_days, streak_days: newStreak,
+                                                        days_elapsed: updated.days_elapsed, days_since_checkin: 0,
+                                                        last_checkin_at: ISO8601DateFormatter().string(from: .now),
+                                                        notes: updated.notes, is_active: updated.is_active,
+                                                        started_at: updated.started_at
+                                                    )
+                                                    saveChallengesForWidget(challenges)
                                                 }
                                             })
                                         }
