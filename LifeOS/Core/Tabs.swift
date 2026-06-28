@@ -2281,10 +2281,10 @@ struct GoalEditorSheet: View {
         GoalDef(id: "water",   title: "Volume eau",           icon: "drop.fill",           colorHex: 0x3CB2E0, section: "Nutrition"),
         GoalDef(id: "kcal",    title: "Calories",             icon: "flame.fill",          colorHex: 0xF1746C, section: "Nutrition"),
         GoalDef(id: "protein", title: "Protéines",            icon: "fork.knife",          colorHex: 0xE0A23C, section: "Nutrition"),
-        GoalDef(id: "fast",    title: "Jeûne intermittent",   icon: "clock",               colorHex: 0x9B6CF1, section: "Nutrition"),
+        GoalDef(id: "fast",    title: "Jeûne intermittent",   icon: "clock",               colorHex: 0x5DCFA8, section: "Nutrition"),
         GoalDef(id: "focus",   title: "Temps de focus",       icon: "brain.head.profile",  colorHex: 0x9B6CF1, section: "Focus"),
-        GoalDef(id: "social",  title: "Réseaux sociaux max",  icon: "iphone.slash",        colorHex: 0xF07060, section: "Focus"),
-        GoalDef(id: "budget",  title: "Budget mensuel",       icon: "creditcard.fill",     colorHex: 0x4CC38A, section: "Finances"),
+        GoalDef(id: "social",  title: "Réseaux sociaux max",  icon: "iphone.slash",        colorHex: 0xE05A7A, section: "Focus"),
+        GoalDef(id: "budget",  title: "Budget mensuel",       icon: "creditcard.fill",     colorHex: 0x618EF1, section: "Finances"),
     ]
 
     private var hiddenIDs: Set<String> {
