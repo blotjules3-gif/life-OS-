@@ -649,9 +649,9 @@ struct DailyBriefingView: View {
                             } label: {
                                 Image(systemName: s <= sleepQuality ? "moon.stars.fill" : "moon.stars")
                                     .font(.system(size: 24))
-                                    .foregroundStyle(s <= sleepQuality ? Color(hex: 0x6B7FD4) : Color.secondary.opacity(0.4))
+                                    .foregroundStyle(s <= sleepQuality ? Color(hex: 0x6C7BF1) : Color.secondary.opacity(0.4))
                                     .frame(maxWidth: .infinity)
-                            }.buttonStyle(.plain)
+                            }.buttonStyle(LifeOSPressStyle())
                         }
                     }
                 }
