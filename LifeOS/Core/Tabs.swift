@@ -1518,7 +1518,7 @@ struct ProfileView: View {
 
     private var sectionPicker: some View {
         HStack(spacing: 0) {
-            ForEach([(0, "Aujourd'hui"), (1, "Objectifs")], id: \.0) { idx, label in
+            ForEach([(0, "Aujourd'hui"), (1, "Défis")], id: \.0) { idx, label in
                 Button {
                     withAnimation(.spring(duration: 0.3, bounce: 0.15)) { profileSection = idx }
                 } label: {
