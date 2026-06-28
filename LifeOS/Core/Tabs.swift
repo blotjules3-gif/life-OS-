@@ -3047,7 +3047,7 @@ struct ChallengeCard: View {
                         if challenge.streak_days > 0 {
                             Label("\(challenge.streak_days)j", systemImage: "flame.fill")
                                 .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(Color(hex: 0xE07B3C))
                         }
                     }
                 }
