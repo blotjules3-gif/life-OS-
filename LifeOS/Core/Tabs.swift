@@ -1189,22 +1189,60 @@ struct ProfileView: View {
                                 activeGoalsSection
                                     .transition(.opacity)
                             } else {
-                                if challengesLoading {
-                                    ProgressView()
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 36)
-                                        .background(neoCard)
-                                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                                        .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-                                        .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
+                                VStack(alignment: .leading, spacing: 12) {
+                                    HStack {
+                                        Text("MES DÉFIS")
+                                            .font(.system(size: 10, weight: .bold))
+                                            .foregroundStyle(.secondary)
+                                            .kerning(1.2)
+                                        if !challenges.isEmpty {
+                                            Spacer()
+                                            Text("\(challenges.count) actif\(challenges.count > 1 ? "s" : "")")
+                                                .font(.system(size: 12, weight: .semibold))
+                                                .foregroundStyle(.secondary)
+                                        }
+                                    }
+                                    .padding(.horizontal, 4)
+
+                                    if challengesLoading {
+                                        ProgressView()
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 36)
+                                            .background(neoCard)
+                                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                                            .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+                                            .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
+                                            .transition(.opacity)
+                                    } else if challenges.isEmpty {
+                                        challengesEmptyState
+                                            .transition(.opacity)
+                                    } else {
+                                        ForEach(challenges) { challenge in
+                                            ChallengeCard(challenge: challenge, onCheckin: {
+                                                Task {
+                                                    if let result = try? await AgentAPI.shared.checkinChallenge(id: challenge.id),
+                                                       let idx = challenges.firstIndex(where: { $0.id == challenge.id }) {
+                                                        let newStreak = (result["streak_days"]?.value as? Int) ?? challenges[idx].streak_days + 1
+                                                        let updated = challenges[idx]
+                                                        challenges[idx] = ChallengeOut(
+                                                            id: updated.id, title: updated.title,
+                                                            challenge_type: updated.challenge_type,
+                                                            daily_target: updated.daily_target, unit: updated.unit,
+                                                            duration_days: updated.duration_days, streak_days: newStreak,
+                                                            days_elapsed: updated.days_elapsed, days_since_checkin: 0,
+                                                            last_checkin_at: ISO8601DateFormatter().string(from: .now),
+                                                            notes: updated.notes, is_active: updated.is_active,
+                                                            started_at: updated.started_at
+                                                        )
+                                                        saveChallengesForWidget(challenges)
+                                                    }
+                                                }
+                                            })
+                                        }
                                         .transition(.opacity)
-                                } else if challenges.isEmpty {
-                                    challengesEmptyState
-                                        .transition(.opacity)
-                                } else {
-                                    activeChallengesSection
-                                        .transition(.opacity)
+                                    }
                                 }
+                                .transition(.opacity)
                             }
                         }
                         .animation(.easeInOut(duration: 0.18), value: profileSection)
