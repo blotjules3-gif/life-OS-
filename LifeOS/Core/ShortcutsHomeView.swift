@@ -227,9 +227,23 @@ struct ShortcutsHomeView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(habits.enumerated()), id: \.element.id) { idx, habit in
                         habitRow(habit, isLast: idx == habits.count - 1)
+                            .opacity(animatedHabitIDs.contains(habit.id) ? 1 : 0)
+                            .offset(y: animatedHabitIDs.contains(habit.id) ? 0 : 16)
                     }
                 }
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+            }
+        }
+        .onChange(of: habits.count) { _, _ in animateNewHabits() }
+        .onAppear { animateNewHabits() }
+    }
+
+    private func animateNewHabits() {
+        let newIDs = Set(habits.map { $0.id }).subtracting(animatedHabitIDs)
+        guard !newIDs.isEmpty else { return }
+        for (i, id) in newIDs.sorted(by: { $0.hashValue < $1.hashValue }).enumerated() {
+            withAnimation(.spring(duration: 0.45, bounce: 0.2).delay(Double(i) * 0.07)) {
+                animatedHabitIDs.insert(id)
             }
         }
     }
