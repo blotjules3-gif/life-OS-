@@ -131,6 +131,12 @@ struct LifeOSApp: App {
         .fullScreenCover(isPresented: $alarm.showBriefing) {
             DailyBriefingView(modules: recommendedModules, speakOnAppear: true)
         }
+        .sheet(isPresented: $showWeeklyBilan) {
+            WeeklyBilanView()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenWeeklyBilan)) { _ in
+            showWeeklyBilan = true
+        }
     }
 
     // MARK: - Reset journalier à minuit
