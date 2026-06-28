@@ -735,7 +735,7 @@ struct DailyBriefingView: View {
                     }
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 13)
+                    .padding(.vertical, 14)
                     .background(
                         sleepQuality > 0 && morningMood > 0 && morningFatigue > 0
                         ? Color.accentColor
