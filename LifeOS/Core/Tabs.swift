@@ -1748,113 +1748,62 @@ struct ProfileView: View {
     // MARK: - Eau rapide
 
     private var bentoRow: some View {
-        HStack(spacing: 14) {
-            let habitColor = Color(hex: 0x9B6CF1)
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 5) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(habitColor)
-                    Text("HABITUDES")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(habitColor)
-                        .kerning(0.4)
-                    Spacer()
-                    Text("\(habitsDone)/\(habits.count)")
-                        .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
-                        .foregroundStyle(habitColor)
-                }
-                if habits.isEmpty {
-                    Text("Aucune habitude")
-                        .font(.caption2).foregroundStyle(.tertiary)
-                    Spacer()
-                } else {
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: 5), spacing: 5) {
-                        ForEach(Array(habits.prefix(10).enumerated()), id: \.offset) { _, h in
-                            let done = h.completions.contains { Calendar.current.isDateInToday($0.date) }
-                            RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                .fill(done ? habitColor : habitColor.opacity(0.12))
-                                .frame(height: 13)
-                        }
-                    }
-                    Text(habitsDone == habits.count && !habits.isEmpty ? "Toutes" : "\(habits.count - habitsDone) restantes")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(habitsDone == habits.count ? habitColor : .secondary)
-                }
-            }
-            .padding(14)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(neoCard)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-            .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
-
-            let waterColor = Color(hex: 0x3CB2E0)
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 5) {
+        let waterColor = Color(hex: 0x3CB2E0)
+        return VStack(spacing: 0) {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(waterColor.opacity(0.14))
+                        .frame(width: 44, height: 44)
                     Image(systemName: "drop.fill")
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(waterColor)
+                }
+                VStack(alignment: .leading, spacing: 2) {
                     Text("EAU")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(waterColor)
-                        .kerning(0.4)
-                    Spacer()
-                    Text("\(glassesToday)/\(glassesGoalCalc)")
-                        .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
-                        .foregroundStyle(waterColor)
-                }
-
-                HStack(alignment: .lastTextBaseline, spacing: 4) {
-                    Text("\(glassesToday)")
-                        .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
-                        .foregroundStyle(.primary)
-                    Text("verres")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(.secondary)
+                        .kerning(1.2)
+                    HStack(alignment: .lastTextBaseline, spacing: 3) {
+                        Text("\(glassesToday)")
+                            .font(.system(size: 22, weight: .black, design: .rounded).monospacedDigit())
+                            .foregroundStyle(.primary)
+                        Text("/ \(glassesGoalCalc) verres")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
                 }
-
-                Text(String(format: "1 bouteille 1,5L = 6 verres · objectif %.1f bout.", bottlesEquivalent))
-                    .font(.system(size: 9))
-                    .foregroundStyle(.tertiary)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-
                 Spacer()
-
-                VStack(spacing: 6) {
+                HStack(spacing: 8) {
                     Button {
                         ctx.insert(WaterEntry(amountML: 250)); Haptics.tap()
                     } label: {
-                        Text("+1 verre (250 ml)")
-                            .font(.system(size: 12, weight: .semibold))
+                        Text("+1")
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(waterColor)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 7)
-                            .background(waterColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                            .frame(minWidth: 52, minHeight: 44)
+                            .background(waterColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                     .buttonStyle(LifeOSPressStyle())
                     Button {
                         ctx.insert(WaterEntry(amountML: 750)); Haptics.tap()
                     } label: {
-                        Text("+½ bouteille (750 ml)")
-                            .font(.system(size: 12, weight: .semibold))
+                        Text("+3")
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(waterColor)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 7)
-                            .background(waterColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                            .frame(minWidth: 52, minHeight: 44)
+                            .background(waterColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                     .buttonStyle(LifeOSPressStyle())
                 }
             }
-            .padding(14)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(neoCard)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-            .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
         }
-        .fixedSize(horizontal: false, vertical: true)
+        .background(neoCard)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+        .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
     }
 
     // MARK: - Tip Card
