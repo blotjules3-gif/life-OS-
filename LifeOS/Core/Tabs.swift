@@ -1690,7 +1690,7 @@ struct ProfileView: View {
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(Color.accentColor)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(LifeOSPressStyle())
                     }
                 }
                 .padding(.vertical, 24)
