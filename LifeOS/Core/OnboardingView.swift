@@ -1374,8 +1374,10 @@ struct OnboardingModuleSetup: View {
     private func advance() {
         if currentIndex < modulesWithQuestions.count - 1 {
             withAnimation(.spring(duration: 0.35)) { currentIndex += 1 }
-        } else {
+        } else if !skipHabitStep {
             withAnimation(.spring(duration: 0.35)) { showHabitPicker = true }
+        } else {
+            onNext(answers)
         }
     }
 }
