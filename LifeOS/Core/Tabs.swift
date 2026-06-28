@@ -1855,7 +1855,7 @@ struct ProfileView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
                             .background(neoCard)
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
                             .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
                     }
