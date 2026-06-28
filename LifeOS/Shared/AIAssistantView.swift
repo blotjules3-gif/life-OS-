@@ -91,6 +91,7 @@ final class AIAssistantViewModel: ObservableObject {
     @AppStorage("wakeupHour") private var wakeupHour = 7
     @AppStorage("wakeupMinute") private var wakeupMinute = 0
     @AppStorage("appTheme") private var appThemeRaw = "classic"
+    @AppStorage("habitModulesRaw") private var habitModulesRaw = ""
 
     var modelContext: ModelContext?
 
