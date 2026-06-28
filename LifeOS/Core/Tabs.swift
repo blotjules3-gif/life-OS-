@@ -1383,7 +1383,7 @@ struct ProfileView: View {
             Spacer(minLength: 8)
 
             VStack(alignment: .trailing, spacing: 0) {
-                Text(hoursRemaining > 0 ? "\(hoursRemaining)h" : "—")
+                Text(hoursRemaining > 0 ? "\(hoursRemaining)h" : minutesRemaining > 0 ? "\(minutesRemaining)m" : "0h")
                     .font(.system(size: 30, weight: .black, design: .rounded).monospacedDigit())
                     .foregroundStyle(color)
                 Text("restantes")
