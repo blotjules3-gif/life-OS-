@@ -755,7 +755,7 @@ struct DailyBriefingView: View {
             case 70..<85:  return Color(hex: 0x5DCFA8)
             case 50..<70:  return Color(hex: 0xFF9F0A)
             case 30..<50:  return Color(hex: 0xE07B3C)
-            default:       return Color(hex: 0xFF3B30)
+            default:       return Color(hex: 0xF1746C)
             }
         }()
 
@@ -3065,7 +3065,7 @@ struct SleepCheckSheet: View {
         case 70..<85:  return Color(hex: 0x5DCFA8)
         case 50..<70:  return Color(hex: 0xFF9F0A)
         case 30..<50:  return Color(hex: 0xE07B3C)
-        default:       return Color(hex: 0xFF3B30)
+        default:       return Color(hex: 0xF1746C)
         }
     }
 
