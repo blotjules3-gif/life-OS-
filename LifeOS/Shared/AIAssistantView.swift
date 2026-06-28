@@ -325,7 +325,8 @@ final class AIAssistantViewModel: ObservableObject {
 
         appendThinking()
         isLoading = true
-        firstLaunchDone = true
+        // NE PAS mettre firstLaunchDone = true ici — seulement après succès réseau.
+        // Si le serveur est offline on réessaie au prochain lancement.
         aiKnownModulesRaw = recommendedModulesRaw
 
         Task {
@@ -335,6 +336,8 @@ final class AIAssistantViewModel: ObservableObject {
                     module: nil,
                     conversationID: nil
                 )
+                // Succès — on marque le welcome comme vu seulement maintenant
+                firstLaunchDone = true
                 conversationID = response.conversation_id
                 isServerOffline = false
                 removeThinking()
@@ -347,9 +350,10 @@ final class AIAssistantViewModel: ObservableObject {
                 if let apiErr = error as? AgentAPIError, case .networkError = apiErr {
                     isServerOffline = true
                 }
+                // firstLaunchDone reste false → réessai au prochain lancement
                 let name = userName.isEmpty ? "" : " \(userName)"
                 appendAssistantMessage(
-                    "Bonjour\(name) ! Je suis ton coach LifeOS. Je connais tes objectifs et je vais t'aider à les atteindre étape par étape. Dis-moi juste par où tu veux commencer.",
+                    "Connexion impossible. Je te retrouve dès que le réseau est disponible. En attendant, dis-moi par où tu veux commencer.",
                     actions: []
                 )
             }
