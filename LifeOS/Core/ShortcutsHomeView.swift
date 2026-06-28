@@ -686,6 +686,12 @@ struct WeeklyBilanView: View {
         let week = moods.filter { m in weekDays.contains { cal.isDate(m.date, inSameDayAs: $0) } }
         return week.isEmpty ? 0 : Double(week.reduce(0) { $0 + $1.score }) / Double(week.count)
     }
+    private var weekMoods: [(Date, Int)] {
+        weekDays.compactMap { day -> (Date, Int)? in
+            guard let entry = moods.first(where: { cal.isDate($0.date, inSameDayAs: day) }) else { return nil }
+            return (day, entry.score)
+        }
+    }
     private var scoreColor: Color {
         let p = Int(weeklyScore * 100)
         if p >= 80 { return Color(hex: 0x4CC38A) }
