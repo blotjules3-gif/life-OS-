@@ -830,6 +830,383 @@ struct OnboardingResults: View {
     }
 }
 
+// MARK: - Module setup data
+
+struct ModuleQuestion: Identifiable {
+    let id: String
+    let question: String
+    let options: [ModuleOption]
+    let multiSelect: Bool
+
+    init(_ id: String, _ question: String, _ options: [ModuleOption], multiSelect: Bool = false) {
+        self.id = id; self.question = question; self.options = options; self.multiSelect = multiSelect
+    }
+}
+
+struct ModuleOption: Identifiable {
+    let id: String
+    let label: String
+    let icon: String
+
+    init(_ id: String, _ label: String, _ icon: String = "") {
+        self.id = id; self.label = label; self.icon = icon
+    }
+}
+
+private let moduleSetupQuestions: [AppCategory: [ModuleQuestion]] = [
+    .fitness: [
+        ModuleQuestion("location", "Ou tu t'entraines ?", [
+            ModuleOption("gym",     "En salle",    "building.2"),
+            ModuleOption("home",    "A la maison", "house"),
+            ModuleOption("outdoor", "Dehors",      "leaf"),
+            ModuleOption("mixed",   "Mixte",       "shuffle"),
+        ]),
+        ModuleQuestion("frequency", "Frequence par semaine ?", [
+            ModuleOption("1_2", "1 – 2 fois", "1.circle"),
+            ModuleOption("3",   "3 fois",     "3.circle"),
+            ModuleOption("4p",  "4 fois +",   "bolt"),
+        ]),
+        ModuleQuestion("goal", "Ton objectif sport ?", [
+            ModuleOption("loss",   "Perte de poids",  "scalemass"),
+            ModuleOption("muscle", "Prise de muscle", "dumbbell"),
+            ModuleOption("cardio", "Cardio",           "heart.circle"),
+            ModuleOption("flex",   "Souplesse",        "figure.mind.and.body"),
+        ]),
+    ],
+    .nutrition: [
+        ModuleQuestion("diet", "Regime alimentaire ?", [
+            ModuleOption("omni",  "Omnivore",   "fork.knife"),
+            ModuleOption("vege",  "Vegetarien", "leaf"),
+            ModuleOption("vegan", "Vegan",      "sparkles"),
+            ModuleOption("gf",    "Sans gluten","exclamationmark.circle"),
+        ]),
+        ModuleQuestion("goal", "Objectif nutrition ?", [
+            ModuleOption("loss",    "Perdre du poids",    "arrow.down.circle"),
+            ModuleOption("mass",    "Prendre de la masse","arrow.up.circle"),
+            ModuleOption("balance", "Equilibrer",          "equal.circle"),
+            ModuleOption("energy",  "Plus d'energie",     "bolt"),
+        ]),
+    ],
+    .sleep: [
+        ModuleQuestion("bedtime", "Tu te couches habituellement a ?", [
+            ModuleOption("early",    "Avant 22h",   "moon.stars"),
+            ModuleOption("normal",   "22h – 23h",   "moon"),
+            ModuleOption("late",     "23h – 0h",    "cloud.moon"),
+            ModuleOption("verylate", "Apres minuit","moon.zzz"),
+        ]),
+        ModuleQuestion("issue", "Problemes de sommeil ?", [
+            ModuleOption("falling", "Endormissement",  "zzz"),
+            ModuleOption("waking",  "Reveils nocturnes","alarm"),
+            ModuleOption("none",    "Aucun",            "checkmark.circle"),
+        ], multiSelect: true),
+    ],
+    .mind: [
+        ModuleQuestion("stress", "Niveau de stress actuel ?", [
+            ModuleOption("low",    "Faible",     "leaf"),
+            ModuleOption("medium", "Modere",     "minus.circle"),
+            ModuleOption("high",   "Eleve",      "exclamationmark.triangle"),
+            ModuleOption("vhigh",  "Tres eleve", "flame"),
+        ]),
+        ModuleQuestion("practice", "Tu pratiques deja ?", [
+            ModuleOption("meditation", "Meditation", "brain.head.profile"),
+            ModuleOption("journaling", "Journal",    "book"),
+            ModuleOption("sport",      "Sport",      "figure.run"),
+            ModuleOption("nothing",    "Rien encore","circle"),
+        ], multiSelect: true),
+    ],
+    .productivity: [
+        ModuleQuestion("peak", "Quand es-tu le plus productif ?", [
+            ModuleOption("morning",   "Le matin",    "sunrise"),
+            ModuleOption("afternoon", "L'apres-midi","sun.max"),
+            ModuleOption("evening",   "Le soir",     "sunset"),
+        ]),
+        ModuleQuestion("method", "Methode de travail ?", [
+            ModuleOption("pomodoro", "Pomodoro",  "timer"),
+            ModuleOption("tasks",    "To-do list","checklist"),
+            ModuleOption("block",    "Timeblock", "calendar"),
+            ModuleOption("free",     "Flux libre","wand.and.stars"),
+        ]),
+    ],
+    .finance: [
+        ModuleQuestion("goal", "Objectif principal ?", [
+            ModuleOption("save",   "Epargner plus",     "banknote"),
+            ModuleOption("debt",   "Rembourser dettes", "arrow.down.circle"),
+            ModuleOption("budget", "Suivre le budget",  "chart.pie"),
+            ModuleOption("invest", "Investir",           "chart.line.uptrend.xyaxis"),
+        ]),
+    ],
+    .invest: [
+        ModuleQuestion("level", "Ton niveau en investissement ?", [
+            ModuleOption("beginner",     "Debutant",     "star"),
+            ModuleOption("intermediate", "Intermediaire","star.leadinghalf.filled"),
+            ModuleOption("expert",       "Experimente",  "star.fill"),
+        ]),
+        ModuleQuestion("risk", "Appetit au risque ?", [
+            ModuleOption("low",    "Faible", "shield"),
+            ModuleOption("medium", "Modere", "shield.lefthalf.filled"),
+            ModuleOption("high",   "Eleve",  "bolt.shield"),
+        ]),
+    ],
+    .career: [
+        ModuleQuestion("goal", "Ton objectif carriere ?", [
+            ModuleOption("promotion", "Promotion",           "arrow.up.circle"),
+            ModuleOption("change",    "Changer de domaine",  "arrow.right.circle"),
+            ModuleOption("startup",   "Creer mon activite",  "flame"),
+            ModuleOption("job",       "Trouver un emploi",   "magnifyingglass"),
+        ]),
+    ],
+    .learning: [
+        ModuleQuestion("domain", "Domaine principal ?", [
+            ModuleOption("tech",      "Tech / Code","laptopcomputer"),
+            ModuleOption("business",  "Business",   "briefcase"),
+            ModuleOption("languages", "Langues",    "globe"),
+            ModuleOption("other",     "Autre",      "ellipsis.circle"),
+        ]),
+        ModuleQuestion("time", "Temps dispo par jour ?", [
+            ModuleOption("15",  "15 min","timer"),
+            ModuleOption("30",  "30 min","timer"),
+            ModuleOption("60",  "1h",    "clock"),
+            ModuleOption("60p", "1h+",   "infinity"),
+        ]),
+    ],
+    .looks: [
+        ModuleQuestion("goal", "Ton objectif ?", [
+            ModuleOption("loss",     "Perte de poids",    "arrow.down.circle"),
+            ModuleOption("mass",     "Prise de masse",    "arrow.up.circle"),
+            ModuleOption("tone",     "Tonifier",           "bolt"),
+            ModuleOption("wellness", "Bien-etre general",  "heart"),
+        ]),
+        ModuleQuestion("skincare", "Suivi skincare ?", [
+            ModuleOption("yes",  "Oui, routine complete", "checkmark.circle"),
+            ModuleOption("basic","Basique seulement",     "minus.circle"),
+            ModuleOption("no",   "Non",                   "xmark.circle"),
+        ]),
+    ],
+    .social: [
+        ModuleQuestion("type", "Tu es plutot ?", [
+            ModuleOption("intro", "Introverti",    "person"),
+            ModuleOption("extro", "Extraverti",    "person.3"),
+            ModuleOption("mixed", "Entre les deux","person.2"),
+        ]),
+        ModuleQuestion("goal", "Objectif social ?", [
+            ModuleOption("meet",   "Rencontrer du monde",     "person.badge.plus"),
+            ModuleOption("deepen", "Ameliorer mes relations", "heart.circle"),
+            ModuleOption("both",   "Les deux",                "sparkles"),
+        ]),
+    ],
+    .home: [
+        ModuleQuestion("type", "Type de logement ?", [
+            ModuleOption("apartment", "Appartement","building.2"),
+            ModuleOption("house",     "Maison",     "house"),
+            ModuleOption("studio",    "Studio",     "squareshape"),
+            ModuleOption("shared",    "Colocation", "person.2"),
+        ]),
+    ],
+    .mobility: [
+        ModuleQuestion("vehicle", "Transport principal ?", [
+            ModuleOption("car",     "Voiture",    "car"),
+            ModuleOption("moto",    "Moto",       "figure.outdoor.cycle"),
+            ModuleOption("bike",    "Velo",       "bicycle"),
+            ModuleOption("transit", "Transports", "bus"),
+        ]),
+    ],
+    .admin: [
+        ModuleQuestion("priority", "Ta priorite admin ?", [
+            ModuleOption("docs",      "Documents",  "doc.text"),
+            ModuleOption("taxes",     "Impots",     "eurosign.circle"),
+            ModuleOption("insurance", "Assurances", "shield"),
+            ModuleOption("all",       "Tout gerer", "tray.full"),
+        ]),
+    ],
+    .travel: [
+        ModuleQuestion("style", "Tu voyages plutot ?", [
+            ModuleOption("solo",    "Solo",      "person"),
+            ModuleOption("couple",  "En couple", "person.2"),
+            ModuleOption("family",  "En famille","person.3"),
+            ModuleOption("friends", "Entre amis","person.3.fill"),
+        ]),
+    ],
+    .cycle: [
+        ModuleQuestion("goal", "Ton objectif ?", [
+            ModuleOption("tracking",   "Suivi cycle",      "calendar"),
+            ModuleOption("fertility",  "Fertilite",         "heart.circle"),
+            ModuleOption("pain",       "Gestion douleurs",  "cross.circle"),
+            ModuleOption("understand", "Mieux comprendre",  "book"),
+        ]),
+    ],
+]
+
+// MARK: - Etape 5 : Setup par module
+
+struct OnboardingModuleSetup: View {
+    let modules: [AppCategory]
+    let onNext: ([String: [String: String]]) -> Void
+
+    @State private var currentIndex = 0
+    @State private var answers: [String: [String: String]] = [:]
+
+    private var modulesWithQuestions: [AppCategory] {
+        modules.filter { moduleSetupQuestions[$0]?.isEmpty == false }
+    }
+
+    private var currentModule: AppCategory? {
+        guard currentIndex < modulesWithQuestions.count else { return nil }
+        return modulesWithQuestions[currentIndex]
+    }
+
+    private var currentQuestions: [ModuleQuestion] {
+        guard let m = currentModule else { return [] }
+        return moduleSetupQuestions[m] ?? []
+    }
+
+    private var canAdvance: Bool {
+        guard let m = currentModule else { return true }
+        let dict = answers[m.rawValue] ?? [:]
+        return currentQuestions.filter { !$0.multiSelect }.allSatisfy { dict[$0.id] != nil }
+    }
+
+    var body: some View {
+        if modulesWithQuestions.isEmpty {
+            Color.clear.onAppear { onNext([:]) }
+        } else {
+            VStack(spacing: 0) {
+                subProgress
+                    .padding(.horizontal, 28)
+                    .padding(.bottom, 20)
+
+                if let m = currentModule {
+                    ScrollView(showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 28) {
+                            moduleHeader(m)
+                            ForEach(currentQuestions) { q in
+                                questionBlock(q, module: m)
+                            }
+                            Color.clear.frame(height: 8)
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.top, 4)
+                        .padding(.bottom, 16)
+                    }
+                }
+
+                OnboardingButton(
+                    label: currentIndex < modulesWithQuestions.count - 1 ? "Module suivant" : "Continuer",
+                    enabled: canAdvance
+                ) {
+                    advance()
+                }
+                .padding(.horizontal, 28)
+                .padding(.bottom, 52)
+                .animation(.spring(duration: 0.2), value: canAdvance)
+            }
+        }
+    }
+
+    private var subProgress: some View {
+        HStack(spacing: 6) {
+            ForEach(modulesWithQuestions.indices, id: \.self) { i in
+                Capsule()
+                    .fill(i <= currentIndex ? modulesWithQuestions[i].tint : Color.primary.opacity(0.1))
+                    .frame(height: 3)
+            }
+        }
+        .animation(.spring(duration: 0.3), value: currentIndex)
+    }
+
+    private func moduleHeader(_ m: AppCategory) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: m.icon)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 44, height: 44)
+                .background(m.tint, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(m.title)
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                Text("Module \(currentIndex + 1) sur \(modulesWithQuestions.count)")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func questionBlock(_ q: ModuleQuestion, module: AppCategory) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(q.question)
+                .font(.system(size: 15, weight: .semibold))
+
+            let raw = (answers[module.rawValue] ?? [:])[q.id] ?? ""
+            let selected = Set(raw.split(separator: ",").map(String.init).filter { !$0.isEmpty })
+            let cols = [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
+
+            LazyVGrid(columns: cols, spacing: 10) {
+                ForEach(q.options) { opt in
+                    let on = selected.contains(opt.id)
+                    Button {
+                        pick(opt, question: q, module: module)
+                        Haptics.tap()
+                    } label: {
+                        HStack(spacing: 8) {
+                            if !opt.icon.isEmpty {
+                                Image(systemName: opt.icon)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(on ? .white : module.tint)
+                            }
+                            Text(opt.label)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(on ? .white : .primary)
+                                .lineLimit(2)
+                                .minimumScaleFactor(0.8)
+                                .multilineTextAlignment(.leading)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 11)
+                        .background(
+                            on ? module.tint : module.tint.opacity(0.07),
+                            in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(on ? Color.clear : module.tint.opacity(0.2), lineWidth: 1)
+                        )
+                        .scaleEffect(on ? 0.97 : 1.0)
+                        .animation(.spring(duration: 0.18), value: on)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private func pick(_ opt: ModuleOption, question q: ModuleQuestion, module: AppCategory) {
+        var dict = answers[module.rawValue] ?? [:]
+        if q.multiSelect {
+            var set = Set((dict[q.id] ?? "").split(separator: ",").map(String.init).filter { !$0.isEmpty })
+            if set.contains(opt.id) {
+                set.remove(opt.id)
+            } else if opt.id == "nothing" {
+                set = ["nothing"]
+            } else {
+                set.remove("nothing")
+                set.insert(opt.id)
+            }
+            dict[q.id] = set.joined(separator: ",")
+        } else {
+            dict[q.id] = opt.id
+        }
+        answers[module.rawValue] = dict
+    }
+
+    private func advance() {
+        if currentIndex < modulesWithQuestions.count - 1 {
+            withAnimation(.spring(duration: 0.35)) { currentIndex += 1 }
+        } else {
+            onNext(answers)
+        }
+    }
+}
+
 // MARK: - Bouton CTA commun
 
 struct OnboardingButton: View {
