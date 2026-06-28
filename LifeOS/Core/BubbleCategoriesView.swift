@@ -458,11 +458,18 @@ struct BubbleCategoriesView: View {
         )
         .contextMenu {
             if !cat.isFiller {
-                Menu {
-                    Button { setCatSize(cat.title, .large) }  label: { Label("Grande",  systemImage: "circle.fill") }
-                    Button { setCatSize(cat.title, .medium) } label: { Label("Moyenne", systemImage: "circle.lefthalf.filled") }
-                    Button { setCatSize(cat.title, .small) }  label: { Label("Petite",  systemImage: "circle") }
-                } label: { Label("Taille", systemImage: "arrow.up.left.and.arrow.down.right") }
+                // Les 3 tailles directement au 1er niveau (plus de sous-menu) → un seul tap.
+                Section("Taille de la bulle") {
+                    Button { setCatSize(cat.title, .large) } label: {
+                        Label("Grande", systemImage: effectiveSize(cat) == .large ? "checkmark" : "circle.fill")
+                    }
+                    Button { setCatSize(cat.title, .medium) } label: {
+                        Label("Moyenne", systemImage: effectiveSize(cat) == .medium ? "checkmark" : "circle.lefthalf.filled")
+                    }
+                    Button { setCatSize(cat.title, .small) } label: {
+                        Label("Petite", systemImage: effectiveSize(cat) == .small ? "checkmark" : "circle")
+                    }
+                }
                 if catOffset(cat.title) != .zero {
                     Button { withAnimation { resetCatOffset(cat.title) } } label: { Label("Replacer", systemImage: "arrow.counterclockwise") }
                 }
