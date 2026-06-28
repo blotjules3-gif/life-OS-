@@ -1535,7 +1535,10 @@ struct ProfileView: View {
                         .font(.system(size: 48, weight: .black, design: .rounded).monospacedDigit())
                         .foregroundStyle(wakeupEnabled ? accentColor : .primary)
                         .opacity(wakeupEnabled ? 1.0 : 0.35)
+                        .contentTransition(.numericText())
                         .animation(.spring(duration: 0.3), value: wakeupEnabled)
+                        .animation(.spring(duration: 0.38, bounce: 0.1), value: wakeupHour)
+                        .animation(.spring(duration: 0.38, bounce: 0.1), value: wakeupMinute)
                     if alarmRingsNextDay {
                         Text("demain")
                             .font(.system(size: 11, weight: .semibold))
