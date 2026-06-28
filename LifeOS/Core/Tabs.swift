@@ -1398,9 +1398,9 @@ struct ProfileView: View {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("RÉVEIL")
-                        .font(.system(size: 9, weight: .bold))
+                        .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(accentColor.opacity(0.75))
-                        .kerning(1.4)
+                        .kerning(1.2)
                     Text(String(format: "%02d:%02d", wakeupHour, wakeupMinute))
                         .font(.system(size: 48, weight: .black, design: .rounded).monospacedDigit())
                         .foregroundStyle(wakeupEnabled ? accentColor : .primary)
