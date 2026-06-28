@@ -1838,14 +1838,28 @@ struct ProfileView: View {
     private func goalCard(task: ProfileTaskItem, endDate: Date?) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .fill(task.color.opacity(0.14))
-                        .frame(width: 40, height: 40)
-                    Image(systemName: task.icon)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(task.color)
+                ZStack(alignment: .bottomTrailing) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .fill(task.color.opacity(task.progress >= 1 ? 0.22 : 0.14))
+                            .frame(width: 40, height: 40)
+                            .animation(.spring(duration: 0.38, bounce: 0.1), value: task.progress >= 1)
+                        Image(systemName: task.icon)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(task.color)
+                    }
+                    if task.progress >= 1 {
+                        ZStack {
+                            Circle().fill(neoCard).frame(width: 16, height: 16)
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundStyle(task.color)
+                        }
+                        .offset(x: 5, y: 5)
+                        .transition(.scale(scale: 0.25).combined(with: .opacity))
+                    }
                 }
+                .animation(.spring(duration: 0.38, bounce: 0.25), value: task.progress >= 1)
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("\(min(100, Int(task.progress * 100)))%")
