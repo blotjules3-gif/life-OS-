@@ -874,7 +874,7 @@ struct DailyBriefingView: View {
                 HStack(spacing: 10) {
                     Image(systemName: "speaker.wave.2.fill")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Color(hex: 0xFF9F0A))
                     Text("Écouter mon plan du jour")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(.primary)
