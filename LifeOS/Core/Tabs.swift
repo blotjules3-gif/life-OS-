@@ -1237,6 +1237,7 @@ struct ProfileView: View {
             .fullScreenCover(isPresented: $showBriefing) {
                 DailyBriefingView(modules: recommendedModules)
             }
+            .navigationDestination(for: AppCategory.self) { $0.destination }
         }
     }
 
