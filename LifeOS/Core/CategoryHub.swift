@@ -561,7 +561,7 @@ private let adminTools: [CategoryTool] = [
     .init("lock.doc.fill", "Coffre-fort documents", "ID, contrats, garanties", tint: .adminTint) { DocVaultView() },
     .init("bell.badge.fill", "Échéances", "Impôts, assurance, abos", tint: .adminTint) { DeadlinesView() },
     .init("envelope.fill", "Générateur de courriers", "Résiliation, attestation…", tint: .adminTint) { LetterGeneratorView() },
-    .init("doc.viewfinder.fill", "Scan & classement", "OCR auto — à brancher", tint: .adminTint) { DocScanScaffold() },
+    .init("doc.viewfinder.fill", "Scan & classement", "OCR auto · range tout seul", tint: .adminTint) { DocScanView() },
 ]
 
 private let travelTools: [CategoryTool] = [
