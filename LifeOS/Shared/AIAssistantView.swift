@@ -284,6 +284,7 @@ final class AIAssistantViewModel: ObservableObject {
                     conversationID: nil
                 )
                 conversationID = response.conversation_id
+                isServerOffline = false
                 removeThinking()
                 appendAssistantMessage(response.reply, actions: response.actions ?? [])
                 for action in (response.actions ?? []) {
@@ -291,6 +292,9 @@ final class AIAssistantViewModel: ObservableObject {
                 }
             } catch {
                 removeThinking()
+                if let apiErr = error as? AgentAPIError, case .networkError = apiErr {
+                    isServerOffline = true
+                }
                 let name = userName.isEmpty ? "" : " \(userName)"
                 appendAssistantMessage(
                     "Bonjour\(name) ! Je suis ton coach LifeOS. Je connais tes objectifs et je vais t'aider à les atteindre étape par étape. Dis-moi juste par où tu veux commencer.",
