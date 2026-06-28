@@ -3165,13 +3165,15 @@ struct ChallengeCard: View {
                     ZStack {
                         Circle()
                             .fill(challenge.checkedInToday ? typeColor : typeColor.opacity(0.12))
-                            .frame(width: 36, height: 36)
+                            .frame(width: 40, height: 40)
                         Image(systemName: challenge.checkedInToday ? "checkmark" : "plus")
-                            .font(.system(size: 14, weight: .bold))
+                            .font(.system(size: 15, weight: .bold))
                             .foregroundStyle(challenge.checkedInToday ? .white : typeColor)
                             .scaleEffect(challenge.checkedInToday ? 1.0 : 0.85)
                     }
                     .animation(.spring(duration: 0.38, bounce: 0.25), value: challenge.checkedInToday)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Circle())
                 }
                 .buttonStyle(LifeOSPressStyle())
                 .disabled(challenge.checkedInToday)
