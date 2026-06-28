@@ -1948,13 +1948,13 @@ struct ProfileView: View {
                 .frame(height: 4)
             }
         }
-        .padding(14)
+        .padding(16)
         .background(neoCard)
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
         .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
         .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .stroke(task.color.opacity(task.progress >= 1 ? 0.4 : 0), lineWidth: 1.5)
                 .animation(.spring(duration: 0.38, bounce: 0.1), value: task.progress >= 1)
         )
