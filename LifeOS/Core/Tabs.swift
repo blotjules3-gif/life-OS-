@@ -2004,7 +2004,7 @@ struct ProfileView: View {
                             .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(waterColor)
                             .frame(minWidth: 52, minHeight: 44)
-                            .background(waterColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .background(waterColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     }
                     .buttonStyle(LifeOSPressStyle())
                     Button {
@@ -2014,7 +2014,7 @@ struct ProfileView: View {
                             .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(waterColor)
                             .frame(minWidth: 52, minHeight: 44)
-                            .background(waterColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .background(waterColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     }
                     .buttonStyle(LifeOSPressStyle())
                 }
