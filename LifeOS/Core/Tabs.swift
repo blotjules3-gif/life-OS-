@@ -1959,7 +1959,7 @@ struct ProfileView: View {
         return VStack(spacing: 0) {
             HStack(spacing: 14) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(waterColor.opacity(waterProgress >= 1 ? 0.22 : 0.14))
                         .frame(width: 44, height: 44)
                         .animation(.spring(duration: 0.5, bounce: 0.1), value: waterProgress >= 1)
