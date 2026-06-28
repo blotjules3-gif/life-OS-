@@ -669,18 +669,18 @@ struct WeeklyBilanView: View {
     }
     private var perfectDays: Int { weekDays.filter { ratio(for: $0) >= 1 && !activeHabits.isEmpty }.count }
     private var avgWater: Int {
-        let vals = weekDays.compactMap { d -> Int? in
-            let v = waters.filter { cal.isDate($0.date, inSameDayAs: d) }.reduce(0) { $0 + $1.amountML }
-            return v > 0 ? v : nil
+        // Divisé par 7 (semaine entière) — jours sans données comptent comme 0
+        let total = weekDays.reduce(0) { acc, d in
+            acc + waters.filter { cal.isDate($0.date, inSameDayAs: d) }.reduce(0) { $0 + $1.amountML }
         }
-        return vals.isEmpty ? 0 : vals.reduce(0, +) / vals.count
+        return total / 7
     }
     private var avgKcal: Int {
-        let vals = weekDays.compactMap { d -> Int? in
-            let v = foods.filter { cal.isDate($0.date, inSameDayAs: d) }.reduce(0) { $0 + $1.calories }
-            return v > 0 ? v : nil
+        // Divisé par 7 (semaine entière) — jours sans données comptent comme 0
+        let total = weekDays.reduce(0) { acc, d in
+            acc + foods.filter { cal.isDate($0.date, inSameDayAs: d) }.reduce(0) { $0 + $1.calories }
         }
-        return vals.isEmpty ? 0 : vals.reduce(0, +) / vals.count
+        return total / 7
     }
     private var avgMood: Double {
         let week = moods.filter { m in weekDays.contains { cal.isDate(m.date, inSameDayAs: $0) } }
