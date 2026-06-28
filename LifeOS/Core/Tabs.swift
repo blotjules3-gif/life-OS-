@@ -567,9 +567,10 @@ struct DailyBriefingView: View {
                                             .foregroundStyle(.primary)
                                             .fixedSize(horizontal: false, vertical: true)
                                     }
-                                    .padding(12)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 12)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                                 }
                             }
                         }
