@@ -1433,6 +1433,7 @@ struct ProfileView: View {
                     .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
                     .foregroundStyle(.primary)
                     .contentTransition(.numericText())
+                    .animation(.spring(duration: 0.38, bounce: 0.1), value: value)
                 Text(unit)
                     .font(.system(size: 9, weight: .medium))
                     .foregroundStyle(.secondary)
