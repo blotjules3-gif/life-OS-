@@ -1220,7 +1220,6 @@ struct ProfileView: View {
                 if await HealthService.shared.requestAuthorization() {
                     healthConnected = true
                     steps = await HealthService.shared.stepsToday()
-                    activeCalories = await HealthService.shared.activeCaloriesToday()
                 }
                 async let challengesTask = (try? await AgentAPI.shared.fetchChallenges()) ?? []
                 let ch = await challengesTask
