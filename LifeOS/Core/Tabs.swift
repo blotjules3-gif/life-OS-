@@ -1996,7 +1996,7 @@ struct ProfileView: View {
                 Text("LifeOS 1.0 · Données stockées localement")
                     .font(.caption).foregroundStyle(.tertiary)
                 Spacer()
-                Text("15 modules").font(.caption).foregroundStyle(.tertiary)
+                Text("\(AppCategory.allCases.count) modules").font(.caption).foregroundStyle(.tertiary)
             }
             .padding(.horizontal, 4)
         }
