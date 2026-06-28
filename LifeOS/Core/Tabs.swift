@@ -530,7 +530,7 @@ struct DailyBriefingView: View {
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .stroke(task.done ? Color.green.opacity(0.18) : Color.clear, lineWidth: 1)
+                                        .stroke(task.done ? task.color.opacity(0.25) : Color.clear, lineWidth: 1)
                                 )
                             }
                         }
