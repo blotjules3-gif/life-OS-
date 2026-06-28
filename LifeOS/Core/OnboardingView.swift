@@ -135,7 +135,7 @@ struct OnboardingView: View {
                 }
 
                 // Bouton retour (steps 2–5)
-                if step >= 2 && step <= 5 {
+                if step >= 2 && step <= 6 {
                     HStack {
                         Button {
                             withAnimation(.spring(duration: 0.35)) { step -= 1 }
