@@ -1848,7 +1848,7 @@ struct ProfileView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(task.color.opacity(task.progress >= 1 ? 0.4 : 0), lineWidth: 1.5)
-                .animation(.spring(duration: 0.4), value: task.progress >= 1)
+                .animation(.spring(duration: 0.38, bounce: 0.1), value: task.progress >= 1)
         )
     }
 
