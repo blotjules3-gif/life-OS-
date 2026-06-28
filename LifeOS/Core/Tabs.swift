@@ -1866,15 +1866,7 @@ struct ProfileView: View {
             .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
             .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
 
-            Button {
-                UserDefaults.standard.removeObject(forKey: "onboardingDone")
-                UserDefaults.standard.removeObject(forKey: "userName")
-                UserDefaults.standard.removeObject(forKey: "userGender")
-                UserDefaults.standard.removeObject(forKey: "onboardingGoalsRaw")
-                UserDefaults.standard.removeObject(forKey: "recommendedModules")
-                UserDefaults.standard.removeObject(forKey: "wakeupHour")
-                UserDefaults.standard.removeObject(forKey: "wakeupMinute")
-            } label: {
+            Button { showOnboardingReset = true } label: {
                 Text("Refaire l'onboarding")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.red)
@@ -1885,7 +1877,21 @@ struct ProfileView: View {
                     .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
                     .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(LifeOSPressStyle())
+            .confirmationDialog("Réinitialiser le profil ?", isPresented: $showOnboardingReset, titleVisibility: .visible) {
+                Button("Recommencer", role: .destructive) {
+                    UserDefaults.standard.removeObject(forKey: "onboardingDone")
+                    UserDefaults.standard.removeObject(forKey: "userName")
+                    UserDefaults.standard.removeObject(forKey: "userGender")
+                    UserDefaults.standard.removeObject(forKey: "onboardingGoalsRaw")
+                    UserDefaults.standard.removeObject(forKey: "recommendedModules")
+                    UserDefaults.standard.removeObject(forKey: "wakeupHour")
+                    UserDefaults.standard.removeObject(forKey: "wakeupMinute")
+                }
+                Button("Annuler", role: .cancel) { }
+            } message: {
+                Text("Toutes tes préférences seront supprimées.")
+            }
 
             HStack {
                 Text("LifeOS 1.0 · Données stockées localement")
