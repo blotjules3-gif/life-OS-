@@ -1055,6 +1055,7 @@ struct ProfileView: View {
     }
     private var kcalToday: Int { foods.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.calories } }
     private var waterToday: Int { waters.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML } }
+    private var proteinToday: Int { Int(foods.filter { Calendar.current.isDateInToday($0.date) }.reduce(0.0) { $0 + $1.protein }) }
     private var habitsDone: Int { habits.filter { h in h.completions.contains { Calendar.current.isDateInToday($0.date) } }.count }
 
     // Tâches du jour calculées depuis les modules actifs de l'utilisateur
