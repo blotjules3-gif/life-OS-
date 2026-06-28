@@ -35,7 +35,9 @@ struct LifeOSApp: App {
         // Cycle
         CycleEntry.self,
         // Assistant IA
-        AIMessage.self
+        AIMessage.self,
+        // Rappels perso (centre de notifications) + programme de sport
+        CustomReminder.self, GymDay.self
     ])
 
     var body: some Scene {
@@ -97,6 +99,7 @@ struct LifeOSApp: App {
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             resetDailyValuesIfNeeded()
+            MorningReminder.checkAndArm()
         }
         .onChange(of: onboardingDone) { _, done in
             if done { ContextualNotifications.shared.reschedule() }

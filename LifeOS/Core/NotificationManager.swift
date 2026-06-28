@@ -110,6 +110,26 @@ final class NotificationManager {
         UNUserNotificationCenter.current().add(request)
     }
 
+    /// Rappel HEBDOMADAIRE un jour de semaine donné (1=Dim … 7=Sam), éventuellement
+    /// avec catégorie d'action. Sert au programme de sport (séance du jour).
+    func scheduleWeekly(id: String, title: String, body: String,
+                        weekday: Int, hour: Int, minute: Int,
+                        categoryId: String = "", userInfo: [String: Any] = [:]) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        if !categoryId.isEmpty { content.categoryIdentifier = categoryId }
+        content.userInfo = userInfo
+        var comps = DateComponents()
+        comps.weekday = weekday
+        comps.hour = hour
+        comps.minute = minute
+        let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
+        let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request)
+    }
+
     /// Rappel après un intervalle (ex: fin de sieste, fenêtre de sommeil léger).
     func scheduleAfter(id: String, title: String, body: String, seconds: TimeInterval) {
         let content = UNMutableNotificationContent()

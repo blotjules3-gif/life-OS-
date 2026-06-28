@@ -18,6 +18,18 @@ import SwiftData
     }
 }
 
+// MARK: - Programme de sport (1 séance par jour de la semaine)
+
+@Model final class GymDay {
+    var weekday: Int = 2       // 1=Dimanche … 7=Samedi (convention Calendar)
+    var title: String = ""     // ex: "Dos + Biceps"
+    var focus: String = ""     // exercices / notes
+    var isRest: Bool = false
+    init(weekday: Int = 2, title: String = "", focus: String = "", isRest: Bool = false) {
+        self.weekday = weekday; self.title = title; self.focus = focus; self.isRest = isRest
+    }
+}
+
 // MARK: - Rappel du matin (« n'oublie pas… » 5 min après le réveil)
 
 /// Détecte que l'utilisateur est réveillé (1re ouverture de l'app dans la fenêtre du

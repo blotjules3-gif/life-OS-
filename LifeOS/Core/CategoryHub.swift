@@ -473,6 +473,7 @@ private let nutritionTools: [CategoryTool] = [
 ]
 
 private let fitnessTools: [CategoryTool] = [
+    .init("calendar", "Programme de sport", "Ta semaine + rappels muscu", tint: .fitTint) { GymProgramView() },
     .init("figure.walk", "Compteur de pas", "Aujourd'hui + 7 jours (Santé)", tint: .fitTint) { StepsView() },
     .init("dumbbell.fill", "Muscu & progression", "Charges, volume, 1RM, courbe", tint: .fitTint) { StrengthView() },
     .init("timer", "HIIT / Tabata", "Minuteur sportif plein écran", tint: .fitTint, fullScreen: true) { TabataView() },
