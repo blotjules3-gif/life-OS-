@@ -676,7 +676,7 @@ struct DailyBriefingView: View {
                                         .frame(width: 6, height: 6)
                                 }
                                 .frame(maxWidth: .infinity)
-                            }.buttonStyle(.plain)
+                            }.buttonStyle(LifeOSPressStyle())
                         }
                     }
                 }
