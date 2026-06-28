@@ -1906,9 +1906,11 @@ struct ProfileView: View {
     }
 
     private var appearanceSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Couleur de l'app")
-                .font(.system(size: 15, weight: .semibold))
+        VStack(alignment: .leading, spacing: 12) {
+            Text("APPARENCE")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.secondary)
+                .kerning(1.2)
                 .padding(.horizontal, 4)
             VStack(spacing: 12) {
                 HStack(spacing: 10) {
