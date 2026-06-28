@@ -3147,13 +3147,17 @@ struct ChallengeCard: View {
                     HStack(spacing: 6) {
                         if let days = challenge.duration_days {
                             Text("J\(challenge.days_elapsed)/\(days)")
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.system(size: 11, weight: .medium).monospacedDigit())
                                 .foregroundStyle(.secondary)
+                                .contentTransition(.numericText())
+                                .animation(.spring(duration: 0.38, bounce: 0.1), value: challenge.days_elapsed)
                         }
                         if challenge.streak_days > 0 {
                             Label("\(challenge.streak_days)j", systemImage: "flame.fill")
-                                .font(.system(size: 11, weight: .bold))
+                                .font(.system(size: 11, weight: .bold).monospacedDigit())
                                 .foregroundStyle(Color(hex: 0xE07B3C))
+                                .contentTransition(.numericText())
+                                .animation(.spring(duration: 0.38, bounce: 0.1), value: challenge.streak_days)
                         }
                     }
                 }
