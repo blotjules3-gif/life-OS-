@@ -2855,8 +2855,9 @@ struct SleepCheckSheet: View {
                     Label("Note rapide (optionnel)", systemImage: "text.alignleft")
                         .font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)
                     TextField("Cauchemar, réveil nocturne, rêve…", text: $note, axis: .vertical)
-                        .font(.system(size: 14)).lineLimit(3).padding(12)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .font(.system(size: 14)).lineLimit(3)
+                        .padding(.horizontal, 14).padding(.vertical, 12)
+                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .padding(.horizontal, 20)
                 .opacity(appeared ? 1 : 0).animation(.spring(duration: 0.5).delay(0.28), value: appeared)
