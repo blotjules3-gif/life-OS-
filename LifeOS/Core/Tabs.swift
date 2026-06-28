@@ -2440,7 +2440,7 @@ struct GoalEditorSheet: View {
                                 .padding(.horizontal, 14).padding(.vertical, 7)
                                 .background(selected ? color : color.opacity(0.12), in: Capsule())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(LifeOSPressStyle())
                     }
 
                     // Sans limite
@@ -2454,7 +2454,7 @@ struct GoalEditorSheet: View {
                             .padding(.horizontal, 14).padding(.vertical, 7)
                             .background(noLimit ? Color.secondary : Color.secondary.opacity(0.12), in: Capsule())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(LifeOSPressStyle())
                 }
                 .padding(.horizontal, 2)
             }
