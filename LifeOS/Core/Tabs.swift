@@ -1950,9 +1950,10 @@ struct ProfileView: View {
             HStack(spacing: 14) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(waterColor.opacity(0.14))
+                        .fill(waterColor.opacity(waterProgress >= 1 ? 0.22 : 0.14))
                         .frame(width: 44, height: 44)
-                    Image(systemName: "drop.fill")
+                        .animation(.spring(duration: 0.5, bounce: 0.1), value: waterProgress >= 1)
+                    Image(systemName: waterProgress >= 1 ? "drop.fill" : "drop.fill")
                         .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(waterColor)
                 }
