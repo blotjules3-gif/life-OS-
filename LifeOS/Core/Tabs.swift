@@ -1826,6 +1826,11 @@ struct ProfileView: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .shadow(color: neoShadowLight, radius: 7, x: -3, y: -3)
         .shadow(color: neoShadowDark, radius: 7, x: 3, y: 3)
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(task.color.opacity(task.progress >= 1 ? 0.4 : 0), lineWidth: 1.5)
+                .animation(.spring(duration: 0.4), value: task.progress >= 1)
+        )
     }
 
     // MARK: - Eau rapide
