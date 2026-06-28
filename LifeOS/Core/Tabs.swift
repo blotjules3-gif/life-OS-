@@ -514,7 +514,7 @@ struct DailyBriefingView: View {
                                         .frame(width: 34, height: 34)
                                         .background(task.color, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(task.title).font(.subheadline.weight(.semibold))
+                                        Text(task.title).font(.system(size: 14, weight: .semibold))
                                         Text(task.subtitle).font(.caption).foregroundStyle(.secondary)
                                     }
                                     Spacer()
