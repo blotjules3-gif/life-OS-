@@ -1839,7 +1839,7 @@ struct ProfileView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
                         .fill(task.color.opacity(0.14))
                         .frame(width: 40, height: 40)
                     Image(systemName: task.icon)
