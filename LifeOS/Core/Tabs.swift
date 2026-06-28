@@ -1176,6 +1176,10 @@ struct ProfileView: View {
                                     ProgressView()
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 36)
+                                        .background(neoCard)
+                                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                                        .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+                                        .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
                                         .transition(.opacity)
                                 } else if challenges.isEmpty {
                                     challengesEmptyState
