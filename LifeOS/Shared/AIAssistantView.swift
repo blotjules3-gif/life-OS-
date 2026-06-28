@@ -379,6 +379,26 @@ final class AIAssistantViewModel: ObservableObject {
                     delay: 2
                 )
             }
+        case .createHabit:
+            if let title = action.title {
+                let habitDefaults: [String: (icon: String, colorHex: Int)] = [
+                    "fitness":      ("figure.run",                0xF1746C),
+                    "nutrition":    ("fork.knife",                0x4CC38A),
+                    "sleep":        ("moon.stars.fill",           0x6C7BF1),
+                    "productivity": ("checklist",                 0x3CB2E0),
+                    "mind":         ("brain.head.profile",        0x9B6CF1),
+                    "looks":        ("face.smiling",              0xE0A23C),
+                    "learning":     ("book.fill",                 0xE0C13C),
+                    "social":       ("person.2.fill",             0xF16CB0),
+                    "finance":      ("creditcard.fill",           0x4CC38A),
+                    "career":       ("briefcase.fill",            0xE07B3C),
+                    "invest":       ("chart.line.uptrend.xyaxis", 0x46C9A8),
+                ]
+                let d = habitDefaults[action.module ?? ""] ?? (icon: "checkmark.circle", colorHex: 0x4CC38A)
+                let habit = Habit(name: title, icon: d.icon, colorHex: d.colorHex, isPending: true, moduleTag: action.module ?? "")
+                ctx.insert(habit)
+                try? ctx.save()
+            }
         case .addModule:
             if let module = action.module {
                 addModuleToProfile(module)
