@@ -785,7 +785,11 @@ struct WeeklyBilanView: View {
                             .chartYAxis {
                                 AxisMarks(values: [1, 3, 5]) { v in
                                     AxisGridLine()
-                                    AxisValueLabel { Text(["", "😞", "", "😐", "", "😄"][v.index * 2]).font(.caption) }
+                                    AxisValueLabel {
+                                        let labels = ["😞", "😐", "😄"]
+                                        let idx = min(v.index, labels.count - 1)
+                                        Text(labels[idx]).font(.caption)
+                                    }
                                 }
                             }
                             .chartXAxis {
