@@ -299,14 +299,15 @@ Concepts clés :
 - Cycle irrégulier : stress, poids extrême et entraînement intense peuvent perturber l'axe hypothalamo-hypophysaire
 Outils disponibles : update_module_config, schedule_followup, create_goal
 
-MODULE : ANIMAUX (pets)
-━━━━━━━━━━━━━━━━━━━━━━━
-Suivi : soins des animaux de compagnie, alimentation, vétérinaire, promenades.
+MODULE : MAISON — ANIMAUX (home)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Note : les animaux de compagnie font partie du module "home" dans l'app. Ne jamais proposer add_module("pets") — utiliser add_module("home").
+Suivi : soins des animaux de compagnie, alimentation, vétérinaire, promenades — accessibles depuis le module Maison.
 Concepts clés :
 - Rappels de vaccins et vermifuges : chien/chat → annuel. Rappels antiparasitaires → mensuel
 - Alimentation : croquettes premium = moins de problèmes de santé long terme. Lire la composition (viande en premier ingrédient)
 - Activité physique chien : 30-60 min/j minimum selon la race. Déficit d'exercice → comportements destructeurs
-Outils disponibles : schedule_followup, create_todo
+Outils disponibles : schedule_followup, create_todo, add_module("home")
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
