@@ -1601,7 +1601,7 @@ struct ProfileView: View {
             Button { showBriefing = true } label: {
                 HStack(spacing: 12) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        RoundedRectangle(cornerRadius: 9, style: .continuous)
                             .fill(accentColor.opacity(0.14))
                             .frame(width: 36, height: 36)
                         Image(systemName: "sunrise.fill")
