@@ -1151,7 +1151,7 @@ struct ProfileView: View {
                                 NavigationLink(value: mod) {
                                     topModuleIsland
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(LifeOSPressStyle())
                             } else {
                                 topModuleIsland
                             }
