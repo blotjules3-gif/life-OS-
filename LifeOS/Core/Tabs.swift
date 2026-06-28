@@ -2041,11 +2041,21 @@ struct ProfileView: View {
                     Task { healthConnected = await HealthService.shared.requestAuthorization() }
                 }
                 Divider().opacity(0.1).padding(.leading, 50)
-                settingsRow(icon: "bell.fill", iconColor: Color(hex: 0xE0A23C), label: "Activer les rappels") {
-                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
-                } action: {
-                    Task { _ = await NotificationManager.shared.requestAuthorization() }
+                NavigationLink {
+                    NotificationsSettingsView()
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "bell.fill")
+                            .font(.system(size: 12, weight: .bold)).foregroundStyle(.white)
+                            .frame(width: 30, height: 30)
+                            .background(Color(hex: 0xE0A23C), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        Text("Notifications").font(.subheadline).foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 13)
                 }
+                .buttonStyle(.plain)
                 Divider().opacity(0.1).padding(.leading, 50)
                 settingsRow(icon: "slider.horizontal.3", iconColor: Color.accentColor, label: "Modifier mes objectifs") {
                     Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
