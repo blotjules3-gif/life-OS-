@@ -60,7 +60,7 @@ enum AppCategory: String, CaseIterable, Identifiable {
         case .finance: return Color(hex: 0x4CC38A)
         case .invest: return Color(hex: 0x46C9A8)
         case .career: return Color(hex: 0xE07B3C)
-        case .learning: return Color(hex: 0xE0C13C)
+        case .learning: return Color(hex: 0xF97316)
         case .home: return Color(hex: 0x6CA0F1)
         case .mobility: return Color(hex: 0x3CD0C8)
         case .social: return Color(hex: 0xF16CB0)
