@@ -2054,13 +2054,16 @@ struct ProfileView: View {
             .buttonStyle(LifeOSPressStyle())
             .confirmationDialog("Réinitialiser le profil ?", isPresented: $showOnboardingReset, titleVisibility: .visible) {
                 Button("Recommencer", role: .destructive) {
-                    UserDefaults.standard.removeObject(forKey: "onboardingDone")
-                    UserDefaults.standard.removeObject(forKey: "userName")
-                    UserDefaults.standard.removeObject(forKey: "userGender")
-                    UserDefaults.standard.removeObject(forKey: "onboardingGoalsRaw")
-                    UserDefaults.standard.removeObject(forKey: "recommendedModules")
-                    UserDefaults.standard.removeObject(forKey: "wakeupHour")
-                    UserDefaults.standard.removeObject(forKey: "wakeupMinute")
+                    let ud = UserDefaults.standard
+                    for key in ["onboardingDone", "userName", "userGender", "onboardingGoalsRaw",
+                                "recommendedModules", "wakeupEnabled", "wakeupHour", "wakeupMinute",
+                                "wakeupRepeatDays", "wakeupMessage", "snoozeMinutes",
+                                "stepGoal", "kcalGoal", "waterGoal", "proteinGoal",
+                                "fastTarget", "budgetGoal", "glassesGoal", "focusMinGoal", "socialMaxMin",
+                                "hiddenGoalIDsRaw", "goalEndDatesRaw",
+                                "profileHiddenRaw", "profilePinnedRaw"] {
+                        ud.removeObject(forKey: key)
+                    }
                 }
                 Button("Annuler", role: .cancel) { }
             } message: {
