@@ -410,6 +410,7 @@ final class AIAssistantViewModel: ObservableObject {
         case .openModule, .updateConfig:
             break
         }
+        }
     }
 
     private func addModuleToProfile(_ module: String) {
