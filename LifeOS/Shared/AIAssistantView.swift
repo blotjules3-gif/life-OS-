@@ -640,6 +640,30 @@ struct AIAssistantView: View {
         !vm.inputText.trimmingCharacters(in: .whitespaces).isEmpty && !vm.isLoading
     }
 
+    private var offlineBanner: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(Color.orange)
+                .frame(width: 6, height: 6)
+            Text("Serveur inaccessible")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.primary)
+            Spacer()
+            Button {
+                vm.isServerOffline = false
+                vm.send(text: vm.inputText.isEmpty ? nil : vm.inputText)
+            } label: {
+                Text("Reessayer")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(accent)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 9)
+        .background(Color.orange.opacity(0.1))
+    }
+
     // MARK: - Clear
 
     private func clearHistory() {
