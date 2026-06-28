@@ -540,7 +540,8 @@ struct DailyBriefingView: View {
 
                     // Quick actions
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Actions rapides").font(.headline)
+                        Text("Actions rapides")
+                        .font(.system(size: 15, weight: .semibold))
                         HStack(spacing: 10) {
                             quickActionBtn(icon: "drop.fill", label: "1 verre", color: Color(hex: 0x3CB2E0)) {
                                 ctx.insert(WaterEntry(amountML: 250))
