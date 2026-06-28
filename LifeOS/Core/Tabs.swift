@@ -1701,6 +1701,7 @@ struct ProfileView: View {
                 }
                 .buttonStyle(LifeOSPressStyle())
             }
+            .padding(.horizontal, 4)
 
             let endDates = parseEndDates()
             let pinned = Set(profilePinnedRaw.split(separator: ",").map(String.init))
