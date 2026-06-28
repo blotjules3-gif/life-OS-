@@ -344,7 +344,7 @@ struct WakeUpView: View {
                                 .background(cat.tint, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(cat.title).font(.system(size: 14, weight: .medium))
-                                Text(cat.subtitle).font(.caption).foregroundStyle(.secondary)
+                                Text(cat.subtitle).font(.system(size: 12)).foregroundStyle(.secondary)
                             }
                             Spacer()
                             Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
