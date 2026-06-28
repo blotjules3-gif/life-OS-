@@ -1340,6 +1340,7 @@ struct ProfileView: View {
                             .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
                             .foregroundStyle(.primary)
                             .contentTransition(.numericText())
+                            .animation(.spring(duration: 0.38, bounce: 0.1), value: ctx.date)
                         Text(ctx.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated))
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.secondary)
