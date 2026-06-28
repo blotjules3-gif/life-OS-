@@ -1199,7 +1199,12 @@ struct ProfileView: View {
                                 activeGoalsSection
                                     .transition(.opacity)
                             } else {
-                                if challenges.isEmpty {
+                                if challengesLoading {
+                                    ProgressView()
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 36)
+                                        .transition(.opacity)
+                                } else if challenges.isEmpty {
                                     challengesEmptyState
                                         .transition(.opacity)
                                 } else {
@@ -1209,6 +1214,7 @@ struct ProfileView: View {
                             }
                         }
                         .animation(.easeInOut(duration: 0.18), value: profileSection)
+                        .animation(.easeInOut(duration: 0.25), value: challengesLoading)
                         bentoRow
                         tipCard
                         settingsSection
