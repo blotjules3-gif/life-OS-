@@ -267,6 +267,92 @@ struct ShortcutsHomeView: View {
         Haptics.soft()
     }
 
+    // MARK: Section 1b — Recap hebdo
+
+    private var weeklyRecapSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("Cette semaine")
+            VStack(spacing: 14) {
+                HStack(alignment: .center, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(Int(weeklyScore * 100))%")
+                            .font(.system(size: 42, weight: .black, design: .rounded))
+                            .foregroundStyle(weeklyScoreColor)
+                            .contentTransition(.numericText())
+                        Text(weeklyMotivation)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 6) {
+                        Text("\(perfectDaysCount) jour\(perfectDaysCount > 1 ? "s" : "") parfait\(perfectDaysCount > 1 ? "s" : "")")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color(hex: 0x4CC38A))
+                        weekDotsRow
+                    }
+                }
+                if let best = bestHabitWeek {
+                    Divider().opacity(0.4)
+                    HStack(spacing: 10) {
+                        Image(systemName: best.icon)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color(hex: UInt(best.colorHex)))
+                            .frame(width: 30, height: 30)
+                            .background(Color(hex: UInt(best.colorHex)).opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Top habitude").font(.caption).foregroundStyle(.secondary)
+                            Text(best.name).font(.subheadline.weight(.semibold))
+                        }
+                        Spacer()
+                    }
+                }
+            }
+            .padding(16)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+                    .stroke(weeklyScoreColor.opacity(0.15), lineWidth: 1)
+            )
+        }
+    }
+
+    private var weekDotsRow: some View {
+        let cal = Calendar.current
+        let daySymbols = ["L", "M", "M", "J", "V", "S", "D"]
+        return HStack(spacing: 6) {
+            ForEach(0..<7) { i in
+                let day = weekDays[i]
+                let ratio = completionRatio(for: day)
+                let isToday = cal.isDateInToday(day)
+                VStack(spacing: 3) {
+                    Text(daySymbols[i])
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(isToday ? Color.primary : Color.secondary)
+                    Circle()
+                        .fill(dotColor(ratio: ratio))
+                        .frame(width: 8, height: 8)
+                        .overlay(isToday ? Circle().stroke(Color.primary.opacity(0.4), lineWidth: 1) : nil)
+                }
+            }
+        }
+    }
+
+    private func dotColor(ratio: Double) -> Color {
+        if ratio >= 1.0 { return Color(hex: 0x4CC38A) }
+        if ratio > 0 { return Color(hex: 0xFF9F0A) }
+        return Color.secondary.opacity(0.2)
+    }
+
+    private var weeklyScoreColor: Color {
+        let pct = Int(weeklyScore * 100)
+        switch pct {
+        case 80...100: return Color(hex: 0x4CC38A)
+        case 50..<80:  return Color(hex: 0xFF9F0A)
+        default:       return Color(hex: 0x9B6CF1)
+        }
+    }
+
     // MARK: Section 2 — Objectifs du jour (anneaux + 3 objectifs) — tout est cliquable
     private var goalsSection: some View {
         VStack(alignment: .leading, spacing: 14) {
