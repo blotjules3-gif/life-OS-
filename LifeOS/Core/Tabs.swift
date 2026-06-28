@@ -2620,7 +2620,7 @@ struct GoalEditorSheet: View {
     }
 
     private func customStepper(value: Binding<Int>, min: Int, max: Int, step: Int) -> some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 6) {
             Button {
                 if value.wrappedValue - step >= min {
                     value.wrappedValue -= step
@@ -2630,8 +2630,8 @@ struct GoalEditorSheet: View {
                 Image(systemName: "minus")
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(value.wrappedValue - step >= min ? .primary : .tertiary)
-                    .frame(width: 36, height: 36)
-                    .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .frame(width: 44, height: 44)
+                    .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
             .buttonStyle(LifeOSPressStyle())
 
@@ -2644,11 +2644,10 @@ struct GoalEditorSheet: View {
                 Image(systemName: "plus")
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(value.wrappedValue + step <= max ? .primary : .tertiary)
-                    .frame(width: 36, height: 36)
-                    .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .frame(width: 44, height: 44)
+                    .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
             .buttonStyle(LifeOSPressStyle())
-            .padding(.leading, 6)
         }
     }
 
