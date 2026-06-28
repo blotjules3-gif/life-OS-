@@ -1,0 +1,13 @@
+// Config.xcconfig.example
+// Copier ce fichier en "Config.xcconfig" (NON commité) et remplir les valeurs.
+// Dans Xcode : Project → Info → Configurations → ajouter Config.xcconfig pour Debug et Release.
+//
+// Config.xcconfig est dans .gitignore — ne jamais commiter les vraies valeurs.
+
+// URL du backend (sans slash final)
+// Prod : https://ton-domaine.app
+// Dev local : http://192.168.1.7:8000
+API_BASE_URL = https://VOTRE_DOMAINE_ICI
+
+// Clé API interne (INTERNAL_API_KEY dans backend/.env)
+API_KEY = VOTRE_CLE_API_ICI
