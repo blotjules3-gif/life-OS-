@@ -1299,6 +1299,23 @@ struct ProfileView: View {
                           progress: habits.isEmpty ? 1 : min(1, Double(habitsDone) / Double(habits.count)))
             }
             .padding(.vertical, 14)
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Rectangle()
+                        .fill(Color.primary.opacity(0.05))
+                        .frame(height: 3)
+                    Rectangle()
+                        .fill(LinearGradient(
+                            colors: [Color.accentColor.opacity(0.45), Color.accentColor],
+                            startPoint: .leading, endPoint: .trailing
+                        ))
+                        .frame(width: geo.size.width * dayProgress, height: 3)
+                        .animation(.spring(duration: 1.4).delay(0.2), value: appeared)
+                }
+            }
+            .frame(height: 3)
+            .clipShape(Capsule())
         }
         .background(neoCard)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
