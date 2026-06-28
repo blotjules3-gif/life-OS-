@@ -1193,7 +1193,8 @@ struct ProfileView: View {
                     .padding(.bottom, 80)
                 }
             }
-            .navigationTitle("Profil")
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(neoBackground, for: .navigationBar)
             .onAppear { appeared = true }
             .task {
