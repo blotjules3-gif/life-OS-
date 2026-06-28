@@ -1245,8 +1245,8 @@ struct ProfileView: View {
                                 .transition(.opacity)
                             }
                         }
-                        .animation(.easeInOut(duration: 0.18), value: profileSection)
-                        .animation(.easeInOut(duration: 0.25), value: challengesLoading)
+                        .animation(.spring(duration: 0.35, bounce: 0.1), value: profileSection)
+                        .animation(.spring(duration: 0.35, bounce: 0.1), value: challengesLoading)
 
                         bentoRow
                             .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 10)
