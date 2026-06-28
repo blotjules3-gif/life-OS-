@@ -479,7 +479,7 @@ struct DailyBriefingView: View {
                             .multilineTextAlignment(.center)
 
                         Text(Date.now.formatted(date: .complete, time: .omitted))
-                            .font(.subheadline)
+                            .font(.system(size: 14, weight: .regular))
                             .foregroundStyle(.secondary)
                     }
 
