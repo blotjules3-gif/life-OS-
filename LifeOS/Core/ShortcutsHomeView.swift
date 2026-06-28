@@ -177,6 +177,11 @@ struct ShortcutsHomeView: View {
                     }
                     .padding(.horizontal, 4)
 
+                    if !moodDismissed || editingMood {
+                        moodSection
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+
                     if showReengage, let msg = reengageMessage {
                         reengageBanner(message: msg, suggestion: reengageSuggestion)
                     }
@@ -188,7 +193,6 @@ struct ShortcutsHomeView: View {
                     habitsSection
                     if !activeHabits.isEmpty { weeklyRecapSection }
                     goalsSection
-                    moodSection
                 }
                 .padding(Theme.pad)
             }
