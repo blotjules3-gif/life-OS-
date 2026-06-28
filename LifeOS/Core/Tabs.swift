@@ -65,7 +65,7 @@ struct AlarmFullScreenView: View {
                             .padding(.vertical, 22)
                             .background(.white, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(LifeOSPressStyle())
 
                     Button {
                         Haptics.tap()
@@ -82,7 +82,7 @@ struct AlarmFullScreenView: View {
                                     .stroke(.white.opacity(0.12), lineWidth: 1)
                             )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(LifeOSPressStyle())
                 }
                 .padding(.horizontal, 28)
                 .padding(.bottom, 52)
