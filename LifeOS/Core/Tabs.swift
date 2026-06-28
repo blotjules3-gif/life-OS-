@@ -2967,7 +2967,8 @@ struct SleepCheckSheet: View {
 
                 Button { onContinue() } label: {
                     Text("Passer").font(.system(size: 14)).foregroundStyle(.secondary)
-                }.buttonStyle(.plain)
+                        .frame(minHeight: 44)
+                }.buttonStyle(LifeOSPressStyle())
             }
             .padding(.horizontal, 20).padding(.bottom, 32)
             .background(Theme.bg)
