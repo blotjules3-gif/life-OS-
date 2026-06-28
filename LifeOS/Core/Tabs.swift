@@ -1344,6 +1344,7 @@ struct ProfileView: View {
                 Text(value)
                     .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
                     .foregroundStyle(.primary)
+                    .contentTransition(.numericText())
                 Text(unit)
                     .font(.system(size: 9, weight: .medium))
                     .foregroundStyle(.secondary)
