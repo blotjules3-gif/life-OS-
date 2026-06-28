@@ -1185,18 +1185,21 @@ struct ProfileView: View {
                         }
                         nightIsland
                         sectionPicker
-                        if profileSection == 0 {
-                            activeGoalsSection
-                                .transition(.opacity)
-                        } else {
-                            if challenges.isEmpty {
-                                challengesEmptyState
+                        Group {
+                            if profileSection == 0 {
+                                activeGoalsSection
                                     .transition(.opacity)
                             } else {
-                                activeChallengesSection
-                                    .transition(.opacity)
+                                if challenges.isEmpty {
+                                    challengesEmptyState
+                                        .transition(.opacity)
+                                } else {
+                                    activeChallengesSection
+                                        .transition(.opacity)
+                                }
                             }
                         }
+                        .animation(.easeInOut(duration: 0.18), value: profileSection)
                         bentoRow
                         tipCard
                         settingsSection
