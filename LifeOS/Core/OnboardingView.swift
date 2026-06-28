@@ -1120,7 +1120,14 @@ private let moduleSetupQuestions: [AppCategory: [ModuleQuestion]] = [
 
 struct OnboardingModuleSetup: View {
     let modules: [AppCategory]
+    let skipHabitStep: Bool
     let onNext: ([String: [String: String]]) -> Void
+
+    init(modules: [AppCategory], skipHabitStep: Bool = false, onNext: @escaping ([String: [String: String]]) -> Void) {
+        self.modules = modules
+        self.skipHabitStep = skipHabitStep
+        self.onNext = onNext
+    }
 
     @State private var currentIndex = 0
     @State private var answers: [String: [String: String]] = [:]
