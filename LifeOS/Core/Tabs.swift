@@ -436,18 +436,18 @@ struct DailyBriefingView: View {
         for mod in modules {
             switch mod {
             case .nutrition:
-                tasks.append(("fork.knife", "Petit-déjeuner", "Ajouter ton repas du matin", Color(hex: 0x4CC38A), kcalToday > 0))
-                tasks.append(("drop.fill", "Hydratation", "\(waterToday) / \(waterGoal) ml buvés", Color(hex: 0x3CB2E0), waterToday >= waterGoal))
+                tasks.append(("flame.fill",  "Calories",     "Ajouter ton repas du matin",       Color(hex: 0xF1746C), kcalToday > 0))
+                tasks.append(("drop.fill",   "Hydratation",  "\(waterToday) / \(waterGoal) ml",  Color(hex: 0x3CB2E0), waterToday >= waterGoal))
             case .fitness:
-                tasks.append(("figure.run", "Activité physique", "Enregistrer une séance ou des pas", Color(hex: 0xF1746C), false))
+                tasks.append(("figure.run",  "Activité",     "Enregistrer une séance ou des pas", Color(hex: 0x4CC38A), false))
             case .sleep:
-                tasks.append(("moon.stars.fill", "Qualité du sommeil", "Évaluer ta nuit", Color(hex: 0x6C7BF1), false))
+                tasks.append(("moon.stars.fill", "Sommeil",  "Évaluer ta nuit",                  Color(hex: 0x6C7BF1), false))
             case .mind:
-                tasks.append(("brain.head.profile", "Focus mental", "5 min de méditation ou breathing", Color(hex: 0x9B6CF1), false))
+                tasks.append(("brain.head.profile", "Focus", "5 min de méditation",              Color(hex: 0x9B6CF1), false))
             case .productivity:
-                tasks.append(("checklist", "Habitudes", "\(habitsDone) / \(habits.count) complétées", Color(hex: 0x3CB2E0), habitsDone == habits.count && !habits.isEmpty))
+                tasks.append(("checklist",   "Habitudes",    "\(habitsDone) / \(habits.count) complétées", Color(hex: 0x9B6CF1), habitsDone == habits.count && !habits.isEmpty))
             case .finance:
-                tasks.append(("creditcard.fill", "Budget du jour", "Vérifier tes dépenses", Color(hex: 0x4CC38A), false))
+                tasks.append(("creditcard.fill", "Budget",   "Vérifier tes dépenses",            Color(hex: 0x618EF1), false))
             default:
                 break
             }
