@@ -1961,9 +1961,9 @@ struct ProfileView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(Color.red.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
-                    .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+                    .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
             }
             .buttonStyle(LifeOSPressStyle())
             .confirmationDialog("Réinitialiser le profil ?", isPresented: $showOnboardingReset, titleVisibility: .visible) {
