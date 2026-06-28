@@ -685,7 +685,7 @@ struct DailyBriefingView: View {
                     }
                 }
 
-                Divider()
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1)
 
                 // Énergie / fatigue
                 VStack(alignment: .leading, spacing: 8) {
