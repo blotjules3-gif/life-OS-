@@ -60,7 +60,7 @@ final class ContextualNotifications {
             )
         }
 
-        // 4. Coucher (bedtime - 30 min) — seulement si sleep actif
+        // 5. Coucher (bedtime - 30 min) — seulement si sleep actif
         if modules.contains("sleep") {
             let bedH = UserDefaults.standard.integer(forKey: "bedHour")
             let bedM = UserDefaults.standard.integer(forKey: "bedMinute")
