@@ -1387,6 +1387,7 @@ struct ProfileView: View {
                 Text(hoursRemaining > 0 ? "\(hoursRemaining)h" : minutesRemaining > 0 ? "\(minutesRemaining)m" : "0h")
                     .font(.system(size: 30, weight: .black, design: .rounded).monospacedDigit())
                     .foregroundStyle(color)
+                    .contentTransition(.numericText())
                 Text("restantes")
                     .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(.secondary)
