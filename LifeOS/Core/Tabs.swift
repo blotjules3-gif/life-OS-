@@ -1081,6 +1081,18 @@ struct ProfileView: View {
                 tasks.append(ProfileTaskItem(icon: "brain.head.profile", title: "Focus", subtitle: "5 min de méditation", color: Color(hex: 0x9B6CF1), progress: 0))
             case .finance:
                 tasks.append(ProfileTaskItem(icon: "creditcard.fill", title: "Budget", subtitle: "Vérifier mes dépenses", color: Color(hex: 0x618EF1), progress: 0))
+            case .invest:
+                tasks.append(ProfileTaskItem(icon: "chart.line.uptrend.xyaxis", title: "Portefeuille", subtitle: "Consulter tes positions", color: Color(hex: 0x5DCFA8), progress: 0))
+            case .looks:
+                tasks.append(ProfileTaskItem(icon: "face.smiling", title: "Looksmaxx", subtitle: "Routine beauté du jour", color: Color(hex: 0xE0A23C), progress: 0))
+            case .career:
+                tasks.append(ProfileTaskItem(icon: "briefcase.fill", title: "Carrière", subtitle: "Candidatures & suivi", color: Color(hex: 0xE07B3C), progress: 0))
+            case .learning:
+                tasks.append(ProfileTaskItem(icon: "graduationcap.fill", title: "Apprendre", subtitle: "Flashcards & résumés", color: Color(hex: 0xE0C13C), progress: 0))
+            case .social:
+                tasks.append(ProfileTaskItem(icon: "person.2.fill", title: "Social", subtitle: "Contacts & événements", color: Color(hex: 0xE05A7A), progress: 0))
+            case .home:
+                tasks.append(ProfileTaskItem(icon: "house.fill", title: "Maison", subtitle: "Tâches & quotidien", color: Color(hex: 0x6CA0F1), progress: 0))
             default: break
             }
         }
