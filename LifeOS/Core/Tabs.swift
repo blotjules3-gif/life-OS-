@@ -2156,9 +2156,9 @@ struct ProfileView: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: icon)
-                    .font(.system(size: 12, weight: .bold)).foregroundStyle(.white)
+                    .font(.system(size: 12, weight: .bold)).foregroundStyle(iconColor)
                     .frame(width: 30, height: 30)
-                    .background(iconColor, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .background(iconColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 Text(label).font(.subheadline).foregroundStyle(.primary)
                 Spacer()
                 trailing()
