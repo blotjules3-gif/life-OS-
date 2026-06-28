@@ -596,9 +596,9 @@ struct DailyBriefingView: View {
             }
         }
         .task {
-            lastBriefingDate = Date.now.timeIntervalSince1970
             lastBriefingContent = todayTasks.prefix(4).map { $0.title }.joined(separator: "|||")
             briefingLoading = true
+            briefingFailed = false
 
             async let goalsTask = (try? await AgentAPI.shared.listGoals()) ?? []
             async let challengesTask = (try? await AgentAPI.shared.fetchChallenges()) ?? []
@@ -612,6 +612,12 @@ struct DailyBriefingView: View {
             if let resp = try? await AgentAPI.shared.chat(message: prompt, module: nil, conversationID: nil) {
                 aiBriefing = resp.reply
                 UserDefaults.standard.set(resp.reply, forKey: "lastAIBriefing")
+                // Marquer "vu aujourd'hui" seulement après succès
+                lastBriefingDate = Date.now.timeIntervalSince1970
+            } else {
+                briefingFailed = true
+                // Utiliser le dernier briefing en cache si dispo
+                aiBriefing = UserDefaults.standard.string(forKey: "lastAIBriefing")
             }
             briefingLoading = false
 
