@@ -1813,19 +1813,19 @@ struct ProfileView: View {
     // MARK: - Tip Card
 
     private var tipCard: some View {
-        HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 3, style: .continuous)
-                .fill(Color.accentColor.opacity(0.7))
-                .frame(width: 3, height: 36)
+        HStack(spacing: 14) {
+            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                .fill(Color.accentColor.opacity(0.6))
+                .frame(width: 3)
             Text(todayTip)
                 .font(.system(size: 13, weight: .regular))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer()
         }
-        .padding(16)
+        .padding(18)
         .background(neoCard)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
         .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
     }
