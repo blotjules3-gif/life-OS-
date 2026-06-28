@@ -2683,7 +2683,7 @@ struct SleepCheckSheet: View {
             VStack(spacing: 32) {
                 stepHeader(icon: "moon.stars.fill", color: Color(hex: 0x6C7BF1),
                            title: "Comment tu as dormi ?",
-                           subtitle: "Cette info personalise ton briefing")
+                           subtitle: "Cette info personnalise ton briefing")
                     .opacity(appeared ? 1 : 0)
                     .offset(y: appeared ? 0 : 10)
                     .animation(.spring(duration: 0.5, bounce: 0.3), value: appeared)
