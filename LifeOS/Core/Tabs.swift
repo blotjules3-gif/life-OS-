@@ -690,7 +690,8 @@ struct DailyBriefingView: View {
                 // Énergie / fatigue
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Niveau d'énergie")
-                        .font(.subheadline.weight(.medium))
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.secondary)
                     HStack(spacing: 0) {
                         ForEach(1...5, id: \.self) { s in
                             Button {
