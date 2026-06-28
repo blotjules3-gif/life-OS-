@@ -92,6 +92,7 @@ struct LifeOSApp: App {
                 if granted {
                     await MainActor.run {
                         ContextualNotifications.shared.reschedule()
+                        NotificationManager.shared.scheduleWeeklyBilan()
                     }
                 }
             }
