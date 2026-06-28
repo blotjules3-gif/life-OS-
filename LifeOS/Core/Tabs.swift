@@ -1549,7 +1549,7 @@ struct ProfileView: View {
                         Text("demain")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(accentColor.opacity(0.75))
-                            .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                            .transition(.scale(scale: 0.25).combined(with: .opacity))
                     }
                 }
                 .animation(.spring(duration: 0.35), value: alarmRingsNextDay)
