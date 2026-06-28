@@ -78,6 +78,7 @@ final class AIAssistantViewModel: ObservableObject {
     @Published var inputText = ""
     @Published var isLoading = false
     @Published var errorBanner: String? = nil
+    @Published var isServerOffline = false
 
     @AppStorage("aiConversationID") private var conversationID = ""
     @AppStorage("aiFirstLaunchDone") private var firstLaunchDone = false
