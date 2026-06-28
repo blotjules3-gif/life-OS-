@@ -1040,7 +1040,6 @@ struct ProfileView: View {
     @Environment(\.modelContext) private var ctx
 
     @State private var steps = 0
-    @State private var activeCalories = 0.0
     @State private var healthConnected = false
     @State private var showGoalEditor = false
     @State private var showWakeupDetail = false
