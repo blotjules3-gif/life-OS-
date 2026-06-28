@@ -1527,6 +1527,29 @@ struct ProfileView: View {
         defaults.set(top.challenge_type, forKey: "widget_challenge_type")
     }
 
+    private var challengesEmptyState: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "flag.checkered")
+                .font(.system(size: 32, weight: .semibold))
+                .foregroundStyle(Color.accentColor.opacity(0.5))
+            VStack(spacing: 4) {
+                Text("Aucun défi actif")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.primary)
+                Text("Tes défis personnalisés apparaîtront ici.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 36)
+        .background(neoCard)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+        .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
+    }
+
     private var activeChallengesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
