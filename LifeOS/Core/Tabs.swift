@@ -1237,18 +1237,26 @@ struct ProfileView: View {
 
     private var profileHeader: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(greeting.uppercased())
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                        .kerning(2)
-                    Text(name.isEmpty ? "Mon profil" : name)
-                        .font(.system(size: 32, weight: .black, design: .rounded))
-                        .foregroundStyle(.primary)
-                }
-                Spacer()
-                TimelineView(.everyMinute) { ctx in
+            TimelineView(.everyMinute) { ctx in
+                let hour = Calendar.current.component(.hour, from: ctx.date)
+                let greetingText: String = {
+                    switch hour {
+                    case 5..<12: return "Bonjour"
+                    case 12..<18: return "Bon après-midi"
+                    default: return "Bonsoir"
+                    }
+                }()
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(greetingText.uppercased())
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                            .kerning(2)
+                        Text(name.isEmpty ? "Mon profil" : name)
+                            .font(.system(size: 32, weight: .black, design: .rounded))
+                            .foregroundStyle(.primary)
+                    }
+                    Spacer()
                     VStack(alignment: .trailing, spacing: 1) {
                         Text(ctx.date, format: .dateTime.hour().minute())
                             .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
