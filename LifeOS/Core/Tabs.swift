@@ -2064,10 +2064,10 @@ struct ProfileView: View {
             Button { showOnboardingReset = true } label: {
                 Text("Refaire l'onboarding")
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Color(hex: 0xF1746C))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color.red.opacity(0.08))
+                    .background(Color(hex: 0xF1746C).opacity(0.08))
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                     .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
                     .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
