@@ -1907,7 +1907,7 @@ struct ProfileView: View {
         return VStack(spacing: 0) {
             HStack(spacing: 14) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .fill(waterColor.opacity(0.14))
                         .frame(width: 44, height: 44)
                     Image(systemName: "drop.fill")
