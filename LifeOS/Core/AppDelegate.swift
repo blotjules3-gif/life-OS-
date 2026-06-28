@@ -129,7 +129,25 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     }
 }
 
+    // MARK: - APNs Token
+
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        let token = deviceToken.map { String(format: "%02x", $0) }.joined()
+        UserDefaults.standard.set(token, forKey: "apnsToken")
+    }
+
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        // Silencieux en dev (simulateur ne supporte pas les APNs)
+        #if DEBUG
+        print("[APNs] Registration failed: \(error.localizedDescription)")
+        #endif
+    }
+}
+
 extension Notification.Name {
-    static let lifeOSOpenAIChat    = Notification.Name("lifeOSOpenAIChat")
+    static let lifeOSOpenAIChat      = Notification.Name("lifeOSOpenAIChat")
     static let lifeOSOpenWeeklyBilan = Notification.Name("lifeOSOpenWeeklyBilan")
+    static let lifeOSOpenModule      = Notification.Name("lifeOSOpenModule")
 }
