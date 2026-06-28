@@ -1751,13 +1751,13 @@ struct ProfileView: View {
                             )
                             .contextMenu {
                                 Button {
-                                    withAnimation { pinGoal(key) }
+                                    withAnimation(.spring(duration: 0.38, bounce: 0.1)) { pinGoal(key) }
                                 } label: {
                                     Label(isPinned ? "Désépingler" : "Épingler en haut",
                                           systemImage: isPinned ? "pin.slash" : "pin.fill")
                                 }
                                 Button(role: .destructive) {
-                                    withAnimation { toggleHideGoal(key) }
+                                    withAnimation(.spring(duration: 0.38, bounce: 0.1)) { toggleHideGoal(key) }
                                 } label: {
                                     Label("Masquer", systemImage: "eye.slash")
                                 }
