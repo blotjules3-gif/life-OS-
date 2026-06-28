@@ -1869,10 +1869,16 @@ struct ProfileView: View {
                 .animation(.spring(duration: 0.38, bounce: 0.25), value: task.progress >= 1)
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(min(100, Int(task.progress * 100)))%")
-                        .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
-                        .foregroundStyle(task.progress >= 1 ? task.color : .secondary)
-                        .contentTransition(.numericText())
+                    if task.progress > 0 {
+                        Text("\(min(100, Int(task.progress * 100)))%")
+                            .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
+                            .foregroundStyle(task.progress >= 1 ? task.color : .secondary)
+                            .contentTransition(.numericText())
+                    } else {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(.tertiary)
+                    }
                     if let end = endDate {
                         let days = max(0, Calendar.current.dateComponents([.day], from: .now, to: end).day ?? 0)
                         Text(days > 0 ? "J-\(days)" : "Échu")
@@ -1894,19 +1900,21 @@ struct ProfileView: View {
                     .lineLimit(1)
             }
 
-            GeometryReader { g in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(task.color.opacity(0.12))
-                        .frame(height: 4)
-                    Capsule()
-                        .fill(task.color)
-                        .frame(width: g.size.width * min(1, max(0, task.progress)), height: 4)
-                        .animation(.spring(duration: 1.0).delay(0.2), value: appeared)
-                        .animation(.spring(duration: 0.5), value: task.progress)
+            if task.progress > 0 {
+                GeometryReader { g in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(task.color.opacity(0.12))
+                            .frame(height: 4)
+                        Capsule()
+                            .fill(task.color)
+                            .frame(width: g.size.width * min(1, max(0, task.progress)), height: 4)
+                            .animation(.spring(duration: 1.0).delay(0.2), value: appeared)
+                            .animation(.spring(duration: 0.5), value: task.progress)
+                    }
                 }
+                .frame(height: 4)
             }
-            .frame(height: 4)
         }
         .padding(14)
         .background(neoCard)
