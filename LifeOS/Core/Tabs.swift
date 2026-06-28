@@ -1409,6 +1409,10 @@ struct ProfileView: View {
         VStack(spacing: 6) {
             ZStack {
                 Circle()
+                    .fill(progress >= 1 ? color.opacity(0.10) : Color.clear)
+                    .frame(width: 36, height: 36)
+                    .animation(.spring(duration: 0.38, bounce: 0.1), value: progress >= 1)
+                Circle()
                     .stroke(color.opacity(0.12), lineWidth: 3)
                     .frame(width: 36, height: 36)
                 Circle()
