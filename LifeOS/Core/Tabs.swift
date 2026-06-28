@@ -583,7 +583,7 @@ struct DailyBriefingView: View {
                             .padding(.vertical, 16)
                             .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(LifeOSPressStyle())
                     .padding(.bottom, 40)
                 }
                 .padding(.horizontal, 22)
