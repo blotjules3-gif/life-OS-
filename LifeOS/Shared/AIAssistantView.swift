@@ -814,6 +814,7 @@ private struct MessageRow: View {
         case .scheduleReminder: return "bell"
         case .updateConfig: return "slider.horizontal.3"
         case .createChallenge: return "flame"
+        case .createHabit: return "repeat.circle.fill"
         case .addModule: return "plus.circle"
         case .removeModule: return "minus.circle"
         }
