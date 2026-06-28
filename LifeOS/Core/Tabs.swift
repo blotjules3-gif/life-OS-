@@ -2484,7 +2484,7 @@ struct GoalEditorSheet: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(color)
                     .frame(width: 32, height: 32)
-                    .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
 
                 // Titre + date fin
                 VStack(alignment: .leading, spacing: 2) {
