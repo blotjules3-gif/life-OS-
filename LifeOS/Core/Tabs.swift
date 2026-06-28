@@ -325,7 +325,7 @@ struct WakeUpView: View {
                 .padding(14)
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(LifeOSPressStyle())
 
             if !recommendedModules.isEmpty {
                 Text("Modules prioritaires")
