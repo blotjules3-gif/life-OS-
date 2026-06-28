@@ -1146,14 +1146,6 @@ struct ProfileView: View {
 
     // MARK: - Computed helpers
 
-    private var dayProgress: Double {
-        let cal = Calendar.current
-        let now = Date()
-        let start = cal.startOfDay(for: now)
-        let end = cal.date(byAdding: .day, value: 1, to: start) ?? now
-        return (now.timeIntervalSince(start)) / (end.timeIntervalSince(start))
-    }
-
     private func parseEndDates() -> [String: Date] {
         guard let data = goalEndDatesRaw.data(using: .utf8),
               let dict = try? JSONDecoder().decode([String: Double].self, from: data) else { return [:] }
