@@ -268,19 +268,27 @@ struct BubbleCategoriesView: View {
             let h = geo.size.height
             let base = w * BubbleLayout.baseRatio
             let items = tidy ? mains : visible
+            // En mode libre, le cluster est un peu PLUS HAUT que l'écran : les bulles
+            // respirent et les petites (Sommeil, Maison…) ne sont plus enterrées sous
+            // les grosses. On scrolle légèrement. Les tailles ne changent PAS.
+            let contentH = tidy ? h : max(h, h * 1.34)
 
-            TimelineView(.animation) { context in
-                let t = context.date.timeIntervalSinceReferenceDate
-                ZStack {
-                    Color.clear.contentShape(Rectangle())
-                        .onTapGesture { if editing { setEditing(false) } }
-                        .gesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in setEditing(true) })
+            ScrollView(.vertical, showsIndicators: false) {
+                TimelineView(.animation) { context in
+                    let t = context.date.timeIntervalSinceReferenceDate
+                    ZStack {
+                        Color.clear.contentShape(Rectangle())
+                            .onTapGesture { if editing { setEditing(false) } }
+                            .gesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in setEditing(true) })
 
-                    ForEach(Array(items.enumerated()), id: \.element.id) { index, cat in
-                        bubble(cat, index: index, base: base, w: w, h: h, t: t, tidy: tidy)
+                        ForEach(Array(items.enumerated()), id: \.element.id) { index, cat in
+                            bubble(cat, index: index, base: base, w: w, h: contentH, t: t, tidy: tidy)
+                        }
                     }
+                    .frame(width: w, height: contentH)
                 }
             }
+            .scrollDisabled(contentH <= h)
         }
     }
 
