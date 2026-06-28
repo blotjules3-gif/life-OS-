@@ -332,6 +332,19 @@ struct ShortcutsHomeView: View {
                         Spacer()
                     }
                 }
+                Divider().opacity(0.4)
+                Button { showBilan = true } label: {
+                    HStack {
+                        Text("Voir le bilan complet")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(weeklyScoreColor)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(weeklyScoreColor.opacity(0.6))
+                    }
+                }
+                .buttonStyle(.plain)
             }
             .padding(16)
             .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
