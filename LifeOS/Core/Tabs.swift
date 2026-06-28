@@ -1695,10 +1695,16 @@ struct ProfileView: View {
                     columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
                     spacing: 12
                 ) {
-                    ForEach(Array(tasks.enumerated()), id: \.offset) { _, task in
+                    ForEach(Array(tasks.enumerated()), id: \.offset) { offset, task in
                         let key = task.icon + task.title
                         let isPinned = pinned.contains(key)
                         goalCard(task: task, endDate: endDates[key])
+                            .opacity(appeared ? 1 : 0)
+                            .offset(y: appeared ? 0 : 10)
+                            .animation(
+                                .spring(duration: 0.45, bounce: 0.1).delay(Double(offset) * 0.07 + 0.08),
+                                value: appeared
+                            )
                             .contextMenu {
                                 Button {
                                     withAnimation { pinGoal(key) }
