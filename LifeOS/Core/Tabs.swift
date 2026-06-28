@@ -2096,10 +2096,10 @@ struct ProfileView: View {
                     }
                 }
                 Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
-                settingsRow(icon: "bell.fill", iconColor: Color(hex: 0xE0A23C), label: "Activer les rappels") {
+                settingsRow(icon: "bell.fill", iconColor: Color(hex: 0xE0A23C), label: "Gérer mes rappels") {
                     Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
                 } action: {
-                    Task { _ = await NotificationManager.shared.requestAuthorization() }
+                    showNotificationSettings = true
                 }
                 Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
                 settingsRow(icon: "slider.horizontal.3", iconColor: Color.accentColor, label: "Modifier mes objectifs") {
