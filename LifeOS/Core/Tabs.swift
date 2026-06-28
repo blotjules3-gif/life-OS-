@@ -320,7 +320,7 @@ struct WakeUpView: View {
                     }
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.caption.bold())
+                        .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(.tertiary)
                 }
                 .padding(14)
