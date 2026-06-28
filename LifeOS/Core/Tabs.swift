@@ -760,6 +760,7 @@ struct DailyBriefingView: View {
                     .font(.system(size: 56, weight: .black, design: .rounded))
                     .foregroundStyle(scoreColor)
                     .contentTransition(.numericText())
+                    .animation(.spring(duration: 0.6, bounce: 0.15), value: todayEnergyScore)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Score d'Énergie").font(.headline)
                     Text(todayEnergyLabel.isEmpty ? "—" : todayEnergyLabel)
