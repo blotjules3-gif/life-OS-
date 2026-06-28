@@ -991,7 +991,7 @@ struct DailyBriefingView: View {
                     .frame(width: 64, height: 64)
                 Image(systemName: icon).font(.system(size: 12)).foregroundStyle(color)
             }
-            Text(label).font(.caption2).foregroundStyle(.secondary)
+            Text(label).font(.system(size: 11)).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
