@@ -1318,6 +1318,7 @@ struct ProfileView: View {
                     .frame(width: 36, height: 36)
                     .rotationEffect(.degrees(-90))
                     .animation(.spring(duration: 1.2).delay(0.15), value: appeared)
+                    .animation(.spring(duration: 0.6), value: progress)
                 Image(systemName: icon)
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(color)
