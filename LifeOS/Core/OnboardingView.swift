@@ -762,7 +762,7 @@ struct OnboardingResults: View {
                   let data = configStr.data(using: .utf8),
                   let config = try? JSONDecoder().decode([String: String].self, from: data),
                   !config.isEmpty else { return nil }
-            let labelMap: [String: [String: String]] = [
+            let labelMap: [String: [String: [String: String]]] = [
                 "fitness": ["location": ["gym":"En salle","home":"A la maison","outdoor":"Dehors","mixed":"Mixte"],
                             "frequency": ["1_2":"1-2x/sem","3":"3x/sem","4p":"4x+/sem"],
                             "goal": ["loss":"Perte de poids","muscle":"Muscle","cardio":"Cardio","flex":"Souplesse"]],
