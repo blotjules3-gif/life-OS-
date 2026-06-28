@@ -1136,6 +1136,17 @@ struct ProfileView: View {
 
     private var topModule: AppCategory? { recommendedModules.first }
 
+    private var activeNotifCount: Int {
+        let mods = recommendedModules
+        var n = 1 // bilan de semaine always
+        if mods.contains(.sleep) || mods.contains(.fitness) || mods.contains(.mind) { n += 1 }
+        if mods.contains(.fitness) { n += 1 }
+        if mods.contains(.nutrition) { n += 1 }
+        if mods.contains(.productivity) || mods.contains(.fitness) || mods.contains(.mind) || mods.contains(.sleep) { n += 1 }
+        if mods.contains(.sleep) { n += 1 }
+        return n
+    }
+
     private let glassML = 250
     private var glassesToday: Int { waterToday / glassML }
     private var glassesGoalCalc: Int { max(1, waterGoal / glassML) }
