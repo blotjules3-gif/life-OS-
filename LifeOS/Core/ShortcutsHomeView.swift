@@ -446,35 +446,38 @@ struct ShortcutsHomeView: View {
         }
     }
 
-    // MARK: Section 3 — Humeur du jour (check-in)
+    // MARK: Humeur — compact, en haut, disparaît après vote
     private var moodSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Comment tu te sens ?")
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Comment tu te sens ?")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .kerning(0.5)
+                .padding(.horizontal, 4)
             if let m = todayMood, !editingMood {
-                HStack(spacing: 14) {
-                    Text(moodEmoji(m.score)).font(.system(size: 36))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Humeur enregistrée").font(.subheadline.weight(.semibold))
-                        Text("Bonne journée à toi ✨").font(.caption).foregroundStyle(.secondary)
-                    }
+                HStack(spacing: 12) {
+                    Text(moodEmoji(m.score)).font(.system(size: 28))
+                    Text("Noté — revote dans 24h")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     Spacer()
-                    Button("Modifier") { withAnimation { editingMood = true } }
-                        .font(.subheadline).foregroundStyle(.secondary)
+                    Button("Modifier") { withAnimation(.spring(duration: 0.3)) { editingMood = true } }
+                        .font(.caption).foregroundStyle(.secondary)
                 }
-                .padding(16)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                .padding(.horizontal, 14).padding(.vertical, 10)
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             } else {
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     ForEach(1...5, id: \.self) { s in
                         Button { logMood(s) } label: {
-                            Text(moodEmoji(s)).font(.system(size: 30))
-                                .frame(maxWidth: .infinity).padding(.vertical, 12)
-                                .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            Text(moodEmoji(s))
+                                .font(.system(size: 26))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                         }.buttonStyle(.plain)
                     }
                 }
-                .padding(16)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
             }
         }
     }
@@ -484,7 +487,10 @@ struct ShortcutsHomeView: View {
         if let m = todayMood { m.score = s } else { ctx.insert(MoodEntry(score: s)) }
         try? ctx.save()
         Haptics.soft()
-        withAnimation { editingMood = false }
+        withAnimation(.spring(duration: 0.3)) { editingMood = false }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            withAnimation(.easeOut(duration: 0.4)) { moodDismissed = true }
+        }
     }
 
     private func weeklyModuleCard(_ module: AppCategory) -> some View {
