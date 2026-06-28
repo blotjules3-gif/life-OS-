@@ -50,6 +50,10 @@ struct ModuleChatView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 messagesScrollView
+                if isServerOffline {
+                    moduleChatOfflineBanner
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
                 inputBar
             }
             .background(Theme.bg.ignoresSafeArea())
