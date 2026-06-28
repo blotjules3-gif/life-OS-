@@ -998,7 +998,7 @@ struct DailyBriefingView: View {
             .padding(.vertical, 14)
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(LifeOSPressStyle())
     }
 }
 
