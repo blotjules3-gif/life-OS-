@@ -1120,14 +1120,6 @@ struct ProfileView: View {
         return wakeupHour < h || (wakeupHour == h && wakeupMinute <= m)
     }
 
-    private var islandBg: some ShapeStyle {
-        LinearGradient(
-            colors: [appTheme.accent.opacity(0.72), Color(hex: 0x1A1A22).opacity(0.88)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
     // MARK: - Neomorphism helpers
 
     private var neoBackground: Color {
