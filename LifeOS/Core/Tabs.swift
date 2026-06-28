@@ -1609,7 +1609,7 @@ struct ProfileView: View {
     private var activeGoalsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("MES MODULES")
+                Text("AUJOURD'HUI")
                     .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(.secondary)
                     .kerning(1.2)
