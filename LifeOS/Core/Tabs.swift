@@ -1250,7 +1250,10 @@ struct ProfileView: View {
                                         .transition(.opacity)
                                     }
                                 }
-                                .transition(.opacity)
+                                .transition(.asymmetric(
+                                    insertion: .scale(scale: 0.94, anchor: .top).combined(with: .opacity),
+                                    removal: .opacity
+                                ))
                             }
                         }
                         .animation(.spring(duration: 0.35, bounce: 0.1), value: profileSection)
