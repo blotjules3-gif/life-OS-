@@ -1791,7 +1791,7 @@ struct ProfileView: View {
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(Int(task.progress * 100))%")
+                    Text("\(min(100, Int(task.progress * 100)))%")
                         .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
                         .foregroundStyle(task.progress >= 1 ? task.color : .secondary)
                         .contentTransition(.numericText())
