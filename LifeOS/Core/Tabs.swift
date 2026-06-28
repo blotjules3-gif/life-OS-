@@ -265,7 +265,7 @@ struct WakeUpView: View {
                 }
                 .padding(Theme.pad)
             }
-            .background(Theme.bg)
+            .scrollContentBackground(.hidden)
             .navigationTitle("Réveil")
             .fullScreenCover(isPresented: $showBriefing) {
                 DailyBriefingView(modules: recommendedModules)
@@ -1172,7 +1172,6 @@ struct ProfileView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                neoBackground.ignoresSafeArea()
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
                         profileHeader
@@ -1195,7 +1194,7 @@ struct ProfileView: View {
                 }
             }
             .navigationTitle("Profil")
-            .toolbarBackground(neoBackground, for: .navigationBar)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .onAppear { appeared = true }
             .task {
                 if await HealthService.shared.requestAuthorization() {

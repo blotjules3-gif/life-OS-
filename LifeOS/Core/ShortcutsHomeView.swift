@@ -150,7 +150,7 @@ struct ShortcutsHomeView: View {
                 }
                 .padding(Theme.pad)
             }
-            .background(Theme.bg)
+            .scrollContentBackground(.hidden)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .task {
