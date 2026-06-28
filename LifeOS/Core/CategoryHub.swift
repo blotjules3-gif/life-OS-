@@ -82,18 +82,53 @@ struct CategoryHubView: View {
     @AppStorage("appTheme")   private var appThemeRaw = "classic"
     @AppStorage("bubbleSize") private var bubbleSizeRaw = "medium"
     @State private var cover: CategoryTool?
+    @State private var showReconfigure = false
 
     private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .organic }
     private var theme: AppTheme   { AppTheme(rawValue: appThemeRaw) ?? .classic }
     private var tools: [CategoryTool] { category.tools }
-    // Petite / Moyenne / Grande — partagé avec la grille de catégories.
     private var sizeFactor: CGFloat { BubbleSize(rawValue: bubbleSizeRaw)?.factor ?? 1.0 }
+    private var hasModuleQuestions: Bool { moduleSetupQuestions[category]?.isEmpty == false }
 
     var body: some View {
         content
             .navigationTitle(category.title)
             .navigationBarTitleDisplayMode(layout == .list ? .large : .inline)
             .fullScreenCover(item: $cover) { $0.dest() }
+            .toolbar {
+                if hasModuleQuestions {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            showReconfigure = true
+                        } label: {
+                            Image(systemName: "slider.horizontal.3")
+                                .font(.system(size: 15))
+                        }
+                        .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .sheet(isPresented: $showReconfigure) {
+                NavigationStack {
+                    OnboardingModuleSetup(modules: [category], skipHabitStep: true) { answers in
+                        for (module, config) in answers {
+                            if let data = try? JSONSerialization.data(withJSONObject: config),
+                               let str = String(data: data, encoding: .utf8) {
+                                UserDefaults.standard.set(str, forKey: "moduleConfig_\(module)")
+                            }
+                        }
+                        showReconfigure = false
+                    }
+                    .navigationTitle("Reconfigurer")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Fermer") { showReconfigure = false }
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
     }
 
     @ViewBuilder private var content: some View {
