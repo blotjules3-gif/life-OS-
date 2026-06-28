@@ -210,6 +210,7 @@ struct OnboardingView: View {
                                 if !finalModules.isEmpty {
                                     homeShortcuts = buildShortcuts(from: finalModules)
                                 }
+                                createPendingHabits()
                                 NotificationManager.shared.scheduleAfter(
                                     id: "lifeos.ai.welcome",
                                     title: "LifeOS",
