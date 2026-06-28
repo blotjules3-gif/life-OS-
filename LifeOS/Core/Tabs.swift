@@ -2393,13 +2393,13 @@ struct GoalEditorSheet: View {
                     Image(systemName: isExpanded ? "calendar.badge.minus" : "calendar.badge.plus")
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(isExpanded ? color : .secondary)
-                        .frame(width: 34, height: 34)
+                        .frame(width: 44, height: 44)
                         .background(
                             isExpanded ? color.opacity(0.12) : Color.clear,
                             in: RoundedRectangle(cornerRadius: 9, style: .continuous)
                         )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(LifeOSPressStyle())
             }
             .padding(.vertical, 6)
 
