@@ -885,7 +885,7 @@ struct DailyBriefingView: View {
                 .padding(.vertical, 12)
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(LifeOSPressStyle())
             .transition(.opacity)
         }
     }
@@ -895,9 +895,9 @@ struct DailyBriefingView: View {
             HStack(spacing: 12) {
                 Image(systemName: "sparkles")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Color(hex: 0xFF9F0A))
                     .frame(width: 32, height: 32)
-                    .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .background(Color(hex: 0xFF9F0A).opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 VStack(alignment: .leading, spacing: 7) {
                     ForEach(0..<3, id: \.self) { i in
                         RoundedRectangle(cornerRadius: 4, style: .continuous)
