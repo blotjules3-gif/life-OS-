@@ -3185,7 +3185,7 @@ struct ChallengeCard: View {
                             .foregroundStyle(challenge.checkedInToday ? .white : typeColor)
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(LifeOSPressStyle())
                 .disabled(challenge.checkedInToday)
             }
             .padding(.horizontal, 14)
