@@ -1433,12 +1433,14 @@ struct ProfileView: View {
             VStack(spacing: 1) {
                 Text(value)
                     .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(progress >= 1 ? color : .primary)
                     .contentTransition(.numericText())
                     .animation(.spring(duration: 0.38, bounce: 0.1), value: value)
+                    .animation(.spring(duration: 0.5, bounce: 0.1), value: progress >= 1)
                 Text(unit)
                     .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(progress >= 1 ? color.opacity(0.7) : .secondary)
+                    .animation(.spring(duration: 0.5, bounce: 0.1), value: progress >= 1)
             }
         }
         .frame(maxWidth: .infinity)
