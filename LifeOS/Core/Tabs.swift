@@ -924,7 +924,7 @@ struct DailyBriefingView: View {
             }
             .padding(14)
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
+            .transition(.scale(scale: 0.88, anchor: .top).combined(with: .opacity))
         }
     }
 
