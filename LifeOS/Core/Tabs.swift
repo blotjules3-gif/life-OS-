@@ -559,9 +559,9 @@ struct DailyBriefingView: View {
                                     HStack(alignment: .top, spacing: 10) {
                                         Image(systemName: "lightbulb.fill")
                                             .font(.system(size: 12, weight: .semibold))
-                                            .foregroundStyle(Color(hex: 0xFFBF00))
+                                            .foregroundStyle(Color(hex: 0xE0A23C))
                                             .frame(width: 22, height: 22)
-                                            .background(Color(hex: 0xFFBF00).opacity(0.12), in: Circle())
+                                            .background(Color(hex: 0xE0A23C).opacity(0.12), in: Circle())
                                         Text(insight)
                                             .font(.subheadline)
                                             .foregroundStyle(.primary)
