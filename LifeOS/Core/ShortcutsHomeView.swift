@@ -114,6 +114,8 @@ struct ShortcutsHomeView: View {
     @State private var steps = 0
     @State private var editingMood = false
     @State private var animatedHabitIDs: Set<PersistentIdentifier> = []
+    @State private var moodDismissed = false
+    @State private var showBilan = false
 
     private let cols = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
 
