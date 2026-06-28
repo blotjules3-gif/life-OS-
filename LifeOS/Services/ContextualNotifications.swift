@@ -40,15 +40,25 @@ final class ContextualNotifications {
             )
         }
 
-        // 3. Fin de journée regroupée (20h) — habitudes + nutrition + tout le reste
-        var bodyParts: [String] = ["Tes habitudes du jour — quelques secondes."]
-        if modules.contains("nutrition") { bodyParts.append("Pense à noter ton dîner.") }
-        scheduleDaily(
-            id: "evening",
-            title: "Fin de journée",
-            body: bodyParts.joined(separator: " "),
-            hour: 20, minute: 0
-        )
+        // 3. Rappel nutrition soir (19h30) — seulement si nutrition actif
+        if modules.contains("nutrition") {
+            scheduleDaily(
+                id: "nutrition_evening",
+                title: "Objectif nutrition",
+                body: "Note ton dîner et vérifie tes calories du jour.",
+                hour: 19, minute: 30
+            )
+        }
+
+        // 4. Rappel habitudes soir (20h) — seulement si productivity ou au moins 1 module actif
+        if modules.contains("productivity") || modules.contains("fitness") || modules.contains("mind") || modules.contains("sleep") {
+            scheduleDaily(
+                id: "habits_evening",
+                title: "Tes habitudes du jour",
+                body: "Quelques secondes pour cocher ce que tu as fait.",
+                hour: 20, minute: 0
+            )
+        }
 
         // 4. Coucher (bedtime - 30 min) — seulement si sleep actif
         if modules.contains("sleep") {
