@@ -451,6 +451,10 @@ struct AIAssistantView: View {
 
                 VStack(spacing: 0) {
                     messagesArea
+                    if vm.isServerOffline {
+                        offlineBanner
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
                     inputArea
                 }
             }
