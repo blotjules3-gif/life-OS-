@@ -1050,6 +1050,7 @@ struct ProfileView: View {
     @State private var appeared = false
     @State private var challenges: [ChallengeOut] = []
     @State private var profileSection = 0
+    @State private var showOnboardingReset = false
     @Namespace private var pickerNS
 
     private var recommendedModules: [AppCategory] {
