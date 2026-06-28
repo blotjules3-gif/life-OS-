@@ -1634,6 +1634,7 @@ struct ProfileView: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
+            .padding(.horizontal, 4)
 
             ForEach(challenges) { challenge in
                 ChallengeCard(challenge: challenge, onCheckin: {
