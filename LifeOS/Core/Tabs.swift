@@ -907,7 +907,7 @@ struct DailyBriefingView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Color(hex: 0xFF9F0A))
                     .frame(width: 32, height: 32)
-                    .background(Color(hex: 0xFF9F0A).opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .background(Color(hex: 0xFF9F0A).opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 VStack(alignment: .leading, spacing: 7) {
                     ForEach(0..<3, id: \.self) { i in
                         RoundedRectangle(cornerRadius: 4, style: .continuous)
@@ -925,7 +925,7 @@ struct DailyBriefingView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Color(hex: 0xFF9F0A))
                     .frame(width: 32, height: 32)
-                    .background(Color(hex: 0xFF9F0A).opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .background(Color(hex: 0xFF9F0A).opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 Text(text)
                     .font(.system(size: 15))
                     .foregroundStyle(.primary)
