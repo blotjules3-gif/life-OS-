@@ -1959,8 +1959,9 @@ struct ProfileView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("EAU")
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(waterProgress >= 1 ? waterColor : .secondary)
                         .kerning(1.2)
+                        .animation(.spring(duration: 0.5, bounce: 0.1), value: waterProgress >= 1)
                     HStack(alignment: .lastTextBaseline, spacing: 3) {
                         Text("\(glassesToday)")
                             .font(.system(size: 22, weight: .black, design: .rounded).monospacedDigit())
