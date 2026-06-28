@@ -504,7 +504,8 @@ struct DailyBriefingView: View {
                     // Task list
                     if !todayTasks.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("À faire aujourd'hui").font(.headline)
+                            Text("À faire aujourd'hui")
+                            .font(.system(size: 15, weight: .semibold))
                             ForEach(Array(todayTasks.enumerated()), id: \.offset) { _, task in
                                 HStack(spacing: 14) {
                                     Image(systemName: task.icon)
