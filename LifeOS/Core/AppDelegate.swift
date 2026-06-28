@@ -128,5 +128,6 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
 }
 
 extension Notification.Name {
-    static let lifeOSOpenAIChat = Notification.Name("lifeOSOpenAIChat")
+    static let lifeOSOpenAIChat    = Notification.Name("lifeOSOpenAIChat")
+    static let lifeOSOpenWeeklyBilan = Notification.Name("lifeOSOpenWeeklyBilan")
 }
