@@ -1501,7 +1501,9 @@ struct ProfileView: View {
             }
             .padding(.horizontal, 20).padding(.top, 20).padding(.bottom, 16)
 
-            Divider().opacity(0.12)
+            Rectangle()
+                .fill(Color.primary.opacity(0.06))
+                .frame(height: 1)
 
             Button { showBriefing = true } label: {
                 HStack(spacing: 12) {
