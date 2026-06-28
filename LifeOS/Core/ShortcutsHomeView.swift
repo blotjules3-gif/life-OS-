@@ -207,6 +207,7 @@ struct ShortcutsHomeView: View {
                 reengageSuggestion = EngagementTracker.shared.simplificationSuggestion
                 weeklyModuleSuggestion = WeeklyModuleSuggester.shared.currentSuggestion()
                 WeeklyModuleSuggester.shared.scheduleWeeklyNotification()
+                if todayMood != nil { moodDismissed = true }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                 Task {
@@ -214,7 +215,9 @@ struct ShortcutsHomeView: View {
                         steps = await HealthService.shared.stepsToday()
                     }
                 }
+                if todayMood == nil { withAnimation { moodDismissed = false } }
             }
+            .sheet(isPresented: $showBilan) { WeeklyBilanView() }
         }
     }
 
