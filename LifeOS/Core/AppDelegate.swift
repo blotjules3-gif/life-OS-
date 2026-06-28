@@ -99,6 +99,11 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                 NotificationCenter.default.post(name: .lifeOSOpenAIChat, object: nil)
             }
         }
+        if id == "lifeos.weekly_bilan" {
+            await MainActor.run {
+                NotificationCenter.default.post(name: .lifeOSOpenWeeklyBilan, object: nil)
+            }
+        }
 
         // Réponse à une notif de CONFIRMATION (compléments, salle, etc.)
         let content = response.notification.request.content
