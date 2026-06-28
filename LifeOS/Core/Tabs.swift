@@ -1961,6 +1961,7 @@ struct ProfileView: View {
                             .font(.system(size: 22, weight: .black, design: .rounded).monospacedDigit())
                             .foregroundStyle(.primary)
                             .contentTransition(.numericText())
+                            .animation(.spring(duration: 0.38, bounce: 0.1), value: glassesToday)
                         Text("/ \(glassesGoalCalc) verres")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(.secondary)
