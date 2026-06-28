@@ -567,5 +567,7 @@ private let adminTools: [CategoryTool] = [
 
 private let travelTools: [CategoryTool] = [
     .init("map.fill", "Mes voyages", "Itinéraire + budget + valise", tint: .travelTint) { TripsView() },
+    .init("coloncurrencysign.circle.fill", "Convertisseur", "12 devises, hors-ligne, repères rapides", tint: .travelTint) { CurrencyConverterView() },
+    .init("character.bubble.fill", "Phrases de voyage", "5 langues, prononcées à voix haute", tint: .travelTint) { PhrasebookView() },
     .init("airplane.circle.fill", "Suivi des vols", "Statut & retards — à brancher", tint: .travelTint) { FlightScaffold() },
 ]
