@@ -3392,10 +3392,15 @@ struct SleepCheckSheet: View {
         UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: "lastSleepCheckDate")
         UserDefaults.standard.set(quality, forKey: "lastSleepQuality")
         UserDefaults.standard.set(hours, forKey: "lastSleepHours")
-        guard !note.isEmpty else { return }
-        let dream = DreamEntry(title: "Nuit du \(Date.now.formatted(.dateTime.day().month()))",
-                               text: note, mood: quality)
+        // Toujours persister en SwiftData — même sans note textuelle.
+        // Permet l'historique sommeil dans SleepModule et le bilan hebdomadaire.
+        let dream = DreamEntry(
+            title: "Nuit du \(Date.now.formatted(.dateTime.day().month()))",
+            text: note,
+            mood: quality
+        )
         ctx.insert(dream)
+        try? ctx.save()
     }
 
     private func submitAndReveal() {
