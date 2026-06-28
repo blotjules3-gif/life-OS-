@@ -1951,8 +1951,8 @@ struct ProfileView: View {
         .padding(14)
         .background(neoCard)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .shadow(color: neoShadowLight, radius: 7, x: -3, y: -3)
-        .shadow(color: neoShadowDark, radius: 7, x: 3, y: 3)
+        .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+        .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(task.color.opacity(task.progress >= 1 ? 0.4 : 0), lineWidth: 1.5)
