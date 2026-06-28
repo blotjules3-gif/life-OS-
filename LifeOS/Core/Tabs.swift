@@ -1484,6 +1484,7 @@ struct ProfileView: View {
                             .transition(.opacity.combined(with: .scale(scale: 0.8)))
                     }
                 }
+                .animation(.spring(duration: 0.35), value: alarmRingsNextDay)
                 Spacer()
                 VStack(alignment: .trailing, spacing: 10) {
                     Toggle("", isOn: $wakeupEnabled)
