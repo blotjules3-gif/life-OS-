@@ -1664,18 +1664,32 @@ struct ProfileView: View {
             Image(systemName: "flag.checkered")
                 .font(.system(size: 32, weight: .semibold))
                 .foregroundStyle(Color.accentColor.opacity(0.5))
-            VStack(spacing: 4) {
+            VStack(spacing: 6) {
                 Text("Aucun défi actif")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.primary)
-                Text("Tes défis personnalisés apparaîtront ici.")
+                Text("Crée un défi avec ton assistant IA.")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
+            Button {
+                NotificationCenter.default.post(name: Notification.Name("lifeOSOpenAIChat"), object: nil)
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 12, weight: .semibold))
+                    Text("Ouvrir l'assistant")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                .foregroundStyle(Color.accentColor)
+                .padding(.horizontal, 18).padding(.vertical, 9)
+                .background(Color.accentColor.opacity(0.1), in: Capsule())
+            }
+            .buttonStyle(LifeOSPressStyle())
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 36)
+        .padding(.vertical, 32)
         .background(neoCard)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
