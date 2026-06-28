@@ -33,6 +33,7 @@ struct ModuleChatView: View {
     @State private var conversationID: String? = nil
     @State private var isLoading = false
     @State private var errorMessage: String? = nil
+    @State private var isServerOffline = false
     @State private var goalsBadge = false
     @State private var configBadge = false
     @FocusState private var inputFocused: Bool
