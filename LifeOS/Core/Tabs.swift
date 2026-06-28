@@ -300,7 +300,8 @@ struct WakeUpView: View {
 
     private var planPreviewSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Plan du jour").font(.headline)
+            Text("Plan du jour")
+            .font(.system(size: 15, weight: .semibold))
 
             Button { showBriefing = true } label: {
                 HStack(spacing: 14) {
