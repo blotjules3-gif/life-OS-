@@ -490,8 +490,8 @@ struct DailyBriefingView: View {
 
                     // Brief IA personnalisé
                     aiBriefingCard
-                        .animation(.easeOut(duration: 0.3), value: aiBriefing != nil)
-                        .animation(.easeOut(duration: 0.3), value: briefingLoading)
+                        .animation(.spring(duration: 0.3, bounce: 0.05), value: aiBriefing != nil)
+                        .animation(.spring(duration: 0.3, bounce: 0.05), value: briefingLoading)
 
                     // Progress rings
                     HStack(spacing: 10) {
