@@ -1506,7 +1506,7 @@ struct ProfileView: View {
                         .contentTransition(.numericText())
                         .animation(.spring(duration: 0.38, bounce: 0.1), value: ctx.date)
                     Text("restantes")
-                        .font(.system(size: 9, weight: .semibold))
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.secondary)
                 }
             }
