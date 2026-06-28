@@ -205,6 +205,7 @@ struct ModuleChatView: View {
                 await MainActor.run {
                     messages.removeAll { $0.isThinking }
                     messages.append(ModuleChatMessage(role: .assistant, text: response.reply))
+                    isServerOffline = false
 
                     if response.module_config_updated {
                         configBadge = true
@@ -218,7 +219,11 @@ struct ModuleChatView: View {
             } catch {
                 await MainActor.run {
                     messages.removeAll { $0.isThinking }
-                    errorMessage = (error as? AgentAPIError)?.errorDescription ?? error.localizedDescription
+                    if let apiErr = error as? AgentAPIError, case .networkError = apiErr {
+                        isServerOffline = true
+                    } else {
+                        errorMessage = (error as? AgentAPIError)?.errorDescription ?? error.localizedDescription
+                    }
                     isLoading = false
                 }
             }
