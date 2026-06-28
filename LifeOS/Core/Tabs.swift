@@ -1831,7 +1831,12 @@ struct ProfileView: View {
     // MARK: - Paramètres
 
     private var settingsSection: some View {
-        VStack(spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("RÉGLAGES")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.secondary)
+                .kerning(1.2)
+                .padding(.horizontal, 4)
             VStack(spacing: 0) {
                 settingsRow(icon: "heart.fill", iconColor: Color(hex: 0xF1746C),
                             label: healthConnected ? "Apple Santé connecté" : "Connecter Apple Santé") {
