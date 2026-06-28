@@ -2823,14 +2823,20 @@ struct SleepCheckSheet: View {
                         Button { if hours > 1 { hours -= 1; Haptics.tap() } } label: {
                             Image(systemName: "minus").font(.system(size: 16, weight: .semibold))
                                 .frame(width: 48, height: 48).contentShape(Rectangle())
-                        }.foregroundStyle(.primary)
+                        }
+                        .foregroundStyle(.primary)
+                        .buttonStyle(LifeOSPressStyle())
                         Text("\(hours)h")
                             .font(.system(size: 28, weight: .bold, design: .rounded).monospacedDigit())
                             .frame(maxWidth: .infinity)
+                            .contentTransition(.numericText())
+                            .animation(.spring(duration: 0.38, bounce: 0.1), value: hours)
                         Button { if hours < 14 { hours += 1; Haptics.tap() } } label: {
                             Image(systemName: "plus").font(.system(size: 16, weight: .semibold))
                                 .frame(width: 48, height: 48).contentShape(Rectangle())
-                        }.foregroundStyle(.primary)
+                        }
+                        .foregroundStyle(.primary)
+                        .buttonStyle(LifeOSPressStyle())
                     }
                     .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
