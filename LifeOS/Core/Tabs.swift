@@ -1231,6 +1231,7 @@ struct ProfileView: View {
                 async let challengesTask = (try? await AgentAPI.shared.fetchChallenges()) ?? []
                 let ch = await challengesTask
                 challenges = ch
+                challengesLoading = false
                 saveChallengesForWidget(challenges)
             }
             .sheet(isPresented: $showGoalEditor) {
