@@ -13,13 +13,18 @@ final class ContextualNotifications {
     func reschedule() {
         cancelAll()
 
+        let ud = UserDefaults.standard
         let modules = activeModules()
-        let wakeupHour = UserDefaults.standard.integer(forKey: "wakeupHour")
-        let wakeupMin  = UserDefaults.standard.integer(forKey: "wakeupMinute")
+        let wakeupHour = ud.integer(forKey: "wakeupHour")
+        let wakeupMin  = ud.integer(forKey: "wakeupMinute")
         let wakeupTotal = wakeupHour * 60 + wakeupMin
 
+        func enabled(_ key: String) -> Bool {
+            return ud.object(forKey: "notifEnabled.\(key)") as? Bool ?? true
+        }
+
         // 1. Bilan du matin (wakeup + 30 min) — seulement si sleep, fitness ou mind actif
-        if modules.contains("sleep") || modules.contains("fitness") || modules.contains("mind") {
+        if enabled("morning") && (modules.contains("sleep") || modules.contains("fitness") || modules.contains("mind")) {
             let t = (wakeupTotal + 30) % (24 * 60)
             scheduleDaily(
                 id: "morning",
@@ -30,8 +35,8 @@ final class ContextualNotifications {
         }
 
         // 2. Sport (heure configurée ou 18h) — seulement si fitness
-        if modules.contains("fitness") {
-            let h = UserDefaults.standard.integer(forKey: "sportHour")
+        if enabled("sport") && modules.contains("fitness") {
+            let h = ud.integer(forKey: "sportHour")
             scheduleDaily(
                 id: "sport",
                 title: "C'est l'heure de bouger",
@@ -41,7 +46,7 @@ final class ContextualNotifications {
         }
 
         // 3. Rappel nutrition soir (19h30) — seulement si nutrition actif
-        if modules.contains("nutrition") {
+        if enabled("nutrition") && modules.contains("nutrition") {
             scheduleDaily(
                 id: "nutrition_evening",
                 title: "Objectif nutrition",
@@ -50,8 +55,8 @@ final class ContextualNotifications {
             )
         }
 
-        // 4. Rappel habitudes soir (20h) — seulement si productivity ou au moins 1 module actif
-        if modules.contains("productivity") || modules.contains("fitness") || modules.contains("mind") || modules.contains("sleep") {
+        // 4. Rappel habitudes soir (20h) — seulement si au moins 1 module actif
+        if enabled("habits") && (modules.contains("productivity") || modules.contains("fitness") || modules.contains("mind") || modules.contains("sleep")) {
             scheduleDaily(
                 id: "habits_evening",
                 title: "Tes habitudes du jour",
@@ -61,9 +66,9 @@ final class ContextualNotifications {
         }
 
         // 5. Coucher (bedtime - 30 min) — seulement si sleep actif
-        if modules.contains("sleep") {
-            let bedH = UserDefaults.standard.integer(forKey: "bedHour")
-            let bedM = UserDefaults.standard.integer(forKey: "bedMinute")
+        if enabled("bedtime") && modules.contains("sleep") {
+            let bedH = ud.integer(forKey: "bedHour")
+            let bedM = ud.integer(forKey: "bedMinute")
             let bed  = ((bedH > 0 ? bedH : 23) * 60 + bedM - 30 + 1440) % 1440
             scheduleDaily(
                 id: "bedtime",
