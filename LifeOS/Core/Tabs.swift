@@ -330,7 +330,7 @@ struct WakeUpView: View {
 
             if !recommendedModules.isEmpty {
                 Text("Modules prioritaires")
-                    .font(.subheadline)
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.secondary)
                     .padding(.top, 4)
 
