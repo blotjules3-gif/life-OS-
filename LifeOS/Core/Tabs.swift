@@ -860,7 +860,7 @@ struct DailyBriefingView: View {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .stroke(Color(hex: 0xFF9F0A).opacity(0.18), lineWidth: 1)
             )
-            .transition(.opacity.combined(with: .scale(scale: 0.96)))
+            .transition(.scale(scale: 0.88, anchor: .top).combined(with: .opacity))
             .onAppear { waveActive = true }
         } else if !speakOnAppear {
             // Bouton relance manuelle
