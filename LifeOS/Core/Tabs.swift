@@ -2042,7 +2042,7 @@ struct ProfileView: View {
                     ForEach(AppTheme.allCases) { th in
                         let selected = appThemeRaw == th.rawValue
                         Button {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { appThemeRaw = th.rawValue }
+                            withAnimation(.spring(duration: 0.38, bounce: 0.1)) { appThemeRaw = th.rawValue }
                         } label: {
                             VStack(spacing: 6) {
                                 ZStack {
