@@ -2190,7 +2190,7 @@ struct ProfileView: View {
                     }
                 }
                 Text("Thème actif dans toute l'app — modifiable à tout moment.")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(.system(size: 12)).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(16)
