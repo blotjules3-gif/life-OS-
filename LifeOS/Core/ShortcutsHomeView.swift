@@ -753,6 +753,45 @@ struct WeeklyBilanView: View {
                         }
                     }
 
+                    // Graphe humeur 7 jours
+                    if !weekMoods.isEmpty {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("HUMEUR — 7 JOURS")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(.secondary)
+                                .kerning(1.2)
+                            Chart(weekMoods, id: \.0) { item in
+                                LineMark(
+                                    x: .value("Jour", item.0, unit: .day),
+                                    y: .value("Humeur", item.1)
+                                )
+                                .foregroundStyle(Color(hex: 0x9B6CF1))
+                                .interpolationMethod(.catmullRom)
+                                PointMark(
+                                    x: .value("Jour", item.0, unit: .day),
+                                    y: .value("Humeur", item.1)
+                                )
+                                .foregroundStyle(Color(hex: 0x9B6CF1))
+                                .symbolSize(40)
+                            }
+                            .frame(height: 100)
+                            .chartYScale(domain: 1...5)
+                            .chartYAxis {
+                                AxisMarks(values: [1, 3, 5]) { v in
+                                    AxisGridLine()
+                                    AxisValueLabel { Text(["", "😞", "", "😐", "", "😄"][v.index * 2]).font(.caption) }
+                                }
+                            }
+                            .chartXAxis {
+                                AxisMarks(values: .stride(by: .day)) { _ in
+                                    AxisValueLabel(format: .dateTime.weekday(.narrow))
+                                }
+                            }
+                        }
+                        .padding(16)
+                        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                    }
+
                     // Habitudes détaillées
                     if !activeHabits.isEmpty {
                         VStack(alignment: .leading, spacing: 0) {
