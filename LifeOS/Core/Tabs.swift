@@ -1098,7 +1098,7 @@ struct ProfileView: View {
         "Un pas de plus qu'hier. C'est tout ce qui compte.",
         "Tes habitudes d'aujourd'hui sont ta santé de demain.",
         "Le succès, c'est la somme de petits efforts répétés.",
-        "Discipline is choosing between what you want now and what you want most.",
+        "La discipline, c'est choisir ce que tu veux vraiment plutôt que ce que tu veux maintenant.",
         "L'énergie suit l'attention. Mets-la au bon endroit.",
         "Une journée complète commence par 5 min pour toi."
     ]
