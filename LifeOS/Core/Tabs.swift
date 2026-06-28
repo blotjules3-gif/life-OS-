@@ -2138,10 +2138,14 @@ struct ProfileView: View {
                                         .font(.system(size: 16, weight: .semibold))
                                         .foregroundStyle(.white)
                                 }
-                                .overlay(Circle().stroke(th.accent, lineWidth: selected ? 2.5 : 0))
+                                .overlay(
+                                    Circle()
+                                        .stroke(th.accent, lineWidth: selected ? 2.5 : 0)
+                                        .animation(.spring(duration: 0.38, bounce: 0.15), value: selected)
+                                )
                                 .padding(2)
                                 Text(th.label)
-                                    .font(.system(size: 11, weight: selected ? .semibold : .regular))
+                                    .font(.system(size: 11, weight: .medium))
                                     .foregroundStyle(selected ? .primary : .secondary)
                                     .lineLimit(1).minimumScaleFactor(0.7)
                             }
