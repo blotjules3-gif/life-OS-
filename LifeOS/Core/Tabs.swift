@@ -1034,8 +1034,6 @@ struct ProfileView: View {
     @AppStorage("wakeupMinute") private var wakeupMinute = 0
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
     @AppStorage("lastBriefingDate") private var lastBriefingDate: Double = 0
-    @AppStorage("bubbleWeights") private var bubbleWeightsRaw = ""
-
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
     @Query private var habits: [Habit]
