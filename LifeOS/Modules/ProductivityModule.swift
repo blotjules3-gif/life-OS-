@@ -216,6 +216,10 @@ struct HabitTrackerView: View {
         .navigationTitle("Habit tracker").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
         .sheet(isPresented: $showAdd) { HabitEditor() }
+        .task { NotificationManager.shared.schedulePendingHabitNotification(pendingCount: pendingHabits.count) }
+        .onChange(of: pendingHabits.count) { _, new in
+            NotificationManager.shared.schedulePendingHabitNotification(pendingCount: new)
+        }
     }
 }
 
