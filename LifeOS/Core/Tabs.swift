@@ -307,8 +307,8 @@ struct WakeUpView: View {
                     Image(systemName: "sunrise.fill")
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundStyle(Color(hex: 0xFF9F0A))
-                        .frame(width: 42, height: 42)
-                        .background(Color(hex: 0xFF9F0A).opacity(0.1), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                        .frame(width: 40, height: 40)
+                        .background(Color(hex: 0xFF9F0A).opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Lancer ma journée")
                             .font(.system(size: 15, weight: .semibold))
