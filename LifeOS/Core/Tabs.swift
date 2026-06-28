@@ -1264,13 +1264,16 @@ struct ProfileView: View {
                         .foregroundStyle(.primary)
                 }
                 Spacer()
-                VStack(alignment: .trailing, spacing: 1) {
-                    Text(Date(), format: .dateTime.hour().minute())
-                        .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
-                        .foregroundStyle(.primary)
-                    Text(Date(), format: .dateTime.weekday(.abbreviated).day().month(.abbreviated))
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
+                TimelineView(.everyMinute) { ctx in
+                    VStack(alignment: .trailing, spacing: 1) {
+                        Text(ctx.date, format: .dateTime.hour().minute())
+                            .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
+                            .foregroundStyle(.primary)
+                            .contentTransition(.numericText())
+                        Text(ctx.date, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated))
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             .padding(.horizontal, 20)
