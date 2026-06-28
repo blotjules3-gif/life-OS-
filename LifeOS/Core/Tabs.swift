@@ -2999,12 +2999,12 @@ struct ChallengeCard: View {
 
     private var typeColor: Color {
         switch challenge.challenge_type {
-        case "water":     return Color(hex: 0x3CB2E0)
-        case "sport":     return Color(hex: 0xF1746C)
-        case "smoking":   return Color(hex: 0x9B6CF1)
-        case "meditation":return Color(hex: 0x4CC38A)
-        case "nutrition": return Color(hex: 0xE0A23C)
-        case "sleep":     return Color(hex: 0x6C7BF1)
+        case "water":     return Color(hex: 0x3CB2E0)  // bleu = hydratation
+        case "sport":     return Color(hex: 0x4CC38A)  // vert = activité physique (= steps)
+        case "smoking":   return Color(hex: 0xE05A7A)  // rose = cessation (distinct)
+        case "meditation":return Color(hex: 0x9B6CF1)  // violet = mental/focus
+        case "nutrition": return Color(hex: 0xF1746C)  // rouge = calories/énergie
+        case "sleep":     return Color(hex: 0x6C7BF1)  // indigo = nuit
         default:          return Color.accentColor
         }
     }
