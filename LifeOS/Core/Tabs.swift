@@ -286,7 +286,7 @@ struct WakeUpView: View {
                     if wakeupEnabled { scheduleWakeupAlarm() }
                 }
 
-            Divider()
+            Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1)
 
             Toggle("Réveil quotidien activé", isOn: $wakeupEnabled)
                 .tint(Color.accentColor)
