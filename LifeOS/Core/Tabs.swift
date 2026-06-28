@@ -772,6 +772,7 @@ struct DailyBriefingView: View {
             ProgressView(value: Double(todayEnergyScore) / 100)
                 .tint(scoreColor)
                 .scaleEffect(x: 1, y: 1.4, anchor: .center)
+                .animation(.spring(duration: 0.8, bounce: 0.1), value: todayEnergyScore)
         }
         .padding(18)
         .background(
