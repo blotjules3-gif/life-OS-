@@ -2318,7 +2318,7 @@ struct WakeUpPersonalizationSheet: View {
                                     .font(.system(size: 18))
                             }
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(LifeOSPressStyle())
                     }
                 } header: { Text("Plan du matin") }
                   footer: { Text("Ces pôles apparaissent en priorité dans ton briefing du matin.") }
