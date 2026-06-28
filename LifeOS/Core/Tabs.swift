@@ -1318,6 +1318,16 @@ struct ProfileView: View {
                     goalEndDatesRaw: $goalEndDatesRaw
                 )
             }
+            .sheet(isPresented: $showNotificationSettings) {
+                NotificationSettingsSheet(
+                    modules: recommendedModules,
+                    sportHour: $sportHour,
+                    bedHour: $bedHour,
+                    bedMinute: $bedMinute,
+                    wakeupHour: wakeupHour,
+                    wakeupMinute: wakeupMinute
+                )
+            }
             .sheet(isPresented: $showWakeupDetail) {
                 WakeUpPersonalizationSheet(
                     hour: $wakeupHour, minute: $wakeupMinute,
