@@ -849,16 +849,16 @@ struct DailyBriefingView: View {
                 } label: {
                     Image(systemName: "stop.circle.fill")
                         .font(.system(size: 24))
-                        .foregroundStyle(Color.orange.opacity(0.8))
+                        .foregroundStyle(Color(hex: 0xFF9F0A).opacity(0.8))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(LifeOSPressStyle())
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(Color(hex: 0xFF9F0A).opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.orange.opacity(0.18), lineWidth: 1)
+                    .stroke(Color(hex: 0xFF9F0A).opacity(0.18), lineWidth: 1)
             )
             .transition(.opacity.combined(with: .scale(scale: 0.96)))
             .onAppear { waveActive = true }
