@@ -1613,7 +1613,7 @@ struct ProfileView: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.primary)
                         Text("Briefing vocal + priorités")
-                            .font(.system(size: 11))
+                            .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
