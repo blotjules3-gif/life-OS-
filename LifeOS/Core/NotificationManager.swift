@@ -91,6 +91,25 @@ final class NotificationManager {
         UNUserNotificationCenter.current().add(request)
     }
 
+    /// Rappel quotidien récurrent AVEC boutons d'action (catégorie) + payload.
+    /// Sert aux notifs de confirmation « Tu as bien fait X ? → Oui ✓ / Pas encore ».
+    func scheduleDailyAction(id: String, title: String, body: String,
+                             hour: Int, minute: Int,
+                             categoryId: String, userInfo: [String: Any] = [:]) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        content.categoryIdentifier = categoryId
+        content.userInfo = userInfo
+        var comps = DateComponents()
+        comps.hour = hour
+        comps.minute = minute
+        let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
+        let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request)
+    }
+
     /// Rappel après un intervalle (ex: fin de sieste, fenêtre de sommeil léger).
     func scheduleAfter(id: String, title: String, body: String, seconds: TimeInterval) {
         let content = UNMutableNotificationContent()

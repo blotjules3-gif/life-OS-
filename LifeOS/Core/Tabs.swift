@@ -265,7 +265,7 @@ struct WakeUpView: View {
                 }
                 .padding(Theme.pad)
             }
-            .background(Theme.bg)
+            .scrollContentBackground(.hidden)
             .navigationTitle("Réveil")
             .fullScreenCover(isPresented: $showBriefing) {
                 DailyBriefingView(modules: recommendedModules)
@@ -1171,7 +1171,6 @@ struct ProfileView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                neoBackground.ignoresSafeArea()
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
                         profileHeader

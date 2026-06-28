@@ -68,6 +68,10 @@ struct ThemedBubbleBackground: View {
 enum BubbleSize: String, CaseIterable {
     case small, medium, large
     var factor: CGFloat { self == .small ? 0.80 : (self == .large ? 1.22 : 1.0) }
+    // Diamètre absolu (fraction de la largeur d'écran) pour la grille de catégories :
+    // 3 tailles NETTES. Petite/Moyenne/Grande — rien entre les deux.
+    var widthFraction: CGFloat { self == .small ? 0.255 : (self == .large ? 0.405 : 0.315) }
+    var rank: Double { self == .small ? 0 : (self == .large ? 2 : 1) }
     var label: String { self == .small ? "Petite" : (self == .large ? "Grande" : "Moyenne") }
     var symbol: String { self == .small ? "circle" : (self == .large ? "circle.fill" : "circle.lefthalf.filled") }
     var next: BubbleSize { self == .small ? .medium : (self == .medium ? .large : .small) }
@@ -223,47 +227,153 @@ struct CategoryHubView: View {
         }
     }
 
-    // Cercle organique (phyllotaxie / spirale dorée) — PAS de rangées.
+    // ≤6 outils → cercle/anneau centré (sobre, tient sur un écran, pas de scroll).
+    // >6 outils → quinconce vertical à GROSSES bulles (taille du cas à 5), scrollable :
+    // on ne rapetisse PAS les bulles, on défile.
+    @ViewBuilder
     private func organicCluster(_ geo: GeometryProxy) -> some View {
         let w = geo.size.width
         let availH = geo.size.height
-        let n = max(tools.count, 1)
-        let golden = 2.399963229728653            // angle d'or (137.5°)
-        // Diamètre généreux (léger chevauchement = aspect bulles, comme l'écran principal).
-        let R = min(w, availH) / 2 * 0.94
-        let dBase = R / (0.66 * sqrt(Double(max(n - 1, 1))) + 0.55)
-        let d0 = min(max(dBase, 64), w * 0.42) * sizeFactor
-        let spacing = d0 * 0.74
-        let maxR = spacing * CGFloat(sqrt(Double(max(n - 1, 0))))
-        let contentH = max(availH, 2 * (maxR + d0) + 60)
-
-        return ScrollView(showsIndicators: false) {
+        if tools.count <= 6 {
+            let placed = ringLayout(count: tools.count, w: w, availH: availH)
             TimelineView(.animation) { ctx in
                 let t = ctx.date.timeIntervalSinceReferenceDate
-                let cx = w / 2
-                let cy = contentH / 2 - 16
                 ZStack(alignment: .topLeading) {
                     ForEach(Array(tools.enumerated()), id: \.element.id) { i, tool in
-                        let angle = Double(i) * golden
-                        let radius = spacing * CGFloat(sqrt(Double(i)))
-                        // Variation de taille pseudo-aléatoire → aspect organique.
-                        let rnd = (sin(Double(i) * 12.9898) * 43758.5453).truncatingRemainder(dividingBy: 1)
-                        let dv = d0 * (0.88 + 0.12 * CGFloat(abs(rnd)))
-                        let bobx = CGFloat(sin(t * 0.5 + Double(i) * 1.3)) * 3
-                        let boby = CGFloat(cos(t * 0.42 + Double(i) * 1.1)) * 3
-                        let x = cx + CGFloat(cos(angle)) * radius + bobx
-                        let y = cy + CGFloat(sin(angle)) * radius + boby
+                        let p = placed.indices.contains(i) ? placed[i] : (CGPoint(x: w/2, y: availH/2), 60.0)
+                        let bobx = CGFloat(sin(t * 0.5 + Double(i) * 1.3)) * 2
+                        let boby = CGFloat(cos(t * 0.42 + Double(i) * 1.1)) * 2
                         toolLink(tool) {
-                            toolBubble(tool, diameter: dv, index: i, base: d0, t: t)
+                            toolBubble(tool, diameter: p.1, index: i, base: p.1, t: t)
                         }
-                        .position(x: x, y: y)
-                        .zIndex(Double(n - i))   // bulles centrales au-dessus
+                        .position(x: p.0.x + bobx, y: p.0.y + boby)
                     }
                 }
-                .frame(width: w, height: contentH)
+                .frame(width: w, height: availH)
             }
-            .frame(width: w, height: contentH)
+        } else {
+            let (placed, contentH) = honeycombLayout(count: tools.count, w: w, availH: availH)
+            ScrollView(showsIndicators: false) {
+                TimelineView(.animation) { ctx in
+                    let t = ctx.date.timeIntervalSinceReferenceDate
+                    ZStack(alignment: .topLeading) {
+                        ForEach(Array(tools.enumerated()), id: \.element.id) { i, tool in
+                            let p = placed.indices.contains(i) ? placed[i] : (CGPoint(x: w/2, y: 60), 60.0)
+                            let bobx = CGFloat(sin(t * 0.5 + Double(i) * 1.3)) * 2
+                            let boby = CGFloat(cos(t * 0.42 + Double(i) * 1.1)) * 2
+                            toolLink(tool) {
+                                toolBubble(tool, diameter: p.1, index: i, base: p.1, t: t)
+                            }
+                            .position(x: p.0.x + bobx, y: p.0.y + boby)
+                        }
+                    }
+                    .frame(width: w, height: contentH)
+                }
+            }
         }
+    }
+
+    // Quinconce vertical (rangées 3,2,3,2…) à GROSSES bulles fixes, centré, scrollable.
+    private func honeycombLayout(count: Int, w: CGFloat, availH: CGFloat) -> ([(CGPoint, CGFloat)], CGFloat) {
+        let n = max(count, 1)
+        let side: CGFloat = 14
+        let gap: CGFloat = 14
+        let d = max((w - side * 2 - gap * 2) / 3, 80) * sizeFactor   // 3 par rangée = grosses bulles
+
+        // Rangées en quinconce 3,2,3,2… puis rééquilibrage si la dernière est seule.
+        var rows: [Int] = []
+        var rem = n
+        var big = true
+        while rem > 0 { let c = min(big ? 3 : 2, rem); rows.append(c); rem -= c; big.toggle() }
+        if rows.count >= 2, rows[rows.count - 1] == 1 {
+            rows[rows.count - 2] -= 1; rows[rows.count - 1] = 2
+        }
+
+        let rowH = d + gap * 0.5
+        var result: [(CGPoint, CGFloat)] = []
+        var y = d / 2 + 18
+        for c in rows {
+            let rowW = CGFloat(c) * d + CGFloat(c - 1) * gap
+            let startX = (w - rowW) / 2
+            for col in 0..<c {
+                let x = startX + CGFloat(col) * (d + gap) + d / 2
+                result.append((CGPoint(x: x, y: y), d))
+            }
+            y += rowH
+        }
+        let contentH = max(availH, y + d / 2 + 130)   // +130 = dégage la barre d'onglets flottante
+        return (result, contentH)
+    }
+
+    // Calcule centre + diamètre de chaque outil en anneaux concentriques, puis met le
+    // tout à l'échelle pour tenir (centré) dans l'espace dispo. Renvoie [(centre, d)].
+    private func ringLayout(count: Int, w: CGFloat, availH: CGFloat) -> [(CGPoint, CGFloat)] {
+        let n = max(count, 1)
+        let gap: CGFloat = 12
+        // On part d'un GRAND diamètre ; l'auto-échelle (étape 3) le réduit juste ce qu'il
+        // faut pour que le cluster tienne. Peu d'outils = grosses bulles qui remplissent.
+        var d = w * 0.42 * sizeFactor
+
+        // 1) Répartition en anneaux : ≤6 = un seul cercle ; sinon centre + anneaux (6,12,18…).
+        var hasCenter = false
+        var ringCounts: [Int] = []
+        if n == 1 {
+            hasCenter = true
+        } else if n <= 6 {
+            ringCounts = [n]
+        } else {
+            hasCenter = true
+            var rem = n - 1
+            for cap in [6, 12, 18, 24] {
+                if rem <= 0 { break }
+                let take = min(cap, rem); ringCounts.append(take); rem -= take
+            }
+        }
+
+        // 2) Rayon de chaque anneau : tient compte de l'écart sur l'anneau ET de la
+        //    séparation radiale avec l'anneau précédent (zéro chevauchement).
+        func radii(for dd: CGFloat) -> [CGFloat] {
+            var rs: [CGFloat] = []
+            var prev: CGFloat = 0
+            for (m, k) in ringCounts.enumerated() {
+                let chordR = k > 1 ? (dd + gap) / (2 * CGFloat(sin(Double.pi / Double(k)))) : 0
+                let radialMin = (hasCenter || m > 0) ? prev + dd + gap : chordR
+                let R = max(chordR, radialMin)
+                rs.append(R); prev = R
+            }
+            return rs
+        }
+
+        // 3) Mise à l'échelle pour que le cluster entier tienne dans le cercle dispo.
+        let maxRadius = min(w, availH) * 0.5 * 0.92
+        var rs = radii(for: d)
+        let outer = (rs.last ?? 0) + d / 2
+        if outer > maxRadius {
+            let s = maxRadius / outer
+            d *= s
+            rs = rs.map { $0 * s }
+        }
+
+        // 4) Placement : centre + anneaux, légèrement remonté pour l'équilibre visuel.
+        let cx = w / 2
+        let cy = availH * 0.46
+        var result: [(CGPoint, CGFloat)] = []
+        var idx = 0
+        if hasCenter {
+            result.append((CGPoint(x: cx, y: cy), d)); idx += 1
+        }
+        for (m, k) in ringCounts.enumerated() {
+            let R = rs[m]
+            let phase = (m % 2 == 0 ? 0.0 : Double.pi / Double(max(k, 1))) - Double.pi / 2
+            for j in 0..<k {
+                let a = phase + 2 * Double.pi * Double(j) / Double(k)
+                let x = cx + CGFloat(cos(a)) * R
+                let y = cy + CGFloat(sin(a)) * R
+                result.append((CGPoint(x: x, y: y), d))
+                idx += 1
+            }
+        }
+        return result
     }
 
     // Disposition rangée (mode "Bulles rangées").

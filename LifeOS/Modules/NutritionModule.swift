@@ -454,48 +454,143 @@ struct HydrationView: View {
 struct SupplementsView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \Supplement.hour) private var supps: [Supplement]
-    @State private var name = ""; @State private var time = Date()
+    @State private var name = ""
+    @State private var time = Date()
+    @State private var withFood = true
+    @State private var confirm = true
+    @State private var reco: SuppReco? = nil
 
     var body: some View {
         ZStack {
             Theme.background
-            VStack(spacing: 0) {
-                VStack(spacing: 10) {
-                    TextField("Nom (ex: Vitamine D, Créatine…)", text: $name).textFieldStyle(.roundedBorder)
-                    HStack {
-                        DatePicker("Heure", selection: $time, displayedComponents: .hourAndMinute).labelsHidden()
-                        Spacer()
-                        Button("Ajouter") { add() }.buttonStyle(.borderedProminent).tint(.nutriTint).disabled(name.isEmpty)
+            ScrollView {
+                VStack(spacing: 16) {
+                    addCard
+                    if supps.isEmpty {
+                        EmptyState(icon: "pills", title: "Aucun complément")
+                            .padding(.top, 24)
+                    } else {
+                        VStack(spacing: 10) { ForEach(supps) { suppRow($0) } }
                     }
-                }.padding()
-                if supps.isEmpty { EmptyState(icon: "pills", title: "Aucun complément"); Spacer() }
-                else {
-                    List {
-                        ForEach(supps) { s in
-                            HStack {
-                                Image(systemName: "pills.fill").foregroundStyle(.nutriTint)
-                                Text(s.name)
-                                Spacer()
-                                Text(String(format: "%02d:%02d", s.hour, s.minute)).foregroundStyle(Theme.textSecondary)
-                                Toggle("", isOn: Binding(get: { s.active }, set: { s.active = $0; reschedule(s) })).labelsHidden().tint(.nutriTint)
-                            }
-                        }
-                        .onDelete { idx in idx.map { supps[$0] }.forEach { NotificationManager.shared.cancel(id: "supp\($0.persistentModelID.hashValue)"); ctx.delete($0) } }
-                    }.scrollContentBackground(.hidden)
                 }
+                .padding()
             }
+            .scrollContentBackground(.hidden)
         }
         .navigationTitle("Compléments").navigationBarTitleDisplayMode(.inline)
     }
-    private func add() {
-        let c = Calendar.current.dateComponents([.hour, .minute], from: time)
-        let s = Supplement(name: name, hour: c.hour ?? 8, minute: c.minute ?? 0)
-        ctx.insert(s); reschedule(s); name = ""
+
+    // Carte d'ajout : reco calculée EN DIRECT pendant la frappe.
+    private var addCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            TextField("Nom (ex: Oméga 3, Magnésium, Ashwagandha…)", text: $name)
+                .textFieldStyle(.roundedBorder)
+                .onChange(of: name) { _, v in applyReco(v) }
+
+            if let r = reco, !name.isEmpty {
+                HStack(spacing: 10) {
+                    Image(systemName: r.icon).font(.title3).foregroundStyle(.nutriTint)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(r.momentLabel) · \(withFood ? "avec un repas" : "à jeun")")
+                            .font(.subheadline.weight(.semibold))
+                        Text(r.advice).font(.caption).foregroundStyle(Theme.textSecondary)
+                    }
+                    Spacer()
+                }
+                .padding(10)
+                .background(Color.nutriTint.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+
+                HStack {
+                    DatePicker("Heure", selection: $time, displayedComponents: .hourAndMinute).labelsHidden()
+                    Spacer()
+                    Toggle("Avec un repas", isOn: $withFood).tint(.nutriTint)
+                }
+                Toggle("Vérif « bien pris ? » ~1h30 après", isOn: $confirm)
+                    .tint(.nutriTint).font(.subheadline)
+            }
+
+            Button { add() } label: {
+                Label("Ajouter", systemImage: "plus.circle.fill").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent).tint(.nutriTint).disabled(name.isEmpty)
+        }
+        .padding()
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16))
     }
+
+    private func suppRow(_ s: Supplement) -> some View {
+        let key = "supp\(s.persistentModelID.hashValue)"
+        let streak = ConfirmationStore.shared.streak(key)
+        return HStack(spacing: 12) {
+            Image(systemName: "pills.fill").foregroundStyle(.nutriTint)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(s.name).font(.body.weight(.medium))
+                Text("\(momentLabel(s.moment)) · \(s.withFood ? "avec repas" : "à jeun") · \(String(format: "%02d:%02d", s.hour, s.minute))")
+                    .font(.caption).foregroundStyle(Theme.textSecondary)
+            }
+            Spacer()
+            if streak > 0 {
+                Text("🔥 \(streak)").font(.caption.weight(.bold)).foregroundStyle(.orange)
+            }
+            Toggle("", isOn: Binding(get: { s.active }, set: { s.active = $0; reschedule(s) }))
+                .labelsHidden().tint(.nutriTint)
+        }
+        .padding(12)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+        .contextMenu {
+            Button(role: .destructive) { delete(s) } label: { Label("Supprimer", systemImage: "trash") }
+        }
+    }
+
+    private func momentLabel(_ m: String) -> String {
+        m == "soir" ? "Le soir" : (m == "midi" ? "Le midi" : "Le matin")
+    }
+
+    private func applyReco(_ v: String) {
+        guard !v.trimmingCharacters(in: .whitespaces).isEmpty else { reco = nil; return }
+        let r = SupplementAdvisor.reco(for: v)
+        reco = r
+        withFood = r.withFood
+        var c = DateComponents(); c.hour = r.hour; c.minute = r.minute
+        if let d = Calendar.current.date(from: c) { time = d }
+    }
+
+    private func add() {
+        let r = reco ?? SupplementAdvisor.reco(for: name)
+        let c = Calendar.current.dateComponents([.hour, .minute], from: time)
+        let s = Supplement(name: name.trimmingCharacters(in: .whitespaces),
+                           hour: c.hour ?? r.hour, minute: c.minute ?? r.minute,
+                           moment: r.moment, withFood: withFood, advice: r.advice, confirm: confirm)
+        ctx.insert(s); reschedule(s)
+        name = ""; reco = nil; withFood = true; confirm = true
+    }
+
+    private func delete(_ s: Supplement) {
+        let id = "supp\(s.persistentModelID.hashValue)"
+        NotificationManager.shared.cancel(id: id)
+        NotificationManager.shared.cancel(id: id + ".confirm")
+        ctx.delete(s)
+    }
+
     private func reschedule(_ s: Supplement) {
         let id = "supp\(s.persistentModelID.hashValue)"
-        if s.active { NotificationManager.shared.scheduleDaily(id: id, title: "Complément 💊", body: "C'est l'heure de prendre : \(s.name)", hour: s.hour, minute: s.minute) }
-        else { NotificationManager.shared.cancel(id: id) }
+        let confirmId = id + ".confirm"
+        NotificationManager.shared.cancel(id: id)
+        NotificationManager.shared.cancel(id: confirmId)
+        guard s.active else { return }
+        NotificationManager.shared.scheduleDaily(
+            id: id, title: "💊 \(s.name)",
+            body: "C'est le moment — \(momentLabel(s.moment).lowercased()), \(s.withFood ? "avec un repas" : "à jeun").",
+            hour: s.hour, minute: s.minute)
+        if s.confirm {
+            let total = s.hour * 60 + s.minute + 90
+            NotificationManager.shared.scheduleDailyAction(
+                id: confirmId, title: "Petite vérif 💊",
+                body: "Tu as bien pris ton \(s.name) ?",
+                hour: (total / 60) % 24, minute: total % 60,
+                categoryId: "LIFEOS_CONFIRM",
+                userInfo: ["confirmKey": id, "confirmLabel": s.name])
+        }
     }
 }
 

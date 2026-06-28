@@ -48,12 +48,19 @@ import SwiftData
 }
 
 @Model final class Supplement {
-    var name: String
-    var hour: Int
-    var minute: Int
-    var active: Bool
-    init(name: String = "", hour: Int = 8, minute: Int = 0, active: Bool = true) {
+    var name: String = ""
+    var hour: Int = 8
+    var minute: Int = 0
+    var active: Bool = true
+    // Recommandation de prise (calculée par SupplementAdvisor, ajustable par l'utilisateur)
+    var moment: String = "matin"      // matin | midi | soir
+    var withFood: Bool = true         // avec un repas / à jeun
+    var advice: String = ""           // courte explication
+    var confirm: Bool = true          // envoyer une notif de confirmation ~1h30 après
+    init(name: String = "", hour: Int = 8, minute: Int = 0, active: Bool = true,
+         moment: String = "matin", withFood: Bool = true, advice: String = "", confirm: Bool = true) {
         self.name = name; self.hour = hour; self.minute = minute; self.active = active
+        self.moment = moment; self.withFood = withFood; self.advice = advice; self.confirm = confirm
     }
 }
 

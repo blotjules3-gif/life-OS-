@@ -53,6 +53,8 @@ struct MainTabView: View {
     @Environment(\.modelContext) private var ctx
     @AppStorage("kcalGoal") private var kcalGoal = 2200
     @AppStorage("waterGoal") private var waterGoal = 2500
+    @AppStorage("appTheme") private var appThemeRaw = "classic"
+    private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -81,6 +83,10 @@ struct MainTabView: View {
 
     @ViewBuilder private var content: some View {
         ZStack {
+            // Fond thématique unique, partagé par TOUS les onglets (Accueil / Réveil /
+            // Catégories / Profil) — l'app a la même identité visuelle partout.
+            ThemedBubbleBackground(theme: theme)
+                .ignoresSafeArea()
             ShortcutsHomeView()
                 .opacity(tab == .home ? 1 : 0)
                 .allowsHitTesting(tab == .home)

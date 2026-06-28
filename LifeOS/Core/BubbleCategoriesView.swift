@@ -109,27 +109,32 @@ enum BubbleLayout {
 
     // Composition riche et dense : grosses gouttes, priorités dominantes
     // (Sport/Social/Mental/Voyage), longs labels agrandis pour que le texte tienne dedans.
+    // 3 TAILLES EXACTES : grande (1.5) / moyenne (1.0) / petite (0.7). Le diamètre
+    // réel vient de BubbleSize.widthFraction ; sizeMul ne sert plus qu'à dire à quelle
+    // des 3 classes appartient la catégorie par défaut. L'ordre forme 5 rangées de 3
+    // (grande + moyenne + petite, décalées) — voir packOrganic() qui calcule le placement
+    // serré (bulles qui se touchent, sans chevauchement) tenant sur UN seul écran.
     static let categories: [BubbleCategory] = [
-        .init(title: "Documents",    systemImage: "folder.fill",               tint: Color(red: 0.74, green: 0.84, blue: 0.97), anchor: .init(x: 0.210, y: 0.120), sizeMul: 0.96),
-        .init(title: "Travail",      systemImage: "briefcase.fill",            tint: Color(red: 1.00, green: 0.72, blue: 0.24), anchor: .init(x: 0.485, y: 0.140), sizeMul: 0.92),
-        .init(title: "Social",       systemImage: "person.2.fill",             tint: Color(red: 1.00, green: 0.20, blue: 0.55), anchor: .init(x: 0.765, y: 0.205), sizeMul: 1.26),
-        .init(title: "Finance",      systemImage: "creditcard.fill",           tint: Color(red: 0.13, green: 0.52, blue: 1.00), anchor: .init(x: 0.185, y: 0.345), sizeMul: 0.94),
-        .init(title: "Mental",       systemImage: "brain.head.profile",        tint: Color(red: 0.66, green: 0.32, blue: 0.96), anchor: .init(x: 0.470, y: 0.360), sizeMul: 1.24),
-        .init(title: "Bien-être",    systemImage: "face.smiling",              tint: Color(red: 1.00, green: 0.54, blue: 0.10), anchor: .init(x: 0.770, y: 0.430), sizeMul: 1.18),
-        .init(title: "Sport",        systemImage: "figure.run",                tint: Color(red: 1.00, green: 0.18, blue: 0.20), anchor: .init(x: 0.265, y: 0.590), sizeMul: 1.56),
-        .init(title: "Alimentation", systemImage: "fork.knife",                tint: Color(red: 0.28, green: 0.80, blue: 0.36), anchor: .init(x: 0.600, y: 0.620), sizeMul: 1.22),
-        .init(title: "Éducation",    systemImage: "graduationcap.fill",        tint: Color(red: 1.00, green: 0.80, blue: 0.18), anchor: .init(x: 0.840, y: 0.595), sizeMul: 0.96),
-        .init(title: "Sommeil",      systemImage: "moon.stars.fill",           tint: Color(red: 0.42, green: 0.40, blue: 0.95), anchor: .init(x: 0.810, y: 0.730), sizeMul: 0.94),
-        .init(title: "Tâches",       systemImage: "checklist",                 tint: Color(red: 0.14, green: 0.78, blue: 0.80), anchor: .init(x: 0.175, y: 0.760), sizeMul: 0.94),
-        .init(title: "Voyage",       systemImage: "airplane",                  tint: Color(red: 0.20, green: 0.50, blue: 1.00), anchor: .init(x: 0.420, y: 0.825), sizeMul: 1.20),
-        .init(title: "Maison",       systemImage: "house.fill",                tint: Color(red: 0.24, green: 0.56, blue: 0.96), anchor: .init(x: 0.655, y: 0.795), sizeMul: 0.94),
-        .init(title: "Transports",   systemImage: "tram.fill",                 tint: Color(red: 0.16, green: 0.74, blue: 0.78), anchor: .init(x: 0.820, y: 0.880), sizeMul: 1.14),
-        .init(title: "Bourse",       systemImage: "chart.line.uptrend.xyaxis", tint: Color(red: 0.16, green: 0.80, blue: 0.62), anchor: .init(x: 0.165, y: 0.905), sizeMul: 0.82),
-
-        // Micro-gouttes (sans glyphe ni label) dans les creux — discrètes, pour le rythme
-        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.620, y: 0.300), sizeMul: 0.15, isFiller: true),
-        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.945, y: 0.460), sizeMul: 0.12, isFiller: true),
-        .init(title: "", systemImage: "", tint: .white, anchor: .init(x: 0.490, y: 0.730), sizeMul: 0.13, isFiller: true),
+        // Rangée 1
+        .init(title: "Social",       systemImage: "person.2.fill",             tint: Color(red: 1.00, green: 0.20, blue: 0.55), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
+        .init(title: "Bien-être",    systemImage: "face.smiling",              tint: Color(red: 1.00, green: 0.54, blue: 0.10), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
+        .init(title: "Éducation",    systemImage: "graduationcap.fill",        tint: Color(red: 1.00, green: 0.80, blue: 0.18), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
+        // Rangée 2
+        .init(title: "Tâches",       systemImage: "checklist",                 tint: Color(red: 0.14, green: 0.78, blue: 0.80), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
+        .init(title: "Mental",       systemImage: "brain.head.profile",        tint: Color(red: 0.66, green: 0.32, blue: 0.96), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
+        .init(title: "Documents",    systemImage: "folder.fill",               tint: Color(red: 0.74, green: 0.84, blue: 0.97), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
+        // Rangée 3
+        .init(title: "Travail",      systemImage: "briefcase.fill",            tint: Color(red: 1.00, green: 0.72, blue: 0.24), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
+        .init(title: "Sommeil",      systemImage: "moon.stars.fill",           tint: Color(red: 0.42, green: 0.40, blue: 0.95), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
+        .init(title: "Sport",        systemImage: "figure.run",                tint: Color(red: 1.00, green: 0.18, blue: 0.20), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
+        // Rangée 4
+        .init(title: "Alimentation", systemImage: "fork.knife",                tint: Color(red: 0.28, green: 0.80, blue: 0.36), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
+        .init(title: "Transports",   systemImage: "tram.fill",                 tint: Color(red: 0.16, green: 0.74, blue: 0.78), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
+        .init(title: "Maison",       systemImage: "house.fill",                tint: Color(red: 0.24, green: 0.56, blue: 0.96), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
+        // Rangée 5
+        .init(title: "Bourse",       systemImage: "chart.line.uptrend.xyaxis", tint: Color(red: 0.16, green: 0.80, blue: 0.62), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
+        .init(title: "Voyage",       systemImage: "airplane",                  tint: Color(red: 0.20, green: 0.50, blue: 1.00), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
+        .init(title: "Finance",      systemImage: "creditcard.fill",           tint: Color(red: 0.13, green: 0.52, blue: 1.00), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
     ]
 }
 
@@ -173,13 +178,21 @@ struct BubbleCategoriesView: View {
 
     private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .organic }
     private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
-    // Taille INDIVIDUELLE par catégorie (défaut Moyenne)
-    private func catSize(_ title: String) -> BubbleSize {
+    // Taille INDIVIDUELLE par catégorie. 3 classes exactes (petite/moyenne/grande).
+    // Défaut = la classe codée dans sizeMul (1.5 grande / 1.0 moyenne / 0.7 petite) ;
+    // l'appui long écrit un override qui prime.
+    private func catSizeOverride(_ title: String) -> BubbleSize? {
         for p in catSizesRaw.split(separator: ",") {
             let kv = p.split(separator: ":")
-            if kv.count == 2, String(kv[0]) == title { return BubbleSize(rawValue: String(kv[1])) ?? .medium }
+            if kv.count == 2, String(kv[0]) == title { return BubbleSize(rawValue: String(kv[1])) }
         }
-        return .medium
+        return nil
+    }
+    private func defaultSize(_ sizeMul: CGFloat) -> BubbleSize {
+        sizeMul >= 1.3 ? .large : (sizeMul >= 0.9 ? .medium : .small)
+    }
+    private func effectiveSize(_ cat: BubbleCategory) -> BubbleSize {
+        catSizeOverride(cat.title) ?? defaultSize(cat.sizeMul)
     }
     private func setCatSize(_ title: String, _ size: BubbleSize) {
         var m: [String: String] = [:]
@@ -267,7 +280,10 @@ struct BubbleCategoriesView: View {
             let w = geo.size.width
             let h = geo.size.height
             let base = w * BubbleLayout.baseRatio
-            let items = tidy ? mains : visible
+            let items = mains
+            // Placement SERRÉ calculé : bulles tangentes (elles se touchent), aucun
+            // chevauchement, tout tient sur UN écran entre les boutons et le menu.
+            let packed = tidy ? [:] : packOrganic(items, w: w, h: h)
 
             TimelineView(.animation) { context in
                 let t = context.date.timeIntervalSinceReferenceDate
@@ -277,29 +293,102 @@ struct BubbleCategoriesView: View {
                         .gesture(LongPressGesture(minimumDuration: 0.45).onEnded { _ in setEditing(true) })
 
                     ForEach(Array(items.enumerated()), id: \.element.id) { index, cat in
-                        bubble(cat, index: index, base: base, w: w, h: h, t: t, tidy: tidy)
+                        bubble(cat, index: index, base: base, w: w, h: h, t: t, tidy: tidy, packed: packed)
                     }
                 }
             }
         }
     }
 
+    // Placement ALÉATOIRE organique (mode « Bulles libres ») : on éparpille les bulles
+    // (scatter pseudo-aléatoire stable, déterministe), puis on les repousse les unes des
+    // autres (relaxation) jusqu'à ZÉRO chevauchement — elles peuvent se TOUCHER mais
+    // jamais se cacher. Tout reste dans la bande [sous les boutons … au-dessus du menu
+    // flottant]. 3 tailles exactes conservées. Renvoie centre + diamètre par catégorie.
+    private func packOrganic(_ items: [BubbleCategory], w: CGFloat, h: CGFloat) -> [UUID: (CGPoint, CGFloat)] {
+        let topInset: CGFloat = 88       // sous les boutons Modifier / layout
+        let bottomInset: CGFloat = 116   // dégage la barre d'onglets flottante (incluse dans h)
+        let sideInset: CGFloat = 12
+        let gap: CGFloat = 4             // marge mini entre bulles (≈ se touchent)
+        let minX = sideInset, maxX = w - sideInset
+        let minY = topInset, maxY = max(h - bottomInset, topInset + 1)
+        let areaW = maxX - minX, areaH = maxY - minY
+
+        let n = items.count
+        guard n > 0 else { return [:] }
+
+        // Diamètres bruts (3 tailles) → échelle pour viser une densité qui laisse la
+        // place de TOUT séparer (pas de chevauchement résiduel).
+        var dias = items.map { w * effectiveSize($0).widthFraction }
+        let rawArea = dias.reduce(0) { $0 + .pi * ($1 * 0.5) * ($1 * 0.5) }
+        let density: CGFloat = 0.70
+        let areaScale = min(1, (density * areaW * areaH / max(rawArea, 1)).squareRoot())
+        dias = dias.map { $0 * areaScale }
+
+        // PRNG déterministe (pas de Math.random → stable entre rendus).
+        func rnd(_ i: Int, _ s: Int) -> CGFloat {
+            let v = sin(Double(i) * 12.9898 + Double(s) * 78.233) * 43758.5453
+            return CGFloat(v - v.rounded(.down))
+        }
+        var cx = [CGFloat](repeating: 0, count: n)
+        var cy = [CGFloat](repeating: 0, count: n)
+        for i in 0..<n {
+            let r = dias[i] * 0.5
+            cx[i] = minX + r + rnd(i, 1) * max(areaW - 2 * r, 1)
+            cy[i] = minY + r + rnd(i, 2) * max(areaH - 2 * r, 1)
+        }
+
+        // Relaxation : repousse chaque paire en chevauchement, puis recadre dans les bornes.
+        for _ in 0..<260 {
+            for i in 0..<n {
+                for j in (i + 1)..<n {
+                    let dx = cx[j] - cx[i], dy = cy[j] - cy[i]
+                    var dist = (dx * dx + dy * dy).squareRoot()
+                    if dist < 0.0001 { dist = 0.0001 }
+                    let minDist = dias[i] * 0.5 + dias[j] * 0.5 + gap
+                    if dist < minDist {
+                        let push = (minDist - dist) * 0.5
+                        let ux = dx / dist, uy = dy / dist
+                        cx[i] -= ux * push; cy[i] -= uy * push
+                        cx[j] += ux * push; cy[j] += uy * push
+                    }
+                }
+            }
+            for i in 0..<n {
+                let r = dias[i] * 0.5
+                cx[i] = min(max(cx[i], minX + r), maxX - r)
+                cy[i] = min(max(cy[i], minY + r), maxY - r)
+            }
+        }
+
+        var result: [UUID: (CGPoint, CGFloat)] = [:]
+        for i in 0..<n { result[items[i].id] = (CGPoint(x: cx[i], y: cy[i]), dias[i]) }
+        return result
+    }
+
     // Une bulle : compteur d'usage (taille), bob, drag + tap, badge − en édition.
-    private func bubble(_ cat: BubbleCategory, index: Int, base: CGFloat, w: CGFloat, h: CGFloat, t: Double, tidy: Bool) -> some View {
-        let grow = cat.isFiller ? 1.0 : growth(cat.title)
-        // rangé : grille 3 colonnes, taille uniforme ; libre : ancres organiques + tailles variées
+    private func bubble(_ cat: BubbleCategory, index: Int, base: CGFloat, w: CGFloat, h: CGFloat, t: Double, tidy: Bool, packed: [UUID: (CGPoint, CGFloat)]) -> some View {
+        // Taille + centre : mode libre = packing calculé (tangent, 3 tailles) ;
+        // mode rangé = grille 3 colonnes uniforme.
         let cols = 3
         let gx: [CGFloat] = [0.21, 0.50, 0.79]
-        let tidyAnchor = CGPoint(x: gx[index % cols], y: 0.12 + CGFloat(index / cols) * 0.158)
-        let d = (tidy ? base * 0.92 * grow : base * cat.sizeMul * grow) * catSize(cat.title).factor
+        let d: CGFloat
+        let cx: CGFloat
+        let cy: CGFloat
+        if !tidy, let p = packed[cat.id] {
+            d = p.1; cx = p.0.x; cy = p.0.y
+        } else {
+            d = base * 0.92
+            cx = gx[index % cols] * w
+            cy = 96 + CGFloat(index / cols) * (base * 0.92 + 14)
+        }
         let phase = Double(index) * 1.37
-        let amp: Double = cat.isFiller ? 6 : 4
+        let amp: Double = 2.5
         let dv = drag[cat.id] ?? .zero
         let moving = dv != .zero
         let bx = (moving ? 0 : sin(t * 0.5 + phase) * amp) + dv.width
         let by = (moving ? 0 : cos(t * 0.42 + phase * 1.3) * amp) + dv.height
         let wig: Double = (editing && !cat.isFiller) ? sin(t * 7 + phase) * 2.0 : 0
-        let a = tidy ? tidyAnchor : (cat.isFiller ? cat.anchor : adjustedAnchor(cat))
 
         return Group {
             if theme == .gothic {
@@ -345,10 +434,10 @@ struct BubbleCategoriesView: View {
         .animation(.spring(response: 0.3, dampingFraction: 0.45), value: tappedID)
         // Bande verticale : on descend sous les boutons (haut) et on laisse de l'air en bas.
         .position(
-            x: a.x * w + bx + (cat.isFiller ? 0 : catOffset(cat.title).width),
-            y: (76 + a.y * (h - 94)) + by + (cat.isFiller ? 0 : catOffset(cat.title).height)
+            x: cx + bx + catOffset(cat.title).width,
+            y: cy + by + catOffset(cat.title).height
         )
-        .zIndex(moving ? 100 : Double(cat.sizeMul))
+        .zIndex(moving ? 100 : effectiveSize(cat).rank)
         .allowsHitTesting(!cat.isFiller)
         .onTapGesture {
             guard !cat.isFiller, !editing else { return }
@@ -369,11 +458,18 @@ struct BubbleCategoriesView: View {
         )
         .contextMenu {
             if !cat.isFiller {
-                Menu {
-                    Button { setCatSize(cat.title, .large) }  label: { Label("Grande",  systemImage: "circle.fill") }
-                    Button { setCatSize(cat.title, .medium) } label: { Label("Moyenne", systemImage: "circle.lefthalf.filled") }
-                    Button { setCatSize(cat.title, .small) }  label: { Label("Petite",  systemImage: "circle") }
-                } label: { Label("Taille", systemImage: "arrow.up.left.and.arrow.down.right") }
+                // Les 3 tailles directement au 1er niveau (plus de sous-menu) → un seul tap.
+                Section("Taille de la bulle") {
+                    Button { setCatSize(cat.title, .large) } label: {
+                        Label("Grande", systemImage: effectiveSize(cat) == .large ? "checkmark" : "circle.fill")
+                    }
+                    Button { setCatSize(cat.title, .medium) } label: {
+                        Label("Moyenne", systemImage: effectiveSize(cat) == .medium ? "checkmark" : "circle.lefthalf.filled")
+                    }
+                    Button { setCatSize(cat.title, .small) } label: {
+                        Label("Petite", systemImage: effectiveSize(cat) == .small ? "checkmark" : "circle")
+                    }
+                }
                 if catOffset(cat.title) != .zero {
                     Button { withAnimation { resetCatOffset(cat.title) } } label: { Label("Replacer", systemImage: "arrow.counterclockwise") }
                 }
