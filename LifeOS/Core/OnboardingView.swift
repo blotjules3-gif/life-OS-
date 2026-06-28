@@ -756,6 +756,35 @@ struct OnboardingResults: View {
 
     @State private var selected: Set<AppCategory> = []
 
+    private var preferencesSummary: [(module: AppCategory, bullets: [String])] {
+        recommendations.compactMap { cat in
+            guard let configStr = UserDefaults.standard.string(forKey: "moduleConfig_\(cat.rawValue)"),
+                  let data = configStr.data(using: .utf8),
+                  let config = try? JSONDecoder().decode([String: String].self, from: data),
+                  !config.isEmpty else { return nil }
+            let labelMap: [String: [String: String]] = [
+                "fitness": ["location": ["gym":"En salle","home":"A la maison","outdoor":"Dehors","mixed":"Mixte"],
+                            "frequency": ["1_2":"1-2x/sem","3":"3x/sem","4p":"4x+/sem"],
+                            "goal": ["loss":"Perte de poids","muscle":"Muscle","cardio":"Cardio","flex":"Souplesse"]],
+                "nutrition": ["diet": ["omni":"Omnivore","vege":"Vegetarien","vegan":"Vegan","gf":"Sans gluten"],
+                              "goal": ["loss":"Perdre du poids","mass":"Prise de masse","balance":"Equilibrer","energy":"Energie"]],
+                "sleep": ["bedtime": ["early":"Avant 22h","normal":"22h-23h","late":"23h-0h","verylate":"Apres minuit"]],
+                "mind": ["stress": ["low":"Faible","medium":"Modere","high":"Eleve","vhigh":"Tres eleve"]],
+                "productivity": ["peak": ["morning":"Le matin","afternoon":"Apres-midi","evening":"Le soir"]],
+                "invest": ["level": ["beginner":"Debutant","intermediate":"Intermediaire","expert":"Experimente"],
+                           "risk": ["low":"Faible","medium":"Modere","high":"Eleve"]],
+            ]
+            let bullets: [String] = config.compactMap { (key, value) in
+                let values = value.split(separator: ",").map(String.init)
+                let moduleMap = labelMap[cat.rawValue]?[key] ?? [:]
+                let labels = values.compactMap { moduleMap[$0] ?? $0 }
+                return labels.isEmpty ? nil : labels.joined(separator: ", ")
+            }
+            guard !bullets.isEmpty else { return nil }
+            return (module: cat, bullets: bullets)
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             ScrollView(showsIndicators: false) {
@@ -773,6 +802,57 @@ struct OnboardingResults: View {
                             .lineSpacing(3)
                     }
                     .padding(.horizontal, 28)
+
+                    if !preferencesSummary.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("TES PREFERENCES")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.secondary)
+                                .kerning(1.2)
+                                .padding(.horizontal, 4)
+
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 10) {
+                                    ForEach(preferencesSummary, id: \.module) { item in
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            HStack(spacing: 6) {
+                                                Image(systemName: item.module.icon)
+                                                    .font(.system(size: 11, weight: .semibold))
+                                                    .foregroundStyle(item.module.tint)
+                                                Text(item.module.title)
+                                                    .font(.system(size: 12, weight: .semibold))
+                                                    .foregroundStyle(.primary)
+                                            }
+                                            ForEach(item.bullets, id: \.self) { b in
+                                                HStack(spacing: 4) {
+                                                    Circle()
+                                                        .fill(item.module.tint)
+                                                        .frame(width: 4, height: 4)
+                                                    Text(b)
+                                                        .font(.system(size: 11))
+                                                        .foregroundStyle(.secondary)
+                                                }
+                                            }
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .background(
+                                            item.module.tint.opacity(0.07),
+                                            in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                .stroke(item.module.tint.opacity(0.2), lineWidth: 1)
+                                        )
+                                        .frame(minWidth: 130)
+                                    }
+                                }
+                                .padding(.horizontal, 22)
+                                .padding(.vertical, 2)
+                            }
+                        }
+                        .padding(.horizontal, 22)
+                    }
 
                     VStack(spacing: 10) {
                         ForEach(recommendations) { cat in
