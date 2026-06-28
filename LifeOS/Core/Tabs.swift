@@ -2037,7 +2037,7 @@ struct ProfileView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                Text("Tout l'app suit le thème : menu, sections, fond et bulles. Tu peux changer à tout moment.")
+                Text("Thème actif dans toute l'app — modifiable à tout moment.")
                     .font(.caption).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
