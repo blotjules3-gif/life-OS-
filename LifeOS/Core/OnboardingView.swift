@@ -757,7 +757,7 @@ struct OnboardingResults: View {
     @State private var selected: Set<AppCategory> = []
 
     private var preferencesSummary: [(module: AppCategory, bullets: [String])] {
-        recommendations.compactMap { cat in
+        recommendations.compactMap { cat -> (module: AppCategory, bullets: [String])? in
             guard let configStr = UserDefaults.standard.string(forKey: "moduleConfig_\(cat.rawValue)"),
                   let data = configStr.data(using: .utf8),
                   let config = try? JSONDecoder().decode([String: String].self, from: data),
