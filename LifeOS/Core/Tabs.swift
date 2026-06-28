@@ -1618,7 +1618,7 @@ struct ProfileView: View {
                     }
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .bold))
+                        .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(.tertiary)
                 }
                 .padding(.horizontal, 20).padding(.vertical, 14)
