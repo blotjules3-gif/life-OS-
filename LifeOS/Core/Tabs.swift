@@ -566,7 +566,7 @@ struct DailyBriefingView: View {
                                             .frame(width: 22, height: 22)
                                             .background(Color(hex: 0xE0A23C).opacity(0.12), in: Circle())
                                         Text(insight)
-                                            .font(.subheadline)
+                                            .font(.system(size: 14, weight: .regular))
                                             .foregroundStyle(.primary)
                                             .fixedSize(horizontal: false, vertical: true)
                                     }
