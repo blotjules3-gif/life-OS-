@@ -2814,7 +2814,7 @@ struct SleepCheckSheet: View {
                                     .foregroundStyle(sel ? q.color : Color.secondary.opacity(0.4))
                                     .scaleEffect(sel ? 1.15 : 1)
                                 Text(q.label)
-                                    .font(.system(size: 9, weight: sel ? .semibold : .regular))
+                                    .font(.system(size: 10, weight: sel ? .semibold : .regular))
                                     .foregroundStyle(sel ? q.color : .secondary)
                                     .multilineTextAlignment(.center)
                             }
