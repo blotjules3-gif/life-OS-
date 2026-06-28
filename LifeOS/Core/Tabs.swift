@@ -2947,7 +2947,7 @@ struct SleepCheckSheet: View {
                                             .foregroundStyle(sel ? Color(hex: 0x4CC38A) : .secondary)
                                     }
                                     .frame(maxWidth: .infinity).padding(.vertical, 12)
-                                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
                                         .fill(sel ? Color(hex: 0x4CC38A).opacity(0.1) : Theme.card))
                                 }.buttonStyle(LifeOSPressStyle())
                             }
