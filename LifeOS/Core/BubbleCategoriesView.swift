@@ -300,55 +300,69 @@ struct BubbleCategoriesView: View {
         }
     }
 
-    // Packing en rangées : remplit chaque rangée jusqu'à la largeur dispo (bulles
-    // tangentes), empile les rangées, puis met le tout à l'échelle pour tenir EXACTEMENT
-    // dans la bande [sous les boutons … au-dessus du menu]. Garantit : 0 chevauchement,
-    // 0 scroll, tout visible. Renvoie centre + diamètre par catégorie.
+    // Placement ALÉATOIRE organique (mode « Bulles libres ») : on éparpille les bulles
+    // (scatter pseudo-aléatoire stable, déterministe), puis on les repousse les unes des
+    // autres (relaxation) jusqu'à ZÉRO chevauchement — elles peuvent se TOUCHER mais
+    // jamais se cacher. Tout reste dans la bande [sous les boutons … au-dessus du menu
+    // flottant]. 3 tailles exactes conservées. Renvoie centre + diamètre par catégorie.
     private func packOrganic(_ items: [BubbleCategory], w: CGFloat, h: CGFloat) -> [UUID: (CGPoint, CGFloat)] {
-        let topInset: CGFloat = 86      // sous les boutons Modifier / layout + ~5px
-        let bottomInset: CGFloat = 10   // ~5px au-dessus du menu (le menu est déjà hors de h)
-        let sideInset: CGFloat = 10
-        let gap: CGFloat = 7            // petit espace = bulles qui se touchent presque
-        let availW = w - sideInset * 2
-        let availH = max(h - topInset - bottomInset, 1)
+        let topInset: CGFloat = 88       // sous les boutons Modifier / layout
+        let bottomInset: CGFloat = 116   // dégage la barre d'onglets flottante (incluse dans h)
+        let sideInset: CGFloat = 12
+        let gap: CGFloat = 6             // marge mini entre bulles (≈ se touchent)
+        let minX = sideInset, maxX = w - sideInset
+        let minY = topInset, maxY = max(h - bottomInset, topInset + 1)
+        let areaW = maxX - minX, areaH = maxY - minY
 
-        func dia(_ cat: BubbleCategory) -> CGFloat { w * effectiveSize(cat).widthFraction }
+        let n = items.count
+        guard n > 0 else { return [:] }
 
-        // 1) Rangées gloutonnes (largeur).
-        var rows: [[BubbleCategory]] = []
-        var cur: [BubbleCategory] = []
-        var curW: CGFloat = 0
-        for cat in items {
-            let d = dia(cat)
-            let projected = cur.isEmpty ? d : curW + gap + d
-            if projected > availW && !cur.isEmpty {
-                rows.append(cur); cur = [cat]; curW = d
-            } else {
-                cur.append(cat); curW = projected
+        // Diamètres bruts (3 tailles) → échelle pour viser une densité qui laisse la
+        // place de TOUT séparer (pas de chevauchement résiduel).
+        var dias = items.map { w * effectiveSize($0).widthFraction }
+        let rawArea = dias.reduce(0) { $0 + .pi * ($1 * 0.5) * ($1 * 0.5) }
+        let density: CGFloat = 0.60
+        let areaScale = min(1, (density * areaW * areaH / max(rawArea, 1)).squareRoot())
+        dias = dias.map { $0 * areaScale }
+
+        // PRNG déterministe (pas de Math.random → stable entre rendus).
+        func rnd(_ i: Int, _ s: Int) -> CGFloat {
+            let v = sin(Double(i) * 12.9898 + Double(s) * 78.233) * 43758.5453
+            return CGFloat(v - v.rounded(.down))
+        }
+        var cx = [CGFloat](repeating: 0, count: n)
+        var cy = [CGFloat](repeating: 0, count: n)
+        for i in 0..<n {
+            let r = dias[i] * 0.5
+            cx[i] = minX + r + rnd(i, 1) * max(areaW - 2 * r, 1)
+            cy[i] = minY + r + rnd(i, 2) * max(areaH - 2 * r, 1)
+        }
+
+        // Relaxation : repousse chaque paire en chevauchement, puis recadre dans les bornes.
+        for _ in 0..<260 {
+            for i in 0..<n {
+                for j in (i + 1)..<n {
+                    let dx = cx[j] - cx[i], dy = cy[j] - cy[i]
+                    var dist = (dx * dx + dy * dy).squareRoot()
+                    if dist < 0.0001 { dist = 0.0001 }
+                    let minDist = dias[i] * 0.5 + dias[j] * 0.5 + gap
+                    if dist < minDist {
+                        let push = (minDist - dist) * 0.5
+                        let ux = dx / dist, uy = dy / dist
+                        cx[i] -= ux * push; cy[i] -= uy * push
+                        cx[j] += ux * push; cy[j] += uy * push
+                    }
+                }
+            }
+            for i in 0..<n {
+                let r = dias[i] * 0.5
+                cx[i] = min(max(cx[i], minX + r), maxX - r)
+                cy[i] = min(max(cy[i], minY + r), maxY - r)
             }
         }
-        if !cur.isEmpty { rows.append(cur) }
 
-        // 2) Hauteur totale puis mise à l'échelle pour remplir la bande sans déborder.
-        let rowMaxD = rows.map { $0.map(dia).max() ?? 0 }
-        let totalH = rowMaxD.reduce(0, +) + gap * CGFloat(max(0, rows.count - 1))
-        let scale = min(1, availH / totalH)
-
-        // 3) Positions : rangées centrées horizontalement, cluster centré verticalement.
         var result: [UUID: (CGPoint, CGFloat)] = [:]
-        var y = topInset + max(0, (availH - totalH * scale) / 2)
-        for (ri, row) in rows.enumerated() {
-            let rMaxD = rowMaxD[ri] * scale
-            let rowW = row.map { dia($0) * scale }.reduce(0, +) + gap * scale * CGFloat(max(0, row.count - 1))
-            var x = sideInset + max(0, (availW - rowW) / 2)
-            let cy = y + rMaxD / 2
-            for cat in row {
-                let d = dia(cat) * scale
-                result[cat.id] = (CGPoint(x: x + d / 2, y: cy), d)
-                x += d + gap * scale
-            }
-            y += rMaxD + gap * scale
-        }
+        for i in 0..<n { result[items[i].id] = (CGPoint(x: cx[i], y: cy[i]), dias[i]) }
         return result
     }
 
