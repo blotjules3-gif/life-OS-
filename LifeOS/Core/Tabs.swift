@@ -1720,7 +1720,9 @@ struct ProfileView: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .center)
                     if !hiddenGoals.isEmpty {
-                        Button { profileHiddenRaw = "" } label: {
+                        Button {
+                            withAnimation(.spring(duration: 0.38, bounce: 0.1)) { profileHiddenRaw = "" }
+                        } label: {
                             Text("Afficher tous les modules masqués")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(Color.accentColor)
