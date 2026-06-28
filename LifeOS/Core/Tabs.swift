@@ -2598,7 +2598,7 @@ struct GoalEditorSheet: View {
                     .font(.system(size: 22)).foregroundStyle(color)
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(LifeOSPressStyle())
     }
 
     // MARK: - Boutons +/- personnalisés
