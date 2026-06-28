@@ -470,7 +470,7 @@ struct DailyBriefingView: View {
                     VStack(spacing: 10) {
                         Image(systemName: "sunrise.fill")
                             .font(.system(size: 52, weight: .semibold))
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Color(hex: 0xFF9F0A))
                             .padding(.top, 56)
 
                         Text("\(greeting)\(userName.isEmpty ? "" : ", \(userName)") !")
