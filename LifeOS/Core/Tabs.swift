@@ -518,14 +518,14 @@ struct DailyBriefingView: View {
                                     Spacer()
                                     if task.done {
                                         Image(systemName: "checkmark.circle.fill")
-                                            .foregroundStyle(.green)
+                                            .foregroundStyle(task.color)
                                             .font(.system(size: 18))
                                     }
                                 }
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 12)
                                 .background(
-                                    task.done ? Color.green.opacity(0.06) : Theme.card,
+                                    task.done ? task.color.opacity(0.08) : Theme.card,
                                     in: RoundedRectangle(cornerRadius: 14, style: .continuous)
                                 )
                                 .overlay(
