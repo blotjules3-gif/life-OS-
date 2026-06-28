@@ -350,7 +350,7 @@ struct WakeUpView: View {
                             Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
                         }
                         .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
+                        .padding(.vertical, 12)
                         .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     .buttonStyle(LifeOSPressStyle())
