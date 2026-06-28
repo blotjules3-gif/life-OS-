@@ -1769,7 +1769,7 @@ struct ProfileView: View {
 
                 if !hiddenGoals.isEmpty {
                     Button {
-                        withAnimation { profileHiddenRaw = "" }
+                        withAnimation(.spring(duration: 0.38, bounce: 0.1)) { profileHiddenRaw = "" }
                     } label: {
                         Text("Afficher \(hiddenGoals.count) module\(hiddenGoals.count > 1 ? "s" : "") masqué\(hiddenGoals.count > 1 ? "s" : "")")
                             .font(.system(size: 12, weight: .medium))
