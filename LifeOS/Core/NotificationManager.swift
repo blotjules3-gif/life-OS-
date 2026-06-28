@@ -128,4 +128,22 @@ final class NotificationManager {
     func cancelAll() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
     }
+
+    func schedulePendingHabitNotification(pendingCount: Int) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["lifeos.pending_habits"])
+        guard pendingCount > 0 else { return }
+        let content = UNMutableNotificationContent()
+        content.title = "Habitudes en attente"
+        content.body = pendingCount == 1
+            ? "1 habitude proposée t'attend. Quelques secondes pour l'activer."
+            : "\(pendingCount) habitudes proposées t'attendent."
+        content.sound = .default
+        content.interruptionLevel = .active
+        var comps = DateComponents()
+        comps.hour = 10
+        comps.minute = 0
+        let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
+        let req = UNNotificationRequest(identifier: "lifeos.pending_habits", content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(req)
+    }
 }
