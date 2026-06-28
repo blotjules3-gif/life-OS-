@@ -32,7 +32,17 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             intentIdentifiers: [],
             options: [.customDismissAction]
         )
-        UNUserNotificationCenter.current().setNotificationCategories([alarmCategory])
+
+        // Catégorie CONFIRMATION — « Tu as bien fait X ? » avec 2 boutons.
+        let yes = UNNotificationAction(identifier: "CONFIRM_YES", title: "Oui ✓", options: [])
+        let no  = UNNotificationAction(identifier: "CONFIRM_NO",  title: "Pas encore", options: [])
+        let confirmCategory = UNNotificationCategory(
+            identifier: "LIFEOS_CONFIRM",
+            actions: [yes, no],
+            intentIdentifiers: [],
+            options: []
+        )
+        UNUserNotificationCenter.current().setNotificationCategories([alarmCategory, confirmCategory])
 
         return true
     }
@@ -87,6 +97,26 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         if id == "lifeos.ai.welcome" {
             await MainActor.run {
                 NotificationCenter.default.post(name: .lifeOSOpenAIChat, object: nil)
+            }
+        }
+
+        // Réponse à une notif de CONFIRMATION (compléments, salle, etc.)
+        let content = response.notification.request.content
+        if content.categoryIdentifier == "LIFEOS_CONFIRM" {
+            let info = content.userInfo
+            let key = info["confirmKey"] as? String ?? id
+            let label = info["confirmLabel"] as? String ?? "ça"
+            let action = response.actionIdentifier
+            if action == "CONFIRM_YES" || action == UNNotificationDefaultActionIdentifier {
+                ConfirmationStore.shared.markDone(key)
+            } else if action == "CONFIRM_NO" {
+                // Petit rappel dans 30 min.
+                NotificationManager.shared.scheduleAfter(
+                    id: "\(key).snooze",
+                    title: "Petit rappel",
+                    body: "\(label) — quand tu peux 😉",
+                    seconds: 30 * 60
+                )
             }
         }
     }
