@@ -3088,7 +3088,7 @@ struct ChallengeCard: View {
                         Capsule()
                             .fill(typeColor)
                             .frame(width: geo.size.width * challenge.progressFraction, height: 3)
-                            .animation(.spring(duration: 0.6), value: challenge.progressFraction)
+                            .animation(.spring(duration: 0.6, bounce: 0.1), value: challenge.progressFraction)
                     }
                 }
                 .frame(height: 3)
@@ -3103,6 +3103,7 @@ struct ChallengeCard: View {
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .stroke(challenge.isAbandoned ? typeColor.opacity(0.35) : Color.clear, lineWidth: 1.5)
+                .animation(.spring(duration: 0.38, bounce: 0.1), value: challenge.isAbandoned)
         )
     }
 }
