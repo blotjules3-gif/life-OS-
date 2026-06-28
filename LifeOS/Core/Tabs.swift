@@ -2768,7 +2768,7 @@ struct SleepCheckSheet: View {
                 }
             }
             .animation(.spring(duration: 0.38, bounce: 0.08), value: step)
-            .onAppear { withAnimation { appeared = true } }
+            .onAppear { withAnimation(.spring(duration: 0.45, bounce: 0.1)) { appeared = true } }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
