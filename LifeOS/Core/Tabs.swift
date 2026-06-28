@@ -1914,7 +1914,7 @@ struct ProfileView: View {
                     if let end = endDate {
                         let days = max(0, Calendar.current.dateComponents([.day], from: .now, to: end).day ?? 0)
                         Text(days > 0 ? "J-\(days)" : "Échu")
-                            .font(.system(size: 9, weight: .bold))
+                            .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(days <= 3 ? Color(hex: 0xF1746C) : task.color)
                             .padding(.horizontal, 5).padding(.vertical, 2)
                             .background((days <= 3 ? Color(hex: 0xF1746C) : task.color).opacity(0.12), in: Capsule())
