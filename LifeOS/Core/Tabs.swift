@@ -1614,10 +1614,11 @@ struct ProfileView: View {
                             .font(.system(size: 12, weight: .semibold))
                     }
                     .foregroundStyle(Color.accentColor)
-                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .frame(minHeight: 44)
+                    .padding(.horizontal, 12)
                     .background(Color.accentColor.opacity(0.1), in: Capsule())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(LifeOSPressStyle())
             }
 
             let endDates = parseEndDates()
