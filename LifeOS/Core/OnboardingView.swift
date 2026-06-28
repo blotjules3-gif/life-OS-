@@ -120,9 +120,9 @@ struct OnboardingView: View {
 
             VStack(spacing: 0) {
                 // Barre de progression (steps 1–5)
-                if step >= 1 && step <= 5 {
+                if step >= 1 && step <= 6 {
                     HStack(spacing: 6) {
-                        ForEach(1...5, id: \.self) { s in
+                        ForEach(1...6, id: \.self) { s in
                             Capsule()
                                 .fill(step >= s ? Color.accentColor : Color.primary.opacity(0.1))
                                 .frame(height: 4)
