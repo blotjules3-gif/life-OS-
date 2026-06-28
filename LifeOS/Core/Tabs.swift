@@ -752,7 +752,7 @@ struct DailyBriefingView: View {
         let scoreColor: Color = {
             switch todayEnergyScore {
             case 85...100: return Color(hex: 0x4CC38A)
-            case 70..<85:  return Color(hex: 0x30D158)
+            case 70..<85:  return Color(hex: 0x5DCFA8)
             case 50..<70:  return Color(hex: 0xFF9F0A)
             case 30..<50:  return Color(hex: 0xFF6B35)
             default:       return Color(hex: 0xFF3B30)
@@ -3062,7 +3062,7 @@ struct SleepCheckSheet: View {
     private var scoreColor: Color {
         switch todayEnergyScore {
         case 85...100: return Color(hex: 0x4CC38A)
-        case 70..<85:  return Color(hex: 0x30D158)
+        case 70..<85:  return Color(hex: 0x5DCFA8)
         case 50..<70:  return Color(hex: 0xFF9F0A)
         case 30..<50:  return Color(hex: 0xFF6B35)
         default:       return Color(hex: 0xFF3B30)
