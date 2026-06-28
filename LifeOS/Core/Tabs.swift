@@ -2112,7 +2112,7 @@ struct ProfileView: View {
 
             Button { showOnboardingReset = true } label: {
                 Text("Refaire l'onboarding")
-                    .font(.subheadline.weight(.medium))
+                    .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(Color(hex: 0xF1746C))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
