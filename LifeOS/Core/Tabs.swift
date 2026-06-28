@@ -826,7 +826,7 @@ struct DailyBriefingView: View {
                 HStack(spacing: 3) {
                     ForEach(Array(Self.waveBars.enumerated()), id: \.offset) { i, h in
                         RoundedRectangle(cornerRadius: 2, style: .continuous)
-                            .fill(Color.orange)
+                            .fill(Color(hex: 0xFF9F0A))
                             .frame(width: 3, height: waveActive ? h : h * 0.3)
                             .animation(
                                 .easeInOut(duration: 0.28 + Double(i) * 0.04)
