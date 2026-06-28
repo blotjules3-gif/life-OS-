@@ -2536,7 +2536,7 @@ struct GoalEditorSheet: View {
                     .frame(width: 36, height: 36)
                     .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(LifeOSPressStyle())
 
             Button {
                 if value.wrappedValue + step <= max {
@@ -2550,7 +2550,7 @@ struct GoalEditorSheet: View {
                     .frame(width: 36, height: 36)
                     .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(LifeOSPressStyle())
             .padding(.leading, 6)
         }
     }
