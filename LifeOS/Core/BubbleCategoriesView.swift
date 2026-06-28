@@ -309,7 +309,7 @@ struct BubbleCategoriesView: View {
         let topInset: CGFloat = 88       // sous les boutons Modifier / layout
         let bottomInset: CGFloat = 116   // dégage la barre d'onglets flottante (incluse dans h)
         let sideInset: CGFloat = 12
-        let gap: CGFloat = 6             // marge mini entre bulles (≈ se touchent)
+        let gap: CGFloat = 4             // marge mini entre bulles (≈ se touchent)
         let minX = sideInset, maxX = w - sideInset
         let minY = topInset, maxY = max(h - bottomInset, topInset + 1)
         let areaW = maxX - minX, areaH = maxY - minY
@@ -321,7 +321,7 @@ struct BubbleCategoriesView: View {
         // place de TOUT séparer (pas de chevauchement résiduel).
         var dias = items.map { w * effectiveSize($0).widthFraction }
         let rawArea = dias.reduce(0) { $0 + .pi * ($1 * 0.5) * ($1 * 0.5) }
-        let density: CGFloat = 0.60
+        let density: CGFloat = 0.70
         let areaScale = min(1, (density * areaW * areaH / max(rawArea, 1)).squareRoot())
         dias = dias.map { $0 * areaScale }
 
