@@ -306,7 +306,7 @@ struct WakeUpView: View {
                 HStack(spacing: 14) {
                     Image(systemName: "sunrise.fill")
                         .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Color(hex: 0xFF9F0A))
                         .frame(width: 42, height: 42)
                         .background(Color(hex: 0xFF9F0A).opacity(0.1), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
                     VStack(alignment: .leading, spacing: 2) {
