@@ -1760,6 +1760,7 @@ struct ProfileView: View {
                     Text("\(Int(task.progress * 100))%")
                         .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
                         .foregroundStyle(task.progress >= 1 ? task.color : .secondary)
+                        .contentTransition(.numericText())
                     if let end = endDate {
                         let days = max(0, Calendar.current.dateComponents([.day], from: .now, to: end).day ?? 0)
                         Text(days > 0 ? "J-\(days)" : "Échu")
