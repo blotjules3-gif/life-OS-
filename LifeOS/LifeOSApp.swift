@@ -165,21 +165,25 @@ struct LifeOSApp: App {
 
     private func buildContainer() async {
         let schema = Self.schema
-        let built = await Task.detached(priority: .userInitiated) {
-            if let mc = try? ModelContainer(
+        let result = await Task.detached(priority: .userInitiated) {
+            Result { try ModelContainer(
                 for: schema,
                 configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)]
-            ) {
-                return mc
-            }
-            // Fallback mémoire si la migration échoue
-            return try! ModelContainer(
+            )}
+        }.value
+
+        switch result {
+        case .success(let mc):
+            migrationFailed = false
+            container = mc
+        case .failure:
+            migrationFailed = true
+            // Conteneur mémoire temporaire pour que l'app reste navigable
+            container = try? ModelContainer(
                 for: schema,
                 configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
             )
-        }.value
-
-        container = built
+        }
     }
 }
 
