@@ -341,7 +341,7 @@ struct WakeUpView: View {
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(.white)
                                 .frame(width: 30, height: 30)
-                                .background(cat.tint, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                .background(cat.tint, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(cat.title).font(.system(size: 14, weight: .medium))
                                 Text(cat.subtitle).font(.caption).foregroundStyle(.secondary)
