@@ -1177,7 +1177,14 @@ struct ProfileView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
                         profileHeader
-                        topModuleIsland
+                        if let mod = topModule {
+                            NavigationLink(value: mod) {
+                                topModuleIsland
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            topModuleIsland
+                        }
                         nightIsland
                         sectionPicker
                         if profileSection == 0 {
