@@ -1044,6 +1044,8 @@ struct OnboardingModuleSetup: View {
 
     @State private var currentIndex = 0
     @State private var answers: [String: [String: String]] = [:]
+    @State private var showHabitPicker = false
+    @State private var selectedHabitModules: Set<String> = []
 
     private var modulesWithQuestions: [AppCategory] {
         modules.filter { moduleSetupQuestions[$0]?.isEmpty == false }
@@ -1068,6 +1070,12 @@ struct OnboardingModuleSetup: View {
     var body: some View {
         if modulesWithQuestions.isEmpty {
             Color.clear.onAppear { onNext([:]) }
+        } else if showHabitPicker {
+            habitPickerView
+                .transition(.asymmetric(
+                    insertion: .move(edge: .trailing).combined(with: .opacity),
+                    removal: .move(edge: .leading).combined(with: .opacity)
+                ))
         } else {
             VStack(spacing: 0) {
                 subProgress
@@ -1090,7 +1098,7 @@ struct OnboardingModuleSetup: View {
                 }
 
                 OnboardingButton(
-                    label: currentIndex < modulesWithQuestions.count - 1 ? "Module suivant" : "Continuer",
+                    label: currentIndex < modulesWithQuestions.count - 1 ? "Module suivant" : "Configurer mes habitudes",
                     enabled: canAdvance
                 ) {
                     advance()
@@ -1098,6 +1106,84 @@ struct OnboardingModuleSetup: View {
                 .padding(.horizontal, 28)
                 .padding(.bottom, 52)
                 .animation(.spring(duration: 0.2), value: canAdvance)
+            }
+        }
+    }
+
+    private var habitPickerView: some View {
+        VStack(spacing: 0) {
+            VStack(spacing: 10) {
+                Text("Tes habitudes a creer")
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .multilineTextAlignment(.center)
+                Text("On les prepare pour toi, desactivees.\nTu les actives quand tu veux.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+            }
+            .padding(.horizontal, 28)
+            .padding(.bottom, 24)
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 10) {
+                    ForEach(modulesWithQuestions) { m in
+                        let on = selectedHabitModules.contains(m.rawValue)
+                        Button {
+                            withAnimation(.spring(duration: 0.2)) {
+                                if on { selectedHabitModules.remove(m.rawValue) }
+                                else { selectedHabitModules.insert(m.rawValue) }
+                            }
+                            Haptics.tap()
+                        } label: {
+                            HStack(spacing: 14) {
+                                Image(systemName: m.icon)
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 38, height: 38)
+                                    .background(
+                                        on ? m.tint : Color.primary.opacity(0.12),
+                                        in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    )
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(m.title)
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundStyle(on ? .primary : .secondary)
+                                    Text(m.subtitle)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Image(systemName: on ? "checkmark.circle.fill" : "circle")
+                                    .foregroundStyle(on ? m.tint : Color.secondary.opacity(0.4))
+                                    .font(.system(size: 22))
+                                    .contentTransition(.symbolEffect(.replace))
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .opacity(on ? 1 : 0.6)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 22)
+                .padding(.bottom, 16)
+            }
+
+            OnboardingButton(label: "Demarrer LifeOS", enabled: true) {
+                UserDefaults.standard.set(
+                    selectedHabitModules.joined(separator: ","),
+                    forKey: "habitModulesRaw"
+                )
+                onNext(answers)
+            }
+            .padding(.horizontal, 28)
+            .padding(.bottom, 52)
+        }
+        .onAppear {
+            if selectedHabitModules.isEmpty {
+                selectedHabitModules = Set(modulesWithQuestions.map { $0.rawValue })
             }
         }
     }
