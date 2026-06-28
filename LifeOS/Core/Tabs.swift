@@ -1869,7 +1869,7 @@ struct ProfileView: View {
             HStack(alignment: .top) {
                 ZStack(alignment: .bottomTrailing) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
                             .fill(task.color.opacity(task.progress >= 1 ? 0.22 : 0.14))
                             .frame(width: 40, height: 40)
                             .animation(.spring(duration: 0.38, bounce: 0.1), value: task.progress >= 1)
