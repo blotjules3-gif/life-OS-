@@ -3094,7 +3094,7 @@ struct SleepCheckSheet: View {
     private func animateScore() {
         let target = todayEnergyScore
         guard target > 0 else { return }
-        withAnimation(.easeOut(duration: 1.2)) { displayScore = target }
+        withAnimation(.spring(duration: 1.2, bounce: 0.0)) { displayScore = target }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) { Haptics.tap() }
     }
 }
