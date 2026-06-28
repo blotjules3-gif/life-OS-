@@ -291,15 +291,34 @@ final class AIAssistantViewModel: ObservableObject {
             .compactMap { moduleLabels[String($0)] }
             .joined(separator: ", ")
 
+        let habitModules = habitModulesRaw.split(separator: ",")
+            .compactMap { moduleLabels[String($0)] }
+            .joined(separator: ", ")
+
         let wake = String(format: "%02d:%02d", wakeupHour, wakeupMinute)
+
+        // Collect per-module config answers saved during onboarding
+        let moduleConfigs = recommendedModulesRaw.split(separator: ",").compactMap { key -> String? in
+            let k = String(key)
+            guard let raw = UserDefaults.standard.string(forKey: "moduleConfig_\(k)"),
+                  let data = raw.data(using: .utf8),
+                  let config = try? JSONDecoder().decode([String: String].self, from: data),
+                  !config.isEmpty else { return nil }
+            let label = moduleLabels[k] ?? k
+            let detail = config.map { "\($0.key)=\($0.value)" }.joined(separator: ",")
+            return "\(label):\(detail)"
+        }.joined(separator: " | ")
 
         let prompt = """
         [PREMIER_LANCEMENT]
         Prénom: \(userName.isEmpty ? "non renseigné" : userName)
         Genre: \(userGender.isEmpty ? "non renseigné" : userGender)
-        Objectifs déclarés: \(goals.isEmpty ? "non renseignés" : goals)
+        Objectifs: \(goals.isEmpty ? "non renseignés" : goals)
         Modules activés: \(modules.isEmpty ? "aucun" : modules)
         Heure de réveil: \(wake)
+        Modules pour habitudes: \(habitModules.isEmpty ? "aucun" : habitModules)
+        Config modules: \(moduleConfigs.isEmpty ? "aucune" : moduleConfigs)
+        Instruction: Pour chaque module avec habitudes, pose des questions précises (durée séance, nombre d'exercices, etc.) pour créer des habitudes personnalisées. Demande l'accord avant de créer chaque habitude (action create_habit).
         """
 
         appendThinking()
