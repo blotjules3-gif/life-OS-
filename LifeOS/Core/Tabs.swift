@@ -1567,7 +1567,7 @@ struct ProfileView: View {
                     if alarmRingsNextDay {
                         Text("demain")
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(accentColor.opacity(0.75))
+                            .foregroundStyle(accentColor.opacity(0.8))
                             .transition(.scale(scale: 0.25).combined(with: .opacity))
                     }
                 }
