@@ -1744,7 +1744,7 @@ struct ProfileView: View {
                             .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
                             .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(LifeOSPressStyle())
                 }
             }
         }
