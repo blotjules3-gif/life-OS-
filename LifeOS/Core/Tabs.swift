@@ -1814,6 +1814,7 @@ struct ProfileView: View {
                         Text("\(glassesToday)")
                             .font(.system(size: 22, weight: .black, design: .rounded).monospacedDigit())
                             .foregroundStyle(.primary)
+                            .contentTransition(.numericText())
                         Text("/ \(glassesGoalCalc) verres")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(.secondary)
