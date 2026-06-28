@@ -3165,7 +3165,7 @@ struct ChallengeCard: View {
                 // Icône type
                 ZStack {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(typeColor.opacity(0.12))
+                        .fill(typeColor.opacity(0.14))
                         .frame(width: 40, height: 40)
                     Image(systemName: typeIcon)
                         .font(.system(size: 18, weight: .semibold))
