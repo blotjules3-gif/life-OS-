@@ -1755,33 +1755,48 @@ struct ProfileView: View {
                 .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
                 .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
             } else {
-                LazyVGrid(
-                    columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)],
-                    spacing: 12
-                ) {
-                    ForEach(Array(tasks.enumerated()), id: \.offset) { offset, task in
-                        let key = task.icon + task.title
-                        let isPinned = pinned.contains(key)
-                        goalCard(task: task, endDate: endDates[key])
-                            .opacity(appeared ? 1 : 0)
-                            .offset(y: appeared ? 0 : 10)
-                            .animation(
-                                .spring(duration: 0.45, bounce: 0.1).delay(Double(offset) * 0.07 + 0.08),
-                                value: appeared
-                            )
-                            .contextMenu {
-                                Button {
-                                    withAnimation(.spring(duration: 0.38, bounce: 0.1)) { pinGoal(key) }
-                                } label: {
-                                    Label(isPinned ? "Désépingler" : "Épingler en haut",
-                                          systemImage: isPinned ? "pin.slash" : "pin.fill")
+                VStack(spacing: 12) {
+                    ForEach(stride(from: 0, to: tasks.count, by: 2).map { $0 }, id: \.self) { rowStart in
+                        HStack(spacing: 12) {
+                            let task0 = tasks[rowStart]
+                            let key0 = task0.icon + task0.title
+                            goalCard(task: task0, endDate: endDates[key0])
+                                .frame(maxWidth: .infinity)
+                                .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 10)
+                                .animation(.spring(duration: 0.45, bounce: 0.1).delay(Double(rowStart) * 0.07 + 0.08), value: appeared)
+                                .contextMenu {
+                                    Button {
+                                        withAnimation(.spring(duration: 0.38, bounce: 0.1)) { pinGoal(key0) }
+                                    } label: {
+                                        Label(pinned.contains(key0) ? "Désépingler" : "Épingler en haut",
+                                              systemImage: pinned.contains(key0) ? "pin.slash" : "pin.fill")
+                                    }
+                                    Button(role: .destructive) {
+                                        withAnimation(.spring(duration: 0.38, bounce: 0.1)) { toggleHideGoal(key0) }
+                                    } label: { Label("Masquer", systemImage: "eye.slash") }
                                 }
-                                Button(role: .destructive) {
-                                    withAnimation(.spring(duration: 0.38, bounce: 0.1)) { toggleHideGoal(key) }
-                                } label: {
-                                    Label("Masquer", systemImage: "eye.slash")
-                                }
+                            if rowStart + 1 < tasks.count {
+                                let task1 = tasks[rowStart + 1]
+                                let key1 = task1.icon + task1.title
+                                goalCard(task: task1, endDate: endDates[key1])
+                                    .frame(maxWidth: .infinity)
+                                    .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 10)
+                                    .animation(.spring(duration: 0.45, bounce: 0.1).delay(Double(rowStart + 1) * 0.07 + 0.08), value: appeared)
+                                    .contextMenu {
+                                        Button {
+                                            withAnimation(.spring(duration: 0.38, bounce: 0.1)) { pinGoal(key1) }
+                                        } label: {
+                                            Label(pinned.contains(key1) ? "Désépingler" : "Épingler en haut",
+                                                  systemImage: pinned.contains(key1) ? "pin.slash" : "pin.fill")
+                                        }
+                                        Button(role: .destructive) {
+                                            withAnimation(.spring(duration: 0.38, bounce: 0.1)) { toggleHideGoal(key1) }
+                                        } label: { Label("Masquer", systemImage: "eye.slash") }
+                                    }
+                            } else {
+                                Color.clear.frame(maxWidth: .infinity)
                             }
+                        }
                     }
                 }
 
