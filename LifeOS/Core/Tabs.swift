@@ -917,12 +917,44 @@ struct DailyBriefingView: View {
                     .frame(width: 32, height: 32)
                     .background(Color(hex: 0xFF9F0A).opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 VStack(alignment: .leading, spacing: 7) {
-                    ForEach(0..<3, id: \.self) { i in
+                    ForEach(0..<3, id: \.self) { _ in
                         RoundedRectangle(cornerRadius: 4, style: .continuous)
                             .fill(Color.primary.opacity(0.07))
-                            .frame(maxWidth: i == 2 ? .infinity * 0.6 : .infinity)
+                            .frame(maxWidth: .infinity)
                             .frame(height: 11)
                     }
+                }
+            }
+            .padding(14)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        } else if briefingFailed && aiBriefing == nil {
+            HStack(spacing: 12) {
+                Image(systemName: "wifi.slash")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 32, height: 32)
+                    .background(Color.secondary.opacity(0.1), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Briefing indisponible")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.secondary)
+                    Button("Réessayer") {
+                        briefingFailed = false
+                        briefingLoading = true
+                        Task {
+                            let prompt = buildBriefingPrompt(goals: briefingGoals, challenges: briefingChallenges)
+                            if let resp = try? await AgentAPI.shared.chat(message: prompt, module: nil, conversationID: nil) {
+                                aiBriefing = resp.reply
+                                UserDefaults.standard.set(resp.reply, forKey: "lastAIBriefing")
+                                lastBriefingDate = Date.now.timeIntervalSince1970
+                            } else {
+                                briefingFailed = true
+                            }
+                            briefingLoading = false
+                        }
+                    }
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
                 }
             }
             .padding(14)
