@@ -637,7 +637,7 @@ struct DailyBriefingView: View {
             energyScoreDisplayCard
                 .transition(.scale(scale: 0.88, anchor: .top).combined(with: .opacity))
         } else {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 16) {
                 Text("Bilan du matin")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.secondary)
