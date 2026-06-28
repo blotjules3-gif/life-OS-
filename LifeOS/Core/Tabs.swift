@@ -1056,6 +1056,7 @@ struct ProfileView: View {
     @State private var steps = 0
     @State private var healthConnected = false
     @State private var showGoalEditor = false
+    @State private var showNotificationSettings = false
     @State private var showWakeupDetail = false
     @State private var showBriefing = false
     @State private var appeared = false
