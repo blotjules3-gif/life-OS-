@@ -3154,7 +3154,12 @@ struct ChallengeCard: View {
         .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(challenge.isAbandoned ? typeColor.opacity(0.35) : Color.clear, lineWidth: 1.5)
+                .stroke(
+                    challenge.checkedInToday ? typeColor.opacity(0.55) :
+                    challenge.isAbandoned ? Color(hex: 0xF1746C).opacity(0.45) : Color.clear,
+                    lineWidth: 1.5
+                )
+                .animation(.spring(duration: 0.38, bounce: 0.1), value: challenge.checkedInToday)
                 .animation(.spring(duration: 0.38, bounce: 0.1), value: challenge.isAbandoned)
         )
     }
