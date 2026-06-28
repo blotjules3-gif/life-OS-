@@ -1473,7 +1473,7 @@ struct ProfileView: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text((mod?.title ?? "Module").uppercased())
-                    .font(.system(size: 9, weight: .bold))
+                    .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(color.opacity(0.8))
                     .kerning(1.2)
                 Text(moduleContextLine(mod))
