@@ -1968,7 +1968,7 @@ struct ProfileView: View {
                 settingsRow(icon: "heart.fill", iconColor: Color(hex: 0xF1746C),
                             label: healthConnected ? "Apple Santé connecté" : "Connecter Apple Santé") {
                     if healthConnected {
-                        Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(Color(hex: 0x4CC38A))
                     } else {
                         Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
                     }
