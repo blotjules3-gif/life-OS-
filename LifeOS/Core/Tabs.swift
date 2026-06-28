@@ -2036,7 +2036,7 @@ struct ProfileView: View {
             }
             .padding(.horizontal, 14).padding(.vertical, 13)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(LifeOSPressStyle())
     }
 
 
