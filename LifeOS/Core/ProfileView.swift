@@ -148,21 +148,6 @@ struct ProfileView: View {
         return wakeupHour < h || (wakeupHour == h && wakeupMinute <= m)
     }
 
-    // MARK: - Neomorphism helpers
-
-    private var neoBackground: Color {
-        colorScheme == .dark ? Color(hex: 0x1C1C1F) : Color(hex: 0xECEBE8)
-    }
-    private var neoCard: Color {
-        colorScheme == .dark ? Color(hex: 0x252528) : Color(hex: 0xECEBE8)
-    }
-    private var neoShadowLight: Color {
-        colorScheme == .dark ? Color.white.opacity(0.04) : Color.white.opacity(0.85)
-    }
-    private var neoShadowDark: Color {
-        colorScheme == .dark ? Color.black.opacity(0.45) : Color(hex: 0xB0ADA8).opacity(0.6)
-    }
-
     private func parseEndDates() -> [String: Date] {
         guard let data = goalEndDatesRaw.data(using: .utf8),
               let dict = try? JSONDecoder().decode([String: Double].self, from: data) else { return [:] }
