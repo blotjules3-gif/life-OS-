@@ -25,6 +25,7 @@ enum AppCategory: String, CaseIterable, Identifiable {
         case .admin: return "Admin & paperasse"
         case .travel: return "Voyage"
         case .cycle: return "Cycle menstruel"
+        case .medical: return "Santé médicale"
         }
     }
 
