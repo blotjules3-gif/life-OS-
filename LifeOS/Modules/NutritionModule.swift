@@ -164,8 +164,16 @@ struct MacroLogView: View {
             }
         }
         .navigationTitle("Calories & macros").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                HStack(spacing: 4) {
+                    Button { showSearch = true } label: { Image(systemName: "magnifyingglass") }
+                    Button { showAdd = true } label: { Image(systemName: "plus") }
+                }
+            }
+        }
         .sheet(isPresented: $showAdd) { FoodEditor() }
+        .sheet(isPresented: $showSearch) { NavigationStack { FoodSearchView() } }
     }
     private func macroBar(_ label: String, _ v: Double, _ goal: Double, _ c: Color) -> some View {
         VStack(spacing: 4) {
