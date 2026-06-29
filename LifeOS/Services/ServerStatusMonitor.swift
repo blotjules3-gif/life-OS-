@@ -8,6 +8,7 @@ final class ServerStatusMonitor: ObservableObject {
     @Published private(set) var isOnline: Bool? = nil
 
     private init() {
+        Task { await ping() }
         Task { await runLoop() }
     }
 
