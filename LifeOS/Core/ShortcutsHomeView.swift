@@ -1010,74 +1010,41 @@ struct WeeklyBilanView: View {
     // MARK: Bilan IA
 
     private var aiBilanCard: some View {
-        Group {
-            if !isPremium {
-                Button { showPremium = true } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(Color(hex: 0xE0A23C))
-                            .frame(width: 36, height: 36)
-                            .background(Color(hex: 0xE0A23C).opacity(0.12), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Bilan IA de la semaine")
-                                .font(.system(size: 15, weight: .semibold))
-                            Text("Premium — analyse narrative personnalisée")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Image(systemName: "lock.fill")
-                            .font(.system(size: 13))
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(14)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                            .stroke(Color(hex: 0xE0A23C).opacity(0.2), lineWidth: 1)
-                    )
-                }
-                .buttonStyle(.plain)
-                .sheet(isPresented: $showPremium) { PremiumView() }
-            } else {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(Color.accentColor)
-                        Text("Analyse IA")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(.secondary)
-                            .kerning(0.5)
-                        Spacer()
-                        if bilanLoading { ProgressView().scaleEffect(0.7) }
-                    }
-                    if let text = aiBilan {
-                        Text(text)
-                            .font(.system(size: 14))
-                            .foregroundStyle(.primary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    } else if !bilanLoading && !cachedBilan.isEmpty {
-                        Text(cachedBilan)
-                            .font(.system(size: 14))
-                            .foregroundStyle(.primary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    } else if !bilanLoading {
-                        Text("Connexion requise pour générer l'analyse.")
-                            .font(.system(size: 14))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(14)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.accentColor.opacity(0.06), in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                        .stroke(Color.accentColor.opacity(0.15), lineWidth: 1)
-                )
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
+                Text("Analyse IA")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .kerning(0.5)
+                Spacer()
+                if bilanLoading { ProgressView().scaleEffect(0.7) }
+            }
+            if let text = aiBilan {
+                Text(text)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if !bilanLoading && !cachedBilan.isEmpty {
+                Text(cachedBilan)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if !bilanLoading {
+                Text("Connexion requise pour générer l'analyse.")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
             }
         }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.accentColor.opacity(0.06), in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+                .stroke(Color.accentColor.opacity(0.15), lineWidth: 1)
+        )
     }
 
     private func loadAIBilan() async {
