@@ -52,6 +52,7 @@ class AgentOrchestrator:
         user_gender: str | None,
         conversation_id: uuid.UUID,
         session: AsyncSession,
+        user_context: str | None = None,
     ) -> AgentResult:
         """Execute one full agent turn and return the result.
 
