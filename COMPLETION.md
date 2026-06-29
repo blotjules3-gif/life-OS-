@@ -40,7 +40,7 @@ with zero errors via the xcodebuild command at the top of CHANGELOG.md.
 | 9 | Carrière (`career`) | 5 | DONE | |
 | 10 | Apprentissage (`learning`) | 5 | DONE | langues (Leitner) livré |
 | 11 | Maison & quotidien (`home`) | 5 | DONE | |
-| 12 | Mobilité (`mobility`) | 3 | TODO | catégorie maigre, à enrichir |
+| 12 | Mobilité (`mobility`) | 3 | DONE | scaffolds remplacés : Trajets & CO₂ (local) + Où ai-je garé (CoreLocation) ; Ma voiture déjà complet |
 | 13 | Social & relations (`social`) | 3 | TODO | catégorie maigre, à enrichir |
 | 14 | Admin & paperasse (`admin`) | 4 | DONE | scan OCR on-device livré |
 | 15 | Voyage (`travel`) | 4 | DONE | convertisseur + phrases livrés |

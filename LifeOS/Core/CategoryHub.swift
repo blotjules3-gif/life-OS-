@@ -549,8 +549,8 @@ private let homeTools: [CategoryTool] = [
 
 private let mobilityTools: [CategoryTool] = [
     .init("car.fill", "Ma voiture", "Assurance, révision, carburant", tint: .mobTint) { VehicleListView() },
-    .init("fuelpump.fill", "Carburant le moins cher", "Carte stations — à brancher", tint: .mobTint) { FuelMapScaffold() },
-    .init("point.topleft.down.to.point.bottomright.curvepath", "Itinéraire multimodal", "Citymapper — à brancher", tint: .mobTint) { MultimodalScaffold() },
+    .init("leaf.arrow.circlepath", "Trajets & CO₂", "Empreinte + budget par mode", tint: .mobTint) { TripCO2View() },
+    .init("parkingsign.circle.fill", "Où ai-je garé ?", "Mémorise la place de ta voiture", tint: .mobTint) { ParkingView() },
 ]
 
 private let socialTools: [CategoryTool] = [
