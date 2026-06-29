@@ -389,8 +389,25 @@ final class AIAssistantViewModel: ObservableObject {
             if let module = action.module {
                 removeModuleFromProfile(module)
             }
-        case .openModule, .updateConfig:
-            break
+        case .openModule:
+            if let module = action.module {
+                NotificationCenter.default.post(
+                    name: .lifeOSOpenModule,
+                    object: nil,
+                    userInfo: ["module": module]
+                )
+            }
+        case .updateConfig:
+            // title = clé AppStorage (ex: "kcalGoal"), reminderBody = valeur en string
+            if let key = action.title, let rawValue = action.reminderBody {
+                if let intVal = Int(rawValue) {
+                    UserDefaults.standard.set(intVal, forKey: key)
+                } else if let doubleVal = Double(rawValue) {
+                    UserDefaults.standard.set(doubleVal, forKey: key)
+                } else {
+                    UserDefaults.standard.set(rawValue, forKey: key)
+                }
+            }
         }
     }
 
