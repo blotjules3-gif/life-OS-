@@ -233,7 +233,9 @@ struct HomeDashboardContent: View {
                         MetricRing(value: Double(steps), goal: Double(stepGoal), label: "Pas", unit: "", color: Color(hex: 0xF1746C), icon: "figure.walk")
                         MetricRing(value: Double(waterToday), goal: Double(waterGoal), label: "Eau", unit: "ml", color: Color(hex: 0x3CB2E0), icon: "drop.fill")
                         MetricRing(value: Double(kcalToday), goal: Double(kcalGoal), label: "Calories", unit: "kcal", color: Color(hex: 0x4CC38A), icon: "flame.fill")
-                        MetricRing(value: fastHours, goal: Double(fastTarget), label: "Jeûne", unit: "h", color: Color(hex: 0x9B6CF1), icon: "timer")
+                        TimelineView(.everyMinute) { _ in
+                            MetricRing(value: fastHours, goal: Double(fastTarget), label: "Jeûne", unit: "h", color: Color(hex: 0x9B6CF1), icon: "timer")
+                        }
                         if weekWorkouts > 0 {
                             MetricRing(value: Double(weekWorkouts), goal: 5, label: "Séances", unit: "/sem", color: Color(hex: 0xE0A23C), icon: "dumbbell.fill")
                         }
