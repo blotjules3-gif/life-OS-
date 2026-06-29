@@ -366,7 +366,7 @@ final class AIAssistantViewModel: ObservableObject {
                 let d = HabitDefaults.iconAndColor(for: action.module ?? "")
                 let habit = Habit(name: title, icon: d.icon, colorHex: d.colorHex, isPending: true, moduleTag: action.module ?? "")
                 ctx.insert(habit)
-                try? ctx.save()
+                do { try ctx.save() } catch { print("[SwiftData] createHabit failed: \(error)") }
             }
         case .addModule:
             if let module = action.module {
