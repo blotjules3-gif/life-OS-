@@ -152,7 +152,9 @@ struct CalAIView: View {
             if dayFoods.isEmpty {
                 Button { showAdd = true } label: {
                     HStack(spacing: 14) {
-                        Text("🥗").font(.system(size: 34))
+                        Image(systemName: "fork.knife.circle.fill")
+                            .font(.system(size: 34))
+                            .foregroundStyle(.secondary)
                         Text("Touche + pour ajouter ton premier repas").font(.subheadline).foregroundStyle(.secondary)
                         Spacer()
                     }
