@@ -129,9 +129,10 @@ struct FloatingTabBar: View {
                         Image(systemName: "sparkles")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(Color.accentColor)
-                        Text("Ton assistant…")
-                            .font(.system(size: 14))
+                        Text("Pose une question…")
+                            .font(.system(size: 13))
                             .foregroundStyle(Color(uiColor: .placeholderText))
+                            .lineLimit(1)
                         Spacer()
                     }
                     .padding(.horizontal, 12)
