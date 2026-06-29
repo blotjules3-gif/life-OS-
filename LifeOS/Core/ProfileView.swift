@@ -243,7 +243,12 @@ struct ProfileView: View {
                                                     else { return }
 
                                                     let status = result["status"]?.value as? String ?? ""
-                                                    guard status != "already_checked_in" else { return }
+                                                    if status == "already_checked_in" {
+                                                        let streak = (result["streak_days"]?.value as? Int) ?? challenge.streak_days
+                                                        checkinToast = "Déjà validé aujourd'hui — streak \(streak)j"
+                                                        Task { try? await Task.sleep(nanoseconds: 2_500_000_000); checkinToast = nil }
+                                                        return
+                                                    }
 
                                                     let newStreak = (result["streak_days"]?.value as? Int) ?? challenges[idx].streak_days + 1
                                                     let updated = challenges[idx]
