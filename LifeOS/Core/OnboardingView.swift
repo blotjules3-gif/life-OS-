@@ -116,6 +116,23 @@ struct OnboardingView: View {
         return tools.prefix(8).map { $0.rawValue }.joined(separator: ",")
     }
 
+    private func applyGenderDefaults(gender: String) {
+        switch gender {
+        case "femme":
+            UserDefaults.standard.set(1800, forKey: "kcalGoal")
+            UserDefaults.standard.set(110,  forKey: "proteinGoal")
+            UserDefaults.standard.set(2000, forKey: "waterGoal")
+        case "homme":
+            UserDefaults.standard.set(2200, forKey: "kcalGoal")
+            UserDefaults.standard.set(150,  forKey: "proteinGoal")
+            UserDefaults.standard.set(2500, forKey: "waterGoal")
+        default:
+            UserDefaults.standard.set(2000, forKey: "kcalGoal")
+            UserDefaults.standard.set(130,  forKey: "proteinGoal")
+            UserDefaults.standard.set(2200, forKey: "waterGoal")
+        }
+    }
+
     private func createPendingHabits() {
         let modules = habitModulesRaw.split(separator: ",").map(String.init)
         HabitDefaults.insertPendingHabits(for: modules, into: ctx)
