@@ -559,6 +559,33 @@ struct ShortcutsHomeView: View {
         }
     }
 
+    private var moodHistoryDots: some View {
+        let cal = Calendar.current
+        let past6 = (1...6).reversed().compactMap { off -> MoodEntry? in
+            let day = cal.date(byAdding: .day, value: -off, to: .now)!
+            return moods.first { cal.isDate($0.date, inSameDayAs: day) }
+        }
+        return HStack(spacing: 4) {
+            Spacer()
+            ForEach(past6, id: \.date) { m in
+                Circle()
+                    .fill(moodColor(m.score))
+                    .frame(width: 7, height: 7)
+                    .accessibilityHidden(true)
+            }
+        }
+    }
+
+    private func moodColor(_ score: Int) -> Color {
+        switch score {
+        case 5: return Color(hex: 0x4CC38A)
+        case 4: return Color(hex: 0x30C77A)
+        case 3: return Color(hex: 0xFF9F0A)
+        case 2: return Color(hex: 0xFF6B35)
+        default: return Color(hex: 0xF1746C)
+        }
+    }
+
     private func moodEmoji(_ s: Int) -> String { ["😞", "😕", "😐", "🙂", "😄"][max(0, min(4, s - 1))] }
     private func logMood(_ s: Int) {
         if let m = todayMood { m.score = s } else { ctx.insert(MoodEntry(score: s)) }
