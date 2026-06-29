@@ -148,6 +148,12 @@ class AgentOrchestrator:
                         module_config_updated = True
                     if tool_name in ("create_goal", "delete_goal"):
                         goals_updated = True
+                    if tool_name == "create_habit" and isinstance(result, dict):
+                        pending_actions.append({
+                            "type": "create_habit",
+                            "title": result.get("title"),
+                            "module": result.get("module"),
+                        })
                     if tool_name == "create_todo" and isinstance(result, dict):
                         pending_actions.append({
                             "type": "create_todo",
