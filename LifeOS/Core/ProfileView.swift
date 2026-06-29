@@ -1094,6 +1094,70 @@ struct ProfileView: View {
         .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
     }
 
+    // MARK: - Energy Score Card
+
+    @ViewBuilder
+    private var energyScoreCard: some View {
+        if energyScore != nil || !energyHistory.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("ÉNERGIE")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.secondary)
+                        .kerning(1.2)
+                    Spacer()
+                    if let label = energyScore?.label {
+                        Text(label)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(energyColor(energyScore?.energy_score))
+                    }
+                }
+                HStack(alignment: .bottom, spacing: 0) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        if let score = energyScore?.energy_score {
+                            Text("\(score)")
+                                .font(.system(size: 48, weight: .black, design: .rounded))
+                                .foregroundStyle(energyColor(score))
+                        } else {
+                            Text("—")
+                                .font(.system(size: 48, weight: .black, design: .rounded))
+                                .foregroundStyle(.secondary)
+                        }
+                        Text("/ 100 aujourd'hui")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if !energyHistory.isEmpty {
+                        HStack(alignment: .bottom, spacing: 4) {
+                            ForEach(Array(energyHistory.suffix(7).enumerated()), id: \.offset) { _, entry in
+                                let score = entry.energy_score ?? 0
+                                let barH = max(8, CGFloat(score) / 100 * 48)
+                                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                                    .fill(energyColor(score))
+                                    .frame(width: 8, height: barH)
+                            }
+                        }
+                        .frame(height: 48)
+                    }
+                }
+            }
+            .padding(16)
+            .background(neoCard)
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
+            .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
+        }
+    }
+
+    private func energyColor(_ score: Int?) -> Color {
+        switch score ?? 0 {
+        case 75...: return Color(hex: 0x4CC38A)
+        case 50..<75: return Color(hex: 0xE0A23C)
+        default: return Color(hex: 0xF1746C)
+        }
+    }
+
     // MARK: - Tip Card
 
     private var tipCard: some View {
