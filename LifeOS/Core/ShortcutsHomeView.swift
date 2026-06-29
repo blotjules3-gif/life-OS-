@@ -743,6 +743,11 @@ struct WeeklyBilanView: View {
     @Query private var foods: [FoodEntry]
     @Query(sort: \MoodEntry.date, order: .reverse) private var moods: [MoodEntry]
 
+    @State private var aiBilan: String? = nil
+    @State private var bilanLoading = false
+    @AppStorage("lastWeeklyBilanText") private var cachedBilan = ""
+    @AppStorage("lastWeeklyBilanDate") private var cachedBilanDate = 0.0
+
     private var activeHabits: [Habit] { habits.filter { !$0.isPending } }
     private var cal: Calendar { Calendar.current }
 
