@@ -315,7 +315,7 @@ struct PendingHabitRow: View {
             Button {
                 withAnimation(.spring(duration: 0.25)) {
                     habit.isPending = false
-                    try? ctx.save()
+                    do { try ctx.save() } catch { print("[SwiftData] activateHabit failed: \(error)") }
                 }
                 Haptics.tap()
             } label: {
