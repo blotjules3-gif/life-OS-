@@ -540,6 +540,13 @@ struct AIAssistantView: View {
             } message: {
                 Text(vm.errorBanner ?? "")
             }
+            .sheet(isPresented: $showServerConfig) {
+                ServerConfigView {
+                    showServerConfig = false
+                    vm.isServerOffline = false
+                    vm.loadHistory()
+                }
+            }
         }
         .task {
             vm.modelContext = ctx
