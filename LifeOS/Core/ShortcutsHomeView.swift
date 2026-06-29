@@ -227,6 +227,9 @@ struct ShortcutsHomeView: View {
                 if todayMood == nil { withAnimation { moodDismissed = false } }
             }
             .sheet(isPresented: $showBilan) { WeeklyBilanView() }
+            .fullScreenCover(item: $fullScreenTool) { tool in
+                tool.destination
+            }
         }
     }
 
