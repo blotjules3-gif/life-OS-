@@ -53,6 +53,8 @@ struct ProfileView: View {
     @State private var showOnboardingReset = false
     @State private var showServerConfig = false
     @State private var checkinToast: String? = nil
+    @State private var energyScore: EnergyScoreOut? = nil
+    @State private var energyHistory: [EnergyScoreOut] = []
     @ObservedObject private var serverStatus = ServerStatusMonitor.shared
     @Namespace private var pickerNS
 
