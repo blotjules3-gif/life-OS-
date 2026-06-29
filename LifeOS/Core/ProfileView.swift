@@ -306,7 +306,6 @@ struct ProfileView: View {
                 challengesLoading = false
                 saveChallengesForWidget(challenges)
             }
-            .sheet(isPresented: $showPremium) { PremiumView() }
             .sheet(isPresented: $showGoalEditor) {
                 GoalEditorSheet(
                     stepGoal: $stepGoal, waterGoal: $waterGoal,
