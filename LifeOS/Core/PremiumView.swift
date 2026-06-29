@@ -97,4 +97,84 @@ struct PremiumView: View {
             }
         }
     }
+
+    // MARK: - Helpers
+
+    @ViewBuilder
+    private func purchaseButton(product: Product?, fallbackLabel: String, primary: Bool) -> some View {
+        Button {
+            guard let p = product else { return }
+            Task { await purchase(p) }
+        } label: {
+            Group {
+                if let p = product {
+                    Text(p.displayPrice + (primary ? " / mois" : " / an"))
+                } else {
+                    Text(fallbackLabel)
+                }
+            }
+            .font(.system(size: primary ? 16 : 14, weight: .bold))
+            .foregroundStyle(primary ? .white : Color.accentColor)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, primary ? 16 : 14)
+            .background(
+                primary ? Color.accentColor : Color.accentColor.opacity(0.1),
+                in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(purchasing || product == nil)
+    }
+
+    private func loadProducts() async {
+        do {
+            let products = try await Product.products(for: [Self.monthlyID, Self.annualID])
+            monthlyProduct = products.first { $0.id == Self.monthlyID }
+            annualProduct  = products.first { $0.id == Self.annualID }
+        } catch {
+            storeError = "Impossible de charger les offres. Vérifie ta connexion."
+        }
+    }
+
+    private func purchase(_ product: Product) async {
+        purchasing = true; storeError = nil
+        do {
+            let result = try await product.purchase()
+            switch result {
+            case .success(let verification):
+                if case .verified(_) = verification {
+                    isPremium = true
+                    dismiss()
+                }
+            case .userCancelled:
+                break
+            case .pending:
+                storeError = "Achat en attente d'approbation."
+            @unknown default:
+                break
+            }
+        } catch {
+            storeError = "Erreur lors de l'achat. Réessaie."
+        }
+        purchasing = false
+    }
+
+    private func restorePurchases() async {
+        purchasing = true
+        do {
+            try await AppStore.sync()
+            for await result in Transaction.currentEntitlements {
+                if case .verified(let tx) = result,
+                   [Self.monthlyID, Self.annualID].contains(tx.productID) {
+                    isPremium = true
+                    dismiss()
+                    return
+                }
+            }
+            storeError = "Aucun achat trouvé à restaurer."
+        } catch {
+            storeError = "Erreur lors de la restauration."
+        }
+        purchasing = false
+    }
 }
