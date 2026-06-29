@@ -147,6 +147,53 @@ final class NotificationManager {
         UNUserNotificationCenter.current().add(req)
     }
 
+    /// Planifie les 3 notifications cycle depuis une date de début et une durée.
+    func scheduleCycleNotifications(lastPeriodDate: Date, cycleDays: Int) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(
+            withIdentifiers: ["lifeos.cycle.period_warning", "lifeos.cycle.ovulation", "lifeos.cycle.pms"]
+        )
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: .now)
+        let start = cal.startOfDay(for: lastPeriodDate)
+        let elapsed = cal.dateComponents([.day], from: start, to: today).day ?? 0
+        let dayInCycle = (elapsed % cycleDays) + 1
+        let daysLeft = cycleDays - (elapsed % cycleDays)
+
+        // Alerte règles J-3
+        let periodWarningDate = cal.date(byAdding: .day, value: daysLeft - 3, to: today) ?? today
+        if periodWarningDate > today {
+            schedule(id: "lifeos.cycle.period_warning",
+                     title: "Règles dans 3 jours",
+                     body: "Prépare du magnésium et prévois des séances douces cette semaine.",
+                     at: cal.date(bySettingHour: 9, minute: 0, second: 0, of: periodWarningDate) ?? periodWarningDate)
+        }
+
+        // Fenêtre ovulation (~jour 14)
+        let ovulationDay = 14
+        let daysToOvulation: Int
+        if dayInCycle < ovulationDay {
+            daysToOvulation = ovulationDay - dayInCycle
+        } else {
+            daysToOvulation = cycleDays - dayInCycle + ovulationDay
+        }
+        let ovulationDate = cal.date(byAdding: .day, value: daysToOvulation, to: today) ?? today
+        if ovulationDate > today {
+            schedule(id: "lifeos.cycle.ovulation",
+                     title: "Fenêtre d'ovulation",
+                     body: "Énergie au pic — idéal pour tes séances les plus intenses.",
+                     at: cal.date(bySettingHour: 8, minute: 0, second: 0, of: ovulationDate) ?? ovulationDate)
+        }
+
+        // Fenêtre SPM (J-7 avant les règles)
+        let pmsDate = cal.date(byAdding: .day, value: daysLeft - 7, to: today) ?? today
+        if pmsDate > today {
+            schedule(id: "lifeos.cycle.pms",
+                     title: "Phase lutéale",
+                     body: "Ta fenêtre SPM commence — magnésium le soir et séances modérées.",
+                     at: cal.date(bySettingHour: 9, minute: 0, second: 0, of: pmsDate) ?? pmsDate)
+        }
+    }
+
     func schedulePendingHabitNotification(pendingCount: Int) {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["lifeos.pending_habits"])
         guard pendingCount > 0 else { return }
