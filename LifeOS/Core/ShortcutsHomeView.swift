@@ -335,6 +335,8 @@ struct ShortcutsHomeView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(habit.name), \(done ? "faite" : "non faite")")
+        .accessibilityHint(done ? "Double-tapez pour décocher" : "Double-tapez pour valider")
         .overlay(alignment: .bottom) {
             if !isLast { Divider().padding(.leading, 52) }
         }
