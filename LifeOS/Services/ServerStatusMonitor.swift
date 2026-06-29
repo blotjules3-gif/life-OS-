@@ -31,13 +31,14 @@ final class ServerStatusMonitor: ObservableObject {
     }
 
     private func ping() async {
-        var request = URLRequest(url: Configuration.baseURL)
+        let url = Configuration.baseURL.appendingPathComponent("health")
+        var request = URLRequest(url: url)
         request.httpMethod = "HEAD"
         request.timeoutInterval = 5
-        request.setValue(Configuration.apiKey, forHTTPHeaderField: "X-API-Key")
         do {
             let (_, response) = try await URLSession.shared.data(for: request)
-            isOnline = (response as? HTTPURLResponse) != nil
+            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+            isOnline = (200..<300).contains(code)
         } catch {
             isOnline = false
         }
