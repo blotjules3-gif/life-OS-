@@ -464,6 +464,7 @@ struct AIAssistantView: View {
     private var accent: Color { (AppTheme(rawValue: appThemeRaw) ?? .classic).accent }
     @FocusState private var inputFocused: Bool
     @State private var showClearConfirm = false
+    @State private var showServerConfig = false
 
     // Quick suggestions change per time of day
     private var quickSuggestions: [(label: String, message: String, module: String?)] {
