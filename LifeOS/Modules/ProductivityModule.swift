@@ -30,6 +30,7 @@ struct TodoView: View {
     @Query(sort: \TodoItem.due) private var todos: [TodoItem]
     @State private var showAdd = false
     @State private var filter = 0   // 0 actives, 1 toutes
+    @State private var calendarAlert: String? = nil
 
     private var visible: [TodoItem] {
         let base = filter == 0 ? todos.filter { !$0.done } : todos
