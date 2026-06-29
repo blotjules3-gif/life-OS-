@@ -32,6 +32,10 @@ class ChatAction(BaseModel):
     priority: int | None = None
     reminder_body: str | None = None
     delay_seconds: int | None = None  # pour schedule_reminder : délai réel en secondes
+    challenge_id: str | None = None
+    daily_target: float | None = None
+    unit: str | None = None
+    duration_days: int | None = None
 
 
 class ChatResponse(BaseModel):
