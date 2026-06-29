@@ -198,12 +198,14 @@ actor AgentAPI {
         module: String?,
         conversationID: String?
     ) async throws -> ChatResponse {
+        let userContext = await MainActor.run { UserContextBuilder.shared.build() }
         let body = ChatRequest(
             device_id: deviceID,
             message: message,
             module: module,
             conversation_id: conversationID,
-            apns_token: await currentAPNsToken()
+            apns_token: await currentAPNsToken(),
+            user_context: userContext
         )
         return try await post(path: "/api/v1/chat", body: body)
     }
