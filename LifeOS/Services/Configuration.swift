@@ -21,7 +21,7 @@ enum Configuration {
            !override.isEmpty { return override }
         if let plist = Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String,
            !plist.isEmpty, !plist.hasPrefix("$(") { return plist }
-        return "http://192.168.1.7:8000"   // fallback développement local
+        return "https://lifeos-api-production-91e2.up.railway.app"
     }
 
     static var apiKey: String {
