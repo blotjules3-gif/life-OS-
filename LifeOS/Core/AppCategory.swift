@@ -47,6 +47,7 @@ enum AppCategory: String, CaseIterable, Identifiable {
         case .admin: return "folder.fill"
         case .travel: return "airplane"
         case .cycle: return "drop.fill"
+        case .medical: return "cross.case.fill"
         }
     }
 
