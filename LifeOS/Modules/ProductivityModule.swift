@@ -267,7 +267,13 @@ struct HabitTrackerView: View {
         .navigationTitle("Habit tracker").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
         .sheet(isPresented: $showAdd) { HabitEditor() }
-        .task { NotificationManager.shared.schedulePendingHabitNotification(pendingCount: pendingHabits.count) }
+        .task {
+            let modules = habitModulesRaw.split(separator: ",").map(String.init)
+            if !modules.isEmpty && allHabits.isEmpty {
+                HabitDefaults.insertPendingHabits(for: modules, into: ctx)
+            }
+            NotificationManager.shared.schedulePendingHabitNotification(pendingCount: pendingHabits.count)
+        }
         .onChange(of: pendingHabits.count) { _, new in
             NotificationManager.shared.schedulePendingHabitNotification(pendingCount: new)
         }
