@@ -57,6 +57,7 @@ def _register_all_tools() -> None:
     registry.register("delete_goal", handle_delete_goal)
     registry.register("ask_clarification", handle_ask_clarification)
     registry.register("create_todo", handle_create_todo)
+    registry.register("create_habit", handle_create_habit)
     registry.register("schedule_followup", handle_schedule_followup)
     registry.register("get_user_context", handle_get_user_context)
     registry.register("update_user_profile", handle_update_user_profile)
