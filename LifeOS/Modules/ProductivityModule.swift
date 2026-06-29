@@ -274,6 +274,7 @@ struct HabitTrackerView: View {
                 HabitDefaults.insertPendingHabits(for: modules, into: ctx)
             }
             NotificationManager.shared.schedulePendingHabitNotification(pendingCount: pendingHabits.count)
+            syncHabitsToWidget()
         }
         .onChange(of: pendingHabits.count) { _, new in
             NotificationManager.shared.schedulePendingHabitNotification(pendingCount: new)
