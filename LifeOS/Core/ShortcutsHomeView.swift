@@ -182,6 +182,10 @@ struct ShortcutsHomeView: View {
                     }
                     .padding(.horizontal, 4)
 
+                    if !activeShortcuts.isEmpty {
+                        shortcutsSection
+                    }
+
                     if !moodDismissed || editingMood {
                         moodSection
                             .transition(.opacity.combined(with: .move(edge: .top)))
