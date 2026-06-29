@@ -207,6 +207,13 @@ struct MacroLogView: View {
         }
         .sheet(isPresented: $showAdd) { FoodEditor() }
         .sheet(isPresented: $showSearch) { NavigationStack { FoodSearchView() } }
+        .task { syncNutritionToContext() }
+        .onChange(of: all.count) { _, _ in syncNutritionToContext() }
+    }
+    private func syncNutritionToContext() {
+        let grp = UserDefaults(suiteName: "group.lifeos.app") ?? .standard
+        grp.set(kcal, forKey: "today_kcal")
+        grp.set(Int(protein), forKey: "today_protein_g")
     }
     private func macroBar(_ label: String, _ v: Double, _ goal: Double, _ c: Color) -> some View {
         VStack(spacing: 4) {
