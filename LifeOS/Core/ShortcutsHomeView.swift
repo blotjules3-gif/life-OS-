@@ -250,11 +250,13 @@ struct ShortcutsHomeView: View {
                     if tool.isFullScreen {
                         Button { fullScreenTool = tool } label: { shortcutTile(tool) }
                             .buttonStyle(.plain)
+                            .accessibilityLabel(tool.label)
                     } else {
                         NavigationLink(destination: tool.destination) {
                             shortcutTile(tool)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(tool.label)
                     }
                 }
             }
