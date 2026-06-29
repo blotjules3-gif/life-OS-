@@ -232,7 +232,57 @@ struct ShortcutsHomeView: View {
             .fullScreenCover(item: $fullScreenTool) { tool in
                 tool.destination
             }
+            .overlay(alignment: .bottom) {
+                if showTutorial {
+                    tutorialOverlay
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .onAppear {
+                if !tutorialDone {
+                    withAnimation(.spring(duration: 0.55, bounce: 0.2).delay(1.2)) { showTutorial = true }
+                }
+            }
         }
+    }
+
+    private var tutorialOverlay: some View {
+        VStack(spacing: 14) {
+            HStack(spacing: 12) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Ton assistant IA est en bas")
+                        .font(.system(size: 15, weight: .semibold))
+                    Text("Appuie sur le champ \"Ton assistant…\" pour poser une question, créer une habitude ou naviguer vers un module.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Button {
+                withAnimation(.easeOut(duration: 0.3)) { showTutorial = false }
+                tutorialDone = true
+            } label: {
+                Text("Compris")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 11)
+                    .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(18)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(Color.accentColor.opacity(0.2), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.18), radius: 24, x: 0, y: 8)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 120)
     }
 
     // MARK: Section 0 — Raccourcis personnalisés
