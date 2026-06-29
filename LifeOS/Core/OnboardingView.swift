@@ -191,25 +191,32 @@ struct OnboardingView: View {
                         OnboardingName(name: $name, gender: $gender) {
                             savedName = name.trimmingCharacters(in: .whitespaces)
                             savedGender = gender
-                            withAnimation(.spring(duration: 0.4)) { step = 2 }
+                            let nextStep = (gender == "femme" || gender == "autre") ? 2 : 3
+                            withAnimation(.spring(duration: 0.4)) { step = nextStep }
                         }
                     case 2:
+                        OnboardingHormonalContext(hasCycle: $hasCycle, hormonalContext: $hormonalContext) {
+                            savedHasCycle = hasCycle
+                            savedHormonalContext = hormonalContext
+                            withAnimation(.spring(duration: 0.4)) { step = 3 }
+                        }
+                    case 3:
                         OnboardingLifeProfile(selected: $lifeProfile) {
                             savedLifeProfile = lifeProfile?.rawValue ?? ""
                             if let p = lifeProfile {
                                 UserDefaults.standard.set(p.sportHour, forKey: "sportHour")
                             }
-                            withAnimation(.spring(duration: 0.4)) { step = 3 }
-                        }
-                    case 3:
-                        OnboardingGoalStep(selected: $goals) {
                             withAnimation(.spring(duration: 0.4)) { step = 4 }
                         }
                     case 4:
-                        OnboardingInterests(selected: $interests) {
+                        OnboardingGoalStep(selected: $goals) {
                             withAnimation(.spring(duration: 0.4)) { step = 5 }
                         }
                     case 5:
+                        OnboardingInterests(selected: $interests) {
+                            withAnimation(.spring(duration: 0.4)) { step = 6 }
+                        }
+                    case 6:
                         OnboardingModuleSetup(modules: Array(interests)) { moduleAnswers in
                             for (module, config) in moduleAnswers {
                                 if let data = try? JSONSerialization.data(withJSONObject: config),
@@ -217,16 +224,16 @@ struct OnboardingView: View {
                                     UserDefaults.standard.set(str, forKey: "moduleConfig_\(module)")
                                 }
                             }
-                            withAnimation(.spring(duration: 0.4)) { step = 6 }
+                            withAnimation(.spring(duration: 0.4)) { step = 7 }
                         }
-                    case 6:
+                    case 7:
                         OnboardingWakeTime(hour: $wakeHour, minute: $wakeMinute) {
                             savedWakeupHour = wakeHour
                             savedWakeupMinute = wakeMinute
                             savedWakeupEnabled = true
-                            withAnimation(.spring(duration: 0.4)) { step = 7 }
+                            withAnimation(.spring(duration: 0.4)) { step = 8 }
                         }
-                    case 7:
+                    case 8:
                         OnboardingResults(
                             name: savedName,
                             recommendations: recommendations,
