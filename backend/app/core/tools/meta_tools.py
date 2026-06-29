@@ -305,6 +305,18 @@ async def handle_create_life_challenge(
     }
 
 
+async def handle_create_habit(
+    args: dict[str, Any],
+    user_id: uuid.UUID,
+    session: AsyncSession,
+    context: dict[str, Any],
+) -> dict[str, Any]:
+    title = args["title"]
+    module = args["module"]
+    log.info("habit_proposed", user_id=str(user_id), title=title, module=module)
+    return {"action": "create_habit", "title": title, "module": module, "created": True}
+
+
 async def handle_ask_clarification(
     args: dict[str, Any],
     user_id: uuid.UUID,
