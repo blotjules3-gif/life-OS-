@@ -117,6 +117,8 @@ struct ShortcutsHomeView: View {
     @State private var moodDismissed = false
     @State private var showBilan = false
     @State private var fullScreenTool: ShortcutTool? = nil
+    @AppStorage("tutorialDone") private var tutorialDone = false
+    @State private var showTutorial = false
 
     private let cols = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
 
