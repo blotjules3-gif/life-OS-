@@ -277,6 +277,18 @@ struct HabitTrackerView: View {
         .onChange(of: pendingHabits.count) { _, new in
             NotificationManager.shared.schedulePendingHabitNotification(pendingCount: new)
         }
+        .onChange(of: allHabits.count) { _, _ in syncHabitsToWidget() }
+    }
+
+    private func syncHabitsToWidget() {
+        let today = Date()
+        let entries = activeHabits.map { h -> [String: Any] in
+            let done = h.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: today) }
+            return ["name": h.name, "icon": h.icon, "colorHex": h.colorHex, "done": done, "module": h.moduleTag]
+        }
+        let defaults = UserDefaults(suiteName: "group.lifeos.app") ?? .standard
+        defaults.set(try? JSONSerialization.data(withJSONObject: entries), forKey: "widget_habits")
+        WidgetCenter.shared.reloadTimelines(ofKind: "HabitsWidget")
     }
 }
 
