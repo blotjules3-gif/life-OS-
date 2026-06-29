@@ -63,11 +63,15 @@ struct OnboardingView: View {
     @AppStorage("habitModulesRaw") private var habitModulesRaw = ""
 
     @AppStorage("lifeProfile") private var savedLifeProfile = ""
+    @AppStorage("userHasCycle") private var savedHasCycle = false
+    @AppStorage("userHormonalContext") private var savedHormonalContext = ""
     @Environment(\.modelContext) private var ctx
 
     @State private var step = 0
     @State private var name = ""
     @State private var gender = ""
+    @State private var hasCycle = false
+    @State private var hormonalContext = ""
     @State private var lifeProfile: LifeProfile? = nil
     @State private var goals: Set<OnboardingGoal> = []
     @State private var interests: Set<AppCategory> = []
