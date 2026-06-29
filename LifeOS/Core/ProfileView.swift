@@ -379,7 +379,7 @@ struct ProfileView: View {
                             .font(.system(size: 10, weight: .semibold))
                             .foregroundStyle(.secondary)
                             .kerning(2)
-                        Text(name.isEmpty ? "Mon profil" : name)
+                        Text(name.isEmpty ? "Mon profil" : name.prefix(1).uppercased() + name.dropFirst())
                             .font(.system(size: 32, weight: .black, design: .rounded))
                             .foregroundStyle(.primary)
                     }
