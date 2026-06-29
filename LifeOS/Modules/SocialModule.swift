@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Contacts
 
 extension ShapeStyle where Self == Color { static var socialTint: Color { AppCategory.social.tint } }
 
