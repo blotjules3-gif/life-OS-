@@ -1126,6 +1126,20 @@ struct ProfileView: View {
                 } action: {
                     showGoalEditor = true
                 }
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
+                settingsRow(icon: "sparkles", iconColor: Color.accentColor, label: "Assistant IA — serveur") {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(serverStatus.dotColor == .clear ? Color.secondary.opacity(0.3) : serverStatus.dotColor)
+                            .frame(width: 8, height: 8)
+                        Text(serverStatus.isOnline == true ? "En ligne" : serverStatus.isOnline == false ? "Hors ligne" : "…")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(serverStatus.isOnline == true ? Color.green : serverStatus.isOnline == false ? Color.orange : Color.secondary)
+                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
+                    }
+                } action: {
+                    showServerConfig = true
+                }
             }
             .background(neoCard)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
