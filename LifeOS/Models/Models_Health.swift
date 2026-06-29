@@ -108,3 +108,67 @@ import SwiftData
     var steps: Int
     init(day: Date = .now, steps: Int = 0) { self.day = day; self.steps = steps }
 }
+
+// MARK: - Santé médicale
+
+@Model final class Medication {
+    var name: String
+    var dosage: String         // ex: "500mg"
+    var frequency: String      // ex: "2x/jour"
+    var hourMorning: Int?
+    var hourEvening: Int?
+    var notes: String
+    var startDate: Date
+    var endDate: Date?
+    var active: Bool
+    init(name: String = "", dosage: String = "", frequency: String = "1x/jour",
+         hourMorning: Int? = 8, hourEvening: Int? = nil, notes: String = "",
+         startDate: Date = .now, endDate: Date? = nil, active: Bool = true) {
+        self.name = name; self.dosage = dosage; self.frequency = frequency
+        self.hourMorning = hourMorning; self.hourEvening = hourEvening
+        self.notes = notes; self.startDate = startDate; self.endDate = endDate; self.active = active
+    }
+}
+
+@Model final class MedicalAppointment {
+    var date: Date
+    var specialty: String      // Généraliste, Dentiste, Cardiologue…
+    var doctorName: String
+    var location: String
+    var notes: String
+    var nextDate: Date?
+    init(date: Date = .now, specialty: String = "", doctorName: String = "",
+         location: String = "", notes: String = "", nextDate: Date? = nil) {
+        self.date = date; self.specialty = specialty; self.doctorName = doctorName
+        self.location = location; self.notes = notes; self.nextDate = nextDate
+    }
+}
+
+@Model final class VitalRecord {
+    var date: Date
+    var type: String           // "poids", "tension", "glycémie", "fréquence cardiaque", "autre"
+    var value: Double          // valeur principale (kg, mmHg systolique, g/L…)
+    var value2: Double?        // diastolique pour tension
+    var unit: String
+    var notes: String
+    init(date: Date = .now, type: String = "poids", value: Double = 0,
+         value2: Double? = nil, unit: String = "kg", notes: String = "") {
+        self.date = date; self.type = type; self.value = value
+        self.value2 = value2; self.unit = unit; self.notes = notes
+    }
+}
+
+@Model final class Vaccination {
+    var name: String           // ex: "Grippe", "COVID-19", "Tétanos"
+    var date: Date
+    var nextDueDate: Date?
+    var lot: String
+    var notes: String
+    init(name: String = "", date: Date = .now, nextDueDate: Date? = nil, lot: String = "", notes: String = "") {
+        self.name = name; self.date = date; self.nextDueDate = nextDueDate; self.lot = lot; self.notes = notes
+    }
+    var isDue: Bool {
+        guard let next = nextDueDate else { return false }
+        return next <= Calendar.current.date(byAdding: .day, value: 30, to: .now)!
+    }
+}
