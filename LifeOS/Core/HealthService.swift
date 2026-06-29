@@ -32,6 +32,17 @@ final class HealthService {
         return fresh
     }
 
+    private var cachedCalories: Double = 0
+    private var cachedCaloriesDate: Date = .distantPast
+
+    func cachedActiveCaloriesToday() async -> Double {
+        if Date().timeIntervalSince(cachedCaloriesDate) < 300 { return cachedCalories }
+        let fresh = await activeCaloriesToday()
+        cachedCalories = fresh
+        cachedCaloriesDate = .now
+        return fresh
+    }
+
     private var readTypes: Set<HKObjectType> {
         var set = Set<HKObjectType>()
         if let steps = HKObjectType.quantityType(forIdentifier: .stepCount) { set.insert(steps) }
