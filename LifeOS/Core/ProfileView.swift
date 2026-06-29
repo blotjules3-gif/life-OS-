@@ -311,10 +311,14 @@ struct ProfileView: View {
                     steps = await HealthService.shared.cachedStepsToday()
                 }
                 async let challengesTask = (try? await AgentAPI.shared.fetchChallenges()) ?? []
+                async let energyTask = try? await AgentAPI.shared.fetchEnergyScore()
+                async let historyTask = (try? await AgentAPI.shared.fetchEnergyHistory(days: 7)) ?? []
                 let ch = await challengesTask
                 challenges = ch
                 challengesLoading = false
                 saveChallengesForWidget(challenges)
+                energyScore = await energyTask
+                energyHistory = await historyTask
             }
             .sheet(isPresented: $showGoalEditor) {
                 GoalEditorSheet(
