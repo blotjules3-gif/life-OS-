@@ -60,7 +60,7 @@ struct CycleTrackerView: View {
     private let symptomsAll = ["Crampes", "Maux de tête", "Ballonnements", "Fatigue", "Acné", "Seins sensibles", "Nausées", "Dos douloureux"]
     private let moods = ["", "Triste", "Irritable", "Neutre", "Bien", "Super"]
 
-    private var phaseColor: Color { Color(hex: cycle.currentPhase.colorHex) }
+    private var phaseColor: Color { Color(hex: UInt(cycle.currentPhase.colorHex)) }
     private var todayEntry: CycleEntry? {
         entries.first { Calendar.current.isDateInToday($0.date) }
     }
