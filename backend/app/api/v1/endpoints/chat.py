@@ -98,6 +98,7 @@ async def chat(
             user_gender=user.gender,
             conversation_id=conversation.id,
             session=session,
+            user_context=body.user_context,
         )
     except AgentMaxIterationsError as exc:
         log.error("chat_agent_max_iterations", user_id=str(user.id))
