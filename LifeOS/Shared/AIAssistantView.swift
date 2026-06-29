@@ -679,6 +679,7 @@ struct AIAssistantView: View {
                     .padding(.vertical, 10)
                     .background(Theme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                     .focused($inputFocused)
+                    .submitLabel(.send)
                     .onSubmit { vm.send() }
 
                 Button { vm.send() } label: {
