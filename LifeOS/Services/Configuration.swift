@@ -39,7 +39,7 @@ enum Configuration {
     // MARK: - Helpers
 
     static var isLocalDev: Bool {
-        apiBaseURL.contains("192.168") || apiBaseURL.contains("localhost")
+        apiBaseURL.contains("192.168") || apiBaseURL.contains("localhost") || apiBaseURL.contains("127.0")
     }
 
     static var baseURL: URL {
