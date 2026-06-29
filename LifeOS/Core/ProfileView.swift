@@ -212,7 +212,7 @@ struct ProfileView: View {
                                         ProgressView()
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 36)
-                                            .background(neoCard)
+                                            .background(Theme.card)
                                             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                                             .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
                                             .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
@@ -454,7 +454,7 @@ struct ProfileView: View {
                 .clipShape(Capsule())
             }
         }
-        .background(neoCard)
+        .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: neoShadowLight, radius: 10, x: -5, y: -5)
         .shadow(color: neoShadowDark, radius: 10, x: 5, y: 5)
@@ -547,7 +547,7 @@ struct ProfileView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
-        .background(neoCard)
+        .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: neoShadowLight, radius: 10, x: -5, y: -5)
         .shadow(color: neoShadowDark, radius: 10, x: 5, y: 5)
@@ -660,7 +660,7 @@ struct ProfileView: View {
             }
             .buttonStyle(LifeOSPressStyle())
         }
-        .background(neoCard)
+        .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: neoShadowLight, radius: 10, x: -5, y: -5)
         .shadow(color: neoShadowDark, radius: 10, x: 5, y: 5)
@@ -682,7 +682,7 @@ struct ProfileView: View {
                     ZStack {
                         if profileSection == idx {
                             RoundedRectangle(cornerRadius: 15, style: .continuous)
-                                .fill(neoCard)
+                                .fill(Theme.card)
                                 .shadow(color: neoShadowLight, radius: 5, x: -2, y: -2)
                                 .shadow(color: neoShadowDark, radius: 5, x: 2, y: 2)
                                 .matchedGeometryEffect(id: "pickerPill", in: pickerNS)
@@ -765,7 +765,7 @@ struct ProfileView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 32)
-        .background(neoCard)
+        .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
         .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
@@ -838,7 +838,7 @@ struct ProfileView: View {
                 }
                 .padding(.vertical, 24)
                 .frame(maxWidth: .infinity)
-                .background(neoCard)
+                .background(Theme.card)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
                 .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
@@ -897,7 +897,7 @@ struct ProfileView: View {
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
-                            .background(neoCard)
+                            .background(Theme.card)
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
                             .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
@@ -923,7 +923,7 @@ struct ProfileView: View {
                     }
                     if task.progress >= 1 {
                         ZStack {
-                            Circle().fill(neoCard).frame(width: 16, height: 16)
+                            Circle().fill(Theme.card).frame(width: 16, height: 16)
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 14))
                                 .foregroundStyle(task.color)
@@ -984,7 +984,7 @@ struct ProfileView: View {
             }
         }
         .padding(16)
-        .background(neoCard)
+        .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
         .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
@@ -1072,7 +1072,7 @@ struct ProfileView: View {
             .padding(.horizontal, 18)
             .padding(.bottom, 14)
         }
-        .background(neoCard)
+        .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
         .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
@@ -1127,7 +1127,7 @@ struct ProfileView: View {
                 }
             }
             .padding(16)
-            .background(neoCard)
+            .background(Theme.card)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
             .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
@@ -1162,7 +1162,7 @@ struct ProfileView: View {
             }
         }
         .padding(16)
-        .background(neoCard)
+        .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
         .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
@@ -1225,7 +1225,7 @@ struct ProfileView: View {
                     showServerConfig = true
                 }
             }
-            .background(neoCard)
+            .background(Theme.card)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
             .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
@@ -1314,7 +1314,7 @@ struct ProfileView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(16)
-            .background(neoCard)
+            .background(Theme.card)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
             .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
