@@ -284,6 +284,10 @@ struct ProfileView: View {
                             .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 10)
                             .animation(.spring(duration: 0.45, bounce: 0.1).delay(0.24), value: appeared)
 
+                        energyScoreCard
+                            .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 10)
+                            .animation(.spring(duration: 0.45, bounce: 0.1).delay(0.27), value: appeared)
+
                         tipCard
                             .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 10)
                             .animation(.spring(duration: 0.45, bounce: 0.1).delay(0.30), value: appeared)
