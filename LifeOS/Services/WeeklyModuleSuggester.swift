@@ -43,9 +43,11 @@ final class WeeklyModuleSuggester {
     func scheduleWeeklyNotification() {
         let content = UNMutableNotificationContent()
         content.title = "Nouveau module ?"
-        content.body  = suggestion()?.title.isEmpty == false
-            ? "Et si tu explorais « \(suggestion()!.title) » cette semaine ?"
-            : "Tu veux ajouter un nouvel aspect à ta vie cette semaine ?"
+        if let title = suggestion()?.title, !title.isEmpty {
+            content.body = "Et si tu explorais « \(title) » cette semaine ?"
+        } else {
+            content.body = "Tu veux ajouter un nouvel aspect à ta vie cette semaine ?"
+        }
         content.sound = .default
         content.interruptionLevel = .passive
 
