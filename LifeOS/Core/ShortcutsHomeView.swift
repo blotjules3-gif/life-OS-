@@ -284,6 +284,10 @@ struct ShortcutsHomeView: View {
 
                     habitsSection
                     if !activeHabits.isEmpty { weeklyRecapSection }
+                    if isMorningEmpty {
+                        morningContextCard
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
                     goalsSection
                 }
                 .padding(Theme.pad)
