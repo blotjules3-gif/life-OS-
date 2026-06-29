@@ -108,8 +108,12 @@ struct MacroLogView: View {
     @Query private var all: [FoodEntry]
     @AppStorage("kcalGoal") private var kcalGoal = 2200
     @AppStorage("proteinGoal") private var proteinGoal = 150
+    @AppStorage("userHasCycle") private var hasCycle = false
+    @ObservedObject private var cycleCtx = CycleContext.shared
     @State private var showAdd = false
     @State private var showSearch = false
+
+    private var effectiveKcalGoal: Int { kcalGoal + (hasCycle ? cycleCtx.suggestedCalorieOffset : 0) }
 
     private var today: [FoodEntry] {
         all.filter { Calendar.current.isDateInToday($0.date) }
