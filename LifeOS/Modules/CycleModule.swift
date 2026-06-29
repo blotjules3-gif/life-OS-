@@ -293,6 +293,37 @@ struct CycleTrackerView: View {
             .background(Theme.bg)
             .navigationTitle("Suivi du cycle")
             .onAppear { loadTodayEntry() }
+            .sheet(isPresented: $showDatePicker) {
+                NavigationStack {
+                    VStack(spacing: 24) {
+                        DatePicker("Date des dernières règles", selection: $pickedDate, in: ...Date(), displayedComponents: .date)
+                            .datePickerStyle(.graphical)
+                            .tint(Color(hex: 0xE85D9A))
+                            .padding(.horizontal)
+                        Stepper("Durée du cycle : \(cycleLengthDays) jours", value: $cycleLengthDays, in: 21...45)
+                            .padding(.horizontal)
+                            .onChange(of: cycleLengthDays) { _, _ in cycle.refresh() }
+                    }
+                    .navigationTitle("Paramètres cycle")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Enregistrer") {
+                                cycleStartDateTS = pickedDate.timeIntervalSince1970
+                                cycle.refresh()
+                                showDatePicker = false
+                            }
+                        }
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Annuler") { showDatePicker = false }
+                        }
+                    }
+                }
+                .presentationDetents([.medium])
+            }
+            .onAppear {
+                pickedDate = cycleStartDateTS > 0 ? Date(timeIntervalSince1970: cycleStartDateTS) : Date()
+            }
             .overlay {
                 if showSuccess {
                     VStack {
