@@ -1123,20 +1123,6 @@ struct ProfileView: View {
                 } action: {
                     showGoalEditor = true
                 }
-                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
-                settingsRow(icon: "crown.fill", iconColor: Color(hex: 0xE0A23C), label: isPremium ? "LifeOS Premium actif" : "Passer à Premium") {
-                    if isPremium {
-                        Image(systemName: "checkmark.circle.fill").foregroundStyle(Color(hex: 0x4CC38A))
-                    } else {
-                        Text("Découvrir")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 10).padding(.vertical, 4)
-                            .background(Color(hex: 0xE0A23C), in: Capsule())
-                    }
-                } action: {
-                    if !isPremium { showPremium = true }
-                }
             }
             .background(neoCard)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
