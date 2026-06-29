@@ -42,12 +42,15 @@ extension ShapeStyle where Self == Color { static var cycleTint: Color { AppCate
 struct CycleTrackerView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \CycleEntry.date, order: .reverse) private var entries: [CycleEntry]
+    @ObservedObject private var cycle = CycleContext.shared
 
     @State private var selectedFlow = 1
     @State private var selectedSymptoms: Set<String> = []
     @State private var selectedMood = 0
     @State private var note = ""
     @State private var showSuccess = false
+    @State private var showDatePicker = false
+    @State private var pickedDate = Date()
 
     @AppStorage("cycleStartDate") private var cycleStartDateTS: Double = 0
     @AppStorage("cycleLengthDays") private var cycleLengthDays = 28
@@ -57,83 +60,62 @@ struct CycleTrackerView: View {
     private let symptomsAll = ["Crampes", "Maux de tête", "Ballonnements", "Fatigue", "Acné", "Seins sensibles", "Nausées", "Dos douloureux"]
     private let moods = ["", "Triste", "Irritable", "Neutre", "Bien", "Super"]
 
-    private var cycleStart: Date? {
-        cycleStartDateTS > 0 ? Date(timeIntervalSince1970: cycleStartDateTS) : nil
-    }
+    private var phaseColor: Color { Color(hex: cycle.currentPhase.colorHex) }
     private var todayEntry: CycleEntry? {
         entries.first { Calendar.current.isDateInToday($0.date) }
-    }
-    private var cycleDay: Int? {
-        guard let start = cycleStart else { return nil }
-        let days = Calendar.current.dateComponents([.day], from: start, to: .now).day ?? 0
-        return (days % cycleLengthDays) + 1
-    }
-    private var phase: String {
-        guard let day = cycleDay else { return "" }
-        switch day {
-        case 1...5:    return "Menstruations"
-        case 6...13:   return "Phase folliculaire"
-        case 14...16:  return "Ovulation"
-        default:       return "Phase lutéale"
-        }
-    }
-    private var phaseColor: Color {
-        guard let day = cycleDay else { return Color(hex: 0xE85D9A) }
-        switch day {
-        case 1...5:    return Color(hex: 0xE85D9A)
-        case 6...13:   return Color(hex: 0x46C9A8)
-        case 14...16:  return Color(hex: 0xE0A23C)
-        default:       return Color(hex: 0x9B6CF1)
-        }
     }
 
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 18) {
+
                     // Phase du cycle
                     VStack(spacing: 12) {
-                        if let day = cycleDay {
-                            HStack(spacing: 0) {
+                        if cycleStartDateTS > 0 {
+                            HStack(spacing: 1) {
                                 ForEach(0..<cycleLengthDays, id: \.self) { i in
                                     Capsule()
-                                        .fill(i < day ? phaseColor : Color.primary.opacity(0.08))
+                                        .fill(i < cycle.dayOfCycle ? phaseColor : Color.primary.opacity(0.08))
                                         .frame(height: 6)
-                                        .padding(.horizontal, 1)
                                 }
                             }
-                            .animation(.spring(duration: 0.8), value: day)
+                            .animation(.spring(duration: 0.8), value: cycle.dayOfCycle)
 
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Jour \(day)")
-                                        .font(.system(size: 28, weight: .black, design: .rounded).monospacedDigit())
+                            HStack(alignment: .top) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Jour \(cycle.dayOfCycle)")
+                                        .font(.system(size: 32, weight: .black, design: .rounded).monospacedDigit())
                                         .foregroundStyle(.primary)
-                                    Text(phase)
+                                    Text(cycle.currentPhase.label)
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundStyle(phaseColor)
+                                    Text("Règles dans \(cycle.daysUntilPeriod) jour\(cycle.daysUntilPeriod > 1 ? "s" : "")")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
                                 }
                                 Spacer()
                                 Button {
-                                    cycleStartDateTS = Date.now.timeIntervalSince1970
+                                    showDatePicker = true
                                 } label: {
-                                    Text("Réinitialiser")
+                                    Text("Modifier")
                                         .font(.system(size: 12, weight: .semibold))
-                                        .foregroundStyle(Color(hex: 0xE85D9A))
+                                        .foregroundStyle(phaseColor)
                                         .padding(.horizontal, 12).padding(.vertical, 6)
-                                        .background(Color(hex: 0xE85D9A).opacity(0.1), in: Capsule())
+                                        .background(phaseColor.opacity(0.1), in: Capsule())
                                 }
                                 .buttonStyle(.plain)
                             }
                         } else {
-                            VStack(spacing: 10) {
-                                Text("Indique la date de tes dernières règles")
+                            VStack(spacing: 12) {
+                                Text("Quand ont commencé tes dernières règles ?")
                                     .font(.system(size: 15, weight: .semibold))
                                     .multilineTextAlignment(.center)
                                 Button {
                                     cycleStartDateTS = Date.now.timeIntervalSince1970
+                                    cycle.refresh()
                                 } label: {
-                                    Text("Mes règles ont commencé aujourd'hui")
+                                    Text("Aujourd'hui")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundStyle(.white)
                                         .frame(maxWidth: .infinity)
@@ -141,11 +123,63 @@ struct CycleTrackerView: View {
                                         .background(Color(hex: 0xE85D9A), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 }
                                 .buttonStyle(.plain)
+                                Button {
+                                    showDatePicker = true
+                                } label: {
+                                    Text("Choisir une date")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(Color(hex: 0xE85D9A))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 12)
+                                        .background(Color(hex: 0xE85D9A).opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                     }
                     .padding(16)
                     .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+                    // Conseils de la phase
+                    if cycleStartDateTS > 0 {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text(cycle.currentPhase.label.uppercased())
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(phaseColor)
+                                    .kerning(1.2)
+                                Spacer()
+                            }
+                            Text(cycle.currentPhase.energyDescription)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(.primary)
+                            HStack(alignment: .top, spacing: 16) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Label("Fitness", systemImage: "figure.run")
+                                        .font(.caption.bold())
+                                        .foregroundStyle(.secondary)
+                                    Text(cycle.currentPhase.fitnessAdvice)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Divider()
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Label("Nutriments", systemImage: "leaf.fill")
+                                        .font(.caption.bold())
+                                        .foregroundStyle(.secondary)
+                                    Text(cycle.currentPhase.keyNutrients.joined(separator: " · "))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        .padding(16)
+                        .background(phaseColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .stroke(phaseColor.opacity(0.25), lineWidth: 1)
+                        )
+                    }
 
                     // Flux du jour
                     VStack(alignment: .leading, spacing: 12) {
