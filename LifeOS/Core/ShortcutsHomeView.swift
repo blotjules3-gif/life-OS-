@@ -116,8 +116,13 @@ struct ShortcutsHomeView: View {
     @State private var animatedHabitIDs: Set<PersistentIdentifier> = []
     @State private var moodDismissed = false
     @State private var showBilan = false
+    @State private var fullScreenTool: ShortcutTool? = nil
 
     private let cols = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
+
+    private var activeShortcuts: [ShortcutTool] {
+        enabledRaw.split(separator: ",").compactMap { ShortcutTool(rawValue: String($0)) }
+    }
 
     // MARK: données du jour
     private var kcalToday: Int { foods.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.calories } }
