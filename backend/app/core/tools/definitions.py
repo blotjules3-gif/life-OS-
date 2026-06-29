@@ -324,6 +324,35 @@ TOOL_DEFINITIONS: list[dict] = [
         },
     },
 
+    # ── Habits ────────────────────────────────────────────────────────────────
+
+    {
+        "type": "function",
+        "function": {
+            "name": "create_habit",
+            "description": (
+                "Propose a new habit to track in the user's Habit Tracker. "
+                "The habit starts as 'pending' — the user confirms it in the app. "
+                "ONLY call after the user agrees to add a habit. "
+                "For each module, propose ONE specific, actionable habit."
+            ),
+            "parameters": {
+                "type": "object",
+                "required": ["title", "module"],
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "description": "Habit name in French, short and actionable. Ex: '20 min de sport', 'Boire 2L d\'eau', '10 min de méditation'",
+                    },
+                    "module": {
+                        "type": "string",
+                        "description": "Module this habit belongs to: fitness | nutrition | sleep | mind | productivity | finance | learning | social | home | medical",
+                    },
+                },
+            },
+        },
+    },
+
     # ── Module management ──────────────────────────────────────────────────────
 
     {
