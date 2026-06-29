@@ -145,6 +145,35 @@ struct MacroLogView: View {
                         }
                     }.card()
 
+                    if hasCycle && cycleCtx.lastPeriodDate != nil {
+                        let phase = cycleCtx.currentPhase
+                        let phaseColor = Color(hex: phase.colorHex)
+                        HStack(spacing: 12) {
+                            Circle()
+                                .fill(phaseColor)
+                                .frame(width: 10, height: 10)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Phase \(phase.label) · Jour \(cycleCtx.dayOfCycle)")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(phaseColor)
+                                Text(phase.keyNutrients.prefix(3).joined(separator: " · "))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            if phase.calorieOffset > 0 {
+                                Text("+\(phase.calorieOffset) kcal")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(phaseColor)
+                                    .padding(.horizontal, 8).padding(.vertical, 4)
+                                    .background(phaseColor.opacity(0.12), in: Capsule())
+                            }
+                        }
+                        .padding(12)
+                        .background(phaseColor.opacity(0.07), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(phaseColor.opacity(0.2), lineWidth: 1))
+                    }
+
                     if today.isEmpty {
                         EmptyState(icon: "fork.knife", title: "Rien aujourd'hui", message: "Ajoute ton premier repas.")
                     } else {
