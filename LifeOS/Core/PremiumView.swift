@@ -64,45 +64,26 @@ struct PremiumView: View {
                     }
 
                     VStack(spacing: 10) {
-                        Button {
-                            // StoreKit purchase flow goes here
-                            isPremium = true
-                            dismiss()
-                        } label: {
-                            Text("Continuer — 4,99 € / mois")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        }
-                        .buttonStyle(LifeOSPressStyle())
-
-                        Button {
-                            // StoreKit purchase annual
-                            isPremium = true
-                            dismiss()
-                        } label: {
-                            Text("39,99 € / an  — 2 mois offerts")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(Color.accentColor)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(Color.accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        }
-                        .buttonStyle(LifeOSPressStyle())
+                        purchaseButton(product: monthlyProduct, fallbackLabel: "4,99 € / mois", primary: true)
+                        purchaseButton(product: annualProduct,  fallbackLabel: "39,99 € / an — 2 mois offerts", primary: false)
 
                         Button("Restaurer les achats") {
-                            // StoreKit restore
+                            Task { await restorePurchases() }
                         }
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                        .disabled(purchasing)
+
+                        if let err = storeError {
+                            Text(err).font(.caption).foregroundStyle(.red).multilineTextAlignment(.center)
+                        }
 
                         Text("Paiement via Apple. Résiliable à tout moment.")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                             .multilineTextAlignment(.center)
                     }
+                    .task { await loadProducts() }
                 }
                 .padding(20)
             }
