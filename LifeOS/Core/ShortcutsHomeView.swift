@@ -848,6 +848,9 @@ struct WeeklyBilanView: View {
                     .frame(maxWidth: .infinity)
                     .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
 
+                    // Bilan IA
+                    aiBilanCard
+
                     // Stats rapides
                     if avgWater > 0 || avgKcal > 0 || avgMood > 0 {
                         HStack(spacing: 12) {
