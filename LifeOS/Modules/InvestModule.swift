@@ -18,9 +18,6 @@ struct InvestHubView: View {
             ToolRow(icon: "percent", title: "Simulateur fiscalité",
                     subtitle: "Impôt sur le revenu (FR)", tint: .investTint) { TaxSimulatorView() }
         }
-        .fullScreenCover(isPresented: $showCrypto) {
-            CryptoAppView()
-        }
     }
 }
 
