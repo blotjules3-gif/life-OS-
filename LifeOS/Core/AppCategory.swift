@@ -91,6 +91,7 @@ enum AppCategory: String, CaseIterable, Identifiable {
         case .admin: return "Coffre-fort, échéances"
         case .travel: return "Itinéraire, valise, vols"
         case .cycle: return "Règles, ovulation, symptômes"
+        case .medical: return "Médicaments, RDV, carnets"
         }
     }
 
