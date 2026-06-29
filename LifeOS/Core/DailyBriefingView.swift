@@ -96,7 +96,7 @@ struct DailyBriefingView: View {
                             .foregroundStyle(Color(hex: 0xFF9F0A))
                             .padding(.top, 56)
 
-                        Text("\(greeting)\(userName.isEmpty ? "" : ", \(userName)") !")
+                        Text("\(greeting)\(userName.isEmpty ? "" : ", \(userName.prefix(1).uppercased() + userName.dropFirst())") !")
                             .font(.system(size: 30, weight: .bold, design: .rounded))
                             .multilineTextAlignment(.center)
 
