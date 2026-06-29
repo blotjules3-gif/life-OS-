@@ -339,6 +339,12 @@ struct ProfileView: View {
             .fullScreenCover(isPresented: $showBriefing) {
                 DailyBriefingView(modules: recommendedModules)
             }
+            .sheet(isPresented: $showServerConfig) {
+                ServerConfigView {
+                    showServerConfig = false
+                    serverStatus.pingNow()
+                }
+            }
             .navigationDestination(for: AppCategory.self) { $0.destination }
         }
     }
