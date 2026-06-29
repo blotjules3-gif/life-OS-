@@ -37,7 +37,9 @@ struct LifeOSApp: App {
         // Cycle
         CycleEntry.self,
         // Assistant IA
-        AIMessage.self
+        AIMessage.self,
+        // Santé médicale
+        Medication.self, MedicalAppointment.self, VitalRecord.self, Vaccination.self
     ])
 
     var body: some Scene {
