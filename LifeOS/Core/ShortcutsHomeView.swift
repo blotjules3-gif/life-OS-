@@ -941,7 +941,80 @@ struct WeeklyBilanView: View {
                         .font(.subheadline.weight(.semibold))
                 }
             }
+            .task { await loadAIBilan() }
         }
+    }
+
+    // MARK: Bilan IA
+
+    private var aiBilanCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.accentColor)
+                Text("Analyse IA")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .kerning(0.5)
+                Spacer()
+                if bilanLoading {
+                    ProgressView().scaleEffect(0.7)
+                }
+            }
+            if let text = aiBilan {
+                Text(text)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if !bilanLoading && !cachedBilan.isEmpty {
+                Text(cachedBilan)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if !bilanLoading {
+                Text("Connecte-toi pour obtenir un bilan personnalisé.")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.accentColor.opacity(0.06), in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+                .stroke(Color.accentColor.opacity(0.15), lineWidth: 1)
+        )
+    }
+
+    private func loadAIBilan() async {
+        // Use cache if generated today
+        let today = Calendar.current.startOfDay(for: .now).timeIntervalSince1970
+        if cachedBilanDate >= today && !cachedBilan.isEmpty {
+            aiBilan = cachedBilan
+            return
+        }
+        bilanLoading = true
+        let habitNames = activeHabits.map { $0.name }.joined(separator: ", ")
+        let prompt = """
+        [BILAN_SEMAINE]
+        Score habitudes: \(Int(weeklyScore * 100))%
+        Jours parfaits: \(perfectDays)/7
+        Habitudes: \(habitNames.isEmpty ? "aucune" : habitNames)
+        Eau moy: \(avgWater) ml/j
+        Calories moy: \(avgKcal) kcal/j
+        Humeur moy: \(avgMood > 0 ? String(format: "%.1f/5", avgMood) : "non renseignée")
+        Instruction: Fais un bilan de semaine motivant en 2-3 phrases. Sois direct, précis, encourage sans être artificiel.
+        """
+        do {
+            let response = try await AgentAPI.shared.chat(message: prompt, module: nil, conversationID: nil)
+            aiBilan = response.reply
+            cachedBilan = response.reply
+            cachedBilanDate = today
+        } catch {
+            // Silently fall back to cached or empty
+        }
+        bilanLoading = false
     }
 
     private func statPill(_ icon: String, _ label: String, _ color: Color) -> some View {
