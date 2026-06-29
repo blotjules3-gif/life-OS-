@@ -51,10 +51,12 @@ final class NotificationManager {
         previewContent.userInfo = ["type": "wakeup_preview", "alarmHour": hour, "alarmMinute": minute,
                                    "userName": userName]
 
-        let totalMinutes = hour * 60 + minute - 5
-        var preComps = DateComponents()
-        preComps.hour = ((totalMinutes / 60) % 24 + 24) % 24
-        preComps.minute = ((totalMinutes % 60) + 60) % 60
+        var alarmComps = DateComponents()
+        alarmComps.hour = hour
+        alarmComps.minute = minute
+        let alarmDate = Calendar.current.nextDate(after: .now, matching: alarmComps, matchingPolicy: .nextTime) ?? .now
+        let previewDate = Calendar.current.date(byAdding: .minute, value: -5, to: alarmDate) ?? alarmDate
+        let preComps = Calendar.current.dateComponents([.hour, .minute], from: previewDate)
         let preTrigger = UNCalendarNotificationTrigger(dateMatching: preComps, repeats: true)
         let preRequest = UNNotificationRequest(
             identifier: "lifeos.wakeup.preview",
