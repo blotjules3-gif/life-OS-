@@ -13,6 +13,7 @@ class ChatRequest(BaseModel):
     module: Optional[str] = None  # 'sport', 'nutrition', etc. — None = general
     conversation_id: Optional[uuid.UUID] = None
     apns_token: Optional[str] = None  # update token on each request
+    user_context: Optional[str] = Field(None, max_length=2000)  # real-time snapshot from iOS
 
 
 class MessageOut(BaseModel):
