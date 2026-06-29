@@ -93,7 +93,7 @@ struct HabitsWidgetView: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .containerBackground(for: .widget) { Color(.systemBackground) }
+        .containerBackground(for: .widget) { Color(red: 0, green: 0, blue: 0, opacity: 0).background() }
     }
 
     private var smallView: some View {
@@ -132,7 +132,7 @@ struct HabitsWidgetView: View {
             }
         }
         .padding(12)
-        .containerBackground(for: .widget) { Color(.systemBackground) }
+        .containerBackground(for: .widget) { Color(red: 0, green: 0, blue: 0, opacity: 0).background() }
     }
 
     private var mediumView: some View {
@@ -183,7 +183,7 @@ struct HabitsWidgetView: View {
             }
         }
         .padding(14)
-        .containerBackground(for: .widget) { Color(.systemBackground) }
+        .containerBackground(for: .widget) { Color(red: 0, green: 0, blue: 0, opacity: 0).background() }
     }
 }
 
