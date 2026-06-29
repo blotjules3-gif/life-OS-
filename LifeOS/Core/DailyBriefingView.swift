@@ -100,7 +100,7 @@ struct DailyBriefingView: View {
                             .font(.system(size: 30, weight: .bold, design: .rounded))
                             .multilineTextAlignment(.center)
 
-                        Text(Date.now.formatted(date: .complete, time: .omitted))
+                        Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide).year().locale(Locale(identifier: "fr_FR"))))
                             .font(.system(size: 14, weight: .regular))
                             .foregroundStyle(.secondary)
                     }
