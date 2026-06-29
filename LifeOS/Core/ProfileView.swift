@@ -51,6 +51,8 @@ struct ProfileView: View {
     @State private var challengesLoading = true
     @State private var profileSection = 0
     @State private var showOnboardingReset = false
+    @State private var showServerConfig = false
+    @ObservedObject private var serverStatus = ServerStatusMonitor.shared
     @Namespace private var pickerNS
 
     private var recommendedModules: [AppCategory] {
