@@ -85,6 +85,20 @@ final class HealthService {
         return await sumToday(type, unit: .kilocalorie())
     }
 
+    /// Number of workouts logged in Apple Santé over the last 7 days.
+    func workoutsThisWeek() async -> Int {
+        guard HKHealthStore.isHealthDataAvailable() else { return 0 }
+        let type = HKObjectType.workoutType()
+        let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+        let predicate = HKQuery.predicateForSamples(withStart: weekAgo, end: Date())
+        return await withCheckedContinuation { cont in
+            let q = HKSampleQuery(sampleType: type, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, _ in
+                cont.resume(returning: samples?.count ?? 0)
+            }
+            store.execute(q)
+        }
+    }
+
     // MARK: - Requêtes bas niveau
 
     private func sumToday(_ type: HKQuantityType, unit: HKUnit) async -> Double {
