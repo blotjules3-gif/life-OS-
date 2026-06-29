@@ -405,6 +405,95 @@ struct OnboardingName: View {
     }
 }
 
+// MARK: - Étape 2 : Contexte hormonal (femme / autre uniquement)
+
+struct OnboardingHormonalContext: View {
+    @Binding var hasCycle: Bool
+    @Binding var hormonalContext: String
+    let onNext: () -> Void
+
+    private let contextOptions: [(id: String, label: String, icon: String)] = [
+        ("natural",      "Cycle naturel",          "waveform.path.ecg"),
+        ("pill",         "Pilule contraceptive",   "pills.fill"),
+        ("iud_hormonal", "Stérilet hormonal",      "cross.circle.fill"),
+        ("pcos",         "SOPK",                   "exclamationmark.triangle.fill"),
+        ("endometriosis","Endométriose",            "heart.slash.fill"),
+        ("menopause",    "Ménopause / Péri",        "sun.max.fill"),
+        ("no_cycle",     "Pas de cycle",            "xmark.circle.fill"),
+    ]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+            VStack(spacing: 28) {
+                VStack(spacing: 10) {
+                    Text("Ton contexte hormonal")
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.center)
+                    Text("Pour adapter tes recommandations nutrition, fitness et suppléments au plus près de ta réalité.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
+                }
+
+                VStack(spacing: 10) {
+                    ForEach(contextOptions, id: \.id) { opt in
+                        Button {
+                            hormonalContext = opt.id
+                            hasCycle = (opt.id != "no_cycle" && opt.id != "menopause")
+                            Haptics.tap()
+                        } label: {
+                            HStack(spacing: 14) {
+                                Image(systemName: opt.icon)
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(hormonalContext == opt.id ? .white : Color(hex: 0xE85D9A))
+                                    .frame(width: 38, height: 38)
+                                    .background(
+                                        hormonalContext == opt.id ? Color(hex: 0xE85D9A) : Color(hex: 0xE85D9A).opacity(0.1),
+                                        in: RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    )
+                                Text(opt.label)
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundStyle(hormonalContext == opt.id ? .primary : .secondary)
+                                Spacer()
+                                if hormonalContext == opt.id {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(Color(hex: 0xE85D9A))
+                                        .font(.system(size: 20))
+                                        .contentTransition(.symbolEffect(.replace))
+                                }
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .stroke(hormonalContext == opt.id ? Color(hex: 0xE85D9A) : Color.clear, lineWidth: 1.5)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            Spacer()
+            VStack(spacing: 10) {
+                OnboardingButton(label: "Continuer", enabled: !hormonalContext.isEmpty, action: onNext)
+                Button("Préférer ne pas répondre") {
+                    hormonalContext = "undisclosed"
+                    hasCycle = false
+                    onNext()
+                }
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.secondary)
+                .buttonStyle(.plain)
+            }
+            .padding(.bottom, 52)
+        }
+        .padding(.horizontal, 28)
+    }
+}
+
 // MARK: - Profil de vie
 
 enum LifeProfile: String, CaseIterable, Identifiable {
