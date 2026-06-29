@@ -97,6 +97,34 @@ struct TodoView: View {
         .sheet(isPresented: $showAdd) { TodoEditor() }
     }
     private func priorityColor(_ p: Int) -> Color { p >= 2 ? .red : p == 1 ? .orange : Theme.textSecondary }
+
+    private func addToCalendar(_ todo: TodoItem) {
+        let store = EKEventStore()
+        let requestAccess = {
+            let event = EKEvent(eventStore: store)
+            event.title = todo.title
+            event.notes = todo.project.isEmpty ? nil : todo.project
+            let start = todo.due ?? Calendar.current.date(byAdding: .hour, value: 1, to: .now)!
+            event.startDate = start
+            event.endDate   = Calendar.current.date(byAdding: .hour, value: 1, to: start)!
+            event.calendar  = store.defaultCalendarForNewEvents
+            do {
+                try store.save(event, span: .thisEvent)
+                calendarAlert = "Ajouté au calendrier pour \(start.formatted(.dateTime.day().month().hour().minute()))."
+            } catch {
+                calendarAlert = "Impossible d'accéder au calendrier. Vérifie les autorisations dans Réglages."
+            }
+        }
+        if #available(iOS 17, *) {
+            store.requestWriteOnlyAccessToEvents { granted, _ in
+                DispatchQueue.main.async { if granted { requestAccess() } else { calendarAlert = "Accès calendrier refusé." } }
+            }
+        } else {
+            store.requestAccess(to: .event) { granted, _ in
+                DispatchQueue.main.async { if granted { requestAccess() } else { calendarAlert = "Accès calendrier refusé." } }
+            }
+        }
+    }
 }
 
 struct TodoEditor: View {
