@@ -365,6 +365,7 @@ struct CycleTrackerView: View {
         if selectedFlow > 0 && cycleStartDateTS == 0 {
             cycleStartDateTS = Date.now.timeIntervalSince1970
         }
+        cycle.refresh()
         Haptics.tap()
         withAnimation(.spring(duration: 0.3)) { showSuccess = true }
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
