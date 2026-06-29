@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import EventKit
+import WidgetKit
 
 extension ShapeStyle where Self == Color { static var prodTint: Color { AppCategory.productivity.tint } }
 
