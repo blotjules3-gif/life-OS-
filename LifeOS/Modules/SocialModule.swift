@@ -25,6 +25,7 @@ struct CRMView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \Contact.name) private var contacts: [Contact]
     @State private var showAdd = false
+    @State private var showImport = false
     private var overdue: [Contact] { contacts.filter { $0.isOverdue } }
 
     var body: some View {
