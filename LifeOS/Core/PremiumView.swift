@@ -1,10 +1,19 @@
 import SwiftUI
+import StoreKit
 
 // MARK: - Paywall
 
 struct PremiumView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("isPremium") private var isPremium = false
+
+    @State private var monthlyProduct: Product? = nil
+    @State private var annualProduct: Product?  = nil
+    @State private var purchasing = false
+    @State private var storeError: String? = nil
+
+    private static let monthlyID = "com.lifeos.premium.monthly"
+    private static let annualID  = "com.lifeos.premium.annual"
 
     private let perks: [(icon: String, title: String, sub: String, color: Color)] = [
         ("sparkles",               "Bilan IA hebdomadaire",    "Analyse narrative personnalisée chaque semaine",      Color.accentColor),
