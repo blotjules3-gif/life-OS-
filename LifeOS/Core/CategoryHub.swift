@@ -477,6 +477,7 @@ extension AppCategory {
         case .admin:        return adminTools
         case .travel:       return travelTools
         case .cycle:        return cycleTools
+        case .medical:      return medicalTools
         }
     }
 }
