@@ -33,6 +33,14 @@ struct CalAIView: View {
             Button { showAdd = true } label: { Image(systemName: "plus.circle.fill").font(.title2) }
         } }
         .sheet(isPresented: $showAdd) { FoodEditor() }
+        .task { syncNutritionToContext() }
+        .onChange(of: foods.count) { _, _ in syncNutritionToContext() }
+    }
+
+    private func syncNutritionToContext() {
+        let grp = UserDefaults(suiteName: "group.lifeos.app") ?? .standard
+        grp.set(totals.kcal, forKey: "today_kcal")
+        grp.set(Int(totals.p), forKey: "today_protein_g")
     }
 
     // MARK: En-tête + streak
