@@ -112,6 +112,11 @@ struct ShortcutsHomeView: View {
 
     @State private var steps = 0
     @State private var editingMood = false
+    @State private var editingShortcuts = false
+
+    private var enabledShortcuts: [ShortcutTool] {
+        enabledRaw.split(separator: ",").compactMap { ShortcutTool(rawValue: String($0)) }
+    }
 
     private let cols = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
 
@@ -144,6 +149,7 @@ struct ShortcutsHomeView: View {
                         weeklyModuleCard(module)
                     }
 
+                    shortcutsSection
                     habitsSection
                     goalsSection
                     moodSection
@@ -153,6 +159,9 @@ struct ShortcutsHomeView: View {
             .scrollContentBackground(.hidden)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $editingShortcuts) {
+                ShortcutPickerSheet(enabledRaw: $enabledRaw)
+            }
             .task {
                 if await HealthService.shared.requestAuthorization() {
                     steps = await HealthService.shared.stepsToday()
@@ -295,6 +304,48 @@ struct ShortcutsHomeView: View {
             Image(systemName: o.done ? "checkmark.circle.fill" : "circle")
                 .font(.system(size: 18)).foregroundStyle(o.done ? AnyShapeStyle(o.color) : AnyShapeStyle(Color.secondary.opacity(0.4)))
         }
+    }
+
+    // MARK: Section — Raccourcis épinglés
+    private var shortcutsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("Raccourcis", trailing: "Éditer") { editingShortcuts = true }
+            if enabledShortcuts.isEmpty {
+                Button { editingShortcuts = true } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 22)).foregroundStyle(.secondary)
+                        Text("Épingle tes outils favoris ici")
+                            .font(.subheadline).foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                    .padding(16).frame(maxWidth: .infinity)
+                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            } else {
+                LazyVGrid(columns: cols, spacing: 12) {
+                    ForEach(enabledShortcuts) { tool in
+                        NavigationLink { tool.destination } label: { shortcutTile(tool) }
+                            .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    private func shortcutTile(_ tool: ShortcutTool) -> some View {
+        VStack(spacing: 10) {
+            Image(systemName: tool.icon)
+                .font(.system(size: 20, weight: .semibold)).foregroundStyle(.white)
+                .frame(width: 46, height: 46)
+                .background(tool.tint.gradient, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+            Text(tool.label)
+                .font(.system(size: 13, weight: .medium)).foregroundStyle(.primary)
+                .lineLimit(1).minimumScaleFactor(0.75)
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, 16)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 
     // MARK: Section 3 — Humeur du jour (check-in)
@@ -470,5 +521,54 @@ struct ShortcutsHomeView: View {
         case 18..<23: return "Bonsoir"
         default:      return "Bonne nuit"
         }
+    }
+}
+
+// MARK: - Éditeur de raccourcis de l'accueil
+
+private struct ShortcutPickerSheet: View {
+    @Binding var enabledRaw: String
+    @Environment(\.dismiss) private var dismiss
+
+    private var enabled: [String] { enabledRaw.split(separator: ",").map(String.init) }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(ShortcutTool.allCases) { tool in
+                        let on = enabled.contains(tool.rawValue)
+                        Button { toggle(tool, on: on) } label: {
+                            HStack(spacing: 14) {
+                                Image(systemName: tool.icon)
+                                    .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
+                                    .frame(width: 32, height: 32)
+                                    .background(tool.tint.gradient, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                Text(tool.label).foregroundStyle(.primary)
+                                Spacer()
+                                Image(systemName: on ? "checkmark.circle.fill" : "circle")
+                                    .font(.system(size: 20))
+                                    .foregroundStyle(on ? AnyShapeStyle(tool.tint) : AnyShapeStyle(Color.secondary.opacity(0.4)))
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                } header: {
+                    Text("Choisis les raccourcis affichés sur l'accueil")
+                } footer: {
+                    Text("Touche pour épingler ou retirer. L'ordre suit tes sélections.")
+                }
+            }
+            .navigationTitle("Raccourcis").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("OK") { dismiss() } } }
+        }
+    }
+
+    private func toggle(_ tool: ShortcutTool, on: Bool) {
+        var list = enabled
+        if on { list.removeAll { $0 == tool.rawValue } }
+        else { list.append(tool.rawValue) }
+        enabledRaw = list.joined(separator: ",")
+        Haptics.soft()
     }
 }
