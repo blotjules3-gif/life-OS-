@@ -11,7 +11,6 @@ private struct ProfileTaskItem: Identifiable {
 }
 
 struct ProfileView: View {
-    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("appTheme") private var appThemeRaw = "classic"
     @AppStorage("userName") private var name = ""
     @AppStorage("stepGoal") private var stepGoal = 10000
@@ -214,8 +213,6 @@ struct ProfileView: View {
                                             .padding(.vertical, 36)
                                             .background(Theme.card)
                                             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                                            .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-                                            .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
                                             .transition(.opacity)
                                     } else if challenges.isEmpty {
                                         challengesEmptyState
@@ -456,8 +453,6 @@ struct ProfileView: View {
         }
         .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: neoShadowLight, radius: 10, x: -5, y: -5)
-        .shadow(color: neoShadowDark, radius: 10, x: 5, y: 5)
     }
 
     private func quickStat(icon: String, value: String, unit: String, color: Color, progress: Double) -> some View {
@@ -549,8 +544,6 @@ struct ProfileView: View {
         .padding(.vertical, 16)
         .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: neoShadowLight, radius: 10, x: -5, y: -5)
-        .shadow(color: neoShadowDark, radius: 10, x: 5, y: 5)
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(color.opacity(0.22), lineWidth: 1.5)
@@ -662,8 +655,6 @@ struct ProfileView: View {
         }
         .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: neoShadowLight, radius: 10, x: -5, y: -5)
-        .shadow(color: neoShadowDark, radius: 10, x: 5, y: 5)
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(wakeupEnabled ? accentColor.opacity(0.3) : Color.clear, lineWidth: 1.5)
@@ -683,8 +674,6 @@ struct ProfileView: View {
                         if profileSection == idx {
                             RoundedRectangle(cornerRadius: 15, style: .continuous)
                                 .fill(Theme.card)
-                                .shadow(color: neoShadowLight, radius: 5, x: -2, y: -2)
-                                .shadow(color: neoShadowDark, radius: 5, x: 2, y: 2)
                                 .matchedGeometryEffect(id: "pickerPill", in: pickerNS)
                         }
                         HStack(spacing: 5) {
@@ -712,8 +701,6 @@ struct ProfileView: View {
         .padding(5)
         .background(neoBackground)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
-        .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
     }
 
     // MARK: - Challenges helpers
@@ -767,8 +754,6 @@ struct ProfileView: View {
         .padding(.vertical, 32)
         .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-        .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
     }
 
     // MARK: - Active Goals
@@ -840,8 +825,6 @@ struct ProfileView: View {
                 .frame(maxWidth: .infinity)
                 .background(Theme.card)
                 .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-                .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
             } else {
                 VStack(spacing: 12) {
                     ForEach(stride(from: 0, to: tasks.count, by: 2).map { $0 }, id: \.self) { rowStart in
@@ -899,8 +882,6 @@ struct ProfileView: View {
                             .padding(.vertical, 10)
                             .background(Theme.card)
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
-                            .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
                     }
                     .buttonStyle(LifeOSPressStyle())
                 }
@@ -986,8 +967,6 @@ struct ProfileView: View {
         .padding(16)
         .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-        .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .stroke(task.color.opacity(task.progress >= 1 ? 0.4 : 0), lineWidth: 1.5)
@@ -1074,8 +1053,6 @@ struct ProfileView: View {
         }
         .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-        .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
     }
 
     // MARK: - Energy Score Card
@@ -1129,8 +1106,6 @@ struct ProfileView: View {
             .padding(16)
             .background(Theme.card)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-            .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
         }
     }
 
@@ -1164,8 +1139,6 @@ struct ProfileView: View {
         .padding(16)
         .background(Theme.card)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-        .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
     }
 
     // MARK: - Paramètres
@@ -1227,8 +1200,6 @@ struct ProfileView: View {
             }
             .background(Theme.card)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-            .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
 
             Button { showOnboardingReset = true } label: {
                 Text("Refaire l'onboarding")
@@ -1238,8 +1209,6 @@ struct ProfileView: View {
                     .padding(.vertical, 14)
                     .background(Color(hex: 0xF1746C).opacity(0.08))
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-                    .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
             }
             .buttonStyle(LifeOSPressStyle())
             .confirmationDialog("Réinitialiser le profil ?", isPresented: $showOnboardingReset, titleVisibility: .visible) {
@@ -1316,8 +1285,6 @@ struct ProfileView: View {
             .padding(16)
             .background(Theme.card)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .shadow(color: neoShadowLight, radius: 8, x: -4, y: -4)
-            .shadow(color: neoShadowDark, radius: 8, x: 4, y: 4)
         }
     }
 
