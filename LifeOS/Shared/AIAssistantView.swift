@@ -237,10 +237,14 @@ final class AIAssistantViewModel: ObservableObject {
                 }
             } catch {
                 removeThinking()
-                if let apiErr = error as? AgentAPIError, case .networkError = apiErr {
-                    isServerOffline = true
+                if let apiErr = error as? AgentAPIError {
+                    switch apiErr {
+                    case .networkError: isServerOffline = true
+                    case .invalidResponse(404): conversationID = ""
+                    default: errorBanner = apiErr.errorDescription
+                    }
                 } else {
-                    errorBanner = (error as? AgentAPIError)?.errorDescription ?? error.localizedDescription
+                    errorBanner = error.localizedDescription
                 }
             }
             isLoading = false
