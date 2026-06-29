@@ -479,6 +479,7 @@ def build_system_prompt(
     module_config: dict[str, Any],
     user_name: str | None,
     user_gender: str | None = None,
+    user_context: str | None = None,
 ) -> str:
     prompt = SYSTEM_PROMPT_BASE.strip()
 
