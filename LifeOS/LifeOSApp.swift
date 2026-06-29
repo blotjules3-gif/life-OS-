@@ -45,8 +45,6 @@ struct LifeOSApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                // Couche 0 — fond système rendu avant toute autre chose.
-                // Empêche le flash blanc sur iPhone en mode sombre.
                 Color(uiColor: .systemBackground)
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
@@ -121,7 +119,6 @@ struct LifeOSApp: App {
         .sheet(isPresented: $showSleepCheckFromWidget) {
             SleepCheckSheet {
                 showSleepCheckFromWidget = false
-                // Bref délai pour laisser la sheet se fermer avant d'ouvrir le briefing
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                     showBriefingFromWidget = true
                 }
@@ -163,19 +160,15 @@ struct LifeOSApp: App {
         UserDefaults.standard.set(today, forKey: key)
     }
 
-    // MARK: - Création container (thread de fond, Swift concurrency natif)
+    // MARK: - Création container
 
     private func buildContainer() async {
         let schema = Self.schema
         let result = await Task.detached(priority: .userInitiated) {
-            Result { () throws -> ModelContainer in
-                let cloudConfig = ModelConfiguration(
-                    schema: schema,
-                    isStoredInMemoryOnly: false,
-                    cloudKitDatabase: .private("iCloud.com.blotjules.lifeos")
-                )
-                return try ModelContainer(for: schema, configurations: [cloudConfig])
-            }
+            Result { try ModelContainer(
+                for: schema,
+                configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)]
+            )}
         }.value
 
         switch result {
@@ -183,24 +176,11 @@ struct LifeOSApp: App {
             migrationFailed = false
             container = mc
         case .failure:
-            // CloudKit non disponible (pas de compte iCloud, ou container non créé) → local uniquement
-            let localResult = await Task.detached(priority: .userInitiated) {
-                Result { try ModelContainer(
-                    for: schema,
-                    configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)]
-                )}
-            }.value
-            switch localResult {
-            case .success(let mc):
-                migrationFailed = false
-                container = mc
-            case .failure:
-                migrationFailed = true
-                container = try? ModelContainer(
-                    for: schema,
-                    configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
-                )
-            }
+            migrationFailed = true
+            container = try? ModelContainer(
+                for: schema,
+                configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
+            )
         }
     }
 }
