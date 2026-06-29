@@ -136,9 +136,9 @@ struct ShortcutsHomeView: View {
         enabledRaw.split(separator: ",").compactMap { ShortcutTool(rawValue: String($0)) }
     }
 
-    // MARK: données du jour
-    private var kcalToday: Int { foods.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.calories } }
-    private var waterToday: Int { waters.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML } }
+    // MARK: données du jour (foods/waters already filtered to today by @Query predicate)
+    private var kcalToday: Int { foods.reduce(0) { $0 + $1.calories } }
+    private var waterToday: Int { waters.reduce(0) { $0 + $1.amountML } }
     private var habitsDone: Int { habits.filter { h in h.completions.contains { Calendar.current.isDateInToday($0.date) } }.count }
     private var fastHours: Double { fasts.first(where: { $0.isActive }).map { $0.elapsed / 3600 } ?? 0 }
     private var todayMood: MoodEntry? { moods.first { Calendar.current.isDateInToday($0.date) } }
