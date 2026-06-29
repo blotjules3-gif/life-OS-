@@ -298,7 +298,7 @@ struct ProfileView: View {
             .task {
                 if await HealthService.shared.requestAuthorization() {
                     healthConnected = true
-                    steps = await HealthService.shared.stepsToday()
+                    steps = await HealthService.shared.cachedStepsToday()
                 }
                 async let challengesTask = (try? await AgentAPI.shared.fetchChallenges()) ?? []
                 let ch = await challengesTask

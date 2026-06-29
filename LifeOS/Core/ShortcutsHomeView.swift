@@ -210,7 +210,7 @@ struct ShortcutsHomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .task {
                 if await HealthService.shared.requestAuthorization() {
-                    steps = await HealthService.shared.stepsToday()
+                    steps = await HealthService.shared.cachedStepsToday()
                 }
                 reengageMessage    = EngagementTracker.shared.reengagementMessage
                 reengageSuggestion = EngagementTracker.shared.simplificationSuggestion
@@ -221,7 +221,7 @@ struct ShortcutsHomeView: View {
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                 Task {
                     if await HealthService.shared.requestAuthorization() {
-                        steps = await HealthService.shared.stepsToday()
+                        steps = await HealthService.shared.cachedStepsToday()
                     }
                 }
                 if todayMood == nil { withAnimation { moodDismissed = false } }

@@ -259,7 +259,7 @@ struct HomeDashboardContent: View {
             .navigationTitle(greeting)
             .task {
                 if await HealthService.shared.requestAuthorization() {
-                    steps = await HealthService.shared.stepsToday()
+                    steps = await HealthService.shared.cachedStepsToday()
                 }
             }
     }

@@ -77,7 +77,7 @@ struct StepsView: View {
         .navigationTitle("Compteur de pas").navigationBarTitleDisplayMode(.inline)
         .task {
             _ = await HealthService.shared.requestAuthorization()
-            today = await HealthService.shared.stepsToday()
+            today = await HealthService.shared.cachedStepsToday()
             loading = false
         }
     }
