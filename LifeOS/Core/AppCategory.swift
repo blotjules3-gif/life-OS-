@@ -69,6 +69,7 @@ enum AppCategory: String, CaseIterable, Identifiable {
         case .admin: return Color(hex: 0x8A93A8)
         case .travel: return Color(hex: 0x6C9BF1)
         case .cycle: return Color(hex: 0xE85D9A)
+        case .medical: return Color(hex: 0xE84C4C)
         }
     }
 
