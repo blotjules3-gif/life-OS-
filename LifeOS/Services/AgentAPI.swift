@@ -17,6 +17,7 @@ struct ChatRequest: Encodable {
     let module: String?
     let conversation_id: String?
     let apns_token: String?
+    let user_context: String?
 }
 
 struct ChatResponse: Decodable {
