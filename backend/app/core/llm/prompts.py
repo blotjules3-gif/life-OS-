@@ -516,6 +516,10 @@ def build_system_prompt(
         prompt += f"\n\nFOCUS MODULE : {label}\nConfiguration actuelle : {config_str}"
         prompt += f"\n→ Concentre-toi sur la personnalisation du module {label} lors de cette conversation."
 
+    if user_context:
+        prompt += f"\n\n--- SNAPSHOT UTILISATEUR (maintenant) ---\n{user_context}\n--- FIN SNAPSHOT ---"
+        prompt += "\n→ Utilise ce snapshot pour répondre en contexte : si l'utilisateur n'a pas encore fait ses habitudes, propose-le. Si son énergie est basse, adapte tes conseils. Si son jeûne est en cours, ne propose pas de repas."
+
     return prompt
 
 
