@@ -135,7 +135,7 @@ struct MacroLogView: View {
                                 Text("/ \(effectiveKcalGoal) kcal").font(.caption).foregroundStyle(Theme.textSecondary)
 }
                             Spacer()
-                            ProgressRing(progress: Double(kcal)/Double(max(1,kcalGoal)), lineWidth: 10, tint: .nutriTint)
+                            ProgressRing(progress: Double(kcal)/Double(max(1,effectiveKcalGoal)), lineWidth: 10, tint: .nutriTint)
                                 .frame(width: 64, height: 64)
                         }
                         HStack(spacing: 10) {
