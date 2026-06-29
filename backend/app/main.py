@@ -116,6 +116,14 @@ Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 app.include_router(v1_router)
 
 
+# ── Health check (no auth required) ──────────────────────────────────────────
+
+@app.get("/health", tags=["system"])
+@app.head("/health", tags=["system"])
+async def health() -> dict:
+    return {"status": "ok", "version": "1.0.0"}
+
+
 # ── Exception handlers ────────────────────────────────────────────────────────
 
 @app.exception_handler(LifeOSBaseError)
