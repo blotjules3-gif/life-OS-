@@ -481,9 +481,15 @@ struct HydrationView: View {
             }
         }
         .navigationTitle("Hydratation").navigationBarTitleDisplayMode(.inline)
+        .task { syncWaterToContext() }
+        .onChange(of: entries.count) { _, _ in syncWaterToContext() }
+    }
+    private func syncWaterToContext() {
+        let grp = UserDefaults(suiteName: "group.lifeos.app") ?? .standard
+        grp.set(todayML, forKey: "today_water_ml")
     }
     private func addBtn(_ ml: Int, _ icon: String) -> some View {
-        Button { ctx.insert(WaterEntry(amountML: ml)); Haptics.tap() } label: {
+        Button { ctx.insert(WaterEntry(amountML: ml)); syncWaterToContext(); Haptics.tap() } label: {
             VStack(spacing: 6) { Image(systemName: icon).font(.title2); Text("\(ml)").font(.caption.bold()) }
                 .frame(maxWidth: .infinity).padding(.vertical, 14)
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
