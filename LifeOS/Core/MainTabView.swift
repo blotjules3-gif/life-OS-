@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 import Charts
 
-// MARK: - Onglets (chat retiré — input intégré dans la barre)
+// MARK: - Onglets
 
 enum AppTab: String, CaseIterable, Identifiable {
     case wakeup, home, categories, profile
@@ -38,21 +38,8 @@ enum AppTab: String, CaseIterable, Identifiable {
 struct MainTabView: View {
     @State private var tab: AppTab = .home
     @State private var catPath: [AppCategory] = []
-    @State private var chatInput = ""
-    @State private var chatMessages: [ChatMessage] = [
-        ChatMessage(fromUser: false, text: "Salut ! Je suis ton assistant LifeOS. Dis-moi « retiens que... » pour que je mémorise quelque chose. Je peux aussi t'aider sur calories, eau, jeûne et habitudes.")
-    ]
-    @State private var showChat = false
     @State private var showAIAssistant = false
 
-    @Query private var foods: [FoodEntry]
-    @Query private var waters: [WaterEntry]
-    @Query private var fasts: [FastingSession]
-    @Query private var habits: [Habit]
-    @Query(sort: \MemoryEntry.created, order: .reverse) private var memories: [MemoryEntry]
-    @Environment(\.modelContext) private var ctx
-    @AppStorage("kcalGoal") private var kcalGoal = 2200
-    @AppStorage("waterGoal") private var waterGoal = 2500
     @AppStorage("appTheme") private var appThemeRaw = "classic"
     private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
 
@@ -62,17 +49,10 @@ struct MainTabView: View {
                 .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 104) }
             FloatingTabBar(
                 selected: $tab,
-                chatInput: $chatInput,
-                onSend: sendChat,
                 onOpenAssistant: { showAIAssistant = true }
             )
         }
-        // La barre est alignée en bas de ce ZStack : c'est ICI qu'il faut ignorer
-        // la safe area pour que le pill colle à 10pt du vrai bord (sinon +34pt d'inset).
         .ignoresSafeArea(.container, edges: .bottom)
-        .sheet(isPresented: $showChat) {
-            ChatHistorySheet(messages: chatMessages)
-        }
         .fullScreenCover(isPresented: $showAIAssistant) {
             AIAssistantView()
         }
@@ -83,8 +63,6 @@ struct MainTabView: View {
 
     @ViewBuilder private var content: some View {
         ZStack {
-            // Fond thématique unique, partagé par TOUS les onglets (Accueil / Réveil /
-            // Catégories / Profil) — l'app a la même identité visuelle partout.
             ThemedBubbleBackground(theme: theme)
                 .ignoresSafeArea()
             ShortcutsHomeView()
@@ -107,151 +85,30 @@ struct MainTabView: View {
                 .allowsHitTesting(tab == .profile)
         }
     }
-
-    // MARK: Envoi message
-
-    private func sendChat() {
-        let q = chatInput.trimmingCharacters(in: .whitespaces)
-        guard !q.isEmpty else { return }
-        chatMessages.append(ChatMessage(fromUser: true, text: q))
-        chatInput = ""
-        let ql = q.lowercased()
-
-        // Détection mémorisation
-        let memPrefixes = ["retiens que ", "souviens-toi que ", "note que ", "mémorise que ", "remember that "]
-        if let prefix = memPrefixes.first(where: { ql.hasPrefix($0) }) {
-            let content = String(q.dropFirst(prefix.count))
-            let category = detectMemoryCategory(ql)
-            let entry = MemoryEntry(content: content, category: category, source: "chat")
-            ctx.insert(entry)
-            chatMessages.append(ChatMessage(fromUser: false, text: "Mémorisé ✓ — Je me souviendrai que \"\(content)\". Tu peux retrouver ça dans l'onglet Profil."))
-            showChat = true
-            return
-        }
-
-        chatMessages.append(ChatMessage(fromUser: false, text: answer(for: ql)))
-        showChat = true
-    }
-
-    private func detectMemoryCategory(_ q: String) -> String {
-        if q.contains("objectif") || q.contains("but ") || q.contains("veux ") || q.contains("voudrais") { return "objectif" }
-        if q.contains("aime") || q.contains("préfère") || q.contains("adore") || q.contains("déteste") { return "préférence" }
-        if q.contains("habitude") || q.contains("chaque jour") || q.contains("tous les") { return "habitude" }
-        if q.contains("santé") || q.contains("allergie") || q.contains("médic") || q.contains("douleur") { return "santé" }
-        return "fait"
-    }
-
-    private func answer(for q: String) -> String {
-        let kcal  = foods.filter  { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.calories }
-        let water = waters.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML }
-
-        if q.contains("mémoire") || q.contains("souviens") || q.contains("retiens") || q.contains("mémorisé") {
-            if memories.isEmpty { return "Je n'ai encore rien mémorisé. Dis-moi « retiens que... » pour stocker quelque chose." }
-            let list = memories.prefix(5).map { "• \($0.content)" }.joined(separator: "\n")
-            return "Voici ce que je mémorise sur toi :\n\(list)"
-        }
-        if q.contains("calor") || q.contains("manger") || q.contains("mangé") {
-            return "Tu es à \(kcal) kcal aujourd'hui, objectif \(kcalGoal). Il te reste \(max(0, kcalGoal - kcal)) kcal."
-        }
-        if q.contains("eau") || q.contains("hydrat") || q.contains("bois") || q.contains("bu") {
-            return "Tu as bu \(water) ml sur \(waterGoal) ml. \(water >= waterGoal ? "Objectif atteint !" : "Encore \(waterGoal - water) ml à boire.")"
-        }
-        if q.contains("jeûn") || q.contains("jeun") || q.contains("fast") {
-            if let a = fasts.first(where: { $0.isActive }) {
-                return "Jeûne en cours depuis \(Int(a.elapsed/3600))h\(Int(a.elapsed.truncatingRemainder(dividingBy: 3600)/60))min. Va dans Catégories › Nutrition › Jeûne."
-            }
-            return "Aucun jeûne en cours. Lance-le dans Catégories › Nutrition › Jeûne."
-        }
-        if q.contains("habitude") || q.contains("streak") {
-            let done = habits.filter { h in h.completions.contains { Calendar.current.isDateInToday($0.date) } }.count
-            return "Tu as validé \(done)/\(habits.count) habitudes aujourd'hui."
-        }
-        if q.contains("bonjour") || q.contains("salut") || q.contains("hello") || q.contains("hey") {
-            return "Hello ! Je peux te dire tes calories, ton eau, ton jeûne ou tes habitudes. Dis aussi « retiens que... » pour que je mémorise quelque chose."
-        }
-        if q.contains("merci") { return "Avec plaisir !" }
-        return "Je peux t'aider sur : calories, hydratation, jeûne, habitudes — ou mémoriser quelque chose (« retiens que... »)."
-    }
 }
 
-// MARK: - Historique chat (sheet)
-
-struct ChatHistorySheet: View {
-    let messages: [ChatMessage]
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(spacing: 10) {
-                        ForEach(messages) { m in
-                            HStack {
-                                if m.fromUser { Spacer(minLength: 40) }
-                                Text(m.text)
-                                    .padding(.horizontal, 14).padding(.vertical, 10)
-                                    .background(
-                                        m.fromUser ? Color.accentColor : Theme.card,
-                                        in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    )
-                                    .foregroundStyle(m.fromUser ? .white : .primary)
-                                if !m.fromUser { Spacer(minLength: 40) }
-                            }
-                            .id(m.id)
-                        }
-                    }
-                    .padding(Theme.pad)
-                }
-                .onAppear {
-                    if let last = messages.last {
-                        proxy.scrollTo(last.id, anchor: .bottom)
-                    }
-                }
-            }
-            .background(Theme.bg)
-            .navigationTitle("Assistant")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Fermer") { dismiss() }
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Barre flottante : [2 onglets] [chat direct] [2 onglets]
+// MARK: - Barre flottante : [2 onglets] [assistant] [2 onglets]
 
 struct FloatingTabBar: View {
     @Binding var selected: AppTab
-    @Binding var chatInput: String
-    let onSend: () -> Void
     var onOpenAssistant: () -> Void = {}
 
-    @FocusState private var inputFocused: Bool
-    @State private var chatMode = false
     @Namespace private var ns
 
-    private static let barBg  = Color(uiColor: .secondarySystemBackground)   // blanc en clair, sombre en dark
-    private static let selBg  = Color(uiColor: .systemGray5)
+    private static let barBg   = Color(uiColor: .secondarySystemBackground)
+    private static let selBg   = Color(uiColor: .systemGray5)
     private static let fieldBg = Color(uiColor: .tertiarySystemFill)
-    private static let barInset: CGFloat = 10   // gauche = droite = bas, identiques
+    private static let barInset: CGFloat = 10
 
     private let leftTabs:  [AppTab] = [.home, .wakeup]
     private let rightTabs: [AppTab] = [.categories, .profile]
 
     var body: some View {
         HStack(spacing: 6) {
-
-            // Onglets gauche — masqués quand clavier ouvert
-            if !chatMode {
-                HStack(spacing: 0) {
-                    ForEach(leftTabs) { t in tabBtn(t) }
-                }
-                .transition(.move(edge: .leading).combined(with: .opacity))
+            HStack(spacing: 0) {
+                ForEach(leftTabs) { t in tabBtn(t) }
             }
 
-            // Chat au centre — tap = ouvrir assistant IA plein écran
             Button {
                 Haptics.tap()
                 onOpenAssistant()
@@ -271,15 +128,9 @@ struct FloatingTabBar: View {
             }
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity)
-            .animation(.spring(duration: 0.28), value: chatMode)
-            .animation(.spring(duration: 0.22), value: chatInput.isEmpty)
 
-            // Onglets droite — masqués quand clavier ouvert
-            if !chatMode {
-                HStack(spacing: 0) {
-                    ForEach(rightTabs) { t in tabBtn(t) }
-                }
-                .transition(.move(edge: .trailing).combined(with: .opacity))
+            HStack(spacing: 0) {
+                ForEach(rightTabs) { t in tabBtn(t) }
             }
         }
         .frame(height: 60)
@@ -291,13 +142,11 @@ struct FloatingTabBar: View {
         .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 6)
         .padding(.horizontal, Self.barInset)
         .padding(.bottom, Self.barInset)
-        .animation(.spring(duration: 0.32, bounce: 0.2), value: chatMode)
     }
 
     private func tabBtn(_ t: AppTab) -> some View {
         Button {
             withAnimation(.spring(duration: 0.28, bounce: 0.35)) { selected = t }
-            inputFocused = false
             if t == .profile { Haptics.medium() } else { Haptics.tap() }
         } label: {
             ZStack {
