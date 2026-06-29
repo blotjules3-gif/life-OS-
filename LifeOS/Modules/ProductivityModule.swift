@@ -65,10 +65,30 @@ struct TodoView: View {
                                 Spacer()
                             }
                             .listRowBackground(Theme.card)
+                            .contextMenu {
+                                Button {
+                                    addToCalendar(t)
+                                } label: {
+                                    Label("Ajouter au calendrier", systemImage: "calendar.badge.plus")
+                                }
+                                Button(role: .destructive) {
+                                    ctx.delete(t)
+                                } label: {
+                                    Label("Supprimer", systemImage: "trash")
+                                }
+                            }
                         }
                         .onDelete { idx in idx.map { visible[$0] }.forEach(ctx.delete) }
                     }
                     .scrollContentBackground(.hidden)
+                    .alert("Calendrier", isPresented: .init(
+                        get: { calendarAlert != nil },
+                        set: { if !$0 { calendarAlert = nil } }
+                    )) {
+                        Button("OK") { calendarAlert = nil }
+                    } message: {
+                        Text(calendarAlert ?? "")
+                    }
                 }
             }
         }
