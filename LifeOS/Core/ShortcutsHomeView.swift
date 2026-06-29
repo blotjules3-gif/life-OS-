@@ -111,6 +111,16 @@ struct ShortcutsHomeView: View {
     @Query(sort: \MoodEntry.date, order: .reverse) private var moods: [MoodEntry]
     @Environment(\.modelContext) private var ctx
 
+    init() {
+        let todayStart   = Calendar.current.startOfDay(for: Date())
+        let tomorrowStart = Calendar.current.date(byAdding: .day, value: 1, to: todayStart)!
+        let fourteenDaysAgo = Calendar.current.date(byAdding: .day, value: -14, to: Date())!
+        _foods  = Query(filter: #Predicate<FoodEntry>  { $0.date >= todayStart && $0.date < tomorrowStart })
+        _waters = Query(filter: #Predicate<WaterEntry> { $0.date >= todayStart && $0.date < tomorrowStart })
+        _moods  = Query(filter: #Predicate<MoodEntry>  { $0.date >= fourteenDaysAgo },
+                        sort: \MoodEntry.date, order: .reverse)
+    }
+
     @State private var steps = 0
     @State private var editingMood = false
     @State private var animatedHabitIDs: Set<PersistentIdentifier> = []
