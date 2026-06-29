@@ -14,6 +14,7 @@ enum HabitDefaults {
         "career":       ("Avancer sur mes objectifs",    "briefcase.fill",            0xE07B3C),
         "invest":       ("Suivre mon portefeuille",      "chart.line.uptrend.xyaxis", 0x46C9A8),
         "home":         ("Tache maison du jour",         "house.fill",                0x6CA0F1),
+        "medical":      ("Prendre mes medicaments",      "pills.fill",                0xE84C4C),
     ]
 
     /// Returns the icon name and colorHex for a given module key.
