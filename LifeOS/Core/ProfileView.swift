@@ -52,6 +52,7 @@ struct ProfileView: View {
     @State private var profileSection = 0
     @State private var showOnboardingReset = false
     @State private var showServerConfig = false
+    @State private var checkinToast: String? = nil
     @ObservedObject private var serverStatus = ServerStatusMonitor.shared
     @Namespace private var pickerNS
 
