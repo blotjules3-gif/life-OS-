@@ -482,7 +482,7 @@ private let fitnessTools: [CategoryTool] = [
 ]
 
 private let looksTools: [CategoryTool] = [
-    .init("face.dashed", "Analyse faciale", "Symétrie, harmony — Umax", tint: .looksTint) { FaceAnalysisScaffold() },
+    .init("face.dashed", "Analyse faciale", "Symétrie, tiers, ratios — Vision", tint: .looksTint) { FaceAnalysisView() },
     .init("sparkles", "Routine skincare", "Matin/soir + rappels", tint: .looksTint) { SkincareView() },
     .init("camera.fill", "Photos avant / après", "Suivi visuel daté", tint: .looksTint) { ProgressPhotoGalleryView() },
     .init("mouth.fill", "Mewing & posture", "Rappels + minuteur", tint: .looksTint) { MewingPostureView() },

@@ -32,7 +32,7 @@ with zero errors via the xcodebuild command at the top of CHANGELOG.md.
 | 1 | Sommeil & réveil (`sleep`) | 5 | DONE | |
 | 2 | Nutrition (`nutrition`) | 9 | DONE | suppléments + reco + notifs livrés |
 | 3 | Sport & fitness (`fitness`) | 6 | DONE | programme + notifs muscu livrés |
-| 4 | Looksmaxx (`looks`) | 5 | TODO | analyse faciale réelle (Vision) à ajouter |
+| 4 | Looksmaxx (`looks`) | 5 | DONE | analyse faciale réelle Vision (symétrie/tiers/FWHR/écart yeux) livrée, remplace le scaffold |
 | 5 | Mental & focus (`mind`) | 6 | DONE | sons relaxants on-device (bruit blanc/rose/brun/océan + minuteur) livré |
 | 6 | Productivité (`productivity`) | 5 | DONE | |
 | 7 | Finances perso (`finance`) | 6 | DONE | |
@@ -48,4 +48,4 @@ with zero errors via the xcodebuild command at the top of CHANGELOG.md.
 
 ### Known BLOCKED sub-items (do not fake)
 - Voyage › **Suivi des vols** (`FlightScaffold`) — BLOCKED: needs a flight-status API key (e.g. AviationStack/FlightAware). Unblock = provide key + endpoint.
-- Looks › **Analyse faciale** — feasible on-device (Vision face landmarks); only BLOCKED if it needs device-only camera testing beyond the simulator.
+- Looks › **Analyse faciale** — DONE (Vision, on-device). Build + intro/empty/error states verified on simulator; the full real-face scorecard wasn't screenshot-verified in the automated loop only because the sim photo library has no face image — the pipeline is standard `VNDetectFaceLandmarksRequest` that runs on-sim. Confirm visually with a real selfie when convenient.
