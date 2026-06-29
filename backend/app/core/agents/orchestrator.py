@@ -58,7 +58,7 @@ class AgentOrchestrator:
 
         Returns AgentResult containing the final text reply and metadata.
         """
-        system_prompt = build_system_prompt(module_type, module_config, user_name, user_gender)
+        system_prompt = build_system_prompt(module_type, module_config, user_name, user_gender, user_context)
         tools = get_tools_for_module(module_type)
 
         messages: list[dict[str, Any]] = [
