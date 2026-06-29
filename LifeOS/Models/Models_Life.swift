@@ -102,24 +102,6 @@ import SwiftUI
         self.isPinned = isPinned
     }
 
-    var categoryIcon: String {
-        switch category {
-        case "objectif":    return "target"
-        case "préférence":  return "heart.fill"
-        case "habitude":    return "arrow.clockwise"
-        case "santé":       return "cross.fill"
-        default:            return "brain"
-        }
-    }
-    var categoryColor: Color {
-        switch category {
-        case "objectif":    return Color(hex: 0x00D4B4)
-        case "préférence":  return Color(hex: 0xF1746C)
-        case "habitude":    return Color(hex: 0x9B6CF1)
-        case "santé":       return Color(hex: 0x4CC38A)
-        default:            return Color(hex: 0x3CB2E0)
-        }
-    }
 }
 
 // MARK: - Finances
