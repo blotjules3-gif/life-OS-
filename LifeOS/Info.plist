@@ -51,6 +51,8 @@
 	<string>LifeOS utilise ta position pour le suivi running GPS et le partage de localisation.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>LifeOS enregistre ton journal de reves vocal.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>LifeOS importe tes contacts pour alimenter ton CRM personnel et ne rater aucun anniversaire.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>LifeOS importe tes photos pour la garde-robe et le suivi looksmaxx.</string>
 	<key>NSSupportsLiveActivities</key>
