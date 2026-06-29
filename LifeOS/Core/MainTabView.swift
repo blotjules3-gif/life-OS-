@@ -263,7 +263,10 @@ struct HomeDashboardContent: View {
             .navigationTitle(greeting)
             .task {
                 if await HealthService.shared.requestAuthorization() {
-                    steps = await HealthService.shared.cachedStepsToday()
+                    async let s = HealthService.shared.cachedStepsToday()
+                    async let w = HealthService.shared.workoutsThisWeek()
+                    steps = await s
+                    weekWorkouts = await w
                 }
             }
     }
