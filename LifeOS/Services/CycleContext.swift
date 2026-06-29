@@ -74,13 +74,17 @@ final class CycleContext: ObservableObject {
     var suggestedCalorieOffset: Int { currentPhase.calorieOffset }
     var keyNutrients: [String] { currentPhase.keyNutrients }
 
-    private let lastPeriodKey   = "cycleLastPeriodDate"
-    private let cycleLengthKey  = "cycleAvgLength"
+    // Clés alignées avec CycleTrackerView (@AppStorage)
+    private let startTSKey     = "cycleStartDate"    // Double timestamp
+    private let cycleLengthKey = "cycleLengthDays"   // Int
 
     var lastPeriodDate: Date? {
-        get { UserDefaults.standard.object(forKey: lastPeriodKey) as? Date }
+        get {
+            let ts = UserDefaults.standard.double(forKey: startTSKey)
+            return ts > 0 ? Date(timeIntervalSince1970: ts) : nil
+        }
         set {
-            UserDefaults.standard.set(newValue, forKey: lastPeriodKey)
+            UserDefaults.standard.set(newValue?.timeIntervalSince1970 ?? 0, forKey: startTSKey)
             refresh()
         }
     }
