@@ -120,12 +120,23 @@ struct FloatingTabBar: View {
 
             Button {
                 Haptics.tap()
+                serverStatus.pingNow()
                 onOpenAssistant()
             } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Color.accentColor)
+                    ZStack(alignment: .topTrailing) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color.accentColor)
+                        if serverStatus.isOnline != nil {
+                            Circle()
+                                .fill(serverStatus.dotColor)
+                                .frame(width: 6, height: 6)
+                                .overlay(Circle().stroke(Self.fieldBg, lineWidth: 1.5))
+                                .offset(x: 5, y: -4)
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                    }
                     Text("Ton assistant…")
                         .font(.system(size: 14))
                         .foregroundStyle(Color(uiColor: .placeholderText))
@@ -137,6 +148,7 @@ struct FloatingTabBar: View {
             }
             .buttonStyle(.plain)
             .frame(maxWidth: .infinity)
+            .animation(.easeInOut(duration: 0.3), value: serverStatus.isOnline)
 
             HStack(spacing: 0) {
                 ForEach(rightTabs) { t in tabBtn(t) }
