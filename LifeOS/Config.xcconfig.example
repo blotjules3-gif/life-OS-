@@ -1,0 +1,10 @@
+// Config.xcconfig.example
+// Copier ce fichier en Config.xcconfig et remplir les valeurs réelles.
+// Config.xcconfig est dans .gitignore — ne jamais le commiter.
+//
+// SETUP XCODE :
+//   1. Project → Info → Configurations → Debug & Release → choisir "Config"
+//   2. Clean Build (Cmd+Shift+K) puis rebuilder
+
+API_BASE_URL = http://192.168.1.7:8000
+API_KEY = your-api-key-here
