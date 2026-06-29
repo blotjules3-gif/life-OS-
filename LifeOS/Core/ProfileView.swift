@@ -352,6 +352,20 @@ struct ProfileView: View {
                 }
             }
             .navigationDestination(for: AppCategory.self) { $0.destination }
+            .overlay(alignment: .bottom) {
+                if let msg = checkinToast {
+                    Text(msg)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(.ultraThinMaterial.opacity(0), in: Capsule())
+                        .background(Color.secondary.opacity(0.85), in: Capsule())
+                        .padding(.bottom, 24)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .animation(.spring(duration: 0.3), value: msg)
+                }
+            }
         }
     }
 
