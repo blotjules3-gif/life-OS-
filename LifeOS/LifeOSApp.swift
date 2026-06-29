@@ -166,10 +166,14 @@ struct LifeOSApp: App {
     private func buildContainer() async {
         let schema = Self.schema
         let result = await Task.detached(priority: .userInitiated) {
-            Result { try ModelContainer(
-                for: schema,
-                configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)]
-            )}
+            Result { () throws -> ModelContainer in
+                let cloudConfig = ModelConfiguration(
+                    schema: schema,
+                    isStoredInMemoryOnly: false,
+                    cloudKitDatabase: .private("iCloud.com.blotjules.lifeos")
+                )
+                return try ModelContainer(for: schema, configurations: [cloudConfig])
+            }
         }.value
 
         switch result {
@@ -177,12 +181,24 @@ struct LifeOSApp: App {
             migrationFailed = false
             container = mc
         case .failure:
-            migrationFailed = true
-            // Conteneur mémoire temporaire pour que l'app reste navigable
-            container = try? ModelContainer(
-                for: schema,
-                configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
-            )
+            // CloudKit non disponible (pas de compte iCloud, ou container non créé) → local uniquement
+            let localResult = await Task.detached(priority: .userInitiated) {
+                Result { try ModelContainer(
+                    for: schema,
+                    configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)]
+                )}
+            }.value
+            switch localResult {
+            case .success(let mc):
+                migrationFailed = false
+                container = mc
+            case .failure:
+                migrationFailed = true
+                container = try? ModelContainer(
+                    for: schema,
+                    configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
+                )
+            }
         }
     }
 }
