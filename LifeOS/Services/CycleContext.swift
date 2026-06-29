@@ -120,6 +120,8 @@ final class CycleContext: ObservableObject {
 
         isOvulationWindow = (14...16).contains(day)
         isPMSWindow = day >= (len - 7)
+
+        NotificationManager.shared.scheduleCycleNotifications(lastPeriodDate: last, cycleDays: len)
     }
 }
 
