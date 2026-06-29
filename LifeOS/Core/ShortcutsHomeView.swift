@@ -233,6 +233,53 @@ struct ShortcutsHomeView: View {
         }
     }
 
+    // MARK: Section 0 — Raccourcis personnalisés
+
+    private let shortcutCols = [
+        GridItem(.flexible(), spacing: 10),
+        GridItem(.flexible(), spacing: 10),
+        GridItem(.flexible(), spacing: 10),
+        GridItem(.flexible(), spacing: 10),
+    ]
+
+    private var shortcutsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("Raccourcis")
+            LazyVGrid(columns: shortcutCols, spacing: 10) {
+                ForEach(activeShortcuts) { tool in
+                    if tool.isFullScreen {
+                        Button { fullScreenTool = tool } label: { shortcutTile(tool) }
+                            .buttonStyle(.plain)
+                    } else {
+                        NavigationLink(destination: tool.destination) {
+                            shortcutTile(tool)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    private func shortcutTile(_ tool: ShortcutTool) -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: tool.icon)
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(tool.tint)
+                .frame(width: 44, height: 44)
+                .background(tool.tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            Text(tool.label)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+    }
+
     // MARK: Section 1 — Habitudes
 
     private var habitsSection: some View {
