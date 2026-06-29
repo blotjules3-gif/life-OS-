@@ -1,0 +1,805 @@
+{
+  "sourceLanguage" : "fr",
+  "strings" : {
+
+    "Sommeil & réveil" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sleep & wake" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sueño & despertar" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schlaf & Aufwachen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Sono & despertar" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sonno & sveglia" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "النوم والاستيقاظ" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "睡眠与唤醒" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "睡眠と起床" } }
+      }
+    },
+
+    "Nutrition" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nutrition" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Nutrición" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Ernährung" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Nutrição" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nutrizione" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "التغذية" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "营养" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "栄養" } }
+      }
+    },
+
+    "Sport & fitness" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sport & fitness" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Deporte & fitness" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sport & Fitness" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Desporto & fitness" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sport & fitness" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الرياضة واللياقة" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "运动与健身" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "スポーツ＆フィットネス" } }
+      }
+    },
+
+    "Looksmaxx" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Looksmaxx" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Apariencia" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aussehen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Aparência" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aspetto" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "المظهر" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "外观提升" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "外見" } }
+      }
+    },
+
+    "Mental & focus" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mental & focus" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Mental & concentración" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mental & Fokus" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Mental & foco" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mente & concentrazione" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "العقل والتركيز" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "心理与专注" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "メンタル＆集中" } }
+      }
+    },
+
+    "Productivité" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Productivity" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Productividad" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Produktivität" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Produtividade" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Produttività" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الإنتاجية" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "生产力" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "生産性" } }
+      }
+    },
+
+    "Finances perso" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Personal finance" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Finanzas personales" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Persönliche Finanzen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Finanças pessoais" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Finanze personali" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "المالية الشخصية" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "个人财务" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "個人財務" } }
+      }
+    },
+
+    "Investissement" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Investment" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Inversión" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Investment" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Investimento" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Investimento" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الاستثمار" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "投资" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "投資" } }
+      }
+    },
+
+    "Carrière" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Career" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Carrera" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Karriere" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Carreira" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Carriera" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "المهنة" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "职业" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャリア" } }
+      }
+    },
+
+    "Apprentissage" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Learning" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Aprendizaje" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lernen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Aprendizagem" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Apprendimento" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "التعلم" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "学习" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "学習" } }
+      }
+    },
+
+    "Maison & quotidien" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Home & daily life" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Hogar & vida diaria" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zuhause & Alltag" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Casa & vida diária" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Casa & vita quotidiana" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "المنزل والحياة اليومية" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "家庭与日常" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "家庭と日常" } }
+      }
+    },
+
+    "Mobilité" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mobility" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Movilidad" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mobilität" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Mobilidade" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mobilità" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "التنقل" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "出行" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "モビリティ" } }
+      }
+    },
+
+    "Social & relations" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Social & relationships" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Social & relaciones" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Soziales & Beziehungen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Social & relações" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sociale & relazioni" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الحياة الاجتماعية" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "社交与人际" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ソーシャル＆人間関係" } }
+      }
+    },
+
+    "Admin & paperasse" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Admin & paperwork" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Administración" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verwaltung" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Administração" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Burocrazia" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الإدارة والأوراق" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "行政事务" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "管理と書類" } }
+      }
+    },
+
+    "Voyage" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Travel" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Viajes" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Reisen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Viagem" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Viaggi" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "السفر" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "旅行" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "旅行" } }
+      }
+    },
+
+    "Cycle menstruel" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Menstrual cycle" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ciclo menstrual" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Menstruationszyklus" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Ciclo menstrual" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ciclo mestruale" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الدورة الشهرية" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "月经周期" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "月経周期" } }
+      }
+    },
+
+    "Santé médicale" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Medical health" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Salud médica" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Medizinische Gesundheit" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Saúde médica" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Salute medica" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الصحة الطبية" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "医疗健康" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "医療健康" } }
+      }
+    },
+
+    "Annuler" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cancelar" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Abbrechen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Cancelar" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Annulla" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "إلغاء" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "キャンセル" } }
+      }
+    },
+
+    "Ajouter" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Añadir" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Hinzufügen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Adicionar" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "إضافة" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "追加" } }
+      }
+    },
+
+    "Supprimer" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eliminar" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Löschen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Excluir" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Elimina" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "حذف" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "削除" } }
+      }
+    },
+
+    "Modifier" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Edit" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Editar" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bearbeiten" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Editar" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Modifica" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "تعديل" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "编辑" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "編集" } }
+      }
+    },
+
+    "Fermer" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Close" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cerrar" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schließen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Fechar" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Chiudi" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "إغلاق" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "关闭" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "閉じる" } }
+      }
+    },
+
+    "Enregistrer" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Guardar" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Speichern" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Salvar" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Salva" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "حفظ" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "保存" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "保存" } }
+      }
+    },
+
+    "Réveil" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wake up" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Despertar" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wecker" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Despertar" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sveglia" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "المنبه" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "闹钟" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "起床" } }
+      }
+    },
+
+    "Accueil" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Home" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Inicio" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Startseite" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Início" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Home" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الرئيسية" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "主页" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "ホーム" } }
+      }
+    },
+
+    "Catégories" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Categories" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Categorías" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kategorien" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Categorias" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Categorie" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الفئات" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "分类" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "カテゴリ" } }
+      }
+    },
+
+    "Profil" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Profile" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Perfil" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Profil" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Perfil" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Profilo" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الملف الشخصي" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "个人资料" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "プロフィール" } }
+      }
+    },
+
+    "Bienvenue sur LifeOS" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Welcome to LifeOS" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Bienvenido a LifeOS" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Willkommen bei LifeOS" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Bem-vindo ao LifeOS" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Benvenuto su LifeOS" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "مرحباً بك في LifeOS" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "欢迎使用 LifeOS" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "LifeOSへようこそ" } }
+      }
+    },
+
+    "Ton système personnel pour tout\norganiser et progresser chaque jour." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your personal system to\norganize everything and grow every day." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tu sistema personal para\norganizarlo todo y progresar cada día." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dein persönliches System, um\nalles zu organisieren und täglich voranzukommen." } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Seu sistema pessoal para\norganizar tudo e progredir a cada dia." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il tuo sistema personale per\norganizzare tutto e crescere ogni giorno." } }
+      }
+    },
+
+    "Comment tu t'appelles ?" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "What's your name?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Cómo te llamas?" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wie heißt du?" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Como te chamas?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Come ti chiami?" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "ما اسمك؟" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "你叫什么名字？" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "お名前は？" } }
+      }
+    },
+
+    "Tu es…" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "You are…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eres…" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Du bist…" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Você é…" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sei…" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "أنت…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "你是…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "あなたは…" } }
+      }
+    },
+
+    "Qu'est-ce qui t'intéresse ?" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "What are you interested in?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Qué te interesa?" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Was interessiert dich?" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "O que te interessa?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cosa ti interessa?" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "ما الذي يهمك؟" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "你对什么感兴趣？" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "何に興味がありますか？" } }
+      }
+    },
+
+    "Quels sont tes objectifs ?" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "What are your goals?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "¿Cuáles son tus objetivos?" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Was sind deine Ziele?" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Quais são os seus objetivos?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Quali sono i tuoi obiettivi?" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "ما هي أهدافك؟" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "你的目标是什么？" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "目標は何ですか？" } }
+      }
+    },
+
+    "Lancer ma journée" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Start my day" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Comenzar mi día" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Meinen Tag starten" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Começar meu dia" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Inizia la mia giornata" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "ابدأ يومي" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "开始我的一天" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "今日を始める" } }
+      }
+    },
+
+    "Assistant IA" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "AI Assistant" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Asistente IA" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "KI-Assistent" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Assistente IA" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Assistente IA" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "المساعد الذكي" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "AI 助手" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "AIアシスタント" } }
+      }
+    },
+
+    "Ton assistant…" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your assistant…" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tu asistente…" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dein Assistent…" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Seu assistente…" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il tuo assistente…" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "مساعدك…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "你的助手…" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "あなたのアシスタント…" } }
+      }
+    },
+
+    "Objectifs du jour" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Today's goals" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Objetivos del día" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Heutige Ziele" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Metas do dia" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Obiettivi del giorno" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "أهداف اليوم" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "今日目标" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "今日の目標" } }
+      }
+    },
+
+    "Habitudes — 7 derniers jours" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Habits — last 7 days" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Hábitos — últimos 7 días" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gewohnheiten — letzte 7 Tage" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Hábitos — últimos 7 dias" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Abitudini — ultimi 7 giorni" } }
+      }
+    },
+
+    "Humeur" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mood" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Estado de ánimo" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Stimmung" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Humor" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Umore" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "المزاج" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "心情" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "気分" } }
+      }
+    },
+
+    "Briefing vocal + priorités" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Voice briefing + priorities" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Briefing de voz + prioridades" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sprach-Briefing + Prioritäten" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Briefing de voz + prioridades" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Briefing vocale + priorità" } }
+      }
+    },
+
+    "Bilan de semaine" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weekly review" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Resumen semanal" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wochenrückblick" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Revisão semanal" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Revisione settimanale" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "مراجعة الأسبوع" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "每周回顾" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "週次レビュー" } }
+      }
+    },
+
+    "Analyse IA" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "AI analysis" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Análisis IA" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "KI-Analyse" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Análise IA" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Analisi IA" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "تحليل الذكاء الاصطناعي" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "AI 分析" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "AI分析" } }
+      }
+    },
+
+    "Médicaments" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Medications" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Medicamentos" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Medikamente" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Medicamentos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Farmaci" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "الأدوية" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "药物" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "薬" } }
+      }
+    },
+
+    "Rendez-vous" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Appointments" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Citas" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Termine" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Consultas" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Appuntamenti" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "المواعيد" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "预约" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "予約" } }
+      }
+    },
+
+    "Carnet de santé" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Health journal" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Libreta de salud" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gesundheitsheft" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Caderno de saúde" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Diario della salute" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "دفتر الصحة" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "健康手册" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "健康手帳" } }
+      }
+    },
+
+    "Vaccinations" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Vaccinations" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Vacunaciones" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Impfungen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Vacinações" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Vaccinazioni" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "التطعيمات" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "疫苗接种" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "予防接種" } }
+      }
+    },
+
+    "Ton profil de vie" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Your life profile" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tu perfil de vida" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Dein Lebensprofil" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Seu perfil de vida" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Il tuo profilo di vita" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "ملف حياتك" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "你的生活档案" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "あなたのライフプロフィール" } }
+      }
+    },
+
+    "Refaire l'onboarding" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Redo onboarding" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Rehacer la configuración" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Einrichtung wiederholen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Refazer a configuração" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ripeti l'onboarding" } }
+      }
+    },
+
+    "Compris" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Got it" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Entendido" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verstanden" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Entendido" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Capito" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "فهمت" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "明白了" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "わかった" } }
+      }
+    },
+
+    "Pas maintenant" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not now" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ahora no" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht jetzt" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Agora não" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non ora" } },
+        "ar" : { "stringUnit" : { "state" : "translated", "value" : "ليس الآن" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "暂不" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "後で" } }
+      }
+    },
+
+    "Connexion requise pour générer l'analyse." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Connection required to generate the analysis." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Se requiere conexión para generar el análisis." } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verbindung erforderlich, um die Analyse zu erstellen." } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Conexão necessária para gerar a análise." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Connessione necessaria per generare l'analisi." } }
+      }
+    },
+
+    "Cycles, réveil malin, sieste" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cycles, smart alarm, nap" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ciclos, alarma inteligente, siesta" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zyklen, Smart-Alarm, Nickerchen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Ciclos, alarme inteligente, soneca" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cicli, sveglia intelligente, pisolino" } }
+      }
+    },
+
+    "Calories, jeûne, courses" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Calories, fasting, groceries" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Calorías, ayuno, compras" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Kalorien, Fasten, Einkauf" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Calorias, jejum, compras" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Calorie, digiuno, spesa" } }
+      }
+    },
+
+    "Pas, muscu, HIIT, streaks" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Steps, weights, HIIT, streaks" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Pasos, musculación, HIIT, rachas" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Schritte, Kraft, HIIT, Serien" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Passos, musculação, HIIT, sequências" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Passi, pesi, HIIT, serie" } }
+      }
+    },
+
+    "To-do, habitudes, notes" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "To-do, habits, notes" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tareas, hábitos, notas" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aufgaben, Gewohnheiten, Notizen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Tarefas, hábitos, notas" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "To-do, abitudini, note" } }
+      }
+    },
+
+    "Budget, abonnements, split" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Budget, subscriptions, split" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Presupuesto, suscripciones, división" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Budget, Abos, Aufteilen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Orçamento, assinaturas, divisão" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Budget, abbonamenti, divisione" } }
+      }
+    },
+
+    "Portefeuille, FIRE, immo" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Portfolio, FIRE, real estate" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cartera, FIRE, inmobiliaria" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Portfolio, FIRE, Immobilien" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Portfólio, FIRE, imóveis" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Portafoglio, FIRE, immobili" } }
+      }
+    },
+
+    "Candidatures, CV, entretien" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Applications, CV, interview" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Candidaturas, CV, entrevista" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bewerbungen, Lebenslauf, Interview" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Candidaturas, CV, entrevista" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Candidature, CV, colloquio" } }
+      }
+    },
+
+    "Flashcards, skills, résumés" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Flashcards, skills, summaries" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Flashcards, habilidades, resúmenes" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lernkarten, Skills, Zusammenfassungen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Flashcards, habilidades, resumos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Flashcard, competenze, riassunti" } }
+      }
+    },
+
+    "Anti-gaspi, animaux, tâches" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Zero waste, pets, chores" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Anti-desperdicio, mascotas, tareas" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lebensmittelretter, Haustiere, Aufgaben" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Anti-desperdício, animais, tarefas" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Anti-spreco, animali, compiti" } }
+      }
+    },
+
+    "Trajets, voiture, carburant" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Commutes, car, fuel" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Trayectos, coche, combustible" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wege, Auto, Kraftstoff" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Trajetos, carro, combustível" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tragitti, auto, carburante" } }
+      }
+    },
+
+    "CRM, anniversaires, events" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "CRM, birthdays, events" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "CRM, cumpleaños, eventos" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "CRM, Geburtstage, Events" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "CRM, aniversários, eventos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "CRM, compleanni, eventi" } }
+      }
+    },
+
+    "Coffre-fort, échéances" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Safe, deadlines" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Caja fuerte, vencimientos" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Tresor, Fristen" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Cofre, prazos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cassaforte, scadenze" } }
+      }
+    },
+
+    "Itinéraire, valise, vols" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Itinerary, luggage, flights" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Itinerario, maleta, vuelos" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Reiseplan, Koffer, Flüge" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Itinerário, mala, voos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Itinerario, valigia, voli" } }
+      }
+    },
+
+    "Règles, ovulation, symptômes" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Period, ovulation, symptoms" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Reglas, ovulación, síntomas" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Periode, Eisprung, Symptome" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Menstruação, ovulação, sintomas" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ciclo, ovulazione, sintomi" } }
+      }
+    },
+
+    "Médicaments, RDV, carnets" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Medications, appointments, records" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Medicamentos, citas, libretas" } },
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Medikamente, Termine, Hefte" } },
+        "pt" : { "stringUnit" : { "state" : "translated", "value" : "Medicamentos, consultas, cadernos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Farmaci, appuntamenti, diari" } }
+      }
+    }
+
+  },
+  "version" : "1.0"
+}
