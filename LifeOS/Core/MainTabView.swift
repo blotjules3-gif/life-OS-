@@ -101,6 +101,7 @@ struct FloatingTabBar: View {
     @Binding var selected: AppTab
     var onOpenAssistant: () -> Void = {}
 
+    @ObservedObject private var serverStatus = ServerStatusMonitor.shared
     @Namespace private var ns
 
     private static let barBg   = Color(uiColor: .secondarySystemBackground)
