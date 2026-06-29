@@ -288,7 +288,7 @@ struct ProfileView: View {
             }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(neoBackground, for: .navigationBar)
+            .scrollContentBackground(.hidden)
             .onAppear { appeared = true }
             .task {
                 if await HealthService.shared.requestAuthorization() {
