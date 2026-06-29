@@ -16,6 +16,12 @@ enum HabitDefaults {
         "home":         ("Tache maison du jour",         "house.fill",                0x6CA0F1),
     ]
 
+    /// Returns the icon name and colorHex for a given module key.
+    static func iconAndColor(for module: String) -> (icon: String, colorHex: Int) {
+        guard let d = catalog[module] else { return ("checkmark.circle", 0x4CC38A) }
+        return (d.icon, d.colorHex)
+    }
+
     /// Inserts a pending habit for each module that doesn't already have one.
     static func insertPendingHabits(for modules: [String], into context: ModelContext) {
         guard !modules.isEmpty else { return }
