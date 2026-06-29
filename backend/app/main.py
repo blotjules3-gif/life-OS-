@@ -28,6 +28,7 @@ def _register_all_tools() -> None:
         handle_ask_clarification,
         handle_check_in_challenge,
         handle_create_goal,
+        handle_create_habit,
         handle_create_life_challenge,
         handle_create_todo,
         handle_delete_goal,
