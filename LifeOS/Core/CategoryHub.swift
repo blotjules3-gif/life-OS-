@@ -482,6 +482,13 @@ extension AppCategory {
     }
 }
 
+private let medicalTools: [CategoryTool] = [
+    .init("pills.fill",         "Médicaments",     "Traitements en cours et rappels",  tint: .init(hex: 0xE84C4C)) { MedicalHubView() },
+    .init("stethoscope",        "Rendez-vous",     "Agenda médical et suivi",          tint: .init(hex: 0xE84C4C)) { AppointmentsView() },
+    .init("waveform.path.ecg",  "Carnet de santé", "Poids, tension, glycémie…",        tint: .init(hex: 0xE84C4C)) { VitalsView() },
+    .init("syringe.fill",       "Vaccinations",    "Historique et rappels",            tint: .init(hex: 0xE84C4C)) { VaccinationView() },
+]
+
 private let cycleTools: [CategoryTool] = [
     .init("calendar.badge.clock", "Suivi du cycle", "Règles · durée · prédiction", tint: .cycleTint) { CycleTrackerView() },
     .init("waveform.path.ecg", "Symptômes", "Crampes, humeur, énergie, peau", tint: .cycleTint) { CycleSymptomsView() },
