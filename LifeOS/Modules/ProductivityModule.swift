@@ -220,6 +220,7 @@ struct HabitTrackerView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \Habit.createdAt) private var allHabits: [Habit]
     @State private var showAdd = false
+    @AppStorage("habitModulesRaw") private var habitModulesRaw = ""
 
     private var pendingHabits: [Habit] { allHabits.filter { $0.isPending } }
     private var activeHabits: [Habit] { allHabits.filter { !$0.isPending } }
