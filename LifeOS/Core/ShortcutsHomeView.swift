@@ -523,11 +523,14 @@ struct ShortcutsHomeView: View {
     // MARK: Humeur — compact, en haut, disparaît après vote
     private var moodSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Comment tu te sens ?")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.secondary)
-                .kerning(0.5)
-                .padding(.horizontal, 4)
+            HStack {
+                Text("Comment tu te sens ?")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .kerning(0.5)
+                moodHistoryDots
+            }
+            .padding(.horizontal, 4)
             if let m = todayMood, !editingMood {
                 HStack(spacing: 12) {
                     Text(moodEmoji(m.score)).font(.system(size: 28))
