@@ -92,6 +92,8 @@ struct ChallengeCard: View {
                 }
                 .buttonStyle(LifeOSPressStyle())
                 .disabled(challenge.checkedInToday)
+                .accessibilityLabel(challenge.checkedInToday ? "Défi validé aujourd'hui" : "Valider le défi")
+                .accessibilityHint(challenge.checkedInToday ? "" : "Double-tapez pour marquer comme accompli")
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
