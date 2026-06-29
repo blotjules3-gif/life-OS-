@@ -554,6 +554,7 @@ struct ProfileView: View {
         case .admin:        return "Une démarche réglée = une charge mentale en moins."
         case .travel:       return "Prépare bien pour profiter encore mieux."
         case .cycle:        return "Écoute ton corps — chaque phase a ses besoins."
+        case .medical:      return "Prends soin de ta santé — médicaments, RDV, constantes."
         }
     }
 
