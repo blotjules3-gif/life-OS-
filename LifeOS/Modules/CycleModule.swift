@@ -321,6 +321,7 @@ struct CycleTrackerView: View {
                 .presentationDetents([.medium])
             }
             .onAppear {
+                loadTodayEntry()
                 pickedDate = cycleStartDateTS > 0 ? Date(timeIntervalSince1970: cycleStartDateTS) : Date()
             }
             .overlay {
