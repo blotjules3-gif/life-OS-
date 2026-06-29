@@ -560,6 +560,7 @@ struct AIAssistantView: View {
         ScrollViewReader { proxy in
             ScrollView(showsIndicators: false) {
                 LazyVStack(spacing: 0) {
+                    Color.clear.frame(height: 1).onTapGesture { inputFocused = false }
                     // Avatar header
                     aiHeader
                         .padding(.bottom, 20)
