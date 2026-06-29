@@ -201,6 +201,8 @@ final class AIAssistantViewModel: ObservableObject {
                 removeThinking()
                 if let apiErr = error as? AgentAPIError, case .networkError = apiErr {
                     isServerOffline = true
+                } else if let apiErr = error as? AgentAPIError, case .invalidResponse(404) = apiErr {
+                    conversationID = ""
                 }
             }
             isLoading = false
