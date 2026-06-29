@@ -51,8 +51,18 @@ struct CRMView: View {
             }
         }
         .navigationTitle("CRM personnel").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Button { showAdd = true } label: { Label("Nouveau contact", systemImage: "plus") }
+                    Button { showImport = true } label: { Label("Importer depuis Contacts", systemImage: "person.crop.circle.badge.plus") }
+                } label: { Image(systemName: "plus") }
+            }
+        }
         .sheet(isPresented: $showAdd) { ContactEditor() }
+        .sheet(isPresented: $showImport) { ContactImportSheet(existingNames: Set(contacts.map(\.name))) { imported in
+            for c in imported { ctx.insert(c) }
+        }}
     }
     private func contactRow(_ c: Contact, highlight: Bool) -> some View {
         HStack {
