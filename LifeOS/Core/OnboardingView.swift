@@ -215,6 +215,7 @@ struct OnboardingView: View {
                                 if !finalModules.isEmpty {
                                     homeShortcuts = buildShortcuts(from: finalModules)
                                 }
+                                applyGenderDefaults(gender: savedGender)
                                 createPendingHabits()
                                 NotificationManager.shared.scheduleAfter(
                                     id: "lifeos.ai.welcome",
