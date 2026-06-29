@@ -292,7 +292,6 @@ struct CycleTrackerView: View {
             }
             .background(Theme.bg)
             .navigationTitle("Suivi du cycle")
-            .onAppear { loadTodayEntry() }
             .sheet(isPresented: $showDatePicker) {
                 NavigationStack {
                     VStack(spacing: 24) {
