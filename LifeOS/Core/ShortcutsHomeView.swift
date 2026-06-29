@@ -1048,7 +1048,6 @@ struct WeeklyBilanView: View {
     }
 
     private func loadAIBilan() async {
-        guard isPremium else { return }
         // Use cache if generated today
         let today = Calendar.current.startOfDay(for: .now).timeIntervalSince1970
         if cachedBilanDate >= today && !cachedBilan.isEmpty {
