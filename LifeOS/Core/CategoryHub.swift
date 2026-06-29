@@ -557,7 +557,6 @@ private let financeTools: [CategoryTool] = [
 ]
 
 private let investTools: [CategoryTool] = [
-    .init("bitcoinsign.circle.fill", "Crypto", "Marché, risque et potentiel en temps réel", tint: .investTint, fullScreen: true) { CryptoAppView() },
     .init("chart.pie.fill", "Portefeuille", "Actions + crypto en un dashboard", tint: .investTint) { PortfolioView() },
     .init("chart.line.uptrend.xyaxis", "Net worth & FIRE", "Patrimoine + projection", tint: .investTint) { NetWorthView() },
     .init("house.fill", "Immobilier", "Biens, loyers, cashflow", tint: .investTint) { RealEstateView() },
