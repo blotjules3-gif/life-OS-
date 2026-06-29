@@ -462,7 +462,10 @@ struct SupplementsView: View {
             }
             Spacer()
             if streak > 0 {
-                Text("🔥 \(streak)").font(.caption.weight(.bold)).foregroundStyle(.orange)
+                HStack(spacing: 3) {
+                    Image(systemName: "flame.fill").font(.caption).foregroundStyle(.orange)
+                    Text("\(streak)").font(.caption.weight(.bold)).foregroundStyle(.orange)
+                }
             }
             Toggle("", isOn: Binding(get: { s.active }, set: { s.active = $0; reschedule(s) }))
                 .labelsHidden().tint(.nutriTint)
