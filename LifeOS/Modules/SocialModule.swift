@@ -291,9 +291,10 @@ struct ContactImportSheet: View {
 
     private func fetchContacts() async {
         let store = CNContactStore()
-        do {
-            try await store.requestAccess(for: .contacts)
-        } catch {
+        let granted = await withCheckedContinuation { cont in
+            store.requestAccess(for: .contacts) { ok, _ in cont.resume(returning: ok) }
+        }
+        guard granted else {
             await MainActor.run { denied = true; loading = false }
             return
         }
@@ -302,10 +303,13 @@ struct ContactImportSheet: View {
             CNContactFamilyNameKey as CNKeyDescriptor,
             CNContactBirthdayKey as CNKeyDescriptor,
         ]
+        let request = CNContactFetchRequest(keysToFetch: keys)
         do {
-            let fetched = try store.unifiedContacts(matching: CNContact.predicateForContactsInContainer(withIdentifier: store.defaultContainerIdentifier()), keysToFetch: keys)
+            var fetched: [CNContact] = []
+            try store.enumerateContacts(with: request) { c, _ in fetched.append(c) }
             await MainActor.run {
-                phoneContacts = fetched.filter { !($0.givenName + $0.familyName).trimmingCharacters(in: .whitespaces).isEmpty }
+                phoneContacts = fetched
+                    .filter { !($0.givenName + $0.familyName).trimmingCharacters(in: .whitespaces).isEmpty }
                     .sorted { ($0.familyName + $0.givenName) < ($1.familyName + $1.givenName) }
                 loading = false
             }
