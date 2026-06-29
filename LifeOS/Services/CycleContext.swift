@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import UserNotifications
 
 enum CyclePhase: String {
     case menstrual   // jours 1–5
