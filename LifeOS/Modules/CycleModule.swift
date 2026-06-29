@@ -56,7 +56,7 @@ struct CycleTrackerView: View {
     @AppStorage("cycleLengthDays") private var cycleLengthDays = 28
 
     private let flows = ["Aucun", "Léger", "Moyen", "Abondant"]
-    private let flowColors: [Color] = [.secondary, Color(hex: 0xF9C0D8), Color(hex: 0xE85D9A), Color(hex: 0xB5136A)]
+    private let flowColors: [Color] = [.secondary, Color(hex: UInt(0xF9C0D8)), Color(hex: UInt(0xE85D9A)), Color(hex: UInt(0xB5136A))]
     private let symptomsAll = ["Crampes", "Maux de tête", "Ballonnements", "Fatigue", "Acné", "Seins sensibles", "Nausées", "Dos douloureux"]
     private let moods = ["", "Triste", "Irritable", "Neutre", "Bien", "Super"]
 
