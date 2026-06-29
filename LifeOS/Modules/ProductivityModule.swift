@@ -290,6 +290,14 @@ struct HabitTrackerView: View {
         }
         let defaults = UserDefaults(suiteName: "group.lifeos.app") ?? .standard
         defaults.set(try? JSONSerialization.data(withJSONObject: entries), forKey: "widget_habits")
+
+        // Snapshot pour l'IA
+        let doneCount = entries.filter { $0["done"] as? Bool == true }.count
+        defaults.set(doneCount, forKey: "habits_done_today")
+        defaults.set(entries.count, forKey: "habits_total_today")
+        let avgStreak = activeHabits.isEmpty ? 0 : activeHabits.map { $0.completions.count }.reduce(0, +) / max(1, activeHabits.count)
+        defaults.set(avgStreak, forKey: "habits_avg_streak")
+
         WidgetCenter.shared.reloadTimelines(ofKind: "HabitsWidget")
     }
 }
