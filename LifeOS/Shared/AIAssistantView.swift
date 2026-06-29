@@ -346,7 +346,7 @@ final class AIAssistantViewModel: ObservableObject {
             if let title = action.title {
                 let todo = TodoItem(title: title, priority: action.priority ?? 1)
                 ctx.insert(todo)
-                try? ctx.save()
+                do { try ctx.save() } catch { print("[SwiftData] createTodo failed: \(error)") }
             }
         case .scheduleReminder:
             if let body = action.reminderBody {
