@@ -59,6 +59,14 @@ struct MainTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenAIChat)) { _ in
             showAIAssistant = true
         }
+        .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenModule)) { notif in
+            if let module = notif.userInfo?["module"] as? String,
+               let cat = AppCategory(rawValue: module) {
+                showAIAssistant = false
+                tab = .categories
+                catPath = [cat]
+            }
+        }
     }
 
     @ViewBuilder private var content: some View {
