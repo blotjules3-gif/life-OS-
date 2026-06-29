@@ -18,6 +18,20 @@ final class HealthService {
 
     private init() {}
 
+    // MARK: - Step cache (TTL 5 min — évite les requêtes HealthKit répétées)
+
+    private var cachedSteps: Int = 0
+    private var cachedStepsDate: Date = .distantPast
+
+    /// Returns cached step count if fresh (< 5 min), otherwise re-queries HealthKit.
+    func cachedStepsToday() async -> Int {
+        if Date().timeIntervalSince(cachedStepsDate) < 300 { return cachedSteps }
+        let fresh = await stepsToday()
+        cachedSteps = fresh
+        cachedStepsDate = .now
+        return fresh
+    }
+
     private var readTypes: Set<HKObjectType> {
         var set = Set<HKObjectType>()
         if let steps = HKObjectType.quantityType(forIdentifier: .stepCount) { set.insert(steps) }
