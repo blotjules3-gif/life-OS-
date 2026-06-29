@@ -144,6 +144,76 @@ struct ShortcutsHomeView: View {
     private var fastHours: Double { fasts.first(where: { $0.isActive }).map { $0.elapsed / 3600 } ?? 0 }
     private var todayMood: MoodEntry? { moods.first { Calendar.current.isDateInToday($0.date) } }
 
+    private var isMorningEmpty: Bool {
+        let hour = Calendar.current.component(.hour, from: Date())
+        return hour < 10 && kcalToday == 0 && waterToday == 0 && steps < 200 && habitsDone == 0
+    }
+
+    private var morningModuleChips: [(icon: String, label: String, color: Color)] {
+        let active = Set(recommendedModulesRaw.split(separator: ",").map(String.init))
+        var chips: [(String, String, Color)] = []
+        if active.contains("nutrition") { chips.append(("flame.fill", "Calories", Color(hex: 0xF1746C))) }
+        if active.contains("fitness")   { chips.append(("figure.run", "Activité", Color(hex: 0x4CC38A))) }
+        if active.contains("sleep")     { chips.append(("moon.stars.fill", "Sommeil", Color(hex: 0x6C7BF1))) }
+        if active.contains("mind")      { chips.append(("brain.head.profile", "Focus", Color(hex: 0x9B6CF1))) }
+        if chips.isEmpty {
+            chips = [("sun.horizon.fill", "Journée", Color(hex: 0xFF9F0A)),
+                     ("figure.run", "Activité", Color(hex: 0x4CC38A)),
+                     ("drop.fill", "Hydratation", Color(hex: 0x3CB2E0))]
+        }
+        return Array(chips.prefix(4))
+    }
+
+    private var morningContextCard: some View {
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: "sun.horizon.fill")
+                .font(.system(size: 28, weight: .semibold))
+                .foregroundStyle(Color(hex: 0xFF9F0A))
+                .frame(width: 44, height: 44)
+                .background(Color(hex: 0xFF9F0A).opacity(0.12),
+                             in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Ta journée commence")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.primary)
+                Text("Voilà ce qui t'attend aujourd'hui.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+
+                HStack(spacing: 8) {
+                    ForEach(morningModuleChips, id: \.label) { chip in
+                        HStack(spacing: 5) {
+                            Image(systemName: chip.icon)
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(chip.color)
+                            Text(chip.label)
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 5)
+                        .background(chip.color.opacity(0.10),
+                                     in: Capsule())
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(
+                colors: [Color(hex: 0xFF9F0A).opacity(0.07), Color(hex: 0xFF9F0A).opacity(0.02)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            ),
+            in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+                .stroke(Color(hex: 0xFF9F0A).opacity(0.15), lineWidth: 1)
+        )
+    }
+
     // MARK: données hebdo
     private var activeHabits: [Habit] { habits.filter { !$0.isPending } }
     private var weekDays: [Date] {
