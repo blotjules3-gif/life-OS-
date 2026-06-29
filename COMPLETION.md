@@ -33,7 +33,7 @@ with zero errors via the xcodebuild command at the top of CHANGELOG.md.
 | 2 | Nutrition (`nutrition`) | 9 | DONE | suppléments + reco + notifs livrés |
 | 3 | Sport & fitness (`fitness`) | 6 | DONE | programme + notifs muscu livrés |
 | 4 | Looksmaxx (`looks`) | 5 | TODO | analyse faciale réelle (Vision) à ajouter |
-| 5 | Mental & focus (`mind`) | 5 | TODO | sons relaxants / ASMR on-device à ajouter |
+| 5 | Mental & focus (`mind`) | 6 | DONE | sons relaxants on-device (bruit blanc/rose/brun/océan + minuteur) livré |
 | 6 | Productivité (`productivity`) | 5 | DONE | |
 | 7 | Finances perso (`finance`) | 6 | DONE | |
 | 8 | Investissement (`invest`) | 5 | DONE | |

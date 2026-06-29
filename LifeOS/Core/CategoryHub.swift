@@ -492,6 +492,7 @@ private let looksTools: [CategoryTool] = [
 private let mindTools: [CategoryTool] = [
     .init("wind", "Respiration & cohérence", "Box breathing, 365…", tint: .mindTint) { BreathingView() },
     .init("leaf.fill", "Méditation", "Minuteur silencieux guidé", tint: .mindTint) { MeditationView() },
+    .init("water.waves", "Sons relaxants", "Bruit blanc/rose/brun + minuteur", tint: .mindTint) { SoundscapeView() },
     .init("face.smiling.inverse", "Humeur & gratitude", "Journal quotidien", tint: .mindTint) { MoodJournalView() },
     .init("hourglass", "Détox écran", "Usage & objectifs", tint: .mindTint) { ScreenDetoxView() },
     .init("sun.horizon.fill", "Briefing du matin", "Motivation + ta journée", tint: .mindTint) { MorningBriefingView() },

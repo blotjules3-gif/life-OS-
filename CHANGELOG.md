@@ -18,3 +18,4 @@ If the simulator UDID is ever invalid, substitute `name=iPhone 17` for `id=...`.
 [2026-06-29] | scaffolding | created COMPLETION.md, CHANGELOG.md, resume_loop.sh; confirmed scheme=LifeOS and build command | builds yes
 [2026-06-29] | Home › Raccourcis | rendered pinned ShortcutTool grid (was modeled but never shown) + ShortcutPickerSheet editor; empty-state + nav wired; verified on simulator | builds yes
 [2026-06-29] | Home › Humeur | reviewed moodSection — filled/empty states + SwiftData persistence complete; marked DONE | builds yes
+[2026-06-29] | Mental › Sons relaxants | new on-device noise generator (AVAudioEngine + AVAudioSourceNode, procedural white/pink/brown/ocean, no assets) + sleep timer + volume; error/active states; added to mindTools; verified on simulator | builds yes
