@@ -699,8 +699,7 @@ struct ProfileView: View {
             }
         }
         .padding(5)
-        .background(neoBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     // MARK: - Challenges helpers
