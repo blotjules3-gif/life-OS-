@@ -398,6 +398,38 @@ struct BubbleCategoriesView: View {
             }
         }
 
+        // PASSE FINALE — séparation pure (sans ressort). Garantit l'espace mini même
+        // entre bulles ancrées qui ont grossi : le non-chevauchement gagne TOUJOURS.
+        // Les voisines sont repoussées vers l'extérieur jusqu'à dégager le `gap`.
+        for _ in 0..<260 {
+            var maxOverlap: CGFloat = 0
+            for i in 0..<n {
+                for j in (i + 1)..<n {
+                    let dx = cx[j] - cx[i], dy = cy[j] - cy[i]
+                    var dist = (dx * dx + dy * dy).squareRoot()
+                    if dist < 0.0001 { dist = 0.0001 }
+                    let minDist = dias[i] * 0.5 + dias[j] * 0.5 + gap
+                    let overlap = minDist - dist
+                    if overlap > 0 {
+                        maxOverlap = max(maxOverlap, overlap)
+                        // séparation symétrique le long de l'axe ; si superposées
+                        // parfaitement, on écarte sur un axe déterministe.
+                        let ux = dist > 0.001 ? dx / dist : (rnd(i + j, 7) - 0.5)
+                        let uy = dist > 0.001 ? dy / dist : (rnd(i + j, 8) - 0.5)
+                        let push = overlap * 0.5
+                        cx[i] -= ux * push; cy[i] -= uy * push
+                        cx[j] += ux * push; cy[j] += uy * push
+                    }
+                }
+            }
+            for i in 0..<n {
+                let r = dias[i] * 0.5
+                cx[i] = min(max(cx[i], minX + r), maxX - r)
+                cy[i] = min(max(cy[i], minY + r), maxY - r)
+            }
+            if maxOverlap < 0.5 { break }   // convergé : plus aucun chevauchement
+        }
+
         var result: [UUID: (CGPoint, CGFloat)] = [:]
         for i in 0..<n { result[items[i].id] = (CGPoint(x: cx[i], y: cy[i]), dias[i]) }
         return result
