@@ -837,7 +837,7 @@ private struct MessageRow: View {
 
 // MARK: - Server Config Sheet
 
-private struct ServerConfigView: View {
+struct ServerConfigView: View {
     let onSave: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var urlText = Configuration.apiBaseURL
