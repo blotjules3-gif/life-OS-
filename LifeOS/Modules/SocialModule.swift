@@ -215,3 +215,102 @@ struct EventEditor: View {
         }
     }
 }
+
+// MARK: - Import Contacts
+
+struct ContactImportSheet: View {
+    let existingNames: Set<String>
+    let onImport: ([Contact]) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var phoneContacts: [CNContact] = []
+    @State private var selected: Set<String> = []
+    @State private var loading = true
+    @State private var denied = false
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if loading {
+                    ProgressView("Chargement des contacts…").frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if denied {
+                    ContentUnavailableView("Accès refusé", systemImage: "person.crop.circle.badge.xmark",
+                        description: Text("Autorise l'accès aux Contacts dans Réglages > LifeOS."))
+                } else if phoneContacts.isEmpty {
+                    ContentUnavailableView("Aucun contact", systemImage: "person.2", description: Text("Ton carnet d'adresses est vide."))
+                } else {
+                    List(phoneContacts, id: \.identifier) { c in
+                        let name = [c.givenName, c.familyName].filter { !$0.isEmpty }.joined(separator: " ")
+                        let already = existingNames.contains(name)
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(name.isEmpty ? "(Sans nom)" : name).font(.subheadline.weight(.semibold))
+                                if let bday = c.birthday?.date {
+                                    Text(bday, format: .dateTime.day().month(.wide)).font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                            Spacer()
+                            if already {
+                                Text("Déjà importé").font(.caption2).foregroundStyle(.secondary)
+                            } else if selected.contains(c.identifier) {
+                                Image(systemName: "checkmark.circle.fill").foregroundStyle(.socialTint)
+                            } else {
+                                Image(systemName: "circle").foregroundStyle(.secondary)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            guard !already else { return }
+                            if selected.contains(c.identifier) { selected.remove(c.identifier) }
+                            else { selected.insert(c.identifier) }
+                        }
+                        .foregroundStyle(already ? .secondary : .primary)
+                    }
+                }
+            }
+            .navigationTitle("Importer des contacts")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Importer (\(selected.count))") {
+                        let toImport = phoneContacts.filter { selected.contains($0.identifier) }.map { c -> Contact in
+                            let name = [c.givenName, c.familyName].filter { !$0.isEmpty }.joined(separator: " ")
+                            let bday = c.birthday?.date
+                            return Contact(name: name.isEmpty ? "(Sans nom)" : name, cadenceDays: 30, birthday: bday, giftIdeas: "", notes: "")
+                        }
+                        onImport(toImport)
+                        dismiss()
+                    }
+                    .disabled(selected.isEmpty)
+                }
+            }
+        }
+        .task { await fetchContacts() }
+    }
+
+    private func fetchContacts() async {
+        let store = CNContactStore()
+        do {
+            try await store.requestAccess(for: .contacts)
+        } catch {
+            await MainActor.run { denied = true; loading = false }
+            return
+        }
+        let keys: [CNKeyDescriptor] = [
+            CNContactGivenNameKey as CNKeyDescriptor,
+            CNContactFamilyNameKey as CNKeyDescriptor,
+            CNContactBirthdayKey as CNKeyDescriptor,
+        ]
+        do {
+            let fetched = try store.unifiedContacts(matching: CNContact.predicateForContactsInContainer(withIdentifier: store.defaultContainerIdentifier()), keysToFetch: keys)
+            await MainActor.run {
+                phoneContacts = fetched.filter { !($0.givenName + $0.familyName).trimmingCharacters(in: .whitespaces).isEmpty }
+                    .sorted { ($0.familyName + $0.givenName) < ($1.familyName + $1.givenName) }
+                loading = false
+            }
+        } catch {
+            await MainActor.run { loading = false }
+        }
+    }
+}
