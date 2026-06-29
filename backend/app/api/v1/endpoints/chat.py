@@ -42,10 +42,7 @@ async def chat(
         )
         conversation = result.scalar_one_or_none()
         if not conversation:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Conversation {body.conversation_id} not found for this user.",
-            )
+            log.warning("conversation_not_found_creating_new", conversation_id=str(body.conversation_id))
 
     if not conversation:
         conversation = Conversation(
