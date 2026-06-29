@@ -119,37 +119,54 @@ struct FloatingTabBar: View {
                 ForEach(leftTabs) { t in tabBtn(t) }
             }
 
-            Button {
-                Haptics.tap()
-                serverStatus.pingNow()
-                onOpenAssistant()
-            } label: {
-                HStack(spacing: 8) {
-                    ZStack(alignment: .topTrailing) {
+            ZStack(alignment: .topLeading) {
+                Button {
+                    Haptics.tap()
+                    serverStatus.pingNow()
+                    onOpenAssistant()
+                } label: {
+                    HStack(spacing: 8) {
                         Image(systemName: "sparkles")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(Color.accentColor)
-                        if serverStatus.isOnline != nil {
+                        Text("Ton assistant…")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color(uiColor: .placeholderText))
+                        Spacer()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Self.fieldBg, in: Capsule())
+                }
+                .buttonStyle(.plain)
+
+                if serverStatus.isOnline != nil {
+                    Button {
+                        Haptics.tap()
+                        showServerConfig = true
+                    } label: {
+                        ZStack {
+                            Color.clear.frame(width: 22, height: 22)
                             Circle()
                                 .fill(serverStatus.dotColor)
                                 .frame(width: 6, height: 6)
                                 .overlay(Circle().stroke(Self.fieldBg, lineWidth: 1.5))
-                                .offset(x: 5, y: -4)
-                                .transition(.scale.combined(with: .opacity))
                         }
                     }
-                    Text("Ton assistant…")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color(uiColor: .placeholderText))
-                    Spacer()
+                    .buttonStyle(.plain)
+                    .offset(x: 20, y: 0)
+                    .transition(.scale.combined(with: .opacity))
+                    .allowsHitTesting(serverStatus.isOnline == false)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Self.fieldBg, in: Capsule())
             }
-            .buttonStyle(.plain)
             .frame(maxWidth: .infinity)
             .animation(.easeInOut(duration: 0.3), value: serverStatus.isOnline)
+            .sheet(isPresented: $showServerConfig) {
+                ServerConfigView {
+                    showServerConfig = false
+                    serverStatus.pingNow()
+                }
+            }
 
             HStack(spacing: 0) {
                 ForEach(rightTabs) { t in tabBtn(t) }
