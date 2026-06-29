@@ -705,26 +705,44 @@ struct AIAssistantView: View {
     }
 
     private var offlineBanner: some View {
-        HStack(spacing: 8) {
-            Circle()
-                .fill(Color.orange)
-                .frame(width: 6, height: 6)
-            Text("Serveur inaccessible")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.primary)
-            Spacer()
-            Button {
-                vm.isServerOffline = false
-                vm.send(text: vm.inputText.isEmpty ? nil : vm.inputText)
-            } label: {
-                Text("Reessayer")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(accent)
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(Color.orange)
+                    .frame(width: 6, height: 6)
+                Text("Serveur inaccessible")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.primary)
+                Spacer()
+                Button {
+                    showServerConfig = true
+                } label: {
+                    Text("Configurer")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    vm.isServerOffline = false
+                    vm.send(text: vm.inputText.isEmpty ? nil : vm.inputText)
+                } label: {
+                    Text("Reessayer")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(accent)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 9)
+
+            Text("URL actuelle : \(Configuration.apiBaseURL)")
+                .font(.system(size: 10))
+                .foregroundStyle(.tertiary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 7)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 9)
         .background(Color.orange.opacity(0.1))
     }
 
