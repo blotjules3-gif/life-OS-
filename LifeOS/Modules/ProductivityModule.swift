@@ -391,6 +391,7 @@ struct HabitRow: View {
             habit.completions.removeAll { $0 === c }; ctx.delete(c)
         } else { habit.completions.append(HabitCompletion(date: day)) }
         Haptics.tap()
+        WidgetCenter.shared.reloadTimelines(ofKind: "HabitsWidget")
     }
     private func shortDay(_ d: Date) -> String { let f = DateFormatter(); f.locale = Locale(identifier:"fr_FR"); f.dateFormat = "EE"; return String(f.string(from: d).prefix(1)).uppercased() }
 }
