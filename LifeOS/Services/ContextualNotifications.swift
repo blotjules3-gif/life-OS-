@@ -87,14 +87,6 @@ final class ContextualNotifications {
 
     // MARK: - Helpers
 
-    func cancelAll() {
-        let center = UNUserNotificationCenter.current()
-        center.getPendingNotificationRequests { requests in
-            let ids = requests.filter { $0.identifier.hasPrefix(self.prefix) }.map { $0.identifier }
-            center.removePendingNotificationRequests(withIdentifiers: ids)
-        }
-    }
-
     private func activeModules() -> Set<String> {
         let raw = UserDefaults.standard.string(forKey: "recommendedModules") ?? ""
         return Set(raw.split(separator: ",").map(String.init))
