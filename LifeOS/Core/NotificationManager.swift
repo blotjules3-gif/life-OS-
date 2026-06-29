@@ -130,6 +130,21 @@ final class NotificationManager {
         UNUserNotificationCenter.current().add(request)
     }
 
+    /// Rappel annuel récurrent (anniversaires) — se déclenche chaque année au mois/jour donné.
+    func scheduleYearly(id: String, title: String, body: String,
+                        month: Int, day: Int, hour: Int, minute: Int) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        var comps = DateComponents()
+        comps.month = month; comps.day = day
+        comps.hour = hour; comps.minute = minute
+        let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
+        let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request)
+    }
+
     /// Rappel après un intervalle (ex: fin de sieste, fenêtre de sommeil léger).
     func scheduleAfter(id: String, title: String, body: String, seconds: TimeInterval) {
         let content = UNMutableNotificationContent()

@@ -41,7 +41,7 @@ with zero errors via the xcodebuild command at the top of CHANGELOG.md.
 | 10 | Apprentissage (`learning`) | 5 | DONE | langues (Leitner) livré |
 | 11 | Maison & quotidien (`home`) | 5 | DONE | |
 | 12 | Mobilité (`mobility`) | 3 | DONE | scaffolds remplacés : Trajets & CO₂ (local) + Où ai-je garé (CoreLocation) ; Ma voiture déjà complet |
-| 13 | Social & relations (`social`) | 3 | TODO | catégorie maigre, à enrichir |
+| 13 | Social & relations (`social`) | 3 | DONE | CRM/Anniversaires/Events déjà complets ; ajout des rappels d'anniversaire annuels (la promesse « Rappels » du tool était non tenue) |
 | 14 | Admin & paperasse (`admin`) | 4 | DONE | scan OCR on-device livré |
 | 15 | Voyage (`travel`) | 4 | DONE | convertisseur + phrases livrés |
 | 16 | Cycle menstruel (`cycle`) | 3 | DONE | |
