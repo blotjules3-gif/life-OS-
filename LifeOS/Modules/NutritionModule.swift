@@ -109,6 +109,7 @@ struct MacroLogView: View {
     @AppStorage("kcalGoal") private var kcalGoal = 2200
     @AppStorage("proteinGoal") private var proteinGoal = 150
     @State private var showAdd = false
+    @State private var showSearch = false
 
     private var today: [FoodEntry] {
         all.filter { Calendar.current.isDateInToday($0.date) }
