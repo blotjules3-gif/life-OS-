@@ -185,7 +185,7 @@ struct ShortcutsHomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     HStack(alignment: .bottom) {
-                        Text(userName.isEmpty ? greeting : "\(greeting), \(userName)")
+                        Text(userName.isEmpty ? greeting : "\(greeting), \(userName.prefix(1).uppercased() + userName.dropFirst())")
                             .font(.largeTitle.bold())
                         Spacer()
                         if todayEnergyScore > 0 {
