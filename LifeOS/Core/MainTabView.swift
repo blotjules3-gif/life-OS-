@@ -101,11 +101,13 @@ struct MainTabView: View {
 
 private struct HabitWidgetSyncer: View {
     @Query(sort: \Habit.createdAt) private var allHabits: [Habit]
+    @Query(sort: \HabitCompletion.date) private var completions: [HabitCompletion]
 
     var body: some View {
         Color.clear.frame(width: 0, height: 0)
             .task { sync() }
             .onChange(of: allHabits.count) { _, _ in sync() }
+            .onChange(of: completions.count) { _, _ in sync() }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in sync() }
     }
 
