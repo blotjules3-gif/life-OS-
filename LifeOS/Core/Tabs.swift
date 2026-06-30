@@ -23,8 +23,6 @@ struct CameraView: View {
         }
     }
 }
-<<<<<<< HEAD
-=======
 
 
 // MARK: - Réveil (onglet dédié)
