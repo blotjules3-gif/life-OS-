@@ -124,20 +124,13 @@ struct ShortcutsHomeView: View {
 
     @State private var steps = 0
     @State private var editingMood = false
-<<<<<<< HEAD
     @State private var animatedHabitIDs: Set<PersistentIdentifier> = []
     @State private var moodDismissed = false
     @State private var showBilan = false
     @State private var fullScreenTool: ShortcutTool? = nil
     @AppStorage("tutorialDone") private var tutorialDone = false
     @State private var showTutorial = false
-=======
     @State private var editingShortcuts = false
-
-    private var enabledShortcuts: [ShortcutTool] {
-        enabledRaw.split(separator: ",").compactMap { ShortcutTool(rawValue: String($0)) }
-    }
->>>>>>> origin/pote
 
     private let cols = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
 
