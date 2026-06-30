@@ -213,7 +213,7 @@ actor AgentAPI {
             apns_token: await currentAPNsToken(),
             user_context: userContext
         )
-        return try await post(path: "/api/v1/chat", body: body)
+        return try await post(path: "/api/v1/chat", body: body, session: chatSession)
     }
 
     // MARK: - Module Config
