@@ -113,7 +113,9 @@ final class AIAssistantViewModel: ObservableObject {
         }
 
         static func thinking() -> DisplayMessage {
-            DisplayMessage(id: UUID(), role: "assistant", text: "…", date: .now, actions: [])
+            var msg = DisplayMessage(id: UUID(), role: "assistant", text: "…", date: .now, actions: [])
+            msg.isThinking = true
+            return msg
         }
 
         private init(id: UUID, role: String, text: String, date: Date, actions: [AIAction]) {
