@@ -918,7 +918,6 @@ struct ShortcutsHomeView: View {
     }
 }
 
-<<<<<<< HEAD
 // MARK: - Bilan de semaine
 
 struct WeeklyBilanView: View {
