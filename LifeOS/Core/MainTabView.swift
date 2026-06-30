@@ -118,6 +118,7 @@ private struct HabitWidgetSyncer: View {
         }
         guard let defaults = UserDefaults(suiteName: "group.lifeos.app") else { return }
         defaults.set(try? JSONSerialization.data(withJSONObject: entries), forKey: "widget_habits")
+        defaults.set(Date(), forKey: "widget_habits_sync_date")
         defaults.set(entries.filter { $0["done"] as? Bool == true }.count, forKey: "habits_done_today")
         defaults.set(entries.count, forKey: "habits_total_today")
         WidgetCenter.shared.reloadTimelines(ofKind: "HabitsWidget")
