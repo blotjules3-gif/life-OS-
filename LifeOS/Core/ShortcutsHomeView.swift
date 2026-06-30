@@ -1293,6 +1293,5 @@ private struct ShortcutPickerSheet: View {
         else { list.append(tool.rawValue) }
         enabledRaw = list.joined(separator: ",")
         Haptics.soft()
->>>>>>> origin/pote
     }
 }
