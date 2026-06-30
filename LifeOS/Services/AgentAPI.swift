@@ -180,6 +180,7 @@ actor AgentAPI {
     static let shared = AgentAPI()
 
     private let session: URLSession
+    private let chatSession: URLSession
     private var deviceID: String {
         UIDevice.current.identifierForVendor?.uuidString ?? "unknown"
     }
@@ -189,6 +190,11 @@ actor AgentAPI {
         config.timeoutIntervalForRequest = AgentAPIConfig.timeoutInterval
         config.timeoutIntervalForResource = AgentAPIConfig.timeoutInterval
         session = URLSession(configuration: config)
+
+        let chatConfig = URLSessionConfiguration.default
+        chatConfig.timeoutIntervalForRequest = Configuration.chatTimeoutInterval
+        chatConfig.timeoutIntervalForResource = Configuration.chatTimeoutInterval
+        chatSession = URLSession(configuration: chatConfig)
     }
 
     // MARK: - Chat
