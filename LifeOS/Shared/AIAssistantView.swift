@@ -239,7 +239,15 @@ final class AIAssistantViewModel: ObservableObject {
                 removeThinking()
                 if let apiErr = error as? AgentAPIError {
                     switch apiErr {
-                    case .networkError: isServerOffline = true
+                    case .networkError(let underlying):
+                        let urlErr = underlying as? URLError
+                        if urlErr?.code == .timedOut {
+                            errorBanner = "L'IA met trop de temps à répondre. Réessaie."
+                        } else if urlErr?.code == .notConnectedToInternet || urlErr?.code == .networkConnectionLost {
+                            isServerOffline = true
+                        } else {
+                            errorBanner = "Erreur réseau. Réessaie dans un instant."
+                        }
                     case .invalidResponse(404): conversationID = ""
                     default: errorBanner = apiErr.errorDescription
                     }
