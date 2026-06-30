@@ -291,6 +291,6 @@ struct HabitsWidget: Widget {
         }
         .configurationDisplayName("Habitudes")
         .description("Tes habitudes du jour et ta progression.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular])
     }
 }
