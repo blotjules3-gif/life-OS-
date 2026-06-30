@@ -366,47 +366,82 @@ struct PendingHabitRow: View {
 struct HabitRow: View {
     @Environment(\.modelContext) private var ctx
     let habit: Habit
-    private var last7: [Date] { (0..<7).map { Calendar.current.date(byAdding: .day, value: -$0, to: Calendar.current.startOfDay(for: .now))! }.reversed() }
-    private func done(_ day: Date) -> Bool { habit.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: day) } }
+    var onEdit: () -> Void
+
+    private var doneToday: Bool {
+        habit.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: .now) }
+    }
     private var streak: Int {
-        var c = 0; var day = Calendar.current.startOfDay(for: .now)
-        if !done(day) { day = Calendar.current.date(byAdding: .day, value: -1, to: day)! }
-        while done(day) { c += 1; day = Calendar.current.date(byAdding: .day, value: -1, to: day)! }
+        var c = 0
+        var day = Calendar.current.startOfDay(for: .now)
+        if !doneToday { day = Calendar.current.date(byAdding: .day, value: -1, to: day)! }
+        while habit.completions.contains(where: { Calendar.current.isDate($0.date, inSameDayAs: day) }) {
+            c += 1; day = Calendar.current.date(byAdding: .day, value: -1, to: day)!
+        }
         return c
     }
+    private var timeLabel: String { String(format: "%02d:%02d", habit.scheduledHour, habit.scheduledMinute) }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: habit.icon).foregroundStyle(Color(hex: UInt(habit.colorHex)))
-                Text(habit.name).font(.headline).foregroundStyle(Theme.textPrimary)
-                Spacer()
-                Label("\(streak)", systemImage: "flame.fill").font(.caption.bold()).foregroundStyle(.orange)
-                Button(role: .destructive) { ctx.delete(habit) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(.red.opacity(0.6))
+        HStack(spacing: 14) {
+            Button { toggleToday() } label: {
+                Image(systemName: doneToday ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(doneToday ? Color(hex: UInt(habit.colorHex)) : Color.secondary.opacity(0.35))
+                    .animation(.spring(duration: 0.2), value: doneToday)
             }
-            HStack(spacing: 8) {
-                ForEach(last7, id: \.self) { day in
-                    let isDone = done(day)
-                    Button { toggle(day) } label: {
-                        VStack(spacing: 4) {
-                            Text(shortDay(day)).font(.caption2).foregroundStyle(Theme.textSecondary)
-                            RoundedRectangle(cornerRadius: 7)
-                                .fill(isDone ? Color(hex: UInt(habit.colorHex)) : Theme.bg2)
-                                .frame(height: 34)
-                                .overlay(isDone ? Image(systemName: "checkmark").font(.caption.bold()).foregroundStyle(.white) : nil)
-                        }
-                    }.frame(maxWidth: .infinity)
+            .buttonStyle(.plain)
+
+            Image(systemName: habit.icon)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Color(hex: UInt(habit.colorHex)))
+                .frame(width: 36, height: 36)
+                .background(Color(hex: UInt(habit.colorHex)).opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(habit.name)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                Text(timeLabel)
+                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            if streak > 0 {
+                HStack(spacing: 3) {
+                    Image(systemName: "flame.fill").font(.system(size: 11)).foregroundStyle(.orange)
+                    Text("\(streak)").font(.system(size: 12, weight: .bold)).foregroundStyle(.orange)
                 }
             }
-        }.card()
+
+            Button { onEdit() } label: {
+                Image(systemName: "pencil")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 36, height: 36)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .contextMenu {
+            Button(role: .destructive) { ctx.delete(habit) } label: { Label("Supprimer", systemImage: "trash") }
+        }
     }
-    private func toggle(_ day: Date) {
-        if let c = habit.completions.first(where: { Calendar.current.isDate($0.date, inSameDayAs: day) }) {
-            habit.completions.removeAll { $0 === c }; ctx.delete(c)
-        } else { habit.completions.append(HabitCompletion(date: day)) }
+
+    private func toggleToday() {
+        if let c = habit.completions.first(where: { Calendar.current.isDate($0.date, inSameDayAs: .now) }) {
+            habit.completions.removeAll { $0 === c }
+            ctx.delete(c)
+        } else {
+            habit.completions.append(HabitCompletion())
+        }
         Haptics.tap()
         WidgetCenter.shared.reloadTimelines(ofKind: "HabitsWidget")
     }
-    private func shortDay(_ d: Date) -> String { let f = DateFormatter(); f.locale = Locale(identifier:"fr_FR"); f.dateFormat = "EE"; return String(f.string(from: d).prefix(1)).uppercased() }
 }
 
 struct HabitEditor: View {
