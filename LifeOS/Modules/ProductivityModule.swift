@@ -288,7 +288,7 @@ struct HabitTrackerView: View {
             let done = h.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: today) }
             return ["name": h.name, "icon": h.icon, "colorHex": h.colorHex, "done": done, "module": h.moduleTag]
         }
-        let defaults = UserDefaults(suiteName: "group.lifeos.app") ?? .standard
+        guard let defaults = UserDefaults(suiteName: "group.lifeos.app") else { return }
         defaults.set(try? JSONSerialization.data(withJSONObject: entries), forKey: "widget_habits")
 
         // Snapshot pour l'IA
