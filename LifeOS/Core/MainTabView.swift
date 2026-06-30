@@ -72,6 +72,7 @@ struct MainTabView: View {
 
     @ViewBuilder private var content: some View {
         ZStack {
+            HabitWidgetSyncer()
             ThemedBubbleBackground(theme: theme)
                 .ignoresSafeArea()
             ShortcutsHomeView()
