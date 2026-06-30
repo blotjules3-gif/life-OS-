@@ -1177,6 +1177,7 @@ struct ProfileView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
                         profileHeader
+                        ProfileCompletionCard()
                         topModuleIsland
                         nightIsland
                         sectionPicker

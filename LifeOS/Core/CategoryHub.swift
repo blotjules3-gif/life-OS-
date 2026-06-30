@@ -86,6 +86,7 @@ struct CategoryHubView: View {
     @AppStorage("appTheme")   private var appThemeRaw = "classic"
     @AppStorage("bubbleSize") private var bubbleSizeRaw = "medium"
     @State private var cover: CategoryTool?
+    @State private var showSetup = false
 
     private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .organic }
     private var theme: AppTheme   { AppTheme(rawValue: appThemeRaw) ?? .classic }
@@ -98,6 +99,28 @@ struct CategoryHubView: View {
             .navigationTitle(category.title)
             .navigationBarTitleDisplayMode(layout == .list ? .large : .inline)
             .fullScreenCover(item: $cover) { $0.dest() }
+            .toolbar {
+                if CategorySetup.hasFlow(category) {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button { showSetup = true } label: { Image(systemName: "slider.horizontal.3") }
+                    }
+                }
+            }
+            .fullScreenCover(isPresented: $showSetup) { setupFlow }
+            .onAppear {
+                if CategorySetup.shouldAutoPrompt(category) {
+                    CategorySetup.markPrompted(category)
+                    showSetup = true
+                }
+            }
+    }
+
+    @ViewBuilder private var setupFlow: some View {
+        switch category {
+        case .nutrition: NutritionSetupView()
+        case .fitness:   FitnessSetupView()
+        default:         EmptyView()
+        }
     }
 
     @ViewBuilder private var content: some View {
