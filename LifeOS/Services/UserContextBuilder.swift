@@ -12,7 +12,7 @@ final class UserContextBuilder {
     func build() -> String {
         var lines: [String] = []
         let ud = UserDefaults.standard
-        let grp = Self.group
+        guard let grp = Self.group else { return lines.joined(separator: "\n") }
 
         // ── Current date/time ────────────────────────────────────────────────
         let fmt = DateFormatter()
