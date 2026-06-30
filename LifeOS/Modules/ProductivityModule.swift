@@ -265,10 +265,12 @@ struct HabitTrackerView: View {
                     }
                 }.padding(Theme.pad)
             }
+            .refreshable { syncHabitsToWidget() }
         }
         .navigationTitle("Habit tracker").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
         .sheet(isPresented: $showAdd) { HabitEditor() }
+        .sheet(item: $editingHabit) { h in HabitEditor(editingHabit: h) }
         .task {
             let modules = habitModulesRaw.split(separator: ",").map(String.init)
             if !modules.isEmpty && allHabits.isEmpty {
