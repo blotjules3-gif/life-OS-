@@ -219,8 +219,9 @@ struct TimeBlockView: View {
 
 struct HabitTrackerView: View {
     @Environment(\.modelContext) private var ctx
-    @Query(sort: \Habit.createdAt) private var allHabits: [Habit]
+    @Query(sort: \Habit.scheduledHour) private var allHabits: [Habit]
     @State private var showAdd = false
+    @State private var editingHabit: Habit? = nil
     @AppStorage("habitModulesRaw") private var habitModulesRaw = ""
 
     private var pendingHabits: [Habit] { allHabits.filter { $0.isPending } }
