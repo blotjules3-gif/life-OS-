@@ -105,16 +105,22 @@ private struct HabitWidgetSyncer: View {
 
     var body: some View {
         Color.clear.frame(width: 0, height: 0)
-            .task { sync() }
+            .onAppear { sync() }
+            .task {
+                // Deuxième sync après un court délai pour garantir que SwiftData est chargé
+                try? await Task.sleep(for: .milliseconds(300))
+                sync()
+            }
             .onChange(of: allHabits.count) { _, _ in sync() }
             .onChange(of: completions.count) { _, _ in sync() }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in sync() }
     }
 
     private func sync() {
+        guard !allHabits.isEmpty || completions.isEmpty else { return }
         let today = Date()
-        let active = allHabits.filter { !$0.isPending }
-        let entries = active.map { h -> [String: Any] in
+        // Toutes les habitudes (pending ou non) — l'utilisateur les voit toutes dans le widget
+        let entries: [[String: Any]] = allHabits.map { h in
             let done = h.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: today) }
             return ["name": h.name, "icon": h.icon, "colorHex": h.colorHex, "done": done]
         }
@@ -123,7 +129,7 @@ private struct HabitWidgetSyncer: View {
         defaults.set(Date(), forKey: "widget_habits_sync_date")
         defaults.set(entries.filter { $0["done"] as? Bool == true }.count, forKey: "habits_done_today")
         defaults.set(entries.count, forKey: "habits_total_today")
-        WidgetCenter.shared.reloadTimelines(ofKind: "HabitsWidget")
+        WidgetCenter.shared.reloadAllTimelines()
     }
 }
 
