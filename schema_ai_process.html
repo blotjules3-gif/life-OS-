@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Processus de réflexion — Coach IA LifeOS</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    background: #0E0F12;
+    color: #E8E6E1;
+    padding: 48px 32px;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: #6B6A68;
+    margin-bottom: 48px;
+    font-weight: 400;
+  }
+
+  /* ── EXEMPLE UTILISATEUR ── */
+  .user-bubble {
+    background: #1C1D21;
+    border: 1px solid #2A2B30;
+    border-radius: 20px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+    max-width: 680px;
+  }
+
+  .bubble-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #4A9EFF;
+    margin-bottom: 8px;
+  }
+
+  .bubble-text {
+    font-size: 18px;
+    font-weight: 500;
+    color: #fff;
+    line-height: 1.5;
+  }
+
+  .bubble-context {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #2A2B30;
+    font-size: 12px;
+    color: #6B6A68;
+    line-height: 1.7;
+  }
+
+  .tag-active {
+    display: inline-block;
+    background: rgba(52, 199, 89, 0.12);
+    color: #34C759;
+    border: 1px solid rgba(52, 199, 89, 0.25);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    margin: 2px 3px 2px 0;
+  }
+
+  .tag-missing {
+    display: inline-block;
+    background: rgba(255, 69, 58, 0.1);
+    color: #FF453A;
+    border: 1px solid rgba(255, 69, 58, 0.2);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    margin: 2px 3px 2px 0;
+  }
+
+  /* ── ÉTAPES ── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 0 20px;
+    position: relative;
+  }
+
+  .step-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .step-dot {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .step-connector {
+    width: 2px;
+    flex: 1;
+    min-height: 24px;
+    background: linear-gradient(to bottom, #2A2B30, transparent);
+    margin: 4px 0;
+  }
+
+  .step-body {
+    padding-bottom: 32px;
+    padding-top: 6px;
+  }
+
+  .step-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .step-card {
+    background: #1A1B1F;
+    border-radius: 14px;
+    padding: 18px 20px;
+    border: 1px solid #252629;
+  }
+
+  /* Couleurs par étape */
+  .step-ios .step-dot { background: rgba(74, 158, 255, 0.15); color: #4A9EFF; border: 1.5px solid rgba(74, 158, 255, 0.3); }
+  .step-ios .step-title { color: #4A9EFF; }
+
+  .step-snapshot .step-dot { background: rgba(255, 214, 10, 0.12); color: #FFD60A; border: 1.5px solid rgba(255, 214, 10, 0.25); }
+  .step-snapshot .step-title { color: #FFD60A; }
+
+  .step-prompt .step-dot { background: rgba(191, 90, 242, 0.12); color: #BF5AF2; border: 1.5px solid rgba(191, 90, 242, 0.25); }
+  .step-prompt .step-title { color: #BF5AF2; }
+
+  .step-think .step-dot { background: rgba(255, 159, 10, 0.12); color: #FF9F0A; border: 1.5px solid rgba(255, 159, 10, 0.25); }
+  .step-think .step-title { color: #FF9F0A; }
+
+  .step-tools .step-dot { background: rgba(52, 199, 89, 0.12); color: #34C759; border: 1.5px solid rgba(52, 199, 89, 0.25); }
+  .step-tools .step-title { color: #34C759; }
+
+  .step-reply .step-dot { background: rgba(50, 215, 220, 0.12); color: #32D7DC; border: 1.5px solid rgba(50, 215, 220, 0.25); }
+  .step-reply .step-title { color: #32D7DC; }
+
+  .step-ios2 .step-dot { background: rgba(74, 158, 255, 0.15); color: #4A9EFF; border: 1.5px solid rgba(74, 158, 255, 0.3); }
+  .step-ios2 .step-title { color: #4A9EFF; }
+
+  /* ── Contenu des cards ── */
+  .code-block {
+    background: #111214;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    color: #A8A6A0;
+    margin-top: 10px;
+    border: 1px solid #1E1F23;
+    overflow-x: auto;
+  }
+
+  .code-block .key { color: #BF5AF2; }
+  .code-block .val { color: #32D7DC; }
+  .code-block .str { color: #FFD60A; }
+  .code-block .comment { color: #444; font-style: italic; }
+
+  .prompt-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .prompt-section {
+    background: #111214;
+    border-radius: 10px;
+    padding: 12px 14px;
+    border-left: 3px solid;
+  }
+
+  .ps-base { border-color: #BF5AF2; }
+  .ps-snapshot { border-color: #FFD60A; }
+  .ps-diagnostic { border-color: #FF9F0A; }
+  .ps-custom { border-color: #34C759; }
+
+  .ps-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .ps-base .ps-label { color: #BF5AF2; }
+  .ps-snapshot .ps-label { color: #FFD60A; }
+  .ps-diagnostic .ps-label { color: #FF9F0A; }
+  .ps-custom .ps-label { color: #34C759; }
+
+  .ps-desc {
+    font-size: 12px;
+    color: #6B6A68;
+    line-height: 1.5;
+  }
+
+  /* ── Reasoning steps ── */
+  .reasoning {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .reasoning-step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .reasoning-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #252629;
+    color: #FF9F0A;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .reasoning-text {
+    font-size: 13px;
+    color: #A8A6A0;
+    line-height: 1.6;
+  }
+
+  .reasoning-text strong {
+    color: #E8E6E1;
+    font-weight: 600;
+  }
+
+  .reasoning-text .found {
+    color: #FF9F0A;
+    font-weight: 600;
+  }
+
+  /* ── Solution matrix ── */
+  .solution-matrix {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .solution-row {
+    display: grid;
+    grid-template-columns: 1fr 100px 140px;
+    gap: 10px;
+    align-items: center;
+    background: #111214;
+    border-radius: 10px;
+    padding: 10px 14px;
+    border: 1px solid #1E1F23;
+  }
+
+  .sol-problem { font-size: 12px; color: #A8A6A0; line-height: 1.4; }
+  .sol-problem strong { color: #E8E6E1; font-size: 13px; display: block; }
+
+  .sol-module {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .sol-active { background: rgba(52, 199, 89, 0.12); color: #34C759; border: 1px solid rgba(52, 199, 89, 0.25); }
+  .sol-missing { background: rgba(255, 69, 58, 0.1); color: #FF453A; border: 1px solid rgba(255, 69, 58, 0.2); }
+
+  .sol-action {
+    font-size: 11px;
+    color: #6B6A68;
+    line-height: 1.4;
+  }
+
+  .sol-action .action-call {
+    font-family: 'SF Mono', monospace;
+    font-size: 10px;
+    color: #32D7DC;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* ── Tool calls ── */
+  .tool-calls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .tool-call {
+    background: #111214;
+    border-radius: 10px;
+    padding: 12px 14px;
+    border: 1px solid #1E1F23;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .tool-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .tool-icon-update { background: rgba(52, 199, 89, 0.15); }
+  .tool-icon-add { background: rgba(74, 158, 255, 0.15); }
+  .tool-icon-habit { background: rgba(255, 159, 10, 0.12); }
+
+  .tool-name {
+    font-family: 'SF Mono', monospace;
+    font-size: 12px;
+    color: #32D7DC;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .tool-args {
+    font-family: 'SF Mono', monospace;
+    font-size: 11px;
+    color: #6B6A68;
+    line-height: 1.6;
+  }
+
+  .tool-args .arg-key { color: #BF5AF2; }
+  .tool-args .arg-val { color: #FFD60A; }
+
+  /* ── Final reply ── */
+  .final-reply {
+    background: #111214;
+    border-radius: 14px;
+    padding: 18px 20px;
+    border-left: 3px solid #32D7DC;
+    margin-top: 10px;
+  }
+
+  .reply-text {
+    font-size: 16px;
+    color: #E8E6E1;
+    line-height: 1.65;
+    font-weight: 400;
+  }
+
+  .reply-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #1E1F23;
+  }
+
+  .action-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .chip-add { background: rgba(74, 158, 255, 0.12); color: #4A9EFF; border: 1px solid rgba(74, 158, 255, 0.2); }
+  .chip-update { background: rgba(52, 199, 89, 0.1); color: #34C759; border: 1px solid rgba(52, 199, 89, 0.2); }
+  .chip-habit { background: rgba(255, 159, 10, 0.1); color: #FF9F0A; border: 1px solid rgba(255, 159, 10, 0.2); }
+
+  /* ── iOS response ── */
+  .ios-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .ios-box {
+    background: #111214;
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid #1E1F23;
+  }
+
+  .ios-box-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #4A9EFF;
+    margin-bottom: 8px;
+  }
+
+  .ios-box-desc {
+    font-size: 12px;
+    color: #6B6A68;
+    line-height: 1.6;
+  }
+
+  /* ── Separator ── */
+  .section-sep {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #2A2B30, transparent);
+    margin: 32px 0;
+  }
+
+  /* ── Loop indicator ── */
+  .loop-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 159, 10, 0.1);
+    color: #FF9F0A;
+    border: 1px solid rgba(255, 159, 10, 0.2);
+    border-radius: 100px;
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .highlight-box {
+    background: rgba(191, 90, 242, 0.06);
+    border: 1px solid rgba(191, 90, 242, 0.15);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #A8A6A0;
+    line-height: 1.7;
+  }
+
+  .highlight-box strong { color: #BF5AF2; }
+</style>
+</head>
+<body>
+
+<h1>Processus de réflexion — Coach IA LifeOS</h1>
+<p class="subtitle">Exemple concret : que se passe-t-il quand l'utilisateur dit "je suis stressé et j'arrive pas à dormir"</p>
+
+<!-- USER MESSAGE -->
+<div class="user-bubble">
+  <div class="bubble-label">Message utilisateur</div>
+  <div class="bubble-text">"je suis super stressé en ce moment et j'arrive plus à dormir"</div>
+  <div class="bubble-context">
+    Modules actifs :
+    <span class="tag-active">fitness</span>
+    <span class="tag-active">nutrition</span>
+    <span class="tag-missing">sleep ✗</span>
+    <span class="tag-missing">mind ✗</span>
+    <span class="tag-missing">finance ✗</span>
+    &nbsp;·&nbsp; Humeur : 2/5 &nbsp;·&nbsp; Score énergie : 30/100 &nbsp;·&nbsp; Habitudes : 1/4 faites
+  </div>
+</div>
+
+<div class="steps">
+
+  <!-- ÉTAPE 1 — iOS envoie la requête -->
+  <div class="step step-ios">
+    <div class="step-line">
+      <div class="step-dot">1</div>
+      <div class="step-connector"></div>
+    </div>
+    <div class="step-body">
+      <div class="step-title">iOS → Backend : ChatRequest</div>
+      <div class="step-card">
+        <div class="code-block">
+POST /chat<br>
+{<br>
+&nbsp;&nbsp;<span class="key">device_id</span>: <span class="str">"iPhone-Jules-A1B2"</span>,<br>
+&nbsp;&nbsp;<span class="key">message</span>: <span class="str">"je suis super stressé et j'arrive plus à dormir"</span>,<br>
+&nbsp;&nbsp;<span class="key">module</span>: <span class="val">null</span>, <span class="comment">// conversation générale</span><br>
+&nbsp;&nbsp;<span class="key">conversation_id</span>: <span class="str">"uuid-xyz"</span>,<br>
+&nbsp;&nbsp;<span class="key">user_context</span>: <span class="str">"Date: lundi 30 juin 2026, 23:14\nPrénom: Jules\nModules actifs: fitness,nutrition\nHumeur: 2/5\nScore énergie: 30/100\nHabitudes: 1/4 faites\nSommeil nuit dernière: 5.2h (qualité 2/5)"</span><br>
+}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 2 — Snapshot utilisateur -->
+  <div class="step step-snapshot">
+    <div class="step-line">
+      <div class="step-dot">2</div>
+      <div class="step-connector"></div>
+    </div>
+    <div class="step-body">
+      <div class="step-title">UserContextBuilder — ce que l'IA sait sur toi maintenant</div>
+      <div class="step-card">
+        <div style="font-size:12px;color:#6B6A68;margin-bottom:10px;">
+          Construit automatiquement par iOS à chaque message depuis les UserDefaults + App Group
+        </div>
+        <div class="code-block">
+Date: lundi 30 juin 2026, 23:14<br>
+Prénom: Jules<br>
+Genre: homme<br>
+Modules actifs: <span class="val">fitness, nutrition</span>  <span class="comment">← clé critique</span><br>
+Humeur: <span class="val">2/5</span><br>
+Score énergie: <span class="val">30/100</span><br>
+Habitudes: <span class="val">1/4</span> faites aujourd'hui<br>
+Sommeil nuit dernière: <span class="val">5.2h</span> (qualité 2/5)<br>
+Objectif kcal: 2400 kcal/j
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 3 — Construction du prompt -->
+  <div class="step step-prompt">
+    <div class="step-line">
+      <div class="step-dot">3</div>
+      <div class="step-connector"></div>
+    </div>
+    <div class="step-body">
+      <div class="step-title">build_system_prompt() — assemblage du contexte LLM</div>
+      <div class="step-card">
+        <div style="font-size:12px;color:#6B6A68;margin-bottom:10px;">
+          4 blocs injectés dans l'ordre, totalisant ~47 000 caractères
+        </div>
+        <div class="prompt-sections">
+          <div class="prompt-section ps-base">
+            <div class="ps-label">Base (~470 lignes)</div>
+            <div class="ps-desc">Rôle du coach, 3 résultats possibles (personnaliser / ajouter / supprimer), règles de conversation, format 2 phrases max</div>
+          </div>
+          <div class="prompt-section ps-snapshot">
+            <div class="ps-label">Snapshot utilisateur</div>
+            <div class="ps-desc">Le user_context iOS injecté ici : date, prénom, <strong style="color:#FFD60A">modules actifs : fitness, nutrition</strong>, humeur, énergie, sommeil</div>
+          </div>
+          <div class="prompt-section ps-diagnostic">
+            <div class="ps-label">Diagnostic P→S</div>
+            <div class="ps-desc">PROBLEMES_SOLUTIONS.md : 60+ problèmes avec solutions taguées <strong style="color:#FF9F0A">[MODULE: xxx]</strong> + protocole de cross-référencement</div>
+          </div>
+          <div class="prompt-section ps-custom">
+            <div class="ps-label">Instructions perso</div>
+            <div class="ps-desc">INSTRUCTIONS_CUSTOM.md : tes règles personnelles (Jules peut modifier ce fichier directement)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 4 — Raisonnement LLM -->
+  <div class="step step-think">
+    <div class="step-line">
+      <div class="step-dot">4</div>
+      <div class="step-connector"></div>
+    </div>
+    <div class="step-body">
+      <div class="step-title">Raisonnement interne du LLM (invisible pour l'utilisateur)</div>
+      <div class="step-card">
+        <div class="loop-badge">⟳ Agent loop — itération 1</div>
+        <div class="reasoning">
+          <div class="reasoning-step">
+            <div class="reasoning-num">1</div>
+            <div class="reasoning-text">
+              <strong>Identification des problèmes :</strong> "stressé" → problème mental/émotionnel. "j'arrive plus à dormir" → problème de sommeil. Deux problèmes distincts à traiter.
+            </div>
+          </div>
+          <div class="reasoning-step">
+            <div class="reasoning-num">2</div>
+            <div class="reasoning-text">
+              <strong>Lookup dans PROBLEMES_SOLUTIONS :</strong> <span class="found">MENTAL</span> → "je suis stressé / sous pression" trouvé. Solutions : [fitness], [mind], [productivity], [finance]. <span class="found">SOMMEIL</span> → "je n'arrive pas à m'endormir" trouvé. Solutions : [sleep], [mind], [nutrition].
+            </div>
+          </div>
+          <div class="reasoning-step">
+            <div class="reasoning-num">3</div>
+            <div class="reasoning-text">
+              <strong>Cross-référencement avec les modules actifs :</strong> Modules actifs = <span style="color:#34C759">fitness</span>, <span style="color:#34C759">nutrition</span>. Modules manquants = <span style="color:#FF453A">mind</span>, <span style="color:#FF453A">sleep</span>, <span style="color:#FF453A">productivity</span>, <span style="color:#FF453A">finance</span>.
+            </div>
+          </div>
+          <div class="reasoning-step">
+            <div class="reasoning-num">4</div>
+            <div class="reasoning-text">
+              <strong>Décision selon le protocole :</strong> Commencer par les modules déjà actifs → optimiser fitness (sport réduit cortisol) + nutrition (arrêter café après 14h). Puis proposer les modules manquants qui couvrent le mieux les deux problèmes → <strong>mind</strong> couvre stress ET sommeil. <strong>sleep</strong> couvre directement le problème de nuit.
+            </div>
+          </div>
+          <div class="reasoning-step">
+            <div class="reasoning-num">5</div>
+            <div class="reasoning-text">
+              <strong>Plan d'action :</strong> 1 optimisation config fitness → 1 optimisation config nutrition → 2 add_module (mind + sleep) → créer 1 habitude rapide → répondre en 2 phrases max.
+            </div>
+          </div>
+        </div>
+
+        <div class="highlight-box" style="margin-top:14px;">
+          <strong>Règle clé appliquée :</strong> Ne jamais proposer add_module pour un module déjà actif. Fitness et nutrition sont actifs → le LLM propose de les <em>optimiser</em>, pas de les rajouter.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 5 — Appels outils -->
+  <div class="step step-tools">
+    <div class="step-line">
+      <div class="step-dot">5</div>
+      <div class="step-connector"></div>
+    </div>
+    <div class="step-body">
+      <div class="step-title">Orchestrator — exécution des tool calls</div>
+      <div class="step-card">
+        <div class="tool-calls">
+
+          <div class="tool-call">
+            <div class="tool-icon tool-icon-update">⚙️</div>
+            <div>
+              <div class="tool-name">update_module_config</div>
+              <div class="tool-args">
+                <span class="arg-key">module</span>: <span class="arg-val">"fitness"</span> &nbsp;|&nbsp;
+                <span class="arg-key">config</span>: <span class="arg-val">{ "timing": "matin_avant_travail", "note": "sport le matin réduit le cortisol" }</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-call">
+            <div class="tool-icon tool-icon-update">⚙️</div>
+            <div>
+              <div class="tool-name">update_module_config</div>
+              <div class="tool-args">
+                <span class="arg-key">module</span>: <span class="arg-val">"nutrition"</span> &nbsp;|&nbsp;
+                <span class="arg-key">config</span>: <span class="arg-val">{ "caffeine_cutoff": "14h", "note": "café après 14h détruit le sommeil profond" }</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-call">
+            <div class="tool-icon tool-icon-add">➕</div>
+            <div>
+              <div class="tool-name">add_module</div>
+              <div class="tool-args">
+                <span class="arg-key">module</span>: <span class="arg-val">"mind"</span> &nbsp;|&nbsp;
+                <span class="arg-key">reason</span>: <span class="arg-val">"Cohérence cardiaque et suivi d'humeur pour gérer le stress chronique"</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-call">
+            <div class="tool-icon tool-icon-add">➕</div>
+            <div>
+              <div class="tool-name">add_module</div>
+              <div class="tool-args">
+                <span class="arg-key">module</span>: <span class="arg-val">"sleep"</span> &nbsp;|&nbsp;
+                <span class="arg-key">reason</span>: <span class="arg-val">"Routine du soir et suivi des cycles de sommeil pour résoudre les insomnies"</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-call">
+            <div class="tool-icon tool-icon-habit">🔁</div>
+            <div>
+              <div class="tool-name">create_habit</div>
+              <div class="tool-args">
+                <span class="arg-key">title</span>: <span class="arg-val">"Cohérence cardiaque 5min"</span> &nbsp;|&nbsp;
+                <span class="arg-key">module</span>: <span class="arg-val">"mind"</span> &nbsp;|&nbsp;
+                <span class="arg-key">scheduledHour</span>: <span class="arg-val">22</span> <span class="arg-key">scheduledMinute</span>: <span class="arg-val">0</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 6 — Réponse finale -->
+  <div class="step step-reply">
+    <div class="step-line">
+      <div class="step-dot">6</div>
+      <div class="step-connector"></div>
+    </div>
+    <div class="step-body">
+      <div class="step-title">Réponse — 2 phrases max (règle absolue)</div>
+      <div class="step-card">
+        <div class="final-reply">
+          <div class="reply-text">
+            "J'ai activé <strong>Sommeil</strong> et <strong>Mental</strong> pour t'aider — une routine du soir et 5min de cohérence cardiaque à 22h vont changer la donne rapidement.<br><br>
+            En attendant, coupe le café après 14h et essaie de faire ton sport le matin — le cortisol redescend bien plus vite comme ça."
+          </div>
+          <div class="reply-actions">
+            <span class="action-chip chip-add">➕ Module Sleep ajouté</span>
+            <span class="action-chip chip-add">➕ Module Mind ajouté</span>
+            <span class="action-chip chip-update">⚙️ Fitness optimisé</span>
+            <span class="action-chip chip-update">⚙️ Nutrition optimisé</span>
+            <span class="action-chip chip-habit">🔁 Habitude créée : 22h00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 7 — iOS reçoit -->
+  <div class="step step-ios2">
+    <div class="step-line">
+      <div class="step-dot">7</div>
+    </div>
+    <div class="step-body">
+      <div class="step-title">iOS reçoit ChatResponse — actions appliquées dans l'app</div>
+      <div class="step-card">
+        <div class="ios-grid">
+          <div class="ios-box">
+            <div class="ios-box-title">reply</div>
+            <div class="ios-box-desc">Affiché dans la bulle de chat de l'assistant</div>
+          </div>
+          <div class="ios-box">
+            <div class="ios-box-title">actions</div>
+            <div class="ios-box-desc">
+              add_module → Sleep et Mind apparaissent dans l'onglet Modules<br>
+              create_habit → Cohérence cardiaque 22h dans les Habitudes<br>
+              update_module_config → Config fitness et nutrition sauvegardée
+            </div>
+          </div>
+          <div class="ios-box">
+            <div class="ios-box-title">module_config_updated</div>
+            <div class="ios-box-desc">true → iOS rafraîchit l'affichage du module actif</div>
+          </div>
+          <div class="ios-box">
+            <div class="ios-box-title">Prochain message</div>
+            <div class="ios-box-desc">Le snapshot contiendra : Modules actifs: <strong style="color:#34C759">fitness, nutrition, mind, sleep</strong> — l'IA ne reproposera jamais ces modules</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── MATRICE DÉCISION ── -->
+<div class="section-sep"></div>
+
+<h1 style="font-size:22px;margin-bottom:6px;">Matrice de décision — quel outil selon l'état du module</h1>
+<p class="subtitle" style="margin-bottom:24px;">Pour un problème donné, comment le LLM choisit son action</p>
+
+<div class="solution-matrix">
+
+  <div class="solution-row" style="background:#15161A;border-color:#252629;padding:8px 14px;">
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#6B6A68;">Solution détectée</div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#6B6A68;">Module requis</div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#6B6A68;">Action LLM</div>
+  </div>
+
+  <div class="solution-row">
+    <div class="sol-problem"><strong>Sport le matin pour réduire le cortisol</strong>[MODULE: fitness]</div>
+    <div class="sol-module sol-active">fitness ✓ actif</div>
+    <div class="sol-action">Optimiser la config du module<span class="action-call">update_module_config("fitness", {timing: "matin"})</span></div>
+  </div>
+
+  <div class="solution-row">
+    <div class="sol-problem"><strong>Couper le café après 14h</strong>[MODULE: nutrition]</div>
+    <div class="sol-module sol-active">nutrition ✓ actif</div>
+    <div class="sol-action">Ajouter règle dans la config nutrition<span class="action-call">update_module_config("nutrition", {caffeine_cutoff: "14h"})</span></div>
+  </div>
+
+  <div class="solution-row">
+    <div class="sol-problem"><strong>Cohérence cardiaque + suivi humeur</strong>[MODULE: mind]</div>
+    <div class="sol-module sol-missing">mind ✗ manquant</div>
+    <div class="sol-action">Proposer d'ajouter le module<span class="action-call">add_module("mind", reason: "...")</span></div>
+  </div>
+
+  <div class="solution-row">
+    <div class="sol-problem"><strong>Routine du soir + suivi sommeil</strong>[MODULE: sleep]</div>
+    <div class="sol-module sol-missing">sleep ✗ manquant</div>
+    <div class="sol-action">Proposer d'ajouter le module<span class="action-call">add_module("sleep", reason: "...")</span></div>
+  </div>
+
+  <div class="solution-row">
+    <div class="sol-problem"><strong>Vérifier si stress financier (source cachée)</strong>[MODULE: finance]</div>
+    <div class="sol-module sol-missing">finance ✗ manquant</div>
+    <div class="sol-action">Ne pas proposer maintenant — priorité aux modules directs. Garder en réserve si le problème persiste.</div>
+  </div>
+
+</div>
+
+</body>
+</html>
