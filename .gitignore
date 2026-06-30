@@ -19,9 +19,13 @@ Packages/
 # macOS
 .DS_Store
 *.swp
+<<<<<<< HEAD
 
 # Secrets — ne jamais commiter
 Config.xcconfig
 !Config.xcconfig.example
 backend/.env
 !backend/.env.example
+=======
+build/
+>>>>>>> origin/pote

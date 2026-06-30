@@ -169,7 +169,8 @@ struct BubbleCategoriesView: View {
     @AppStorage("catLayout")     private var layoutRaw = "organic"
     @AppStorage("appTheme")      private var appThemeRaw = "classic"
     @AppStorage("catSizes")      private var catSizesRaw = ""    // "titre:s|m|l,…" — taille par catégorie
-    @AppStorage("catOffsets")    private var catOffsetsRaw = ""  // "titre:dx:dy,…" — bulle déplacée
+    @AppStorage("catOffsets")    private var catOffsetsRaw = ""  // "titre:dx:dy,…" — (legacy, plus utilisé)
+    @AppStorage("catAnchors")    private var catAnchorsRaw = ""  // "titre:fx:fy,…" — position ancrée (fraction)
     @State private var editing = false
     @State private var showAdd = false
     @State private var tappedID: UUID?
@@ -220,6 +221,24 @@ struct BubbleCategoriesView: View {
         writeOffsets(m)
     }
     private func resetCatOffset(_ title: String) { var m = offsetsMap(); m[title] = nil; writeOffsets(m) }
+
+    // Position ANCRÉE (fraction d'écran) d'une bulle déplacée par l'utilisateur. Le packing
+    // l'utilise comme position préférée + ressort fort → les voisines sont repoussées.
+    private func anchorsMap() -> [String: CGPoint] {
+        var m: [String: CGPoint] = [:]
+        for p in catAnchorsRaw.split(separator: ",") {
+            let f = p.split(separator: ":")
+            if f.count == 3, let fx = Double(f[1]), let fy = Double(f[2]) { m[String(f[0])] = CGPoint(x: fx, y: fy) }
+        }
+        return m
+    }
+    private func writeAnchors(_ m: [String: CGPoint]) {
+        catAnchorsRaw = m.map { "\($0.key):\(String(format: "%.4f", $0.value.x)):\(String(format: "%.4f", $0.value.y))" }
+            .joined(separator: ",")
+    }
+    private func setAnchor(_ title: String, _ frac: CGPoint) { var m = anchorsMap(); m[title] = frac; writeAnchors(m) }
+    private func removeAnchor(_ title: String) { var m = anchorsMap(); m[title] = nil; writeAnchors(m) }
+    private func hasAnchor(_ title: String) -> Bool { anchorsMap()[title] != nil }
 
     private var hidden: Set<String> { Set(hiddenRaw.split(separator: ",").map(String.init)) }
     private var visible: [BubbleCategory] {
@@ -309,7 +328,7 @@ struct BubbleCategoriesView: View {
         let topInset: CGFloat = 88       // sous les boutons Modifier / layout
         let bottomInset: CGFloat = 116   // dégage la barre d'onglets flottante (incluse dans h)
         let sideInset: CGFloat = 12
-        let gap: CGFloat = 4             // marge mini entre bulles (≈ se touchent)
+        let gap: CGFloat = 18            // marge mini entre bulles → elles NE se touchent PAS
         let minX = sideInset, maxX = w - sideInset
         let minY = topInset, maxY = max(h - bottomInset, topInset + 1)
         let areaW = maxX - minX, areaH = maxY - minY
@@ -317,11 +336,11 @@ struct BubbleCategoriesView: View {
         let n = items.count
         guard n > 0 else { return [:] }
 
-        // Diamètres bruts (3 tailles) → échelle pour viser une densité qui laisse la
-        // place de TOUT séparer (pas de chevauchement résiduel).
+        // Diamètres bruts (3 tailles) → échelle pour viser une densité qui laisse de
+        // l'AIR entre les bulles (densité plus basse = plus d'espace visible).
         var dias = items.map { w * effectiveSize($0).widthFraction }
         let rawArea = dias.reduce(0) { $0 + .pi * ($1 * 0.5) * ($1 * 0.5) }
-        let density: CGFloat = 0.70
+        let density: CGFloat = 0.58
         let areaScale = min(1, (density * areaW * areaH / max(rawArea, 1)).squareRoot())
         dias = dias.map { $0 * areaScale }
 
@@ -330,16 +349,31 @@ struct BubbleCategoriesView: View {
             let v = sin(Double(i) * 12.9898 + Double(s) * 78.233) * 43758.5453
             return CGFloat(v - v.rounded(.down))
         }
+
+        // Position PRÉFÉRÉE de chaque bulle : son ancre si l'utilisateur l'a déplacée
+        // (ressort fort), sinon une position éparpillée stable (ressort faible).
+        let anchors = anchorsMap()
+        var px = [CGFloat](repeating: 0, count: n)
+        var py = [CGFloat](repeating: 0, count: n)
+        var anchored = [Bool](repeating: false, count: n)
         var cx = [CGFloat](repeating: 0, count: n)
         var cy = [CGFloat](repeating: 0, count: n)
         for i in 0..<n {
             let r = dias[i] * 0.5
-            cx[i] = minX + r + rnd(i, 1) * max(areaW - 2 * r, 1)
-            cy[i] = minY + r + rnd(i, 2) * max(areaH - 2 * r, 1)
+            if let a = anchors[items[i].title] {
+                px[i] = min(max(a.x * w, minX + r), maxX - r)
+                py[i] = min(max(a.y * h, minY + r), maxY - r)
+                anchored[i] = true
+            } else {
+                px[i] = minX + r + rnd(i, 1) * max(areaW - 2 * r, 1)
+                py[i] = minY + r + rnd(i, 2) * max(areaH - 2 * r, 1)
+            }
+            cx[i] = px[i]; cy[i] = py[i]
         }
 
-        // Relaxation : repousse chaque paire en chevauchement, puis recadre dans les bornes.
-        for _ in 0..<260 {
+        // Relaxation force-dirigée : répulsion (anti-chevauchement) + ressort vers la
+        // position préférée. Déplacer une bulle (ancre) repousse donc ses voisines.
+        for _ in 0..<300 {
             for i in 0..<n {
                 for j in (i + 1)..<n {
                     let dx = cx[j] - cx[i], dy = cy[j] - cy[i]
@@ -355,10 +389,45 @@ struct BubbleCategoriesView: View {
                 }
             }
             for i in 0..<n {
+                let k: CGFloat = anchored[i] ? 0.16 : 0.05   // ancrée = tient sa place
+                cx[i] += (px[i] - cx[i]) * k
+                cy[i] += (py[i] - cy[i]) * k
                 let r = dias[i] * 0.5
                 cx[i] = min(max(cx[i], minX + r), maxX - r)
                 cy[i] = min(max(cy[i], minY + r), maxY - r)
             }
+        }
+
+        // PASSE FINALE — séparation pure (sans ressort). Garantit l'espace mini même
+        // entre bulles ancrées qui ont grossi : le non-chevauchement gagne TOUJOURS.
+        // Les voisines sont repoussées vers l'extérieur jusqu'à dégager le `gap`.
+        for _ in 0..<260 {
+            var maxOverlap: CGFloat = 0
+            for i in 0..<n {
+                for j in (i + 1)..<n {
+                    let dx = cx[j] - cx[i], dy = cy[j] - cy[i]
+                    var dist = (dx * dx + dy * dy).squareRoot()
+                    if dist < 0.0001 { dist = 0.0001 }
+                    let minDist = dias[i] * 0.5 + dias[j] * 0.5 + gap
+                    let overlap = minDist - dist
+                    if overlap > 0 {
+                        maxOverlap = max(maxOverlap, overlap)
+                        // séparation symétrique le long de l'axe ; si superposées
+                        // parfaitement, on écarte sur un axe déterministe.
+                        let ux = dist > 0.001 ? dx / dist : (rnd(i + j, 7) - 0.5)
+                        let uy = dist > 0.001 ? dy / dist : (rnd(i + j, 8) - 0.5)
+                        let push = overlap * 0.5
+                        cx[i] -= ux * push; cy[i] -= uy * push
+                        cx[j] += ux * push; cy[j] += uy * push
+                    }
+                }
+            }
+            for i in 0..<n {
+                let r = dias[i] * 0.5
+                cx[i] = min(max(cx[i], minX + r), maxX - r)
+                cy[i] = min(max(cy[i], minY + r), maxY - r)
+            }
+            if maxOverlap < 0.5 { break }   // convergé : plus aucun chevauchement
         }
 
         var result: [UUID: (CGPoint, CGFloat)] = [:]
@@ -433,10 +502,7 @@ struct BubbleCategoriesView: View {
         .scaleEffect(theme == .gothic ? 1.0 : (tappedID == cat.id ? 1.12 : 1.0))
         .animation(.spring(response: 0.3, dampingFraction: 0.45), value: tappedID)
         // Bande verticale : on descend sous les boutons (haut) et on laisse de l'air en bas.
-        .position(
-            x: cx + bx + catOffset(cat.title).width,
-            y: cy + by + catOffset(cat.title).height
-        )
+        .position(x: cx + bx, y: cy + by)   // l'ancre est déjà intégrée dans cx/cy (packing)
         .zIndex(moving ? 100 : effectiveSize(cat).rank)
         .allowsHitTesting(!cat.isFiller)
         .onTapGesture {
@@ -451,8 +517,14 @@ struct BubbleCategoriesView: View {
                 .onChanged { v in if !cat.isFiller { drag[cat.id] = v.translation } }
                 .onEnded { v in
                     guard !cat.isFiller else { return }
-                    addCatOffset(cat.title, v.translation)   // déplacement persistant
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { drag[cat.id] = .zero }
+                    // Nouvelle position absolue → ancre (fraction). Le packing s'anime
+                    // et repousse les voisines pour laisser la place.
+                    let nx = cx + v.translation.width
+                    let ny = cy + v.translation.height
+                    withAnimation(.spring(response: 0.5, dampingFraction: 0.78)) {
+                        setAnchor(cat.title, CGPoint(x: nx / w, y: ny / h))
+                        drag[cat.id] = .zero
+                    }
                     UIImpactFeedbackGenerator(style: .soft).impactOccurred()
                 }
         )
@@ -470,8 +542,10 @@ struct BubbleCategoriesView: View {
                         Label("Petite", systemImage: effectiveSize(cat) == .small ? "checkmark" : "circle")
                     }
                 }
-                if catOffset(cat.title) != .zero {
-                    Button { withAnimation { resetCatOffset(cat.title) } } label: { Label("Replacer", systemImage: "arrow.counterclockwise") }
+                if hasAnchor(cat.title) {
+                    Button { withAnimation(.spring(response: 0.5, dampingFraction: 0.78)) { removeAnchor(cat.title) } } label: {
+                        Label("Replacer automatiquement", systemImage: "arrow.counterclockwise")
+                    }
                 }
                 Button(role: .destructive) { remove(cat.title) } label: { Label("Supprimer", systemImage: "trash") }
             }

@@ -110,6 +110,7 @@ struct ContactEditor: View {
 
 struct BirthdaysView: View {
     @Query private var contacts: [Contact]
+    @AppStorage("birthdayRemindersOn") private var remindersOn = false
     private var withBirthday: [Contact] {
         contacts.filter { $0.birthday != nil }.sorted { daysUntil($0.birthday!) < daysUntil($1.birthday!) }
     }
@@ -121,6 +122,7 @@ struct BirthdaysView: View {
                     if withBirthday.isEmpty {
                         EmptyState(icon: "gift", title: "Aucun anniversaire", message: "Ajoute les dates de naissance dans le CRM.")
                     } else {
+                        reminderCard
                         ForEach(withBirthday) { c in
                             VStack(alignment: .leading, spacing: 6) {
                                 HStack {
@@ -139,7 +141,46 @@ struct BirthdaysView: View {
             }
         }
         .navigationTitle("Anniversaires").navigationBarTitleDisplayMode(.inline)
+        .onAppear { if remindersOn { reschedule() } }
     }
+
+    private var reminderCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Toggle(isOn: $remindersOn) {
+                Label("Me rappeler les anniversaires", systemImage: "bell.badge.fill")
+                    .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+            }
+            .tint(.socialTint)
+            .onChange(of: remindersOn) { _, on in
+                Task {
+                    if on { _ = await NotificationManager.shared.requestAuthorization() }
+                    reschedule()
+                }
+            }
+            Text("Notification 3 jours avant, à 10 h, avec tes idées cadeaux.")
+                .font(.caption2).foregroundStyle(Theme.textSecondary)
+        }.card()
+    }
+
+    private func bdayID(_ c: Contact) -> String {
+        "bday.\(c.name.replacingOccurrences(of: " ", with: "_")).\(Int(c.birthday!.timeIntervalSince1970))"
+    }
+    private func reschedule() {
+        for c in withBirthday { NotificationManager.shared.cancel(id: bdayID(c)) }
+        guard remindersOn else { return }
+        let cal = Calendar.current
+        for c in withBirthday {
+            let remindDate = cal.date(byAdding: .day, value: -3, to: c.birthday!) ?? c.birthday!
+            let m = cal.component(.month, from: remindDate)
+            let d = cal.component(.day, from: remindDate)
+            let body = c.giftIdeas.isEmpty ? "Pense à lui souhaiter 🎉" : "💡 Idées : \(c.giftIdeas)"
+            NotificationManager.shared.scheduleYearly(
+                id: bdayID(c),
+                title: "🎁 Anniversaire de \(c.name) dans 3 jours",
+                body: body, month: m, day: d, hour: 10, minute: 0)
+        }
+    }
+
     private func daysUntil(_ birthday: Date) -> Int {
         let cal = Calendar.current
         let now = cal.startOfDay(for: .now)

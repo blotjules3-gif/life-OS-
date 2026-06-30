@@ -516,6 +516,7 @@ private let nutritionTools: [CategoryTool] = [
 ]
 
 private let fitnessTools: [CategoryTool] = [
+    .init("calendar", "Programme de sport", "Ta semaine + rappels muscu", tint: .fitTint) { GymProgramView() },
     .init("figure.walk", "Compteur de pas", "Aujourd'hui + 7 jours (Santé)", tint: .fitTint) { StepsView() },
     .init("dumbbell.fill", "Muscu & progression", "Charges, volume, 1RM, courbe", tint: .fitTint) { StrengthView() },
     .init("timer", "HIIT / Tabata", "Minuteur sportif plein écran", tint: .fitTint, fullScreen: true) { TabataView() },
@@ -524,7 +525,7 @@ private let fitnessTools: [CategoryTool] = [
 ]
 
 private let looksTools: [CategoryTool] = [
-    .init("face.dashed", "Analyse faciale", "Symétrie, harmony — Umax", tint: .looksTint) { FaceAnalysisScaffold() },
+    .init("face.dashed", "Analyse faciale", "Symétrie, tiers, ratios — Vision", tint: .looksTint) { FaceAnalysisView() },
     .init("sparkles", "Routine skincare", "Matin/soir + rappels", tint: .looksTint) { SkincareView() },
     .init("camera.fill", "Photos avant / après", "Suivi visuel daté", tint: .looksTint) { ProgressPhotoGalleryView() },
     .init("mouth.fill", "Mewing & posture", "Rappels + minuteur", tint: .looksTint) { MewingPostureView() },
@@ -534,6 +535,7 @@ private let looksTools: [CategoryTool] = [
 private let mindTools: [CategoryTool] = [
     .init("wind", "Respiration & cohérence", "Box breathing, 365…", tint: .mindTint) { BreathingView() },
     .init("leaf.fill", "Méditation", "Minuteur silencieux guidé", tint: .mindTint) { MeditationView() },
+    .init("water.waves", "Sons relaxants", "Bruit blanc/rose/brun + minuteur", tint: .mindTint) { SoundscapeView() },
     .init("face.smiling.inverse", "Humeur & gratitude", "Journal quotidien", tint: .mindTint) { MoodJournalView() },
     .init("hourglass", "Détox écran", "Usage & objectifs", tint: .mindTint) { ScreenDetoxView() },
     .init("sun.horizon.fill", "Briefing du matin", "Motivation + ta journée", tint: .mindTint) { MorningBriefingView() },
@@ -572,6 +574,7 @@ private let careerTools: [CategoryTool] = [
 ]
 
 private let learningTools: [CategoryTool] = [
+    .init("character.bubble.fill", "Langues", "Vocabulaire en répétition espacée", tint: .learnTint) { LanguagesView() },
     .init("rectangle.on.rectangle.angled", "Flashcards", "Répétition espacée (SM-2)", tint: .learnTint) { FlashcardsView() },
     .init("lightbulb.max.fill", "Micro-learning du jour", "Une pépite par jour", tint: .learnTint) { MicroLearningView() },
     .init("books.vertical.fill", "Résumés de livres", "Tes idées clés — Blinkist", tint: .learnTint) { BookSummariesView() },
@@ -588,8 +591,8 @@ private let homeTools: [CategoryTool] = [
 
 private let mobilityTools: [CategoryTool] = [
     .init("car.fill", "Ma voiture", "Assurance, révision, carburant", tint: .mobTint) { VehicleListView() },
-    .init("fuelpump.fill", "Carburant le moins cher", "Carte stations — à brancher", tint: .mobTint) { FuelMapScaffold() },
-    .init("point.topleft.down.to.point.bottomright.curvepath", "Itinéraire multimodal", "Citymapper — à brancher", tint: .mobTint) { MultimodalScaffold() },
+    .init("leaf.arrow.circlepath", "Trajets & CO₂", "Empreinte + budget par mode", tint: .mobTint) { TripCO2View() },
+    .init("parkingsign.circle.fill", "Où ai-je garé ?", "Mémorise la place de ta voiture", tint: .mobTint) { ParkingView() },
 ]
 
 private let socialTools: [CategoryTool] = [
@@ -602,10 +605,12 @@ private let adminTools: [CategoryTool] = [
     .init("lock.doc.fill", "Coffre-fort documents", "ID, contrats, garanties", tint: .adminTint) { DocVaultView() },
     .init("bell.badge.fill", "Échéances", "Impôts, assurance, abos", tint: .adminTint) { DeadlinesView() },
     .init("envelope.fill", "Générateur de courriers", "Résiliation, attestation…", tint: .adminTint) { LetterGeneratorView() },
-    .init("doc.viewfinder.fill", "Scan & classement", "OCR auto — à brancher", tint: .adminTint) { DocScanScaffold() },
+    .init("doc.viewfinder.fill", "Scan & classement", "OCR auto · range tout seul", tint: .adminTint) { DocScanView() },
 ]
 
 private let travelTools: [CategoryTool] = [
     .init("map.fill", "Mes voyages", "Itinéraire + budget + valise", tint: .travelTint) { TripsView() },
+    .init("coloncurrencysign.circle.fill", "Convertisseur", "12 devises, hors-ligne, repères rapides", tint: .travelTint) { CurrencyConverterView() },
+    .init("character.bubble.fill", "Phrases de voyage", "5 langues, prononcées à voix haute", tint: .travelTint) { PhrasebookView() },
     .init("airplane.circle.fill", "Suivi des vols", "Statut & retards — à brancher", tint: .travelTint) { FlightScaffold() },
 ]
