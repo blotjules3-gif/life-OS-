@@ -413,7 +413,8 @@ struct OnboardingName: View {
         }
         .padding(.horizontal, 28)
         .task {
-            try? await Task.sleep(for: .milliseconds(250))
+            // Attendre que la transition (320ms) soit terminée avant d'ouvrir le clavier
+            try? await Task.sleep(for: .milliseconds(650))
             focused = true
         }
     }
