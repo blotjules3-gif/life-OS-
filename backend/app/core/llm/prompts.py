@@ -1,6 +1,18 @@
 from __future__ import annotations
 
+import os
+from pathlib import Path
 from typing import Any
+
+_AI_DIR = Path(__file__).parent.parent.parent.parent.parent.parent / "AI"
+
+
+def _load_ai_file(filename: str) -> str:
+    path = _AI_DIR / filename
+    try:
+        return path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return ""
 
 
 # ─────────────────────────────────────────────────────────────────────────────
