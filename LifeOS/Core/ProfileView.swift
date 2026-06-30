@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import WidgetKit
 
 private struct ProfileTaskItem: Identifiable {
     let id = UUID()
