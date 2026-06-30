@@ -167,11 +167,10 @@ struct LifeOSApp: App {
 
     private func buildContainer() async {
         let schema = Self.schema
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+
         let result = await Task.detached(priority: .userInitiated) {
-            Result { try ModelContainer(
-                for: schema,
-                configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)]
-            )}
+            Result { try ModelContainer(for: schema, configurations: [config]) }
         }.value
 
         switch result {
@@ -179,11 +178,23 @@ struct LifeOSApp: App {
             migrationFailed = false
             container = mc
         case .failure:
-            migrationFailed = true
-            container = try? ModelContainer(
-                for: schema,
-                configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
-            )
+            // Schéma incompatible (ex. colonnes ajoutées) — on efface le store et on repart propre
+            let storeURLs = config.url.flatMap { url -> [URL] in
+                [url, url.deletingPathExtension().appendingPathExtension("store-shm"),
+                      url.deletingPathExtension().appendingPathExtension("store-wal")]
+            } ?? []
+            storeURLs.forEach { try? FileManager.default.removeItem(at: $0) }
+
+            if let fresh = try? ModelContainer(for: schema, configurations: [config]) {
+                migrationFailed = false
+                container = fresh
+            } else {
+                migrationFailed = true
+                container = try? ModelContainer(
+                    for: schema,
+                    configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]
+                )
+            }
         }
     }
 }
