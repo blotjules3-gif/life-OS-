@@ -21,19 +21,31 @@ struct WidgetHabit: Identifiable {
     let isDoneToday: Bool
 
     var color: Color { Color(hex: UInt(colorHex)) }
+}
 
-    static var fromSharedDefaults: [WidgetHabit] {
-        let defaults = UserDefaults(suiteName: "group.lifeos.app") ?? .standard
+struct WidgetHabitsData {
+    let habits: [WidgetHabit]
+    let appGroupWorking: Bool
+    let lastSync: Date?
+
+    static func load() -> WidgetHabitsData {
+        guard let defaults = UserDefaults(suiteName: "group.lifeos.app") else {
+            return WidgetHabitsData(habits: [], appGroupWorking: false, lastSync: nil)
+        }
+        let lastSync = defaults.object(forKey: "widget_habits_sync_date") as? Date
         guard let data = defaults.data(forKey: "widget_habits"),
               let raw = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
-        else { return [] }
-        return raw.compactMap { d in
+        else {
+            return WidgetHabitsData(habits: [], appGroupWorking: true, lastSync: lastSync)
+        }
+        let habits = raw.compactMap { d -> WidgetHabit? in
             guard let name = d["name"] as? String,
                   let icon = d["icon"] as? String,
                   let colorHex = d["colorHex"] as? Int
             else { return nil }
             return WidgetHabit(name: name, icon: icon, colorHex: colorHex, isDoneToday: d["done"] as? Bool ?? false)
         }
+        return WidgetHabitsData(habits: habits, appGroupWorking: true, lastSync: lastSync)
     }
 }
 
@@ -41,27 +53,36 @@ struct WidgetHabit: Identifiable {
 
 struct HabitsEntry: TimelineEntry {
     let date: Date
-    let habits: [WidgetHabit]
+    let data: WidgetHabitsData
 
+    var habits: [WidgetHabit] { data.habits }
     var doneCount: Int { habits.filter { $0.isDoneToday }.count }
     var total: Int { habits.count }
 }
 
 struct HabitsProvider: TimelineProvider {
     func placeholder(in context: Context) -> HabitsEntry {
-        HabitsEntry(date: .now, habits: [
-            WidgetHabit(name: "Méditation", icon: "brain.head.profile", colorHex: 0x4CC38A, isDoneToday: true),
-            WidgetHabit(name: "Sport", icon: "dumbbell.fill", colorHex: 0x618EF1, isDoneToday: false),
-            WidgetHabit(name: "Lecture", icon: "book.fill", colorHex: 0xE0A23C, isDoneToday: true),
-        ])
+        HabitsEntry(date: .now, data: WidgetHabitsData(
+            habits: [
+                WidgetHabit(name: "Méditation", icon: "brain.head.profile", colorHex: 0x4CC38A, isDoneToday: true),
+                WidgetHabit(name: "Sport", icon: "dumbbell.fill", colorHex: 0x618EF1, isDoneToday: false),
+                WidgetHabit(name: "Lecture", icon: "book.fill", colorHex: 0xE0A23C, isDoneToday: true),
+            ],
+            appGroupWorking: true,
+            lastSync: .now
+        ))
     }
 
     func getSnapshot(in context: Context, completion: @escaping (HabitsEntry) -> Void) {
-        completion(HabitsEntry(date: .now, habits: WidgetHabit.fromSharedDefaults))
+        if context.isPreview {
+            completion(placeholder(in: context))
+        } else {
+            completion(HabitsEntry(date: .now, data: WidgetHabitsData.load()))
+        }
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<HabitsEntry>) -> Void) {
-        let entry = HabitsEntry(date: .now, habits: WidgetHabit.fromSharedDefaults)
+        let entry = HabitsEntry(date: .now, data: WidgetHabitsData.load())
         let midnight = Calendar.current.startOfDay(for: Calendar.current.date(byAdding: .day, value: 1, to: .now)!)
         completion(Timeline(entries: [entry], policy: .after(midnight)))
     }
@@ -74,26 +95,51 @@ struct HabitsWidgetView: View {
     @Environment(\.widgetFamily) private var family
 
     var body: some View {
-        if entry.habits.isEmpty {
-            emptyView
-        } else if family == .systemSmall {
-            smallView
-        } else {
-            mediumView
+        Group {
+            if !entry.data.appGroupWorking {
+                setupNeededView
+            } else if entry.habits.isEmpty {
+                noHabitsView
+            } else if family == .systemSmall {
+                smallView
+            } else {
+                mediumView
+            }
+        }
+        .containerBackground(for: .widget) {
+            Color(uiColor: .systemBackground)
         }
     }
 
-    private var emptyView: some View {
-        VStack(spacing: 6) {
-            Image(systemName: "square.grid.3x3")
-                .font(.system(size: 20))
-                .foregroundStyle(.secondary)
-            Text("Aucune habitude")
+    // App Group non configuré
+    private var setupNeededView: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 22))
+                .foregroundStyle(.orange)
+            Text("Ouvre LifeOS\nune fois pour activer")
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .containerBackground(for: .widget) { Color.clear }
+    }
+
+    // App Group OK mais aucune habitude
+    private var noHabitsView: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "square.grid.3x3")
+                .font(.system(size: 22))
+                .foregroundStyle(Color(hex: 0x4CC38A))
+            Text("Aucune habitude")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(.primary)
+            Text("Crée tes habitudes\ndans LifeOS")
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var smallView: some View {
@@ -101,14 +147,14 @@ struct HabitsWidgetView: View {
             HStack(spacing: 4) {
                 Image(systemName: "square.grid.3x3.fill")
                     .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color(hex: 0x4CC38A))
                 Text("Habitudes")
                     .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text("\(entry.doneCount)/\(entry.total)")
                     .font(.system(size: 9, weight: .bold, design: .rounded))
-                    .foregroundStyle(entry.doneCount == entry.total && entry.total > 0 ? .green : .secondary)
+                    .foregroundStyle(entry.doneCount == entry.total ? Color(hex: 0x4CC38A) : .secondary)
             }
 
             Spacer()
@@ -132,7 +178,6 @@ struct HabitsWidgetView: View {
             }
         }
         .padding(12)
-        .containerBackground(for: .widget) { Color.clear }
     }
 
     private var mediumView: some View {
@@ -140,14 +185,14 @@ struct HabitsWidgetView: View {
             HStack {
                 Image(systemName: "square.grid.3x3.fill")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color(hex: 0x4CC38A))
                 Text("Habitudes du jour")
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text("\(entry.doneCount)/\(entry.total)")
                     .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundStyle(entry.doneCount == entry.total && entry.total > 0 ? .green : .primary)
+                    .foregroundStyle(entry.doneCount == entry.total ? Color(hex: 0x4CC38A) : .primary)
             }
 
             let columns = [GridItem(.flexible()), GridItem(.flexible())]
@@ -179,11 +224,10 @@ struct HabitsWidgetView: View {
 
             if entry.total > 0 {
                 ProgressView(value: Double(entry.doneCount), total: Double(entry.total))
-                    .tint(entry.doneCount == entry.total ? .green : .accentColor)
+                    .tint(entry.doneCount == entry.total ? Color(hex: 0x4CC38A) : .accentColor)
             }
         }
         .padding(14)
-        .containerBackground(for: .widget) { Color.clear }
     }
 }
 
