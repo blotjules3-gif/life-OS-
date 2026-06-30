@@ -56,8 +56,8 @@ mood check-in, Raccourcis grid + editor. Profile-completion card added.
 | 12 | Mobilité (`mobility`) | DONE | Trajets CO₂ + parking real; cheap-fuel = BLOCKED |
 | 13 | Social (`social`) | DONE | CRM/birthdays/events + reminders real |
 | 14 | Admin (`admin`) | DONE | OCR real |
-| 15 | Voyage (`travel`) | PARTIAL | converter + phrases real |
-| – | Voyage › Traduction | **TODO** | must build Apple Translation framework (iOS 18) translator + offline download |
+| 15 | Voyage (`travel`) | PARTIAL | converter + phrases + translator real |
+| – | Voyage › Traduction | **DONE** | real Apple Translation (translationTask/TranslationSession + offline prepareTranslation), 12 langs, iOS18-guarded; compile-verified (visual pending sim reboot) |
 | – | Voyage › Suivi des vols | **BLOCKED** | flight-status API key |
 | 16 | Cycle (`cycle`) | DONE | |
 
