@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeOS — Problèmes & Solutions par module</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0F0F13;
+    color: #E8E6E0;
+    padding: 40px 24px 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1 {
+    font-size: 32px;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #6D6A63;
+    font-size: 15px;
+    margin-bottom: 48px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background: #1A1A22;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .module-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .module-name {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .module-desc {
+    font-size: 12px;
+    color: #6D6A63;
+    margin-top: 1px;
+  }
+
+  .problems {
+    padding: 14px 20px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .problem-block {}
+
+  .problem-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #C8C4BC;
+    margin-bottom: 8px;
+  }
+  .problem-label .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #F1746C;
+    flex-shrink: 0;
+  }
+
+  .solutions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-left: 15px;
+  }
+
+  .solution {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12.5px;
+    color: #8A8680;
+    line-height: 1.45;
+  }
+
+  .solution-arrow {
+    font-size: 10px;
+    flex-shrink: 0;
+    margin-top: 3px;
+    opacity: 0.5;
+  }
+
+  .solution strong {
+    color: #E8E6E0;
+    font-weight: 600;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 5px;
+    margin-left: 4px;
+    vertical-align: middle;
+    letter-spacing: 0.3px;
+  }
+  .tag-ai { background: rgba(155,108,241,0.2); color: #9B6CF1; }
+  .tag-auto { background: rgba(76,195,138,0.2); color: #4CC38A; }
+  .tag-notif { background: rgba(224,162,60,0.2); color: #E0A23C; }
+
+  .divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    margin: 0;
+  }
+
+  /* Module colors */
+  .c-fitness    { background: rgba(241,116,108,0.15); color: #F1746C; }
+  .c-nutrition  { background: rgba(76,195,138,0.15);  color: #4CC38A; }
+  .c-sleep      { background: rgba(97,142,241,0.15);  color: #618EF1; }
+  .c-mind       { background: rgba(155,108,241,0.15); color: #9B6CF1; }
+  .c-productivity { background: rgba(224,162,60,0.15); color: #E0A23C; }
+  .c-finance    { background: rgba(60,180,224,0.15);  color: #3CB4E0; }
+  .c-invest     { background: rgba(76,195,138,0.15);  color: #4CC38A; }
+  .c-career     { background: rgba(97,142,241,0.15);  color: #618EF1; }
+  .c-learning   { background: rgba(241,116,108,0.15); color: #F1746C; }
+  .c-looks      { background: rgba(232,93,154,0.15);  color: #E85D9A; }
+  .c-social     { background: rgba(60,208,200,0.15);  color: #3CD0C8; }
+  .c-cycle      { background: rgba(232,93,154,0.15);  color: #E85D9A; }
+  .c-home       { background: rgba(224,162,60,0.15);  color: #E0A23C; }
+  .c-admin      { background: rgba(155,108,241,0.15); color: #9B6CF1; }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #6D6A63;
+  }
+</style>
+</head>
+<body>
+
+<h1>LifeOS — Problèmes & Solutions</h1>
+<p class="subtitle">Chaque module identifie un problème de vie réel et propose une réponse concrète dans l'app.</p>
+
+<div class="legend">
+  <div class="legend-item"><span class="tag tag-ai">IA</span> Réponse générée par IA</div>
+  <div class="legend-item"><span class="tag tag-auto">AUTO</span> Automatique / passif</div>
+  <div class="legend-item"><span class="tag tag-notif">NOTIF</span> Notification proactive</div>
+</div>
+
+<div class="grid">
+
+  <!-- SPORT / FITNESS -->
+  <div class="card">
+    <div class="card-header">
+      <div class="module-icon c-fitness">🏋️</div>
+      <div>
+        <div class="module-name">Fitness</div>
+        <div class="module-desc">Entraînement, cardio, récupération</div>
+      </div>
+    </div>
+    <div class="problems">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Pas de motivation pour s'entraîner</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Habit tracker</strong> avec streak — voir sa série active crée une pression positive de ne pas briser la chaîne</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Rappel planifié</strong> à l'heure de sport choisie à l'onboarding <span class="tag tag-notif">NOTIF</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Ne sait pas quoi faire comme entraînement</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Programme Tabata / HIIT</strong> intégré avec minuteur guidé</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>IA</strong> qui génère une séance adaptée au goal (perte poids, muscle, cardio) <span class="tag tag-ai">IA</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Difficile de suivre sa progression</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Suivi des séries/reps</strong> par exercice avec historique</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Photos de progression</strong> (module Looksmaxx) pour voir le changement corporel</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NUTRITION -->
+  <div class="card">
+    <div class="card-header">
+      <div class="module-icon c-nutrition">🥗</div>
+      <div>
+        <div class="module-name">Nutrition</div>
+        <div class="module-desc">Calories, macros, hydratation</div>
+      </div>
+    </div>
+    <div class="problems">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Dépasse ses calories sans le savoir</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Cal AI</strong> — scan photo du plat → kcal + macros en 2 secondes <span class="tag tag-ai">IA</span></span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Anneau de progression</strong> kcal visuel (rouge si dépassé) accessible depuis l'écran d'accueil</span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Pas assez de protéines / mauvais ratio</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Objectif protéines</strong> configuré à l'onboarding selon genre + goal</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Widget</strong> qui affiche kcal + protéines restantes sur l'écran d'accueil <span class="tag tag-auto">AUTO</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Oublie de boire de l'eau</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Tracker eau</strong> avec objectif ml + bouton rapide (+250ml)</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Rappel toutes les 2h</strong> pendant les heures actives <span class="tag tag-notif">NOTIF</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Jeûne difficile à tenir</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Minuteur de jeûne</strong> avec progression visuelle (16:8, 18:6, etc.)</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Notification de fin de jeûne automatique <span class="tag tag-notif">NOTIF</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOMMEIL -->
+  <div class="card">
+    <div class="card-header">
+      <div class="module-icon c-sleep">🌙</div>
+      <div>
+        <div class="module-name">Sommeil</div>
+        <div class="module-desc">Endormissement, qualité, réveil</div>
+      </div>
+    </div>
+    <div class="problems">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Difficultés à s'endormir</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Minuteur respiration</strong> 4-7-8 ou cohérence cardiaque intégré dans l'app</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Rappel heure de coucher</strong> configurée à l'onboarding <span class="tag tag-notif">NOTIF</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Se réveille fatigué sans savoir pourquoi</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Check-in matin</strong> — qualité de sommeil notée sur 5, historique visible</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Corrélation automatique</strong> sommeil ↔ énergie du jour ↔ activité physique <span class="tag tag-ai">IA</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Réveil brutal, grognon le matin</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Réveil malin</strong> à l'heure configurée + Daily Briefing vocal pour démarrer la journée positivement</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Nap tracker pour récupérer en semaine si nuit courte</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENTAL / BIEN-ÊTRE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="module-icon c-mind">🧠</div>
+      <div>
+        <div class="module-name">Mental & Bien-être</div>
+        <div class="module-desc">Stress, émotions, méditation</div>
+      </div>
+    </div>
+    <div class="problems">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Stress élevé / anxiété chronique</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Exercices de respiration</strong> guidés (box breathing, 4-7-8) dans le module mind</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>IA coach</strong> qui détecte le pattern "stress élevé" dans les check-ins et propose une séance de sport ou de relaxation <span class="tag tag-ai">IA</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Humeur instable, mauvais jours sans comprendre pourquoi</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Mood tracker</strong> quotidien (1–5) avec notes — graphique de tendance sur 30 jours</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Corrélation automatique humeur ↔ sommeil ↔ nutrition ↔ sport <span class="tag tag-ai">IA</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Pas de pratique de gratitude / présence</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Journal de gratitude</strong> dans le check-in humeur — 1 phrase par jour</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Rappel le soir pour le remplir <span class="tag tag-notif">NOTIF</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCTIVITÉ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="module-icon c-productivity">⚡</div>
+      <div>
+        <div class="module-name">Productivité</div>
+        <div class="module-desc">Tâches, focus, habitudes</div>
+      </div>
+    </div>
+    <div class="problems">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Procrastination / difficultés à démarrer</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Pomodoro 25min</strong> — se donner juste 25 minutes supprime l'inertie de démarrage</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Time blocking auto</strong> — l'app remplit ta journée avec tes tâches en créneaux d'1h</span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Trop de tâches, ne sait pas par quoi commencer</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>To-do avec priorités</strong> (Normal / Important / Urgent) — triées automatiquement</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>IA</strong> qui analyse les tâches et suggère un ordre d'exécution selon le contexte <span class="tag tag-ai">IA</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Bonnes habitudes non tenues dans le temps</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Habit tracker</strong> avec heure planifiée + streak visible → ne pas briser la chaîne</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Widget iPhone</strong> avec toutes les habitudes du jour visible depuis l'écran d'accueil <span class="tag tag-auto">AUTO</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINANCES -->
+  <div class="card">
+    <div class="card-header">
+      <div class="module-icon c-finance">💳</div>
+      <div>
+        <div class="module-name">Finances</div>
+        <div class="module-desc">Budget, dépenses, épargne</div>
+      </div>
+    </div>
+    <div class="problems">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Dépenses incontrôlées / fin de mois difficile</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Enveloppes budgétaires</strong> — montant fixe par catégorie (resto, sorties, etc.) avec barre de progression</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Alerte quand une enveloppe est à 80% du budget <span class="tag tag-notif">NOTIF</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Pas d'épargne / objectifs non atteints</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Objectifs d'épargne</strong> avec montant cible + mensualité + mois restants calculés automatiquement</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Rappel mensuel pour alimenter l'objectif <span class="tag tag-notif">NOTIF</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Abonnements oubliés qui s'accumulent</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Tracker abonnements</strong> avec coût mensuel total calculé automatiquement</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Notification 3 jours avant chaque renouvellement <span class="tag tag-notif">NOTIF</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVESTISSEMENT -->
+  <div class="card">
+    <div class="card-header">
+      <div class="module-icon c-invest">📈</div>
+      <div>
+        <div class="module-name">Investissement</div>
+        <div class="module-desc">Portefeuille, patrimoine, DCA</div>
+      </div>
+    </div>
+    <div class="problems">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Débutant, ne sait pas comment commencer</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Module apprentissage</strong> intégré avec flashcards sur les bases (ETF, DCA, diversification)</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>IA coach</strong> qui explique chaque concept au niveau débutant dans le chat <span class="tag tag-ai">IA</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Pas de vision claire de son patrimoine</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Tableau de bord patrimoine</strong> — immobilier + bourse + cash + crypto en un seul endroit</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Évolution mensuelle automatique calculée <span class="tag tag-auto">AUTO</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARRIÈRE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="module-icon c-career">💼</div>
+      <div>
+        <div class="module-name">Carrière</div>
+        <div class="module-desc">Candidatures, compétences, objectifs</div>
+      </div>
+    </div>
+    <div class="problems">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Recherche d'emploi désorganisée</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Tracker de candidatures</strong> avec statuts (envoyé / relance / entretien / refus)</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Rappel de relance automatique après 7 jours sans réponse <span class="tag tag-notif">NOTIF</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Compétences insuffisantes pour évoluer</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Skill gap analysis</strong> — identifier les compétences manquantes par rapport au poste cible</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Plan d'apprentissage généré par l'IA avec ressources <span class="tag tag-ai">IA</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPRENTISSAGE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="module-icon c-learning">📚</div>
+      <div>
+        <div class="module-name">Apprentissage</div>
+        <div class="module-desc">Flashcards, livres, compétences</div>
+      </div>
+    </div>
+    <div class="problems">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Oublie rapidement ce qu'il apprend</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Flashcards avec répétition espacée</strong> (SRS) — révision intelligente aux bons intervalles</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Rappel quotidien pour la session de révision <span class="tag tag-notif">NOTIF</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Pas assez de temps pour apprendre</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Sessions courtes</strong> 15-30 min avec Pomodoro — compatible avec n'importe quel emploi du temps</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Résumés de livres condensés (key insights) pour apprendre sans lire tout le livre</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPARENCE / LOOKSMAXX -->
+  <div class="card">
+    <div class="card-header">
+      <div class="module-icon c-looks">✨</div>
+      <div>
+        <div class="module-name">Apparence (Looksmaxx)</div>
+        <div class="module-desc">Peau, corps, style, progression</div>
+      </div>
+    </div>
+    <div class="problems">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Routine beauté/skincare inconstante</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Habit tracker skincare</strong> — matin/soir, streak pour maintenir la régularité</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Rappel matin et soir configurable <span class="tag tag-notif">NOTIF</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Pas de vision de sa transformation physique</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Photos de progression</strong> hebdomadaires avec comparaison avant/après par catégorie (visage / corps / peau)</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>IA qui analyse la progression entre deux photos <span class="tag tag-ai">IA</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Ne sait pas comment s'habiller selon la météo</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Garde-robe digitale</strong> avec suggestion de tenue selon température du jour <span class="tag tag-auto">AUTO</span></span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>IA stylist qui assemble les pièces compatibles <span class="tag tag-ai">IA</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOCIAL -->
+  <div class="card">
+    <div class="card-header">
+      <div class="module-icon c-social">👥</div>
+      <div>
+        <div class="module-name">Social & Relations</div>
+        <div class="module-desc">Contacts, événements, lien social</div>
+      </div>
+    </div>
+    <div class="problems">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Perd contact avec ses proches sans le vouloir</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>CRM personnel</strong> — fréquence de contact souhaitée par personne + alerte si aucun contact depuis X jours <span class="tag tag-notif">NOTIF</span></span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Notes privées sur chaque contact (sujets importants, préférences)</span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Isolement / manque d'interactions sociales</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Objectif hebdomadaire</strong> de sorties/rencontres avec tracking</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>IA</strong> qui détecte l'isolement dans les patterns d'humeur et propose des sorties concrètes <span class="tag tag-ai">IA</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CYCLE (FEMMES) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="module-icon c-cycle">🌸</div>
+      <div>
+        <div class="module-name">Cycle hormonal</div>
+        <div class="module-desc">Phases, énergie, symptômes</div>
+      </div>
+    </div>
+    <div class="problems">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Fluctuations d'énergie non comprises</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Phase du cycle en temps réel</strong> visible dans l'app (folliculaire / ovulation / lutéale / menstruelle) <span class="tag tag-auto">AUTO</span></span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Recommandations nutrition/sport adaptées à chaque phase <span class="tag tag-ai">IA</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Douleurs / SPM non anticipés</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span>Alerte préventive 3 jours avant le SPM avec conseils adaptés <span class="tag tag-notif">NOTIF</span></span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Journal de symptômes</strong> pour identifier les patterns récurrents et les anticiper</span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Performance sportive incohérente</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span>Planning fitness adapté à la phase — intensité haute en folliculaire/ovulation, récupération en lutéale</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Corrélation automatique phase ↔ humeur ↔ performance <span class="tag tag-auto">AUTO</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAISON -->
+  <div class="card">
+    <div class="card-header">
+      <div class="module-icon c-home">🏠</div>
+      <div>
+        <div class="module-name">Maison & Quotidien</div>
+        <div class="module-desc">Ménage, courses, entretien</div>
+      </div>
+    </div>
+    <div class="problems">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Ménage mal réparti / maison toujours en désordre</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Planning ménage</strong> avec tâches récurrentes (quotidien / hebdo / mensuel)</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Rappel automatique selon la fréquence configurée <span class="tag tag-notif">NOTIF</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Oublie de faire les courses / liste incomplète</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Liste de courses</strong> partageable avec quantités</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Garde-manger</strong> — l'app génère la liste de courses depuis ce qui manque <span class="tag tag-auto">AUTO</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="card">
+    <div class="card-header">
+      <div class="module-icon c-admin">📄</div>
+      <div>
+        <div class="module-name">Admin & Documents</div>
+        <div class="module-desc">Docs, deadlines, impôts</div>
+      </div>
+    </div>
+    <div class="problems">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Perd des documents importants</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Coffre-fort numérique</strong> — carte d'identité, passeport, assurances, contrats centralisés</span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span>Alerte avant expiration des documents (carte ID, passeport) <span class="tag tag-notif">NOTIF</span></span></div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="problem-block">
+        <div class="problem-label"><span class="dot"></span> Deadlines administratives ratées</div>
+        <div class="solutions">
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>Tracker de deadlines</strong> avec rappels progressifs (30j → 7j → 1j avant) <span class="tag tag-notif">NOTIF</span></span></div>
+          <div class="solution"><span class="solution-arrow">▶</span><span><strong>IA</strong> qui aide à remplir les formulaires courants <span class="tag tag-ai">IA</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="text-align:center; margin-top: 48px; color: #3D3A35; font-size: 12px;">
+  LifeOS — Architecture modules v1 — Chaque problème a une réponse dans l'app.
+</div>
+
+</body>
+</html>
