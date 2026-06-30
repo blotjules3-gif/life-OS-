@@ -841,8 +841,10 @@ private struct MessageRow: View {
             }
         }
         .transition(.asymmetric(
-            insertion: .move(edge: isUser ? .trailing : .leading).combined(with: .opacity),
-            removal: .opacity
+            insertion: .move(edge: isUser ? .trailing : .leading)
+                .combined(with: .opacity)
+                .combined(with: .scale(scale: 0.94, anchor: isUser ? .bottomTrailing : .bottomLeading)),
+            removal: .opacity.combined(with: .scale(scale: 0.97))
         ))
     }
 
