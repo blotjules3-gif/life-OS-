@@ -708,13 +708,14 @@ struct ProfileView: View {
     // MARK: - Challenges helpers
 
     private func saveChallengesForWidget(_ list: [ChallengeOut]) {
-        guard let top = list.first else { return }
-        let defaults = UserDefaults(suiteName: "group.lifeos.app") ?? .standard
+        guard let top = list.first,
+              let defaults = UserDefaults(suiteName: "group.lifeos.app") else { return }
         defaults.set(top.title, forKey: "widget_challenge_title")
         defaults.set(top.streak_days, forKey: "widget_challenge_streak")
         defaults.set(top.duration_days ?? 30, forKey: "widget_challenge_duration")
         defaults.set(top.days_elapsed, forKey: "widget_challenge_elapsed")
         defaults.set(top.challenge_type, forKey: "widget_challenge_type")
+        WidgetCenter.shared.reloadTimelines(ofKind: "ChallengeStreakWidget")
     }
 
     private var challengesEmptyState: some View {
