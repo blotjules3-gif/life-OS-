@@ -616,7 +616,7 @@ struct AIAssistantView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .onChange(of: vm.messages.count) { _, _ in
-                withAnimation(.easeOut(duration: 0.3)) {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                     proxy.scrollTo("bottom", anchor: .bottom)
                 }
             }
