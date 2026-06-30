@@ -96,7 +96,11 @@ struct HabitsWidgetView: View {
 
     var body: some View {
         Group {
-            if !entry.data.appGroupWorking {
+            if family == .accessoryCircular {
+                lockCircularView
+            } else if family == .accessoryRectangular {
+                lockRectangularView
+            } else if !entry.data.appGroupWorking {
                 setupNeededView
             } else if entry.habits.isEmpty {
                 noHabitsView
@@ -109,6 +113,51 @@ struct HabitsWidgetView: View {
         .containerBackground(for: .widget) {
             Color(uiColor: .systemBackground)
         }
+    }
+
+    // Lock screen — cercle de progression
+    private var lockCircularView: some View {
+        ZStack {
+            if entry.total > 0 {
+                Circle()
+                    .stroke(Color.secondary.opacity(0.25), lineWidth: 4)
+                Circle()
+                    .trim(from: 0, to: entry.total > 0 ? Double(entry.doneCount) / Double(entry.total) : 0)
+                    .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+            }
+            VStack(spacing: 0) {
+                Text("\(entry.doneCount)")
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                Text("/\(entry.total)")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .containerBackground(for: .widget) { Color.clear }
+    }
+
+    // Lock screen — barre rectangulaire
+    private var lockRectangularView: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 4) {
+                Image(systemName: entry.doneCount == entry.total && entry.total > 0 ? "checkmark.circle.fill" : "square.grid.3x3.fill")
+                    .font(.system(size: 10, weight: .semibold))
+                Text("Habitudes — \(entry.doneCount)/\(entry.total)")
+                    .font(.system(size: 11, weight: .semibold))
+                    .lineLimit(1)
+            }
+            ProgressView(value: entry.total > 0 ? Double(entry.doneCount) / Double(entry.total) : 0)
+                .tint(.white)
+            HStack(spacing: 6) {
+                ForEach(entry.habits.prefix(5)) { h in
+                    Image(systemName: h.isDoneToday ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 11))
+                        .foregroundStyle(h.isDoneToday ? .white : .secondary)
+                }
+            }
+        }
+        .containerBackground(for: .widget) { Color.clear }
     }
 
     // App Group non configuré
