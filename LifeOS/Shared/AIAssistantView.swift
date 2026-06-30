@@ -579,6 +579,20 @@ struct AIAssistantView: View {
         }
     }
 
+    // MARK: - Input section (offline banner + input bar)
+
+    private var inputSection: some View {
+        VStack(spacing: 0) {
+            if vm.isServerOffline {
+                offlineBanner
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+            inputArea
+        }
+        .background(Theme.bg)
+        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: vm.isServerOffline)
+    }
+
     // MARK: - Messages area
 
     private var messagesArea: some View {
@@ -604,13 +618,19 @@ struct AIAssistantView: View {
                             .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .bottom)))
                     }
 
-                    Color.clear.frame(height: 16).id("bottom")
+                    Color.clear.frame(height: 24).id("bottom")
                 }
                 .padding(.top, 16)
             }
             .scrollDismissesKeyboard(.interactively)
             .onChange(of: vm.messages.count) { _, _ in
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                    proxy.scrollTo("bottom", anchor: .bottom)
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
+                let duration = (notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double) ?? 0.28
+                withAnimation(.easeOut(duration: duration)) {
                     proxy.scrollTo("bottom", anchor: .bottom)
                 }
             }
