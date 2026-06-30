@@ -184,7 +184,7 @@ struct OnboardingView: View {
                 if step >= 2 && step <= 7 {
                     HStack {
                         Button {
-                            withAnimation(.spring(duration: 0.35)) { step -= 1 }
+                            goBack()
                         } label: {
                             Image(systemName: "chevron.left")
                                 .font(.system(size: 16, weight: .semibold))
