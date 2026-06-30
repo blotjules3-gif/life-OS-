@@ -260,7 +260,7 @@ struct HabitTrackerView: View {
                                     .foregroundStyle(.secondary)
                                     .kerning(1.2)
                             }
-                            ForEach(activeHabits) { h in HabitRow(habit: h) }
+                            ForEach(activeHabits) { h in HabitRow(habit: h, onEdit: { editingHabit = h }) }
                         }
                     }
                 }.padding(Theme.pad)
