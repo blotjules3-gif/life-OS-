@@ -957,20 +957,33 @@ struct ServerConfigView: View {
 private struct ThinkingIndicator: View {
     @State private var active = false
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 5) {
             ForEach(0..<3, id: \.self) { i in
                 Circle()
-                    .fill(Color.secondary.opacity(0.5))
-                    .frame(width: 6, height: 6)
-                    .scaleEffect(active ? 1.35 : 0.9)
+                    .fill(Color.secondary)
+                    .frame(width: 7, height: 7)
+                    .scaleEffect(active ? 1.0 : 0.65)
+                    .opacity(active ? 0.85 : 0.3)
+                    .offset(y: active ? -3 : 0)
                     .animation(
-                        .easeInOut(duration: 0.45)
+                        .spring(response: 0.4, dampingFraction: 0.5)
                             .repeatForever(autoreverses: true)
-                            .delay(Double(i) * 0.15),
+                            .delay(Double(i) * 0.16),
                         value: active
                     )
             }
         }
+        .padding(.vertical, 2)
         .onAppear { active = true }
+    }
+}
+
+// MARK: - PressScaleButtonStyle
+
+private struct PressScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.spring(response: 0.2, dampingFraction: 0.65), value: configuration.isPressed)
     }
 }
