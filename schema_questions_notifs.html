@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Questions par module → Notifications — LifeOS</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    background: #0E0F12;
+    color: #E8E6E1;
+    padding: 40px 28px;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1 { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 4px; letter-spacing: -0.02em; }
+  .subtitle { font-size: 13px; color: #5A5856; margin-bottom: 36px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: #16171B;
+    border-radius: 16px;
+    border: 1px solid #222328;
+    overflow: hidden;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #1E1F23;
+  }
+
+  .card-icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+
+  .card-title { font-size: 14px; font-weight: 700; color: #fff; }
+  .card-key { font-size: 10px; font-family: 'SF Mono', monospace; color: #5A5856; margin-top: 1px; }
+
+  .questions { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+  .q-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    align-items: start;
+  }
+
+  .q-text { font-size: 12px; color: #A8A6A0; line-height: 1.5; }
+  .q-text strong { color: #E8E6E1; font-weight: 600; display: block; margin-bottom: 1px; }
+
+  .q-key {
+    font-family: 'SF Mono', monospace;
+    font-size: 9.5px;
+    color: #4A9EFF;
+    background: rgba(74, 158, 255, 0.08);
+    border: 1px solid rgba(74, 158, 255, 0.15);
+    border-radius: 5px;
+    padding: 3px 7px;
+    white-space: nowrap;
+    margin-top: 2px;
+  }
+
+  .notifs {
+    background: #111214;
+    border-top: 1px solid #1E1F23;
+    padding: 10px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .notif-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #4A5856;
+    margin-bottom: 2px;
+  }
+
+  .notif-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .notif-time {
+    font-family: 'SF Mono', monospace;
+    font-size: 10px;
+    color: #32D7DC;
+    background: rgba(50, 215, 220, 0.07);
+    border: 1px solid rgba(50, 215, 220, 0.15);
+    border-radius: 5px;
+    padding: 2px 7px;
+    white-space: nowrap;
+  }
+
+  .notif-desc { font-size: 11px; color: #6B6A68; }
+
+  .cond {
+    font-size: 9px;
+    color: #FF9F0A;
+    background: rgba(255, 159, 10, 0.08);
+    border: 1px solid rgba(255, 159, 10, 0.15);
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-left: auto;
+  }
+
+  /* Couleurs modules */
+  .m-sleep    { background: rgba(100, 140, 230, 0.15); color: #648CE6; }
+  .m-fitness  { background: rgba(240, 120, 80, 0.15);  color: #F07850; }
+  .m-nutrition{ background: rgba(80, 200, 120, 0.15);  color: #50C878; }
+  .m-mind     { background: rgba(160, 100, 240, 0.15); color: #A064F0; }
+  .m-prod     { background: rgba(50, 180, 220, 0.15);  color: #32B4DC; }
+  .m-finance  { background: rgba(80, 200, 160, 0.15);  color: #50C8A0; }
+  .m-invest   { background: rgba(50, 215, 100, 0.15);  color: #32D764; }
+  .m-career   { background: rgba(240, 180, 60, 0.15);  color: #F0B43C; }
+  .m-learning { background: rgba(255, 120, 60, 0.15);  color: #FF783C; }
+  .m-cycle    { background: rgba(240, 80, 140, 0.15);  color: #F0508C; }
+  .m-home     { background: rgba(160, 140, 100, 0.15); color: #A08C64; }
+  .m-admin    { background: rgba(120, 160, 200, 0.15); color: #78A0C8; }
+  .m-looks    { background: rgba(220, 100, 160, 0.15); color: #DC64A0; }
+  .m-social   { background: rgba(80, 160, 240, 0.15);  color: #50A0F0; }
+
+  .divider { height: 1px; background: #1A1B1F; margin: 4px 0; }
+
+  .rule-box {
+    background: rgba(255, 69, 58, 0.07);
+    border: 1px solid rgba(255, 69, 58, 0.15);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    color: #A8A6A0;
+    line-height: 1.7;
+  }
+  .rule-box strong { color: #FF453A; }
+</style>
+</head>
+<body>
+
+<h1>Questions de configuration → Notifications</h1>
+<p class="subtitle">Chaque module pose des questions précises. Sans réponse = pas de notification.</p>
+
+<div class="rule-box">
+  <strong>Règle absolue :</strong> si la question n'a pas été posée, la clé UserDefaults est absente → aucune notification n'est envoyée pour ce module.<br>
+  Plus besoin de hardcoder des heures — tout est piloté par les réponses de l'utilisateur.
+</div>
+
+<div class="grid">
+
+  <!-- SOMMEIL -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-sleep">🌙</div>
+      <div>
+        <div class="card-title">Sommeil</div>
+        <div class="card-key">sleep</div>
+      </div>
+    </div>
+    <div class="questions">
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure tu te lèves normalement ?</strong>Heure de réveil habituelle</div>
+        <div class="q-key">wakeupHour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Tu veux un bilan après ton réveil ?</strong>Résumé énergie + sommeil</div>
+        <div class="q-key">notif_sleep_morning_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure tu veux te coucher ?</strong>Heure cible de coucher</div>
+        <div class="q-key">bedHour / bedMinute</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Tu veux un rappel avant de dormir ?</strong>Rappel écrans off</div>
+        <div class="q-key">notif_sleep_bedtime_enabled</div>
+      </div>
+    </div>
+    <div class="notifs">
+      <div class="notif-label">Notifications déclenchées</div>
+      <div class="notif-row">
+        <div class="notif-time">réveil + 20min</div>
+        <div class="notif-desc">Bilan du matin — score énergie</div>
+        <div class="cond">si activé</div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-time">coucher − 30min</div>
+        <div class="notif-desc">Écrans off, prépare-toi à dormir</div>
+        <div class="cond">si activé</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FITNESS -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-fitness">💪</div>
+      <div>
+        <div class="card-title">Fitness</div>
+        <div class="card-key">fitness</div>
+      </div>
+    </div>
+    <div class="questions">
+      <div class="q-row">
+        <div class="q-text"><strong>Tu t'entraînes le matin, midi ou le soir ?</strong>Créneau d'entraînement</div>
+        <div class="q-key">fitness_timing</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure exactement ?</strong>Heure de la séance</div>
+        <div class="q-key">sportHour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Quels jours de la semaine ?</strong>Lun, Mar, Mer… (multiple)</div>
+        <div class="q-key">fitness_days</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel combien de minutes avant ?</strong>Avance du rappel</div>
+        <div class="q-key">notif_fitness_advance_min</div>
+      </div>
+    </div>
+    <div class="notifs">
+      <div class="notif-label">Notifications déclenchées</div>
+      <div class="notif-row">
+        <div class="notif-time">séance − 15min</div>
+        <div class="notif-desc">Rappel séance, uniquement les jours configurés</div>
+        <div class="cond">si activé</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NUTRITION -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-nutrition">🥗</div>
+      <div>
+        <div class="card-title">Nutrition</div>
+        <div class="card-key">nutrition</div>
+      </div>
+    </div>
+    <div class="questions">
+      <div class="q-row">
+        <div class="q-text"><strong>Tu pratiques le jeûne intermittent ?</strong>Désactive le rappel petit-déj si oui</div>
+        <div class="q-key">nutrition_fasting_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure tu prends ton petit-déjeuner ?</strong>Heure du matin</div>
+        <div class="q-key">nutrition_breakfast_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure tu manges le midi ?</strong>Heure du déjeuner</div>
+        <div class="q-key">nutrition_lunch_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure tu dînes ?</strong>Heure du dîner</div>
+        <div class="q-key">nutrition_dinner_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure faire le bilan calories ?</strong>Récap du soir</div>
+        <div class="q-key">notif_nutrition_review_hour</div>
+      </div>
+    </div>
+    <div class="notifs">
+      <div class="notif-label">Notifications déclenchées</div>
+      <div class="notif-row">
+        <div class="notif-time">petit-déj − 10min</div>
+        <div class="notif-desc">Note ton repas du matin</div>
+        <div class="cond">si pas jeûne</div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-time">déjeuner − 10min</div>
+        <div class="notif-desc">Pense à noter ton repas</div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-time">dîner − 10min</div>
+        <div class="notif-desc">Dernière ligne droite calories</div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-time">heure bilan</div>
+        <div class="notif-desc">Vérifie tes calories et protéines</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENTAL -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-mind">🧠</div>
+      <div>
+        <div class="card-title">Mental / Bien-être</div>
+        <div class="card-key">mind</div>
+      </div>
+    </div>
+    <div class="questions">
+      <div class="q-row">
+        <div class="q-text"><strong>Tu préfères méditer le matin ou le soir ?</strong>Timing de la session</div>
+        <div class="q-key">mind_session_timing</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure exactement ?</strong>Heure de la session</div>
+        <div class="q-key">mind_session_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Tu veux un check-in humeur quotidien ?</strong>Suivi émotionnel</div>
+        <div class="q-key">notif_mind_mood_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ton check-in humeur ?</strong>Moment du check-in</div>
+        <div class="q-key">mind_mood_hour</div>
+      </div>
+    </div>
+    <div class="notifs">
+      <div class="notif-label">Notifications déclenchées</div>
+      <div class="notif-row">
+        <div class="notif-time">heure session</div>
+        <div class="notif-desc">Ta session bien-être — 5min pour toi</div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-time">heure mood</div>
+        <div class="notif-desc">Check-in humeur quotidien</div>
+        <div class="cond">si activé</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCTIVITÉ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-prod">✅</div>
+      <div>
+        <div class="card-title">Productivité</div>
+        <div class="card-key">productivity</div>
+      </div>
+    </div>
+    <div class="questions">
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure tu commences ta journée ?</strong>Début de journée de travail</div>
+        <div class="q-key">productivity_start_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Point priorités en début de journée ?</strong>Rappel 3 priorités du jour</div>
+        <div class="q-key">notif_productivity_morning_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure tu termines ta journée ?</strong>Heure de fin de journée</div>
+        <div class="q-key">productivity_end_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Bilan todos en fin de journée ?</strong>Revue des tâches</div>
+        <div class="q-key">notif_productivity_evening_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure tu veux voir tes habitudes ?</strong>Rappel habitudes du jour</div>
+        <div class="q-key">notif_habits_hour</div>
+      </div>
+    </div>
+    <div class="notifs">
+      <div class="notif-label">Notifications déclenchées</div>
+      <div class="notif-row">
+        <div class="notif-time">début + 5min</div>
+        <div class="notif-desc">3 priorités pour aujourd'hui</div>
+        <div class="cond">si activé</div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-time">heure fin</div>
+        <div class="notif-desc">Bilan de la journée</div>
+        <div class="cond">si activé</div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-time">heure habitudes</div>
+        <div class="notif-desc">Tes habitudes du jour</div>
+        <div class="cond">si activé</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINANCES -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-finance">💰</div>
+      <div>
+        <div class="card-title">Finances</div>
+        <div class="card-key">finance</div>
+      </div>
+    </div>
+    <div class="questions">
+      <div class="q-row">
+        <div class="q-text"><strong>Quel jour du mois tu reçois ton salaire ?</strong>Date de virement</div>
+        <div class="q-key">finance_salary_day</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Bilan budget hebdomadaire ?</strong>Revue dépenses de la semaine</div>
+        <div class="q-key">notif_finance_weekly_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Quel jour de la semaine ?</strong>Lundi, vendredi…</div>
+        <div class="q-key">finance_review_weekday</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ?</strong>Heure du bilan</div>
+        <div class="q-key">finance_review_hour</div>
+      </div>
+    </div>
+    <div class="notifs">
+      <div class="notif-label">Notifications déclenchées</div>
+      <div class="notif-row">
+        <div class="notif-time">jour salaire</div>
+        <div class="notif-desc">Bilan budget mensuel</div>
+        <div class="cond">si activé</div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-time">jour + heure config</div>
+        <div class="notif-desc">Revue dépenses hebdomadaire</div>
+        <div class="cond">si activé</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVESTISSEMENT -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-invest">📈</div>
+      <div>
+        <div class="card-title">Investissement</div>
+        <div class="card-key">invest</div>
+      </div>
+    </div>
+    <div class="questions">
+      <div class="q-row">
+        <div class="q-text"><strong>Tu investis régulièrement chaque mois (DCA) ?</strong>Versement mensuel</div>
+        <div class="q-key">notif_invest_dca_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Quel jour du mois ?</strong>Jour du versement</div>
+        <div class="q-key">invest_dca_day</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Revue portfolio hebdomadaire ?</strong>Check de performance</div>
+        <div class="q-key">notif_invest_weekly_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Quel jour et à quelle heure ?</strong>Moment de la revue</div>
+        <div class="q-key">invest_review_weekday / invest_review_hour</div>
+      </div>
+    </div>
+    <div class="notifs">
+      <div class="notif-label">Notifications déclenchées</div>
+      <div class="notif-row">
+        <div class="notif-time">jour DCA à 9h</div>
+        <div class="notif-desc">C'est le bon moment pour investir</div>
+        <div class="cond">si activé</div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-time">jour + heure config</div>
+        <div class="notif-desc">Revue portfolio hebdomadaire</div>
+        <div class="cond">si activé</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARRIÈRE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-career">💼</div>
+      <div>
+        <div class="card-title">Carrière</div>
+        <div class="card-key">career</div>
+      </div>
+    </div>
+    <div class="questions">
+      <div class="q-row">
+        <div class="q-text"><strong>Tu es en recherche d'emploi active ?</strong>Active ou non les rappels candidatures</div>
+        <div class="q-key">career_job_searching</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Combien de candidatures par semaine tu vises ?</strong>Objectif hebdomadaire</div>
+        <div class="q-key">career_applications_target</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel hebdomadaire candidatures ?</strong>Point de la semaine</div>
+        <div class="q-key">notif_career_weekly_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Quel jour ?</strong>Lundi matin par exemple</div>
+        <div class="q-key">career_review_weekday</div>
+      </div>
+    </div>
+    <div class="notifs">
+      <div class="notif-label">Notifications déclenchées</div>
+      <div class="notif-row">
+        <div class="notif-time">jour config à 9h</div>
+        <div class="notif-desc">Candidatures de la semaine</div>
+        <div class="cond">si recherche active</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPRENTISSAGE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-learning">📚</div>
+      <div>
+        <div class="card-title">Apprentissage</div>
+        <div class="card-key">learning</div>
+      </div>
+    </div>
+    <div class="questions">
+      <div class="q-row">
+        <div class="q-text"><strong>Tu préfères apprendre le matin ou le soir ?</strong>Moment d'apprentissage</div>
+        <div class="q-key">learning_timing</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ?</strong>Heure exacte de la session</div>
+        <div class="q-key">learning_session_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Tu veux un rappel quotidien ?</strong>Active la notification</div>
+        <div class="q-key">notif_learning_enabled</div>
+      </div>
+    </div>
+    <div class="notifs">
+      <div class="notif-label">Notifications déclenchées</div>
+      <div class="notif-row">
+        <div class="notif-time">heure session</div>
+        <div class="notif-desc">Ta session d'apprentissage du jour</div>
+        <div class="cond">si activé</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CYCLE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-cycle">🌸</div>
+      <div>
+        <div class="card-title">Cycle menstruel</div>
+        <div class="card-key">cycle</div>
+      </div>
+    </div>
+    <div class="questions">
+      <div class="q-row">
+        <div class="q-text"><strong>Tu veux tracker ton cycle chaque jour ?</strong>Suivi quotidien</div>
+        <div class="q-key">notif_cycle_daily_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ?</strong>Moment du suivi</div>
+        <div class="q-key">cycle_track_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Être prévenue avant tes règles ?</strong>Alerte pré-menstruelle</div>
+        <div class="q-key">notif_cycle_pms_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Combien de jours avant ?</strong>Avance de l'alerte (3 jours recommandé)</div>
+        <div class="q-key">cycle_pms_advance_days</div>
+      </div>
+    </div>
+    <div class="notifs">
+      <div class="notif-label">Notifications déclenchées</div>
+      <div class="notif-row">
+        <div class="notif-time">heure config</div>
+        <div class="notif-desc">Suivi cycle quotidien</div>
+        <div class="cond">si activé</div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-time">J-3 avant règles</div>
+        <div class="notif-desc">Alerte pré-menstruelle</div>
+        <div class="cond">si activé</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAISON -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-home">🏠</div>
+      <div>
+        <div class="card-title">Maison</div>
+        <div class="card-key">home</div>
+      </div>
+    </div>
+    <div class="questions">
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel hebdomadaire pour le ménage ?</strong>Session nettoyage</div>
+        <div class="q-key">notif_home_cleaning_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Quel jour et à quelle heure ?</strong>Moment du ménage</div>
+        <div class="q-key">home_cleaning_weekday / home_cleaning_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel pour les courses ?</strong>Jour de courses</div>
+        <div class="q-key">notif_home_groceries_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Quel jour tu fais tes courses ?</strong>Samedi matin par exemple</div>
+        <div class="q-key">home_groceries_weekday</div>
+      </div>
+    </div>
+    <div class="notifs">
+      <div class="notif-label">Notifications déclenchées</div>
+      <div class="notif-row">
+        <div class="notif-time">jour + heure config</div>
+        <div class="notif-desc">Session ménage hebdomadaire</div>
+        <div class="cond">si activé</div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-time">jour courses à 10h</div>
+        <div class="notif-desc">Ta liste de courses est prête</div>
+        <div class="cond">si activé</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-admin">📋</div>
+      <div>
+        <div class="card-title">Admin</div>
+        <div class="card-key">admin</div>
+      </div>
+    </div>
+    <div class="questions">
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel hebdomadaire pour l'admin ?</strong>Session paperasse</div>
+        <div class="q-key">notif_admin_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Quel jour de la semaine ?</strong>Dimanche soir par exemple</div>
+        <div class="q-key">admin_session_weekday</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ?</strong>Heure de la session admin</div>
+        <div class="q-key">admin_session_hour</div>
+      </div>
+    </div>
+    <div class="notifs">
+      <div class="notif-label">Notifications déclenchées</div>
+      <div class="notif-row">
+        <div class="notif-time">jour + heure config</div>
+        <div class="notif-desc">Session admin — paperasse en 30min</div>
+        <div class="cond">si activé</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CORPS -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-looks">✨</div>
+      <div>
+        <div class="card-title">Corps / Looks</div>
+        <div class="card-key">looks</div>
+      </div>
+    </div>
+    <div class="questions">
+      <div class="q-row">
+        <div class="q-text"><strong>Tu as une routine soin le matin ?</strong>Skincare, hygiène, préparation</div>
+        <div class="q-key">looks_has_morning_routine</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ?</strong>Heure de la routine matin</div>
+        <div class="q-key">looks_morning_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Tu as une routine soin le soir ?</strong>Double nettoyage, crème de nuit…</div>
+        <div class="q-key">looks_has_evening_routine</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ?</strong>Heure de la routine soir</div>
+        <div class="q-key">looks_evening_hour</div>
+      </div>
+    </div>
+    <div class="notifs">
+      <div class="notif-label">Notifications déclenchées</div>
+      <div class="notif-row">
+        <div class="notif-time">heure matin</div>
+        <div class="notif-desc">Routine du matin</div>
+        <div class="cond">si activé</div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-time">heure soir</div>
+        <div class="notif-desc">Routine du soir</div>
+        <div class="cond">si activé</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOCIAL -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-social">👥</div>
+      <div>
+        <div class="card-title">Social</div>
+        <div class="card-key">social</div>
+      </div>
+    </div>
+    <div class="questions">
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel pour garder contact avec ton réseau ?</strong>Famille, amis, collègues</div>
+        <div class="q-key">notif_social_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Quel jour de la semaine ?</strong>Moment du rappel contact</div>
+        <div class="q-key">social_contact_weekday</div>
+      </div>
+    </div>
+    <div class="notifs">
+      <div class="notif-label">Notifications déclenchées</div>
+      <div class="notif-row">
+        <div class="notif-time">jour config à 18h</div>
+        <div class="notif-desc">Garde le contact — un message aujourd'hui</div>
+        <div class="cond">si activé</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
