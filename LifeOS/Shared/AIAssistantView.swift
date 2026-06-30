@@ -199,10 +199,18 @@ final class AIAssistantViewModel: ObservableObject {
                 }
             } catch {
                 removeThinking()
-                if let apiErr = error as? AgentAPIError, case .networkError = apiErr {
-                    isServerOffline = true
-                } else if let apiErr = error as? AgentAPIError, case .invalidResponse(404) = apiErr {
-                    conversationID = ""
+                if let apiErr = error as? AgentAPIError {
+                    switch apiErr {
+                    case .networkError(let underlying):
+                        let urlErr = underlying as? URLError
+                        if urlErr?.code == .notConnectedToInternet || urlErr?.code == .networkConnectionLost {
+                            isServerOffline = true
+                        }
+                    case .invalidResponse(404):
+                        conversationID = ""
+                    default:
+                        break
+                    }
                 }
             }
             isLoading = false
