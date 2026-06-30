@@ -328,11 +328,12 @@ actor AgentAPI {
         return try decode(T.self, from: data)
     }
 
-    private func post<Body: Encodable, Response: Decodable>(path: String, body: Body) async throws -> Response {
+    private func post<Body: Encodable, Response: Decodable>(path: String, body: Body, session sessionOverride: URLSession? = nil) async throws -> Response {
         var req = makeRequest(path: path)
         req.httpMethod = "POST"
         req.httpBody = try JSONEncoder().encode(body)
-        let (data, response) = try await session.data(for: req)
+        let s = sessionOverride ?? session
+        let (data, response) = try await s.data(for: req)
         try validateResponse(data: data, response: response)
         return try decode(Response.self, from: data)
     }
