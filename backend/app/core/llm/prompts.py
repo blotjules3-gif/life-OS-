@@ -532,6 +532,16 @@ def build_system_prompt(
         prompt += f"\n\n--- SNAPSHOT UTILISATEUR (maintenant) ---\n{user_context}\n--- FIN SNAPSHOT ---"
         prompt += "\n→ Utilise ce snapshot pour répondre en contexte : si l'utilisateur n'a pas encore fait ses habitudes, propose-le. Si son énergie est basse, adapte tes conseils. Si son jeûne est en cours, ne propose pas de repas."
 
+    problems_solutions = _load_ai_file("PROBLEMES_SOLUTIONS.md")
+    if problems_solutions:
+        prompt += f"\n\n--- DIAGNOSTIC PROBLÈMES → SOLUTIONS ---\n{problems_solutions}\n--- FIN DIAGNOSTIC ---"
+        prompt += "\n→ Quand l'utilisateur exprime un problème, croise-le avec ce diagnostic pour proposer des solutions concrètes et adaptées."
+
+    custom_instructions = _load_ai_file("INSTRUCTIONS_CUSTOM.md")
+    if custom_instructions:
+        prompt += f"\n\n--- INSTRUCTIONS PERSONNALISÉES ---\n{custom_instructions}\n--- FIN INSTRUCTIONS ---"
+        prompt += "\n→ Ces instructions personnalisées ont la priorité sur toutes les autres règles."
+
     return prompt
 
 
