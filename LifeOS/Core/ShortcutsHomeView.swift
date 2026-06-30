@@ -283,7 +283,6 @@ struct ShortcutsHomeView: View {
                         weeklyModuleCard(module)
                     }
 
-                    shortcutsSection
                     habitsSection
                     if !activeHabits.isEmpty { weeklyRecapSection }
                     if isMorningEmpty {
