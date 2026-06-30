@@ -179,10 +179,12 @@ struct LifeOSApp: App {
             container = mc
         case .failure:
             // Schéma incompatible (ex. colonnes ajoutées) — on efface le store et on repart propre
-            let storeURLs = config.url.flatMap { url -> [URL] in
-                [url, url.deletingPathExtension().appendingPathExtension("store-shm"),
-                      url.deletingPathExtension().appendingPathExtension("store-wal")]
-            } ?? []
+            let storeURL = config.url
+            let storeURLs: [URL] = [
+                storeURL,
+                URL(fileURLWithPath: storeURL.path + "-shm"),
+                URL(fileURLWithPath: storeURL.path + "-wal")
+            ]
             storeURLs.forEach { try? FileManager.default.removeItem(at: $0) }
 
             if let fresh = try? ModelContainer(for: schema, configurations: [config]) {
