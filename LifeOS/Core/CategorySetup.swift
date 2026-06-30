@@ -6,7 +6,7 @@ import SwiftUI
 
 enum CategorySetup {
     /// Catégories qui possèdent un flux de configuration (s'agrandit à chaque pass).
-    static let flows: [AppCategory] = [.nutrition, .fitness]
+    static let flows: [AppCategory] = [.nutrition, .fitness, .sleep, .finance]
 
     static func hasFlow(_ c: AppCategory) -> Bool { flows.contains(c) }
     static func isDone(_ c: AppCategory) -> Bool { UserDefaults.standard.bool(forKey: "setup.done.\(c.rawValue)") }
@@ -222,6 +222,21 @@ struct SetupNumber: View {
     }
 }
 
+// MARK: - Vue de configuration centrale pour une catégorie
+
+struct CategoryFlowView: View {
+    let category: AppCategory
+    var body: some View {
+        switch category {
+        case .nutrition: NutritionSetupView()
+        case .fitness:   FitnessSetupView()
+        case .sleep:     SleepSetupView()
+        case .finance:   FinanceSetupView()
+        default:         EmptyView()
+        }
+    }
+}
+
 // MARK: - Carte de progression du profil (Profil / Accueil)
 
 struct ProfileCompletionCard: View {
@@ -237,13 +252,7 @@ struct ProfileCompletionCard: View {
         }
         .id(refresh)
         .onAppear { refresh.toggle() }
-        .fullScreenCover(item: $launch) { c in
-            switch c {
-            case .nutrition: NutritionSetupView()
-            case .fitness:   FitnessSetupView()
-            default:         EmptyView()
-            }
-        }
+        .fullScreenCover(item: $launch) { c in CategoryFlowView(category: c) }
     }
 
     private var card: some View {
@@ -278,5 +287,87 @@ struct ProfileCompletionCard: View {
         }
         .padding(16)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+    }
+}
+
+// MARK: - Intake d'onboarding : configure tous les pôles, reprenable & idempotent
+
+struct IntakeHubView: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var launch: AppCategory?
+    @State private var refresh = false
+
+    /// Les 16 pôles dans l'ordre, ceux qui ont un flux d'abord.
+    private var poles: [AppCategory] {
+        AppCategory.allCases.sorted { a, b in
+            CategorySetup.hasFlow(a) && !CategorySetup.hasFlow(b)
+        }
+    }
+    private var doneN: Int { CategorySetup.doneCount }
+    private var totalN: Int { CategorySetup.flows.count }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Theme.background
+                ScrollView {
+                    VStack(spacing: 16) {
+                        headerCard
+                        VStack(spacing: 8) {
+                            ForEach(poles) { c in row(c) }
+                        }
+                    }
+                    .padding(16).padding(.bottom, 30)
+                }
+            }
+            .navigationTitle("Configurer ton profil").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Terminer") { dismiss() } } }
+            .fullScreenCover(item: $launch) { c in CategoryFlowView(category: c) }
+            .id(refresh)
+            .onAppear { refresh.toggle() }
+        }
+    }
+
+    private var headerCard: some View {
+        VStack(spacing: 10) {
+            ZStack {
+                Circle().stroke(Theme.bg2, lineWidth: 9).frame(width: 84, height: 84)
+                Circle().trim(from: 0, to: CGFloat(max(0.02, CategorySetup.fraction)))
+                    .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                    .rotationEffect(.degrees(-90)).frame(width: 84, height: 84)
+                Text("\(CategorySetup.percent)%").font(.title3.bold())
+            }
+            Text("\(doneN) / \(totalN) pôles configurés").font(.headline)
+            Text("Réponds aux questions pour que chaque outil s'ouvre déjà rempli. Tu peux passer une section et y revenir.")
+                .font(.caption).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity).padding(20)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius))
+    }
+
+    @ViewBuilder private func row(_ c: AppCategory) -> some View {
+        let has = CategorySetup.hasFlow(c)
+        let done = CategorySetup.isDone(c)
+        Button { if has { launch = c; Haptics.soft() } } label: {
+            HStack(spacing: 14) {
+                Image(systemName: c.icon).font(.system(size: 16, weight: .semibold)).foregroundStyle(.white)
+                    .frame(width: 38, height: 38)
+                    .background((has ? c.tint : Color.gray).gradient, in: RoundedRectangle(cornerRadius: 10))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(c.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                    Text(has ? (done ? "Configuré" : "À configurer") : "Bientôt")
+                        .font(.caption).foregroundStyle(done ? Color.green : Theme.textSecondary)
+                }
+                Spacer()
+                if has {
+                    Image(systemName: done ? "checkmark.circle.fill" : "chevron.right")
+                        .foregroundStyle(done ? AnyShapeStyle(Color.green) : AnyShapeStyle(Color.secondary))
+                }
+            }
+            .padding(14)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+            .opacity(has ? 1 : 0.5)
+        }
+        .buttonStyle(.plain).disabled(!has)
     }
 }

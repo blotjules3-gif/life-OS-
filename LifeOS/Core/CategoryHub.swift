@@ -116,11 +116,7 @@ struct CategoryHubView: View {
     }
 
     @ViewBuilder private var setupFlow: some View {
-        switch category {
-        case .nutrition: NutritionSetupView()
-        case .fitness:   FitnessSetupView()
-        default:         EmptyView()
-        }
+        CategoryFlowView(category: category)
     }
 
     @ViewBuilder private var content: some View {

@@ -14,6 +14,8 @@ struct LifeOSApp: App {
     private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
     @State private var showBriefingFromWidget = false
     @State private var showSleepCheckFromWidget = false
+    @State private var showIntake = false
+    @AppStorage("intakeShown") private var intakeShown = false
 
     private var recommendedModules: [AppCategory] {
         recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
@@ -81,10 +83,15 @@ struct LifeOSApp: App {
                     .tint(appTheme.accent)
                     .transition(.opacity)
                     .zIndex(1)
+                    .fullScreenCover(isPresented: $showIntake) { IntakeHubView() }
             }
         }
         .modelContainer(container)
         .animation(.easeInOut(duration: 0.35), value: onboardingDone)
+        .onChange(of: onboardingDone) { _, done in
+            // Après l'onboarding identité, propose l'intake complet (une fois).
+            if done && !intakeShown { intakeShown = true; showIntake = true }
+        }
         .onAppear {
             resetDailyValuesIfNeeded()
             EngagementTracker.shared.recordOpen()
