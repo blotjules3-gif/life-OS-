@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-_AI_DIR = Path(__file__).parent.parent.parent.parent.parent.parent / "AI"
+_AI_DIR = Path(__file__).parent.parent.parent.parent.parent / "AI"
 
 
 def _load_ai_file(filename: str) -> str:
