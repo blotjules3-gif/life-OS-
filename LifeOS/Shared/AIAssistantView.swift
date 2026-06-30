@@ -535,19 +535,11 @@ struct AIAssistantView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                Theme.bg.ignoresSafeArea()
-
-                VStack(spacing: 0) {
-                    messagesArea
-                    if vm.isServerOffline {
-                        offlineBanner
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
-                    }
-                    inputArea
+            messagesArea
+                .background(Theme.bg.ignoresSafeArea())
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    inputSection
                 }
-                .animation(.spring(response: 0.35, dampingFraction: 0.82), value: vm.isServerOffline)
-            }
             .navigationTitle("Assistant IA")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
