@@ -96,6 +96,33 @@ struct MainTabView: View {
     }
 }
 
+// MARK: - Syncer invisible habitudes → widget
+
+private struct HabitWidgetSyncer: View {
+    @Query(sort: \Habit.createdAt) private var allHabits: [Habit]
+
+    var body: some View {
+        Color.clear.frame(width: 0, height: 0)
+            .task { sync() }
+            .onChange(of: allHabits.count) { _, _ in sync() }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in sync() }
+    }
+
+    private func sync() {
+        let today = Date()
+        let active = allHabits.filter { !$0.isPending }
+        let entries = active.map { h -> [String: Any] in
+            let done = h.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: today) }
+            return ["name": h.name, "icon": h.icon, "colorHex": h.colorHex, "done": done]
+        }
+        guard let defaults = UserDefaults(suiteName: "group.lifeos.app") else { return }
+        defaults.set(try? JSONSerialization.data(withJSONObject: entries), forKey: "widget_habits")
+        defaults.set(entries.filter { $0["done"] as? Bool == true }.count, forKey: "habits_done_today")
+        defaults.set(entries.count, forKey: "habits_total_today")
+        WidgetCenter.shared.reloadTimelines(ofKind: "HabitsWidget")
+    }
+}
+
 // MARK: - Barre flottante : [2 onglets] [assistant] [2 onglets]
 
 struct FloatingTabBar: View {
