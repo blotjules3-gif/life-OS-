@@ -608,6 +608,7 @@ struct AIAssistantView: View {
                     if !vm.isLoading {
                         quickSuggestionsRow
                             .padding(.top, 8)
+                            .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .bottom)))
                     }
 
                     Color.clear.frame(height: 16).id("bottom")
