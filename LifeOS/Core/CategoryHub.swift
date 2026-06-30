@@ -487,7 +487,7 @@ private let nutritionTools: [CategoryTool] = [
     .init("drop.fill", "Hydratation", "Suivi + rappels", tint: .nutriTint) { HydrationView() },
     .init("pills.fill", "Compléments", "Rappels personnalisés", tint: .nutriTint) { SupplementsView() },
     .init("allergens", "Allergènes & régimes", "Halal, vegan, sans gluten…", tint: .nutriTint) { DietProfileView() },
-    .init("camera.viewfinder", "Calories par photo", "Cal AI — à brancher", tint: .nutriTint) { PhotoCalorieScaffold() },
+    .init("camera.viewfinder", "Calories par photo", "Caméra + estimation on-device", tint: .nutriTint) { PhotoCalorieView() },
     .init("barcode.viewfinder", "Scan code-barres santé", "Yuka + prix + alternative", tint: .nutriTint) { ScanProductView() },
 ]
 

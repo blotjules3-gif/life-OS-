@@ -40,9 +40,9 @@ mood check-in, Raccourcis grid + editor. Profile-completion card added.
 | # | Category | Status | Note |
 |---|---|---|---|
 | 1 | Sommeil (`sleep`) | DONE | + onboarding flow |
-| 2 | Nutrition (`nutrition`) | PARTIAL | tools real EXCEPT the two below |
-| – | Nutrition › Calories par photo | **TODO** | must build real camera (AVFoundation/VisionKit) + CoreML/Anthropic estimate |
-| – | Nutrition › Scan code-barres | **TODO** | must build DataScannerViewController + OpenFoodFacts |
+| 2 | Nutrition (`nutrition`) | DONE | all tools real (incl. both camera features below) |
+| – | Nutrition › Calories par photo | **DONE** | real camera (UIImagePickerController) + PhotosPicker fallback + on-device Vision (VNClassifyImageRequest) food classify → kcal/macros estimate (editable) → FoodEntry journal; loading/empty/error states. Live camera needs a physical device |
+| – | Nutrition › Scan code-barres | **DONE** | was already real: VisionKit DataScannerViewController + OpenFoodFacts (nutriscore/nova) + ProductDetailView; manual-code + search fallback on sim. (Earlier audit wrongly downgraded it) |
 | 3 | Sport (`fitness`) | DONE | program + Tabata linked + onboarding flow |
 | 4 | Looks (`looks`) | DONE | Vision face analysis real |
 | 5 | Mental (`mind`) | DONE | on-device soundscape real; Détox écran = timer only |
