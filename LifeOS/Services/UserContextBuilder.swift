@@ -7,7 +7,7 @@ final class UserContextBuilder {
     static let shared = UserContextBuilder()
     private init() {}
 
-    private static let group = UserDefaults(suiteName: "group.lifeos.app") ?? .standard
+    private static let group = UserDefaults(suiteName: "group.lifeos.app")
 
     func build() -> String {
         var lines: [String] = []
