@@ -546,6 +546,7 @@ struct AIAssistantView: View {
                     }
                     inputArea
                 }
+                .animation(.spring(response: 0.35, dampingFraction: 0.82), value: vm.isServerOffline)
             }
             .navigationTitle("Assistant IA")
             .navigationBarTitleDisplayMode(.inline)
