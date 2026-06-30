@@ -692,7 +692,7 @@ struct AIAssistantView: View {
                             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .stroke(Color(uiColor: .separator).opacity(0.4), lineWidth: 1))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PressScaleButtonStyle())
                 }
             }
             .padding(.horizontal, 16)
