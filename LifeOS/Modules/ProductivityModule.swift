@@ -447,13 +447,44 @@ struct HabitRow: View {
 struct HabitEditor: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
-    @State private var name = ""; @State private var icon = "drop.fill"; @State private var color = 0x4CC38A
+    var editingHabit: Habit? = nil
+
+    @State private var name = ""
+    @State private var icon = "drop.fill"
+    @State private var color = 0x4CC38A
+    @State private var scheduledHour = 9
+    @State private var scheduledMinute = 0
+
     private let icons = ["drop.fill","book.fill","dumbbell.fill","leaf.fill","sun.max.fill","moon.fill","pencil","heart.fill","cup.and.saucer.fill","bed.double.fill"]
     private let colors = [0x4CC38A, 0x618EF1, 0xF1746C, 0xE0A23C, 0x9B6CF1, 0x3CD0C8]
+    private let minutes = [0, 15, 30, 45]
+
     var body: some View {
         NavigationStack {
             Form {
-                TextField("Nom de l'habitude", text: $name)
+                Section("Habitude") {
+                    TextField("Nom", text: $name)
+                }
+                Section("Horaire") {
+                    HStack(spacing: 0) {
+                        Picker("Heure", selection: $scheduledHour) {
+                            ForEach(0..<24, id: \.self) { Text(String(format: "%02d", $0)).tag($0) }
+                        }
+                        .pickerStyle(.wheel)
+                        .frame(maxWidth: .infinity)
+                        .clipped()
+                        Text("h")
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundStyle(.secondary)
+                        Picker("Min", selection: $scheduledMinute) {
+                            ForEach(minutes, id: \.self) { Text(String(format: "%02d", $0)).tag($0) }
+                        }
+                        .pickerStyle(.wheel)
+                        .frame(maxWidth: .infinity)
+                        .clipped()
+                    }
+                    .frame(height: 120)
+                }
                 Section("Icône") {
                     LazyVGrid(columns: Array(repeating: GridItem(), count: 5)) {
                         ForEach(icons, id: \.self) { i in
@@ -464,19 +495,50 @@ struct HabitEditor: View {
                     }
                 }
                 Section("Couleur") {
-                    HStack { ForEach(colors, id: \.self) { c in
-                        Circle().fill(Color(hex: UInt(c))).frame(width: 30, height: 30)
-                            .overlay(color == c ? Circle().stroke(.white, lineWidth: 2) : nil)
-                            .onTapGesture { color = c }
-                    } }
+                    HStack {
+                        ForEach(colors, id: \.self) { c in
+                            Circle().fill(Color(hex: UInt(c))).frame(width: 32, height: 32)
+                                .overlay(color == c ? Circle().stroke(.white, lineWidth: 2.5) : nil)
+                                .shadow(color: Color(hex: UInt(c)).opacity(color == c ? 0.4 : 0), radius: 4)
+                                .onTapGesture { color = c }
+                        }
+                    }
+                }
+                if editingHabit != nil {
+                    Section {
+                        Button(role: .destructive) {
+                            if let h = editingHabit { ctx.delete(h) }
+                            dismiss()
+                        } label: {
+                            HStack {
+                                Spacer()
+                                Text("Supprimer l'habitude")
+                                Spacer()
+                            }
+                        }
+                    }
                 }
             }
-            .navigationTitle("Nouvelle habitude").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(editingHabit == nil ? "Nouvelle habitude" : "Modifier")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Créer") {
-                    ctx.insert(Habit(name: name, icon: icon, colorHex: color)); dismiss()
-                }.disabled(name.isEmpty) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(editingHabit == nil ? "Créer" : "Enregistrer") {
+                        if let h = editingHabit {
+                            h.name = name; h.icon = icon; h.colorHex = color
+                            h.scheduledHour = scheduledHour; h.scheduledMinute = scheduledMinute
+                        } else {
+                            ctx.insert(Habit(name: name, icon: icon, colorHex: color, scheduledHour: scheduledHour, scheduledMinute: scheduledMinute))
+                        }
+                        dismiss()
+                    }.disabled(name.isEmpty)
+                }
+            }
+            .onAppear {
+                guard let h = editingHabit else { return }
+                name = h.name; icon = h.icon; color = h.colorHex
+                scheduledHour = h.scheduledHour; scheduledMinute = h.scheduledMinute
             }
         }
     }
