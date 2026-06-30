@@ -62,10 +62,13 @@ import SwiftUI
     var createdAt: Date
     var isPending: Bool
     var moduleTag: String
+    var scheduledHour: Int
+    var scheduledMinute: Int
     @Relationship(deleteRule: .cascade) var completions: [HabitCompletion]
-    init(name: String = "", icon: String = "checkmark", colorHex: Int = 0x4CC38A, createdAt: Date = .now, isPending: Bool = false, moduleTag: String = "") {
+    init(name: String = "", icon: String = "checkmark", colorHex: Int = 0x4CC38A, createdAt: Date = .now, isPending: Bool = false, moduleTag: String = "", scheduledHour: Int = 9, scheduledMinute: Int = 0) {
         self.name = name; self.icon = icon; self.colorHex = colorHex; self.createdAt = createdAt
         self.isPending = isPending; self.moduleTag = moduleTag
+        self.scheduledHour = scheduledHour; self.scheduledMinute = scheduledMinute
         self.completions = []
     }
 }
