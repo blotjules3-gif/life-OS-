@@ -38,13 +38,10 @@ struct LifeOSApp: App {
         CycleEntry.self,
         // Assistant IA
         AIMessage.self,
-<<<<<<< HEAD
         // Santé médicale
-        Medication.self, MedicalAppointment.self, VitalRecord.self, Vaccination.self
-=======
+        Medication.self, MedicalAppointment.self, VitalRecord.self, Vaccination.self,
         // Rappels perso (centre de notifications) + programme de sport
         CustomReminder.self, GymDay.self
->>>>>>> origin/pote
     ])
 
     var body: some Scene {
