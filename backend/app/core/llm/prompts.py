@@ -535,7 +535,17 @@ def build_system_prompt(
     problems_solutions = _load_ai_file("PROBLEMES_SOLUTIONS.md")
     if problems_solutions:
         prompt += f"\n\n--- DIAGNOSTIC PROBLÈMES → SOLUTIONS ---\n{problems_solutions}\n--- FIN DIAGNOSTIC ---"
-        prompt += "\n→ Quand l'utilisateur exprime un problème, croise-le avec ce diagnostic pour proposer des solutions concrètes et adaptées."
+        prompt += """
+→ PROTOCOLE QUAND L'UTILISATEUR EXPRIME UN PROBLÈME :
+1. Identifier le problème dans le diagnostic ci-dessus
+2. Lister TOUTES les solutions disponibles (minimum 3)
+3. Vérifier "Modules actifs" dans le snapshot utilisateur
+4. Pour chaque solution tagguée [MODULE: xxx] :
+   - Si xxx EST dans "Modules actifs" → proposer d'optimiser ce module (update_module_config)
+   - Si xxx N'EST PAS dans "Modules actifs" → proposer de l'ajouter (add_module)
+5. Commencer par les solutions qui utilisent les modules déjà actifs (moins de friction)
+6. Terminer par 1-2 modules à ajouter pour compléter la solution
+7. Ne JAMAIS proposer add_module pour un module déjà actif"""
 
     custom_instructions = _load_ai_file("INSTRUCTIONS_CUSTOM.md")
     if custom_instructions:
