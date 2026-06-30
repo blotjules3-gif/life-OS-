@@ -11,8 +11,8 @@ struct WidgetChallengeData {
     let challengeType: String
 
     static var fromSharedDefaults: WidgetChallengeData? {
-        let defaults = UserDefaults(suiteName: "group.lifeos.app") ?? .standard
-        guard let title = defaults.string(forKey: "widget_challenge_title") else { return nil }
+        guard let defaults = UserDefaults(suiteName: "group.lifeos.app"),
+              let title = defaults.string(forKey: "widget_challenge_title") else { return nil }
         return WidgetChallengeData(
             title: title,
             streak: defaults.integer(forKey: "widget_challenge_streak"),
