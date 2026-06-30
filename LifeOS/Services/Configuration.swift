@@ -35,6 +35,7 @@ enum Configuration {
     // MARK: - Réseau
 
     static let timeoutInterval: TimeInterval = 30
+    static let chatTimeoutInterval: TimeInterval = 90
 
     // MARK: - Helpers
 
