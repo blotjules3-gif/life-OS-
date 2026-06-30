@@ -664,48 +664,6 @@ struct ShortcutsHomeView: View {
         }
     }
 
-    // MARK: Section — Raccourcis épinglés
-    private var shortcutsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Raccourcis", trailing: "Éditer") { editingShortcuts = true }
-            if activeShortcuts.isEmpty {
-                Button { editingShortcuts = true } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 22)).foregroundStyle(.secondary)
-                        Text("Épingle tes outils favoris ici")
-                            .font(.subheadline).foregroundStyle(.secondary)
-                        Spacer()
-                    }
-                    .padding(16).frame(maxWidth: .infinity)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-                }
-                .buttonStyle(.plain)
-            } else {
-                LazyVGrid(columns: cols, spacing: 12) {
-                    ForEach(activeShortcuts) { tool in
-                        NavigationLink { tool.destination } label: { shortcutTile(tool) }
-                            .buttonStyle(.plain)
-                    }
-                }
-            }
-        }
-    }
-
-    private func shortcutTile(_ tool: ShortcutTool) -> some View {
-        VStack(spacing: 10) {
-            Image(systemName: tool.icon)
-                .font(.system(size: 20, weight: .semibold)).foregroundStyle(.white)
-                .frame(width: 46, height: 46)
-                .background(tool.tint.gradient, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-            Text(tool.label)
-                .font(.system(size: 13, weight: .medium)).foregroundStyle(.primary)
-                .lineLimit(1).minimumScaleFactor(0.75)
-        }
-        .frame(maxWidth: .infinity).padding(.vertical, 16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-    }
-
     // MARK: Humeur — compact, en haut, disparaît après vote
     private var moodSection: some View {
         VStack(alignment: .leading, spacing: 8) {
