@@ -1202,6 +1202,7 @@ struct WeeklyBilanView: View {
         .overlay(alignment: .bottom) {
             if !isLast { Divider().padding(.leading, 58) }
         }
+    }
 }
 
 // MARK: - Éditeur de raccourcis de l'accueil
