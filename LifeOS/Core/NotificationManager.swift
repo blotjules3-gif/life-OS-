@@ -162,6 +162,10 @@ final class NotificationManager {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [id])
     }
 
+    func cancelAll() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+    }
+
     func scheduleWeeklyBilan() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["lifeos.weekly_bilan"])
         let content = UNMutableNotificationContent()
