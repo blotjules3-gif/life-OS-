@@ -226,10 +226,27 @@ struct SetupNumber: View {
 
 struct ProfileCompletionCard: View {
     @State private var refresh = false   // force le recalcul à l'apparition
+    @State private var launch: AppCategory?
     private var pct: Int { CategorySetup.percent }
     private var remaining: [AppCategory] { CategorySetup.flows.filter { !CategorySetup.isDone($0) } }
 
     var body: some View {
+        Group {
+            // Disparaît une fois le profil 100% configuré — plus rien à remplir.
+            if CategorySetup.fraction >= 1.0 { EmptyView() } else { card }
+        }
+        .id(refresh)
+        .onAppear { refresh.toggle() }
+        .fullScreenCover(item: $launch) { c in
+            switch c {
+            case .nutrition: NutritionSetupView()
+            case .fitness:   FitnessSetupView()
+            default:         EmptyView()
+            }
+        }
+    }
+
+    private var card: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 14) {
                 ZStack {
@@ -241,28 +258,25 @@ struct ProfileCompletionCard: View {
                 }
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Profil optimisé à \(pct)%").font(.headline).foregroundStyle(Theme.textPrimary)
-                    Text(remaining.isEmpty ? "Tout est configuré 🎉"
-                                           : "Configure tes catégories pour des recommandations sur-mesure.")
+                    Text("Réponds à quelques questions pour des recommandations sur-mesure.")
                         .font(.caption).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer()
             }
-            if !remaining.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(remaining) { c in
-                            Label(c.title, systemImage: c.icon)
-                                .font(.caption2.weight(.medium)).foregroundStyle(c.tint)
-                                .padding(.horizontal, 10).padding(.vertical, 6)
-                                .background(c.tint.opacity(0.12), in: Capsule())
-                        }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(remaining) { c in
+                        Button { launch = c; Haptics.soft() } label: {
+                            Label("Configurer \(c.title)", systemImage: c.icon)
+                                .font(.caption2.weight(.semibold)).foregroundStyle(.white)
+                                .padding(.horizontal, 12).padding(.vertical, 8)
+                                .background(c.tint.gradient, in: Capsule())
+                        }.buttonStyle(.plain)
                     }
                 }
             }
         }
         .padding(16)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-        .id(refresh)
-        .onAppear { refresh.toggle() }
     }
 }

@@ -12,14 +12,17 @@ struct FitnessSetupView: View {
     @AppStorage("gymReminderHour")  private var gymHour = 7
     @AppStorage("tabataWork")       private var tabataWork = 40
     @AppStorage("tabataRest")       private var tabataRest = 20
+    @AppStorage("userGender")       private var userGender = ""     // déjà connu (onboarding)
+    @AppStorage("userGoalFit")      private var userGoalFit = ""    // réutilisé par d'autres catégories
 
-    @State private var sex = "Homme"
     @State private var goal = "Prise de muscle"
     @State private var level = "Intermédiaire"
     @State private var freq = "4 jours"
     @State private var place = "Salle"
+    @State private var emphasis: Set<String> = []
 
     private let tint = AppCategory.fitness.tint
+    private var isFemme: Bool { userGender == "femme" }
 
     var body: some View {
         SetupFlow(title: "Sport & fitness", accent: tint, pages: pages, onComplete: commit)
@@ -30,14 +33,7 @@ struct FitnessSetupView: View {
             SetupPage {
                 VStack(spacing: 18) {
                     SetupHeader(icon: "figure.run", title: "On construit ton programme",
-                                subtitle: "5 questions et ta semaine d'entraînement est prête.", accent: tint)
-                    SetupChoice(options: ["Homme", "Femme"], selection: $sex, accent: tint,
-                                icons: ["figure.stand", "figure.stand.dress"])
-                }
-            },
-            SetupPage {
-                VStack(spacing: 16) {
-                    SetupHeader(icon: "target", title: "Ton objectif ?", accent: tint)
+                                subtitle: "Quelques questions et ta semaine d'entraînement détaillée est prête.", accent: tint)
                     SetupChoice(options: ["Prise de muscle", "Perte de gras", "Force", "Forme générale"],
                                 selection: $goal, accent: tint)
                 }
@@ -63,8 +59,16 @@ struct FitnessSetupView: View {
             },
             SetupPage {
                 VStack(spacing: 16) {
-                    SetupHeader(icon: "checkmark.seal.fill", title: "Ton programme",
-                                subtitle: "Réparti sur la semaine. Tu pourras l'ajuster à tout moment.", accent: tint)
+                    SetupHeader(icon: "scope", title: "Des muscles à prioriser ?",
+                                subtitle: "Optionnel — on ajoutera du volume dessus.", accent: tint)
+                    SetupMultiChoice(options: ["Pecs", "Dos", "Épaules", "Bras", "Jambes", "Fessiers", "Abdos"],
+                                     selection: $emphasis, accent: tint)
+                }
+            },
+            SetupPage {
+                VStack(spacing: 16) {
+                    SetupHeader(icon: "checkmark.seal.fill", title: "Ton programme détaillé",
+                                subtitle: "Exercices + machines + séries×reps, répartis sur la semaine. Modifiable à tout moment.", accent: tint)
                     programPreview
                 }
             }
@@ -75,33 +79,24 @@ struct FitnessSetupView: View {
 
     private var daysPerWeek: Int { Int(freq.prefix(1)) ?? 4 }
 
-    /// Renvoie les titres de séances (jours d'entraînement) selon objectif/fréquence.
-    private var sessions: [(String, String)] {
+    /// Titres des séances (jours d'entraînement) selon objectif/fréquence.
+    private var sessionTitles: [String] {
         switch daysPerWeek {
         case 2:
-            return [("Full body A", "Squat · Développé couché · Tirage · Gainage"),
-                    ("Full body B", "Soulevé de terre · Développé militaire · Fentes · Abdos")]
+            return ["Full body A", "Full body B"]
         case 3:
-            if goal == "Force" {
-                return [("Squat focus", "Squat lourd · Presse · Mollets"),
-                        ("Bench focus", "Développé couché · Dips · Triceps"),
-                        ("Deadlift focus", "Soulevé de terre · Rowing · Biceps")]
-            }
-            return [("Push", "Pecs · Épaules · Triceps"),
-                    ("Pull", "Dos · Biceps · Avant-bras"),
-                    ("Legs", "Quadris · Ischios · Mollets")]
+            if goal == "Force" { return ["Squat focus", "Bench focus", "Deadlift focus"] }
+            return ["Push", "Pull", "Legs"]
         case 4:
-            return [("Haut du corps A", "Pecs · Dos · Épaules"),
-                    ("Bas du corps A", "Quadris · Ischios · Mollets"),
-                    ("Haut du corps B", "Dos · Biceps · Triceps"),
-                    ("Bas du corps B", "Fessiers · Ischios · Abdos")]
+            return ["Haut du corps A", "Bas du corps A", "Haut du corps B", "Bas du corps B"]
         default:
-            return [("Pecs + Triceps", "Développé couché · Dips · Extensions"),
-                    ("Dos + Biceps", "Tractions · Rowing · Curl"),
-                    ("Jambes", "Squat · Presse · Mollets"),
-                    ("Épaules + Abdos", "Développé militaire · Élévations · Gainage"),
-                    ("Full / Faiblesses", "Rappel des points faibles · Cardio")]
+            return ["Pecs + Triceps", "Dos + Biceps", "Jambes", "Épaules + Abdos", "Full / Faiblesses"]
         }
+    }
+
+    /// (titre, détail) avec exercices réels issus de GymExercises.
+    private var sessions: [(String, String)] {
+        sessionTitles.map { ($0, GymExercises.focus(for: $0, goal: goal)) }
     }
 
     /// Map les séances sur les jours de la semaine (lun→dim), le reste = repos.
@@ -131,14 +126,18 @@ struct FitnessSetupView: View {
                 HStack(spacing: 12) {
                     Text(gymWeekdayName(p.weekday)).font(.subheadline.weight(.semibold))
                         .foregroundStyle(p.rest ? Theme.textSecondary : Theme.textPrimary).frame(width: 70, alignment: .leading)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(p.title).font(.subheadline.weight(.medium))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(p.title).font(.subheadline.weight(.semibold))
                             .foregroundStyle(p.rest ? Theme.textSecondary : tint)
-                        if !p.rest { Text(p.focus).font(.caption2).foregroundStyle(Theme.textSecondary).lineLimit(1) }
+                        if !p.rest {
+                            Text(p.focus.replacingOccurrences(of: " · ", with: "\n"))
+                                .font(.caption2).foregroundStyle(Theme.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                     Spacer()
                 }
-                .padding(.vertical, 9).padding(.horizontal, 12)
+                .padding(.vertical, 10).padding(.horizontal, 12)
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: 10))
             }
         }
@@ -148,10 +147,16 @@ struct FitnessSetupView: View {
     // MARK: enregistrement
 
     private func commit() {
+        userGoalFit = goal
         // Efface l'ancien programme et réécrit le nouveau.
         for d in gymDays { ctx.delete(d) }
         for p in weekPlan {
-            ctx.insert(GymDay(weekday: p.weekday, title: p.title, focus: p.focus, isRest: p.rest))
+            var focus = p.focus
+            // Volume supplémentaire sur les muscles priorisés.
+            if !p.rest, !emphasis.isEmpty {
+                focus = addEmphasis(to: focus, title: p.title)
+            }
+            ctx.insert(GymDay(weekday: p.weekday, title: p.title, focus: focus, isRest: p.rest))
         }
         // Défauts Tabata selon le niveau.
         tabataWork = level == "Débutant" ? 30 : (level == "Avancé" ? 45 : 40)
@@ -160,5 +165,24 @@ struct FitnessSetupView: View {
         try? ctx.save()
         CategorySetup.markDone(.fitness)
         Haptics.success()
+    }
+
+    /// Ajoute un exercice ciblé si la séance touche un muscle priorisé.
+    private func addEmphasis(to focus: String, title: String) -> String {
+        let map: [String: String] = ["Pecs": "Pecs", "Dos": "Dos", "Épaules": "Épaules",
+                                     "Bras": "Biceps", "Jambes": "Quadriceps", "Fessiers": "Ischios", "Abdos": "Abdos"]
+        var f = focus
+        let reps = GymExercises.repScheme(goal: goal)
+        for e in emphasis {
+            guard let group = map[e], let pool = GymExercises.catalog[group] else { continue }
+            // si la séance contient déjà ce groupe, ajoute un exercice de plus
+            if GymExercises.templates[title]?.contains(group) == true {
+                let present = f.components(separatedBy: " · ")
+                if let extra = pool.first(where: { ex in !present.contains(where: { $0.hasPrefix(ex) }) }) {
+                    f += " · \(extra) \(reps)"
+                }
+            }
+        }
+        return f
     }
 }
