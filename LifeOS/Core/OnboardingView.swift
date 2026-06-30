@@ -181,41 +181,40 @@ struct OnboardingView: View {
                 }
 
                 // Étape active
-                Group {
+                ZStack {
                     switch step {
                     case 0:
                         OnboardingWelcome {
-                            withAnimation(.spring(duration: 0.4)) { step = 1 }
+                            advance(to: 1)
                         }
+                        .transition(stepTransition)
                     case 1:
                         OnboardingName(name: $name, gender: $gender) {
                             savedName = name.trimmingCharacters(in: .whitespaces)
                             savedGender = gender
-                            let nextStep = (gender == "femme" || gender == "autre") ? 2 : 3
-                            withAnimation(.spring(duration: 0.4)) { step = nextStep }
+                            advance(to: (gender == "femme" || gender == "autre") ? 2 : 3)
                         }
+                        .transition(stepTransition)
                     case 2:
                         OnboardingHormonalContext(hasCycle: $hasCycle, hormonalContext: $hormonalContext) {
                             savedHasCycle = hasCycle
                             savedHormonalContext = hormonalContext
-                            withAnimation(.spring(duration: 0.4)) { step = 3 }
+                            advance(to: 3)
                         }
+                        .transition(stepTransition)
                     case 3:
                         OnboardingLifeProfile(selected: $lifeProfile) {
                             savedLifeProfile = lifeProfile?.rawValue ?? ""
-                            if let p = lifeProfile {
-                                UserDefaults.standard.set(p.sportHour, forKey: "sportHour")
-                            }
-                            withAnimation(.spring(duration: 0.4)) { step = 4 }
+                            if let p = lifeProfile { UserDefaults.standard.set(p.sportHour, forKey: "sportHour") }
+                            advance(to: 4)
                         }
+                        .transition(stepTransition)
                     case 4:
-                        OnboardingGoalStep(selected: $goals) {
-                            withAnimation(.spring(duration: 0.4)) { step = 5 }
-                        }
+                        OnboardingGoalStep(selected: $goals) { advance(to: 5) }
+                            .transition(stepTransition)
                     case 5:
-                        OnboardingInterests(selected: $interests) {
-                            withAnimation(.spring(duration: 0.4)) { step = 6 }
-                        }
+                        OnboardingInterests(selected: $interests) { advance(to: 6) }
+                            .transition(stepTransition)
                     case 6:
                         OnboardingModuleSetup(modules: Array(interests)) { moduleAnswers in
                             for (module, config) in moduleAnswers {
@@ -224,15 +223,17 @@ struct OnboardingView: View {
                                     UserDefaults.standard.set(str, forKey: "moduleConfig_\(module)")
                                 }
                             }
-                            withAnimation(.spring(duration: 0.4)) { step = 7 }
+                            advance(to: 7)
                         }
+                        .transition(stepTransition)
                     case 7:
                         OnboardingWakeTime(hour: $wakeHour, minute: $wakeMinute) {
                             savedWakeupHour = wakeHour
                             savedWakeupMinute = wakeMinute
                             savedWakeupEnabled = true
-                            withAnimation(.spring(duration: 0.4)) { step = 8 }
+                            advance(to: 8)
                         }
+                        .transition(stepTransition)
                     case 8:
                         OnboardingResults(
                             name: savedName,
@@ -240,9 +241,7 @@ struct OnboardingView: View {
                             onDone: { finalModules in
                                 recommendedModulesRaw = finalModules.map { $0.rawValue }.joined(separator: ",")
                                 onboardingGoalsRaw = Array(goals).map { $0.rawValue }.joined(separator: ",")
-                                if !finalModules.isEmpty {
-                                    homeShortcuts = buildShortcuts(from: finalModules)
-                                }
+                                if !finalModules.isEmpty { homeShortcuts = buildShortcuts(from: finalModules) }
                                 applyGenderDefaults(gender: savedGender)
                                 createPendingHabits()
                                 NotificationManager.shared.scheduleAfter(
@@ -254,15 +253,12 @@ struct OnboardingView: View {
                                 onboardingDone = true
                             }
                         )
+                        .transition(stepTransition)
                     default:
                         EmptyView()
                     }
                 }
-                .transition(.asymmetric(
-                    insertion: .move(edge: .trailing).combined(with: .opacity),
-                    removal:   .move(edge: .leading).combined(with: .opacity)
-                ))
-                .id(step)
+                .ignoresSafeArea(.keyboard)
             }
         }
     }
