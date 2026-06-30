@@ -720,14 +720,15 @@ struct AIAssistantView: View {
                         Circle()
                             .fill(canSend ? accent : Color.secondary.opacity(0.15))
                             .frame(width: 36, height: 36)
+                            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: canSend)
                         Image(systemName: vm.isLoading ? "ellipsis" : "arrow.up")
                             .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(canSend ? .white : .secondary)
+                            .contentTransition(.symbolEffect(.replace.downUp.byLayer))
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(PressScaleButtonStyle())
                 .disabled(!canSend)
-                .animation(.spring(duration: 0.2), value: canSend)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
