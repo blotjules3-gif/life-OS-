@@ -825,6 +825,12 @@ private struct MessageRow: View {
                     isUser ? accent : Color(uiColor: .secondarySystemBackground),
                     in: RoundedRectangle(cornerRadius: 20, style: .continuous)
                 )
+                .shadow(
+                    color: isUser ? accent.opacity(0.18) : Color.black.opacity(0.06),
+                    radius: isUser ? 8 : 4,
+                    x: 0,
+                    y: isUser ? 3 : 2
+                )
 
                 if !isUser { Spacer(minLength: 56) }
             }
