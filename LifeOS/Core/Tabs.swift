@@ -3072,4 +3072,3 @@ struct ChallengeCard: View {
         )
     }
 }
->>>>>>> origin/pote
