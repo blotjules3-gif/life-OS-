@@ -68,6 +68,7 @@ struct OnboardingView: View {
     @Environment(\.modelContext) private var ctx
 
     @State private var step = 0
+    @State private var goingBack = false
     @State private var name = ""
     @State private var gender = ""
     @State private var hasCycle = false
