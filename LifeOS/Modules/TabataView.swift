@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import Combine
 
 // MARK: - Configuration
@@ -140,8 +141,42 @@ struct TabataView: View {
     @State private var engine = TabataEngine(cfg: TabataConfig(prepare: 10, work: 30, rest: 15, rounds: 8, cycles: 1, restCycle: 60, cooldown: 0))
     @State private var showSettings = false
 
+    // Programme du jour (catégorie Sport) → le Tabata enchaîne TES exercices.
+    @Query private var gymDays: [GymDay]
+    private var todaySession: GymDay? {
+        let wd = Calendar.current.component(.weekday, from: .now)
+        return gymDays.first { $0.weekday == wd && !$0.isRest }
+    }
+    private var sessionExercises: [String] {
+        guard let s = todaySession else { return [] }
+        return s.focus.split(separator: "·").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+    }
+    /// Exercice affiché pour un round donné (boucle si plus de rounds que d'exos).
+    private func exercise(forRound r: Int) -> String? {
+        guard !sessionExercises.isEmpty else { return nil }
+        let i = (max(1, r) - 1) % sessionExercises.count
+        return sessionExercises[i]
+    }
+    private var currentExercise: String? { exercise(forRound: engine.round) }
+    private var nextExercise: String? { exercise(forRound: engine.round + 1) }
+
     private var config: TabataConfig {
-        TabataConfig(prepare: prepare, work: work, rest: rest, rounds: rounds, cycles: cycles, restCycle: restCycle, cooldown: cooldown)
+        // Si une séance est prévue aujourd'hui, un round = un exercice.
+        let r = sessionExercises.isEmpty ? rounds : sessionExercises.count
+        return TabataConfig(prepare: prepare, work: work, rest: rest, rounds: r, cycles: cycles, restCycle: restCycle, cooldown: cooldown)
+    }
+
+    /// Nom d'exercice affiché en gros (uniquement pendant l'effort).
+    private var exerciseLabel: String? { engine.phase == .work ? currentExercise : nil }
+    /// Sous-titre : prochain exercice pendant la prépa / le repos.
+    private var phaseSubLabel: String? {
+        switch engine.phase {
+        case .idle:      return exercise(forRound: 1).map { "Commence par : \($0)" }
+        case .prepare:   return exercise(forRound: 1).map { "Commence par : \($0)" }
+        case .rest:      return nextExercise.map { "À suivre : \($0)" }
+        case .restCycle: return exercise(forRound: 1).map { "À suivre : \($0)" }
+        default:         return nil
+        }
     }
 
     var body: some View {
@@ -150,17 +185,36 @@ struct TabataView: View {
             VStack(spacing: 0) {
                 topBar
                 Spacer()
-                // Phase + chrono géant
+                // Phase + exercice + chrono géant
                 VStack(spacing: 4) {
-                    Text(engine.phase.title)
-                        .font(.system(size: 34, weight: .black, design: .rounded))
-                        .foregroundStyle(engine.phase.onColor)
+                    if let exo = exerciseLabel {
+                        Text("EXERCICE \(engine.round)")
+                            .font(.system(size: 15, weight: .heavy, design: .rounded))
+                            .foregroundStyle(engine.phase.onColor.opacity(0.7))
+                        Text(exo)
+                            .font(.system(size: 30, weight: .black, design: .rounded))
+                            .foregroundStyle(engine.phase.onColor)
+                            .multilineTextAlignment(.center)
+                            .minimumScaleFactor(0.6).lineLimit(2)
+                            .padding(.bottom, 2)
+                    } else {
+                        Text(engine.phase.title)
+                            .font(.system(size: 34, weight: .black, design: .rounded))
+                            .foregroundStyle(engine.phase.onColor)
+                    }
                     Text(formatHMS(displayedTime))
                         .font(.system(size: 96, weight: .black, design: .rounded))
                         .monospacedDigit()
                         .foregroundStyle(engine.phase.onColor)
                         .minimumScaleFactor(0.5)
                         .lineLimit(1)
+                    if let sub = phaseSubLabel {
+                        Text(sub)
+                            .font(.system(size: 17, weight: .bold, design: .rounded))
+                            .foregroundStyle(engine.phase.onColor.opacity(0.85))
+                            .multilineTextAlignment(.center)
+                            .minimumScaleFactor(0.7).lineLimit(1)
+                    }
                 }
                 Spacer()
                 controlPanel
@@ -189,7 +243,12 @@ struct TabataView: View {
             Spacer()
             VStack(spacing: 0) {
                 Text("TABATA").font(.headline.bold()).foregroundStyle(engine.phase.onColor)
-                Text("\(work):\(rest)").font(.subheadline.weight(.semibold)).foregroundStyle(engine.phase.onColor.opacity(0.7))
+                if let s = todaySession {
+                    Text(s.title.uppercased()).font(.caption.weight(.bold)).foregroundStyle(engine.phase.onColor.opacity(0.75))
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                } else {
+                    Text("\(work):\(rest)").font(.subheadline.weight(.semibold)).foregroundStyle(engine.phase.onColor.opacity(0.7))
+                }
             }
             Spacer()
             HStack(spacing: 16) {
