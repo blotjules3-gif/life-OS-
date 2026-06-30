@@ -454,7 +454,9 @@ final class AIAssistantViewModel: ObservableObject {
         let msg = AIMessage(role: "user", text: text)
         modelContext?.insert(msg)
         try? modelContext?.save()
-        messages.append(DisplayMessage(from: msg))
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.75)) {
+            messages.append(DisplayMessage(from: msg))
+        }
     }
 
     private func appendAssistantMessage(_ text: String, actions: [AIAction]) {
@@ -462,15 +464,21 @@ final class AIAssistantViewModel: ObservableObject {
         let msg = AIMessage(role: "assistant", text: text, actions: actionsData)
         modelContext?.insert(msg)
         try? modelContext?.save()
-        messages.append(DisplayMessage(from: msg))
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.75)) {
+            messages.append(DisplayMessage(from: msg))
+        }
     }
 
     private func appendThinking() {
-        messages.append(.thinking())
+        withAnimation(.spring(response: 0.38, dampingFraction: 0.72)) {
+            messages.append(.thinking())
+        }
     }
 
     private func removeThinking() {
-        messages.removeAll { $0.isThinking }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            messages.removeAll { $0.isThinking }
+        }
     }
 }
 
