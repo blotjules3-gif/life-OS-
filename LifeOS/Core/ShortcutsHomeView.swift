@@ -664,14 +664,11 @@ struct ShortcutsHomeView: View {
         }
     }
 
-<<<<<<< HEAD
-    // MARK: Humeur — compact, en haut, disparaît après vote
-=======
     // MARK: Section — Raccourcis épinglés
     private var shortcutsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader("Raccourcis", trailing: "Éditer") { editingShortcuts = true }
-            if enabledShortcuts.isEmpty {
+            if activeShortcuts.isEmpty {
                 Button { editingShortcuts = true } label: {
                     HStack(spacing: 12) {
                         Image(systemName: "plus.circle.fill")
@@ -686,7 +683,7 @@ struct ShortcutsHomeView: View {
                 .buttonStyle(.plain)
             } else {
                 LazyVGrid(columns: cols, spacing: 12) {
-                    ForEach(enabledShortcuts) { tool in
+                    ForEach(activeShortcuts) { tool in
                         NavigationLink { tool.destination } label: { shortcutTile(tool) }
                             .buttonStyle(.plain)
                     }
@@ -709,8 +706,7 @@ struct ShortcutsHomeView: View {
         .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 
-    // MARK: Section 3 — Humeur du jour (check-in)
->>>>>>> origin/pote
+    // MARK: Humeur — compact, en haut, disparaît après vote
     private var moodSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
