@@ -6,7 +6,8 @@ import SwiftUI
 
 enum CategorySetup {
     /// Catégories qui possèdent un flux de configuration (s'agrandit à chaque pass).
-    static let flows: [AppCategory] = [.nutrition, .fitness, .sleep, .finance]
+    static let flows: [AppCategory] = [.nutrition, .fitness, .sleep, .finance,
+                                       .productivity, .mind, .looks, .cycle, .mobility]
 
     static func hasFlow(_ c: AppCategory) -> Bool { flows.contains(c) }
     static func isDone(_ c: AppCategory) -> Bool { UserDefaults.standard.bool(forKey: "setup.done.\(c.rawValue)") }
@@ -228,11 +229,16 @@ struct CategoryFlowView: View {
     let category: AppCategory
     var body: some View {
         switch category {
-        case .nutrition: NutritionSetupView()
-        case .fitness:   FitnessSetupView()
-        case .sleep:     SleepSetupView()
-        case .finance:   FinanceSetupView()
-        default:         EmptyView()
+        case .nutrition:    NutritionSetupView()
+        case .fitness:      FitnessSetupView()
+        case .sleep:        SleepSetupView()
+        case .finance:      FinanceSetupView()
+        case .productivity: ProductivitySetupView()
+        case .mind:         MentalSetupView()
+        case .looks:        LooksSetupView()
+        case .cycle:        CycleSetupView()
+        case .mobility:     MobilitySetupView()
+        default:            EmptyView()
         }
     }
 }

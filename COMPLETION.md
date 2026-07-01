@@ -23,7 +23,8 @@ boot a sim). Compile-only verification uses `-destination 'generic/platform=iOS 
 | Pole flow · Fitness | DONE | detailed program (real exercises/machines), idempotent |
 | Pole flow · Sommeil | DONE | wake/duration/alarm → wakeup* + sleepTargetHours |
 | Pole flow · Finances | DONE | budget + courant account + subscriptions (idempotent SwiftData) |
-| Pole flows · 12 remaining poles | TODO | looks, mind, productivity, invest, career, learning, home, mobility, social, admin, travel, cycle |
+| Pole flow · Productivité·Mental·Looks·Cycle·Mobilité | DONE | write real AppStorage/SwiftData (focus/screen, meditation, skin, cycle dates, Vehicle) |
+| Pole flows · 7 remaining | TODO | invest, career, learning, home, social, admin, travel |
 
 ---
 
