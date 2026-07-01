@@ -124,6 +124,22 @@ final class TabataEngine {
         if secs <= 0 { advance() }
     }
     private func finish() { pause(); phase = .done; remaining = 0 }
+
+    // Navigation manuelle entre les séries (ex: j'ai loupé/fini une série).
+    func skipForward() {
+        Haptics.tap()
+        if round < cfg.rounds { round += 1 }
+        else if cycle < cfg.cycles { cycle += 1; round = 1 }
+        else { finish(); return }
+        enter(.work, cfg.work)
+    }
+    func skipBackward() {
+        Haptics.tap()
+        if phase == .done { phase = .work }
+        if round > 1 { round -= 1 }
+        else if cycle > 1 { cycle -= 1; round = cfg.rounds }
+        enter(.work, cfg.work)
+    }
 }
 
 // MARK: - Écran immersif
@@ -140,6 +156,7 @@ struct TabataView: View {
 
     @State private var engine = TabataEngine(cfg: TabataConfig(prepare: 10, work: 30, rest: 15, rounds: 8, cycles: 1, restCycle: 60, cooldown: 0))
     @State private var showSettings = false
+    @State private var chosenSession: GymDay?   // séance choisie manuellement (sinon = celle du jour)
 
     // Programme du jour (catégorie Sport) → le Tabata enchaîne TES exercices.
     @Query private var gymDays: [GymDay]
@@ -147,8 +164,14 @@ struct TabataView: View {
         let wd = Calendar.current.component(.weekday, from: .now)
         return gymDays.first { $0.weekday == wd && !$0.isRest }
     }
+    /// Séances disponibles (jours non-repos avec des exercices).
+    private var availableSessions: [GymDay] {
+        gymWeekOrder.compactMap { w in gymDays.first { $0.weekday == w && !$0.isRest && !$0.title.isEmpty } }
+    }
+    /// Séance active = choisie manuellement, sinon celle du jour.
+    private var activeSession: GymDay? { chosenSession ?? todaySession }
     private var sessionExercises: [String] {
-        guard let s = todaySession else { return [] }
+        guard let s = activeSession else { return [] }
         return s.focus.split(separator: "·").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
     }
     /// Exercice affiché pour un round donné (boucle si plus de rounds que d'exos).
@@ -241,13 +264,33 @@ struct TabataView: View {
                 Image(systemName: "chevron.down").font(.title3.bold()).foregroundStyle(engine.phase.onColor)
             }
             Spacer()
-            VStack(spacing: 0) {
-                Text("TABATA").font(.headline.bold()).foregroundStyle(engine.phase.onColor)
-                if let s = todaySession {
-                    Text(s.title.uppercased()).font(.caption.weight(.bold)).foregroundStyle(engine.phase.onColor.opacity(0.75))
-                        .lineLimit(1).minimumScaleFactor(0.7)
+            Menu {
+                if availableSessions.isEmpty {
+                    Text("Aucun programme — crée-le dans Sport")
                 } else {
-                    Text("\(work):\(rest)").font(.subheadline.weight(.semibold)).foregroundStyle(engine.phase.onColor.opacity(0.7))
+                    ForEach(availableSessions) { s in
+                        Button {
+                            chosenSession = s; engine.reset(); engine.cfg = config
+                        } label: {
+                            Label("\(gymWeekdayName(s.weekday)) · \(s.title)",
+                                  systemImage: activeSession?.persistentModelID == s.persistentModelID ? "checkmark" : "dumbbell")
+                        }
+                    }
+                    Divider()
+                    Button { chosenSession = nil; engine.reset(); engine.cfg = config } label: {
+                        Label("Séance du jour", systemImage: "calendar")
+                    }
+                }
+            } label: {
+                VStack(spacing: 0) {
+                    Text("TABATA").font(.headline.bold()).foregroundStyle(engine.phase.onColor)
+                    HStack(spacing: 4) {
+                        Text((activeSession?.title ?? "\(work):\(rest)").uppercased())
+                            .font(.caption.weight(.bold)).foregroundStyle(engine.phase.onColor.opacity(0.75))
+                            .lineLimit(1).minimumScaleFactor(0.7)
+                        Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(engine.phase.onColor.opacity(0.6))
+                    }
                 }
             }
             Spacer()
@@ -261,26 +304,45 @@ struct TabataView: View {
     }
 
     private var controlPanel: some View {
-        HStack(alignment: .center) {
-            counter("ROUNDS", engine.roundsLeft, Color(hex: 0x4FA8E0))
-            Spacer()
-            Button { engine.startOrPause() } label: {
-                ZStack {
-                    Circle().fill(engine.phase.onColor.opacity(0.12))
-                    Circle().stroke(engine.phase.onColor, lineWidth: 4)
-                    Image(systemName: engine.running ? "pause.fill" : "play.fill")
-                        .font(.system(size: 34, weight: .black))
-                        .foregroundStyle(engine.phase.onColor)
-                        .offset(x: engine.running ? 0 : 3)
+        VStack(spacing: 16) {
+            HStack(alignment: .center) {
+                counter("ROUNDS", engine.roundsLeft, Color(hex: 0x4FA8E0))
+                Spacer()
+                Button { engine.startOrPause() } label: {
+                    ZStack {
+                        Circle().fill(engine.phase.onColor.opacity(0.12))
+                        Circle().stroke(engine.phase.onColor, lineWidth: 4)
+                        Image(systemName: engine.running ? "pause.fill" : "play.fill")
+                            .font(.system(size: 34, weight: .black))
+                            .foregroundStyle(engine.phase.onColor)
+                            .offset(x: engine.running ? 0 : 3)
+                    }
+                    .frame(width: 96, height: 96)
                 }
-                .frame(width: 96, height: 96)
+                Spacer()
+                counter("CYCLES", engine.cyclesLeft, engine.phase.onColor)
             }
-            Spacer()
-            counter("CYCLES", engine.cyclesLeft, engine.phase.onColor)
+            // Navigation manuelle entre les séries (loupé/fini une série).
+            HStack(spacing: 40) {
+                skipButton("backward.fill", "Série préc.") { engine.skipBackward() }
+                skipButton("forward.fill", "Série suiv.") { engine.skipForward() }
+            }
         }
-        .padding(.vertical, 26)
+        .padding(.vertical, 22)
         .padding(.horizontal, 14)
         .background(Color.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+    }
+
+    private func skipButton(_ icon: String, _ label: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: icon).font(.system(size: 15, weight: .bold))
+                Text(label).font(.caption.weight(.semibold))
+            }
+            .foregroundStyle(.white.opacity(0.9))
+            .padding(.horizontal, 16).padding(.vertical, 9)
+            .background(.white.opacity(0.14), in: Capsule())
+        }
     }
 
     private func counter(_ label: String, _ value: Int, _ color: Color) -> some View {
