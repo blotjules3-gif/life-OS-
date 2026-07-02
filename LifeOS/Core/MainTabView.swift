@@ -63,10 +63,11 @@ struct MainTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenModule)) { notif in
             if let module = notif.userInfo?["module"] as? String,
                let cat = AppCategory(rawValue: module) {
+                let isAIOpen = showAIAssistant
                 showAIAssistant = false
                 // Attendre la fin de l'animation de dismiss du fullScreenCover
-                // avant de modifier la navigation, sinon conflit d'état.
-                let delay: TimeInterval = showAIAssistant ? 0.35 : 0
+                // avant de modifier la navigation, sinon conflit d'état UIKit/SwiftUI.
+                let delay: TimeInterval = isAIOpen ? 0.35 : 0
                 DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                     tab = .categories
                     catPath = [cat]
