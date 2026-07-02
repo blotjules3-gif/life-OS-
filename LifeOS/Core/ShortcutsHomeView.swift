@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import Charts
+import UIKit
 
 /// Outils directs qu'on peut épingler en raccourci sur l'accueil.
 enum ShortcutTool: String, CaseIterable, Identifiable {
