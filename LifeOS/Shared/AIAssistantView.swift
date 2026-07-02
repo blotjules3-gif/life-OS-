@@ -429,6 +429,10 @@ final class AIAssistantViewModel: ObservableObject {
         current.insert(module)
         recommendedModulesRaw = current.joined(separator: ",")
         aiKnownModulesRaw = recommendedModulesRaw
+        // Ouvre le questionnaire de configuration des notifications
+        if let category = AppCategory(rawValue: module) {
+            pendingModuleSetup = category
+        }
     }
 
     private func removeModuleFromProfile(_ module: String) {
