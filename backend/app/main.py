@@ -112,19 +112,18 @@ app.add_middleware(
 
 # ── Metrics ───────────────────────────────────────────────────────────────────
 
-_metrics_key_header = APIKeyHeader(name="X-Metrics-Key", auto_error=False)
+
+class MetricsAuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path == "/metrics":
+            key = request.headers.get("X-Metrics-Key", "")
+            if key != settings.internal_api_key:
+                return Response(content="Unauthorized", status_code=401)
+        return await call_next(request)
 
 
-async def _require_metrics_key(key: str | None = Security(_metrics_key_header)) -> None:
-    if not key or key != settings.internal_api_key:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-
-Instrumentator().instrument(app).expose(
-    app,
-    endpoint="/metrics",
-    dependencies=[Security(_require_metrics_key)],
-)
+app.add_middleware(MetricsAuthMiddleware)
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
