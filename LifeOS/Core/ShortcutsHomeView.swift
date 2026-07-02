@@ -1266,6 +1266,120 @@ struct WeeklyBilanView: View {
     }
 }
 
+// MARK: - Carte de partage du bilan (rendue en image, format story)
+
+// Couleurs fixes (pas de tokens adaptatifs) : ImageRenderer rend hors écran,
+// la carte doit être identique quel que soit le thème ou le mode clair/sombre.
+private struct WeeklyShareCard: View {
+    let score: Int
+    let dayRatios: [Double]
+    let perfectDays: Int
+    let avgWater: Int
+    let avgKcal: Int
+    let avgMood: Double
+    let message: String
+    let dateRange: String
+
+    private let dayLetters = ["L", "M", "M", "J", "V", "S", "D"]
+
+    private var scoreColor: Color {
+        if score >= 80 { return Color(hex: 0x4CC38A) }
+        if score >= 50 { return Color(hex: 0xFF9F0A) }
+        return Color(hex: 0x9B6CF1)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            VStack(spacing: 8) {
+                Text("BILAN DE SEMAINE")
+                    .font(.system(size: 13, weight: .bold))
+                    .kerning(2.5)
+                    .foregroundStyle(Color.white.opacity(0.55))
+                Text(dateRange)
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color.white.opacity(0.4))
+            }
+            .padding(.top, 52)
+
+            Spacer()
+
+            VStack(spacing: 14) {
+                Text("\(score)%")
+                    .font(.system(size: 96, weight: .black, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(scoreColor)
+                Text(message)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(Color.white.opacity(0.75))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 36)
+            }
+
+            Spacer()
+
+            VStack(spacing: 24) {
+                HStack(spacing: 16) {
+                    ForEach(0..<7, id: \.self) { i in
+                        VStack(spacing: 8) {
+                            Text(dayLetters[i])
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(Color.white.opacity(0.45))
+                            Circle()
+                                .fill(dayRatios[i] >= 1 ? Color(hex: 0x4CC38A)
+                                      : (dayRatios[i] > 0 ? Color(hex: 0xFF9F0A) : Color.white.opacity(0.12)))
+                                .frame(width: 14, height: 14)
+                        }
+                    }
+                }
+                .padding(.vertical, 18)
+                .padding(.horizontal, 24)
+                .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+
+                HStack(spacing: 10) {
+                    if perfectDays > 0 {
+                        sharePill("star.fill", "\(perfectDays) jour\(perfectDays > 1 ? "s" : "") parfait\(perfectDays > 1 ? "s" : "")", Color(hex: 0xFF9F0A))
+                    }
+                    if avgWater > 0 { sharePill("drop.fill", "\(avgWater) ml/j", Color(hex: 0x3CB2E0)) }
+                    if avgMood > 0 { sharePill("face.smiling", String(format: "%.1f/5", avgMood), Color(hex: 0x9B6CF1)) }
+                }
+            }
+
+            Spacer()
+
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 13, weight: .semibold))
+                Text("LifeOS")
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+            }
+            .foregroundStyle(Color.white.opacity(0.5))
+            .padding(.bottom, 44)
+        }
+        .frame(width: 360, height: 640)
+        .background(
+            LinearGradient(
+                colors: [Color(hex: 0x0E1120), Color(hex: 0x1A1D33)],
+                startPoint: .top, endPoint: .bottom
+            )
+        )
+    }
+
+    private func sharePill(_ icon: String, _ label: String, _ color: Color) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(color)
+            Text(label)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(Color.white.opacity(0.85))
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 9)
+        .background(Color.white.opacity(0.07), in: Capsule())
+    }
+}
+
 // MARK: - Éditeur de raccourcis de l'accueil
 
 private struct ShortcutPickerSheet: View {
