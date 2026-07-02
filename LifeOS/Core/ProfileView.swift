@@ -1062,7 +1062,6 @@ struct ProfileView: View {
 
     // MARK: - Energy Score Card
 
-    @ViewBuilder
     @ViewBuilder private var energyScoreCard: some View {
         if energyScore != nil || !energyHistory.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
