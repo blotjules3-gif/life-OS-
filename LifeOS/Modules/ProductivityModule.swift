@@ -295,6 +295,26 @@ struct HabitTrackerView: View {
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
         .sheet(isPresented: $showAdd) { HabitEditor() }
         .sheet(item: $editingHabit) { h in HabitEditor(editingHabit: h) }
+        .overlay(alignment: .bottom) {
+            if pendingDeleteHabit != nil {
+                HStack(spacing: 12) {
+                    Image(systemName: "trash").foregroundStyle(.secondary)
+                    Text("Habitude supprimée")
+                        .font(.system(size: 14, weight: .medium))
+                    Spacer()
+                    Button("Annuler", action: undoDelete)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.accent)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .padding(.horizontal, Theme.pad)
+                .padding(.bottom, 16)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .animation(.spring(duration: 0.35), value: pendingDeleteHabit != nil)
+            }
+        }
         .task {
             let modules = habitModulesRaw.split(separator: ",").map(String.init)
             if !modules.isEmpty && allHabits.isEmpty {
