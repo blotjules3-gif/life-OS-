@@ -88,6 +88,9 @@ struct EveningSummaryView: View {
                 if await HealthService.shared.requestAuthorization() {
                     steps = await HealthService.shared.cachedStepsToday()
                 }
+                if let fetched = try? await AgentAPI.shared.fetchChallenges(activeOnly: true) {
+                    challenges = fetched
+                }
             }
         }
     }
