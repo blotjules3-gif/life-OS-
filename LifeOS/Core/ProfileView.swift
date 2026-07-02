@@ -51,6 +51,8 @@ struct ProfileView: View {
     @State private var profileSection = 0
     @State private var showOnboardingReset = false
     @State private var showServerConfig = false
+    @State private var showExportSheet = false
+    @State private var appLockEnabled = AppLock.shared.isEnabled
     @State private var checkinToast: String? = nil
     @State private var energyScore: EnergyScoreOut? = nil
     @State private var energyHistory: [EnergyScoreOut] = []
