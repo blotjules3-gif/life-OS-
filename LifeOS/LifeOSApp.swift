@@ -6,6 +6,8 @@ struct LifeOSApp: App {
 
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var alarm = AlarmManager.shared
+    @State private var appLock = AppLock.shared
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var container: ModelContainer? = nil
     @State private var migrationFailed = false
