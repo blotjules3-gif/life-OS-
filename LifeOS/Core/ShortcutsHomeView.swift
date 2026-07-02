@@ -1113,7 +1113,7 @@ struct WeeklyBilanView: View {
                 Image(systemName: "sparkles")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Color.accentColor)
-                Text("Analyse IA")
+                Text("Analyse du coach")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(.secondary)
                     .kerning(0.5)
