@@ -279,6 +279,9 @@ struct VitalsView: View {
                     if filtered.isEmpty {
                         EmptyState(icon: "waveform.path.ecg", title: "Aucune mesure", message: "Enregistre ta première mesure de \(typeLabel(selectedType).lowercased()).")
                     } else {
+                        if chartData.count >= 2 {
+                            trendCard
+                        }
                         VStack(spacing: 8) {
                             ForEach(filtered) { r in vitalRow(r) }
                         }.card()
