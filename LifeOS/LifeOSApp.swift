@@ -78,7 +78,10 @@ struct LifeOSApp: App {
             }
             .preferredColorScheme(appTheme.scheme)
             .tint(appTheme.accent)
-            .task { await buildContainer() }
+            .task {
+                appLock.lockIfNeeded()
+                await buildContainer()
+            }
             .alert("Problème de données", isPresented: $migrationFailed) {
                 Button("Réessayer") { Task { await buildContainer() } }
                 Button("Continuer (données perdues)", role: .destructive) { migrationFailed = false }
