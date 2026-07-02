@@ -27,6 +27,11 @@
 | M8 | `Configuration.baseURL` : force unwrap remplacé par fallback prod | Fait |
 | M9 | `ServerConfigView` + ses 3 points d'entrée derrière `#if DEBUG` ; en release les boutons relancent un ping | Fait |
 | Push | `git push origin jules` échoue : plus de credentials après retrait du PAT | **En attente Jules (auth GitHub)** |
+| F1 | Bilan hebdo partageable : `WeeklyShareCard` (360×640, couleurs fixes) + ImageRenderer scale 3 + ShareLink dans WeeklyBilanView | Fait |
+| F2 | Sync Apple Santé silencieuse : `HealthAutoSync.swift` (sommeil + poids au retour premier plan), `sleepHoursLastNight`/`latestBodyMass` dans HealthService, flag `healthAuthRequested`, dédup poids, priorité check-in manuel | Fait |
+| F3 | Coach hors-ligne : `OfflineCoach.swift` (réponses depuis SwiftData — habitudes, eau, kcal, sommeil, streaks) branché dans le catch offline de `send()` (4 codes URLError) | Fait |
+| Skills | 4 skills créés dans `~/.claude/skills/` : swiftui-lifeos, swiftui-share-image, healthkit-silent-sync, swiftdata-safe-store — enregistrés dans la table CLAUDE.md | Fait |
+| Bloqué | Apple Watch (nouveau target = Xcode GUI) ; défis entre amis (backend Railway inaccessible) | En attente Jules |
 
 ## Journal d'hypothèses
 | Hypothèse | Confiance | Test |
