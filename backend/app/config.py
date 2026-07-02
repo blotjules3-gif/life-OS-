@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     llm_max_retries: int = 3
     llm_timeout_seconds: int = 30
     llm_max_agent_iterations: int = 12  # enough for first-launch bulk config
+    llm_temperature: float = 0.3        # deterministic coaching (default Mistral is 0.7)
+    llm_max_completion_tokens: int = 500  # enforce brevity — prompt says max 2 sentences
 
     # ── Redis ─────────────────────────────────────────────────────────────────
     redis_url: str = "redis://localhost:6379/0"
