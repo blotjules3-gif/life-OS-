@@ -444,7 +444,7 @@ struct ShortcutsHomeView: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader("Habitudes")
             if habits.isEmpty {
-                Text("Aucune habitude — crée-en une via l'assistant IA")
+                Text("Aucune habitude — crée-en une avec ton coach")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(16)
