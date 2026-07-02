@@ -402,6 +402,14 @@ struct MetricRing: View {
     let unit: String
     let color: Color
     let icon: String
+    var delta: Int? = nil
+
+    private var deltaLabel: String? {
+        guard let d = delta, d != 0 else { return nil }
+        return d > 0 ? "+\(d)" : "\(d)"
+    }
+    private var deltaColor: Color { (delta ?? 0) >= 0 ? Theme.success : Theme.danger }
+
     var body: some View {
         VStack(spacing: 8) {
             ZStack {
@@ -412,9 +420,15 @@ struct MetricRing: View {
                     Text("\(Int(value))").font(.title3.bold().monospacedDigit())
                 }
             }
-            VStack(spacing: 0) {
+            VStack(spacing: 2) {
                 Text(label).font(.subheadline.weight(.medium))
                 Text(goal > 0 ? "/ \(Int(goal)) \(unit)" : "").font(.caption2).foregroundStyle(.secondary)
+                if let dl = deltaLabel {
+                    Text(dl)
+                        .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(deltaColor)
+                        .transition(.opacity)
+                }
             }
         }
         .frame(maxWidth: .infinity)
