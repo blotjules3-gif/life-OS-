@@ -107,17 +107,23 @@ struct ShortcutsHomeView: View {
 
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
+    @Query private var foodsYesterday: [FoodEntry]
+    @Query private var watersYesterday: [WaterEntry]
     @Query private var fasts: [FastingSession]
     @Query private var habits: [Habit]
     @Query(sort: \MoodEntry.date, order: .reverse) private var moods: [MoodEntry]
     @Environment(\.modelContext) private var ctx
 
     init() {
-        let todayStart   = Calendar.current.startOfDay(for: Date())
-        let tomorrowStart = Calendar.current.date(byAdding: .day, value: 1, to: todayStart) ?? todayStart
-        let fourteenDaysAgo = Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date()
+        let cal = Calendar.current
+        let todayStart    = cal.startOfDay(for: Date())
+        let tomorrowStart = cal.date(byAdding: .day, value: 1, to: todayStart) ?? todayStart
+        let yesterdayStart = cal.date(byAdding: .day, value: -1, to: todayStart) ?? todayStart
+        let fourteenDaysAgo = cal.date(byAdding: .day, value: -14, to: Date()) ?? Date()
         _foods  = Query(filter: #Predicate<FoodEntry>  { $0.date >= todayStart && $0.date < tomorrowStart })
         _waters = Query(filter: #Predicate<WaterEntry> { $0.date >= todayStart && $0.date < tomorrowStart })
+        _foodsYesterday  = Query(filter: #Predicate<FoodEntry>  { $0.date >= yesterdayStart && $0.date < todayStart })
+        _watersYesterday = Query(filter: #Predicate<WaterEntry> { $0.date >= yesterdayStart && $0.date < todayStart })
         _moods  = Query(filter: #Predicate<MoodEntry>  { $0.date >= fourteenDaysAgo },
                         sort: \MoodEntry.date, order: .reverse)
     }
