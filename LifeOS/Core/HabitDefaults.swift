@@ -31,6 +31,6 @@ enum HabitDefaults {
             guard let d = catalog[module], !existingTags.contains(module) else { continue }
             context.insert(Habit(name: d.name, icon: d.icon, colorHex: d.colorHex, isPending: true, moduleTag: module))
         }
-        try? context.save()
+        do { try context.save() } catch { print("[SwiftData] insertPendingHabits failed: \(error)") }
     }
 }
