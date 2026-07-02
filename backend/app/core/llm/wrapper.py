@@ -37,6 +37,8 @@ class LLMWrapper:
         self._model = settings.mistral_model
         self._timeout = settings.llm_timeout_seconds
         self._max_retries = settings.llm_max_retries
+        self._temperature = settings.llm_temperature
+        self._max_completion_tokens = settings.llm_max_completion_tokens
 
     @staticmethod
     def _build_mistral_messages(messages: list[dict[str, Any]]) -> list[Any]:
