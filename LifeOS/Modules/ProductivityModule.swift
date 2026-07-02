@@ -224,8 +224,32 @@ struct HabitTrackerView: View {
     @State private var editingHabit: Habit? = nil
     @AppStorage("habitModulesRaw") private var habitModulesRaw = ""
 
-    private var pendingHabits: [Habit] { allHabits.filter { $0.isPending } }
-    private var activeHabits: [Habit] { allHabits.filter { !$0.isPending } }
+    private var pendingHabits: [Habit] { allHabits.filter { $0.isPending && !$0.isArchived } }
+    private var activeHabits: [Habit] { allHabits.filter { !$0.isPending && !$0.isArchived } }
+
+    @State private var pendingDeleteHabit: Habit? = nil
+    @State private var undoWorkItem: DispatchWorkItem? = nil
+
+    private func softDelete(_ habit: Habit) {
+        undoWorkItem?.cancel()
+        habit.isArchived = true
+        pendingDeleteHabit = habit
+        let work = DispatchWorkItem {
+            if let h = pendingDeleteHabit, h.isArchived {
+                ctx.delete(h)
+                try? ctx.save()
+            }
+            pendingDeleteHabit = nil
+        }
+        undoWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: work)
+    }
+
+    private func undoDelete() {
+        undoWorkItem?.cancel()
+        pendingDeleteHabit?.isArchived = false
+        pendingDeleteHabit = nil
+    }
 
     var body: some View {
         ZStack {
