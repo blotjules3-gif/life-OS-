@@ -101,7 +101,8 @@ struct OnboardingView: View {
     }
 
     private var stepTransition: AnyTransition {
-        .asymmetric(
+        if reduceMotion { return .opacity }
+        return .asymmetric(
             insertion: .move(edge: goingBack ? .leading : .trailing)
                 .combined(with: .opacity)
                 .animation(.spring(response: 0.38, dampingFraction: 0.88).delay(0.08)),
@@ -113,7 +114,8 @@ struct OnboardingView: View {
 
     private func advance(to next: Int) {
         goingBack = false
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) { step = next }
+        let anim: Animation? = reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.9)
+        withAnimation(anim) { step = next }
     }
 
     private func goBack() {
