@@ -42,8 +42,10 @@ struct BubbleView: View {
     var seed: Double = 0
     var style: BubbleStyle = BubbleStyle()
 
-    var body: some View {
-        let shader = ShaderLibrary.bubble(
+    // `time` varies every frame so the shader cannot be fully cached;
+    // extracting it here avoids allocating shader args inside the view builder.
+    private var bubbleShader: Shader {
+        ShaderLibrary.bubble(
             .float2(diameter, diameter),
             .color(tint),
             .float(Float(style.coreAlpha)),
@@ -53,7 +55,10 @@ struct BubbleView: View {
             .float(Float(seed)),
             .float(Float(style.metal))
         )
+    }
 
+    var body: some View {
+        let shader = bubbleShader
         let isMetal = style.metal > 0
         let glyphGlow = isMetal ? Color.black : tint     // halo noir sur chrome (lisibilité)
 
