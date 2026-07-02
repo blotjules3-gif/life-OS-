@@ -174,6 +174,7 @@ struct BubbleCategoriesView: View {
     @AppStorage("catColors")     private var catColorsRaw = ""   // "titre:RRGGBB,…" — couleur perso par catégorie
     @State private var editing = false
     @State private var showAdd = false
+    @State private var showCatIntake = false
     @State private var tappedID: UUID?
     @State private var drag: [UUID: CGSize] = [:]
     @State private var colorEditTarget: ColorEditTarget?
@@ -301,6 +302,37 @@ struct BubbleCategoriesView: View {
             )
             .presentationDetents([.height(320), .medium])
         }
+        .fullScreenCover(isPresented: $showCatIntake) { IntakeHubView() }
+    }
+
+    // Barre de progression du remplissage des catégories → ouvre les pôles à compléter.
+    private var catProgressHeader: some View {
+        Button { showCatIntake = true } label: {
+            VStack(alignment: .leading, spacing: 9) {
+                HStack(spacing: 8) {
+                    Text("Complète ton profil")
+                        .font(.system(size: 13, weight: .black)).textCase(.uppercase).kerning(0.3)
+                        .foregroundStyle(Theme.textPrimary)
+                    Spacer()
+                    Text("\(CategorySetup.doneCount)/\(CategorySetup.flows.count)")
+                        .monoLabel(11).foregroundStyle(Theme.textSecondary)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .bold)).foregroundStyle(Theme.textSecondary)
+                }
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Color.primary.opacity(0.10)).frame(height: 8)
+                        Capsule().fill(Theme.volt)
+                            .frame(width: max(8, geo.size.width * CategorySetup.fraction), height: 8)
+                    }
+                }
+                .frame(height: 8)
+                Text("Touche pour remplir les pôles qui te manquent")
+                    .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+            }
+            .card(padding: 14, elevated: true)
+        }
+        .buttonStyle(PressableButtonStyle())
     }
 
     @ViewBuilder private var layoutContent: some View {
@@ -324,6 +356,7 @@ struct BubbleCategoriesView: View {
                     .font(.system(size: 34, weight: .black)).textCase(.uppercase).kerning(-1)
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 4)
+                if CategorySetup.fraction < 1.0 { catProgressHeader }
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                     ForEach(Array(mains.enumerated()), id: \.element.id) { i, cat in
                         Button { tapCategory(cat) } label: { nikeTile(cat, index: i) }

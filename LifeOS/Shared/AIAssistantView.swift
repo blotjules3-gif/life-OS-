@@ -163,35 +163,20 @@ final class AIAssistantViewModel: ObservableObject {
     }
 
     private func checkAbandonedChallenges() {
-        Task {
-            guard let challenges = try? await AgentAPI.shared.fetchChallenges() else { return }
-            guard let abandoned = challenges.first(where: { $0.isAbandoned }) else { return }
-            let prompt = "[DÉFI_ABANDONNÉ] Défi : \"\(abandoned.title)\" — streak actuel : \(abandoned.streak_days) jour(s), dernier check-in : \(abandoned.days_since_checkin.map { "\($0) jour(s) ago" } ?? "jamais")"
-            await MainActor.run { triggerProactive(prompt: prompt) }
-        }
+        // Basé sur un backend distant non déployé → désactivé (coach 100% on-device).
     }
 
     private func triggerProactive(prompt: String) {
-        guard !isLoading else { return }
+        guard !isLoading, prompt.contains("[NOUVEAU_MODULE]") else { return }
+        // Message proactif local quand l'utilisateur vient d'ajouter un module.
         appendThinking()
         isLoading = true
-
         Task {
-            do {
-                let response = try await AgentAPI.shared.chat(
-                    message: prompt,
-                    module: nil,
-                    conversationID: conversationID.isEmpty ? nil : conversationID
-                )
-                conversationID = response.conversation_id
-                removeThinking()
-                appendAssistantMessage(response.reply, actions: response.actions ?? [])
-                for action in (response.actions ?? []) {
-                    await execute(action: action)
-                }
-            } catch {
-                removeThinking()
-            }
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            removeThinking()
+            appendAssistantMessage(
+                "Nouveau module activé 💪 Je l'ai pris en compte. Dis-moi ce que tu veux mettre en place dedans (une habitude, un objectif, un rappel) et je m'en occupe.",
+                actions: [])
             isLoading = false
         }
     }
@@ -206,25 +191,18 @@ final class AIAssistantViewModel: ObservableObject {
         appendThinking()
         isLoading = true
 
+        // Coach 100% ON-DEVICE (aucun serveur) — lit les vraies données + agit.
         Task {
-            do {
-                let response = try await AgentAPI.shared.chat(
-                    message: content,
-                    module: module,
-                    conversationID: conversationID.isEmpty ? nil : conversationID
-                )
-                conversationID = response.conversation_id
-                removeThinking()
-                appendAssistantMessage(response.reply, actions: response.actions ?? [])
-
-                // Execute local iOS actions
-                for action in (response.actions ?? []) {
-                    await execute(action: action)
-                }
-            } catch {
-                removeThinking()
-                errorBanner = (error as? AgentAPIError)?.errorDescription ?? error.localizedDescription
+            // Petit délai pour l'effet « réflexion » naturel.
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            let reply: String
+            if let ctx = modelContext {
+                reply = LocalCoach.respond(to: content, ctx: ctx)
+            } else {
+                reply = "Je suis prêt, mais je n'ai pas encore accès à tes données. Réessaie dans un instant."
             }
+            removeThinking()
+            appendAssistantMessage(reply, actions: [])
             isLoading = false
         }
     }
@@ -296,32 +274,16 @@ final class AIAssistantViewModel: ObservableObject {
         Heure de réveil: \(wake)
         """
 
+        _ = prompt   // le contexte reste dispo si un LLM est branché plus tard
         appendThinking()
         isLoading = true
         firstLaunchDone = true
         aiKnownModulesRaw = recommendedModulesRaw
 
         Task {
-            do {
-                let response = try await AgentAPI.shared.chat(
-                    message: prompt,
-                    module: nil,
-                    conversationID: nil
-                )
-                conversationID = response.conversation_id
-                removeThinking()
-                appendAssistantMessage(response.reply, actions: response.actions ?? [])
-                for action in (response.actions ?? []) {
-                    await execute(action: action)
-                }
-            } catch {
-                removeThinking()
-                let name = userName.isEmpty ? "" : " \(userName)"
-                appendAssistantMessage(
-                    "Bonjour\(name) ! Je suis ton coach LifeOS. Je connais tes objectifs et je vais t'aider à les atteindre étape par étape. Dis-moi juste par où tu veux commencer.",
-                    actions: []
-                )
-            }
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            removeThinking()
+            appendAssistantMessage(LocalCoach.welcome(name: userName), actions: [])
             isLoading = false
         }
     }
@@ -766,6 +728,13 @@ private struct MessageRow: View {
 
     var isUser: Bool { message.role == "user" }
 
+    /// Rend le markdown inline (**gras**, sauts de ligne) d'une String dynamique.
+    static func markdown(_ s: String) -> AttributedString {
+        var opts = AttributedString.MarkdownParsingOptions()
+        opts.interpretedSyntax = .inlineOnlyPreservingWhitespace
+        return (try? AttributedString(markdown: s, options: opts)) ?? AttributedString(s)
+    }
+
     var body: some View {
         VStack(alignment: isUser ? .trailing : .leading, spacing: 6) {
             HStack(alignment: .bottom, spacing: 8) {
@@ -775,7 +744,7 @@ private struct MessageRow: View {
                     if message.isThinking {
                         ThinkingIndicator()
                     } else {
-                        Text(message.text)
+                        Text(Self.markdown(message.text))
                             .font(.system(size: 15))
                             .foregroundStyle(isUser ? .white : .primary)
                             .textSelection(.enabled)

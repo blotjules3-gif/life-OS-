@@ -199,6 +199,9 @@ struct ShortcutsHomeView: View {
                         weeklyModuleCard(module)
                     }
 
+                    TodayAgendaSection()
+                        .padding(.horizontal, -Theme.pad)   // pleine largeur (compense le padding parent)
+
                     shortcutsSection
                     habitsSection
                     goalsSection

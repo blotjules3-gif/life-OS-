@@ -253,28 +253,25 @@ struct FloatingTabBar: View {
                 .transition(.move(edge: .leading).combined(with: .opacity))
             }
 
-            // Chat au centre — tap = ouvrir assistant IA plein écran
+            // AI Chat au centre — pastille RONDE minimaliste (noir + logo vert), alignée avec les autres icônes.
             Button {
-                Haptics.tap()
+                Haptics.medium()
                 onOpenAssistant()
             } label: {
-                HStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(Color.black)
+                        .frame(width: 50, height: 50)
+                        .overlay(Circle().strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.5))
+                        .shadow(color: Color.black.opacity(0.20), radius: 6, y: 2)
                     Image(systemName: "sparkles")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Color.accentColor)
-                    Text("Ton assistant…")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Color(uiColor: .placeholderText))
-                    Spacer()
+                        .font(.system(size: 21, weight: .bold))
+                        .foregroundStyle(Theme.volt)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Self.fieldBg, in: Capsule())
+                .frame(width: 58, height: 58)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressableButtonStyle())
             .frame(maxWidth: .infinity)
-            .animation(.spring(duration: 0.28), value: chatMode)
-            .animation(.spring(duration: 0.22), value: chatInput.isEmpty)
 
             // Onglets droite — masqués quand clavier ouvert
             if !chatMode {
