@@ -33,8 +33,22 @@ struct WakeUpView: View {
         }
     }
 
+    private var alarmTimeLabel: String {
+        let h = Calendar.current.component(.hour, from: alarmTime)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH'h'mm"
+        formatter.locale = Locale(identifier: "fr_FR")
+        let period = h < 12 ? "du matin" : h < 18 ? "de l'après-midi" : "du soir"
+        return "\(formatter.string(from: alarmTime)) \(period)"
+    }
+
     private var alarmCard: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 12) {
+            Text(alarmTimeLabel)
+                .font(.system(size: 15, weight: .semibold).monospacedDigit())
+                .foregroundStyle(Theme.textSecondary)
+                .animation(.spring(duration: 0.3), value: alarmTimeLabel)
+
             DatePicker("", selection: $alarmTime, displayedComponents: .hourAndMinute)
                 .datePickerStyle(.wheel)
                 .labelsHidden()
