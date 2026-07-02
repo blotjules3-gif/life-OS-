@@ -8,7 +8,11 @@ enum ImageStore {
     @discardableResult
     static func save(_ data: Data, prefix: String = "img") -> String {
         let name = "\(prefix)-\(UUID().uuidString).jpg"
-        try? data.write(to: dir.appendingPathComponent(name))
+        do {
+            try data.write(to: dir.appendingPathComponent(name))
+        } catch {
+            print("[ImageStore] save failed: \(error)")
+        }
         return name
     }
 
@@ -19,7 +23,11 @@ enum ImageStore {
 
     static func delete(_ filename: String?) {
         guard let filename else { return }
-        try? FileManager.default.removeItem(at: dir.appendingPathComponent(filename))
+        do {
+            try FileManager.default.removeItem(at: dir.appendingPathComponent(filename))
+        } catch {
+            print("[ImageStore] delete failed: \(error)")
+        }
     }
 }
 
