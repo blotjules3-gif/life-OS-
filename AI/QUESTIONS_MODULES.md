@@ -316,3 +316,95 @@ Si la question de notification n'a pas été posée → clé absente → notific
 
 **Notifications :**
 - `social_reminder` → chaque `social_contact_weekday` à `notif_social_hour:00` (si enabled)
+
+---
+
+## MODULE : MÉDICAL (medical)
+
+### Questions sur les événements
+| Question | Clé | Type |
+|---|---|---|
+| "Tu prends des médicaments régulièrement ?" | `medical_medications_enabled` | Bool |
+| "Certains médicaments se prennent le matin ?" | `medical_med_morning_enabled` | Bool |
+| "Certains médicaments se prennent le midi ?" | `medical_med_noon_enabled` | Bool |
+| "Certains médicaments se prennent le soir ?" | `medical_med_evening_enabled` | Bool |
+| "Tu as des rendez-vous médicaux réguliers ?" | `medical_appointments_regular` | Bool |
+| "Tu suis tes constantes (tension, poids, glycémie…) ?" | `medical_vitals_tracking` | Bool |
+| "À quelle fréquence tu mesures tes constantes ?" | `medical_vitals_frequency` | String (daily/weekly/monthly) |
+
+### Questions sur les notifications
+| Question | Clé | Type |
+|---|---|---|
+| "Tu veux un rappel pour tes médicaments du matin ?" | `notif_medical_morning_enabled` | Bool |
+| "À quelle heure ce rappel matin ?" | `notif_medical_morning_hour` | Int |
+| "Tu veux un rappel pour tes médicaments du midi ?" | `notif_medical_noon_enabled` | Bool |
+| "À quelle heure ce rappel midi ?" | `notif_medical_noon_hour` | Int |
+| "Tu veux un rappel pour tes médicaments du soir ?" | `notif_medical_evening_enabled` | Bool |
+| "À quelle heure ce rappel soir ?" | `notif_medical_evening_hour` | Int |
+| "Tu veux un rappel pour mesurer tes constantes ?" | `notif_medical_vitals_enabled` | Bool |
+| "À quelle heure ce rappel constantes ?" | `notif_medical_vitals_hour` | Int |
+| "Tu veux une alerte avant tes RDV médicaux ?" | `notif_medical_appointment_enabled` | Bool |
+| "Combien d'heures avant le RDV tu veux l'alerte ?" | `notif_medical_appointment_advance_h` | Int |
+
+**Notifications :**
+- `medical_morning` → `notif_medical_morning_hour:00` (si enabled && medical_med_morning_enabled)
+- `medical_noon` → `notif_medical_noon_hour:00` (si enabled && medical_med_noon_enabled)
+- `medical_evening` → `notif_medical_evening_hour:00` (si enabled && medical_med_evening_enabled)
+- `medical_vitals` → `notif_medical_vitals_hour:00` (si enabled, à la fréquence définie)
+- `medical_appointment` → calculé depuis la date du prochain RDV − `notif_medical_appointment_advance_h`h
+
+---
+
+## MODULE : MOBILITÉ (mobility)
+
+### Questions sur les événements
+| Question | Clé | Type |
+|---|---|---|
+| "Tu as une voiture / moto / vélo ?" | `mobility_has_vehicle` | Bool |
+| "Quel type de trajet tu fais régulièrement ?" | `mobility_commute_type` | String (car/transit/bike/walk) |
+| "À quelle heure tu pars le matin ?" | `mobility_departure_hour` | Int |
+| "Tu fais le plein régulièrement ?" | `mobility_fuel_tracking` | Bool |
+| "Quand est le prochain contrôle technique ?" | `mobility_ct_date` | String (date) |
+| "Quand expire ton assurance ?" | `mobility_insurance_expiry` | String (date) |
+
+### Questions sur les notifications
+| Question | Clé | Type |
+|---|---|---|
+| "Tu veux un rappel pour partir à l'heure le matin ?" | `notif_mobility_departure_enabled` | Bool |
+| "À quelle heure ce rappel départ ?" | `notif_mobility_departure_hour` | Int |
+| "Tu veux un rappel pour faire le plein ?" | `notif_mobility_fuel_enabled` | Bool |
+| "Quel jour de la semaine ce rappel carburant ?" | `mobility_fuel_weekday` | Int |
+| "À quelle heure ce rappel carburant ?" | `notif_mobility_fuel_hour` | Int |
+| "Tu veux une alerte avant le contrôle technique ?" | `notif_mobility_ct_enabled` | Bool |
+| "Combien de jours avant tu veux l'alerte CT ?" | `mobility_ct_advance_days` | Int |
+
+**Notifications :**
+- `mobility_departure` → `notif_mobility_departure_hour:00` chaque jour (si enabled)
+- `mobility_fuel` → chaque `mobility_fuel_weekday` à `notif_mobility_fuel_hour:00` (si enabled)
+- `mobility_ct` → `mobility_ct_advance_days` jours avant la date CT (si enabled, date ponctuelle)
+
+---
+
+## MODULE : VOYAGE (travel)
+
+### Questions sur les événements
+| Question | Clé | Type |
+|---|---|---|
+| "Tu as un voyage prévu bientôt ?" | `travel_upcoming` | Bool |
+| "Tu pars combien de fois par an en voyage ?" | `travel_frequency` | Int |
+| "Tu prépares ta valise en avance ou au dernier moment ?" | `travel_packing_style` | String (advance/last_minute) |
+
+### Questions sur les notifications
+| Question | Clé | Type |
+|---|---|---|
+| "Tu veux un rappel pour préparer ta valise ?" | `notif_travel_packing_enabled` | Bool |
+| "Combien de jours avant le départ ce rappel ?" | `travel_packing_advance_days` | Int |
+| "Tu veux un rappel la veille du départ ?" | `notif_travel_departure_eve_enabled` | Bool |
+| "À quelle heure ce rappel veille de départ ?" | `notif_travel_departure_eve_hour` | Int |
+| "Tu veux un rappel pour vérifier les documents (passeport, billets) ?" | `notif_travel_docs_enabled` | Bool |
+| "Combien de jours avant le départ ?" | `travel_docs_advance_days` | Int |
+
+**Notifications :**
+- `travel_packing` → `travel_packing_advance_days` jours avant départ (ponctuelle, date du voyage)
+- `travel_docs` → `travel_docs_advance_days` jours avant départ (ponctuelle)
+- `travel_departure_eve` → veille du départ à `notif_travel_departure_eve_hour:00` (ponctuelle)
