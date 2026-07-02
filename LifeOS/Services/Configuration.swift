@@ -29,7 +29,9 @@ enum Configuration {
            !override.isEmpty { return override }
         if let plist = Bundle.main.object(forInfoDictionaryKey: "API_KEY") as? String,
            !plist.isEmpty, !plist.hasPrefix("$(") { return plist }
-        return "82d35e070ca086f995b84718054cfac5"  // fallback développement local
+        // Pas de fallback : sans Config.xcconfig, les requêtes échouent en 401 (visible)
+        // plutôt que d'embarquer une clé de prod dans le binaire.
+        return ""
     }
 
     // MARK: - Crypto proxy
