@@ -150,7 +150,6 @@ private struct HabitWidgetSyncer: View {
 struct FloatingTabBar: View {
     @Binding var selected: AppTab
     var onOpenAssistant: () -> Void = {}
-    var isLoadingAI: Bool = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var serverStatus = ServerStatusMonitor.shared
