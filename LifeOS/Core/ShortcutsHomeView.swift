@@ -1098,13 +1098,54 @@ struct WeeklyBilanView: View {
             .navigationTitle("Bilan de semaine")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    if let ui = shareImage {
+                        ShareLink(
+                            item: Image(uiImage: ui),
+                            preview: SharePreview("Mon bilan de semaine", image: Image(uiImage: ui))
+                        ) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Fermer") { dismiss() }
                         .font(.subheadline.weight(.semibold))
                 }
             }
-            .task { await loadAIBilan() }
+            .task {
+                renderShareCard()
+                await loadAIBilan()
+            }
         }
+    }
+
+    // MARK: Partage
+
+    private var shareDateRange: String {
+        let df = DateFormatter()
+        df.locale = Locale(identifier: "fr_FR")
+        df.dateFormat = "d MMM"
+        guard let first = weekDays.first, let last = weekDays.last else { return "" }
+        return "\(df.string(from: first)) — \(df.string(from: last))"
+    }
+
+    @MainActor
+    private func renderShareCard() {
+        let card = WeeklyShareCard(
+            score: Int(weeklyScore * 100),
+            dayRatios: weekDays.map { ratio(for: $0) },
+            perfectDays: perfectDays,
+            avgWater: avgWater,
+            avgKcal: avgKcal,
+            avgMood: avgMood,
+            message: message,
+            dateRange: shareDateRange
+        )
+        let renderer = ImageRenderer(content: card)
+        renderer.scale = 3
+        shareImage = renderer.uiImage
     }
 
     // MARK: Bilan IA
