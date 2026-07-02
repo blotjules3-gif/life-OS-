@@ -243,6 +243,20 @@ actor AgentAPI {
         return try await post(path: "/api/v1/chat", body: body, session: chatSession)
     }
 
+    // MARK: - Ping
+
+    /// Quick reachability check — 1.5s timeout. Returns true if server responds.
+    func ping() async -> Bool {
+        let pingConfig = URLSessionConfiguration.default
+        pingConfig.timeoutIntervalForRequest = 1.5
+        let pingSession = URLSession(configuration: pingConfig)
+        var req = URLRequest(url: AgentAPIConfig.baseURL.appendingPathComponent("/health"))
+        req.setValue(AgentAPIConfig.apiKey, forHTTPHeaderField: "X-API-Key")
+        guard let (_, response) = try? await pingSession.data(for: req),
+              let http = response as? HTTPURLResponse else { return false }
+        return http.statusCode < 500
+    }
+
     // MARK: - Module Config
 
     func getModuleConfig(module: String) async throws -> ModuleConfig {
