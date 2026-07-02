@@ -547,6 +547,11 @@ def build_system_prompt(
 6. Terminer par 1-2 modules à ajouter pour compléter la solution
 7. Ne JAMAIS proposer add_module pour un module déjà actif"""
 
+    questions_modules = _load_ai_file("QUESTIONS_MODULES.md")
+    if questions_modules:
+        prompt += f"\n\n--- QUESTIONS DE CONFIGURATION PAR MODULE ---\n{questions_modules}\n--- FIN QUESTIONS ---"
+        prompt += "\n→ Quand un module est activé (add_module) ou qu'un utilisateur veut configurer ses notifications : pose les questions de ce document dans l'ordre, une par une en conversation naturelle. Ne montre jamais les clés techniques à l'utilisateur."
+
     custom_instructions = _load_ai_file("INSTRUCTIONS_CUSTOM.md")
     if custom_instructions:
         prompt += f"\n\n--- INSTRUCTIONS PERSONNALISÉES ---\n{custom_instructions}\n--- FIN INSTRUCTIONS ---"
