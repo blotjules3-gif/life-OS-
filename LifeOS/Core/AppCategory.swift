@@ -53,23 +53,23 @@ enum AppCategory: String, CaseIterable, Identifiable {
 
     var tint: Color {
         switch self {
-        case .sleep: return Color(hex: 0x6C7BF1)
-        case .nutrition: return Color(hex: 0x4CC38A)
-        case .fitness: return Color(hex: 0xF1746C)
-        case .looks: return Color(hex: 0xE0A23C)
-        case .mind: return Color(hex: 0x9B6CF1)
-        case .productivity: return Color(hex: 0x3CB2E0)
-        case .finance: return Color(hex: 0x4CC38A)
-        case .invest: return Color(hex: 0x46C9A8)
-        case .career: return Color(hex: 0xE07B3C)
-        case .learning: return Color(hex: 0xF97316)
-        case .home: return Color(hex: 0x6CA0F1)
-        case .mobility: return Color(hex: 0x3CD0C8)
-        case .social: return Color(hex: 0xF16CB0)
-        case .admin: return Color(hex: 0x8A93A8)
-        case .travel: return Color(hex: 0x6C9BF1)
-        case .cycle: return Color(hex: 0xE85D9A)
-        case .medical: return Color(hex: 0xE84C4C)
+        case .sleep:        return Theme.sleep
+        case .nutrition:    return Theme.nutrition
+        case .fitness:      return Theme.fitness
+        case .looks:        return Theme.looks
+        case .mind:         return Theme.mind
+        case .productivity: return Theme.productivity
+        case .finance:      return Theme.finance
+        case .invest:       return Theme.invest
+        case .career:       return Theme.career
+        case .learning:     return Theme.learning
+        case .home:         return Theme.home
+        case .mobility:     return Theme.mobility
+        case .social:       return Theme.social
+        case .admin:        return Theme.admin
+        case .travel:       return Theme.travel
+        case .cycle:        return Theme.cycle
+        case .medical:      return Theme.medical
         }
     }
 
