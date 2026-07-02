@@ -40,9 +40,8 @@ async def compute_insights(session: AsyncSession, user_id: Any) -> list[str]:
     # --- 1. Tendance score d'énergie : 7 derniers jours vs 7 précédents ---
     scored = [r for r in rows if r.energy_score is not None]
     if len(scored) >= 6:
-        last7 = [r for r in scored if r.checkin_date >= (today - timedelta(days=7)).isoformat()[:10] or
-                 (hasattr(r.checkin_date, 'date') and r.checkin_date.date() >= today - timedelta(days=7))]
-        prev7 = [r for r in scored if _days_ago(r, today) >= 7 and _days_ago(r, today) < 14]
+        last7 = [r for r in scored if _days_ago(r, today) < 7]
+        prev7 = [r for r in scored if 7 <= _days_ago(r, today) < 14]
         if last7 and prev7:
             avg_last = sum(r.energy_score for r in last7) / len(last7)
             avg_prev = sum(r.energy_score for r in prev7) / len(prev7)
