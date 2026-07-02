@@ -1187,7 +1187,7 @@ struct ProfileView: View {
                     showGoalEditor = true
                 }
                 Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
-                settingsRow(icon: "sparkles", iconColor: Color.accentColor, label: "Assistant IA — serveur") {
+                settingsRow(icon: "sparkles", iconColor: Color.accentColor, label: "Coach — serveur") {
                     HStack(spacing: 6) {
                         Circle()
                             .fill(serverStatus.dotColor == .clear ? Color.secondary.opacity(0.3) : serverStatus.dotColor)
