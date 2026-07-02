@@ -985,6 +985,9 @@ private struct MessageRow: View {
 
 // MARK: - Server Config Sheet
 
+// Outil de dev uniquement : en prod, l'URL et la clé API viennent de
+// Config.xcconfig et ne doivent pas être modifiables depuis l'UI.
+#if DEBUG
 struct ServerConfigView: View {
     let onSave: () -> Void
     @Environment(\.dismiss) private var dismiss
