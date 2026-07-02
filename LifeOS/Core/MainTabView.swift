@@ -217,12 +217,14 @@ struct FloatingTabBar: View {
             }
             .frame(maxWidth: .infinity)
             .animation(.easeInOut(duration: 0.3), value: serverStatus.isOnline)
+            #if DEBUG
             .sheet(isPresented: $showServerConfig) {
                 ServerConfigView {
                     showServerConfig = false
                     serverStatus.pingNow()
                 }
             }
+            #endif
 
             HStack(spacing: 0) {
                 ForEach(rightTabs) { t in tabBtn(t) }
