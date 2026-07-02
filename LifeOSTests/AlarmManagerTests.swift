@@ -57,6 +57,6 @@ final class AlarmManagerTests: XCTestCase {
         XCTAssertFalse(alarm.showAlarmScreen, "L'écran d'alarme doit être caché")
         XCTAssertTrue(alarm.showSleepCheck, "Le sleep check doit apparaître")
         XCTAssertFalse(alarm.isRinging, "L'alarme ne doit plus sonner")
-        alarm.showSleepCheck = false // cleanup
+        alarm.phase = .idle // cleanup
     }
 }
