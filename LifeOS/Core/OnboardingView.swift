@@ -66,6 +66,7 @@ struct OnboardingView: View {
     @AppStorage("userHasCycle") private var savedHasCycle = false
     @AppStorage("userHormonalContext") private var savedHormonalContext = ""
     @Environment(\.modelContext) private var ctx
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var step = 0
     @State private var goingBack = false
