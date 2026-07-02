@@ -58,9 +58,10 @@ async def analyze_and_schedule(
 
     now = datetime.now(tz=timezone.utc)
 
-    # ── Sport: check if user hasn't logged a session in > 2 days ─────────────
-    if "sport" in configs:
-        sport_cfg = configs["sport"]
+    # ── Fitness : le module s'appelle "fitness" partout (cf. _VALID_MODULES),
+    # l'ancienne clé "sport" ne matchait jamais aucune config réelle.
+    if "fitness" in configs:
+        sport_cfg = configs["fitness"]
         sessions_per_week = int(sport_cfg.get("sessions_per_week", 3))
         last_session = await session.execute(
             select(func.max(SportLog.logged_at)).where(SportLog.user_id == user_id)
