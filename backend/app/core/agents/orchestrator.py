@@ -77,6 +77,8 @@ class AgentOrchestrator:
         module_config_updated = False
         goals_updated = False
         pending_actions: list[dict[str, Any]] = []
+        empty_response_count = 0
+        recent_tool_calls: list[str] = []  # dedup identical consecutive calls
 
         for iteration in range(self._max_iterations):
             log.info(
@@ -111,8 +113,18 @@ class AgentOrchestrator:
 
             # ── Tool calls ────────────────────────────────────────────────────
             if not llm_tool_calls:
-                log.warning("agent_empty_response", iteration=iteration + 1)
+                empty_response_count += 1
+                log.warning("agent_empty_response", iteration=iteration + 1, count=empty_response_count)
+                if empty_response_count >= 2:
+                    log.error("agent_repeated_empty_response", iterations=iteration + 1)
+                    return AgentResult(
+                        reply="Je n'arrive pas à formuler une réponse. Reformule ta demande.",
+                        tools_executed=tools_executed,
+                        module_config_updated=module_config_updated,
+                        goals_updated=goals_updated,
+                    )
                 continue
+            empty_response_count = 0
 
             # Append the assistant message with tool calls
             messages.append({
