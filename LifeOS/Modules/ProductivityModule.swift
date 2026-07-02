@@ -284,7 +284,7 @@ struct HabitTrackerView: View {
                                     .foregroundStyle(.secondary)
                                     .kerning(1.2)
                             }
-                            ForEach(activeHabits) { h in HabitRow(habit: h, onEdit: { editingHabit = h }) }
+                            ForEach(activeHabits) { h in HabitRow(habit: h, onEdit: { editingHabit = h }, onDelete: { softDelete(h) }) }
                         }
                     }
                 }.padding(Theme.pad)
