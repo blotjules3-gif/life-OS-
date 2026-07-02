@@ -91,7 +91,7 @@ class LLMWrapper:
             async for attempt in AsyncRetrying(
                 stop=stop_after_attempt(self._max_retries),
                 wait=wait_exponential(multiplier=1, min=1, max=8),
-                retry=retry_if_exception_type((LLMValidationError, Exception)),
+                retry=retry_if_exception(_is_transient),
                 reraise=False,
             ):
                 with attempt:
