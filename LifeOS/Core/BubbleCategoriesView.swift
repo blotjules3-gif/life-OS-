@@ -495,6 +495,7 @@ struct BubbleCategoriesView: View {
                         .symbolRenderingMode(.palette)
                         .foregroundStyle(.white, .red)
                 }
+                .accessibilityLabel("Retirer \(cat.title)")
                 .buttonStyle(.plain)
                 .offset(x: d * 0.12, y: d * 0.12)
                 .transition(.scale.combined(with: .opacity))
