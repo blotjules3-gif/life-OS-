@@ -61,7 +61,7 @@ struct PrimaryButton: View {
             .background(tint, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
             .foregroundStyle(.white)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(LifeOSPressStyle())
     }
 }
 
