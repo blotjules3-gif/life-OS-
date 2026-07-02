@@ -231,7 +231,8 @@ struct FloatingTabBar: View {
 
     private func tabBtn(_ t: AppTab) -> some View {
         Button {
-            withAnimation(.spring(duration: 0.28, bounce: 0.35)) { selected = t }
+            let anim: Animation? = reduceMotion ? nil : .spring(duration: 0.28, bounce: 0.35)
+            withAnimation(anim) { selected = t }
             if t == .profile { Haptics.medium() } else { Haptics.tap() }
         } label: {
             ZStack {
@@ -244,7 +245,7 @@ struct FloatingTabBar: View {
                 Image(systemName: selected == t ? t.iconFill : t.icon)
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(selected == t ? Color.primary : Color(uiColor: .systemGray))
-                    .animation(.spring(duration: 0.28), value: selected)
+                    .animation(reduceMotion ? nil : .spring(duration: 0.28), value: selected)
             }
             .frame(width: 60, height: 60)
         }
