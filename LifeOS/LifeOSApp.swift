@@ -73,6 +73,11 @@ struct LifeOSApp: App {
             } message: {
                 Text("LifeOS n'a pas pu charger ta base de données. Tes données sont en sécurité — réessaie ou contacte le support.")
             }
+            .alert("Données réinitialisées", isPresented: $storeWasReset) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("Tes données n'ont pas pu être migrées après une mise à jour. Une copie de sauvegarde a été conservée sur l'appareil et l'app repart sur une base vide. Contacte le support pour restaurer la sauvegarde.")
+            }
         }
     }
 
