@@ -88,6 +88,33 @@ struct ChallengeOut: Decodable, Identifiable {
         guard let days = days_since_checkin else { return false }
         return days == 0
     }
+
+    var daysRemaining: Int? {
+        guard let total = duration_days else { return nil }
+        return max(0, total - days_elapsed)
+    }
+
+    var deadlineDate: Date? {
+        guard let total = duration_days else { return nil }
+        let fmt = ISO8601DateFormatter()
+        fmt.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let start = fmt.date(from: started_at) {
+            return Calendar.current.date(byAdding: .day, value: total, to: start)
+        }
+        // fallback without fractional seconds
+        let fmt2 = ISO8601DateFormatter()
+        guard let start = fmt2.date(from: started_at) else { return nil }
+        return Calendar.current.date(byAdding: .day, value: total, to: start)
+    }
+
+    var deadlineLabel: String? {
+        guard let remaining = daysRemaining, let deadline = deadlineDate else { return nil }
+        if remaining == 0 { return "Dernier jour" }
+        let df = DateFormatter()
+        df.dateFormat = "EEE d MMM"
+        df.locale = Locale(identifier: "fr_FR")
+        return "\(remaining)j restants · \(df.string(from: deadline))"
+    }
 }
 
 // MARK: - Energy Score
