@@ -80,6 +80,7 @@ final class AIAssistantViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorBanner: String? = nil
     @Published var isServerOffline = false
+    @Published var pendingModuleSetup: AppCategory? = nil
 
     @AppStorage("aiConversationID") private var conversationID = ""
     @AppStorage("aiFirstLaunchDone") private var firstLaunchDone = false
