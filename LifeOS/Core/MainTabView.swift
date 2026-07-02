@@ -404,9 +404,15 @@ struct HomeDashboardContent: View {
             HStack {
                 Text(label).font(.subheadline)
                 Spacer()
-                Text("\(Int(value)) / \(Int(goal))").font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
+                Text("\(Int(value)) / \(Int(goal))")
+                    .font(.subheadline.weight(.medium).monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .contentTransition(.numericText(value: value))
+                    .animation(.spring(duration: 0.4), value: value)
             }
-            ProgressView(value: min(value, goal), total: max(1, goal)).tint(color)
+            ProgressView(value: min(value, goal), total: max(1, goal))
+                .tint(color)
+                .animation(.spring(duration: 0.6, bounce: 0.1), value: value)
         }
     }
 }
