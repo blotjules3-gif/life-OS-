@@ -712,9 +712,11 @@ struct BubbleCategoriesView: View {
                                 .font(.system(size: 17, weight: .semibold)).foregroundStyle(.white)
                                 .frame(width: 40, height: 40)
                                 .background(themedTint(cat).gradient, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                                .accessibilityHidden(true)
                             Text(cat.title).font(.system(size: 16, weight: .medium)).foregroundStyle(.primary)
                             Spacer()
                             Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(.tertiary)
+                                .accessibilityHidden(true)
                         }
                         .padding(.horizontal, 14).padding(.vertical, 12)
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
