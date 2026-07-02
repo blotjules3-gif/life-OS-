@@ -276,14 +276,17 @@ struct EveningSummaryView: View {
     // MARK: Mood card
 
     private var moodCard: some View {
-        HStack(spacing: 14) {
-            Text(todayMood?.emoji ?? "")
-                .font(.system(size: 36))
+        let score = todayMood?.score ?? 3
+        return HStack(spacing: 14) {
+            Image(systemName: moodSymbol(score))
+                .font(.system(size: 30))
+                .foregroundStyle(moodColor(score))
+                .frame(width: 40)
             VStack(alignment: .leading, spacing: 4) {
                 Text("Humeur du jour")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text(todayMood?.label ?? "")
+                Text("\(moodLabel(score)) — \(score)/5")
                     .font(.system(size: 15, weight: .semibold))
                 if let note = todayMood?.note, !note.isEmpty {
                     Text(note)
@@ -296,6 +299,36 @@ struct EveningSummaryView: View {
         }
         .padding(16)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+    }
+
+    private func moodSymbol(_ score: Int) -> String {
+        switch score {
+        case 1: return "cloud.heavyrain.fill"
+        case 2: return "cloud.fill"
+        case 3: return "cloud.sun.fill"
+        case 4: return "sun.min.fill"
+        default: return "sun.max.fill"
+        }
+    }
+
+    private func moodLabel(_ score: Int) -> String {
+        switch score {
+        case 1: return "Très difficile"
+        case 2: return "Difficile"
+        case 3: return "Correcte"
+        case 4: return "Bonne"
+        default: return "Excellente"
+        }
+    }
+
+    private func moodColor(_ score: Int) -> Color {
+        switch score {
+        case 1: return Color(hex: 0xE5484D)
+        case 2: return Color(hex: 0xFF9F0A)
+        case 3: return .secondary
+        case 4: return Color(hex: 0x00D4B4)
+        default: return Color(hex: 0x4CC38A)
+        }
     }
 
     // MARK: Active challenges card
