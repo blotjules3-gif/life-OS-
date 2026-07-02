@@ -172,22 +172,15 @@ struct FloatingTabBar: View {
 
             ZStack(alignment: .topLeading) {
                 Button {
-                    guard !isLoadingAI else { return }
                     Haptics.tap()
                     serverStatus.pingNow()
                     onOpenAssistant()
                 } label: {
                     HStack(spacing: 8) {
-                        if isLoadingAI {
-                            ProgressView()
-                                .scaleEffect(0.75)
-                                .frame(width: 16, height: 16)
-                        } else {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(Color.accentColor)
-                        }
-                        Text(isLoadingAI ? "Connexion…" : "Pose une question…")
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color.accentColor)
+                        Text("Pose une question…")
                             .font(.system(size: 13))
                             .foregroundStyle(Color(uiColor: .placeholderText))
                             .lineLimit(1)
@@ -196,10 +189,8 @@ struct FloatingTabBar: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .background(Self.fieldBg, in: Capsule())
-                    .opacity(isLoadingAI ? 0.65 : 1)
                 }
                 .buttonStyle(.plain)
-                .animation(.easeInOut(duration: 0.2), value: isLoadingAI)
 
                 if serverStatus.isOnline != nil {
                     Button {
