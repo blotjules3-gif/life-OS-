@@ -28,11 +28,11 @@ enum OnboardingGoal: String, CaseIterable, Identifiable {
 
     var color: Color {
         switch self {
-        case .health:      return Color(hex: 0xF1746C)
-        case .performance: return Color(hex: 0xE0A23C)
-        case .money:       return Color(hex: 0x4CC38A)
-        case .mind:        return Color(hex: 0x9B6CF1)
-        case .habits:      return Color(hex: 0x3CB2E0)
+        case .health:      return Theme.fitness
+        case .performance: return Theme.energy
+        case .money:       return Theme.finance
+        case .mind:        return Theme.mind
+        case .habits:      return Theme.productivity
         }
     }
 
