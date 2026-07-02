@@ -165,7 +165,7 @@ struct FridgeView: View {
                     if items.isEmpty {
                         EmptyState(icon: "refrigerator", title: "Frigo vide", message: "Ajoute ce que tu as sous la main.")
                     } else {
-                        VStack(spacing: 8) {
+                        LazyVStack(spacing: 8) {
                             ForEach(items) { it in
                                 HStack {
                                     VStack(alignment: .leading) {
