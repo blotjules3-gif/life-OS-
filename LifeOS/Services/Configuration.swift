@@ -32,6 +32,16 @@ enum Configuration {
         return "82d35e070ca086f995b84718054cfac5"  // fallback développement local
     }
 
+    // MARK: - Crypto proxy
+
+    static var cryptoProxyURL: String {
+        if let override = UserDefaults.standard.string(forKey: "dev.cryptoProxyURL"),
+           !override.isEmpty { return override }
+        if let plist = Bundle.main.object(forInfoDictionaryKey: "CRYPTO_PROXY_URL") as? String,
+           !plist.isEmpty, !plist.hasPrefix("$(") { return plist }
+        return "https://riskcrypto-proxy.httpsrisckcryptoproxyworkersdev.workers.dev/market"
+    }
+
     // MARK: - Réseau
 
     static let timeoutInterval: TimeInterval = 30
