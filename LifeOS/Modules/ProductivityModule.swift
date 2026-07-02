@@ -479,6 +479,21 @@ struct HabitRow: View {
         }
     }
 
+    private func duplicate() {
+        let copy = Habit(
+            name: habit.name + " (copie)",
+            icon: habit.icon,
+            colorHex: habit.colorHex,
+            isPending: false,
+            moduleTag: habit.moduleTag,
+            scheduledHour: habit.scheduledHour,
+            scheduledMinute: habit.scheduledMinute
+        )
+        ctx.insert(copy)
+        try? ctx.save()
+        Haptics.tap()
+    }
+
     private func toggleToday() {
         if let c = habit.completions.first(where: { Calendar.current.isDate($0.date, inSameDayAs: .now) }) {
             habit.completions.removeAll { $0 === c }
