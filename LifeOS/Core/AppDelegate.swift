@@ -96,11 +96,6 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         if alarmIds.contains(id) {
             await MainActor.run { AlarmManager.shared.triggerAlarm() }
         }
-        if id == "lifeos.ai.welcome" {
-            await MainActor.run {
-                NotificationCenter.default.post(name: .lifeOSOpenAIChat, object: nil)
-            }
-        }
         if id == "lifeos.weekly_bilan" {
             await MainActor.run {
                 NotificationCenter.default.post(name: .lifeOSOpenWeeklyBilan, object: nil)
