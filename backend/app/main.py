@@ -14,6 +14,7 @@ from app.config import get_settings
 from app.core.exceptions import LifeOSBaseError
 from app.core.logging import configure_logging, get_logger
 from app.core.tools.registry import registry
+from app.database import Base, engine
 
 settings = get_settings()
 configure_logging(debug=settings.debug)
