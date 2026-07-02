@@ -168,7 +168,7 @@ struct LifeOSApp: App {
     // MARK: - Création container
 
     private func buildContainer() async {
-        let schema = Self.schema
+        let schema = LocalStore.schema
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         let result = await Task.detached(priority: .userInitiated) {
