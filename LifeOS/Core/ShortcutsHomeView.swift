@@ -305,6 +305,7 @@ struct ShortcutsHomeView: View {
             .task {
                 if await HealthService.shared.requestAuthorization() {
                     steps = await HealthService.shared.cachedStepsToday()
+                    stepsYesterday = await HealthService.shared.stepsYesterday()
                 }
                 reengageMessage    = EngagementTracker.shared.reengagementMessage
                 reengageSuggestion = EngagementTracker.shared.simplificationSuggestion
