@@ -194,10 +194,10 @@ struct GoalEditorSheet: View {
                 DatePicker(
                     "Date précise",
                     selection: Binding(
-                        get: { endDates[id] ?? Calendar.current.date(byAdding: .day, value: 7, to: .now)! },
+                        get: { endDates[id] ?? Calendar.current.date(byAdding: .day, value: 7, to: .now) ?? Date() },
                         set: { endDates[id] = $0 }
                     ),
-                    in: Calendar.current.date(byAdding: .day, value: 1, to: .now)!...,
+                    in: (Calendar.current.date(byAdding: .day, value: 1, to: .now) ?? Date())...,
                     displayedComponents: .date
                 )
                 .datePickerStyle(.compact)
