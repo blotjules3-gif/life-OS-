@@ -118,6 +118,7 @@ struct LifeOSApp: App {
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             resetDailyValuesIfNeeded()
             MorningReminder.checkAndArm()
+            Task { await HealthAutoSync.syncNow(container.mainContext) }
         }
         .onChange(of: onboardingDone) { _, done in
             if done { ContextualNotifications.shared.reschedule() }
