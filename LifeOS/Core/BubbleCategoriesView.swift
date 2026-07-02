@@ -290,6 +290,7 @@ struct BubbleCategoriesView: View {
                 .background(.regularMaterial, in: Circle())
                 .contentTransition(.symbolEffect(.replace))
         }
+        .accessibilityLabel("Changer la disposition")
         .padding(.top, 8).padding(.leading, 16)
     }
 
