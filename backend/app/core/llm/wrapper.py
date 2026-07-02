@@ -3,12 +3,13 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
+import httpx
 from mistralai import Mistral
-from mistralai.models import AssistantMessage, SystemMessage, ToolMessage, UserMessage
+from mistralai.models import AssistantMessage, SDKError, SystemMessage, ToolMessage, UserMessage
 from tenacity import (
     AsyncRetrying,
     RetryError,
-    retry_if_exception_type,
+    retry_if_exception,
     stop_after_attempt,
     wait_exponential,
 )
