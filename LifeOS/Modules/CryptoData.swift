@@ -101,7 +101,7 @@ func cryptoGuessCategory(_ id: String) -> String {
 }
 
 func cryptoGetCat(_ id: String) -> String { cryptoCategories[id] ?? cryptoGuessCategory(id) }
-func cryptoGetCatColor(_ id: String) -> Color { cryptoCatColors[cryptoGetCat(id)] ?? Color(hex: 0x3CB2E0) }
+func cryptoGetCatColor(_ id: String) -> Color { cryptoCatColors[cryptoGetCat(id)] ?? Theme.hydration }
 
 // MARK: - Helpers scores
 
