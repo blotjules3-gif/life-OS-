@@ -271,13 +271,9 @@ struct OnboardingView: View {
                                 if !finalModules.isEmpty { homeShortcuts = buildShortcuts(from: finalModules) }
                                 applyGenderDefaults(gender: savedGender)
                                 createPendingHabits()
-                                NotificationManager.shared.scheduleAfter(
-                                    id: "lifeos.ai.welcome",
-                                    title: "LifeOS",
-                                    body: "Ton assistant t'a envoyé un message",
-                                    seconds: 5
-                                )
-                                onboardingDone = true
+                                // Pré-prompt contextuel : les habitudes viennent d'être créées,
+                                // l'utilisateur comprend pourquoi on demande les notifications.
+                                showNotifPrePrompt = true
                             }
                         )
                         .transition(stepTransition)
