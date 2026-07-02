@@ -304,6 +304,85 @@ struct VitalsView: View {
         }
     }
 
+    // Dernières 30 mesures, chronologiques, pour le graphe.
+    private var chartData: [VitalRecord] {
+        Array(filtered.sorted { $0.date < $1.date }.suffix(30))
+    }
+
+    private var trendCard: some View {
+        let data = chartData
+        let values = data.map(\.value)
+        let minV = values.min() ?? 0
+        let maxV = values.max() ?? 1
+        let pad = Swift.max((maxV - minV) * 0.15, 0.5)
+        let delta = (data.last?.value ?? 0) - (data.first?.value ?? 0)
+        let unit = data.last?.unit ?? ""
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("TENDANCE")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .kerning(1.2)
+                Spacer()
+                Text(String(format: "%+.1f %@", delta, unit))
+                    .font(.system(size: 13, weight: .semibold))
+                    .monospacedDigit()
+                    .foregroundStyle(delta == 0 ? Color.secondary
+                                     : trendIsPositive(delta) ? Color(hex: 0x4CC38A) : Color(hex: 0xF1746C))
+            }
+            Chart(data) { r in
+                AreaMark(
+                    x: .value("Date", r.date),
+                    yStart: .value("Base", minV - pad),
+                    yEnd: .value("Valeur", r.value)
+                )
+                .interpolationMethod(.catmullRom)
+                .foregroundStyle(
+                    LinearGradient(colors: [Color.accentColor.opacity(0.22), Color.accentColor.opacity(0.02)],
+                                   startPoint: .top, endPoint: .bottom)
+                )
+                LineMark(
+                    x: .value("Date", r.date),
+                    y: .value("Valeur", r.value)
+                )
+                .interpolationMethod(.catmullRom)
+                .foregroundStyle(Color.accentColor)
+                .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
+            }
+            .chartYScale(domain: (minV - pad)...(maxV + pad))
+            .chartXAxis {
+                AxisMarks(values: .automatic(desiredCount: 4)) {
+                    AxisValueLabel(format: .dateTime.day().month(.abbreviated))
+                        .font(.system(size: 10))
+                }
+            }
+            .chartYAxis {
+                AxisMarks(position: .trailing, values: .automatic(desiredCount: 4)) {
+                    AxisGridLine().foregroundStyle(Color.primary.opacity(0.06))
+                    AxisValueLabel().font(.system(size: 10))
+                }
+            }
+            .frame(height: 150)
+            HStack {
+                Text(String(format: "Min %.1f", minV))
+                Spacer()
+                Text("\(data.count) mesures")
+                Spacer()
+                Text(String(format: "Max %.1f", maxV))
+            }
+            .font(.system(size: 11))
+            .monospacedDigit()
+            .foregroundStyle(.tertiary)
+        }
+        .card()
+    }
+
+    /// Pour le poids, une baisse est affichée en vert ; pour le reste, la couleur reste neutre-positive à la hausse.
+    private func trendIsPositive(_ delta: Double) -> Bool {
+        selectedType == "poids" ? delta < 0 : delta > 0
+    }
+
     private func vitalRow(_ r: VitalRecord) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
