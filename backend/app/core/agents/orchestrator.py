@@ -140,9 +140,25 @@ class AgentOrchestrator:
                 except Exception as exc:
                     log.warning("tool_arg_parse_error", tool=tool_name, error=str(exc))
                     messages.append(self._llm.build_tool_result_message(
-                        tc.id, tool_name, tool_result_to_json({"error": str(exc)}),
+                        tc.id, tool_name,
+                        tool_result_to_json({
+                            "error": f"Arguments invalides pour {tool_name}: {exc}. Réessaie avec des arguments corrects.",
+                        }),
                     ))
                     continue
+
+                # Dedup: skip if we're calling the same no-arg tool twice in a row
+                call_signature = f"{tool_name}:{tool_args}"
+                if call_signature in recent_tool_calls[-3:] and not tool_args:
+                    log.warning("agent_duplicate_tool_call", tool=tool_name)
+                    messages.append(self._llm.build_tool_result_message(
+                        tc.id, tool_name,
+                        tool_result_to_json({"info": "Résultat identique au précédent appel — utilise le contexte déjà reçu."}),
+                    ))
+                    continue
+                recent_tool_calls.append(call_signature)
+                if len(recent_tool_calls) > 10:
+                    recent_tool_calls.pop(0)
 
                 log.info("agent_calling_tool", tool=tool_name, args=tool_args)
 
