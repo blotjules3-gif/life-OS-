@@ -339,6 +339,9 @@ struct ProfileView: View {
             .fullScreenCover(isPresented: $showBriefing) {
                 DailyBriefingView(modules: recommendedModules)
             }
+            .sheet(isPresented: $showExportSheet) {
+                DataExportSheet()
+            }
             #if DEBUG
             .sheet(isPresented: $showServerConfig) {
                 ServerConfigView {
