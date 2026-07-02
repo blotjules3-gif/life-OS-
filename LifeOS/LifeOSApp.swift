@@ -134,10 +134,10 @@ struct LifeOSApp: App {
             guard url.scheme == "lifeos", url.host == "briefing" else { return }
             showSleepCheckFromWidget = true
         }
-        .sheet(isPresented: $alarm.showSleepCheck) {
+        .sheet(isPresented: Binding(get: { alarm.showSleepCheck }, set: { if !$0 { alarm.phase = .idle } })) {
             SleepCheckSheet { alarm.sleepCheckDone() }
         }
-        .fullScreenCover(isPresented: $alarm.showBriefing) {
+        .fullScreenCover(isPresented: Binding(get: { alarm.showBriefing }, set: { if !$0 { alarm.dismissBriefing() } })) {
             DailyBriefingView(modules: recommendedModules, speakOnAppear: true)
         }
         .sheet(isPresented: $showWeeklyBilan) {
