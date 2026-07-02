@@ -730,7 +730,7 @@ struct BubbleCategoriesView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 16).padding(.top, Theme.space48 + Theme.space8 + Theme.space4).padding(.bottom, 110)
+            .padding(.horizontal, Theme.pad).padding(.top, Theme.space48 + Theme.space8 + Theme.space4).padding(.bottom, 110)
         }
     }
 
