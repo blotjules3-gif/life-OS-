@@ -454,6 +454,18 @@ final class AIAssistantViewModel: ObservableObject {
         aiKnownModulesRaw = recommendedModulesRaw
     }
 
+    private func showToast(_ message: String, module: String?) {
+        actionToast = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) {
+                self.actionToast = ActionToast(message: message, module: module)
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+                withAnimation(.easeOut(duration: 0.25)) { self.actionToast = nil }
+            }
+        }
+    }
+
     private func scheduleLocalNotification(title: String, body: String, delay: TimeInterval) {
         let content = UNMutableNotificationContent()
         content.title = title
