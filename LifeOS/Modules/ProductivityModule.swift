@@ -473,6 +473,8 @@ struct HabitRow: View {
         .padding(.vertical, 12)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .contextMenu {
+            Button { duplicate() } label: { Label("Dupliquer", systemImage: "doc.on.doc") }
+            Divider()
             Button(role: .destructive, action: onDelete) { Label("Supprimer", systemImage: "trash") }
         }
     }
