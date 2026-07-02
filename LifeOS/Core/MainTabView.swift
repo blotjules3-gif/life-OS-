@@ -40,6 +40,7 @@ struct MainTabView: View {
     @State private var tab: AppTab = .home
     @State private var catPath: [AppCategory] = []
     @State private var showAIAssistant = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @AppStorage("appTheme") private var appThemeRaw = "classic"
     private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
