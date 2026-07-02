@@ -603,11 +603,57 @@ struct AIAssistantView: View {
             .sheet(item: $vm.pendingModuleSetup) { category in
                 ModuleSetupView(module: category)
             }
+            .overlay(alignment: .top) {
+                if let toast = vm.actionToast {
+                    actionToastView(toast)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .zIndex(100)
+                }
+            }
+            .animation(.spring(response: 0.35, dampingFraction: 0.82), value: vm.actionToast?.id)
         }
         .task {
             vm.modelContext = ctx
             vm.loadHistory()
         }
+    }
+
+    private func actionToastView(_ toast: AIAssistantViewModel.ActionToast) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Color(hex: 0x4CC38A))
+            Text(toast.message)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+            Spacer()
+            if toast.module != nil {
+                Button {
+                    vm.actionToast = nil
+                    NotificationCenter.default.post(
+                        name: .lifeOSOpenModule,
+                        object: nil,
+                        userInfo: ["module": toast.module!]
+                    )
+                } label: {
+                    Text("Voir →")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.accentColor)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 11)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 3)
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
     }
 
     // MARK: - Input section (offline banner + input bar)
