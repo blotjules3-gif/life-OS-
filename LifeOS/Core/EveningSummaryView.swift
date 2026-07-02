@@ -181,7 +181,6 @@ struct EveningSummaryView: View {
             Text(unit.isEmpty ? "\(value)" : "\(value) \(unit)")
                 .font(.system(size: 22, weight: .bold, design: .rounded))
                 .foregroundStyle(.primary)
-                .font(.system(size: 11))
             Text(label)
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
