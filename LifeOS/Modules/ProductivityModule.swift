@@ -411,6 +411,7 @@ struct HabitRow: View {
     @Environment(\.modelContext) private var ctx
     let habit: Habit
     var onEdit: () -> Void
+    var onDelete: () -> Void = {}
 
     private var doneToday: Bool {
         habit.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: .now) }
