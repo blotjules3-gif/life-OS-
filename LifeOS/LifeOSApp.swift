@@ -204,6 +204,7 @@ struct LifeOSApp: App {
                 migrationFailed = false
                 storeWasReset = true
                 container = fresh
+                LocalStore.adopt(fresh)
             } else {
                 migrationFailed = true
                 container = try? ModelContainer(
