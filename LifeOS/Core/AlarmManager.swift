@@ -128,7 +128,7 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         voiceWorkItem?.cancel()
         voiceWorkItem = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        if phase == .ringing(secondsLeft: secondsLeft) { phase = .idle }
+        phase = .idle
     }
 
     func stopAndShowBriefing() {
