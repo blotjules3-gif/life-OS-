@@ -195,7 +195,11 @@ struct FloatingTabBar: View {
                 if serverStatus.isOnline != nil {
                     Button {
                         Haptics.tap()
+                        #if DEBUG
                         showServerConfig = true
+                        #else
+                        serverStatus.pingNow()
+                        #endif
                     } label: {
                         ZStack {
                             Color.clear.frame(width: 22, height: 22)
