@@ -278,7 +278,7 @@ struct MockInterviewView: View {
                     Spacer()
                     PrimaryButton(title: "Question suivante", icon: "chevron.right", tint: .careerTint) { index = (index+1) % questions.count; showAnswer = false }
                 }
-                IntegrationNotice(text: "Le mock interview « live » avec feedback IA sur tes réponses (ton, contenu, hésitations) se branche en enregistrant ta réponse vocale → transcription → analyse par un modèle de langage. Les questions et trames de réponse sont déjà là.")
+                IntegrationNotice(text: "Le mock interview « live » avec feedback sur tes réponses (ton, contenu, hésitations) arrive bientôt. Les questions et trames de réponse sont déjà là.")
             }.padding()
         }
         .navigationTitle("Mock interview").navigationBarTitleDisplayMode(.inline)
