@@ -337,12 +337,14 @@ struct ProfileView: View {
             .fullScreenCover(isPresented: $showBriefing) {
                 DailyBriefingView(modules: recommendedModules)
             }
+            #if DEBUG
             .sheet(isPresented: $showServerConfig) {
                 ServerConfigView {
                     showServerConfig = false
                     serverStatus.pingNow()
                 }
             }
+            #endif
             .navigationDestination(for: AppCategory.self) { $0.destination }
             .overlay(alignment: .bottom) {
                 if let msg = checkinToast {
