@@ -106,8 +106,8 @@ func cryptoGetCatColor(_ id: String) -> Color { cryptoCatColors[cryptoGetCat(id)
 // MARK: - Helpers scores
 
 func cryptoSc(_ id: String) -> (r: Int, p: Int) { cryptoScores[id] ?? (r: 50, p: 50) }
-func cryptoRiskColor(_ r: Int) -> Color { r >= 70 ? .red : r >= 45 ? .orange : Color(hex: 0x008F6C) }
-func cryptoPotColor(_ p: Int) -> Color { p >= 65 ? Color(hex: 0x008F6C) : p >= 35 ? .orange : .secondary }
+func cryptoRiskColor(_ r: Int) -> Color { r >= 70 ? Theme.danger : r >= 45 ? Theme.warning : Theme.tealDark }
+func cryptoPotColor(_ p: Int) -> Color { p >= 65 ? Theme.tealDark : p >= 35 ? Theme.warning : Theme.textSecondary }
 func cryptoRiskLabel(_ r: Int) -> String { r >= 70 ? "ÉLEVÉ" : r >= 45 ? "MOYEN" : "FAIBLE" }
 func cryptoPotLabel(_ p: Int) -> String { p >= 65 ? "FORT" : p >= 35 ? "MOYEN" : "FAIBLE" }
 
