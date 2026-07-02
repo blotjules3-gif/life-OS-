@@ -159,5 +159,22 @@ struct ChallengeCard: View {
                 .animation(.spring(duration: 0.38, bounce: 0.1), value: challenge.checkedInToday)
                 .animation(.spring(duration: 0.38, bounce: 0.1), value: challenge.isAbandoned)
         )
+        .overlay(alignment: .top) {
+            if showMilestone {
+                HStack(spacing: 6) {
+                    Image(systemName: "flame.fill")
+                        .foregroundStyle(Color(hex: 0xE07B3C))
+                    Text("\(challenge.streak_days) jours de suite !")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.primary)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(.regularMaterial, in: Capsule())
+                .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .offset(y: -20)
+            }
+        }
     }
 }
