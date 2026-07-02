@@ -40,6 +40,8 @@ struct MainTabView: View {
     @State private var tab: AppTab = .home
     @State private var catPath: [AppCategory] = []
     @State private var showAIAssistant = false
+    @State private var isCheckingAI = false
+    @State private var showOfflineToast = false
 
     @AppStorage("appTheme") private var appThemeRaw = "classic"
     private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
@@ -50,15 +52,21 @@ struct MainTabView: View {
                 .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 104) }
             FloatingTabBar(
                 selected: $tab,
-                onOpenAssistant: { showAIAssistant = true }
+                onOpenAssistant: openAIAssistant,
+                isLoadingAI: isCheckingAI
             )
+            if showOfflineToast {
+                offlineToast
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(999)
+            }
         }
         .ignoresSafeArea(.container, edges: .bottom)
         .fullScreenCover(isPresented: $showAIAssistant) {
             AIAssistantView()
         }
         .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenAIChat)) { _ in
-            showAIAssistant = true
+            openAIAssistant()
         }
         .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenModule)) { notif in
             if let module = notif.userInfo?["module"] as? String,
