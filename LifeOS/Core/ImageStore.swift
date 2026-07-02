@@ -72,13 +72,11 @@ struct PhotoPickerButton: View {
         PhotosPicker(selection: $selection, matching: .images) {
             Label(label, systemImage: "photo.badge.plus")
         }
-        .onChange(of: selection) { _, item in
-            guard let item else { return }
-            Task {
-                if let data = try? await item.loadTransferable(type: Data.self) {
-                    let name = ImageStore.save(data, prefix: prefix)
-                    await MainActor.run { onPicked(name) }
-                }
+        .task(id: selection) {
+            guard let item = selection else { return }
+            if let data = try? await item.loadTransferable(type: Data.self) {
+                let name = ImageStore.save(data, prefix: prefix)
+                onPicked(name)
             }
         }
     }
