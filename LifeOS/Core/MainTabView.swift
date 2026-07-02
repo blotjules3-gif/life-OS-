@@ -145,6 +145,7 @@ struct FloatingTabBar: View {
     @Binding var selected: AppTab
     var onOpenAssistant: () -> Void = {}
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var serverStatus = ServerStatusMonitor.shared
     @State private var showServerConfig = false
     @Namespace private var ns
