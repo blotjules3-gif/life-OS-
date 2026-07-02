@@ -116,7 +116,7 @@ struct LifeOSApp: App {
         .onChange(of: recommendedModulesRaw) { _, _ in
             ContextualNotifications.shared.reschedule()
         }
-        .fullScreenCover(isPresented: $alarm.showAlarmScreen) {
+        .fullScreenCover(isPresented: Binding(get: { alarm.showAlarmScreen }, set: { if !$0 { alarm.stopRinging() } })) {
             AlarmFullScreenView()
         }
         .sheet(isPresented: $showSleepCheckFromWidget) {
