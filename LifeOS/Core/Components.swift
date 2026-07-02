@@ -69,11 +69,15 @@ struct EmptyState: View {
     let icon: String
     let title: String
     var message: String = ""
+    var actionLabel: String? = nil
+    var action: (() -> Void)? = nil
+
     var body: some View {
         VStack(spacing: 10) {
             Image(systemName: icon)
                 .font(.system(size: 38))
                 .foregroundStyle(Theme.textSecondary)
+                .accessibilityHidden(true)
             Text(title)
                 .font(.headline)
                 .foregroundStyle(Theme.textPrimary)
@@ -82,6 +86,18 @@ struct EmptyState: View {
                     .font(.subheadline)
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
+            }
+            if let actionLabel, let action {
+                Button(action: action) {
+                    Text(actionLabel)
+                        .font(.subheadline.bold())
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Theme.accent.opacity(0.12), in: Capsule())
+                        .foregroundStyle(Theme.accent)
+                }
+                .buttonStyle(LifeOSPressStyle())
+                .padding(.top, 4)
             }
         }
         .frame(maxWidth: .infinity)
