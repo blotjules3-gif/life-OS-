@@ -62,11 +62,16 @@ let cryptoCategories: [String: String] = [
 ]
 
 let cryptoCatColors: [String: Color] = [
-    "Layer 1": Color(hex: 0x3CB2E0), "Layer 2": Color(hex: 0x6C7BF1),
-    "DeFi": Color(hex: 0x9B6CF1), "Stablecoin": Color(hex: 0x4CC38A),
-    "Meme": Color(hex: 0xE0A23C), "Exchange": Color(hex: 0xE07B3C),
-    "Privacy": Color(hex: 0x8A93A8), "AI/GPU": Color(hex: 0x9B6CF1),
-    "Commodity": Color(hex: 0xE0A23C), "RWA": Color(hex: 0x4CC38A),
+    "Layer 1":   Theme.hydration,
+    "Layer 2":   Theme.sleep,
+    "DeFi":      Theme.mind,
+    "Stablecoin":Theme.nutrition,
+    "Meme":      Theme.energy,
+    "Exchange":  Theme.career,
+    "Privacy":   Theme.admin,
+    "AI/GPU":    Theme.mind,
+    "Commodity": Theme.energy,
+    "RWA":       Theme.nutrition,
 ]
 
 // MARK: - Helpers catégorie
