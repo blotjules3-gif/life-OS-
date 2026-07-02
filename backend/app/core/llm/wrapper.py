@@ -97,6 +97,8 @@ class LLMWrapper:
                             messages=mistral_messages,
                             tools=tools or [],
                             tool_choice=tool_choice,
+                            temperature=self._temperature,
+                            max_tokens=self._max_completion_tokens,
                         ),
                         timeout=self._timeout,
                     )
