@@ -40,8 +40,6 @@ struct MainTabView: View {
     @State private var tab: AppTab = .home
     @State private var catPath: [AppCategory] = []
     @State private var showAIAssistant = false
-    @State private var isCheckingAI = false
-    @State private var showOfflineToast = false
 
     @AppStorage("appTheme") private var appThemeRaw = "classic"
     private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
