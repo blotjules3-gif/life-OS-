@@ -1099,7 +1099,7 @@ struct CryptoInfoTab: View {
                     }
                     Section("À propos") {
                         LabeledContent("Version", value: "LifeOS Crypto Module 1.0")
-                        LabeledContent("Cryptos scorées", value: "\(scores.count)")
+                        LabeledContent("Cryptos scorées", value: "\(cryptoScores.count)")
                         LabeledContent("Données", value: "Temps réel")
                     }
                 }
