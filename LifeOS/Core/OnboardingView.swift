@@ -195,7 +195,7 @@ struct OnboardingView: View {
                             goBack()
                         } label: {
                             Image(systemName: "chevron.left")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.callout.weight(.semibold))
                                 .foregroundStyle(.secondary)
                                 .padding(10)
                         }
@@ -311,10 +311,10 @@ struct OnboardingWelcome: View {
 
                 VStack(spacing: 12) {
                     Text("Bienvenue sur LifeOS")
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .font(.title.bold().design(.rounded))
                         .multilineTextAlignment(.center)
                     Text("Ton système personnel pour tout\norganiser et progresser chaque jour.")
-                        .font(.system(size: 16))
+                        .font(.callout)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
@@ -356,7 +356,7 @@ struct OnboardingName: View {
                 // Prénom
                 VStack(spacing: 10) {
                     Text("Comment tu t'appelles ?")
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .font(.title2.bold().design(.rounded))
                         .multilineTextAlignment(.center)
                     Text("Pour personnaliser ton expérience.")
                         .font(.subheadline)
@@ -364,7 +364,7 @@ struct OnboardingName: View {
                 }
 
                 TextField("Ton prénom…", text: $name)
-                    .font(.system(size: 20, weight: .medium))
+                    .font(.title3.weight(.medium))
                     .multilineTextAlignment(.center)
                     .padding(.vertical, 16)
                     .padding(.horizontal, 20)
@@ -376,7 +376,7 @@ struct OnboardingName: View {
                 // Genre
                 VStack(spacing: 10) {
                     Text("Tu es…")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.headline.design(.rounded))
                         .foregroundStyle(.secondary)
 
                     HStack(spacing: 10) {
@@ -387,7 +387,7 @@ struct OnboardingName: View {
                             } label: {
                                 VStack(spacing: 8) {
                                     Image(systemName: opt.icon)
-                                        .font(.system(size: 22, weight: .semibold))
+                                        .font(.title2.weight(.semibold))
                                         .foregroundStyle(gender == opt.value ? .white : opt.color)
                                         .frame(width: 52, height: 52)
                                         .background(
@@ -395,7 +395,7 @@ struct OnboardingName: View {
                                             in: RoundedRectangle(cornerRadius: 14, style: .continuous)
                                         )
                                     Text(opt.label)
-                                        .font(.system(size: 13, weight: gender == opt.value ? .semibold : .regular))
+                                        .font(.footnote.weight(gender == opt.value ? .semibold : .regular))
                                         .foregroundStyle(gender == opt.value ? .primary : .secondary)
                                 }
                                 .frame(maxWidth: .infinity)
@@ -451,7 +451,7 @@ struct OnboardingHormonalContext: View {
             VStack(spacing: 28) {
                 VStack(spacing: 10) {
                     Text("Ton contexte hormonal")
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .font(.title2.bold().design(.rounded))
                         .multilineTextAlignment(.center)
                     Text("Pour adapter tes recommandations nutrition, fitness et suppléments au plus près de ta réalité.")
                         .font(.subheadline)
@@ -469,7 +469,7 @@ struct OnboardingHormonalContext: View {
                         } label: {
                             HStack(spacing: 14) {
                                 Image(systemName: opt.icon)
-                                    .font(.system(size: 16, weight: .semibold))
+                                    .font(.callout.weight(.semibold))
                                     .foregroundStyle(hormonalContext == opt.id ? .white : Color(hex: 0xE85D9A))
                                     .frame(width: 38, height: 38)
                                     .background(
@@ -477,13 +477,13 @@ struct OnboardingHormonalContext: View {
                                         in: RoundedRectangle(cornerRadius: 10, style: .continuous)
                                     )
                                 Text(opt.label)
-                                    .font(.system(size: 15, weight: .medium))
+                                    .font(.subheadline.weight(.medium))
                                     .foregroundStyle(hormonalContext == opt.id ? .primary : .secondary)
                                 Spacer()
                                 if hormonalContext == opt.id {
                                     Image(systemName: "checkmark.circle.fill")
                                         .foregroundStyle(Color(hex: 0xE85D9A))
-                                        .font(.system(size: 20))
+                                        .font(.title3)
                                         .contentTransition(.symbolEffect(.replace))
                                 }
                             }
@@ -507,7 +507,7 @@ struct OnboardingHormonalContext: View {
                     hasCycle = false
                     onNext()
                 }
-                .font(.system(size: 14, weight: .medium))
+                .font(.footnote.weight(.medium))
                 .foregroundStyle(.secondary)
                 .buttonStyle(.plain)
             }
@@ -599,7 +599,7 @@ struct OnboardingLifeProfile: View {
             VStack(spacing: 24) {
                 VStack(spacing: 10) {
                     Text("Ton profil de vie")
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .font(.title2.bold().design(.rounded))
                         .multilineTextAlignment(.center)
                     Text("Ça aide à adapter les recommandations et les horaires à ta réalité.")
                         .font(.subheadline)
@@ -612,10 +612,10 @@ struct OnboardingLifeProfile: View {
                         Button { selected = profile } label: {
                             VStack(spacing: 10) {
                                 Image(systemName: profile.icon)
-                                    .font(.system(size: 24, weight: .semibold))
+                                    .font(.title3.weight(.semibold))
                                     .foregroundStyle(selected == profile ? .white : profile.color)
                                 Text(profile.label)
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.footnote.weight(.semibold))
                                     .foregroundStyle(selected == profile ? .white : .primary)
                             }
                             .frame(maxWidth: .infinity)
@@ -659,7 +659,7 @@ struct OnboardingGoalStep: View {
         VStack(spacing: 0) {
             VStack(spacing: 10) {
                 Text("Quels sont tes objectifs ?")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.title3.bold().design(.rounded))
                     .multilineTextAlignment(.center)
                 Text("Sélectionne tout ce qui te correspond.")
                     .font(.subheadline)
@@ -704,7 +704,7 @@ struct GoalCard: View {
         Button(action: onTap) {
             VStack(spacing: 12) {
                 Image(systemName: goal.icon)
-                    .font(.system(size: 26, weight: .semibold))
+                    .font(.title2.weight(.semibold))
                     .foregroundStyle(isSelected ? .white : goal.color)
                     .frame(width: 54, height: 54)
                     .background(
@@ -712,7 +712,7 @@ struct GoalCard: View {
                         in: RoundedRectangle(cornerRadius: 14, style: .continuous)
                     )
                 Text(goal.label)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.footnote.weight(.medium))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(isSelected ? .primary : .secondary)
             }
@@ -745,7 +745,7 @@ struct OnboardingInterests: View {
         VStack(spacing: 0) {
             VStack(spacing: 10) {
                 Text("Qu'est-ce qui t'intéresse ?")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.title3.bold().design(.rounded))
                     .multilineTextAlignment(.center)
                 Text("Sélectionne autant que tu veux.")
                     .font(.subheadline)
@@ -797,7 +797,7 @@ struct InterestChip: View {
         Button(action: onTap) {
             VStack(spacing: 6) {
                 Image(systemName: category.icon)
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.title3.weight(.semibold))
                     .foregroundStyle(isSelected ? .white : category.tint)
                     .frame(width: 42, height: 42)
                     .background(
@@ -805,7 +805,7 @@ struct InterestChip: View {
                         in: RoundedRectangle(cornerRadius: 11, style: .continuous)
                     )
                 Text(shortLabel)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.caption2.weight(.medium))
                     .foregroundStyle(isSelected ? .primary : .secondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
@@ -862,7 +862,7 @@ struct OnboardingWakeTime: View {
 
                     VStack(spacing: 10) {
                         Text("À quelle heure tu te lèves ?")
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .font(.title3.bold().design(.rounded))
                             .multilineTextAlignment(.center)
                         Text("On activera ton réveil malin à cette heure.\nTu pourras le changer à tout moment.")
                             .font(.subheadline)
@@ -886,7 +886,7 @@ struct OnboardingWakeTime: View {
                 Button("Passer cette étape") {
                     onNext()
                 }
-                .font(.system(size: 14, weight: .medium))
+                .font(.footnote.weight(.medium))
                 .foregroundStyle(.secondary)
                 .buttonStyle(.plain)
             }
@@ -942,7 +942,7 @@ struct OnboardingResults: View {
 
                     VStack(spacing: 10) {
                         Text(name.isEmpty ? "Parfait !" : "Parfait, \(name) !")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .font(.title.bold().design(.rounded))
                             .multilineTextAlignment(.center)
                         Text("Voici tes modules pour démarrer.\nCoche ou décoche selon tes envies.")
                             .font(.subheadline)
@@ -955,7 +955,7 @@ struct OnboardingResults: View {
                     if !preferencesSummary.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("TES PREFERENCES")
-                                .font(.system(size: 10, weight: .bold))
+                                .font(.caption2.weight(.bold))
                                 .foregroundStyle(.secondary)
                                 .kerning(1.2)
                                 .padding(.horizontal, 4)
@@ -966,10 +966,10 @@ struct OnboardingResults: View {
                                         VStack(alignment: .leading, spacing: 6) {
                                             HStack(spacing: 6) {
                                                 Image(systemName: item.module.icon)
-                                                    .font(.system(size: 11, weight: .semibold))
+                                                    .font(.caption2.weight(.semibold))
                                                     .foregroundStyle(item.module.tint)
                                                 Text(item.module.title)
-                                                    .font(.system(size: 12, weight: .semibold))
+                                                    .font(.caption.weight(.semibold))
                                                     .foregroundStyle(.primary)
                                             }
                                             ForEach(item.bullets, id: \.self) { b in
@@ -978,7 +978,7 @@ struct OnboardingResults: View {
                                                         .fill(item.module.tint)
                                                         .frame(width: 4, height: 4)
                                                     Text(b)
-                                                        .font(.system(size: 11))
+                                                        .font(.caption2)
                                                         .foregroundStyle(.secondary)
                                                 }
                                             }
@@ -1013,13 +1013,13 @@ struct OnboardingResults: View {
                             } label: {
                                 HStack(spacing: 14) {
                                     Image(systemName: cat.icon)
-                                        .font(.system(size: 16, weight: .semibold))
+                                        .font(.callout.weight(.semibold))
                                         .foregroundStyle(.white)
                                         .frame(width: 38, height: 38)
                                         .background(isOn ? cat.tint : Color.primary.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(cat.title)
-                                            .font(.system(size: 15, weight: .semibold))
+                                            .font(.subheadline.weight(.semibold))
                                             .foregroundStyle(isOn ? .primary : .secondary)
                                         Text(cat.subtitle)
                                             .font(.caption)
@@ -1028,7 +1028,7 @@ struct OnboardingResults: View {
                                     Spacer()
                                     Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                                         .foregroundStyle(isOn ? Color.accentColor : Color.secondary.opacity(0.4))
-                                        .font(.system(size: 22))
+                                        .font(.title2)
                                         .contentTransition(.symbolEffect(.replace))
                                 }
                                 .padding(.horizontal, 14)
@@ -1350,7 +1350,7 @@ struct OnboardingModuleSetup: View {
         VStack(spacing: 0) {
             VStack(spacing: 10) {
                 Text("Tes habitudes a creer")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.title3.bold().design(.rounded))
                     .multilineTextAlignment(.center)
                 Text("On les prepare pour toi, desactivees.\nTu les actives quand tu veux.")
                     .font(.subheadline)
@@ -1374,7 +1374,7 @@ struct OnboardingModuleSetup: View {
                         } label: {
                             HStack(spacing: 14) {
                                 Image(systemName: m.icon)
-                                    .font(.system(size: 16, weight: .semibold))
+                                    .font(.callout.weight(.semibold))
                                     .foregroundStyle(.white)
                                     .frame(width: 38, height: 38)
                                     .background(
@@ -1383,7 +1383,7 @@ struct OnboardingModuleSetup: View {
                                     )
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(m.title)
-                                        .font(.system(size: 15, weight: .semibold))
+                                        .font(.subheadline.weight(.semibold))
                                         .foregroundStyle(on ? .primary : .secondary)
                                     Text(m.subtitle)
                                         .font(.caption)
@@ -1392,7 +1392,7 @@ struct OnboardingModuleSetup: View {
                                 Spacer()
                                 Image(systemName: on ? "checkmark.circle.fill" : "circle")
                                     .foregroundStyle(on ? m.tint : Color.secondary.opacity(0.4))
-                                    .font(.system(size: 22))
+                                    .font(.title2)
                                     .contentTransition(.symbolEffect(.replace))
                             }
                             .padding(.horizontal, 14)
@@ -1438,15 +1438,15 @@ struct OnboardingModuleSetup: View {
     private func moduleHeader(_ m: AppCategory) -> some View {
         HStack(spacing: 12) {
             Image(systemName: m.icon)
-                .font(.system(size: 18, weight: .semibold))
+                .font(.body.weight(.semibold))
                 .foregroundStyle(.white)
                 .frame(width: 44, height: 44)
                 .background(m.tint, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             VStack(alignment: .leading, spacing: 2) {
                 Text(m.title)
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.title2.bold().design(.rounded))
                 Text("Module \(currentIndex + 1) sur \(modulesWithQuestions.count)")
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }
@@ -1455,7 +1455,7 @@ struct OnboardingModuleSetup: View {
     private func questionBlock(_ q: ModuleQuestion, module: AppCategory) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(q.question)
-                .font(.system(size: 15, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
 
             let raw = (answers[module.rawValue] ?? [:])[q.id] ?? ""
             let selected = Set(raw.split(separator: ",").map(String.init).filter { !$0.isEmpty })
@@ -1471,11 +1471,11 @@ struct OnboardingModuleSetup: View {
                         HStack(spacing: 8) {
                             if !opt.icon.isEmpty {
                                 Image(systemName: opt.icon)
-                                    .font(.system(size: 13, weight: .semibold))
+                                    .font(.footnote.weight(.semibold))
                                     .foregroundStyle(on ? .white : module.tint)
                             }
                             Text(opt.label)
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.footnote.weight(.medium))
                                 .foregroundStyle(on ? .white : .primary)
                                 .lineLimit(2)
                                 .minimumScaleFactor(0.8)
@@ -1541,7 +1541,7 @@ struct OnboardingButton: View {
     var body: some View {
         Button(action: action) {
             Text(label)
-                .font(.system(size: 17, weight: .semibold))
+                .font(.headline)
                 .foregroundStyle(enabled ? .white : .secondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)

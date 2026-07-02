@@ -7,16 +7,31 @@ import UIKit
 
 // MARK: - Gestionnaire central du réveil
 
+enum AlarmPhase: Equatable {
+    case idle
+    case ringing(secondsLeft: Int)
+    case sleepCheck
+    case briefing
+}
+
 @MainActor
 final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
     static let shared = AlarmManager()
 
-    @Published var isRinging = false
-    @Published var showAlarmScreen = false
-    @Published var showSleepCheck = false
-    @Published var showBriefing = false
+    @Published var phase: AlarmPhase = .idle
     @Published var isSpeaking = false
-    @Published var secondsLeft = 10
+
+    var isRinging: Bool {
+        if case .ringing = phase { return true }
+        return false
+    }
+    var showAlarmScreen: Bool { isRinging }
+    var showSleepCheck: Bool  { phase == .sleepCheck }
+    var showBriefing: Bool    { phase == .briefing }
+    var secondsLeft: Int {
+        if case .ringing(let s) = phase { return s }
+        return 0
+    }
 
     private var ringingActive = false
     private var pendingVoiceOnUnlock = false
@@ -48,12 +63,9 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
 
     func triggerAlarm() {
         guard !isRinging else { return }
-        isRinging = true
         ringingActive = true
-        secondsLeft = 10
-        showAlarmScreen = true
+        phase = .ringing(secondsLeft: 10)
 
-        // Haptic pattern au déclenchement — senti même si le son est coupé
         let generator = UINotificationFeedbackGenerator()
         generator.prepare()
         generator.notificationOccurred(.warning)
@@ -95,8 +107,8 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                if self.secondsLeft > 1 {
-                    self.secondsLeft -= 1
+                if case .ringing(let s) = self.phase, s > 1 {
+                    self.phase = .ringing(secondsLeft: s - 1)
                 } else {
                     self.stopAndShowBriefing()
                 }
@@ -107,8 +119,7 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
     // MARK: - Arrêt / snooze
 
     func stopRinging() {
-        ringingActive = false   // interrompt la boucle de bips (completion guard)
-        isRinging = false
+        ringingActive = false
         pendingVoiceOnUnlock = false
         countdownTimer?.invalidate()
         countdownTimer = nil
@@ -117,21 +128,29 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         voiceWorkItem?.cancel()
         voiceWorkItem = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        if phase == .ringing(secondsLeft: secondsLeft) { phase = .idle }
     }
 
     func stopAndShowBriefing() {
-        stopRinging()
-        showAlarmScreen = false
-        showSleepCheck = true
+        ringingActive = false
+        pendingVoiceOnUnlock = false
+        countdownTimer?.invalidate()
+        countdownTimer = nil
+        autoStopWorkItem?.cancel()
+        autoStopWorkItem = nil
+        voiceWorkItem?.cancel()
+        voiceWorkItem = nil
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        phase = .sleepCheck
         if #available(iOS 16.1, *) {
             AlarmLiveActivityManager.shared.update(phase: .briefing, message: "Bilan du matin en cours…")
         }
     }
 
     func sleepCheckDone() {
-        showSleepCheck = false
+        phase = .idle
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.showBriefing = true
+            self.phase = .briefing
             if #available(iOS 16.1, *) {
                 AlarmLiveActivityManager.shared.update(phase: .briefing, message: "Briefing quotidien en cours…")
             }
@@ -139,9 +158,9 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
     }
 
     func snooze(minutes: Int) {
-        stopSpeaking()           // stop TTS if playing (user is snoozing back)
+        stopSpeaking()
         stopRinging()
-        showAlarmScreen = false
+        phase = .idle
         NotificationManager.shared.scheduleAfter(
             id: "lifeos.wakeup.snooze",
             title: "Rappel — Réveil",
@@ -155,7 +174,7 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
 
     func dismissBriefing() {
         stopSpeaking()
-        showBriefing = false
+        phase = .idle
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         if #available(iOS 16.1, *) {
             AlarmLiveActivityManager.shared.end()
@@ -175,14 +194,12 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
 
     private func attemptWakeUpVoice() {
         guard ringingActive else { return }
-        // Voice plays directly on Lock Screen — background audio (.playback category) allows this
         speakWakeUpMessage()
     }
 
     private func speakWakeUpMessage() {
-        guard ringingActive else { return } // alarm was silenced before TTS
+        guard ringingActive else { return }
 
-        // Allow TTS to mix with the beep cycle
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
         try? AVAudioSession.sharedInstance().setActive(true)
 
@@ -210,7 +227,6 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         default: greeting = "Bonsoir"
         }
 
-        // Personnalisation selon la qualité de sommeil enregistrée hier soir / au réveil
         let sleepQuality = UserDefaults.standard.integer(forKey: "lastSleepQuality")
         let sleepHours = UserDefaults.standard.integer(forKey: "lastSleepHours")
         let sleepIntro: String
@@ -226,7 +242,6 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         var parts: [String] = ["\(greeting) ! Il est \(timeSpoken())."]
         if !sleepIntro.isEmpty { parts.append(sleepIntro) }
 
-        // Read active modules from UserDefaults (same key as @AppStorage("recommendedModules"))
         let rawModules = UserDefaults.standard.string(forKey: "recommendedModules") ?? ""
         let modules = rawModules.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
 
@@ -361,7 +376,6 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         Task { @MainActor in
             self.isSpeaking = false
-            // Voice done on lock screen — invite user to unlock for full briefing
             if #available(iOS 16.1, *), self.ringingActive {
                 AlarmLiveActivityManager.shared.update(
                     phase: .waitingUnlock,
