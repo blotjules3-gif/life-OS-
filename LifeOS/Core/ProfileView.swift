@@ -1207,6 +1207,33 @@ struct ProfileView: View {
                     serverStatus.pingNow()
                     #endif
                 }
+                if AppLock.shared.isAvailable {
+                    Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
+                    settingsRow(icon: "faceid", iconColor: Color(hex: 0x4CC38A),
+                                label: "Verrouiller avec \(AppLock.shared.biometryLabel)") {
+                        Text(appLockEnabled ? "Activé" : "Désactivé")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(appLockEnabled ? Color(hex: 0x4CC38A) : .secondary)
+                    } action: {
+                        if appLockEnabled {
+                            AppLock.shared.isEnabled = false
+                            withAnimation(.spring(duration: 0.38, bounce: 0.1)) { appLockEnabled = false }
+                        } else {
+                            Task {
+                                if await AppLock.shared.enableAfterAuth() {
+                                    withAnimation(.spring(duration: 0.38, bounce: 0.1)) { appLockEnabled = true }
+                                }
+                            }
+                        }
+                    }
+                }
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
+                settingsRow(icon: "square.and.arrow.up", iconColor: Color(hex: 0x5B8DEF),
+                            label: "Exporter mes données") {
+                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
+                } action: {
+                    showExportSheet = true
+                }
             }
             .background(Theme.card)
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
