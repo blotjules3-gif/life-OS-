@@ -87,25 +87,28 @@ struct MainTabView: View {
             HabitWidgetSyncer()
             ThemedBubbleBackground(theme: theme)
                 .ignoresSafeArea()
-            ShortcutsHomeView()
-                .opacity(tab == .home ? 1 : 0)
-                .allowsHitTesting(tab == .home)
-            WakeUpView()
-                .opacity(tab == .wakeup ? 1 : 0)
-                .allowsHitTesting(tab == .wakeup)
-            NavigationStack(path: $catPath) {
-                BubbleCategoriesView(onSelect: { title in
-                    if let cat = AppCategory(bubbleTitle: title) { catPath.append(cat) }
-                })
-                .toolbar(.hidden, for: .navigationBar)
-                .navigationDestination(for: AppCategory.self) { $0.destination }
-            }
-            .opacity(tab == .categories ? 1 : 0)
-            .allowsHitTesting(tab == .categories)
-            ProfileView()
-                .opacity(tab == .profile ? 1 : 0)
-                .allowsHitTesting(tab == .profile)
+            tabPane(ShortcutsHomeView(), .home)
+            tabPane(WakeUpView(), .wakeup)
+            tabPane(
+                NavigationStack(path: $catPath) {
+                    BubbleCategoriesView(onSelect: { title in
+                        if let cat = AppCategory(bubbleTitle: title) { catPath.append(cat) }
+                    })
+                    .toolbar(.hidden, for: .navigationBar)
+                    .navigationDestination(for: AppCategory.self) { $0.destination }
+                },
+                .categories
+            )
+            tabPane(ProfileView(), .profile)
         }
+    }
+
+    /// Onglet vivant : fondu + léger zoom au changement (piloté par le spring du tabBtn).
+    private func tabPane(_ view: some View, _ t: AppTab) -> some View {
+        view
+            .opacity(tab == t ? 1 : 0)
+            .scaleEffect(tab == t ? 1 : (reduceMotion ? 1 : 0.97))
+            .allowsHitTesting(tab == t)
     }
 }
 
