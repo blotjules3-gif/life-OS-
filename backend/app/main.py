@@ -88,6 +88,10 @@ def _register_all_tools() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     log.info("lifeos_agent_starting", version="1.0.0", debug=settings.debug)
+    # Ensure all tables exist. Replace with `alembic upgrade head` once
+    # Alembic migrations are set up (run: alembic init alembic).
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     _register_all_tools()
     yield
     log.info("lifeos_agent_shutdown")
