@@ -110,7 +110,20 @@ struct ChallengeCard: View {
                 }
                 .frame(height: 3)
                 .padding(.horizontal, 14)
-                .padding(.bottom, 12)
+                .padding(.top, 2)
+
+                if let label = challenge.deadlineLabel {
+                    let urgent = (challenge.daysRemaining ?? 99) <= 3
+                    Text(label)
+                        .font(.system(size: 10, weight: .medium).monospacedDigit())
+                        .foregroundStyle(urgent ? Color(hex: 0xF1746C) : Color(uiColor: .secondaryLabel))
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.horizontal, 14)
+                        .padding(.bottom, 10)
+                        .padding(.top, 4)
+                } else {
+                    Spacer().frame(height: 12)
+                }
             }
         }
         .background(neoCard)
