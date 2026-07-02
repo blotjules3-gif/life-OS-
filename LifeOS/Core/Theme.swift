@@ -17,6 +17,7 @@ enum Theme {
     static let radius: CGFloat = 16
     static let radiusSmall: CGFloat = 11
     static let pad: CGFloat = 16
+    static let padWide: CGFloat = 28   // onboarding / large content areas
 
     // MARK: - Palette sémantique (remplace les Color(hex:) éparpillés)
 
