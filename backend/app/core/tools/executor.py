@@ -104,16 +104,42 @@ async def execute_tool(
     return result
 
 
+_VALID_MODULES = frozenset({
+    "fitness", "nutrition", "sleep", "finance", "productivity", "mind",
+    "learning", "mobility", "career", "invest", "social", "home", "admin",
+    "travel", "cycle", "looks", "medical",
+})
+
+
 def _apply_safety_guardrails(tool_name: str, args: dict[str, Any]) -> None:
     """Raise ToolRejectedError if a tool call violates safety rules."""
     if tool_name in _FINANCE_TOOLS:
-        # Finance tools must never receive recommendation-style args
         forbidden_keys = {"asset", "ticker", "buy", "sell", "stock", "crypto_symbol"}
         overlap = forbidden_keys & set(args.keys())
         if overlap:
             raise ToolRejectedError(
                 f"Finance tool '{tool_name}' received forbidden args: {overlap}. "
                 "This tool only performs simulations, not asset-specific recommendations."
+            )
+
+    if tool_name in ("add_module", "remove_module", "get_module_config", "update_module_config"):
+        module = args.get("module")
+        if module and module not in _VALID_MODULES:
+            raise ToolRejectedError(
+                f"Module '{module}' does not exist. Valid modules: {', '.join(sorted(_VALID_MODULES))}"
+            )
+
+    if tool_name == "create_life_challenge":
+        duration = args.get("duration_days")
+        if duration is not None and not (7 <= int(duration) <= 90):
+            raise ToolRejectedError(
+                f"duration_days={duration} is out of range [7, 90]. "
+                "Propose a duration between 7 and 90 days and confirm with the user."
+            )
+        daily_target = args.get("daily_target")
+        if daily_target is not None and float(daily_target) <= 0:
+            raise ToolRejectedError(
+                f"daily_target must be > 0 (got {daily_target})."
             )
 
 
