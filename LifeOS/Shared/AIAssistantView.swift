@@ -458,7 +458,7 @@ final class AIAssistantViewModel: ObservableObject {
     private func appendUserMessage(_ text: String) {
         let msg = AIMessage(role: "user", text: text)
         modelContext?.insert(msg)
-        try? modelContext?.save()
+        do { try modelContext?.save() } catch { print("[SwiftData] appendUserMessage failed: \(error)") }
         withAnimation(.spring(response: 0.42, dampingFraction: 0.75)) {
             messages.append(DisplayMessage(from: msg))
         }
@@ -468,7 +468,7 @@ final class AIAssistantViewModel: ObservableObject {
         let actionsData = try? JSONEncoder().encode(actions)
         let msg = AIMessage(role: "assistant", text: text, actions: actionsData)
         modelContext?.insert(msg)
-        try? modelContext?.save()
+        do { try modelContext?.save() } catch { print("[SwiftData] appendAssistantMessage failed: \(error)") }
         withAnimation(.spring(response: 0.42, dampingFraction: 0.75)) {
             messages.append(DisplayMessage(from: msg))
         }
