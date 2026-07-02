@@ -906,6 +906,7 @@ struct WeeklyBilanView: View {
 
     @State private var aiBilan: String? = nil
     @State private var bilanLoading = false
+    @State private var shareImage: UIImage? = nil
     @AppStorage("lastWeeklyBilanText") private var cachedBilan = ""
     @AppStorage("lastWeeklyBilanDate") private var cachedBilanDate = 0.0
 
