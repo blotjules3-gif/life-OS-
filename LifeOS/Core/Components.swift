@@ -33,7 +33,7 @@ struct StatTile: View {
                     .font(.headline)
             }
             Text(value)
-                .font(.title2.bold())
+                .font(.title2.bold().monospacedDigit())
                 .foregroundStyle(Theme.textPrimary)
                 .contentTransition(.numericText())
             Text(label)
