@@ -371,7 +371,7 @@ struct SleepCheckSheet: View {
             mood: quality
         )
         ctx.insert(dream)
-        try? ctx.save()
+        do { try ctx.save() } catch { print("[SwiftData] saveDream failed: \(error)") }
     }
 
     private func submitAndReveal() {
