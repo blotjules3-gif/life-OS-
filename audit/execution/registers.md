@@ -19,6 +19,13 @@
 | B4 prep | Notifications > 24 h de retard expirées au lieu d'être envoyées (anti-backlog au 1er beat) | Fait — **services Railway à créer par Jules** |
 | Dette | `.venv` (7 432 fichiers) + `__pycache__` (2 977) désindexés, .gitignore complété | Fait |
 | Tests | `test_orchestrator.py` réparé (FakeSettings, user_gender) — 8/8 verts | Fait |
+| B3 | Migration échouée : store déplacé en backup horodaté (jamais supprimé) + alerte « Données réinitialisées » | Fait |
+| M4 | 9 mentions « IA » purgées (ProfileView, ShortcutsHomeView, AIAssistantView, CareerModule) → « ton coach » | Fait |
+| M5 | Le chat s'ouvre sans ping serveur (isCheckingAI/offlineToast supprimés, bandeau offline interne suffit) | Fait |
+| M6 | Fausse notif « +5 s » supprimée ; pré-prompt contextuel après création des habitudes (alerte Activer/Plus tard) ; plus de demande de permission au premier launch | Fait |
+| M7 | `updateConfig` : allowlist stricte de 18 clés objectifs — dev.apiBaseURL/dev.apiKey inaccessibles au serveur | Fait |
+| M8 | `Configuration.baseURL` : force unwrap remplacé par fallback prod | Fait |
+| M9 | `ServerConfigView` + ses 3 points d'entrée derrière `#if DEBUG` ; en release les boutons relancent un ping | Fait |
 | Push | `git push origin jules` échoue : plus de credentials après retrait du PAT | **En attente Jules (auth GitHub)** |
 
 ## Journal d'hypothèses
