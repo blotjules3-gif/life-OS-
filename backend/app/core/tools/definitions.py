@@ -370,7 +370,8 @@ TOOL_DEFINITIONS: list[dict] = [
                 "properties": {
                     "module": {
                         "type": "string",
-                        "description": "Module key: fitness | nutrition | sleep | finance | productivity | mind | learning | mobility | career | invest | social | home | admin | travel | cycle | looks | pets",
+                        "enum": ["fitness", "nutrition", "sleep", "finance", "productivity", "mind", "learning", "mobility", "career", "invest", "social", "home", "admin", "travel", "cycle", "looks", "medical"],
+                        "description": "Module key — must be one of the listed values",
                     },
                     "reason": {
                         "type": "string",
