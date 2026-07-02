@@ -50,14 +50,8 @@ struct MainTabView: View {
                 .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 104) }
             FloatingTabBar(
                 selected: $tab,
-                onOpenAssistant: openAIAssistant,
-                isLoadingAI: isCheckingAI
+                onOpenAssistant: openAIAssistant
             )
-            if showOfflineToast {
-                offlineToast
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                    .zIndex(999)
-            }
         }
         .ignoresSafeArea(.container, edges: .bottom)
         .fullScreenCover(isPresented: $showAIAssistant) {
