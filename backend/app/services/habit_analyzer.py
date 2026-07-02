@@ -73,9 +73,9 @@ async def analyze_and_schedule(
         if days_since >= ideal_gap_days:
             reminder_time_str = sport_cfg.get("reminder_time", "18:00")
             scheduled_for = _next_occurrence(reminder_time_str)
-            notif = _pick_template("sport", 0)
+            notif = _pick_template("fitness", 0)
             nid = await _schedule_notification(
-                session, user_id, notif, "sport", "lifeos://module/sport", scheduled_for
+                session, user_id, notif, "fitness", "lifeos://module/fitness", scheduled_for
             )
             if nid:
                 scheduled_ids.append(nid)
