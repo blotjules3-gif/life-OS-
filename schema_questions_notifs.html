@@ -715,6 +715,230 @@
     </div>
   </div>
 
+  <!-- NUTRITION — compléments alimentaires (section dans nutrition) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon m-nutrition" style="font-size:12px;">💊</div>
+      <div><div class="card-title">Compléments alimentaires</div><div class="card-sub">nutrition → supplements</div></div>
+    </div>
+    <div class="section-label label-event">Événement</div>
+    <div class="q-list">
+      <div class="q-row">
+        <div class="q-text"><strong>Tu prends des compléments alimentaires ?</strong>Active la section</div>
+        <div class="q-key event-key">nutrition_supplements_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Tu en prends le matin ?</strong>Vitamine D, magnésium, oméga…</div>
+        <div class="q-key event-key">supplement_morning_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Tu en prends le soir ?</strong>Magnésium, mélatonine…</div>
+        <div class="q-key event-key">supplement_evening_enabled</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="section-label label-notif">Notification</div>
+    <div class="q-list">
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel pour tes compléments du matin ?</strong></div>
+        <div class="q-key">notif_supplement_morning_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ce rappel ?</strong></div>
+        <div class="q-key">notif_supplement_morning_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel pour tes compléments du soir ?</strong></div>
+        <div class="q-key">notif_supplement_evening_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ce rappel ?</strong></div>
+        <div class="q-key">notif_supplement_evening_hour</div>
+      </div>
+    </div>
+    <div class="notif-results">
+      <div class="notif-result-label">Résultat</div>
+      <div class="notif-row"><div class="notif-time">heure matin</div><div class="notif-desc">Compléments du matin</div><div class="notif-cond">si actif</div></div>
+      <div class="notif-row"><div class="notif-time">heure soir</div><div class="notif-desc">Compléments du soir</div><div class="notif-cond">si actif</div></div>
+    </div>
+  </div>
+
+  <!-- MÉDICAL -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(232,76,76,.15);color:#E84C4C;">🏥</div>
+      <div><div class="card-title">Santé médicale</div><div class="card-sub">medical</div></div>
+    </div>
+    <div class="section-label label-event">Événement</div>
+    <div class="q-list">
+      <div class="q-row">
+        <div class="q-text"><strong>Tu prends des médicaments régulièrement ?</strong></div>
+        <div class="q-key event-key">medical_medications_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Certains se prennent le matin / midi / soir ?</strong></div>
+        <div class="q-key event-key">medical_med_morning/noon/evening_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Tu suis tes constantes (tension, poids…) ?</strong></div>
+        <div class="q-key event-key">medical_vitals_tracking</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="section-label label-notif">Notification — une question par prise</div>
+    <div class="q-list">
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel médicaments du matin ?</strong></div>
+        <div class="q-key">notif_medical_morning_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ce rappel ?</strong></div>
+        <div class="q-key">notif_medical_morning_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel médicaments du midi ?</strong></div>
+        <div class="q-key">notif_medical_noon_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ce rappel ?</strong></div>
+        <div class="q-key">notif_medical_noon_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel médicaments du soir ?</strong></div>
+        <div class="q-key">notif_medical_evening_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ce rappel ?</strong></div>
+        <div class="q-key">notif_medical_evening_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel pour mesurer tes constantes ?</strong></div>
+        <div class="q-key">notif_medical_vitals_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ce rappel constantes ?</strong></div>
+        <div class="q-key">notif_medical_vitals_hour</div>
+      </div>
+    </div>
+    <div class="notif-results">
+      <div class="notif-result-label">Résultat</div>
+      <div class="notif-row"><div class="notif-time">heure matin</div><div class="notif-desc">Médicaments du matin</div><div class="notif-cond">si prise matin</div></div>
+      <div class="notif-row"><div class="notif-time">heure midi</div><div class="notif-desc">Médicaments du midi</div><div class="notif-cond">si prise midi</div></div>
+      <div class="notif-row"><div class="notif-time">heure soir</div><div class="notif-desc">Médicaments du soir</div><div class="notif-cond">si prise soir</div></div>
+      <div class="notif-row"><div class="notif-time">heure constantes</div><div class="notif-desc">Mesure tes constantes</div><div class="notif-cond">si activé</div></div>
+    </div>
+  </div>
+
+  <!-- MOBILITÉ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(60,208,200,.15);color:#3CD0C8;">🚗</div>
+      <div><div class="card-title">Mobilité</div><div class="card-sub">mobility</div></div>
+    </div>
+    <div class="section-label label-event">Événement</div>
+    <div class="q-list">
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure tu pars le matin ?</strong>Heure de départ habituelle</div>
+        <div class="q-key event-key">mobility_departure_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Tu fais le plein régulièrement ?</strong>Suivi carburant</div>
+        <div class="q-key event-key">mobility_fuel_tracking</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Date du prochain contrôle technique ?</strong></div>
+        <div class="q-key event-key">mobility_ct_date</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="section-label label-notif">Notification</div>
+    <div class="q-list">
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel pour partir à l'heure ?</strong></div>
+        <div class="q-key">notif_mobility_departure_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ce rappel départ ?</strong></div>
+        <div class="q-key">notif_mobility_departure_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel hebdomadaire pour le plein ?</strong></div>
+        <div class="q-key">notif_mobility_fuel_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Quel jour et à quelle heure ?</strong></div>
+        <div class="q-key">mobility_fuel_weekday / notif_mobility_fuel_hour</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Alerte avant le contrôle technique ?</strong></div>
+        <div class="q-key">notif_mobility_ct_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Combien de jours avant ?</strong></div>
+        <div class="q-key">mobility_ct_advance_days</div>
+      </div>
+    </div>
+    <div class="notif-results">
+      <div class="notif-result-label">Résultat</div>
+      <div class="notif-row"><div class="notif-time">heure départ</div><div class="notif-desc">C'est l'heure de partir</div><div class="notif-cond">quotidien</div></div>
+      <div class="notif-row"><div class="notif-time">jour + heure</div><div class="notif-desc">Rappel carburant</div><div class="notif-cond">hebdo</div></div>
+      <div class="notif-row"><div class="notif-time">J-X avant CT</div><div class="notif-desc">Contrôle technique</div><div class="notif-cond">ponctuel</div></div>
+    </div>
+  </div>
+
+  <!-- VOYAGE -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(108,155,241,.15);color:#6C9BF1;">✈️</div>
+      <div><div class="card-title">Voyage</div><div class="card-sub">travel</div></div>
+    </div>
+    <div class="section-label label-event">Événement</div>
+    <div class="q-list">
+      <div class="q-row">
+        <div class="q-text"><strong>Tu as un voyage prévu bientôt ?</strong>Active les rappels voyage</div>
+        <div class="q-key event-key">travel_upcoming</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Tu prépares ta valise longtemps à l'avance ?</strong>Style de préparation</div>
+        <div class="q-key event-key">travel_packing_style</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="section-label label-notif">Notification — ponctuelles (par voyage)</div>
+    <div class="q-list">
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel pour préparer ta valise ?</strong></div>
+        <div class="q-key">notif_travel_packing_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Combien de jours avant le départ ?</strong></div>
+        <div class="q-key">travel_packing_advance_days</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel documents (passeport, billets) ?</strong></div>
+        <div class="q-key">notif_travel_docs_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Combien de jours avant le départ ?</strong></div>
+        <div class="q-key">travel_docs_advance_days</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>Rappel la veille du départ ?</strong></div>
+        <div class="q-key">notif_travel_departure_eve_enabled</div>
+      </div>
+      <div class="q-row">
+        <div class="q-text"><strong>À quelle heure ce rappel veille ?</strong></div>
+        <div class="q-key">notif_travel_departure_eve_hour</div>
+      </div>
+    </div>
+    <div class="notif-results">
+      <div class="notif-result-label">Résultat (ponctuelles)</div>
+      <div class="notif-row"><div class="notif-time">J-X valise</div><div class="notif-desc">Prépare ta valise</div><div class="notif-cond">par voyage</div></div>
+      <div class="notif-row"><div class="notif-time">J-X docs</div><div class="notif-desc">Vérifie tes documents</div><div class="notif-cond">par voyage</div></div>
+      <div class="notif-row"><div class="notif-time">veille à heure config</div><div class="notif-desc">Dernier check avant départ</div><div class="notif-cond">par voyage</div></div>
+    </div>
+  </div>
+
 </div>
 </body>
 </html>
