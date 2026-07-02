@@ -32,7 +32,7 @@ struct EveningSummaryView: View {
             !h.isPending && h.completions.contains { Calendar.current.isDateInToday($0.date) }
         }.count
     }
-    private var habitsTotal: Int { habits.filter { !h.isPending }.count }
+    private var habitsTotal: Int { habits.filter { !$0.isPending }.count }
     private var todayMood: MoodEntry? { moods.first }
 
     private var overallScore: Double {
