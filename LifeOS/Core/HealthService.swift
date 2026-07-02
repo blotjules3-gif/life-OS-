@@ -49,6 +49,7 @@ final class HealthService {
         if let hr = HKObjectType.quantityType(forIdentifier: .restingHeartRate) { set.insert(hr) }
         if let hrv = HKObjectType.quantityType(forIdentifier: .heartRateVariabilitySDNN) { set.insert(hrv) }
         if let cal = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) { set.insert(cal) }
+        if let mass = HKObjectType.quantityType(forIdentifier: .bodyMass) { set.insert(mass) }
         set.insert(HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!)
         return set
     }
@@ -58,6 +59,9 @@ final class HealthService {
         do {
             try await store.requestAuthorization(toShare: [], read: readTypes)
             authorized = true
+            // Marqueur pour HealthAutoSync : le prompt a déjà été montré en contexte,
+            // la sync silencieuse peut tourner sans déclencher de popup.
+            UserDefaults.standard.set(true, forKey: "healthAuthRequested")
             return true
         } catch {
             return false
