@@ -138,15 +138,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     }
 }
 
-    // MARK: - Système d'ombres (3 niveaux)
-
-    /// Ombre légère — cartes de contenu, tuiles
-    static func shadowSm() -> some ViewModifier { ShadowModifier(radius: 4, y: 2, opacity: 0.06) }
-    /// Ombre moyenne — modals, sheets, bulles
-    static func shadowMd() -> some ViewModifier { ShadowModifier(radius: 12, y: 6, opacity: 0.09) }
-    /// Ombre forte — overlays, popovers
-    static func shadowLg() -> some ViewModifier { ShadowModifier(radius: 24, y: 12, opacity: 0.13) }
-}
+// MARK: - Système d'ombres (3 niveaux)
 
 private struct ShadowModifier: ViewModifier {
     let radius: CGFloat
@@ -160,9 +152,12 @@ private struct ShadowModifier: ViewModifier {
 }
 
 extension View {
-    func shadowSm() -> some View { modifier(Theme.shadowSm()) }
-    func shadowMd() -> some View { modifier(Theme.shadowMd()) }
-    func shadowLg() -> some View { modifier(Theme.shadowLg()) }
+    /// Ombre légère — cartes de contenu, tuiles
+    func shadowSm() -> some View { modifier(ShadowModifier(radius: 4, y: 2, opacity: 0.06)) }
+    /// Ombre moyenne — modals, sheets, bulles
+    func shadowMd() -> some View { modifier(ShadowModifier(radius: 12, y: 6, opacity: 0.09)) }
+    /// Ombre forte — overlays, popovers
+    func shadowLg() -> some View { modifier(ShadowModifier(radius: 24, y: 12, opacity: 0.13)) }
 }
 
 // MARK: - Carte sobre (cellule groupée façon iOS)
