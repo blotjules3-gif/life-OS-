@@ -473,7 +473,7 @@ struct HabitRow: View {
         .padding(.vertical, 12)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .contextMenu {
-            Button(role: .destructive) { ctx.delete(habit) } label: { Label("Supprimer", systemImage: "trash") }
+            Button(role: .destructive, action: onDelete) { Label("Supprimer", systemImage: "trash") }
         }
     }
 
