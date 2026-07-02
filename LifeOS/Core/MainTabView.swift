@@ -356,15 +356,15 @@ struct HomeDashboardContent: View {
         habits.filter { h in h.completions.contains { Calendar.current.isDateInToday($0.date) } }.count
     }
     private var weekData: [(Date, Int)] {
-        (0..<7).reversed().map { off in
-            let day = Calendar.current.date(byAdding: .day, value: -off, to: todayStart)!
+        (0..<7).reversed().compactMap { off -> (Date, Int)? in
+            guard let day = Calendar.current.date(byAdding: .day, value: -off, to: todayStart) else { return nil }
             let count = habits.reduce(0) { acc, h in acc + h.completions.filter { Calendar.current.isDate($0.date, inSameDayAs: day) }.count }
             return (day, count)
         }
     }
     private var recentMoods: [MoodEntry] {
-        moods.filter { $0.date > Calendar.current.date(byAdding: .day, value: -14, to: .now)! }
-            .sorted { $0.date < $1.date }
+        let cutoff = Calendar.current.date(byAdding: .day, value: -14, to: .now) ?? Date()
+        return moods.filter { $0.date > cutoff }.sorted { $0.date < $1.date }
     }
     private var greeting: String {
         switch Calendar.current.component(.hour, from: .now) {
