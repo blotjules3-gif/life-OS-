@@ -492,7 +492,7 @@ struct ShortcutsHomeView: View {
             let c = HabitCompletion(date: .now)
             habit.completions.append(c)
         }
-        try? ctx.save()
+        do { try ctx.save() } catch { print("[SwiftData] toggleHabit failed: \(error)") }
         Haptics.soft()
     }
 
