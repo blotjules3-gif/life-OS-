@@ -732,7 +732,7 @@ struct ShortcutsHomeView: View {
     private func moodEmoji(_ s: Int) -> String { ["😞", "😕", "😐", "🙂", "😄"][max(0, min(4, s - 1))] }
     private func logMood(_ s: Int) {
         if let m = todayMood { m.score = s } else { ctx.insert(MoodEntry(score: s)) }
-        try? ctx.save()
+        do { try ctx.save() } catch { print("[SwiftData] logMood failed: \(error)") }
         Haptics.soft()
         withAnimation(.spring(duration: 0.3)) { editingMood = false }
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
