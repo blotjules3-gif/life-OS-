@@ -29,6 +29,7 @@ enum ShortcutTool: String, CaseIterable, Identifiable {
         case .flashcards: return "Flashcards"
         case .nap: return "Sieste"
         case .progressPhotos: return "Photos"
+        case .bilanSoir: return "Bilan du soir"
         }
     }
     var icon: String {
@@ -50,6 +51,7 @@ enum ShortcutTool: String, CaseIterable, Identifiable {
         case .flashcards: return "rectangle.on.rectangle.angled"
         case .nap: return "powersleep"
         case .progressPhotos: return "camera.fill"
+        case .bilanSoir: return "sunset.fill"
         }
     }
     var tint: Color {
@@ -59,7 +61,7 @@ enum ShortcutTool: String, CaseIterable, Identifiable {
         case .calories, .scan, .fasting, .water: return AppCategory.nutrition.tint
         case .todo, .focus: return AppCategory.productivity.tint
         case .mood, .breathing: return AppCategory.mind.tint
-        case .bedtime: return AppCategory.sleep.tint
+        case .bedtime, .bilanSoir: return AppCategory.sleep.tint
         case .budget: return AppCategory.finance.tint
         case .portfolio: return AppCategory.invest.tint
         case .flashcards: return AppCategory.learning.tint
@@ -87,6 +89,7 @@ enum ShortcutTool: String, CaseIterable, Identifiable {
         case .flashcards: FlashcardsView()
         case .nap: PowerNapView()
         case .progressPhotos: ProgressPhotoGalleryView()
+        case .bilanSoir: EveningSummaryView()
         }
     }
 }
