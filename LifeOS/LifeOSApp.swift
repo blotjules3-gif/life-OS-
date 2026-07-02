@@ -102,6 +102,9 @@ struct LifeOSApp: App {
         .onAppear {
             resetDailyValuesIfNeeded()
             EngagementTracker.shared.recordOpen()
+            // Pas de demande de permission pendant l'onboarding : elle est faite
+            // en contexte (pré-prompt) juste après la création des habitudes.
+            guard onboardingDone else { return }
             Task.detached(priority: .background) {
                 let granted = await NotificationManager.shared.requestAuthorization()
                 if granted {
