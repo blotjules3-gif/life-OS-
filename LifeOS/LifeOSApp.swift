@@ -9,6 +9,7 @@ struct LifeOSApp: App {
 
     @State private var container: ModelContainer? = nil
     @State private var migrationFailed = false
+    @State private var storeWasReset = false
     @AppStorage("onboardingDone") private var onboardingDone = false
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
     @AppStorage("appTheme") private var appThemeRaw = "classic"
