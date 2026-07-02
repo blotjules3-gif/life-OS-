@@ -621,6 +621,7 @@ struct BubbleCategoriesView: View {
                 .background(Color.accentColor, in: Circle())
                 .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
         }
+        .accessibilityLabel("Ajouter une catégorie")
         .padding(.trailing, 22).padding(.bottom, 110)
         .transition(.scale.combined(with: .opacity))
     }
