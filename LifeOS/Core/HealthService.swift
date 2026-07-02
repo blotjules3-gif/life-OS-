@@ -105,6 +105,48 @@ final class HealthService {
         return await sumToday(type, unit: .kilocalorie())
     }
 
+    /// Durée de sommeil de la nuit dernière (fenêtre 18h veille → 12h aujourd'hui), en heures.
+    func sleepHoursLastNight() async -> Double? {
+        guard let type = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return nil }
+        let cal = Calendar.current
+        let startOfDay = cal.startOfDay(for: Date())
+        let windowStart = startOfDay.addingTimeInterval(-6 * 3600)   // 18h la veille
+        let windowEnd = startOfDay.addingTimeInterval(12 * 3600)     // midi aujourd'hui
+        let predicate = HKQuery.predicateForSamples(withStart: windowStart, end: windowEnd)
+        let asleepValues: Set<Int> = [
+            HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
+            HKCategoryValueSleepAnalysis.asleepCore.rawValue,
+            HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
+            HKCategoryValueSleepAnalysis.asleepREM.rawValue
+        ]
+        let seconds: Double = await withCheckedContinuation { cont in
+            let q = HKSampleQuery(sampleType: type, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, _ in
+                let total = (samples as? [HKCategorySample] ?? [])
+                    .filter { asleepValues.contains($0.value) }
+                    .reduce(0.0) { $0 + $1.endDate.timeIntervalSince($1.startDate) }
+                cont.resume(returning: total)
+            }
+            store.execute(q)
+        }
+        return seconds > 0 ? seconds / 3600 : nil
+    }
+
+    /// Dernier poids enregistré dans Apple Santé.
+    func latestBodyMass() async -> (kg: Double, date: Date)? {
+        guard let type = HKQuantityType.quantityType(forIdentifier: .bodyMass) else { return nil }
+        let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+        return await withCheckedContinuation { cont in
+            let q = HKSampleQuery(sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]) { _, samples, _ in
+                guard let sample = samples?.first as? HKQuantitySample else {
+                    cont.resume(returning: nil)
+                    return
+                }
+                cont.resume(returning: (sample.quantity.doubleValue(for: .gramUnit(with: .kilo)), sample.endDate))
+            }
+            store.execute(q)
+        }
+    }
+
     /// Number of workouts logged in Apple Santé over the last 7 days.
     func workoutsThisWeek() async -> Int {
         guard HKHealthStore.isHealthDataAvailable() else { return 0 }
