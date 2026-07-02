@@ -1,10 +1,24 @@
 import SwiftUI
+import UIKit
 
 struct ChallengeCard: View {
     let challenge: ChallengeOut
     let onCheckin: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
+    @State private var showMilestone = false
+
+    private static let milestones: Set<Int> = [7, 10, 21, 30, 50, 100]
+
+    private func triggerMilestoneIfNeeded() {
+        guard Self.milestones.contains(challenge.streak_days) else { return }
+        let gen = UINotificationFeedbackGenerator()
+        gen.notificationOccurred(.success)
+        withAnimation(.spring(duration: 0.5, bounce: 0.4)) { showMilestone = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            withAnimation(.easeOut(duration: 0.3)) { showMilestone = false }
+        }
+    }
 
     private var neoCard: Color {
         colorScheme == .dark ? Color(hex: 0x252528) : Color(hex: 0xECEBE8)
