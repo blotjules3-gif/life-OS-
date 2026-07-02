@@ -421,8 +421,22 @@ final class AIAssistantViewModel: ObservableObject {
                 )
             }
         case .updateConfig:
-            // title = clé AppStorage (ex: "kcalGoal"), reminderBody = valeur en string
+            // title = clé AppStorage (ex: "kcalGoal"), reminderBody = valeur en string.
+            // Allowlist stricte : la réponse serveur ne doit jamais pouvoir écrire
+            // des clés sensibles (dev.apiBaseURL, dev.apiKey, état interne…).
             if let key = action.title, let rawValue = action.reminderBody {
+                let allowedConfigKeys: Set<String> = [
+                    "kcalGoal", "proteinGoal", "carbGoal", "fatGoal",
+                    "waterGoal", "glassesGoal", "fastTarget",
+                    "stepGoal", "focusMinGoal", "screenGoal", "socialMaxMin",
+                    "bedHour", "bedMinute", "wakeupHour", "wakeupMinute",
+                    "gymReminderHour", "gymReminderMinute",
+                    "budgetGoal"
+                ]
+                guard allowedConfigKeys.contains(key) else {
+                    print("[updateConfig] clé refusée : \(key)")
+                    return
+                }
                 if let intVal = Int(rawValue) {
                     UserDefaults.standard.set(intVal, forKey: key)
                 } else if let doubleVal = Double(rawValue) {
