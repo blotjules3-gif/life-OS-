@@ -165,7 +165,23 @@ struct MoodJournalView: View {
                         }
                     }.card()
 
-                    if !entries.isEmpty {
+                    if entries.isEmpty {
+                        VStack(spacing: 10) {
+                            Image(systemName: "chart.line.uptrend.xyaxis")
+                                .font(.system(size: 32))
+                                .foregroundStyle(.mindTint)
+                            Text("Suis ton humeur chaque jour")
+                                .font(.headline)
+                                .foregroundStyle(Theme.textPrimary)
+                            Text("En quelques semaines, tu verras des tendances : pic de moral le vendredi, baisse le lundi, lien avec tes habitudes ou ton sommeil.")
+                                .font(.subheadline)
+                                .foregroundStyle(Theme.textSecondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding(20)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.mindTint.opacity(0.07), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    } else {
                         VStack(alignment: .leading, spacing: 10) {
                             SectionHeader(title: "Historique", subtitle: "Humeur moyenne : \(avgMood)")
                             ForEach(entries.prefix(20)) { e in
