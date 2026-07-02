@@ -284,6 +284,22 @@ struct OnboardingView: View {
                 .ignoresSafeArea(.keyboard)
             }
         }
+        .alert("Rappels d'habitudes", isPresented: $showNotifPrePrompt) {
+            Button("Activer") {
+                Task {
+                    let granted = await NotificationManager.shared.requestAuthorization()
+                    if granted {
+                        NotificationManager.shared.scheduleWeeklyBilan()
+                    }
+                    onboardingDone = true
+                }
+            }
+            Button("Plus tard", role: .cancel) {
+                onboardingDone = true
+            }
+        } message: {
+            Text("Tes habitudes sont prêtes. Active les notifications pour recevoir tes rappels au bon moment de la journée.")
+        }
     }
 }
 
