@@ -252,9 +252,81 @@ final class ContextualNotifications {
                       body: "Note tes symptômes du jour.",
                       hour: h, minute: 0)
             }
+            // La notif PMS est planifiée via NotificationManager.scheduleCyclePMS()
+        }
 
-            // La notif PMS est recalculée par le CycleContext quand les données changent
-            // Elle est planifiée via NotificationManager.scheduleCyclePMS() séparément
+        // ── MÉDICAL ───────────────────────────────────────────────────────────
+        if mods.contains("medical") {
+            if ud.bool(forKey: "medical_med_morning_enabled"),
+               enabled("notif_medical_morning_enabled"),
+               let h = notifHour("notif_medical_morning_hour") {
+                daily(id: "medical_morning",
+                      title: "Médicaments du matin",
+                      body: "N'oublie pas tes médicaments du matin.",
+                      hour: h, minute: 0)
+            }
+            if ud.bool(forKey: "medical_med_noon_enabled"),
+               enabled("notif_medical_noon_enabled"),
+               let h = notifHour("notif_medical_noon_hour") {
+                daily(id: "medical_noon",
+                      title: "Médicaments du midi",
+                      body: "N'oublie pas tes médicaments de midi.",
+                      hour: h, minute: 0)
+            }
+            if ud.bool(forKey: "medical_med_evening_enabled"),
+               enabled("notif_medical_evening_enabled"),
+               let h = notifHour("notif_medical_evening_hour") {
+                daily(id: "medical_evening",
+                      title: "Médicaments du soir",
+                      body: "N'oublie pas tes médicaments du soir.",
+                      hour: h, minute: 0)
+            }
+            if enabled("notif_medical_vitals_enabled"),
+               let h = notifHour("notif_medical_vitals_hour") {
+                daily(id: "medical_vitals",
+                      title: "Mesure tes constantes",
+                      body: "Tension, poids, glycémie — prends 2 minutes.",
+                      hour: h, minute: 0)
+            }
+        }
+
+        // ── MOBILITÉ ──────────────────────────────────────────────────────────
+        if mods.contains("mobility") {
+            if enabled("notif_mobility_departure_enabled"),
+               let h = notifHour("notif_mobility_departure_hour") {
+                daily(id: "mobility_departure",
+                      title: "C'est l'heure de partir",
+                      body: "Prépare-toi pour prendre la route.",
+                      hour: h, minute: 0)
+            }
+            if enabled("notif_mobility_fuel_enabled"),
+               let wd = intVal("mobility_fuel_weekday"),
+               let h = notifHour("notif_mobility_fuel_hour") {
+                weekday(id: "mobility_fuel",
+                        title: "Rappel carburant",
+                        body: "Pense à faire le plein cette semaine.",
+                        hour: h, minute: 0, weekday: wd)
+            }
+        }
+
+        // ── COMPLÉMENTS ALIMENTAIRES (dans nutrition) ─────────────────────────
+        if mods.contains("nutrition") && ud.bool(forKey: "nutrition_supplements_enabled") {
+            if ud.bool(forKey: "supplement_morning_enabled"),
+               enabled("notif_supplement_morning_enabled"),
+               let h = notifHour("notif_supplement_morning_hour") {
+                daily(id: "supplement_morning",
+                      title: "Compléments du matin",
+                      body: "Prends tes compléments alimentaires du matin.",
+                      hour: h, minute: 0)
+            }
+            if ud.bool(forKey: "supplement_evening_enabled"),
+               enabled("notif_supplement_evening_enabled"),
+               let h = notifHour("notif_supplement_evening_hour") {
+                daily(id: "supplement_evening",
+                      title: "Compléments du soir",
+                      body: "Prends tes compléments alimentaires du soir.",
+                      hour: h, minute: 0)
+            }
         }
 
         // ── MAISON ────────────────────────────────────────────────────────────
