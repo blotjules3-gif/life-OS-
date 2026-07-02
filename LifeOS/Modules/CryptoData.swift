@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Données statiques & helpers (source : App.js §SC / §CATS)
 
-let cryptoProxyURL = "https://riskcrypto-proxy.httpsrisckcryptoproxyworkersdev.workers.dev/market"
+var cryptoProxyURL: String { Configuration.cryptoProxyURL }
 
 // MARK: - Scores R/P
 
