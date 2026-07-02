@@ -547,14 +547,24 @@ def get_tools_for_module(module: str | None) -> list[dict]:
     """Return only the tools relevant for a given module (+ always-available meta tools)."""
     meta_tools = {"get_module_config", "update_module_config", "list_goals", "create_goal", "delete_goal", "ask_clarification", "create_todo", "schedule_followup", "get_user_context", "update_user_profile", "remember_user_info", "create_life_challenge", "add_module", "remove_module", "check_in_challenge", "create_habit"}
     module_tool_map: dict[str, set[str]] = {
-        "sport": {"log_workout", "analyze_sport_progress"},
+        "fitness": {"log_workout", "analyze_sport_progress"},
+        "sport": {"log_workout", "analyze_sport_progress"},  # alias legacy
         "nutrition": {"add_meal", "compute_calorie_balance"},
         "mobility": {"add_km", "estimate_fuel_remaining"},
         "finance": {"analyze_cashflow", "compute_investable_amount", "simulate_allocation"},
+        "invest": {"analyze_cashflow", "compute_investable_amount", "simulate_allocation"},
         "productivity": set(),
         "sleep": set(),
         "mind": set(),
         "learning": set(),
+        "career": set(),
+        "social": set(),
+        "home": set(),
+        "admin": set(),
+        "travel": set(),
+        "cycle": set(),
+        "looks": set(),
+        "medical": set(),
     }
 
     allowed_names = meta_tools.copy()
