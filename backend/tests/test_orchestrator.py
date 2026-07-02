@@ -34,6 +34,7 @@ async def test_orchestrator_returns_text_reply():
             module_config={},
             user_id=uuid.uuid4(),
             user_name="Jules",
+            user_gender=None,
             conversation_id=uuid.uuid4(),
             session=AsyncMock(),
         )
@@ -74,6 +75,7 @@ async def test_orchestrator_executes_tool_then_replies():
             module_config={},
             user_id=uuid.uuid4(),
             user_name="Jules",
+            user_gender=None,
             conversation_id=uuid.uuid4(),
             session=AsyncMock(),
         )
@@ -110,6 +112,7 @@ async def test_orchestrator_raises_on_max_iterations():
                 module_config={},
                 user_id=uuid.uuid4(),
                 user_name=None,
+                user_gender=None,
                 conversation_id=uuid.uuid4(),
                 session=AsyncMock(),
             )
