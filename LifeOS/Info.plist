@@ -43,6 +43,8 @@
 	<string>AccentColor</string>
 	<key>NSCameraUsageDescription</key>
 	<string>LifeOS utilise l'appareil photo pour scanner les codes-barres, les documents et tes photos avant/apres.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>LifeOS utilise Face ID pour verrouiller l'acces a tes donnees personnelles.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>LifeOS lit ton sommeil, ta frequence cardiaque et tes pas pour calculer ton score de recuperation.</string>
 	<key>NSHealthUpdateUsageDescription</key>
