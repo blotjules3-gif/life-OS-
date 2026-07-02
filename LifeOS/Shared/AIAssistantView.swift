@@ -259,10 +259,16 @@ final class AIAssistantViewModel: ObservableObject {
                     switch apiErr {
                     case .networkError(let underlying):
                         let urlErr = underlying as? URLError
+                        let offlineCodes: [URLError.Code] = [
+                            .notConnectedToInternet, .networkConnectionLost,
+                            .cannotConnectToHost, .cannotFindHost
+                        ]
                         if urlErr?.code == .timedOut {
                             errorBanner = "Ton coach met trop de temps à répondre. Réessaie."
-                        } else if urlErr?.code == .notConnectedToInternet || urlErr?.code == .networkConnectionLost {
+                        } else if let code = urlErr?.code, offlineCodes.contains(code) {
                             isServerOffline = true
+                            // Le chat ne reste pas muet : réponse composée depuis les données locales.
+                            appendAssistantMessage(OfflineCoach.reply(to: content, ctx: modelContext), actions: [])
                         } else {
                             errorBanner = "Erreur réseau. Réessaie dans un instant."
                         }
