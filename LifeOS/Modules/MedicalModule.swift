@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Charts
 
 extension ShapeStyle where Self == Color { static var medicalTint: Color { AppCategory.medical.tint } }
 
