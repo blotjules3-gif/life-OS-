@@ -43,14 +43,21 @@ enum ImageStore {
 struct StoredImage: View {
     let filename: String?
     var placeholder: String = "photo"
+    @State private var image: UIImage?
+
     var body: some View {
-        if let img = ImageStore.load(filename) {
-            Image(uiImage: img).resizable().scaledToFill()
-        } else {
-            ZStack {
-                Theme.bg2
-                Image(systemName: placeholder).font(.title).foregroundStyle(Theme.textSecondary)
+        Group {
+            if let img = image {
+                Image(uiImage: img).resizable().scaledToFill()
+            } else {
+                ZStack {
+                    Theme.bg2
+                    Image(systemName: placeholder).font(.title).foregroundStyle(Theme.textSecondary)
+                }
             }
+        }
+        .task(id: filename) {
+            image = await ImageStore.loadAsync(filename)
         }
     }
 }
