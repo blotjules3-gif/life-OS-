@@ -160,7 +160,7 @@ struct ProfileView: View {
         NavigationStack {
             ZStack {
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 20) {
+                    LazyVStack(spacing: 20) {
                         profileHeader
                             .opacity(appeared ? 1 : 0).offset(y: appeared ? 0 : 10)
                             .animation(.spring(duration: 0.45, bounce: 0.1), value: appeared)
