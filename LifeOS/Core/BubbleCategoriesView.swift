@@ -638,6 +638,7 @@ struct BubbleCategoriesView: View {
                             Image(systemName: cat.systemImage).foregroundStyle(.white)
                                 .frame(width: 30, height: 30)
                                 .background(cat.tint, in: RoundedRectangle(cornerRadius: 8))
+                                .accessibilityHidden(true)
                             Text(cat.title).foregroundStyle(.primary)
                             Spacer()
                             Image(systemName: "plus.circle.fill").foregroundStyle(.green)
