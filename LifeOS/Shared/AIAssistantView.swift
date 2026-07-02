@@ -1058,6 +1058,7 @@ struct ServerConfigView: View {
         }
     }
 }
+#endif
 
 // MARK: - Thinking indicator
 
