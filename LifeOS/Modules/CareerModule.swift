@@ -146,7 +146,7 @@ struct CVBuilderView: View {
                         Label("Exporter / Partager le CV", systemImage: "square.and.arrow.up").frame(maxWidth: .infinity).padding(.vertical, 14)
                             .background(Color.careerTint, in: RoundedRectangle(cornerRadius: Theme.radiusSmall)).foregroundStyle(.white)
                     }
-                    IntegrationNotice(text: "L'optimiseur de CV par IA (réécriture orientée poste, scoring ATS) se branche en envoyant ce texte + l'offre ciblée à un modèle de langage qui renvoie une version optimisée. Le contenu structuré est déjà prêt.")
+                    IntegrationNotice(text: "L'optimiseur de CV (réécriture orientée poste, scoring ATS) arrive bientôt. Ton contenu structuré est déjà prêt.")
                 }.padding(Theme.pad)
             }
         }
