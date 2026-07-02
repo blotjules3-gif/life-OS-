@@ -1200,7 +1200,11 @@ struct ProfileView: View {
                         Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
                     }
                 } action: {
+                    #if DEBUG
                     showServerConfig = true
+                    #else
+                    serverStatus.pingNow()
+                    #endif
                 }
             }
             .background(Theme.card)
