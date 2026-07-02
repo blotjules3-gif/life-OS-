@@ -705,7 +705,7 @@ struct ShortcutsHomeView: View {
     private var moodHistoryDots: some View {
         let cal = Calendar.current
         let past6 = (1...6).reversed().compactMap { off -> MoodEntry? in
-            let day = cal.date(byAdding: .day, value: -off, to: .now)!
+            guard let day = cal.date(byAdding: .day, value: -off, to: .now) else { return nil }
             return moods.first { cal.isDate($0.date, inSameDayAs: day) }
         }
         return HStack(spacing: 4) {
