@@ -296,7 +296,7 @@ struct BubbleCategoriesView: View {
                 .contentTransition(.symbolEffect(.replace))
         }
         .accessibilityLabel("Changer la disposition")
-        .padding(.top, 8).padding(.leading, 16)
+        .padding(.top, Theme.space8).padding(.leading, 16)
     }
 
     // ===== Mode 1 & 2 : bulles (libres / rangées) =====
@@ -616,7 +616,7 @@ struct BubbleCategoriesView: View {
                 .padding(.horizontal, 14).padding(.vertical, 8)
                 .background(.regularMaterial, in: Capsule())
         }
-        .padding(.top, 8).padding(.trailing, 16)
+        .padding(.top, Theme.space8).padding(.trailing, Theme.pad)
     }
 
     private var addButton: some View {
@@ -627,7 +627,7 @@ struct BubbleCategoriesView: View {
                 .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
         }
         .accessibilityLabel("Ajouter une catégorie")
-        .padding(.trailing, 22).padding(.bottom, 110)
+        .padding(.trailing, Theme.space24).padding(.bottom, 110)
         .transition(.scale.combined(with: .opacity))
     }
 
@@ -703,7 +703,7 @@ struct BubbleCategoriesView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 18).padding(.top, 58).padding(.bottom, 110)
+            .padding(.horizontal, Theme.space20).padding(.top, Theme.space48 + Theme.space8 + Theme.space4).padding(.bottom, 110)
         }
     }
 
@@ -730,7 +730,7 @@ struct BubbleCategoriesView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 16).padding(.top, 58).padding(.bottom, 110)
+            .padding(.horizontal, 16).padding(.top, Theme.space48 + Theme.space8 + Theme.space4).padding(.bottom, 110)
         }
     }
 

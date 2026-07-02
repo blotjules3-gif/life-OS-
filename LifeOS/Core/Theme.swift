@@ -19,6 +19,20 @@ enum Theme {
     static let pad: CGFloat = 16
     static let padWide: CGFloat = 28   // onboarding / large content areas
 
+    // MARK: - Système typographique (Dynamic Type — scales avec les préférences d'accessibilité)
+    static let fontDisplay   = Font.system(size: 46, weight: .bold, design: .rounded)
+    static let fontHero      = Font.system(size: 36, weight: .semibold, design: .rounded)
+    static let fontTitle     = Font.title.bold()
+    static let fontTitle2    = Font.title2.bold()
+    static let fontTitle3    = Font.title3.bold()
+    static let fontHeadline  = Font.headline
+    static let fontBody      = Font.body
+    static let fontCallout   = Font.callout
+    static let fontSub       = Font.subheadline
+    static let fontFootnote  = Font.footnote
+    static let fontCaption   = Font.caption
+    static let fontCaption2  = Font.caption2
+
     // MARK: - Palette sémantique (remplace les Color(hex:) éparpillés)
 
     // Catégories de modules

@@ -283,7 +283,7 @@ struct ProfileView: View {
                             .animation(.spring(duration: 0.45, bounce: 0.1).delay(0.40), value: appeared)
                     }
                     .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                    .padding(.top, Theme.space8)
                     .padding(.bottom, 80)
                 }
             }
@@ -1036,7 +1036,7 @@ struct ProfileView: View {
                     .buttonStyle(LifeOSPressStyle())
                 }
             }
-            .padding(.horizontal, 18)
+            .padding(.horizontal, Theme.space20)
             .padding(.top, 14)
             .padding(.bottom, 10)
 
@@ -1051,7 +1051,7 @@ struct ProfileView: View {
                 }
             }
             .frame(height: 3)
-            .padding(.horizontal, 18)
+            .padding(.horizontal, Theme.space20)
             .padding(.bottom, 14)
         }
         .background(Theme.card)

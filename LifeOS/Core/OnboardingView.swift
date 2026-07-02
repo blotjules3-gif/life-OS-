@@ -182,7 +182,7 @@ struct OnboardingView: View {
                                 .frame(height: 4)
                         }
                     }
-                    .padding(.horizontal, 28)
+                    .padding(.horizontal, Theme.padWide)
                     .padding(.top, 56)
                     .padding(.bottom, 16)
                     .animation(.spring(duration: 0.35), value: step)
@@ -326,7 +326,7 @@ struct OnboardingWelcome: View {
             OnboardingButton(label: "Commencer", enabled: true, action: onNext)
                 .padding(.bottom, 52)
         }
-        .padding(.horizontal, 28)
+        .padding(.horizontal, Theme.padWide)
     }
 }
 
@@ -419,7 +419,7 @@ struct OnboardingName: View {
             OnboardingButton(label: "Continuer", enabled: canContinue, action: onNext)
                 .padding(.bottom, 52)
         }
-        .padding(.horizontal, 28)
+        .padding(.horizontal, Theme.padWide)
         .task {
             // Attendre que la transition (320ms) soit terminée avant d'ouvrir le clavier
             try? await Task.sleep(for: .milliseconds(650))
@@ -513,7 +513,7 @@ struct OnboardingHormonalContext: View {
             }
             .padding(.bottom, 52)
         }
-        .padding(.horizontal, 28)
+        .padding(.horizontal, Theme.padWide)
     }
 }
 
@@ -644,7 +644,7 @@ struct OnboardingLifeProfile: View {
             OnboardingButton(label: "Continuer", enabled: selected != nil, action: onNext)
                 .padding(.bottom, 52)
         }
-        .padding(.horizontal, 28)
+        .padding(.horizontal, Theme.padWide)
     }
 }
 
@@ -666,7 +666,7 @@ struct OnboardingGoalStep: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
-            .padding(.horizontal, 28)
+            .padding(.horizontal, Theme.padWide)
             .padding(.bottom, 24)
 
             LazyVGrid(columns: cols, spacing: 12) {
@@ -688,7 +688,7 @@ struct OnboardingGoalStep: View {
                 enabled: !selected.isEmpty,
                 action: onNext
             )
-            .padding(.horizontal, 28)
+            .padding(.horizontal, Theme.padWide)
             .padding(.bottom, 52)
             .animation(.spring(duration: 0.2), value: selected.count)
         }
@@ -751,7 +751,7 @@ struct OnboardingInterests: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 28)
+            .padding(.horizontal, Theme.padWide)
             .padding(.bottom, 20)
 
             ScrollView(showsIndicators: false) {
@@ -776,7 +776,7 @@ struct OnboardingInterests: View {
                 enabled: true,
                 action: onNext
             )
-            .padding(.horizontal, 28)
+            .padding(.horizontal, Theme.padWide)
             .padding(.bottom, 52)
             .animation(.spring(duration: 0.2), value: selected.count)
         }
@@ -892,7 +892,7 @@ struct OnboardingWakeTime: View {
             }
             .padding(.bottom, 52)
         }
-        .padding(.horizontal, 28)
+        .padding(.horizontal, Theme.padWide)
     }
 }
 
@@ -950,7 +950,7 @@ struct OnboardingResults: View {
                             .multilineTextAlignment(.center)
                             .lineSpacing(3)
                     }
-                    .padding(.horizontal, 28)
+                    .padding(.horizontal, Theme.padWide)
 
                     if !preferencesSummary.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
@@ -1050,7 +1050,7 @@ struct OnboardingResults: View {
                 enabled: !selected.isEmpty,
                 action: { onDone(recommendations.filter { selected.contains($0) }) }
             )
-            .padding(.horizontal, 28)
+            .padding(.horizontal, Theme.padWide)
             .padding(.bottom, 52)
         }
         .onAppear {
@@ -1315,7 +1315,7 @@ struct OnboardingModuleSetup: View {
         } else {
             VStack(spacing: 0) {
                 subProgress
-                    .padding(.horizontal, 28)
+                    .padding(.horizontal, Theme.padWide)
                     .padding(.bottom, 20)
 
                 if let m = currentModule {
@@ -1339,7 +1339,7 @@ struct OnboardingModuleSetup: View {
                 ) {
                     advance()
                 }
-                .padding(.horizontal, 28)
+                .padding(.horizontal, Theme.padWide)
                 .padding(.bottom, 52)
                 .animation(.spring(duration: 0.2), value: canAdvance)
             }
@@ -1358,7 +1358,7 @@ struct OnboardingModuleSetup: View {
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
             }
-            .padding(.horizontal, 28)
+            .padding(.horizontal, Theme.padWide)
             .padding(.bottom, 24)
 
             ScrollView(showsIndicators: false) {
@@ -1414,7 +1414,7 @@ struct OnboardingModuleSetup: View {
                 )
                 onNext(answers)
             }
-            .padding(.horizontal, 28)
+            .padding(.horizontal, Theme.padWide)
             .padding(.bottom, 52)
         }
         .onAppear {
