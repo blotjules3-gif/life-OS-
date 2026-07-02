@@ -1,6 +1,7 @@
 import Foundation
 import LocalAuthentication
 import SwiftUI
+import UIKit
 
 /// Verrou optionnel de l'app par Face ID / Touch ID / code.
 /// Verrouille au passage en arrière-plan, déverrouille via LocalAuthentication.
