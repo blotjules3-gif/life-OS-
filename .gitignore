@@ -25,3 +25,9 @@ Config.xcconfig
 !Config.xcconfig.example
 backend/.env
 !backend/.env.example
+
+# Python
+backend/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/

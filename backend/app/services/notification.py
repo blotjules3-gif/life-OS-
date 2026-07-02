@@ -113,10 +113,24 @@ async def dispatch_pending_notifications(
     apns_client: APNsClient,
 ) -> int:
     """Send all due notifications. Called by Celery beat task."""
-    from sqlalchemy import select
+    from sqlalchemy import select, update
     from app.models.db import User
 
     now = datetime.now(tz=timezone.utc)
+
+    # Ferme les notifications périmées (> 24 h de retard) sans les envoyer :
+    # au premier démarrage du beat, le backlog accumulé partirait d'un coup.
+    stale = await session.execute(
+        update(ScheduledNotification)
+        .where(
+            ScheduledNotification.sent.is_(False),
+            ScheduledNotification.scheduled_for < now - timedelta(hours=24),
+        )
+        .values(sent=True, sent_at=None)
+    )
+    if stale.rowcount:
+        log.info("notifications_expired", count=stale.rowcount)
+
     result = await session.execute(
         select(ScheduledNotification)
         .join(User, ScheduledNotification.user_id == User.id)
