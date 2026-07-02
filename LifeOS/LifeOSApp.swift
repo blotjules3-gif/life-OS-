@@ -179,6 +179,7 @@ struct LifeOSApp: App {
         case .success(let mc):
             migrationFailed = false
             container = mc
+            LocalStore.adopt(mc)
         case .failure:
             // Schéma incompatible (ex. colonnes ajoutées) — le store est déplacé
             // dans un backup horodaté, jamais supprimé : les données restent
