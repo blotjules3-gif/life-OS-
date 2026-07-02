@@ -79,6 +79,7 @@ struct OnboardingView: View {
     @State private var interests: Set<AppCategory> = []
     @State private var wakeHour = 7
     @State private var wakeMinute = 0
+    @State private var showNotifPrePrompt = false
 
     private var recommendations: [AppCategory] {
         var seen = Set<AppCategory>()
