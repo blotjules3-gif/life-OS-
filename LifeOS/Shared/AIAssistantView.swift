@@ -81,6 +81,13 @@ final class AIAssistantViewModel: ObservableObject {
     @Published var errorBanner: String? = nil
     @Published var isServerOffline = false
     @Published var pendingModuleSetup: AppCategory? = nil
+    @Published var actionToast: ActionToast? = nil
+
+    struct ActionToast: Identifiable {
+        let id = UUID()
+        let message: String
+        let module: String?
+    }
 
     @AppStorage("aiConversationID") private var conversationID = ""
     @AppStorage("aiFirstLaunchDone") private var firstLaunchDone = false
