@@ -161,7 +161,7 @@ struct GoalEditorSheet: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(presets, id: \.days) { preset in
-                        let target = Calendar.current.date(byAdding: .day, value: preset.days, to: .now)!
+                        let target = Calendar.current.date(byAdding: .day, value: preset.days, to: .now) ?? Date(timeIntervalSinceNow: TimeInterval(preset.days * 86400))
                         let selected = matchesPreset(endDates[id], days: preset.days)
                         Button {
                             withAnimation(.spring(duration: 0.38, bounce: 0.1)) { endDates[id] = target }
