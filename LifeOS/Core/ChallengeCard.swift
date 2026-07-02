@@ -90,7 +90,12 @@ struct ChallengeCard: View {
 
                 Spacer()
 
-                Button(action: onCheckin) {
+                Button(action: {
+                    onCheckin()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        triggerMilestoneIfNeeded()
+                    }
+                }) {
                     ZStack {
                         Circle()
                             .fill(challenge.checkedInToday ? typeColor : typeColor.opacity(0.12))
