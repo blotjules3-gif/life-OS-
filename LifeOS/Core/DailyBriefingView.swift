@@ -37,8 +37,8 @@ struct DailyBriefingView: View {
 
     private static let waveBars: [Double] = [8, 20, 12, 24, 10, 18, 8, 22, 14, 8]
 
-    private var kcalToday: Int { foods.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.calories } }
-    private var waterToday: Int { waters.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML } }
+    private var kcalToday: Int  { foods.caloriesToday }
+    private var waterToday: Int { waters.mlToday }
     private var habitsDone: Int { habits.filter { h in h.completions.contains { Calendar.current.isDateInToday($0.date) } }.count }
 
     private var yesterday: Date { Calendar.current.date(byAdding: .day, value: -1, to: .now) ?? .now }
