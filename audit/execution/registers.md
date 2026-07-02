@@ -31,7 +31,12 @@
 | F2 | Sync Apple Santé silencieuse : `HealthAutoSync.swift` (sommeil + poids au retour premier plan), `sleepHoursLastNight`/`latestBodyMass` dans HealthService, flag `healthAuthRequested`, dédup poids, priorité check-in manuel | Fait |
 | F3 | Coach hors-ligne : `OfflineCoach.swift` (réponses depuis SwiftData — habitudes, eau, kcal, sommeil, streaks) branché dans le catch offline de `send()` (4 codes URLError) | Fait |
 | Skills | 4 skills créés dans `~/.claude/skills/` : swiftui-lifeos, swiftui-share-image, healthkit-silent-sync, swiftdata-safe-store — enregistrés dans la table CLAUDE.md | Fait |
-| Bloqué | Apple Watch (nouveau target = Xcode GUI) ; défis entre amis (backend Railway inaccessible) | En attente Jules |
+| F4 | Verrou Face ID/Touch ID opt-in : `AppLock.swift` (activation vérifiée par auth, verrou au passage en arrière-plan + au launch, écran opaque zIndex 10), ligne réglage dans ProfileView, `NSFaceIDUsageDescription` | Fait — build vert |
+| F5 | Export JSON local : `DataExporter.swift` (19 entités mappées à la main, dates ISO 8601) + `DataExportSheet` (compteur par section, ShareLink) + ligne « Exporter mes données » | Fait — build vert |
+| F6 | Siri/Raccourcis : `LocalStore.swift` (schéma extrait de LifeOSApp, container partagé app/intents) + `LifeOSIntents.swift` (LogWaterIntent, CompleteHabitIntent + HabitEntity, phrases FR) | Fait — build vert |
+| F7 | Graphe de tendance (Swift Charts) dans VitalsView : ligne + aire, delta coloré (baisse de poids = vert), min/max, 30 dernières mesures — tous types de mesures | Fait — build vert |
+| F8 | Audit CloudKit : **non activable en l'état** — 45 modèles sans défauts inline, 4 relations non optionnelles, capability iCloud manquante → `audit/execution/cloudkit-audit.md` | Fait (rapport) |
+| Bloqué | Apple Watch (nouveau target = Xcode GUI) ; défis entre amis (backend Railway inaccessible) ; capability iCloud (Xcode GUI) | En attente Jules |
 
 ## Journal d'hypothèses
 | Hypothèse | Confiance | Test |
