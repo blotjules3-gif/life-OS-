@@ -21,6 +21,14 @@ enum ImageStore {
         return UIImage(contentsOfFile: dir.appendingPathComponent(filename).path)
     }
 
+    static func loadAsync(_ filename: String?) async -> UIImage? {
+        guard let filename else { return nil }
+        let path = dir.appendingPathComponent(filename).path
+        return await Task.detached(priority: .userInitiated) {
+            UIImage(contentsOfFile: path)
+        }.value
+    }
+
     static func delete(_ filename: String?) {
         guard let filename else { return }
         do {
