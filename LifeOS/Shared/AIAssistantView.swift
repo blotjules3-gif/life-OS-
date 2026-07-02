@@ -577,6 +577,9 @@ struct AIAssistantView: View {
                     vm.loadHistory()
                 }
             }
+            .sheet(item: $vm.pendingModuleSetup) { category in
+                ModuleSetupView(module: category)
+            }
         }
         .task {
             vm.modelContext = ctx
