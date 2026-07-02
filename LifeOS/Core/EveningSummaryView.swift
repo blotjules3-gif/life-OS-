@@ -11,8 +11,7 @@ struct EveningSummaryView: View {
     @Query private var waters: [WaterEntry]
     @Query private var habits: [Habit]
     @Query(sort: \MoodEntry.date, order: .reverse) private var moods: [MoodEntry]
-    @Query private var challenges: [ChallengeEntry]
-
+    @State private var challenges: [ChallengeOut] = []
     @State private var steps = 0
     @Environment(\.dismiss) private var dismiss
 
