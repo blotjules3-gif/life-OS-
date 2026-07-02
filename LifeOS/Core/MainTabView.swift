@@ -253,22 +253,23 @@ struct FloatingTabBar: View {
                 .transition(.move(edge: .leading).combined(with: .opacity))
             }
 
-            // AI Chat au centre — pastille RONDE minimaliste (noir + logo vert), alignée avec les autres icônes.
+            // AI Chat au centre — même forme que l'onglet actif (rectangle arrondi) mais NOIR, plus grand, logo blanc.
             Button {
                 Haptics.medium()
                 onOpenAssistant()
             } label: {
                 ZStack {
-                    Circle()
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(Color.black)
-                        .frame(width: 50, height: 50)
-                        .overlay(Circle().strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.5))
+                        .frame(width: 62, height: 48)
+                        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.5))
                         .shadow(color: Color.black.opacity(0.20), radius: 6, y: 2)
                     Image(systemName: "sparkles")
-                        .font(.system(size: 21, weight: .bold))
-                        .foregroundStyle(Theme.volt)
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(.white)
                 }
-                .frame(width: 58, height: 58)
+                .frame(width: 62, height: 58)
             }
             .buttonStyle(PressableButtonStyle())
             .frame(maxWidth: .infinity)
