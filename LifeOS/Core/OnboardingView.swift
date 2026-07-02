@@ -120,7 +120,8 @@ struct OnboardingView: View {
 
     private func goBack() {
         goingBack = true
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) { step -= 1 }
+        let anim: Animation? = reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.9)
+        withAnimation(anim) { step -= 1 }
     }
 
     private func buildShortcuts(from cats: [AppCategory]) -> String {
