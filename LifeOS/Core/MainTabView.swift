@@ -346,8 +346,8 @@ struct HomeDashboardContent: View {
     // MARK: Calculs
 
     private var todayStart: Date { Calendar.current.startOfDay(for: .now) }
-    private var waterToday: Int { waters.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML } }
-    private var kcalToday: Int  { foods.filter  { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.calories } }
+    private var waterToday: Int { waters.mlToday }
+    private var kcalToday: Int  { foods.caloriesToday }
     private var fastHours: Double {
         guard let active = fasts.first(where: { $0.isActive }) else { return 0 }
         return active.elapsed / 3600
