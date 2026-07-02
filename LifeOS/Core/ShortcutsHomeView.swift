@@ -89,8 +89,53 @@ enum ShortcutTool: String, CaseIterable, Identifiable {
     }
 }
 
+/// Anneaux de progression épinglables sur l'accueil (« Objectifs du jour »).
+enum HomeMetric: String, CaseIterable, Identifiable {
+    case steps, water, calories, fasting, habits
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .steps:    return "Pas"
+        case .water:    return "Eau"
+        case .calories: return "Calories"
+        case .fasting:  return "Jeûne"
+        case .habits:   return "Habitudes"
+        }
+    }
+    var unit: String {
+        switch self {
+        case .steps:    return ""
+        case .water:    return "ml"
+        case .calories: return "kcal"
+        case .fasting:  return "h"
+        case .habits:   return ""
+        }
+    }
+    var icon: String {
+        switch self {
+        case .steps:    return "figure.walk"
+        case .water:    return "drop.fill"
+        case .calories: return "flame.fill"
+        case .fasting:  return "timer"
+        case .habits:   return "checklist"
+        }
+    }
+    var color: Color {
+        switch self {
+        case .steps:    return Color(hex: 0xF1746C)
+        case .water:    return Color(hex: 0x3CB2E0)
+        case .calories: return Color(hex: 0x4CC38A)
+        case .fasting:  return Color(hex: 0x9B6CF1)
+        case .habits:   return Color(hex: 0xF1A33C)
+        }
+    }
+}
+
 struct ShortcutsHomeView: View {
     @AppStorage("homeShortcuts") private var enabledRaw = "tabata,calories,scan,todo"
+    @AppStorage("homeMetrics") private var metricsRaw = "steps,water,calories,fasting"
     @AppStorage("userName") private var userName = ""
     @AppStorage("stepGoal") private var stepGoal = 10000
     @AppStorage("waterGoal") private var waterGoal = 2500
@@ -113,9 +158,13 @@ struct ShortcutsHomeView: View {
     @State private var steps = 0
     @State private var editingMood = false
     @State private var editingShortcuts = false
+    @State private var editingMetrics = false
 
     private var enabledShortcuts: [ShortcutTool] {
         enabledRaw.split(separator: ",").compactMap { ShortcutTool(rawValue: String($0)) }
+    }
+    private var enabledMetrics: [HomeMetric] {
+        metricsRaw.split(separator: ",").compactMap { HomeMetric(rawValue: String($0)) }
     }
 
     private let cols = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
@@ -133,7 +182,8 @@ struct ShortcutsHomeView: View {
                 VStack(alignment: .leading, spacing: 22) {
                     HStack(alignment: .bottom) {
                         Text(userName.isEmpty ? greeting : "\(greeting), \(userName)")
-                            .font(.largeTitle.bold())
+                            .font(.system(size: 40, weight: .black)).textCase(.uppercase).kerning(-1)
+                            .lineLimit(2).minimumScaleFactor(0.7)
                         Spacer()
                         if todayEnergyScore > 0 {
                             energyBadge
@@ -162,6 +212,9 @@ struct ShortcutsHomeView: View {
             .sheet(isPresented: $editingShortcuts) {
                 ShortcutPickerSheet(enabledRaw: $enabledRaw)
             }
+            .sheet(isPresented: $editingMetrics) {
+                HomeMetricPickerSheet(metricsRaw: $metricsRaw)
+            }
             .task {
                 if await HealthService.shared.requestAuthorization() {
                     steps = await HealthService.shared.stepsToday()
@@ -187,12 +240,29 @@ struct ShortcutsHomeView: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader("Habitudes")
             if habits.isEmpty {
-                Text("Aucune habitude — crée-en une via l'assistant IA")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .padding(16)
+                Button {
+                    Haptics.tap()
+                    NotificationCenter.default.post(
+                        name: .lifeOSOpenAIChat, object: nil,
+                        userInfo: ["prefill": "Crée-moi une nouvelle habitude quotidienne"]
+                    )
+                } label: {
+                    HStack(spacing: 13) {
+                        IconBadge(icon: "sparkles", tint: Color(hex: 0x9B6CF1), size: 40)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Créer une habitude")
+                                .font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
+                            Text("Demande à l'assistant IA")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.bold)).foregroundStyle(.tertiary)
+                    }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                    .card()
+                }
+                .buttonStyle(PressableButtonStyle())
             } else {
                 VStack(spacing: 0) {
                     ForEach(Array(habits.enumerated()), id: \.element.id) { idx, habit in
@@ -200,6 +270,8 @@ struct ShortcutsHomeView: View {
                     }
                 }
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
+                .softElevation()
             }
         }
     }
@@ -210,7 +282,7 @@ struct ShortcutsHomeView: View {
             HStack(spacing: 14) {
                 Image(systemName: done ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 22))
-                    .foregroundStyle(done ? Color(hex: 0x4CC38A) : Color.secondary.opacity(0.4))
+                    .foregroundStyle(done ? Theme.volt : Color.secondary.opacity(0.4))
                 Text(habit.name)
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(done ? .secondary : .primary)
@@ -241,20 +313,16 @@ struct ShortcutsHomeView: View {
     // MARK: Section 2 — Objectifs du jour (anneaux + 3 objectifs) — tout est cliquable
     private var goalsSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            sectionHeader("Objectifs du jour")
-            LazyVGrid(columns: cols, spacing: 12) {
-                NavigationLink { StepsView() } label: {
-                    MetricRing(value: Double(steps), goal: Double(stepGoal), label: "Pas", unit: "", color: Color(hex: 0xF1746C), icon: "figure.walk")
-                }.buttonStyle(.plain)
-                NavigationLink { HydrationView() } label: {
-                    MetricRing(value: Double(waterToday), goal: Double(waterGoal), label: "Eau", unit: "ml", color: Color(hex: 0x3CB2E0), icon: "drop.fill")
-                }.buttonStyle(.plain)
-                NavigationLink { FoodSearchView() } label: {
-                    MetricRing(value: Double(kcalToday), goal: Double(kcalGoal), label: "Calories", unit: "kcal", color: Color(hex: 0x4CC38A), icon: "flame.fill")
-                }.buttonStyle(.plain)
-                NavigationLink { FastingView() } label: {
-                    MetricRing(value: fastHours, goal: Double(fastTarget), label: "Jeûne", unit: "h", color: Color(hex: 0x9B6CF1), icon: "timer")
-                }.buttonStyle(.plain)
+            sectionHeader("Objectifs du jour", trailing: "Éditer") { editingMetrics = true }
+            if !enabledMetrics.isEmpty {
+                LazyVGrid(columns: cols, spacing: 12) {
+                    ForEach(enabledMetrics) { m in
+                        let v = metricValue(m)
+                        NavigationLink { metricDestination(m) } label: {
+                            MetricRing(value: v.value, goal: v.goal, label: m.label, unit: m.unit, color: m.color, icon: m.icon)
+                        }.buttonStyle(.plain)
+                    }
+                }
             }
             VStack(spacing: 4) {
                 ForEach(Array(objectives.enumerated()), id: \.element.title) { i, o in
@@ -265,6 +333,8 @@ struct ShortcutsHomeView: View {
             }
             .padding(16)
             .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
+                .softElevation()
         }
     }
 
@@ -273,6 +343,26 @@ struct ShortcutsHomeView: View {
         case "S'hydrater": HydrationView()
         case "Habitudes":  HabitTrackerView()
         default:           StepsView()
+        }
+    }
+
+    private func metricValue(_ m: HomeMetric) -> (value: Double, goal: Double) {
+        switch m {
+        case .steps:    return (Double(steps), Double(stepGoal))
+        case .water:    return (Double(waterToday), Double(waterGoal))
+        case .calories: return (Double(kcalToday), Double(kcalGoal))
+        case .fasting:  return (fastHours, Double(fastTarget))
+        case .habits:   return (Double(habitsDone), Double(max(1, habits.count)))
+        }
+    }
+
+    @ViewBuilder private func metricDestination(_ m: HomeMetric) -> some View {
+        switch m {
+        case .steps:    StepsView()
+        case .water:    HydrationView()
+        case .calories: FoodSearchView()
+        case .fasting:  FastingView()
+        case .habits:   HabitTrackerView()
         }
     }
 
@@ -290,19 +380,17 @@ struct ShortcutsHomeView: View {
 
     private func objectiveRow(_ o: Objective) -> some View {
         HStack(spacing: 13) {
-            Image(systemName: o.icon).font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
-                .frame(width: 34, height: 34)
-                .background(o.color.gradient, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            IconBadge(icon: o.icon, tint: o.color, size: 36)
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(o.title).font(.system(size: 15, weight: .semibold)).foregroundStyle(.primary)
                     Spacer()
                     Text(o.sub).font(.caption).foregroundStyle(.secondary)
                 }
-                ProgressView(value: o.progress).tint(o.color).scaleEffect(x: 1, y: 1.1, anchor: .center)
+                ProgressView(value: o.progress).tint(Theme.volt).scaleEffect(x: 1, y: 1.1, anchor: .center)
             }
             Image(systemName: o.done ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 18)).foregroundStyle(o.done ? AnyShapeStyle(o.color) : AnyShapeStyle(Color.secondary.opacity(0.4)))
+                .font(.system(size: 18)).foregroundStyle(o.done ? AnyShapeStyle(Theme.volt) : AnyShapeStyle(Color.secondary.opacity(0.4)))
         }
     }
 
@@ -321,6 +409,8 @@ struct ShortcutsHomeView: View {
                     }
                     .padding(16).frame(maxWidth: .infinity)
                     .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
+                .softElevation()
                 }
                 .buttonStyle(.plain)
             } else {
@@ -335,17 +425,14 @@ struct ShortcutsHomeView: View {
     }
 
     private func shortcutTile(_ tool: ShortcutTool) -> some View {
-        VStack(spacing: 10) {
-            Image(systemName: tool.icon)
-                .font(.system(size: 20, weight: .semibold)).foregroundStyle(.white)
-                .frame(width: 46, height: 46)
-                .background(tool.tint.gradient, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+        VStack(spacing: 11) {
+            IconBadge(icon: tool.icon, tint: tool.tint, size: 48)
             Text(tool.label)
-                .font(.system(size: 13, weight: .medium)).foregroundStyle(.primary)
+                .font(.system(size: 13, weight: .semibold)).foregroundStyle(.primary)
                 .lineLimit(1).minimumScaleFactor(0.75)
         }
-        .frame(maxWidth: .infinity).padding(.vertical, 16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .frame(maxWidth: .infinity)
+        .card(padding: 18, elevated: true)
     }
 
     // MARK: Section 3 — Humeur du jour (check-in)
@@ -365,6 +452,8 @@ struct ShortcutsHomeView: View {
                 }
                 .padding(16)
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
+                .softElevation()
             } else {
                 HStack(spacing: 8) {
                     ForEach(1...5, id: \.self) { s in
@@ -377,6 +466,8 @@ struct ShortcutsHomeView: View {
                 }
                 .padding(16)
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
+                .softElevation()
             }
         }
     }
@@ -392,14 +483,10 @@ struct ShortcutsHomeView: View {
     private func weeklyModuleCard(_ module: AppCategory) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
-                Image(systemName: module.icon)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 34, height: 34)
-                    .background(module.tint, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                IconBadge(icon: module.icon, size: 34)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Nouveau module cette semaine ?")
-                        .font(.caption.weight(.semibold))
+                        .monoLabel(10)
                         .foregroundStyle(.secondary)
                     Text(module.title)
                         .font(.subheadline.weight(.semibold))
@@ -415,11 +502,11 @@ struct ShortcutsHomeView: View {
                     withAnimation { weeklyModuleSuggestion = nil }
                 } label: {
                     Text("Ajouter")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .font(.system(size: 14, weight: .black)).textCase(.uppercase).kerning(0.5)
+                        .foregroundStyle(Theme.onVolt)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(module.tint, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .padding(.vertical, 11)
+                        .background(Theme.volt, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 Button {
@@ -438,6 +525,8 @@ struct ShortcutsHomeView: View {
         }
         .padding(14)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
+                .softElevation()
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .stroke(module.tint.opacity(0.2), lineWidth: 1)
@@ -504,11 +593,11 @@ struct ShortcutsHomeView: View {
     }
 
     private func sectionHeader(_ title: String, trailing: String? = nil, action: @escaping () -> Void = {}) -> some View {
-        HStack {
-            Text(title).font(.title3.bold())
+        HStack(alignment: .firstTextBaseline) {
+            Text(title).font(.system(size: 20, weight: .black)).textCase(.uppercase).kerning(-0.3)
             Spacer()
             if let trailing {
-                Button(trailing, action: action).font(.subheadline).foregroundStyle(.secondary)
+                Button(action: action) { Text(trailing).monoLabel(11).foregroundStyle(.primary) }
             }
         }
         .padding(.horizontal, 4)
@@ -569,6 +658,55 @@ private struct ShortcutPickerSheet: View {
         if on { list.removeAll { $0 == tool.rawValue } }
         else { list.append(tool.rawValue) }
         enabledRaw = list.joined(separator: ",")
+        Haptics.soft()
+    }
+}
+
+// MARK: - Éditeur des anneaux « Objectifs du jour »
+
+private struct HomeMetricPickerSheet: View {
+    @Binding var metricsRaw: String
+    @Environment(\.dismiss) private var dismiss
+
+    private var enabled: [String] { metricsRaw.split(separator: ",").map(String.init) }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(HomeMetric.allCases) { m in
+                        let on = enabled.contains(m.rawValue)
+                        Button { toggle(m, on: on) } label: {
+                            HStack(spacing: 14) {
+                                Image(systemName: m.icon)
+                                    .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
+                                    .frame(width: 32, height: 32)
+                                    .background(m.color.gradient, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                Text(m.label).foregroundStyle(.primary)
+                                Spacer()
+                                Image(systemName: on ? "checkmark.circle.fill" : "circle")
+                                    .font(.system(size: 20))
+                                    .foregroundStyle(on ? AnyShapeStyle(m.color) : AnyShapeStyle(Color.secondary.opacity(0.4)))
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                } header: {
+                    Text("Choisis les anneaux affichés sur l'accueil")
+                } footer: {
+                    Text("Touche pour ajouter ou retirer. L'ordre suit tes sélections.")
+                }
+            }
+            .navigationTitle("Objectifs du jour").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("OK") { dismiss() } } }
+        }
+    }
+
+    private func toggle(_ m: HomeMetric, on: Bool) {
+        var list = enabled
+        if on { list.removeAll { $0 == m.rawValue } }
+        else { list.append(m.rawValue) }
+        metricsRaw = list.joined(separator: ",")
         Haptics.soft()
     }
 }

@@ -171,10 +171,14 @@ struct BubbleCategoriesView: View {
     @AppStorage("catSizes")      private var catSizesRaw = ""    // "titre:s|m|l,…" — taille par catégorie
     @AppStorage("catOffsets")    private var catOffsetsRaw = ""  // "titre:dx:dy,…" — (legacy, plus utilisé)
     @AppStorage("catAnchors")    private var catAnchorsRaw = ""  // "titre:fx:fy,…" — position ancrée (fraction)
+    @AppStorage("catColors")     private var catColorsRaw = ""   // "titre:RRGGBB,…" — couleur perso par catégorie
     @State private var editing = false
     @State private var showAdd = false
     @State private var tappedID: UUID?
     @State private var drag: [UUID: CGSize] = [:]
+    @State private var colorEditTarget: ColorEditTarget?
+
+    private struct ColorEditTarget: Identifiable { let id = UUID(); let title: String; let initial: Color }
     @Environment(\.colorScheme) private var scheme
 
     private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .organic }
@@ -240,6 +244,30 @@ struct BubbleCategoriesView: View {
     private func removeAnchor(_ title: String) { var m = anchorsMap(); m[title] = nil; writeAnchors(m) }
     private func hasAnchor(_ title: String) -> Bool { anchorsMap()[title] != nil }
 
+    // Couleur PERSO par catégorie (prime sur la couleur du thème). "titre:RRGGBB".
+    private func colorsMap() -> [String: String] {
+        var m: [String: String] = [:]
+        for p in catColorsRaw.split(separator: ",") {
+            let kv = p.split(separator: ":")
+            if kv.count == 2 { m[String(kv[0])] = String(kv[1]) }
+        }
+        return m
+    }
+    private func catColorOverride(_ title: String) -> Color? {
+        guard let hex = colorsMap()[title], let v = UInt(hex, radix: 16) else { return nil }
+        return Color(hex: v)
+    }
+    private func hasCatColor(_ title: String) -> Bool { colorsMap()[title] != nil }
+    private func setCatColor(_ title: String, _ color: Color) {
+        var m = colorsMap(); m[title] = color.hexString
+        catColorsRaw = m.map { "\($0.key):\($0.value)" }.joined(separator: ",")
+        UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+    }
+    private func removeCatColor(_ title: String) {
+        var m = colorsMap(); m[title] = nil
+        catColorsRaw = m.map { "\($0.key):\($0.value)" }.joined(separator: ",")
+    }
+
     private var hidden: Set<String> { Set(hiddenRaw.split(separator: ",").map(String.init)) }
     private var visible: [BubbleCategory] {
         BubbleLayout.categories.filter { $0.isFiller || !hidden.contains($0.title) }
@@ -260,19 +288,70 @@ struct BubbleCategoriesView: View {
             background.ignoresSafeArea()
             layoutContent
         }
-        .overlay(alignment: .topLeading) { layoutSwitcher }
-        .overlay(alignment: .topTrailing) { editButton }
-        .overlay(alignment: .bottomTrailing) { if editing && (layout == .organic || layout == .tidy) { addButton } }
+        .overlay(alignment: .topLeading) { if !theme.isModern { layoutSwitcher } }
+        .overlay(alignment: .topTrailing) { if !theme.isModern { editButton } }
+        .overlay(alignment: .bottomTrailing) { if !theme.isModern && editing && (layout == .organic || layout == .tidy) { addButton } }
         .sheet(isPresented: $showAdd) { addSheet }
+        .sheet(item: $colorEditTarget) { target in
+            CategoryColorSheet(
+                title: target.title,
+                initial: target.initial,
+                onSave: { setCatColor(target.title, $0) },
+                onReset: hasCatColor(target.title) ? { removeCatColor(target.title) } : nil
+            )
+            .presentationDetents([.height(320), .medium])
+        }
     }
 
     @ViewBuilder private var layoutContent: some View {
-        switch layout {
-        case .organic: bubbleCluster(tidy: false)
-        case .tidy:    bubbleCluster(tidy: true)
-        case .icons:   iconGrid
-        case .list:    listLayout
+        if theme.isModern {
+            nikeGrid   // Nike / Verre : grille de tuiles (plus de bulles pastel)
+        } else {
+            switch layout {
+            case .organic: bubbleCluster(tidy: false)
+            case .tidy:    bubbleCluster(tidy: true)
+            case .icons:   iconGrid
+            case .list:    listLayout
+            }
         }
+    }
+
+    // MARK: - Grille NIKE (thèmes modernes) : tuiles noir & blanc, index mono, volt
+    private var nikeGrid: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Catégories")
+                    .font(.system(size: 34, weight: .black)).textCase(.uppercase).kerning(-1)
+                    .foregroundStyle(.primary)
+                    .padding(.horizontal, 4)
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                    ForEach(Array(mains.enumerated()), id: \.element.id) { i, cat in
+                        Button { tapCategory(cat) } label: { nikeTile(cat, index: i) }
+                            .buttonStyle(PressableButtonStyle())
+                    }
+                }
+            }
+            .padding(.horizontal, 16).padding(.top, 66).padding(.bottom, 120)
+        }
+    }
+
+    private func nikeTile(_ cat: BubbleCategory, index: Int) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top) {
+                Text(String(format: "%02d", index + 1)).monoLabel(12).foregroundStyle(.secondary)
+                Spacer()
+                IconBadge(icon: cat.systemImage, size: 42)
+            }
+            Spacer(minLength: 20)
+            Text(cat.title)
+                .font(.system(size: 18, weight: .black)).textCase(.uppercase).kerning(-0.3)
+                .foregroundStyle(.primary)
+                .lineLimit(2).minimumScaleFactor(0.65)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(height: 132, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .card(padding: 16, elevated: true)
     }
 
     // ===== Bouton display : un clic = layout SUIVANT (cycle, pas de dropdown) =====
@@ -542,6 +621,16 @@ struct BubbleCategoriesView: View {
                         Label("Petite", systemImage: effectiveSize(cat) == .small ? "checkmark" : "circle")
                     }
                 }
+                Section("Couleur") {
+                    Button {
+                        colorEditTarget = ColorEditTarget(title: cat.title, initial: themedTint(cat))
+                    } label: { Label("Couleur personnalisée…", systemImage: "paintpalette.fill") }
+                    if hasCatColor(cat.title) {
+                        Button { removeCatColor(cat.title) } label: {
+                            Label("Couleur par défaut", systemImage: "arrow.counterclockwise")
+                        }
+                    }
+                }
                 if hasAnchor(cat.title) {
                     Button { withAnimation(.spring(response: 0.5, dampingFraction: 0.78)) { removeAnchor(cat.title) } } label: {
                         Label("Replacer automatiquement", systemImage: "arrow.counterclockwise")
@@ -605,7 +694,8 @@ struct BubbleCategoriesView: View {
     private var editButton: some View {
         Button { setEditing(!editing) } label: {
             Text(editing ? "OK" : "Modifier")
-                .font(.subheadline.weight(.semibold))
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(Color.primary)
                 .padding(.horizontal, 14).padding(.vertical, 8)
                 .background(.regularMaterial, in: Capsule())
         }
@@ -656,6 +746,7 @@ struct BubbleCategoriesView: View {
     // Couleur des bulles selon le thème : Clair/Sombre = multicolore (couleur de catégorie),
     // les 3 autres thèmes = teinte unique déclinée (rose / argent / nuage).
     func themedTint(_ cat: BubbleCategory) -> Color {
+        if let custom = catColorOverride(cat.title) { return custom }   // couleur perso = priorité absolue
         if theme == .classic || theme == .dark { return cat.tint }
         let idx = BubbleLayout.categories.firstIndex { $0.id == cat.id } ?? 0
         switch theme {
@@ -741,6 +832,72 @@ struct BubbleCategoriesView: View {
 
     // Fond partagé avec les hubs de catégorie (voir CategoryHub.swift) pour rester cohérent.
     private var background: some View { ThemedBubbleBackground(theme: theme) }
+}
+
+// MARK: - Éditeur de couleur d'une bulle
+
+private struct CategoryColorSheet: View {
+    let title: String
+    @State private var color: Color
+    let onSave: (Color) -> Void
+    let onReset: (() -> Void)?
+    @Environment(\.dismiss) private var dismiss
+
+    init(title: String, initial: Color, onSave: @escaping (Color) -> Void, onReset: (() -> Void)?) {
+        self.title = title
+        self._color = State(initialValue: initial)
+        self.onSave = onSave
+        self.onReset = onReset
+    }
+
+    private let presets: [Color] = [
+        Color(hex: 0xFF3B30), Color(hex: 0xFF9500), Color(hex: 0xFFCC00), Color(hex: 0x34C759),
+        Color(hex: 0x00C7BE), Color(hex: 0x30B0C7), Color(hex: 0x007AFF), Color(hex: 0x5856D6),
+        Color(hex: 0xAF52DE), Color(hex: 0xFF2D92), Color(hex: 0xA2845E), Color(hex: 0x8E8E93)
+    ]
+    private let cols = Array(repeating: GridItem(.flexible(), spacing: 12), count: 6)
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 22) {
+                    Circle()
+                        .fill(color.gradient)
+                        .frame(width: 78, height: 78)
+                        .shadow(color: color.opacity(0.5), radius: 12)
+                        .padding(.top, 10)
+
+                    LazyVGrid(columns: cols, spacing: 12) {
+                        ForEach(Array(presets.enumerated()), id: \.offset) { _, c in
+                            Button { color = c; Haptics.soft() } label: {
+                                Circle().fill(c)
+                                    .frame(height: 40)
+                                    .overlay(Circle().stroke(.white, lineWidth: color.hexString == c.hexString ? 3 : 0))
+                                    .overlay(Circle().stroke(Color.primary.opacity(0.12), lineWidth: 1))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    ColorPicker("Couleur sur mesure", selection: $color, supportsOpacity: false)
+                        .font(.subheadline.weight(.medium))
+
+                    if let onReset {
+                        Button(role: .destructive) { onReset(); dismiss() } label: {
+                            Label("Rétablir la couleur d'origine", systemImage: "arrow.counterclockwise")
+                                .font(.subheadline)
+                        }
+                    }
+                }
+                .padding(20)
+            }
+            .navigationTitle(title).navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button("OK") { onSave(color); dismiss() } }
+            }
+        }
+    }
 }
 
 // MARK: - Routing : titre de bulle → pôle AppCategory (navigation existante)

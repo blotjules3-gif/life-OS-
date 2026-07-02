@@ -289,7 +289,7 @@ struct WakeUpView: View {
             Divider()
 
             Toggle("Réveil quotidien activé", isOn: $wakeupEnabled)
-                .tint(Color.accentColor)
+                .tint(Theme.volt)
                 .onChange(of: wakeupEnabled) { _, on in
                     if on { scheduleWakeupAlarm() } else { cancelAlarm() }
                 }
@@ -300,15 +300,11 @@ struct WakeUpView: View {
 
     private var planPreviewSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Plan du jour").font(.headline)
+            Text("Plan du jour").nikeTitle(20)
 
             Button { showBriefing = true } label: {
                 HStack(spacing: 14) {
-                    Image(systemName: "sunrise.fill")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(.orange)
-                        .frame(width: 42, height: 42)
-                        .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                    IconBadge(icon: "sunrise.fill", size: 42)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Lancer ma journée")
                             .font(.system(size: 15, weight: .semibold))
@@ -457,11 +453,7 @@ struct DailyBriefingView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [Color(hex: 0xFFF3E0), Color(hex: 0xFFFAF2), Theme.bg],
-                startPoint: .top, endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            Theme.bg.ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 28) {
@@ -470,11 +462,11 @@ struct DailyBriefingView: View {
                     VStack(spacing: 10) {
                         Image(systemName: "sunrise.fill")
                             .font(.system(size: 52, weight: .semibold))
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Theme.textPrimary)
                             .padding(.top, 56)
 
                         Text("\(greeting)\(userName.isEmpty ? "" : ", \(userName)") !")
-                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .nikeTitle(30)
                             .multilineTextAlignment(.center)
 
                         Text(Date.now.formatted(date: .complete, time: .omitted))
@@ -495,22 +487,18 @@ struct DailyBriefingView: View {
 
                     // Progress rings
                     HStack(spacing: 10) {
-                        briefingRing(value: Double(kcalToday), goal: Double(kcalGoal), label: "Kcal", color: Color(hex: 0x4CC38A), icon: "flame.fill")
-                        briefingRing(value: Double(waterToday), goal: Double(waterGoal), label: "Eau", color: Color(hex: 0x3CB2E0), icon: "drop.fill")
-                        briefingRing(value: Double(habitsDone), goal: max(1, Double(habits.count)), label: "Habits", color: Color(hex: 0xE0A23C), icon: "checkmark.seal.fill")
+                        briefingRing(value: Double(kcalToday), goal: Double(kcalGoal), label: "Kcal", color: Theme.volt, icon: "flame.fill")
+                        briefingRing(value: Double(waterToday), goal: Double(waterGoal), label: "Eau", color: Theme.volt, icon: "drop.fill")
+                        briefingRing(value: Double(habitsDone), goal: max(1, Double(habits.count)), label: "Habits", color: Theme.volt, icon: "checkmark.seal.fill")
                     }
 
                     // Task list
                     if !todayTasks.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("À faire aujourd'hui").font(.headline)
+                            Text("À faire aujourd'hui").nikeTitle(20)
                             ForEach(Array(todayTasks.enumerated()), id: \.offset) { _, task in
                                 HStack(spacing: 14) {
-                                    Image(systemName: task.icon)
-                                        .font(.system(size: 13, weight: .semibold))
-                                        .foregroundStyle(.white)
-                                        .frame(width: 34, height: 34)
-                                        .background(task.color, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                                    IconBadge(icon: task.icon, size: 34)
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(task.title).font(.subheadline.weight(.semibold))
                                         Text(task.subtitle).font(.caption).foregroundStyle(.secondary)
@@ -518,19 +506,19 @@ struct DailyBriefingView: View {
                                     Spacer()
                                     if task.done {
                                         Image(systemName: "checkmark.circle.fill")
-                                            .foregroundStyle(.green)
+                                            .foregroundStyle(Theme.textPrimary)
                                             .font(.system(size: 18))
                                     }
                                 }
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 12)
                                 .background(
-                                    task.done ? Color.green.opacity(0.06) : Theme.card,
+                                    task.done ? Theme.bg2 : Theme.card,
                                     in: RoundedRectangle(cornerRadius: 14, style: .continuous)
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .stroke(task.done ? Color.green.opacity(0.18) : Color.clear, lineWidth: 1)
+                                        .stroke(task.done ? Theme.hairline : Color.clear, lineWidth: 1)
                                 )
                             }
                         }
@@ -538,12 +526,12 @@ struct DailyBriefingView: View {
 
                     // Quick actions
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Actions rapides").font(.headline)
+                        Text("Actions rapides").nikeTitle(20)
                         HStack(spacing: 10) {
-                            quickActionBtn(icon: "drop.fill", label: "1 verre", color: Color(hex: 0x3CB2E0)) {
+                            quickActionBtn(icon: "drop.fill", label: "1 verre", color: Theme.volt) {
                                 ctx.insert(WaterEntry(amountML: 250))
                             }
-                            quickActionBtn(icon: "drop.fill", label: "2 verres", color: Color(hex: 0x3CB2E0)) {
+                            quickActionBtn(icon: "drop.fill", label: "2 verres", color: Theme.volt) {
                                 ctx.insert(WaterEntry(amountML: 500))
                             }
                         }
@@ -553,15 +541,11 @@ struct DailyBriefingView: View {
                     if !behavioralInsights.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Ce qu'on a appris sur toi")
-                                .font(.headline)
+                                .nikeTitle(20)
                             VStack(spacing: 8) {
                                 ForEach(behavioralInsights, id: \.self) { insight in
                                     HStack(alignment: .top, spacing: 10) {
-                                        Image(systemName: "lightbulb.fill")
-                                            .font(.system(size: 12, weight: .semibold))
-                                            .foregroundStyle(Color(hex: 0xFFBF00))
-                                            .frame(width: 22, height: 22)
-                                            .background(Color(hex: 0xFFBF00).opacity(0.12), in: Circle())
+                                        IconBadge(icon: "lightbulb.fill", size: 22)
                                         Text(insight)
                                             .font(.subheadline)
                                             .foregroundStyle(.primary)
@@ -575,16 +559,8 @@ struct DailyBriefingView: View {
                         }
                     }
 
-                    Button { dismiss() } label: {
-                        Text("Commencer la journée")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.bottom, 40)
+                    PrimaryButton(title: "Commencer la journée") { dismiss() }
+                        .padding(.bottom, 40)
                 }
                 .padding(.horizontal, 22)
             }
@@ -672,7 +648,7 @@ struct DailyBriefingView: View {
                                     Text(["😞", "😕", "😐", "🙂", "😄"][s - 1])
                                         .font(.system(size: 26))
                                     Circle()
-                                        .fill(s == morningMood ? Color.accentColor : Color.clear)
+                                        .fill(s == morningMood ? Theme.volt : Color.clear)
                                         .frame(width: 6, height: 6)
                                 }
                                 .frame(maxWidth: .infinity)
@@ -714,25 +690,26 @@ struct DailyBriefingView: View {
                     }
                 }
 
+                let checkinReady = sleepQuality > 0 && morningMood > 0 && morningFatigue > 0
                 Button {
                     submitCheckin()
                 } label: {
                     Group {
                         if checkinSubmitting {
-                            ProgressView().tint(.white)
+                            ProgressView().tint(Theme.onVolt)
                         } else {
                             Text("Calculer mon score")
-                                .font(.system(size: 15, weight: .semibold))
+                                .font(.system(size: 15, weight: .black)).textCase(.uppercase).kerning(0.5)
                         }
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(checkinReady ? Theme.onVolt : .white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 13)
                     .background(
-                        sleepQuality > 0 && morningMood > 0 && morningFatigue > 0
-                        ? Color.accentColor
+                        checkinReady
+                        ? Theme.volt
                         : Color.secondary.opacity(0.3),
-                        in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                     )
                 }
                 .buttonStyle(.plain)
@@ -761,7 +738,7 @@ struct DailyBriefingView: View {
                     .foregroundStyle(scoreColor)
                     .contentTransition(.numericText())
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Score d'Énergie").font(.headline)
+                    Text("Score d'Énergie").nikeTitle(17)
                     Text(todayEnergyLabel.isEmpty ? "—" : todayEnergyLabel)
                         .font(.subheadline)
                         .foregroundStyle(scoreColor)
@@ -824,7 +801,7 @@ struct DailyBriefingView: View {
                 HStack(spacing: 3) {
                     ForEach(Array(Self.waveBars.enumerated()), id: \.offset) { i, h in
                         RoundedRectangle(cornerRadius: 2, style: .continuous)
-                            .fill(Color.orange)
+                            .fill(Theme.volt)
                             .frame(width: 3, height: waveActive ? h : h * 0.3)
                             .animation(
                                 .easeInOut(duration: 0.28 + Double(i) * 0.04)
@@ -847,16 +824,16 @@ struct DailyBriefingView: View {
                 } label: {
                     Image(systemName: "stop.circle.fill")
                         .font(.system(size: 24))
-                        .foregroundStyle(Color.orange.opacity(0.8))
+                        .foregroundStyle(Theme.textPrimary)
                 }
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.orange.opacity(0.18), lineWidth: 1)
+                    .stroke(Theme.hairline, lineWidth: 1)
             )
             .transition(.opacity.combined(with: .scale(scale: 0.96)))
             .onAppear { waveActive = true }
@@ -872,7 +849,7 @@ struct DailyBriefingView: View {
                 HStack(spacing: 10) {
                     Image(systemName: "speaker.wave.2.fill")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Theme.textPrimary)
                     Text("Écouter mon plan du jour")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(.primary)
@@ -891,11 +868,7 @@ struct DailyBriefingView: View {
     @ViewBuilder private var aiBriefingCard: some View {
         if briefingLoading {
             HStack(spacing: 12) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.orange)
-                    .frame(width: 32, height: 32)
-                    .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                IconBadge(icon: "sparkles", size: 32)
                 VStack(alignment: .leading, spacing: 7) {
                     ForEach(0..<3, id: \.self) { i in
                         RoundedRectangle(cornerRadius: 4, style: .continuous)
@@ -909,11 +882,7 @@ struct DailyBriefingView: View {
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         } else if let text = aiBriefing {
             HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.orange)
-                    .frame(width: 32, height: 32)
-                    .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                IconBadge(icon: "sparkles", size: 32)
                 Text(text)
                     .font(.system(size: 15))
                     .foregroundStyle(.primary)
@@ -977,7 +946,7 @@ struct DailyBriefingView: View {
             ZStack {
                 ProgressRing(progress: goal > 0 ? min(1, value / goal) : 0, lineWidth: 7, tint: color)
                     .frame(width: 64, height: 64)
-                Image(systemName: icon).font(.system(size: 12)).foregroundStyle(color)
+                Image(systemName: icon).font(.system(size: 12)).foregroundStyle(Theme.textPrimary)
             }
             Text(label).font(.caption2).foregroundStyle(.secondary)
         }
@@ -989,12 +958,13 @@ struct DailyBriefingView: View {
     private func quickActionBtn(icon: String, label: String, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Image(systemName: icon).font(.system(size: 13, weight: .semibold)).foregroundStyle(color)
-                Text(label).font(.system(size: 14, weight: .medium))
+                Image(systemName: icon).font(.system(size: 13, weight: .bold))
+                Text(label).font(.system(size: 14, weight: .black)).textCase(.uppercase).kerning(0.5)
             }
+            .foregroundStyle(Theme.onVolt)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(color, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
         }
         .buttonStyle(.plain)
     }
@@ -1312,24 +1282,24 @@ struct ProfileView: View {
         VStack(spacing: 6) {
             ZStack {
                 Circle()
-                    .stroke(color.opacity(0.12), lineWidth: 3)
+                    .stroke(Color.primary.opacity(0.12), lineWidth: 3)
                     .frame(width: 36, height: 36)
                 Circle()
                     .trim(from: 0, to: progress)
-                    .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .stroke(Theme.volt, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                     .frame(width: 36, height: 36)
                     .rotationEffect(.degrees(-90))
                     .animation(.spring(duration: 1.2).delay(0.15), value: appeared)
                 Image(systemName: icon)
                     .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(color)
+                    .foregroundStyle(.primary)
             }
             VStack(spacing: 1) {
                 Text(value)
                     .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
                     .foregroundStyle(.primary)
                 Text(unit)
-                    .font(.system(size: 9, weight: .medium))
+                    .monoLabel(9)
                     .foregroundStyle(.secondary)
             }
         }
@@ -1412,17 +1382,17 @@ struct ProfileView: View {
     // MARK: - Night Island (Réveil)
 
     private var nightIsland: some View {
-        let accentColor = Color(hex: 0xE07B3C)
+        let accentColor = Theme.volt
         return VStack(spacing: 0) {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("RÉVEIL")
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(accentColor.opacity(0.75))
+                        .foregroundStyle(Theme.textSecondary)
                         .kerning(1.4)
                     Text(String(format: "%02d:%02d", wakeupHour, wakeupMinute))
                         .font(.system(size: 48, weight: .black, design: .rounded).monospacedDigit())
-                        .foregroundStyle(wakeupEnabled ? accentColor : .primary)
+                        .foregroundStyle(wakeupEnabled ? Theme.textPrimary : Theme.textSecondary)
                         .animation(.spring(duration: 0.3), value: wakeupEnabled)
                 }
                 Spacer()
@@ -1436,10 +1406,10 @@ struct ProfileView: View {
                         }
                     Button { showWakeupDetail = true } label: {
                         Text("Personnaliser")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(accentColor)
+                            .font(.system(size: 11, weight: .bold)).textCase(.uppercase).kerning(0.5)
+                            .foregroundStyle(Theme.onVolt)
                             .padding(.horizontal, 10).padding(.vertical, 5)
-                            .background(accentColor.opacity(0.12), in: Capsule())
+                            .background(Theme.volt, in: Capsule())
                     }
                     .buttonStyle(.plain)
                 }
@@ -1450,14 +1420,7 @@ struct ProfileView: View {
 
             Button { showBriefing = true } label: {
                 HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(Color.orange.opacity(0.14))
-                            .frame(width: 36, height: 36)
-                        Image(systemName: "sunrise.fill")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.orange)
-                    }
+                    IconBadge(icon: "sunrise.fill", size: 36)
                     VStack(alignment: .leading, spacing: 1) {
                         Text("Lancer ma journée")
                             .font(.system(size: 14, weight: .semibold))

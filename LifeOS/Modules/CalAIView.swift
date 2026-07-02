@@ -40,12 +40,12 @@ struct CalAIView: View {
     private var header: some View {
         HStack {
             HStack(spacing: 8) {
-                Image(systemName: "flame.circle.fill").font(.largeTitle).foregroundStyle(.orange)
-                Text("Calories").font(.largeTitle.bold())
+                Image(systemName: "flame.circle.fill").font(.largeTitle).foregroundStyle(Theme.textPrimary)
+                Text("Calories").nikeTitle()
             }
             Spacer()
             HStack(spacing: 5) {
-                Image(systemName: "flame.fill").foregroundStyle(.orange)
+                Image(systemName: "flame.fill").foregroundStyle(Theme.volt)
                 Text("\(streak)").font(.headline.bold())
             }
             .padding(.horizontal, 12).padding(.vertical, 7)
@@ -98,13 +98,12 @@ struct CalAIView: View {
             }
             Spacer()
             ZStack {
-                ProgressRing(progress: kcalGoal == 0 ? 0 : Double(consumed) / Double(kcalGoal), lineWidth: 11, tint: .orange)
-                Image(systemName: "flame.fill").font(.title2).foregroundStyle(.orange)
+                ProgressRing(progress: kcalGoal == 0 ? 0 : Double(consumed) / Double(kcalGoal), lineWidth: 11, tint: Theme.volt)
+                Image(systemName: "flame.fill").font(.title2).foregroundStyle(Theme.textPrimary)
             }
             .frame(width: 92, height: 92)
         }
-        .padding(20)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .card(padding: 20, radius: 26)
     }
 
     // MARK: Macros
@@ -140,7 +139,7 @@ struct CalAIView: View {
 
     private var mealsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Repas du jour").font(.title3.bold())
+            Text("Repas du jour").nikeTitle(20)
             if dayFoods.isEmpty {
                 Button { showAdd = true } label: {
                     HStack(spacing: 14) {
@@ -160,7 +159,7 @@ struct CalAIView: View {
                             Text("\(f.meal) · P\(Int(f.protein)) G\(Int(f.carbs)) L\(Int(f.fat))").font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Text("\(f.calories) kcal").font(.subheadline.bold()).foregroundStyle(.orange)
+                        Text("\(f.calories) kcal").font(.subheadline.bold()).foregroundStyle(Theme.textPrimary)
                     }
                     .padding(14)
                     .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))

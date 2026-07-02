@@ -11,7 +11,7 @@ struct TravelHubView: View {
             ToolRow(icon: "map.fill", title: "Mes voyages",
                     subtitle: "Itinéraire + budget + valise", tint: .travelTint) { TripsView() }
             ToolRow(icon: "airplane.circle.fill", title: "Suivi des vols",
-                    subtitle: "Statut & retards — à brancher", tint: .travelTint) { FlightScaffold() }
+                    subtitle: "Compte à rebours & statut", tint: .travelTint) { FlightTrackerView() }
         }
     }
 }
@@ -156,10 +156,161 @@ enum PackingEngine {
 
 // MARK: - Suivi vols scaffold
 
-struct FlightScaffold: View {
+// MARK: - Suivi des vols (tracker manuel, hors-ligne, avec compte à rebours)
+
+struct TrackedFlight: Identifiable, Codable, Equatable {
+    var id = UUID()
+    var number = ""
+    var airline = ""
+    var from = ""
+    var to = ""
+    var departure = Date()
+    var status = "À l'heure"
+
+    static let statuses = ["À l'heure", "Embarquement", "Retardé", "Décollé", "Atterri", "Annulé"]
+    var statusColor: Color {
+        switch status {
+        case "Retardé":  return .orange
+        case "Annulé":   return .red
+        case "Atterri":  return .green
+        case "Décollé", "Embarquement": return .blue
+        default:         return Color.travelTint
+        }
+    }
+}
+
+struct FlightTrackerView: View {
+    @AppStorage("trackedFlights") private var raw = "[]"
+    @State private var flights: [TrackedFlight] = []
+    @State private var editing: TrackedFlight?
+    @State private var showAdd = false
+
+    private var sorted: [TrackedFlight] { flights.sorted { $0.departure < $1.departure } }
+
     var body: some View {
-        ScaffoldPage(icon: "airplane.circle.fill", title: "Suivi des vols", tint: .travelTint,
-            notice: "Suivre un vol en temps réel (statut, porte, retard) nécessite une API de données aériennes : AviationStack (offre gratuite limitée), FlightAware AeroAPI ou Amadeus. Branchement : saisir le n° de vol → requête API → statut + notifications push en cas de retard.",
-            bullets: ["AviationStack : gratuit jusqu'à ~100 req/mois", "Amadeus Flight Status API (freemium)", "Saisie n° de vol → push en cas de retard", "Lien avec tes voyages déjà créés"])
+        ZStack {
+            Theme.background
+            if flights.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "airplane.circle.fill").font(.system(size: 54)).foregroundStyle(.travelTint)
+                    Text("Aucun vol suivi").font(.headline).foregroundStyle(Theme.textPrimary)
+                    Text("Ajoute un vol pour voir le compte à rebours et son statut.")
+                        .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                    Button { showAdd = true } label: { Label("Ajouter un vol", systemImage: "plus") }
+                        .buttonStyle(.borderedProminent).tint(.travelTint)
+                }.padding(30)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(sorted) { f in flightCard(f) }
+                    }.padding(Theme.pad)
+                }
+            }
+        }
+        .navigationTitle("Suivi des vols").navigationBarTitleDisplayMode(.inline)
+        .toolbar { ToolbarItem(placement: .primaryAction) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .sheet(isPresented: $showAdd) { FlightEditor { add($0) } }
+        .sheet(item: $editing) { f in FlightEditor(flight: f) { update($0) } onDelete: { remove(f) } }
+        .onAppear(perform: reload)
+    }
+
+    private func flightCard(_ f: TrackedFlight) -> some View {
+        Button { editing = f } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("\(f.from.isEmpty ? "???" : f.from)  →  \(f.to.isEmpty ? "???" : f.to)")
+                        .font(.system(size: 17, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                    Spacer()
+                    Text(f.status).font(.caption.bold()).foregroundStyle(.white)
+                        .padding(.horizontal, 9).padding(.vertical, 4)
+                        .background(f.statusColor, in: Capsule())
+                }
+                HStack(spacing: 8) {
+                    if !f.airline.isEmpty { Text(f.airline) }
+                    if !f.number.isEmpty { Text(f.number).foregroundStyle(.travelTint) }
+                    Spacer()
+                    Text(f.departure, format: .dateTime.day().month().hour().minute())
+                }.font(.subheadline).foregroundStyle(.secondary)
+                TimelineView(.periodic(from: .now, by: 30)) { ctx in
+                    Text(countdown(to: f.departure, now: ctx.date))
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(f.departure < ctx.date ? Color.secondary : Color.travelTint)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .contextMenu { Button(role: .destructive) { remove(f) } label: { Label("Supprimer", systemImage: "trash") } }
+    }
+
+    private func countdown(to date: Date, now: Date) -> String {
+        let s = Int(date.timeIntervalSince(now))
+        if s <= 0 { return "Départ passé" }
+        let h = s / 3600, m = (s % 3600) / 60
+        if h >= 24 { return "Dans \(h / 24) j \(h % 24) h" }
+        if h >= 1 { return "Décollage dans \(h) h \(m) min" }
+        return "Décollage dans \(m) min"
+    }
+
+    // MARK: persistance JSON (aucune migration SwiftData)
+    private func reload() {
+        flights = (try? JSONDecoder().decode([TrackedFlight].self, from: Data(raw.utf8))) ?? []
+    }
+    private func persist() {
+        raw = String(data: (try? JSONEncoder().encode(flights)) ?? Data("[]".utf8), encoding: .utf8) ?? "[]"
+    }
+    private func add(_ f: TrackedFlight) { flights.append(f); persist() }
+    private func update(_ f: TrackedFlight) {
+        if let i = flights.firstIndex(where: { $0.id == f.id }) { flights[i] = f; persist() }
+    }
+    private func remove(_ f: TrackedFlight) { flights.removeAll { $0.id == f.id }; persist() }
+}
+
+private struct FlightEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var flight: TrackedFlight
+    let onSave: (TrackedFlight) -> Void
+    let onDelete: (() -> Void)?
+
+    init(flight: TrackedFlight = TrackedFlight(), onSave: @escaping (TrackedFlight) -> Void, onDelete: (() -> Void)? = nil) {
+        self._flight = State(initialValue: flight)
+        self.onSave = onSave
+        self.onDelete = onDelete
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Trajet") {
+                    TextField("De (ex: CDG)", text: $flight.from).textInputAutocapitalization(.characters)
+                    TextField("À (ex: JFK)", text: $flight.to).textInputAutocapitalization(.characters)
+                }
+                Section("Vol") {
+                    TextField("Compagnie (ex: Air France)", text: $flight.airline)
+                    TextField("N° de vol (ex: AF008)", text: $flight.number).textInputAutocapitalization(.characters)
+                    DatePicker("Départ", selection: $flight.departure)
+                }
+                Section("Statut") {
+                    Picker("Statut", selection: $flight.status) {
+                        ForEach(TrackedFlight.statuses, id: \.self) { Text($0).tag($0) }
+                    }
+                }
+                if let onDelete {
+                    Section {
+                        Button(role: .destructive) { onDelete(); dismiss() } label: {
+                            Label("Supprimer ce vol", systemImage: "trash")
+                        }
+                    }
+                }
+            }
+            .navigationTitle(onDelete == nil ? "Nouveau vol" : "Modifier le vol")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button("OK") { onSave(flight); dismiss() } }
+            }
+        }
     }
 }

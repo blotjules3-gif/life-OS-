@@ -267,12 +267,14 @@ struct ProfileCompletionCard: View {
                 ZStack {
                     Circle().stroke(Theme.bg2, lineWidth: 7).frame(width: 54, height: 54)
                     Circle().trim(from: 0, to: CGFloat(max(0.02, CategorySetup.fraction)))
-                        .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                        .stroke(Theme.volt, style: StrokeStyle(lineWidth: 7, lineCap: .round))
                         .rotationEffect(.degrees(-90)).frame(width: 54, height: 54)
-                    Text("\(pct)%").font(.caption.bold()).foregroundStyle(Theme.textPrimary)
+                    Text("\(pct)%").font(.caption.bold().monospacedDigit()).foregroundStyle(Theme.textPrimary)
                 }
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Profil optimisé à \(pct)%").font(.headline).foregroundStyle(Theme.textPrimary)
+                    Text("Profil optimisé à \(pct)%")
+                        .font(.system(size: 16, weight: .black)).textCase(.uppercase).kerning(-0.2)
+                        .foregroundStyle(Theme.textPrimary)
                     Text("Réponds à quelques questions pour des recommandations sur-mesure.")
                         .font(.caption).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
@@ -283,10 +285,11 @@ struct ProfileCompletionCard: View {
                     ForEach(remaining) { c in
                         Button { launch = c; Haptics.soft() } label: {
                             Label("Configurer \(c.title)", systemImage: c.icon)
-                                .font(.caption2.weight(.semibold)).foregroundStyle(.white)
-                                .padding(.horizontal, 12).padding(.vertical, 8)
-                                .background(c.tint.gradient, in: Capsule())
-                        }.buttonStyle(.plain)
+                                .font(.system(size: 12, weight: .black)).textCase(.uppercase).kerning(0.3)
+                                .foregroundStyle(Theme.onVolt)
+                                .padding(.horizontal, 14).padding(.vertical, 9)
+                                .background(Theme.volt, in: Capsule())
+                        }.buttonStyle(PressableButtonStyle())
                     }
                 }
             }
@@ -339,11 +342,12 @@ struct IntakeHubView: View {
             ZStack {
                 Circle().stroke(Theme.bg2, lineWidth: 9).frame(width: 84, height: 84)
                 Circle().trim(from: 0, to: CGFloat(max(0.02, CategorySetup.fraction)))
-                    .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                    .stroke(Theme.volt, style: StrokeStyle(lineWidth: 9, lineCap: .round))
                     .rotationEffect(.degrees(-90)).frame(width: 84, height: 84)
-                Text("\(CategorySetup.percent)%").font(.title3.bold())
+                Text("\(CategorySetup.percent)%").font(.title3.bold().monospacedDigit())
             }
-            Text("\(doneN) / \(totalN) pôles configurés").font(.headline)
+            Text("\(doneN) / \(totalN) pôles configurés")
+                .font(.system(size: 17, weight: .black)).textCase(.uppercase).kerning(-0.2)
             Text("Réponds aux questions pour que chaque outil s'ouvre déjà rempli. Tu peux passer une section et y revenir.")
                 .font(.caption).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
         }

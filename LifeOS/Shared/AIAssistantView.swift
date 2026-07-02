@@ -1,5 +1,8 @@
 import SwiftUI
 import SwiftData
+import PhotosUI
+import Vision
+import UIKit
 
 // MARK: - Persistent message model
 
@@ -226,6 +229,38 @@ final class AIAssistantViewModel: ObservableObject {
         }
     }
 
+    /// Analyse une image on-device (Vision) et route vers la bonne catégorie — sans backend.
+    func analyzeImage(_ image: UIImage) {
+        guard !isLoading else { return }
+        Haptics.tap()
+        appendUserMessage("📷 Photo envoyée")
+        appendThinking()
+        isLoading = true
+
+        Task {
+            let result = await ImageIntel.analyze(image)
+            // Effet concret : si c'est un aliment, on le journalise directement.
+            if case let .food(guess) = result.route, let ctx = modelContext {
+                ctx.insert(FoodEntry(name: guess.name, calories: guess.kcal,
+                                     protein: guess.protein, carbs: guess.carbs, fat: guess.fat,
+                                     meal: currentMeal()))
+                try? ctx.save()
+            }
+            removeThinking()
+            appendAssistantMessage(result.reply, actions: result.actions)
+            isLoading = false
+        }
+    }
+
+    private func currentMeal() -> String {
+        switch Calendar.current.component(.hour, from: .now) {
+        case 5..<11:  return "Petit-déj"
+        case 11..<15: return "Déjeuner"
+        case 15..<18: return "Collation"
+        default:      return "Dîner"
+        }
+    }
+
     private func triggerWelcome() {
         let goalLabels: [String: String] = [
             "health": "Santé & forme",
@@ -384,9 +419,71 @@ final class AIAssistantViewModel: ObservableObject {
 
 import UserNotifications
 
+// MARK: - On-device image understanding + routing
+
+enum ImageRoute { case food(FoodGuess), document(String), general(String) }
+
+enum ImageIntel {
+    /// Classe l'image, lit le texte éventuel, et décide vers quel pôle router — 100% on-device.
+    static func analyze(_ image: UIImage) async -> (route: ImageRoute, reply: String, actions: [AIAction]) {
+        let labels = await classify(image)
+
+        // 1) Aliment reconnu → journalisation calories (pôle Nutrition)
+        if let hit = labels.first(where: { FoodCalorieDB.match($0.label) != nil }),
+           let m = FoodCalorieDB.match(hit.label) {
+            let g = FoodGuess(name: m.0, kcal: m.1, protein: m.2, carbs: m.3, fat: m.4, confidence: Double(hit.confidence))
+            let reply = "🍽️ On dirait : \(g.name) (~\(g.kcal) kcal). Je l'ai ajouté à ton journal du jour — tu peux l'ajuster dans Nutrition."
+            return (.food(g), reply, [AIAction(type: .openModule, title: "Nutrition", module: "nutrition")])
+        }
+
+        // 2) Beaucoup de texte → document / justificatif (pôle Admin)
+        let text = await recognizeText(image)
+        if text.count >= 20 {
+            let snippet = String(text.prefix(120)).replacingOccurrences(of: "\n", with: " ")
+            let reply = "📄 J'ai lu du texte sur cette image :\n« \(snippet)… »\nÇa ressemble à un document — tu peux le classer dans Documents / Admin."
+            return (.document(text), reply, [AIAction(type: .openModule, title: "Documents", module: "admin")])
+        }
+
+        // 3) Sinon : description brute + suggestion
+        let top = labels.first?.label.split(separator: ",").first.map(String.init)?.capitalized ?? "quelque chose"
+        let reply = "🔍 J'ai analysé ta photo : \(top). Dis-moi ce que tu veux en faire (l'ajouter quelque part, créer un rappel…)."
+        return (.general(top), reply, [])
+    }
+
+    private static func classify(_ image: UIImage) async -> [(label: String, confidence: Float)] {
+        guard let cg = image.cgImage else { return [] }
+        return await withCheckedContinuation { cont in
+            let req = VNClassifyImageRequest()
+            let handler = VNImageRequestHandler(cgImage: cg, options: [:])
+            DispatchQueue.global(qos: .userInitiated).async {
+                try? handler.perform([req])
+                let obs = (req.results as? [VNClassificationObservation] ?? []).filter { $0.confidence > 0.05 }
+                cont.resume(returning: obs.prefix(15).map { ($0.identifier, $0.confidence) })
+            }
+        }
+    }
+
+    private static func recognizeText(_ image: UIImage) async -> String {
+        guard let cg = image.cgImage else { return "" }
+        return await withCheckedContinuation { cont in
+            let req = VNRecognizeTextRequest()
+            req.recognitionLevel = .fast
+            req.recognitionLanguages = ["fr-FR", "en-US"]
+            let handler = VNImageRequestHandler(cgImage: cg, options: [:])
+            DispatchQueue.global(qos: .userInitiated).async {
+                try? handler.perform([req])
+                let strings = (req.results as? [VNRecognizedTextObservation] ?? [])
+                    .compactMap { $0.topCandidates(1).first?.string }
+                cont.resume(returning: strings.joined(separator: "\n"))
+            }
+        }
+    }
+}
+
 // MARK: - Main View
 
 struct AIAssistantView: View {
+    var prefill: String? = nil
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     @StateObject private var vm = AIAssistantViewModel()
@@ -394,6 +491,7 @@ struct AIAssistantView: View {
     private var accent: Color { (AppTheme(rawValue: appThemeRaw) ?? .classic).accent }
     @FocusState private var inputFocused: Bool
     @State private var showClearConfirm = false
+    @State private var photoItem: PhotosPickerItem?
 
     // Quick suggestions change per time of day
     private var quickSuggestions: [(label: String, message: String, module: String?)] {
@@ -469,6 +567,10 @@ struct AIAssistantView: View {
         .task {
             vm.modelContext = ctx
             vm.loadHistory()
+            if let prefill, vm.inputText.isEmpty {
+                vm.inputText = prefill
+                inputFocused = true
+            }
         }
     }
 
@@ -570,13 +672,13 @@ struct AIAssistantView: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Color(uiColor: .secondarySystemBackground),
-                                        in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .padding(.vertical, 15)
+                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color(uiColor: .separator).opacity(0.4), lineWidth: 1))
+                                .strokeBorder(Theme.hairline, lineWidth: 0.5))
+                            .softElevation()
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PressableButtonStyle())
                 }
             }
             .padding(.horizontal, 16)
@@ -589,26 +691,46 @@ struct AIAssistantView: View {
         VStack(spacing: 0) {
             Divider().opacity(0.4)
             HStack(spacing: 10) {
+                PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(vm.isLoading ? Color.secondary : accent)
+                        .frame(width: 34, height: 34)
+                }
+                .disabled(vm.isLoading)
+                .onChange(of: photoItem) { _, item in
+                    guard let item else { return }
+                    Task {
+                        if let data = try? await item.loadTransferable(type: Data.self),
+                           let ui = UIImage(data: data) {
+                            vm.analyzeImage(ui)
+                        }
+                        photoItem = nil
+                    }
+                }
+
                 TextField("Dis-moi quelque chose…", text: $vm.inputText, axis: .vertical)
                     .font(.system(size: 15))
                     .lineLimit(1...5)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
+                    .padding(.horizontal, 15)
+                    .padding(.vertical, 11)
                     .background(Theme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
                     .focused($inputFocused)
                     .onSubmit { vm.send() }
 
                 Button { vm.send() } label: {
                     ZStack {
                         Circle()
-                            .fill(canSend ? accent : Color.secondary.opacity(0.15))
-                            .frame(width: 36, height: 36)
+                            .fill(canSend ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Color.secondary.opacity(0.15)))
+                            .frame(width: 38, height: 38)
+                            .shadow(color: canSend ? accent.opacity(0.35) : .clear, radius: 6, y: 2)
                         Image(systemName: vm.isLoading ? "ellipsis" : "arrow.up")
-                            .font(.system(size: 14, weight: .bold))
+                            .font(.system(size: 15, weight: .bold))
                             .foregroundStyle(canSend ? .white : .secondary)
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(PressableButtonStyle())
                 .disabled(!canSend)
                 .animation(.spring(duration: 0.2), value: canSend)
             }
@@ -662,9 +784,16 @@ private struct MessageRow: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(
-                    isUser ? accent : Color(uiColor: .secondarySystemBackground),
+                    isUser ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Theme.card),
                     in: RoundedRectangle(cornerRadius: 20, style: .continuous)
                 )
+                .overlay {
+                    if !isUser {
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .strokeBorder(Theme.hairline, lineWidth: 0.5)
+                    }
+                }
+                .softElevation()
 
                 if !isUser { Spacer(minLength: 56) }
             }

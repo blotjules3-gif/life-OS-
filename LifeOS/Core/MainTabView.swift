@@ -44,6 +44,7 @@ struct MainTabView: View {
     ]
     @State private var showChat = false
     @State private var showAIAssistant = false
+    @State private var aiPrefill: String? = nil
 
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
@@ -74,9 +75,10 @@ struct MainTabView: View {
             ChatHistorySheet(messages: chatMessages)
         }
         .fullScreenCover(isPresented: $showAIAssistant) {
-            AIAssistantView()
+            AIAssistantView(prefill: aiPrefill)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenAIChat)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenAIChat)) { note in
+            aiPrefill = note.userInfo?["prefill"] as? String
             showAIAssistant = true
         }
     }
@@ -235,7 +237,7 @@ struct FloatingTabBar: View {
     private static let barBg  = Color(uiColor: .secondarySystemBackground)   // blanc en clair, sombre en dark
     private static let selBg  = Color(uiColor: .systemGray5)
     private static let fieldBg = Color(uiColor: .tertiarySystemFill)
-    private static let barInset: CGFloat = 10   // gauche = droite = bas, identiques
+    private static let barInset: CGFloat = 18   // gauche = droite = bas, identiques (marge flottante)
 
     private let leftTabs:  [AppTab] = [.home, .wakeup]
     private let rightTabs: [AppTab] = [.categories, .profile]
@@ -284,11 +286,11 @@ struct FloatingTabBar: View {
         }
         .frame(height: 60)
         .padding(.horizontal, 10)
-        // iOS 26 : coins concentriques avec le coin de l'écran (style Safari)
-        .background(Self.barBg, in: ConcentricRectangle(corners: .concentric, isUniform: true))
+        // iOS 26 : barre flottante en verre (Liquid Glass), coins concentriques.
+        .background(.regularMaterial, in: ConcentricRectangle(corners: .concentric, isUniform: true))
         .overlay(ConcentricRectangle(corners: .concentric, isUniform: true)
-            .stroke(Color(uiColor: .separator).opacity(0.6), lineWidth: 1))
-        .shadow(color: .black.opacity(0.12), radius: 20, x: 0, y: 6)
+            .stroke(Theme.hairline, lineWidth: 0.5))
+        .softElevation(true)
         .padding(.horizontal, Self.barInset)
         .padding(.bottom, Self.barInset)
         .animation(.spring(duration: 0.32, bounce: 0.2), value: chatMode)
@@ -303,16 +305,17 @@ struct FloatingTabBar: View {
             ZStack {
                 if selected == t {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Self.selBg)
-                        .frame(width: 54, height: 42)
+                        .fill(Theme.volt)
+                        .frame(width: 52, height: 42)
+                        .shadow(color: Theme.volt.opacity(0.45), radius: 8, y: 3)
                         .matchedGeometryEffect(id: "sel", in: ns)
                 }
                 Image(systemName: selected == t ? t.iconFill : t.icon)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(selected == t ? Color.primary : Color(uiColor: .systemGray))
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(selected == t ? Theme.onVolt : Color.primary.opacity(0.55))
                     .animation(.spring(duration: 0.28), value: selected)
             }
-            .frame(width: 60, height: 60)
+            .frame(width: 58, height: 58)
         }
         .buttonStyle(.plain)
     }
@@ -459,23 +462,28 @@ struct MetricRing: View {
     let color: Color
     let icon: String
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
             ZStack {
-                ProgressRing(progress: goal > 0 ? value / goal : 0, lineWidth: 9, tint: color)
-                    .frame(width: 84, height: 84)
+                ProgressRing(progress: goal > 0 ? value / goal : 0, lineWidth: 9, tint: Theme.volt)
+                    .frame(width: 86, height: 86)
                 VStack(spacing: 1) {
-                    Image(systemName: icon).font(.caption).foregroundStyle(color)
-                    Text("\(Int(value))").font(.title3.bold().monospacedDigit())
+                    Image(systemName: icon).font(.caption).foregroundStyle(.primary)
+                    Text("\(Int(value))").font(.title3.weight(.bold).monospacedDigit())
                 }
             }
-            VStack(spacing: 0) {
-                Text(label).font(.subheadline.weight(.medium))
-                Text(goal > 0 ? "/ \(Int(goal)) \(unit)" : "").font(.caption2).foregroundStyle(.secondary)
+            VStack(spacing: 1) {
+                Text(label).font(.system(size: 13, weight: .bold)).textCase(.uppercase).kerning(0.3)
+                Text(goal > 0 ? "/ \(Int(goal)) \(unit)" : "").monoLabel(9).foregroundStyle(.secondary)
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
+        .padding(.vertical, 18)
         .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+                .strokeBorder(Theme.hairline, lineWidth: 0.5)
+        )
+        .softElevation()
     }
 }
 
