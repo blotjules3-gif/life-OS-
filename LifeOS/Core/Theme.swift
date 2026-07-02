@@ -9,7 +9,9 @@ enum Theme {
     static let card = Color(uiColor: .secondarySystemGroupedBackground)
     static let stroke = Color(uiColor: .separator).opacity(0.6)
     static let textPrimary = Color.primary
-    static let textSecondary = Color.secondary
+    // UIColor.secondaryLabel meets ≥3:1 on system backgrounds in both light and dark
+    static let textSecondary = Color(uiColor: .secondaryLabel)
+    static let textTertiary  = Color(uiColor: .tertiaryLabel)
     static let accent = Color.accentColor
 
     static let radius: CGFloat = 16
