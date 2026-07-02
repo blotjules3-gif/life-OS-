@@ -40,6 +40,23 @@ final class AppLock {
         isLocked = true
     }
 
+    /// Active le verrou après une authentification réussie — évite de
+    /// s'enfermer dehors si Face ID n'est pas configuré.
+    @MainActor
+    func enableAfterAuth() async -> Bool {
+        let context = LAContext()
+        do {
+            let ok = try await context.evaluatePolicy(
+                .deviceOwnerAuthentication,
+                localizedReason: "Confirme ton identité pour activer le verrouillage."
+            )
+            if ok { isEnabled = true }
+            return ok
+        } catch {
+            return false
+        }
+    }
+
     @MainActor
     func unlock() async {
         guard isLocked, !isAuthenticating else { return }
