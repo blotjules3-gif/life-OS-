@@ -568,7 +568,7 @@ struct AIAssistantView: View {
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     inputSection
                 }
-            .navigationTitle("Assistant IA")
+            .navigationTitle("Ton coach")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
