@@ -101,19 +101,23 @@ struct OnboardingView: View {
 
     private var stepTransition: AnyTransition {
         .asymmetric(
-            insertion: .move(edge: goingBack ? .leading : .trailing).combined(with: .opacity),
-            removal:   .move(edge: goingBack ? .trailing : .leading).combined(with: .opacity)
+            insertion: .move(edge: goingBack ? .leading : .trailing)
+                .combined(with: .opacity)
+                .animation(.spring(response: 0.38, dampingFraction: 0.88).delay(0.08)),
+            removal: .move(edge: goingBack ? .trailing : .leading)
+                .combined(with: .opacity)
+                .animation(.spring(response: 0.28, dampingFraction: 0.9))
         )
     }
 
     private func advance(to next: Int) {
         goingBack = false
-        withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) { step = next }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) { step = next }
     }
 
     private func goBack() {
         goingBack = true
-        withAnimation(.spring(response: 0.32, dampingFraction: 0.88)) { step -= 1 }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.9)) { step -= 1 }
     }
 
     private func buildShortcuts(from cats: [AppCategory]) -> String {
