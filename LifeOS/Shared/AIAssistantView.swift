@@ -379,11 +379,13 @@ final class AIAssistantViewModel: ObservableObject {
                 let todo = TodoItem(title: title, priority: action.priority ?? 1)
                 ctx.insert(todo)
                 do { try ctx.save() } catch { print("[SwiftData] createTodo failed: \(error)") }
+                showToast("Tâche ajoutée : \(title)", module: "productivity")
             }
         case .scheduleReminder:
             if let body = action.reminderBody {
                 let delay = TimeInterval(action.delaySeconds ?? 3600)
                 scheduleLocalNotification(title: "LifeOS", body: body, delay: delay)
+                showToast("Rappel programmé", module: nil)
             }
         case .createChallenge:
             if let title = action.title, let days = action.durationDays {
@@ -392,6 +394,7 @@ final class AIAssistantViewModel: ObservableObject {
                     body: "\(title) — \(days) jours. Tu peux le faire !",
                     delay: 2
                 )
+                showToast("Défi créé : \(title)", module: nil)
             }
         case .createHabit:
             if let title = action.title {
@@ -399,6 +402,7 @@ final class AIAssistantViewModel: ObservableObject {
                 let habit = Habit(name: title, icon: d.icon, colorHex: d.colorHex, isPending: true, moduleTag: action.module ?? "")
                 ctx.insert(habit)
                 do { try ctx.save() } catch { print("[SwiftData] createHabit failed: \(error)") }
+                showToast("Habitude ajoutée : \(title)", module: action.module)
             }
         case .addModule:
             if let module = action.module {
