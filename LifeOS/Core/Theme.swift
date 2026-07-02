@@ -202,3 +202,39 @@ extension View {
         modifier(CardStyle(padding: padding))
     }
 }
+
+// MARK: - Apparition en cascade (stagger ~70 ms par section)
+
+private struct StaggeredAppear: ViewModifier {
+    let index: Int
+    let appeared: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(appeared ? 1 : 0)
+            .offset(y: appeared || reduceMotion ? 0 : 18)
+            .animation(
+                reduceMotion
+                    ? .easeOut(duration: 0.2)
+                    : .spring(duration: 0.55, bounce: 0.18).delay(Double(index) * 0.07),
+                value: appeared
+            )
+    }
+}
+
+extension View {
+    /// Entrée décalée de `index` × 70 ms — déclenchée par `appeared`.
+    func staggered(_ index: Int, appeared: Bool) -> some View {
+        modifier(StaggeredAppear(index: index, appeared: appeared))
+    }
+
+    /// Fondu + léger scale des cartes à l'entrée/sortie du viewport de scroll.
+    func scrollFade() -> some View {
+        scrollTransition(axis: .vertical) { content, phase in
+            content
+                .opacity(phase.isIdentity ? 1 : 0.55)
+                .scaleEffect(phase.isIdentity ? 1 : 0.965)
+        }
+    }
+}
