@@ -16,6 +16,37 @@ enum Theme {
     static let radiusSmall: CGFloat = 11
     static let pad: CGFloat = 16
 
+    // MARK: - Palette sémantique (remplace les Color(hex:) éparpillés)
+
+    // Catégories de modules
+    static let fitness    = Color(hex: 0xF1746C)   // sport, calories
+    static let nutrition  = Color(hex: 0x4CC38A)   // alimentation, objectifs verts
+    static let hydration  = Color(hex: 0x3CB2E0)   // eau, hydratation
+    static let sleep      = Color(hex: 0x6C7BF1)   // sommeil, repos
+    static let mind       = Color(hex: 0x9B6CF1)   // méditation, mental
+    static let energy     = Color(hex: 0xE0A23C)   // énergie, amber
+    static let finance    = Color(hex: 0x4CC38A)   // finance (vert = croissance)
+    static let invest     = Color(hex: 0x3CB2E0)   // investissement
+    static let career     = Color(hex: 0x8A93A8)   // carrière, neutre
+    static let looks      = Color(hex: 0xE07B3C)   // beauté, skincare
+
+    // Statuts
+    static let success    = Color(hex: 0x4CC38A)   // validé, objectif atteint
+    static let warning    = Color(hex: 0xE0A23C)   // attention, moyen
+    static let danger     = Color(hex: 0xF1746C)   // risque élevé, danger
+    static let tealDark   = Color(hex: 0x008F6C)   // potentiel fort (scores crypto)
+
+    // MARK: - Grille d'espacement 8pt
+    static let space2: CGFloat  = 2
+    static let space4: CGFloat  = 4
+    static let space8: CGFloat  = 8
+    static let space12: CGFloat = 12
+    static let space16: CGFloat = 16  // = pad
+    static let space20: CGFloat = 20
+    static let space24: CGFloat = 24
+    static let space32: CGFloat = 32
+    static let space48: CGFloat = 48
+
     /// Fond neutre système (utilisé par les écrans de détail).
     static var background: some View {
         Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
