@@ -64,8 +64,18 @@ struct LifeOSApp: App {
                         .allowsHitTesting(false)
                         .zIndex(0)
                 }
+
+                if appLock.isLocked {
+                    AppLockScreen()
+                        .transition(.opacity)
+                        .zIndex(10)
+                }
             }
             .animation(.easeInOut(duration: 0.3), value: container != nil)
+            .animation(.easeInOut(duration: 0.25), value: appLock.isLocked)
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .background { appLock.lockIfNeeded() }
+            }
             .preferredColorScheme(appTheme.scheme)
             .tint(appTheme.accent)
             .task { await buildContainer() }
