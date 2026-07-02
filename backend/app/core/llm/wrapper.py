@@ -22,6 +22,17 @@ from app.core.logging import get_logger
 log = get_logger(__name__)
 
 
+def _is_transient(exc: BaseException) -> bool:
+    # Ne rejouer que ce qui peut réussir au 2e essai : réponse malformée,
+    # timeout, erreur réseau, rate limit ou 5xx. Un 400/401 rejoué 3 fois
+    # ne fait que tripler la facture Mistral.
+    if isinstance(exc, (LLMValidationError, asyncio.TimeoutError, httpx.TransportError)):
+        return True
+    if isinstance(exc, SDKError):
+        return exc.status_code == 429 or exc.status_code >= 500
+    return False
+
+
 class LLMWrapper:
     """Thin, safe wrapper around Mistral AI.
 
