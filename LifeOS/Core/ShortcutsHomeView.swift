@@ -357,7 +357,7 @@ struct ShortcutsHomeView: View {
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(Color.accentColor)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Ton assistant IA est en bas")
+                    Text("Ton coach est en bas")
                         .font(.system(size: 15, weight: .semibold))
                     Text("Appuie sur le champ \"Ton assistant…\" pour poser une question, créer une habitude ou naviguer vers un module.")
                         .font(.caption)
