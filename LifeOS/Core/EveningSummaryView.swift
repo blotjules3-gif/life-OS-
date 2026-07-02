@@ -302,7 +302,7 @@ struct EveningSummaryView: View {
     // MARK: Active challenges card
 
     private var activeChallengesCard: some View {
-        let active = challenges.filter { $0.isActive }
+        let active = challenges.filter { $0.is_active }
         guard !active.isEmpty else { return AnyView(EmptyView()) }
         return AnyView(
             VStack(alignment: .leading, spacing: 12) {
@@ -320,7 +320,7 @@ struct EveningSummaryView: View {
                             Text(ch.title)
                                 .font(.system(size: 14, weight: .medium))
                                 .lineLimit(1)
-                            Text("\(ch.daysElapsed) jour\(ch.daysElapsed > 1 ? "s" : "")")
+                            Text("\(ch.days_elapsed) jour\(ch.days_elapsed > 1 ? "s" : "")")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
