@@ -420,6 +420,9 @@ struct MetricRing: View {
     let icon: String
     var delta: Int? = nil
 
+    @State private var appeared = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     private var deltaLabel: String? {
         guard let d = delta, d != 0 else { return nil }
         return d > 0 ? "+\(d)" : "\(d)"
@@ -429,12 +432,19 @@ struct MetricRing: View {
     var body: some View {
         VStack(spacing: 8) {
             ZStack {
-                ProgressRing(progress: goal > 0 ? value / goal : 0, lineWidth: 9, tint: color)
+                ProgressRing(progress: appeared && goal > 0 ? value / goal : 0, lineWidth: 9, tint: color)
                     .frame(width: 84, height: 84)
                 VStack(spacing: 1) {
                     Image(systemName: icon).font(.caption).foregroundStyle(color)
-                    Text("\(Int(value))").font(.title3.bold().monospacedDigit())
+                    Text("\(Int(value))")
+                        .font(.title3.bold().monospacedDigit())
+                        .contentTransition(.numericText(value: value))
+                        .animation(.spring(duration: 0.4), value: value)
                 }
+            }
+            .onAppear {
+                if reduceMotion { appeared = true }
+                else { withAnimation(.spring(duration: 0.8, bounce: 0.12).delay(0.1)) { appeared = true } }
             }
             VStack(spacing: 2) {
                 Text(label).font(.subheadline.weight(.medium))
