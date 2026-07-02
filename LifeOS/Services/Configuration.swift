@@ -56,6 +56,8 @@ enum Configuration {
     }
 
     static var baseURL: URL {
-        URL(string: apiBaseURL)!
+        // apiBaseURL peut venir d'un override UserDefaults saisi à la main :
+        // une chaîne invalide ne doit pas crasher l'app, on retombe sur la prod.
+        URL(string: apiBaseURL) ?? URL(string: "https://lifeos-api-production-91e2.up.railway.app")!
     }
 }
