@@ -226,10 +226,17 @@ class AgentOrchestrator:
 
                 except ToolRejectedError as exc:
                     log.warning("tool_rejected", tool=tool_name, reason=str(exc))
-                    result = {"error": f"Outil refusé : {exc}", "rejected": True}
+                    result = {
+                        "error": f"Outil refusé : {exc}",
+                        "rejected": True,
+                        "action_requise": "Ne renouvelle pas cet appel. Informe l'utilisateur que cette action n'est pas disponible ou propose une alternative.",
+                    }
                 except (ToolExecutionError, Exception) as exc:
                     log.error("tool_execution_failed", tool=tool_name, error=str(exc))
-                    result = {"error": str(exc)}
+                    result = {
+                        "error": str(exc),
+                        "action_requise": f"L'outil {tool_name} a échoué. Essaie une approche différente ou explique à l'utilisateur ce qui ne fonctionne pas.",
+                    }
 
                 messages.append(self._llm.build_tool_result_message(
                     tc.id, tool_name, tool_result_to_json(result),
