@@ -260,7 +260,7 @@ final class AIAssistantViewModel: ObservableObject {
                     case .networkError(let underlying):
                         let urlErr = underlying as? URLError
                         if urlErr?.code == .timedOut {
-                            errorBanner = "L'IA met trop de temps à répondre. Réessaie."
+                            errorBanner = "Ton coach met trop de temps à répondre. Réessaie."
                         } else if urlErr?.code == .notConnectedToInternet || urlErr?.code == .networkConnectionLost {
                             isServerOffline = true
                         } else {
