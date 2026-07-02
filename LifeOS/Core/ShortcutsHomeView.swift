@@ -813,6 +813,7 @@ struct ShortcutsHomeView: View {
                         .frame(width: 24, height: 24)
                         .background(Color.secondary.opacity(0.1), in: Circle())
                 }
+                .accessibilityLabel("Fermer")
                 .buttonStyle(.plain)
             }
             if let s = suggestion {
