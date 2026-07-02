@@ -114,8 +114,8 @@ struct ShortcutsHomeView: View {
 
     init() {
         let todayStart   = Calendar.current.startOfDay(for: Date())
-        let tomorrowStart = Calendar.current.date(byAdding: .day, value: 1, to: todayStart)!
-        let fourteenDaysAgo = Calendar.current.date(byAdding: .day, value: -14, to: Date())!
+        let tomorrowStart = Calendar.current.date(byAdding: .day, value: 1, to: todayStart) ?? todayStart
+        let fourteenDaysAgo = Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date()
         _foods  = Query(filter: #Predicate<FoodEntry>  { $0.date >= todayStart && $0.date < tomorrowStart })
         _waters = Query(filter: #Predicate<WaterEntry> { $0.date >= todayStart && $0.date < tomorrowStart })
         _moods  = Query(filter: #Predicate<MoodEntry>  { $0.date >= fourteenDaysAgo },
