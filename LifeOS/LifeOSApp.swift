@@ -178,17 +178,28 @@ struct LifeOSApp: App {
             migrationFailed = false
             container = mc
         case .failure:
-            // Schéma incompatible (ex. colonnes ajoutées) — on efface le store et on repart propre
+            // Schéma incompatible (ex. colonnes ajoutées) — le store est déplacé
+            // dans un backup horodaté, jamais supprimé : les données restent
+            // récupérables et l'utilisateur est prévenu via storeWasReset.
             let storeURL = config.url
-            let storeURLs: [URL] = [
-                storeURL,
-                URL(fileURLWithPath: storeURL.path + "-shm"),
-                URL(fileURLWithPath: storeURL.path + "-wal")
-            ]
-            storeURLs.forEach { try? FileManager.default.removeItem(at: $0) }
+            let fm = FileManager.default
+            let backupDir = storeURL
+                .deletingLastPathComponent()
+                .appendingPathComponent("LifeOSBackup-\(Int(Date().timeIntervalSince1970))", isDirectory: true)
+            try? fm.createDirectory(at: backupDir, withIntermediateDirectories: true)
+            for suffix in ["", "-shm", "-wal"] {
+                let src = URL(fileURLWithPath: storeURL.path + suffix)
+                guard fm.fileExists(atPath: src.path) else { continue }
+                let dst = backupDir.appendingPathComponent(src.lastPathComponent)
+                if (try? fm.moveItem(at: src, to: dst)) == nil {
+                    // Dernier recours : sans libérer le chemin, l'app ne démarre plus du tout.
+                    try? fm.removeItem(at: src)
+                }
+            }
 
             if let fresh = try? ModelContainer(for: schema, configurations: [config]) {
                 migrationFailed = false
+                storeWasReset = true
                 container = fresh
             } else {
                 migrationFailed = true
