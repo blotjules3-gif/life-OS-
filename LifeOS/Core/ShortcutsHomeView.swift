@@ -130,8 +130,9 @@ struct ShortcutsHomeView: View {
 
     @State private var steps = 0
     @State private var stepsYesterday = 0
-    @State private var kcalYesterday = 0
-    @State private var waterYesterday = 0
+
+    private var kcalYesterday: Int  { foodsYesterday.caloriesToday }
+    private var waterYesterday: Int { watersYesterday.mlToday }
     @State private var editingMood = false
     @State private var animatedHabitIDs: Set<PersistentIdentifier> = []
     @State private var moodDismissed = false
