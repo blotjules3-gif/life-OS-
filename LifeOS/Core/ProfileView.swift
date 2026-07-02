@@ -732,7 +732,7 @@ struct ProfileView: View {
                 Text("Aucun défi actif")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.primary)
-                Text("Crée un défi avec ton assistant IA.")
+                Text("Crée un défi avec ton coach.")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
