@@ -15,6 +15,7 @@ from app.core.exceptions import LifeOSBaseError
 from app.core.logging import configure_logging, get_logger
 from app.core.tools.registry import registry
 from app.database import Base, engine
+import app.models.db  # noqa: F401 — registers all ORM models with Base.metadata
 
 settings = get_settings()
 configure_logging(debug=settings.debug)
