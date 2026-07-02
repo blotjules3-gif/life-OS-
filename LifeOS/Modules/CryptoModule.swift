@@ -89,7 +89,7 @@ struct CryptoAppView: View {
 
     private static let barBg = Color.white
     private static let selBg = Color(white: 0.92)
-    private static let tint  = Color(hex: 0x46C9A8)
+    private static let accentColor = Theme.invest
 
     var body: some View {
         VStack(spacing: 0) {
@@ -137,7 +137,7 @@ struct CryptoAppView: View {
             HStack(spacing: 8) {
                 Image(systemName: "bubble.left")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Self.tint)
+                    .foregroundStyle(Self.accentColor)
 
                 TextField("Question sur le marché…", text: $chatInput)
                     .font(.system(size: 14))
@@ -151,7 +151,7 @@ struct CryptoAppView: View {
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(.white)
                             .frame(width: 26, height: 26)
-                            .background(Self.tint, in: Circle())
+                            .background(Self.accentColor, in: Circle())
                     }
                     .buttonStyle(.plain)
                     .transition(.scale(scale: 0.6).combined(with: .opacity))
@@ -172,7 +172,7 @@ struct CryptoAppView: View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "brain")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Self.tint)
+                .foregroundStyle(Self.accentColor)
                 .frame(width: 20, height: 20)
                 .padding(.top, 1)
 
@@ -192,7 +192,7 @@ struct CryptoAppView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(Self.tint.opacity(0.07))
+        .background(Self.accentColor.opacity(0.07))
         .overlay(alignment: .bottom) { Divider() }
     }
 
@@ -215,11 +215,11 @@ struct CryptoAppView: View {
                         VStack(spacing: 3) {
                             Image(systemName: tab == t ? t.iconFill : t.icon)
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(tab == t ? Self.tint : Color(white: 0.55))
+                                .foregroundStyle(tab == t ? Self.accentColor : Color(white: 0.55))
                                 .animation(.spring(duration: 0.25), value: tab)
                             Text(t.label)
                                 .font(.system(size: 9, weight: tab == t ? .semibold : .regular))
-                                .foregroundStyle(tab == t ? Self.tint : Color(white: 0.55))
+                                .foregroundStyle(tab == t ? Self.accentColor : Color(white: 0.55))
                         }
                     }
                     .frame(maxWidth: .infinity)
