@@ -15,7 +15,7 @@ log = get_logger(__name__)
 # ── Notification templates per module ────────────────────────────────────────
 
 _NOTIF_TEMPLATES: dict[str, list[dict[str, str]]] = {
-    "sport": [
+    "fitness": [
         {"title": "Séance prévue aujourd'hui", "body": "Tu n'as pas encore enregistré de séance. Lance-toi !"},
         {"title": "Bravo pour ta régularité", "body": "Continue sur ta lancée — tu progresses chaque semaine."},
         {"title": "Rappel sport", "body": "Une courte séance vaut mieux que pas de séance."},
