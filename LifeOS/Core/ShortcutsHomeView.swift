@@ -6,6 +6,7 @@ import Charts
 enum ShortcutTool: String, CaseIterable, Identifiable {
     case dashboard, tabata, calories, scan, todo, fasting, water, habits
     case focus, mood, breathing, bedtime, budget, portfolio, flashcards, nap, progressPhotos
+    case bilanSoir
 
     var id: String { rawValue }
 
