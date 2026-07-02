@@ -112,7 +112,19 @@ app.add_middleware(
 
 # ── Metrics ───────────────────────────────────────────────────────────────────
 
-Instrumentator().instrument(app).expose(app, endpoint="/metrics")
+_metrics_key_header = APIKeyHeader(name="X-Metrics-Key", auto_error=False)
+
+
+async def _require_metrics_key(key: str | None = Security(_metrics_key_header)) -> None:
+    if not key or key != settings.internal_api_key:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+Instrumentator().instrument(app).expose(
+    app,
+    endpoint="/metrics",
+    dependencies=[Security(_require_metrics_key)],
+)
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
