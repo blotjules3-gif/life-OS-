@@ -61,9 +61,15 @@ Si la question de notification n'a pas été posée → clé absente → notific
 | Question | Clé | Type |
 |---|---|---|
 | "Tu pratiques le jeûne intermittent ?" | `nutrition_fasting_enabled` | Bool |
+| "À quelle heure commence ta fenêtre alimentaire ?" | `nutrition_fasting_start_hour` | Int |
+| "À quelle heure se termine ta fenêtre alimentaire ?" | `nutrition_fasting_end_hour` | Int |
 | "À quelle heure tu prends ton petit-déjeuner ?" | `nutrition_breakfast_hour` | Int |
 | "À quelle heure tu manges le midi ?" | `nutrition_lunch_hour` | Int |
 | "À quelle heure tu dînes ?" | `nutrition_dinner_hour` | Int |
+| "Tu prends des compléments alimentaires ?" | `nutrition_supplements_enabled` | Bool |
+| "Certains compléments se prennent le matin ?" | `supplement_morning_enabled` | Bool |
+| "Certains compléments se prennent le soir ?" | `supplement_evening_enabled` | Bool |
+| "Certains compléments se prennent à un repas précis ?" | `supplement_meal_linked` | Bool |
 
 ### Questions sur les notifications
 | Question | Clé | Type |
@@ -76,12 +82,18 @@ Si la question de notification n'a pas été posée → clé absente → notific
 | "À quelle heure tu veux ce rappel ?" | `notif_nutrition_dinner_hour` | Int |
 | "Tu veux un bilan calories en fin de journée ?" | `notif_nutrition_review_enabled` | Bool |
 | "À quelle heure tu veux ce bilan ?" | `notif_nutrition_review_hour` | Int |
+| "Tu veux un rappel pour tes compléments du matin ?" | `notif_supplement_morning_enabled` | Bool |
+| "À quelle heure tu veux ce rappel compléments matin ?" | `notif_supplement_morning_hour` | Int |
+| "Tu veux un rappel pour tes compléments du soir ?" | `notif_supplement_evening_enabled` | Bool |
+| "À quelle heure tu veux ce rappel compléments soir ?" | `notif_supplement_evening_hour` | Int |
 
 **Notifications :**
 - `nutrition_breakfast` → `notif_nutrition_breakfast_hour:00` (si enabled, si pas jeûne)
 - `nutrition_lunch` → `notif_nutrition_lunch_hour:00` (si enabled)
 - `nutrition_dinner` → `notif_nutrition_dinner_hour:00` (si enabled)
 - `nutrition_review` → `notif_nutrition_review_hour:00` (si enabled)
+- `supplement_morning` → `notif_supplement_morning_hour:00` (si enabled)
+- `supplement_evening` → `notif_supplement_evening_hour:00` (si enabled)
 
 ---
 
