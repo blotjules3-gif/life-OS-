@@ -70,6 +70,22 @@ final class HealthService {
         return await Int(sumToday(type, unit: .count()))
     }
 
+    /// Total de pas pour hier.
+    func stepsYesterday() async -> Int {
+        guard let type = HKQuantityType.quantityType(forIdentifier: .stepCount) else { return 0 }
+        let cal = Calendar.current
+        let yesterday = cal.date(byAdding: .day, value: -1, to: Date())!
+        let start = cal.startOfDay(for: yesterday)
+        let end = cal.startOfDay(for: Date())
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        return await withCheckedContinuation { cont in
+            let q = HKStatisticsQuery(quantityType: type, quantitySamplePredicate: predicate, options: .cumulativeSum) { _, result, _ in
+                cont.resume(returning: Int(result?.sumQuantity()?.doubleValue(for: .count()) ?? 0))
+            }
+            store.execute(q)
+        }
+    }
+
     func restingHeartRate() async -> Double? {
         guard let type = HKQuantityType.quantityType(forIdentifier: .restingHeartRate) else { return nil }
         return await mostRecent(type, unit: HKUnit.count().unitDivided(by: .minute()))
