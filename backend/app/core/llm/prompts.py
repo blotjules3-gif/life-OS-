@@ -4,7 +4,9 @@ import os
 from pathlib import Path
 from typing import Any
 
-_AI_DIR = Path(__file__).parent.parent.parent.parent.parent / "AI"
+# backend/AI : dans le contexte de build Docker (COPY . . → /app/AI),
+# contrairement à l'ancien emplacement racine repo, absent du conteneur.
+_AI_DIR = Path(__file__).parent.parent.parent.parent / "AI"
 
 
 def _load_ai_file(filename: str) -> str:
