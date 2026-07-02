@@ -313,17 +313,6 @@ struct ShortcutsHomeView: View {
                     steps = await HealthService.shared.cachedStepsToday()
                     stepsYesterday = await HealthService.shared.stepsYesterday()
                 }
-                // Données d'hier pour comparaison
-                let cal = Calendar.current
-                let yesterday = cal.date(byAdding: .day, value: -1, to: Date())!
-                let yStart = cal.startOfDay(for: yesterday)
-                let yEnd   = cal.startOfDay(for: Date())
-                let fd = FetchDescriptor<FoodEntry>(predicate: #Predicate { $0.date >= yStart && $0.date < yEnd })
-                let wd = FetchDescriptor<WaterEntry>(predicate: #Predicate { $0.date >= yStart && $0.date < yEnd })
-                if let ctx = try? ModelContainer(for: FoodEntry.self, WaterEntry.self).mainContext {
-                    kcalYesterday  = (try? ctx.fetch(fd))?.reduce(0) { $0 + $1.calories } ?? 0
-                    waterYesterday = (try? ctx.fetch(wd))?.reduce(0) { $0 + $1.ml } ?? 0
-                }
                 reengageMessage    = EngagementTracker.shared.reengagementMessage
                 reengageSuggestion = EngagementTracker.shared.simplificationSuggestion
                 weeklyModuleSuggestion = WeeklyModuleSuggester.shared.currentSuggestion()
