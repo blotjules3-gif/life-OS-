@@ -64,8 +64,13 @@ struct MainTabView: View {
             if let module = notif.userInfo?["module"] as? String,
                let cat = AppCategory(rawValue: module) {
                 showAIAssistant = false
-                tab = .categories
-                catPath = [cat]
+                // Attendre la fin de l'animation de dismiss du fullScreenCover
+                // avant de modifier la navigation, sinon conflit d'état.
+                let delay: TimeInterval = showAIAssistant ? 0.35 : 0
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    tab = .categories
+                    catPath = [cat]
+                }
             }
         }
     }
