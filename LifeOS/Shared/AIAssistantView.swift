@@ -856,6 +856,7 @@ struct AIAssistantView: View {
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.primary)
                 Spacer()
+                #if DEBUG
                 Button {
                     showServerConfig = true
                 } label: {
@@ -864,6 +865,7 @@ struct AIAssistantView: View {
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
+                #endif
 
                 Button {
                     vm.isServerOffline = false
