@@ -96,8 +96,8 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
         AudioServicesPlayAlertSoundWithCompletion(SystemSoundID(1005)) { [weak self] in
             guard let self, self.ringingActive else { return }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                self.playBeepCycle()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+                self?.playBeepCycle()
             }
         }
     }
