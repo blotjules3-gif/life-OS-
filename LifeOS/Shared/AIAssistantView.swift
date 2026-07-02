@@ -607,6 +607,7 @@ struct AIAssistantView: View {
             } message: {
                 Text(vm.errorBanner ?? "")
             }
+            #if DEBUG
             .sheet(isPresented: $showServerConfig) {
                 ServerConfigView {
                     showServerConfig = false
@@ -614,6 +615,7 @@ struct AIAssistantView: View {
                     vm.loadHistory()
                 }
             }
+            #endif
             .sheet(item: $vm.pendingModuleSetup) { category in
                 ModuleSetupView(module: category)
             }
