@@ -254,7 +254,7 @@ struct CryptoAppView: View {
 
     private func loadData() async {
         do {
-            let data = try await fetchMarket()
+            let data = try await fetchCryptoMarket()
             await MainActor.run { assets = data; loading = false }
         } catch {
             await MainActor.run { loading = false }
@@ -288,13 +288,13 @@ struct CryptoMarketTab: View {
             list = list.filter { $0.symbol.lowercased().contains(q) || $0.name.lowercased().contains(q) }
         }
         if let cat = selectedCat {
-            list = list.filter { getCat($0.id) == cat }
+            list = list.filter { cryptoGetCat($0.id) == cat }
         }
         switch sortBy {
         case .rank:      list = list.sorted { $0.rank < $1.rank }
         case .change:    list = list.sorted { $0.change24h > $1.change24h }
-        case .potential: list = list.sorted { sc($0.id).p > sc($1.id).p }
-        case .risk:      list = list.sorted { sc($0.id).r < sc($1.id).r }
+        case .potential: list = list.sorted { cryptoSc($0.id).p > cryptoSc($1.id).p }
+        case .risk:      list = list.sorted { cryptoSc($0.id).r < cryptoSc($1.id).r }
         }
         return list
     }
@@ -390,7 +390,7 @@ struct CryptoMarketTab: View {
 
 struct CryptoCellRow: View {
     let asset: CryptoAsset
-    private var s: (r: Int, p: Int) { sc(asset.id) }
+    private var s: (r: Int, p: Int) { cryptoSc(asset.id) }
     private var up: Bool { asset.change24h >= 0 }
 
     var body: some View {
@@ -404,17 +404,17 @@ struct CryptoCellRow: View {
                 Text("\(asset.name) · #\(asset.rank)")
                     .font(.caption)
                     .foregroundStyle(Theme.textSecondary)
-                Text(getCat(asset.id))
+                Text(cryptoGetCat(asset.id))
                     .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(getCatColor(asset.id))
+                    .foregroundStyle(cryptoGetCatColor(asset.id))
                     .padding(.horizontal, 6).padding(.vertical, 2)
-                    .background(getCatColor(asset.id).opacity(0.1), in: Capsule())
+                    .background(cryptoGetCatColor(asset.id).opacity(0.1), in: Capsule())
             }
 
             Spacer()
 
             VStack(alignment: .trailing, spacing: 4) {
-                Text(fmtPrice(asset.price))
+                Text(cryptoFmtPrice(asset.price))
                     .font(.system(.subheadline, weight: .bold))
                     .foregroundStyle(Theme.textPrimary)
                     .monospacedDigit()
@@ -424,8 +424,8 @@ struct CryptoCellRow: View {
                     .foregroundStyle(up ? Color(hex: 0x008F6C) : .red)
                     .monospacedDigit()
                 HStack(spacing: 4) {
-                    scoreBadge("R\(s.r)", rC(s.r))
-                    scoreBadge("P\(s.p)", pC(s.p))
+                    scoreBadge("R\(s.r)", cryptoRiskColor(s.r))
+                    scoreBadge("P\(s.p)", cryptoPotColor(s.p))
                 }
             }
         }
@@ -564,12 +564,12 @@ struct CryptoSuiviTab: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Valeur totale").font(.caption).foregroundStyle(.secondary)
-                            Text(fmtCap(totalValue)).font(.title2.bold()).foregroundStyle(Theme.textPrimary)
+                            Text(cryptoFmtCap(totalValue)).font(.title2.bold()).foregroundStyle(Theme.textPrimary)
                         }
                         Spacer()
                         VStack(alignment: .trailing, spacing: 2) {
                             Text("P&L").font(.caption).foregroundStyle(.secondary)
-                            Text(fmtCap(abs(totalPnl)))
+                            Text(cryptoFmtCap(abs(totalPnl)))
                                 .font(.subheadline.bold())
                                 .foregroundStyle(totalPnl >= 0 ? Color(hex: 0x008F6C) : .red)
                         }
@@ -600,12 +600,12 @@ struct CryptoSuiviTab: View {
             cryptoIcon(symbol: a.symbol, size: 36)
             VStack(alignment: .leading, spacing: 2) {
                 Text(a.symbol).font(.subheadline.bold()).foregroundStyle(Theme.textPrimary)
-                Text("\(String(format: "%.4f", pos.quantity)) · achat \(fmtPrice(pos.buyPrice))")
+                Text("\(String(format: "%.4f", pos.quantity)) · achat \(cryptoFmtPrice(pos.buyPrice))")
                     .font(.caption).foregroundStyle(Theme.textSecondary)
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text(fmtCap(currentValue))
+                Text(cryptoFmtCap(currentValue))
                     .font(.subheadline.bold()).foregroundStyle(Theme.textPrimary)
                 Text(String(format: "%+.1f%%", pct))
                     .font(.caption.bold())
@@ -672,10 +672,10 @@ struct AddPositionSheet: View {
                         let currentVal = a.price * qty
                         let cost = bp * qty
                         let pnl = currentVal - cost
-                        LabeledContent("Prix actuel", value: fmtPrice(a.price))
-                        LabeledContent("Valeur actuelle", value: fmtCap(currentVal))
+                        LabeledContent("Prix actuel", value: cryptoFmtPrice(a.price))
+                        LabeledContent("Valeur actuelle", value: cryptoFmtCap(currentVal))
                         LabeledContent("P&L") {
-                            Text(fmtCap(abs(pnl)))
+                            Text(cryptoFmtCap(abs(pnl)))
                                 .foregroundStyle(pnl >= 0 ? Color(hex: 0x008F6C) : .red)
                         }
                     }
@@ -760,7 +760,7 @@ struct CryptoAlertesTab: View {
                     Image(systemName: al.direction == "above" ? "arrow.up" : "arrow.down")
                         .font(.caption.bold())
                         .foregroundStyle(al.direction == "above" ? Color(hex: 0x008F6C) : .red)
-                    Text("\(al.direction == "above" ? "Au-dessus de" : "En dessous de") \(fmtPrice(al.threshold))")
+                    Text("\(al.direction == "above" ? "Au-dessus de" : "En dessous de") \(cryptoFmtPrice(al.threshold))")
                         .font(.caption).foregroundStyle(Theme.textSecondary)
                 }
             }
@@ -772,7 +772,7 @@ struct CryptoAlertesTab: View {
                 }
             } else if let a = asset {
                 VStack(alignment: .trailing, spacing: 1) {
-                    Text(fmtPrice(a.price)).font(.caption.bold()).foregroundStyle(Theme.textPrimary).monospacedDigit()
+                    Text(cryptoFmtPrice(a.price)).font(.caption.bold()).foregroundStyle(Theme.textPrimary).monospacedDigit()
                     Text("actuel").font(.system(size: 9)).foregroundStyle(.secondary)
                 }
             }
@@ -825,7 +825,7 @@ struct AddAlertSheet: View {
                     TextField("Seuil en USD", text: $thresholdStr)
                         .keyboardType(.decimalPad)
                     if let a = assets.first(where: { $0.id == selectedId }) {
-                        LabeledContent("Prix actuel", value: fmtPrice(a.price))
+                        LabeledContent("Prix actuel", value: cryptoFmtPrice(a.price))
                     }
                 }
             }
@@ -1125,7 +1125,7 @@ struct CryptoInfoTab: View {
 struct CryptoDetailSheet: View {
     let asset: CryptoAsset
     @Environment(\.dismiss) private var dismiss
-    private var s: (r: Int, p: Int) { sc(asset.id) }
+    private var s: (r: Int, p: Int) { cryptoSc(asset.id) }
     private var up: Bool { asset.change24h >= 0 }
 
     var body: some View {
@@ -1140,18 +1140,18 @@ struct CryptoDetailSheet: View {
                                 Text(asset.symbol).font(.system(size: 28, weight: .black)).foregroundStyle(Theme.textPrimary)
                                 Text(asset.name).font(.subheadline).foregroundStyle(Theme.textSecondary)
                                 HStack(spacing: 4) {
-                                    Text(getCat(asset.id))
+                                    Text(cryptoGetCat(asset.id))
                                         .font(.system(size: 10, weight: .semibold))
-                                        .foregroundStyle(getCatColor(asset.id))
+                                        .foregroundStyle(cryptoGetCatColor(asset.id))
                                         .padding(.horizontal, 7).padding(.vertical, 3)
-                                        .background(getCatColor(asset.id).opacity(0.1), in: Capsule())
+                                        .background(cryptoGetCatColor(asset.id).opacity(0.1), in: Capsule())
                                     Text("#\(asset.rank)")
                                         .font(.caption2).foregroundStyle(.secondary)
                                 }
                             }
                             Spacer()
                             VStack(alignment: .trailing, spacing: 4) {
-                                Text(fmtPrice(asset.price))
+                                Text(cryptoFmtPrice(asset.price))
                                     .font(.title2.bold()).foregroundStyle(Theme.textPrimary).monospacedDigit()
                                 Label(String(format: "%.2f%%", abs(asset.change24h)),
                                       systemImage: up ? "arrow.up" : "arrow.down")
@@ -1165,8 +1165,8 @@ struct CryptoDetailSheet: View {
                         // Scores
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Analyse").font(.headline).foregroundStyle(Theme.textPrimary)
-                            detailScoreBar("Risque — \(rL(s.r))", value: s.r, color: rC(s.r))
-                            detailScoreBar("Potentiel — \(pL(s.p))", value: s.p, color: pC(s.p))
+                            detailScoreBar("Risque — \(cryptoRiskLabel(s.r))", value: s.r, color: cryptoRiskColor(s.r))
+                            detailScoreBar("Potentiel — \(cryptoPotLabel(s.p))", value: s.p, color: cryptoPotColor(s.p))
                             Text(s.r < 40 ? "Profil conservateur. Actif établi avec bonne liquidité." :
                                  s.r < 70 ? "Profil modéré. Volatilité significative à surveiller." :
                                  "Profil spéculatif. Position à limiter en % de portefeuille.")
@@ -1178,9 +1178,9 @@ struct CryptoDetailSheet: View {
                         // Stats marché
                         VStack(alignment: .leading, spacing: 0) {
                             Text("Marché").font(.headline).foregroundStyle(Theme.textPrimary).padding(.bottom, 8)
-                            detailStatRow("Cap. marché", fmtCap(asset.marketCap))
+                            detailStatRow("Cap. marché", cryptoFmtCap(asset.marketCap))
                             Divider()
-                            detailStatRow("Volume 24h", fmtCap(asset.volume24h))
+                            detailStatRow("Volume 24h", cryptoFmtCap(asset.volume24h))
                             Divider()
                             detailStatRow("Variation 24h", String(format: "%+.2f%%", asset.change24h))
                         }
