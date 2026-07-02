@@ -84,6 +84,41 @@ struct MainTabView: View {
         }
     }
 
+    private func openAIAssistant() {
+        guard !isCheckingAI else { return }
+        isCheckingAI = true
+        Task {
+            let reachable = await AgentAPI.shared.ping()
+            isCheckingAI = false
+            if reachable {
+                showAIAssistant = true
+            } else {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) { showOfflineToast = true }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    withAnimation(.easeOut(duration: 0.28)) { showOfflineToast = false }
+                }
+            }
+        }
+    }
+
+    private var offlineToast: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "wifi.slash")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.white)
+            Text("Assistant indisponible. Vérifie ta connexion.")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 12)
+        .background(Color(UIColor.systemGray).opacity(0.92), in: Capsule())
+        .shadow(color: .black.opacity(0.18), radius: 12, x: 0, y: 4)
+        .padding(.top, 56)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .allowsHitTesting(false)
+    }
+
     @ViewBuilder private var content: some View {
         ZStack {
             HabitWidgetSyncer()
