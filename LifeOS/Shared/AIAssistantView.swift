@@ -567,7 +567,7 @@ final class AIAssistantViewModel: ObservableObject {
         }
     }
 
-    private func appendAssistantMessage(_ text: String, actions: [AIAction]) {
+    private func appendAssistantMessage(_ text: String, actions: [AIAction], animateReveal: Bool = true) {
         let actionsData = try? JSONEncoder().encode(actions)
         let msg = AIMessage(role: "assistant", text: text, actions: actionsData)
         modelContext?.insert(msg)
@@ -576,6 +576,7 @@ final class AIAssistantViewModel: ObservableObject {
             messages.append(DisplayMessage(from: msg))
         }
         Haptics.soft()
+        guard animateReveal else { return }
         revealID = msg.id
         Task { [id = msg.id] in
             try? await Task.sleep(for: .seconds(3))
