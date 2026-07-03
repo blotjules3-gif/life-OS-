@@ -713,36 +713,17 @@ struct ShortcutsHomeView: View {
     // MARK: Section 2 — Objectifs du jour (anneaux + 3 objectifs) — tout est cliquable
     private var goalsSection: some View {
         VStack(alignment: .leading, spacing: 14) {
-<<<<<<< HEAD
-            sectionHeader("Objectifs du jour")
-            LazyVGrid(columns: cols, spacing: 12) {
-                NavigationLink { StepsView() } label: {
-                    MetricRing(value: Double(steps), goal: Double(stepGoal), label: "Pas", unit: "", color: Color(hex: 0xF1746C), icon: "figure.walk",
-                               delta: stepsYesterday > 0 ? steps - stepsYesterday : nil)
-                }.buttonStyle(.plain)
-                NavigationLink { HydrationView() } label: {
-                    MetricRing(value: Double(waterToday), goal: Double(waterGoal), label: "Eau", unit: "ml", color: Color(hex: 0x3CB2E0), icon: "drop.fill",
-                               delta: waterYesterday > 0 ? waterToday - waterYesterday : nil)
-                }.buttonStyle(.plain)
-                NavigationLink { FoodSearchView() } label: {
-                    MetricRing(value: Double(kcalToday), goal: Double(kcalGoal), label: "Calories", unit: "kcal", color: Color(hex: 0x4CC38A), icon: "flame.fill",
-                               delta: kcalYesterday > 0 ? kcalToday - kcalYesterday : nil)
-                }.buttonStyle(.plain)
-                NavigationLink { FastingView() } label: {
-                    MetricRing(value: fastHours, goal: Double(fastTarget), label: "Jeûne", unit: "h", color: Color(hex: 0x9B6CF1), icon: "timer")
-                }.buttonStyle(.plain)
-=======
             sectionHeader("Objectifs du jour", trailing: "Éditer") { editingMetrics = true }
             if !enabledMetrics.isEmpty {
                 LazyVGrid(columns: cols, spacing: 12) {
                     ForEach(enabledMetrics) { m in
                         let v = metricValue(m)
                         NavigationLink { metricDestination(m).floatingBarClearance() } label: {
-                            MetricRing(value: v.value, goal: v.goal, label: m.label, unit: m.unit, color: m.color, icon: m.icon)
+                            MetricRing(value: v.value, goal: v.goal, label: m.label, unit: m.unit, color: m.color, icon: m.icon,
+                                       delta: metricDelta(m))
                         }.buttonStyle(.plain)
                     }
                 }
->>>>>>> origin/pote
             }
             VStack(spacing: 4) {
                 ForEach(Array(objectives.enumerated()), id: \.element.title) { i, o in
