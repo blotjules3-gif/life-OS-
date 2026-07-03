@@ -1236,8 +1236,7 @@ struct ProfileView: View {
                     showExportSheet = true
                 }
             }
-            .background(Theme.card)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .surface()
 
             Button { showOnboardingReset = true } label: {
                 Text("Refaire l'onboarding")
