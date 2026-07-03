@@ -315,9 +315,6 @@ extension View {
 }
 
 // MARK: - Carte sobre (cellule groupée façon iOS)
-=======
-// MARK: - Carte NIKE (plate, bordure franche, coins nets)
->>>>>>> origin/pote
 
 struct CardStyle: ViewModifier {
     @AppStorage("appTheme") private var themeRaw = "classic"
