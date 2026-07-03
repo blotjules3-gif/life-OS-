@@ -98,19 +98,11 @@ struct CycleTrackerView: View {
                                 Button {
                                     showDatePicker = true
                                 } label: {
-<<<<<<< HEAD
                                     Text("Modifier")
                                         .font(.system(size: 12, weight: .semibold))
                                         .foregroundStyle(phaseColor)
                                         .padding(.horizontal, 12).padding(.vertical, 6)
                                         .background(phaseColor.opacity(0.1), in: Capsule())
-=======
-                                    Text("Réinitialiser")
-                                        .monoLabel(11)
-                                        .foregroundStyle(Theme.textSecondary)
-                                        .padding(.horizontal, 12).padding(.vertical, 6)
-                                        .background(Theme.bg2, in: Capsule())
->>>>>>> origin/pote
                                 }
                                 .buttonStyle(.plain)
                             }
