@@ -86,13 +86,12 @@ struct CategoryHubView: View {
     @AppStorage("appTheme")   private var appThemeRaw = "classic"
     @AppStorage("bubbleSize") private var bubbleSizeRaw = "medium"
     @State private var cover: CategoryTool?
-    @State private var showReconfigure = false
+    @State private var showSetup = false
 
     private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .organic }
     private var theme: AppTheme   { AppTheme(rawValue: appThemeRaw) ?? .classic }
     private var tools: [CategoryTool] { category.tools }
     private var sizeFactor: CGFloat { BubbleSize(rawValue: bubbleSizeRaw)?.factor ?? 1.0 }
-    private var hasModuleQuestions: Bool { moduleSetupQuestions[category]?.isEmpty == false }
 
     var body: some View {
         content
@@ -100,39 +99,24 @@ struct CategoryHubView: View {
             .navigationBarTitleDisplayMode(layout == .list ? .large : .inline)
             .fullScreenCover(item: $cover) { $0.dest() }
             .toolbar {
-                if hasModuleQuestions {
+                if CategorySetup.hasFlow(category) {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            showReconfigure = true
-                        } label: {
-                            Image(systemName: "slider.horizontal.3")
-                                .font(.system(size: 15))
-                        }
-                        .foregroundStyle(.secondary)
+                        Button { showSetup = true } label: { Image(systemName: "slider.horizontal.3") }
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
-            .sheet(isPresented: $showReconfigure) {
-                NavigationStack {
-                    OnboardingModuleSetup(modules: [category], skipHabitStep: true) { answers in
-                        for (module, config) in answers {
-                            if let data = try? JSONSerialization.data(withJSONObject: config),
-                               let str = String(data: data, encoding: .utf8) {
-                                UserDefaults.standard.set(str, forKey: "moduleConfig_\(module)")
-                            }
-                        }
-                        showReconfigure = false
-                    }
-                    .navigationTitle("Reconfigurer")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Fermer") { showReconfigure = false }
-                                .foregroundStyle(.secondary)
-                        }
-                    }
+            .fullScreenCover(isPresented: $showSetup) { setupFlow }
+            .onAppear {
+                if CategorySetup.shouldAutoPrompt(category) {
+                    CategorySetup.markPrompted(category)
+                    showSetup = true
                 }
             }
+    }
+
+    @ViewBuilder private var setupFlow: some View {
+        CategoryFlowView(category: category)
     }
 
     @ViewBuilder private var content: some View {
@@ -511,7 +495,7 @@ private let nutritionTools: [CategoryTool] = [
     .init("drop.fill", "Hydratation", "Suivi + rappels", tint: .nutriTint) { HydrationView() },
     .init("pills.fill", "Compléments", "Rappels personnalisés", tint: .nutriTint) { SupplementsView() },
     .init("allergens", "Allergènes & régimes", "Halal, vegan, sans gluten…", tint: .nutriTint) { DietProfileView() },
-    .init("camera.viewfinder", "Calories par photo", "Cal AI — à brancher", tint: .nutriTint) { PhotoCalorieScaffold() },
+    .init("camera.viewfinder", "Calories par photo", "Caméra + estimation on-device", tint: .nutriTint) { PhotoCalorieView() },
     .init("barcode.viewfinder", "Scan code-barres santé", "Yuka + prix + alternative", tint: .nutriTint) { ScanProductView() },
 ]
 
@@ -612,5 +596,6 @@ private let travelTools: [CategoryTool] = [
     .init("map.fill", "Mes voyages", "Itinéraire + budget + valise", tint: .travelTint) { TripsView() },
     .init("coloncurrencysign.circle.fill", "Convertisseur", "12 devises, hors-ligne, repères rapides", tint: .travelTint) { CurrencyConverterView() },
     .init("character.bubble.fill", "Phrases de voyage", "5 langues, prononcées à voix haute", tint: .travelTint) { PhrasebookView() },
+    .init("globe", "Traduction", "12 langues, hors-ligne (Apple Translation)", tint: .travelTint) { TranslationView() },
     .init("airplane.circle.fill", "Suivi des vols", "Statut & retards — à brancher", tint: .travelTint) { FlightScaffold() },
 ]
