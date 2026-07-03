@@ -82,7 +82,6 @@ final class AIAssistantViewModel: ObservableObject {
     @Published var inputText = ""
     @Published var isLoading = false
     @Published var errorBanner: String? = nil
-<<<<<<< HEAD
     @Published var isServerOffline = false
     @Published var pendingModuleSetup: AppCategory? = nil
     @Published var actionToast: ActionToast? = nil
@@ -94,12 +93,11 @@ final class AIAssistantViewModel: ObservableObject {
         let message: String
         let module: String?
     }
-=======
+
     // Flux « Ajouter » guidé (déclenché depuis le chat)
     @Published var showAddFlow = false
     @Published var addFlowKind: AddAnythingSheet.Kind = .task
     @Published var addFlowPrefill = ""
->>>>>>> origin/pote
 
     @AppStorage("aiConversationID") private var conversationID = ""
     @AppStorage("aiConversationDay") private var conversationDay = ""
