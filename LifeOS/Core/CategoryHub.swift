@@ -284,9 +284,19 @@ struct CategoryHubView: View {
             rows[rows.count - 2] -= 1; rows[rows.count - 1] = 2
         }
 
-        let rowH = d + gap * 0.5
+        // Répartition verticale : on centre le cluster et on étale les rangées pour
+        // remplir l'écran (plus de gros vide en bas), sans jamais faire chevaucher.
+        let topPad: CGFloat = 20
+        let barClear: CGFloat = 120                    // dégage la barre d'onglets flottante
+        let usableH = max(availH - topPad - barClear, d)
+        let rowsN = rows.count
+        let rowStep: CGFloat = rowsN > 1
+            ? max(d + gap * 0.5, min((usableH - d) / CGFloat(rowsN - 1), d + 44))
+            : 0
+        let usedH = rowStep * CGFloat(max(rowsN - 1, 0)) + d
+
         var result: [(CGPoint, CGFloat)] = []
-        var y = d / 2 + 18
+        var y = topPad + max(0, (usableH - usedH) / 2) + d / 2
         for c in rows {
             let rowW = CGFloat(c) * d + CGFloat(c - 1) * gap
             let startX = (w - rowW) / 2
@@ -294,9 +304,10 @@ struct CategoryHubView: View {
                 let x = startX + CGFloat(col) * (d + gap) + d / 2
                 result.append((CGPoint(x: x, y: y), d))
             }
-            y += rowH
+            y += rowStep
         }
-        let contentH = max(availH, y + d / 2 + 130)   // +130 = dégage la barre d'onglets flottante
+        let lastCenterY = y - rowStep
+        let contentH = max(availH, lastCenterY + d / 2 + barClear)
         return (result, contentH)
     }
 
