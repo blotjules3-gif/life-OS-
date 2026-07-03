@@ -188,7 +188,6 @@ struct FloatingTabBar: View {
                 ForEach(leftTabs) { t in tabBtn(t) }
             }
 
-<<<<<<< HEAD
             ZStack(alignment: .topLeading) {
                 Button {
                     Haptics.tap()
