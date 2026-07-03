@@ -698,7 +698,7 @@ struct AIAssistantView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
-            .background(Theme.bg)
+            .background(Theme.isGlassActive ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Theme.bg))
         }
     }
 
@@ -753,7 +753,7 @@ private struct MessageRow: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(
-                    isUser ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Theme.card),
+                    isUser ? AnyShapeStyle(accent.gradient) : Theme.cardFill,
                     in: RoundedRectangle(cornerRadius: 20, style: .continuous)
                 )
                 .overlay {
