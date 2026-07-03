@@ -121,6 +121,56 @@ async def test_orchestrator_raises_on_max_iterations():
 
 
 @pytest.mark.asyncio
+async def test_orchestrator_hard_budget_closes_turn():
+    orchestrator = AgentOrchestrator(FakeSettings())
+    orchestrator._hard_budget = 0.0  # dépassé dès la première itération
+
+    with patch.object(orchestrator._llm, "chat", new_callable=AsyncMock) as mock_chat:
+        result = await orchestrator.run(
+            user_message="test",
+            conversation_history=[],
+            module_type=None,
+            module_config={},
+            user_id=uuid.uuid4(),
+            user_name=None,
+            user_gender=None,
+            conversation_id=uuid.uuid4(),
+            session=AsyncMock(),
+        )
+
+    mock_chat.assert_not_called()
+    assert "trop de temps" in result.reply
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_soft_budget_forces_text_only():
+    orchestrator = AgentOrchestrator(FakeSettings())
+    orchestrator._soft_budget = 0.0  # retire les tools dès la première itération
+
+    seen_tools = []
+
+    async def fake_chat(messages, tools):
+        seen_tools.append(tools)
+        return "Réponse finale.", []
+
+    with patch.object(orchestrator._llm, "chat", new_callable=AsyncMock, side_effect=fake_chat):
+        result = await orchestrator.run(
+            user_message="test",
+            conversation_history=[],
+            module_type="sport",
+            module_config={},
+            user_id=uuid.uuid4(),
+            user_name="Jules",
+            user_gender=None,
+            conversation_id=uuid.uuid4(),
+            session=AsyncMock(),
+        )
+
+    assert seen_tools == [None]
+    assert result.reply == "Réponse finale."
+
+
+@pytest.mark.asyncio
 async def test_finance_tool_rejected_with_asset_arg():
     from app.core.tools.executor import _apply_safety_guardrails
     from app.core.exceptions import ToolRejectedError
