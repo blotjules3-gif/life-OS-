@@ -60,7 +60,7 @@ struct MainTabView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             content
-                .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 104) }
+                .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 118) }
             FloatingTabBar(
                 selected: $tab,
                 chatInput: $chatInput,

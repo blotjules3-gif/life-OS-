@@ -97,7 +97,8 @@ struct CategoryHubView: View {
     @State private var cover: CategoryTool?
     @State private var showSetup = false
 
-    private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .icons }
+    // Les sous-catégories restent TOUJOURS en bulles libres (choix verrouillé).
+    private var layout: CatLayout { .organic }
     private var theme: AppTheme   { AppTheme(rawValue: appThemeRaw) ?? .classic }
     private var tools: [CategoryTool] { category.tools }
     // Petite / Moyenne / Grande — partagé avec la grille de catégories.
@@ -109,15 +110,6 @@ struct CategoryHubView: View {
             .navigationBarTitleDisplayMode(layout == .list ? .large : .inline)
             .fullScreenCover(item: $cover) { $0.dest() }
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        Picker("Affichage", selection: $layoutRaw) {
-                            ForEach(CatLayout.allCases, id: \.rawValue) { l in
-                                Label(l.label, systemImage: l.symbol).tag(l.rawValue)
-                            }
-                        }
-                    } label: { Image(systemName: layout.symbol) }
-                }
                 if CategorySetup.hasFlow(category) {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button { showSetup = true } label: { Image(systemName: "slider.horizontal.3") }

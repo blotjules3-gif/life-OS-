@@ -270,6 +270,21 @@ struct DailyScoreDetailSheet: View {
     let metrics: [DayMetric]
     let score: Int
 
+    @State private var addKind: AddAnythingSheet.Kind?
+
+    /// Quel ajout ouvrir quand on touche un objectif (calories/protéines → aliment, etc.).
+    static func kind(for label: String) -> AddAnythingSheet.Kind? {
+        switch label {
+        case "Calories", "Protéines": return .food
+        case "Eau":       return .water
+        case "Activité":  return .workout
+        case "Habitudes": return .habit
+        case "Tâches":    return .task
+        case "Humeur":    return .mood
+        default:          return nil
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -280,8 +295,18 @@ struct DailyScoreDetailSheet: View {
                         .padding(.top, 8)
                     if metrics.isEmpty {
                         Text("Aucun objectif pour ce jour.").font(.subheadline).foregroundStyle(.secondary).padding(.top, 40)
+                    } else {
+                        Text("Touche un objectif pour l'alimenter")
+                            .font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary)
                     }
-                    ForEach(metrics) { m in metricRow(m) }
+                    ForEach(metrics) { m in
+                        if let k = Self.kind(for: m.label) {
+                            Button { Haptics.tap(); addKind = k } label: { metricRow(m, tappable: true) }
+                                .buttonStyle(PressableButtonStyle())
+                        } else {
+                            metricRow(m, tappable: false)
+                        }
+                    }
                 }
                 .padding(16)
             }
@@ -289,10 +314,11 @@ struct DailyScoreDetailSheet: View {
             .navigationTitle(date.formatted(.dateTime.weekday(.wide).day().month()))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("OK") { dismiss() } } }
+            .sheet(item: $addKind) { k in AddAnythingSheet(initialKind: k) }
         }
     }
 
-    private func metricRow(_ m: DayMetric) -> some View {
+    private func metricRow(_ m: DayMetric, tappable: Bool) -> some View {
         VStack(spacing: 8) {
             HStack(spacing: 10) {
                 Image(systemName: m.icon).font(.system(size: 14, weight: .bold))
@@ -301,7 +327,11 @@ struct DailyScoreDetailSheet: View {
                 Spacer()
                 Text(m.value).font(.system(size: 13, weight: .semibold, design: .monospaced))
                     .foregroundStyle(m.fraction >= 1 ? Theme.volt : Theme.textSecondary)
-                if m.fraction >= 1 { Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.volt).font(.system(size: 14)) }
+                if m.fraction >= 1 {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.volt).font(.system(size: 14))
+                } else if tappable {
+                    Image(systemName: "plus.circle.fill").foregroundStyle(Theme.volt).font(.system(size: 16))
+                }
             }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
