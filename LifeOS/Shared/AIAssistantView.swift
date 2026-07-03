@@ -1108,6 +1108,30 @@ private struct ThinkingIndicator: View {
     }
 }
 
+// MARK: - Typewriter reveal (réponses fraîches uniquement)
+
+private struct TypewriterText: View {
+    let text: String
+    @State private var displayed = ""
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Text(displayed)
+            .animation(.easeOut(duration: 0.12), value: displayed)
+            .task {
+                guard !reduceMotion else { displayed = text; return }
+                let words = text.split(separator: " ", omittingEmptySubsequences: false).map(String.init)
+                // Durée totale plafonnée à ~1,2 s quelle que soit la longueur.
+                let delay = min(0.05, 1.2 / Double(max(1, words.count)))
+                for word in words {
+                    displayed = displayed.isEmpty ? word : displayed + " " + word
+                    try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                }
+                displayed = text
+            }
+    }
+}
+
 // MARK: - PressScaleButtonStyle
 
 private struct PressScaleButtonStyle: ButtonStyle {
