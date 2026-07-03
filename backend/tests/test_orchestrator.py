@@ -17,6 +17,8 @@ class FakeSettings:
     llm_max_agent_iterations = 3
     llm_temperature = 0.7
     llm_max_completion_tokens = 1024
+    agent_soft_budget_seconds = 50.0
+    agent_hard_budget_seconds = 80.0
 
 
 @pytest.mark.asyncio
