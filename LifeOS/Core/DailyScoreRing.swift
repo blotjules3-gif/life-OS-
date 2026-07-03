@@ -1,12 +1,85 @@
 import SwiftUI
 import SwiftData
 
-// Anneau unique « Score du jour » sur l'accueil : mélange TOUS les objectifs du jour
-// (calories, protéines, eau, activité/sport, habitudes, tâches). Le score central = moyenne
-// des objectifs pertinents ; la roue se remplit à mesure qu'on accomplit les choses.
-struct DailyScoreRing: View {
-    @Environment(\.modelContext) private var ctx
+// MARK: - Métrique d'un objectif du jour
 
+struct DayMetric: Identifiable {
+    let id = UUID()
+    let label: String
+    let icon: String
+    let value: String
+    let fraction: Double   // 0…1
+    let color: Color
+}
+
+// MARK: - Moteur : calcule les objectifs d'un jour donné (aujourd'hui OU passé)
+
+enum DailyScoreEngine {
+    static func metrics(for day: Date,
+                        foods: [FoodEntry], waters: [WaterEntry], habits: [Habit],
+                        steps: [StepEntry], todos: [TodoItem], workouts: [WorkoutSet],
+                        moods: [MoodEntry], dreams: [DreamEntry],
+                        kcalGoal: Int, proteinGoal: Int, waterGoal: Int, stepGoal: Int) -> [DayMetric] {
+        let cal = Calendar.current
+        func here(_ d: Date) -> Bool { cal.isDate(d, inSameDayAs: day) }
+        if cal.startOfDay(for: day) > cal.startOfDay(for: .now) { return [] }  // futur
+
+        var out: [DayMetric] = []
+        let dayFoods = foods.filter { here($0.date) }
+
+        if kcalGoal > 0 {
+            let k = dayFoods.reduce(0) { $0 + $1.calories }
+            out.append(.init(label: "Calories", icon: "flame.fill", value: "\(k)/\(kcalGoal)",
+                             fraction: min(1, Double(k) / Double(kcalGoal)), color: Color(hex: 0xF1746C)))
+        }
+        if proteinGoal > 0 {
+            let p = dayFoods.reduce(0.0) { $0 + $1.protein }
+            out.append(.init(label: "Protéines", icon: "fork.knife", value: "\(Int(p))/\(proteinGoal) g",
+                             fraction: min(1, p / Double(proteinGoal)), color: Color(hex: 0xE0A23C)))
+        }
+        if waterGoal > 0 {
+            let w = waters.filter { here($0.date) }.reduce(0) { $0 + $1.amountML }
+            out.append(.init(label: "Eau", icon: "drop.fill", value: "\(w)/\(waterGoal) ml",
+                             fraction: min(1, Double(w) / Double(waterGoal)), color: Color(hex: 0x3CB2E0)))
+        }
+        let sc = steps.filter { here($0.day) }.reduce(0) { $0 + $1.steps }
+        let didW = workouts.contains { here($0.date) }
+        let af = max(min(1, Double(sc) / Double(max(1, stepGoal))), didW ? 1 : 0)
+        out.append(.init(label: "Activité", icon: "figure.walk",
+                         value: didW ? "Séance ✓" : "\(sc)/\(stepGoal) pas", fraction: af, color: Color(hex: 0x4CD07A)))
+
+        if !habits.isEmpty {
+            let d = habits.filter { h in h.completions.contains { here($0.date) } }.count
+            out.append(.init(label: "Habitudes", icon: "checkmark.seal.fill", value: "\(d)/\(habits.count)",
+                             fraction: Double(d) / Double(habits.count), color: Color(hex: 0x9B6CF1)))
+        }
+        let due = todos.filter { if let dd = $0.due { return here(dd) } else { return false } }
+        if !due.isEmpty {
+            let d = due.filter { $0.done }.count
+            out.append(.init(label: "Tâches", icon: "checklist", value: "\(d)/\(due.count)",
+                             fraction: Double(d) / Double(due.count), color: Color(hex: 0x5B8DEF)))
+        }
+        if let m = moods.first(where: { here($0.date) }) {
+            out.append(.init(label: "Humeur", icon: "face.smiling", value: "\(m.score)/5",
+                             fraction: Double(m.score) / 5, color: Color(hex: 0xEC6FB0)))
+        }
+        if let s = dreams.first(where: { here($0.date) }) {
+            out.append(.init(label: "Sommeil", icon: "moon.zzz.fill", value: "\(s.mood)/5",
+                             fraction: Double(s.mood) / 5, color: Color(hex: 0x7C93C8)))
+        }
+        return out
+    }
+
+    static func score(_ m: [DayMetric]) -> Int {
+        guard !m.isEmpty else { return 0 }
+        return Int((m.reduce(0) { $0 + $1.fraction } / Double(m.count) * 100).rounded())
+    }
+}
+
+// MARK: - Hero : orbe central + bande de la semaine
+
+struct DailyScoreRing: View {
+    @Environment(\.colorScheme) private var scheme
     @AppStorage("kcalGoal") private var kcalGoal = 2200
     @AppStorage("proteinGoal") private var proteinGoal = 0
     @AppStorage("waterGoal") private var waterGoal = 2500
@@ -18,110 +91,197 @@ struct DailyScoreRing: View {
     @Query private var steps: [StepEntry]
     @Query private var todos: [TodoItem]
     @Query private var workouts: [WorkoutSet]
+    @Query private var moods: [MoodEntry]
+    @Query private var dreams: [DreamEntry]
 
-    private struct Metric: Identifiable {
-        let id = UUID(); let label: String; let icon: String
-        let value: String; let fraction: Double; let color: Color
+    @State private var selected = Calendar.current.startOfDay(for: .now)
+    @State private var showDetail = false
+
+    private let dayLetters = ["L", "M", "M", "J", "V", "S", "D"]
+
+    private var weekDays: [Date] {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: .now)
+        let wd = cal.component(.weekday, from: today)      // 1=dim … 7=sam
+        let fromMonday = (wd + 5) % 7
+        let monday = cal.date(byAdding: .day, value: -fromMonday, to: today)!
+        return (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: monday) }
     }
 
-    private var isToday: (Date) -> Bool { Calendar.current.isDateInToday }
+    private func metrics(_ day: Date) -> [DayMetric] {
+        DailyScoreEngine.metrics(for: day, foods: foods, waters: waters, habits: habits,
+                                 steps: steps, todos: todos, workouts: workouts, moods: moods, dreams: dreams,
+                                 kcalGoal: kcalGoal, proteinGoal: proteinGoal, waterGoal: waterGoal, stepGoal: stepGoal)
+    }
+    private func score(_ day: Date) -> Int { DailyScoreEngine.score(metrics(day)) }
 
-    private var metrics: [Metric] {
-        var out: [Metric] = []
-
-        // Calories
-        let kcal = foods.filter { isToday($0.date) }.reduce(0) { $0 + $1.calories }
-        if kcalGoal > 0 {
-            out.append(.init(label: "Calories", icon: "flame.fill", value: "\(kcal)/\(kcalGoal)",
-                             fraction: min(1, Double(kcal) / Double(kcalGoal)), color: Color(hex: 0xF1746C)))
-        }
-        // Protéines (si objectif défini)
-        if proteinGoal > 0 {
-            let prot = foods.filter { isToday($0.date) }.reduce(0.0) { $0 + $1.protein }
-            out.append(.init(label: "Protéines", icon: "fork.knife", value: "\(Int(prot))/\(proteinGoal) g",
-                             fraction: min(1, prot / Double(proteinGoal)), color: Color(hex: 0xE0A23C)))
-        }
-        // Eau
-        let water = waters.filter { isToday($0.date) }.reduce(0) { $0 + $1.amountML }
-        out.append(.init(label: "Eau", icon: "drop.fill", value: "\(water)/\(waterGoal) ml",
-                         fraction: min(1, Double(water) / Double(max(1, waterGoal))), color: Color(hex: 0x3CB2E0)))
-        // Activité (pas + séance du jour compte comme bonus)
-        let stepCount = steps.filter { isToday($0.day) }.reduce(0) { $0 + $1.steps }
-        let didWorkout = workouts.contains { isToday($0.date) }
-        let actFrac = max(min(1, Double(stepCount) / Double(max(1, stepGoal))), didWorkout ? 1 : 0)
-        out.append(.init(label: "Activité", icon: "figure.walk",
-                         value: didWorkout ? "Séance ✓" : "\(stepCount)/\(stepGoal) pas",
-                         fraction: actFrac, color: Color(hex: 0x4CD07A)))
-        // Habitudes
-        if !habits.isEmpty {
-            let done = habits.filter { h in h.completions.contains { isToday($0.date) } }.count
-            out.append(.init(label: "Habitudes", icon: "checkmark.seal.fill", value: "\(done)/\(habits.count)",
-                             fraction: Double(done) / Double(habits.count), color: Color(hex: 0x9B6CF1)))
-        }
-        // Tâches du jour (échéance aujourd'hui)
-        let dueToday = todos.filter { if let d = $0.due { return isToday(d) } else { return false } }
-        if !dueToday.isEmpty {
-            let done = dueToday.filter { $0.done }.count
-            out.append(.init(label: "Tâches", icon: "checklist", value: "\(done)/\(dueToday.count)",
-                             fraction: Double(done) / Double(dueToday.count), color: Color(hex: 0x5B8DEF)))
-        }
-        return out
+    private func hasData(_ day: Date) -> Bool {
+        let cal = Calendar.current
+        func here(_ d: Date) -> Bool { cal.isDate(d, inSameDayAs: day) }
+        return foods.contains { here($0.date) } || waters.contains { here($0.date) }
+            || workouts.contains { here($0.date) } || moods.contains { here($0.date) }
+            || dreams.contains { here($0.date) }
+            || habits.contains { h in h.completions.contains { here($0.date) } }
+            || todos.contains { if let d = $0.due { return here(d) && $0.done } else { return false } }
     }
 
-    private var score: Int {
-        let m = metrics
-        guard !m.isEmpty else { return 0 }
-        return Int((m.reduce(0) { $0 + $1.fraction } / Double(m.count) * 100).rounded())
-    }
+    private var isToday: Bool { Calendar.current.isDateInToday(selected) }
 
     var body: some View {
-        let m = metrics
-        let frac = Double(score) / 100
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Objectifs du jour")
-                .font(.system(size: 20, weight: .black)).textCase(.uppercase).kerning(-0.3)
-                .foregroundStyle(Theme.textPrimary)
-
-            HStack(spacing: 20) {
-                ZStack {
-                    Circle().stroke(Color.primary.opacity(0.10), lineWidth: 14)
-                    Circle()
-                        .trim(from: 0, to: max(0.001, frac))
-                        .stroke(Theme.volt, style: StrokeStyle(lineWidth: 14, lineCap: .round))
-                        .rotationEffect(.degrees(-90))
-                        .animation(.spring(response: 0.7, dampingFraction: 0.8), value: frac)
-                    VStack(spacing: 0) {
-                        Text("\(score)").font(.system(size: 34, weight: .black)).monospacedDigit()
-                            .foregroundStyle(Theme.textPrimary)
-                        Text("%").font(.system(size: 12, weight: .bold)).foregroundStyle(Theme.textSecondary)
-                    }
-                }
-                .frame(width: 116, height: 116)
-
-                VStack(alignment: .leading, spacing: 7) {
-                    ForEach(m) { metric in legendRow(metric) }
-                    if m.isEmpty {
-                        Text("Renseigne tes objectifs pour voir ton score.")
-                            .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
+        VStack(spacing: 18) {
+            orb
+            weekStrip
         }
-        .card(padding: 16, elevated: true)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 6)
+        .sheet(isPresented: $showDetail) {
+            DailyScoreDetailSheet(date: selected, metrics: metrics(selected), score: score(selected))
+                .presentationDetents([.medium, .large])
+        }
     }
 
-    private func legendRow(_ m: Metric) -> some View {
+    // Orbe central tappable
+    private var orb: some View {
+        let s = score(selected)
+        let frac = Double(s) / 100
+        return Button { Haptics.tap(); showDetail = true } label: {
+            ZStack {
+                // sphère
+                Circle()
+                    .fill(RadialGradient(colors: sphereColors, center: .init(x: 0.4, y: 0.35),
+                                         startRadius: 6, endRadius: 190))
+                    .overlay(Circle().strokeBorder(Color.white.opacity(scheme == .dark ? 0.06 : 0.5), lineWidth: 1))
+                    .shadow(color: .black.opacity(0.18), radius: 22, y: 12)
+                // anneau de progression
+                Circle().stroke(Color.primary.opacity(0.08), lineWidth: 9)
+                    .padding(10)
+                Circle().trim(from: 0, to: max(0.001, frac))
+                    .stroke(Theme.volt, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .padding(10)
+                    .animation(.spring(response: 0.7, dampingFraction: 0.85), value: frac)
+                // centre
+                VStack(spacing: 2) {
+                    Text(isToday ? "SCORE DU JOUR" : shortDate(selected).uppercased())
+                        .font(.system(size: 10, weight: .bold, design: .monospaced)).kerning(1.4)
+                        .foregroundStyle(Theme.textSecondary)
+                    HStack(alignment: .lastTextBaseline, spacing: 1) {
+                        Text("\(s)").font(.system(size: 62, weight: .black)).monospacedDigit()
+                        Text("%").font(.system(size: 22, weight: .black)).foregroundStyle(Theme.textSecondary)
+                    }
+                    .foregroundStyle(Theme.textPrimary)
+                    Text("\(metrics(selected).filter { $0.fraction >= 1 }.count)/\(metrics(selected).count) objectifs")
+                        .font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.textSecondary)
+                }
+            }
+            .frame(width: 240, height: 240)
+        }
+        .buttonStyle(PressableButtonStyle())
+    }
+
+    private var sphereColors: [Color] {
+        scheme == .dark
+            ? [Color(hex: 0x2C2C33), Color(hex: 0x161619)]
+            : [Color.white, Color(hex: 0xE9E9EE)]
+    }
+
+    // Bande des 7 jours de la semaine
+    private var weekStrip: some View {
         HStack(spacing: 8) {
-            Image(systemName: m.icon).font(.system(size: 11, weight: .bold))
-                .foregroundStyle(m.color).frame(width: 16)
-            Text(m.label).font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.textPrimary)
-            Spacer(minLength: 4)
-            Text(m.value).font(.system(size: 11, weight: .medium, design: .monospaced))
-                .foregroundStyle(m.fraction >= 1 ? Theme.volt : Theme.textSecondary)
-            if m.fraction >= 1 {
-                Image(systemName: "checkmark").font(.system(size: 9, weight: .black)).foregroundStyle(Theme.volt)
+            ForEach(Array(weekDays.enumerated()), id: \.offset) { idx, day in
+                dayBubble(day, letter: dayLetters[idx])
             }
         }
+        .padding(.horizontal, 4)
+    }
+
+    private func dayBubble(_ day: Date, letter: String) -> some View {
+        let cal = Calendar.current
+        let future = cal.startOfDay(for: day) > cal.startOfDay(for: .now)
+        let isSel = cal.isDate(day, inSameDayAs: selected)
+        let today = cal.isDateInToday(day)
+        let m = metrics(day)
+        let sc = DailyScoreEngine.score(m)
+        let showScore = !future && (today || hasData(day))   // pas de « 0 » pour les jours non suivis
+        return VStack(spacing: 6) {
+            Button {
+                Haptics.tap(); withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { selected = day }
+            } label: {
+                ZStack {
+                    Circle().fill(isSel ? AnyShapeStyle(Theme.volt)
+                                        : AnyShapeStyle(future ? AnyShapeStyle(Color.primary.opacity(0.05)) : Theme.cardFill))
+                        .overlay(Circle().strokeBorder(today && !isSel ? Theme.volt : Theme.hairline,
+                                                       lineWidth: today && !isSel ? 1.5 : 0.5))
+                    if showScore {
+                        Text("\(sc)").font(.system(size: 13, weight: .black)).monospacedDigit()
+                            .foregroundStyle(isSel ? Theme.onVolt : Theme.textPrimary)
+                    } else {
+                        Image(systemName: "circle.dashed").font(.system(size: 12)).foregroundStyle(Theme.textSecondary.opacity(0.5))
+                    }
+                }
+                .frame(width: 42, height: 42)
+            }
+            .buttonStyle(.plain)
+            Text(letter).font(.system(size: 11, weight: .bold))
+                .foregroundStyle(isSel ? Theme.textPrimary : Theme.textSecondary)
+        }
+    }
+
+    private func shortDate(_ d: Date) -> String {
+        d.formatted(.dateTime.weekday(.abbreviated).day())
+    }
+}
+
+// MARK: - Détail (au tap sur l'orbe) : tous les objectifs du jour
+
+struct DailyScoreDetailSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let date: Date
+    let metrics: [DayMetric]
+    let score: Int
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 14) {
+                    Text("\(score)%")
+                        .font(.system(size: 54, weight: .black)).monospacedDigit()
+                        .foregroundStyle(Theme.textPrimary)
+                        .padding(.top, 8)
+                    if metrics.isEmpty {
+                        Text("Aucun objectif pour ce jour.").font(.subheadline).foregroundStyle(.secondary).padding(.top, 40)
+                    }
+                    ForEach(metrics) { m in metricRow(m) }
+                }
+                .padding(16)
+            }
+            .background(Theme.screenBG)
+            .navigationTitle(date.formatted(.dateTime.weekday(.wide).day().month()))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("OK") { dismiss() } } }
+        }
+    }
+
+    private func metricRow(_ m: DayMetric) -> some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 10) {
+                Image(systemName: m.icon).font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(m.color).frame(width: 22)
+                Text(m.label).font(.system(size: 15, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                Spacer()
+                Text(m.value).font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(m.fraction >= 1 ? Theme.volt : Theme.textSecondary)
+                if m.fraction >= 1 { Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.volt).font(.system(size: 14)) }
+            }
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.primary.opacity(0.08)).frame(height: 8)
+                    Capsule().fill(m.fraction >= 1 ? Theme.volt : m.color)
+                        .frame(width: max(8, geo.size.width * m.fraction), height: 8)
+                }
+            }
+            .frame(height: 8)
+        }
+        .card(padding: 14)
     }
 }
