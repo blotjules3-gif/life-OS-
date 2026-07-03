@@ -1038,6 +1038,24 @@ struct AIAssistantView: View {
             }
             .padding(.horizontal, 16)
 
+            // Bouton « Ajouter » — flux guidé (tâche, complément, course, aliment, habitude, note + rappel)
+            Button {
+                Haptics.tap()
+                vm.addFlowKind = .task; vm.addFlowPrefill = ""; vm.showAddFlow = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus.circle.fill").font(.system(size: 17, weight: .bold))
+                    Text("Ajouter quelque chose").font(.system(size: 15, weight: .bold))
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold)).opacity(0.6)
+                }
+                .foregroundStyle(Theme.onVolt)
+                .padding(.horizontal, 16).padding(.vertical, 14)
+                .background(Theme.volt, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .buttonStyle(PressScaleButtonStyle())
+            .padding(.horizontal, 16)
+
             // Grille 2×2
             let cols = Array(quickSuggestions.prefix(4))
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
