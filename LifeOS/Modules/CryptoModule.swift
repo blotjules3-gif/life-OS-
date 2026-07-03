@@ -89,11 +89,7 @@ struct CryptoAppView: View {
 
     private static let barBg = Color.white
     private static let selBg = Color(white: 0.92)
-<<<<<<< HEAD
     private static let accentColor = Theme.invest
-=======
-    private static let tint  = Theme.textPrimary
->>>>>>> origin/pote
 
     var body: some View {
         VStack(spacing: 0) {
