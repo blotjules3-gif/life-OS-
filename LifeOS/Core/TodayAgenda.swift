@@ -112,12 +112,17 @@ struct TodayAgendaSection: View {
                              category: .fitness, sortKey: 7 * 60))
         }
 
-        // 💊 Compléments du jour (chacun à son heure)
-        for s in supplements.filter({ $0.active }).sorted(by: { $0.hour * 60 + $0.minute < $1.hour * 60 + $1.minute }) {
-            out.append(.init(icon: "pills.fill",
-                             title: "Complément : \(s.name)",
-                             detail: hm(s.hour, s.minute),
-                             category: .nutrition, sortKey: s.hour * 60 + s.minute))
+        // 💊 Compléments du jour — REGROUPÉS par heure (Whey + Créatine à 08:00 = 1 seule ligne)
+        let activeSupps = supplements.filter { $0.active }
+        let byTime = Dictionary(grouping: activeSupps) { $0.hour * 60 + $0.minute }
+        for (key, group) in byTime.sorted(by: { $0.key < $1.key }) {
+            let names = group.map { $0.name }.filter { !$0.isEmpty }
+            guard !names.isEmpty else { continue }
+            let title = names.count == 1 ? "Complément : \(names[0])"
+                                         : "Compléments : \(names.joined(separator: ", "))"
+            out.append(.init(icon: "pills.fill", title: title,
+                             detail: hm(key / 60, key % 60),
+                             category: .nutrition, sortKey: key))
         }
 
         // 🔔 Rappels perso (shampoing, soins, routines…)
