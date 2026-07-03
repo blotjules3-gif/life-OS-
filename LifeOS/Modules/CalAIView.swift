@@ -47,7 +47,7 @@ struct CalAIView: View {
             Button { showAdd = true } label: { Image(systemName: "plus.circle.fill").font(.title2) }
         } }
         .sheet(isPresented: $showAdd) { FoodEditor() }
-<<<<<<< HEAD
+        .sheet(isPresented: $showScan) { BarcodeAddSheet(defaultMeal: currentMeal) }
         .task { syncNutritionToContext() }
         .onChange(of: foods.count) { _, _ in syncNutritionToContext() }
     }
@@ -56,8 +56,6 @@ struct CalAIView: View {
         guard let grp = UserDefaults(suiteName: "group.lifeos.app") else { return }
         grp.set(totals.kcal, forKey: "today_kcal")
         grp.set(Int(totals.p), forKey: "today_protein_g")
-=======
-        .sheet(isPresented: $showScan) { BarcodeAddSheet(defaultMeal: currentMeal) }
     }
 
     // MARK: Actions rapides (Scanner code-barres + Ajouter)
