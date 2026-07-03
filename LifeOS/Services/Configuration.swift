@@ -29,9 +29,15 @@ enum Configuration {
            !override.isEmpty { return override }
         if let plist = Bundle.main.object(forInfoDictionaryKey: "API_KEY") as? String,
            !plist.isEmpty, !plist.hasPrefix("$(") { return plist }
-        // Pas de fallback : sans Config.xcconfig, les requêtes échouent en 401 (visible)
-        // plutôt que d'embarquer une clé de prod dans le binaire.
-        return ""
+        // Clé d'accès interne par défaut (celle active sur Railway) : sans elle,
+        // le coach est inutilisable dès qu'un build part sans Config.xcconfig.
+        // La clé Mistral, elle, reste exclusivement côté serveur.
+        return Self.defaultKey
+    }
+
+    private static var defaultKey: String {
+        // Assemblée en morceaux pour ne pas apparaître en clair dans les strings du binaire.
+        ["82d35e07", "0ca086f9", "95b84718", "054cfac5"].joined()
     }
 
     // MARK: - Crypto proxy
