@@ -37,7 +37,7 @@ enum Configuration {
 
     private static var defaultKey: String {
         // Assemblée en morceaux pour ne pas apparaître en clair dans les strings du binaire.
-        ["82d35e07", "0ca086f9", "95b84718", "054cfac5"].joined()
+        ["52d68e22", "039657e3", "06f5023c", "44ad0b16"].joined()
     }
 
     // MARK: - Crypto proxy
