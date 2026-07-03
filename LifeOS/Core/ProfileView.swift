@@ -684,6 +684,11 @@ struct ProfileView: View {
                         if profileSection == idx {
                             RoundedRectangle(cornerRadius: 15, style: .continuous)
                                 .fill(Theme.card)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                                        .strokeBorder(Theme.stroke, lineWidth: 1)
+                                )
+                                .shadowSm()
                                 .matchedGeometryEffect(id: "pickerPill", in: pickerNS)
                         }
                         HStack(spacing: 5) {
