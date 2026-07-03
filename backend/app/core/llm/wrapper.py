@@ -118,11 +118,14 @@ class LLMWrapper:
                     message = response.choices[0].message
                     text, tool_calls = extract_text_or_tool_calls(message)
 
+                    usage = getattr(response, "usage", None)
                     log.info(
                         "llm_call_success",
                         has_text=bool(text),
                         tool_call_count=len(tool_calls),
                         finish_reason=response.choices[0].finish_reason,
+                        prompt_tokens=getattr(usage, "prompt_tokens", None),
+                        completion_tokens=getattr(usage, "completion_tokens", None),
                     )
 
                     return text, tool_calls
