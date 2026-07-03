@@ -4,10 +4,11 @@ import UIKit
 // MARK: - Configuration
 
 enum AgentAPIConfig {
-    // TODO: Set to deployed backend URL before shipping
-    // Use .xcconfig / Info.plist injection to avoid hardcoding in source
+    // Backend NON déployé → coupé. Tout passe en on-device (LocalCoach + LifeBrain).
+    // Ce drapeau court-circuite TOUS les appels réseau (plus de « Could not connect »,
+    // plus de timeout de 12 s au lancement / au check-in). Repasser à true si un backend est déployé.
+    static let enabled = false
     static let baseURL = URL(string: "http://192.168.1.178:8000")!
-    // INTERNAL_API_KEY from backend/.env — move to Keychain or .xcconfig in production
     static let apiKey = "82d35e070ca086f995b84718054cfac5"
     static let timeoutInterval: TimeInterval = 30
 }
@@ -312,6 +313,7 @@ actor AgentAPI {
     // MARK: - Helpers
 
     private func get<T: Decodable>(path: String, queryItems: [URLQueryItem] = []) async throws -> T {
+        guard AgentAPIConfig.enabled else { throw AgentAPIError.networkError(URLError(.notConnectedToInternet)) }
         var components = URLComponents(url: AgentAPIConfig.baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
         if !queryItems.isEmpty { components.queryItems = queryItems }
         var req = URLRequest(url: components.url!)
@@ -323,6 +325,7 @@ actor AgentAPI {
     }
 
     private func post<Body: Encodable, Response: Decodable>(path: String, body: Body) async throws -> Response {
+        guard AgentAPIConfig.enabled else { throw AgentAPIError.networkError(URLError(.notConnectedToInternet)) }
         var req = makeRequest(path: path)
         req.httpMethod = "POST"
         req.httpBody = try JSONEncoder().encode(body)

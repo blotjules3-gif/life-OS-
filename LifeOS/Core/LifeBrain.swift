@@ -211,6 +211,34 @@ private extension Int {
     func nz(_ fallback: Int) -> Int { self == 0 ? fallback : self }
 }
 
+// MARK: - Score d'énergie ON-DEVICE (remplace l'ancien calcul backend)
+
+enum LocalEnergy {
+    /// Score 0–100 à partir du check-in du matin (sommeil, humeur, énergie, eau, habitudes).
+    static func score(sleepQuality: Int, sleepHours: Double, mood: Int, energy: Int,
+                      waterML: Int, habitsDone: Int, habitsTotal: Int) -> Int {
+        var pts = 0.0
+        pts += (sleepQuality > 0 ? Double(sleepQuality) / 5 : 0.6) * 30      // qualité sommeil
+        if sleepHours > 0 { pts += max(0, 1 - abs(sleepHours - 8) / 4) * 15 } // durée (optimum 8 h)
+        else { pts += 0.6 * 15 }
+        pts += (mood > 0 ? Double(mood) / 5 : 0.6) * 25                       // humeur
+        pts += (energy > 0 ? Double(energy) / 5 : 0.6) * 20                   // énergie ressentie
+        pts += min(1, Double(waterML) / 2000) * 5                            // hydratation
+        if habitsTotal > 0 { pts += Double(habitsDone) / Double(habitsTotal) * 5 } // habitudes
+        return max(0, min(100, Int(pts.rounded())))
+    }
+
+    static func label(_ s: Int) -> String {
+        switch s {
+        case ..<35: return "Faible"
+        case ..<55: return "Correct"
+        case ..<75: return "Bien"
+        case ..<90: return "Très bien"
+        default:    return "Au top"
+        }
+    }
+}
+
 // MARK: - Carte « Pour toi aujourd'hui » (accueil)
 
 struct LifeBrainCard: View {

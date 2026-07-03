@@ -770,26 +770,15 @@ struct DailyBriefingView: View {
 
     private func submitCheckin() {
         checkinSubmitting = true
-        Task {
-            if let result = try? await AgentAPI.shared.logCheckin(
-                sleepQuality: sleepQuality > 0 ? sleepQuality : nil,
-                sleepHours: sleepHours > 0 ? Double(sleepHours) : nil,
-                mood: morningMood > 0 ? morningMood : nil,
-                fatigue: morningFatigue > 0 ? morningFatigue : nil,
-                waterML: waterToday > 0 ? waterToday : nil,
-                habitsDone: habitsDone,
-                habitsTotal: habits.count > 0 ? habits.count : nil
-            ) {
-                await MainActor.run {
-                    todayEnergyScore = result.energy_score ?? 0
-                    todayEnergyLabel = result.label ?? ""
-                }
-            }
-            await MainActor.run {
-                checkinSubmitting = false
-                withAnimation(.spring(response: 0.4)) { checkinDone = true }
-            }
-        }
+        // Score calculé ON-DEVICE (le backend n'est pas déployé).
+        let score = LocalEnergy.score(
+            sleepQuality: sleepQuality, sleepHours: Double(sleepHours),
+            mood: morningMood, energy: morningFatigue,
+            waterML: waterToday, habitsDone: habitsDone, habitsTotal: habits.count)
+        todayEnergyScore = score
+        todayEnergyLabel = LocalEnergy.label(score)
+        checkinSubmitting = false
+        withAnimation(.spring(response: 0.4)) { checkinDone = true }
     }
 
     // MARK: Bandeau voix
@@ -3141,24 +3130,15 @@ struct SleepCheckSheet: View {
 
     private func submitAndReveal() {
         submitting = true
-        Task {
-            if let result = try? await AgentAPI.shared.logCheckin(
-                sleepQuality: quality > 0 ? quality : nil,
-                sleepHours: Double(hours),
-                mood: mood > 0 ? mood : nil,
-                fatigue: fatigue > 0 ? fatigue : nil
-            ) {
-                await MainActor.run {
-                    todayEnergyScore = result.energy_score ?? 0
-                    todayEnergyLabel = result.label ?? ""
-                }
-            }
-            await MainActor.run {
-                submitting = false
-                if mood > 0 { ctx.insert(MoodEntry(score: mood, note: "")) }
-                withAnimation(.spring(duration: 0.35)) { step = 3 }
-            }
-        }
+        // Score ON-DEVICE (backend non déployé).
+        let score = LocalEnergy.score(
+            sleepQuality: quality, sleepHours: Double(hours),
+            mood: mood, energy: fatigue, waterML: 0, habitsDone: 0, habitsTotal: 0)
+        todayEnergyScore = score
+        todayEnergyLabel = LocalEnergy.label(score)
+        submitting = false
+        if mood > 0 { ctx.insert(MoodEntry(score: mood, note: "")) }
+        withAnimation(.spring(duration: 0.35)) { step = 3 }
     }
 
     private func animateScore() {

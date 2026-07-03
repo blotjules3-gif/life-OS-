@@ -25,6 +25,7 @@ struct ModuleChatView: View {
     let moduleTitle: String
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var ctx
     @AppStorage("appTheme") private var appThemeRaw = "classic"
     private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
 
@@ -187,36 +188,13 @@ struct ModuleChatView: View {
         messages.append(thinking)
         isLoading = true
 
-        Task {
-            do {
-                let response = try await AgentAPI.shared.chat(
-                    message: text,
-                    module: module,
-                    conversationID: conversationID
-                )
-                conversationID = response.conversation_id
-
-                // Replace thinking bubble
-                await MainActor.run {
-                    messages.removeAll { $0.isThinking }
-                    messages.append(ModuleChatMessage(role: .assistant, text: response.reply))
-
-                    if response.module_config_updated {
-                        configBadge = true
-                        Haptics.success()
-                    }
-                    if response.goals_updated {
-                        goalsBadge = true
-                    }
-                    isLoading = false
-                }
-            } catch {
-                await MainActor.run {
-                    messages.removeAll { $0.isThinking }
-                    errorMessage = (error as? AgentAPIError)?.errorDescription ?? error.localizedDescription
-                    isLoading = false
-                }
-            }
+        // Coach 100% ON-DEVICE (backend non déployé) — comme l'assistant principal.
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            let reply = LocalCoach.respond(to: text, ctx: ctx)
+            messages.removeAll { $0.isThinking }
+            messages.append(ModuleChatMessage(role: .assistant, text: reply))
+            isLoading = false
         }
     }
 
