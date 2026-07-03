@@ -522,12 +522,6 @@ struct ShortcutsHomeView: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader("Habitudes")
             if habits.isEmpty {
-<<<<<<< HEAD
-                Text("Aucune habitude — crée-en une avec ton coach")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .padding(16)
-=======
                 Button {
                     Haptics.tap()
                     NotificationCenter.default.post(
@@ -540,14 +534,13 @@ struct ShortcutsHomeView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Créer une habitude")
                                 .font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
-                            Text("Demande à l'assistant IA")
+                            Text("Demande à ton coach")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
                         Image(systemName: "chevron.right")
                             .font(.caption.weight(.bold)).foregroundStyle(.tertiary)
                     }
->>>>>>> origin/pote
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .card()
                 }
