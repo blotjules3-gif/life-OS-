@@ -89,14 +89,15 @@ enum BubbleSize: String, CaseIterable {
 struct CategoryHubView: View {
     let category: AppCategory
 
-    // Les sous-catégories sont verrouillées en bulles libres (voir `layout`).
+    // Affichage propre aux sous-catégories, réglable via le bouton du hub.
+    // Défaut = bulles libres.
+    @AppStorage("hubLayout")  private var layoutRaw = "organic"
     @AppStorage("appTheme")   private var appThemeRaw = "classic"
     @AppStorage("bubbleSize") private var bubbleSizeRaw = "medium"
     @State private var cover: CategoryTool?
     @State private var showSetup = false
 
-    // Les sous-catégories restent TOUJOURS en bulles libres (choix verrouillé).
-    private var layout: CatLayout { .organic }
+    private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .organic }
     private var theme: AppTheme   { AppTheme(rawValue: appThemeRaw) ?? .classic }
     private var tools: [CategoryTool] { category.tools }
     // Petite / Moyenne / Grande — partagé avec la grille de catégories.
@@ -108,6 +109,15 @@ struct CategoryHubView: View {
             .navigationBarTitleDisplayMode(layout == .list ? .large : .inline)
             .fullScreenCover(item: $cover) { $0.dest() }
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Picker("Affichage", selection: $layoutRaw) {
+                            ForEach(CatLayout.allCases, id: \.rawValue) { l in
+                                Label(l.label, systemImage: l.symbol).tag(l.rawValue)
+                            }
+                        }
+                    } label: { Image(systemName: layout.symbol) }
+                }
                 if CategorySetup.hasFlow(category) {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button { showSetup = true } label: { Image(systemName: "slider.horizontal.3") }
@@ -426,19 +436,9 @@ struct CategoryHubView: View {
         return s
     }
 
-    // Teinte selon le thème (même logique que la grille de catégories).
-    private func themedTint(_ tool: CategoryTool) -> Color {
-        switch theme {
-        case .classic, .dark, .glass: return tool.tint
-        case .pinky:  return [Color(hex: 0xFF4F9D), Color(hex: 0xFF77B5), Color(hex: 0xF06EA9),
-                              Color(hex: 0xFF8AC4), Color(hex: 0xE85C9E)][stableIndex(tool) % 5]
-        case .gothic: return [Color(hex: 0xAEB7C4), Color(hex: 0xC6CED9), Color(hex: 0x99A3B2),
-                              Color(hex: 0xD2D8E1), Color(hex: 0xB4BCC8)][stableIndex(tool) % 5]
-        case .cloud:  return [Color(hex: 0xC3D2E8), Color(hex: 0xD2DEEE), Color(hex: 0xB7C8E2),
-                              Color(hex: 0xCBD8EC), Color(hex: 0xDCE5F2)][stableIndex(tool) % 5]
-        }
-    }
-    private func stableIndex(_ tool: CategoryTool) -> Int { tools.firstIndex(of: tool) ?? 0 }
+    // Bulles MONOCHROMES : toutes les bulles d'un hub partagent la teinte du pôle
+    // (plus de palette multicolore par index). Design frosted cohérent dans tous les thèmes.
+    private func themedTint(_ tool: CategoryTool) -> Color { tool.tint }
 }
 
 // MARK: - Données : outils par catégorie (référencent les vues détail des modules)
