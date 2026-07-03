@@ -29,8 +29,21 @@ async def get_or_create_user(
         return user
 
     user = User(device_id=device_id, apns_token=apns_token)
-    session.add(user)
-    await session.flush()
+    try:
+        # Savepoint : un IntegrityError n'avorte pas toute la transaction.
+        async with session.begin_nested():
+            session.add(user)
+            await session.flush()
+    except IntegrityError:
+        # Course entre deux premières requêtes du même appareil (ex. stream
+        # interrompu + fallback POST) : l'autre requête a déjà créé l'utilisateur.
+        result = await session.execute(select(User).where(User.device_id == device_id))
+        user = result.scalar_one()
+        if apns_token and user.apns_token != apns_token:
+            user.apns_token = apns_token
+            await session.flush()
+        return user
+
     log.info("user_created", user_id=str(user.id), device_id=device_id)
     return user
 
