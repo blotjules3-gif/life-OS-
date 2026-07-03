@@ -240,34 +240,6 @@ struct FloatingTabBar: View {
                 ServerConfigView {
                     showServerConfig = false
                     serverStatus.pingNow()
-=======
-            // AI Chat au centre — pastille RONDE qui INVERSE ses couleurs selon le thème
-            // (clair : noir + logo blanc / sombre : blanc + logo noir), débordant en haut et en bas.
-            Button {
-                Haptics.medium()
-                onOpenAssistant()
-            } label: {
-                ZStack {
-                    Circle()
-                        .fill(Color(uiColor: .label))          // noir en clair, blanc en dark
-                        .frame(width: 70, height: 70)
-                        .overlay(Circle().strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.5))
-                        .shadow(color: Color.black.opacity(0.22), radius: 8, y: 3)
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(Color(uiColor: .systemBackground))   // blanc en clair, noir en dark
-                }
-                .frame(width: 70, height: 70)
-            }
-            .buttonStyle(PressableButtonStyle())
-            .frame(maxWidth: .infinity)
-            .zIndex(1)
-
-            // Onglets droite — masqués quand clavier ouvert
-            if !chatMode {
-                HStack(spacing: 0) {
-                    ForEach(rightTabs) { t in tabBtn(t) }
->>>>>>> origin/pote
                 }
             }
             #endif
