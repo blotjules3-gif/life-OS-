@@ -856,6 +856,10 @@ struct AIAssistantView: View {
             .sheet(item: $vm.pendingModuleSetup) { category in
                 ModuleSetupView(module: category)
             }
+            .sheet(isPresented: $vm.showAddFlow) {
+                AddAnythingSheet(initialKind: vm.addFlowKind, prefillName: vm.addFlowPrefill)
+                    .presentationDetents([.large])
+            }
             .overlay(alignment: .top) {
                 if let toast = vm.actionToast {
                     actionToastView(toast)
