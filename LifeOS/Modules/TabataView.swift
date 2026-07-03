@@ -51,6 +51,7 @@ final class TabataEngine {
     var cfg: TabataConfig
     var phase: Phase = .idle
     var remaining: Int = 0
+    var intervalTotal: Int = 0     // durée totale de l'intervalle courant (pour l'anneau)
     var round: Int = 1
     var cycle: Int = 1
     var running = false
@@ -60,10 +61,38 @@ final class TabataEngine {
     init(cfg: TabataConfig) {
         self.cfg = cfg
         self.remaining = cfg.prepare
+        self.intervalTotal = cfg.prepare
     }
 
     var roundsLeft: Int { max(0, cfg.rounds - round + 1) }
     var cyclesLeft: Int { max(0, cfg.cycles - cycle + 1) }
+
+    // Fraction restante de l'intervalle courant (1 → plein, 0 → vide) pour l'anneau.
+    var intervalFraction: Double { Double(remaining) / Double(max(1, intervalTotal)) }
+
+    private var fullCycle: Int { cfg.rounds * cfg.work + max(0, cfg.rounds - 1) * cfg.rest }
+
+    /// Durée totale de toute la séance.
+    var totalDuration: Int {
+        cfg.prepare + cfg.cycles * fullCycle + max(0, cfg.cycles - 1) * cfg.restCycle + cfg.cooldown
+    }
+
+    /// Temps restant sur TOUTE la séance (intervalle courant + tout ce qui suit).
+    var totalRemaining: Int {
+        switch phase {
+        case .idle:    return totalDuration
+        case .done:    return 0
+        case .prepare: return remaining + cfg.cycles * fullCycle + max(0, cfg.cycles - 1) * cfg.restCycle + cfg.cooldown
+        case .work:    return remaining + (cfg.rounds - round) * (cfg.work + cfg.rest)
+                              + (cfg.cycles - cycle) * (cfg.restCycle + fullCycle) + cfg.cooldown
+        case .rest:    return remaining + (cfg.rounds - round) * cfg.work + max(0, cfg.rounds - round - 1) * cfg.rest
+                              + (cfg.cycles - cycle) * (cfg.restCycle + fullCycle) + cfg.cooldown
+        case .restCycle: return remaining + (cfg.cycles - cycle) * fullCycle
+                              + max(0, cfg.cycles - cycle - 1) * cfg.restCycle + cfg.cooldown
+        case .cooldown: return remaining
+        }
+    }
+    var totalElapsed: Int { max(0, totalDuration - totalRemaining) }
 
     func startOrPause() {
         if phase == .idle || phase == .done { begin() }
@@ -72,12 +101,12 @@ final class TabataEngine {
     }
 
     func begin() {
-        phase = .prepare; remaining = cfg.prepare; round = 1; cycle = 1
+        phase = .prepare; remaining = cfg.prepare; intervalTotal = cfg.prepare; round = 1; cycle = 1
         Haptics.tap(); run()
     }
 
     func reset() {
-        pause(); phase = .idle; remaining = cfg.prepare; round = 1; cycle = 1
+        pause(); phase = .idle; remaining = cfg.prepare; intervalTotal = cfg.prepare; round = 1; cycle = 1
     }
 
     private func run() {
@@ -121,6 +150,7 @@ final class TabataEngine {
     private func enter(_ p: Phase, _ secs: Int) {
         phase = p
         remaining = max(1, secs)
+        intervalTotal = max(1, secs)
         if secs <= 0 { advance() }
     }
     private func finish() { pause(); phase = .done; remaining = 0 }
@@ -253,43 +283,10 @@ struct TabataView: View {
             engine.phase.color.ignoresSafeArea()
             VStack(spacing: 0) {
                 topBar
-                Spacer()
-                // Dessin de l'exercice + phase + chrono géant
-                VStack(spacing: 6) {
-                    if let exo = exerciseLabel {
-                        exerciseArt(exo, size: 96)
-                        Text("EXERCICE \(engine.round) / \(engine.cfg.rounds)")
-                            .font(.system(size: 15, weight: .heavy, design: .rounded))
-                            .foregroundStyle(engine.phase.onColor.opacity(0.7))
-                        Text(exo)
-                            .font(.system(size: 30, weight: .black, design: .rounded))
-                            .foregroundStyle(engine.phase.onColor)
-                            .multilineTextAlignment(.center)
-                            .minimumScaleFactor(0.6).lineLimit(2)
-                            .padding(.bottom, 2)
-                    } else {
-                        if let up = upcomingExercise {
-                            exerciseArt(up, size: 64).opacity(0.9)
-                        }
-                        Text(engine.phase.title)
-                            .font(.system(size: 34, weight: .black, design: .rounded))
-                            .foregroundStyle(engine.phase.onColor)
-                    }
-                    Text(formatHMS(displayedTime))
-                        .font(.system(size: 92, weight: .black, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(engine.phase.onColor)
-                        .minimumScaleFactor(0.5)
-                        .lineLimit(1)
-                    if let sub = phaseSubLabel {
-                        Text(sub)
-                            .font(.system(size: 17, weight: .bold, design: .rounded))
-                            .foregroundStyle(engine.phase.onColor.opacity(0.85))
-                            .multilineTextAlignment(.center)
-                            .minimumScaleFactor(0.7).lineLimit(1)
-                    }
-                }
-                Spacer()
+                totalBar
+                Spacer(minLength: 6)
+                centerRing
+                Spacer(minLength: 6)
                 controlPanel
             }
             .padding(.horizontal, 22)
@@ -331,6 +328,79 @@ struct TabataView: View {
         if n.contains("jack") || n.contains("cardio")                                  { return "figure.mixed.cardio" }
         if n.contains("superman") || n.contains("stretch") || n.contains("flex")       { return "figure.flexibility" }
         return "dumbbell.fill"
+    }
+
+    // MARK: - Temps restant total (en haut) + progression globale
+
+    private var onColor: Color { engine.phase.onColor }
+
+    private var globalProgress: Double {
+        engine.phase == .idle ? 0 : Double(engine.totalElapsed) / Double(max(1, engine.totalDuration))
+    }
+
+    private var totalBar: some View {
+        VStack(spacing: 7) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Image(systemName: "hourglass").font(.system(size: 13, weight: .bold))
+                Text("TEMPS RESTANT").font(.system(size: 12, weight: .heavy, design: .rounded)).kerning(1)
+                Spacer()
+                Text(formatHMS(engine.phase == .idle ? engine.totalDuration : engine.totalRemaining))
+                    .font(.system(size: 30, weight: .black, design: .rounded)).monospacedDigit()
+            }
+            .foregroundStyle(onColor)
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(onColor.opacity(0.20))
+                    Capsule().fill(onColor)
+                        .frame(width: max(0, geo.size.width * globalProgress))
+                        .animation(.linear(duration: 0.9), value: globalProgress)
+                }
+            }
+            .frame(height: 6)
+        }
+        .padding(.top, 14)
+    }
+
+    // MARK: - Anneau central (chrono de l'intervalle qui se vide)
+
+    private var centerRing: some View {
+        let working = engine.phase == .work
+        return VStack(spacing: 12) {
+            if let exo = exerciseLabel {
+                exerciseArt(exo, size: 58)
+            } else if let up = upcomingExercise {
+                exerciseArt(up, size: 50).opacity(0.85)
+            }
+            ZStack {
+                Circle().stroke(onColor.opacity(0.18), lineWidth: 13)
+                Circle()
+                    .trim(from: 0, to: engine.phase == .idle ? 1 : max(0.0001, engine.intervalFraction))
+                    .stroke(onColor, style: StrokeStyle(lineWidth: 13, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .animation(.linear(duration: 0.95), value: engine.remaining)
+                VStack(spacing: 2) {
+                    Text(working ? "EXERCICE \(engine.round)/\(engine.cfg.rounds)" : engine.phase.title)
+                        .font(.system(size: 15, weight: .heavy, design: .rounded))
+                        .foregroundStyle(onColor.opacity(0.75))
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                    Text(formatHMS(displayedTime))
+                        .font(.system(size: 74, weight: .black, design: .rounded)).monospacedDigit()
+                        .foregroundStyle(onColor)
+                        .minimumScaleFactor(0.5).lineLimit(1)
+                    if working, let exo = currentExercise {
+                        Text(exo).font(.system(size: 18, weight: .black, design: .rounded))
+                            .foregroundStyle(onColor).multilineTextAlignment(.center)
+                            .minimumScaleFactor(0.6).lineLimit(2)
+                    } else if let sub = phaseSubLabel {
+                        Text(sub).font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundStyle(onColor.opacity(0.85)).multilineTextAlignment(.center)
+                            .minimumScaleFactor(0.7).lineLimit(2)
+                    }
+                }
+                .padding(.horizontal, 30)
+            }
+            .frame(width: 290, height: 290)
+        }
     }
 
     private var topBar: some View {
@@ -380,6 +450,8 @@ struct TabataView: View {
                 }
                 .padding(.top, 12)
 
+                quickConfigStrip
+
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 12) {
                         ForEach(availableSessions) { s in
@@ -394,6 +466,39 @@ struct TabataView: View {
             }
             .padding(.horizontal, 22)
         }
+    }
+
+    // Réglage rapide effort / repos / séries directement sur l'écran de choix.
+    private var quickConfigStrip: some View {
+        HStack(spacing: 10) {
+            cfgStepper("EFFORT", value: $work, unit: "s", step: 5, min: 5, color: 0x9BE14E)
+            cfgStepper("REPOS", value: $rest, unit: "s", step: 5, min: 0, color: 0xF0584B)
+            cfgStepper("SÉRIES", value: $sets, unit: "", step: 1, min: 1, color: 0xF2A03D)
+        }
+    }
+
+    private func cfgStepper(_ label: String, value: Binding<Int>, unit: String, step: Int, min: Int, color: UInt) -> some View {
+        VStack(spacing: 7) {
+            Text(label).font(.system(size: 11, weight: .heavy, design: .rounded)).kerning(0.5)
+                .foregroundStyle(Color(hex: color))
+            HStack(spacing: 10) {
+                Button { Haptics.tap(); value.wrappedValue = Swift.max(min, value.wrappedValue - step) } label: {
+                    Image(systemName: "minus").font(.system(size: 13, weight: .black)).foregroundStyle(.white)
+                        .frame(width: 30, height: 30).background(.white.opacity(0.12), in: Circle())
+                }
+                Text("\(value.wrappedValue)\(unit)")
+                    .font(.system(size: 20, weight: .black, design: .rounded)).monospacedDigit()
+                    .foregroundStyle(.white).frame(minWidth: 40)
+                Button { Haptics.tap(); value.wrappedValue += step } label: {
+                    Image(systemName: "plus").font(.system(size: 13, weight: .black)).foregroundStyle(.white)
+                        .frame(width: 30, height: 30).background(.white.opacity(0.12), in: Circle())
+                }
+            }
+        }
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(.white.opacity(0.08), lineWidth: 1))
     }
 
     private func sessionCard(_ s: TabataSession) -> some View {
