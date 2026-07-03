@@ -10,6 +10,8 @@ struct FitnessHubView: View {
     @State private var showTabata = false
     var body: some View {
         HubScaffold(category: .fitness) {
+            ToolRow(icon: "figure.strengthtraining.traditional", title: "Séance guidée",
+                    subtitle: "Ta séance du jour, série par série + repos", tint: .fitTint) { GuidedWorkoutView() }
             ToolRow(icon: "figure.walk", title: "Compteur de pas",
                     subtitle: "Aujourd'hui + 7 jours (Santé)", tint: .fitTint) { StepsView() }
             ToolRow(icon: "dumbbell.fill", title: "Muscu & progression",
