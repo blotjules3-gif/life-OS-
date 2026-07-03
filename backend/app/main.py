@@ -87,13 +87,37 @@ def _register_all_tools() -> None:
     log.info("tools_registered", tools=registry.list_tools())
 
 
+# Miroir des index de migrations/001-004 : create_all ne crée AUCUN index,
+# et les .sql ne s'appliquent que lancés à la main. Idempotent (IF NOT EXISTS),
+# donc sans effet là où les migrations ont déjà tourné.
+_STARTUP_INDEXES = [
+    "CREATE INDEX IF NOT EXISTS idx_users_device_id ON users(device_id)",
+    "CREATE INDEX IF NOT EXISTS idx_module_configs_user ON module_configs(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_goals_user_module ON goals(user_id, module_type)",
+    "CREATE INDEX IF NOT EXISTS idx_goals_active ON goals(user_id) WHERE is_active",
+    "CREATE INDEX IF NOT EXISTS idx_conversations_user ON conversations(user_id, created_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_messages_conv ON messages(conversation_id, created_at ASC)",
+    "CREATE INDEX IF NOT EXISTS idx_tool_exec_user ON tool_executions(user_id, executed_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_sport_logs_user ON sport_logs(user_id, logged_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_nutrition_user ON nutrition_logs(user_id, logged_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_mobility_user ON mobility_logs(user_id, logged_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_finance_user ON finance_logs(user_id, logged_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_habit_snap_user ON habit_snapshots(user_id, created_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_notif_pending ON scheduled_notifications(scheduled_for) WHERE NOT sent",
+    "CREATE INDEX IF NOT EXISTS idx_life_challenges_user ON life_challenges(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_life_challenges_active ON life_challenges(user_id, is_active)",
+    "CREATE INDEX IF NOT EXISTS idx_daily_checkins_user_date ON daily_checkins(user_id, checkin_date DESC)",
+]
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     log.info("lifeos_agent_starting", version="1.0.0", debug=settings.debug)
-    # Ensure all tables exist. Replace with `alembic upgrade head` once
-    # Alembic migrations are set up (run: alembic init alembic).
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        for stmt in _STARTUP_INDEXES:
+            await conn.execute(text(stmt))
+    log.info("startup_indexes_ensured", count=len(_STARTUP_INDEXES))
     _register_all_tools()
     yield
     log.info("lifeos_agent_shutdown")
