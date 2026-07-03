@@ -74,6 +74,8 @@ class AgentOrchestrator:
     def __init__(self, settings: Settings) -> None:
         self._llm = LLMWrapper(settings)
         self._max_iterations = settings.llm_max_agent_iterations
+        self._soft_budget = settings.agent_soft_budget_seconds
+        self._hard_budget = settings.agent_hard_budget_seconds
 
     @staticmethod
     def _init_state(
