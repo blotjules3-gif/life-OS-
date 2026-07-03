@@ -214,8 +214,7 @@ struct ProfileView: View {
                                         ProgressView()
                                             .frame(maxWidth: .infinity)
                                             .padding(.vertical, 36)
-                                            .background(Theme.card)
-                                            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                                            .surface()
                                             .transition(.opacity)
                                     } else if challenges.isEmpty {
                                         challengesEmptyState
