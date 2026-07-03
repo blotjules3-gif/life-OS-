@@ -689,12 +689,19 @@ struct ShortcutsHomeView: View {
                 HStack {
                     Text(o.title).font(.system(size: 15, weight: .semibold)).foregroundStyle(.primary)
                     Spacer()
-                    Text(o.sub).font(.caption).foregroundStyle(.secondary)
+                    Text(o.sub)
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .contentTransition(.numericText())
+                        .animation(.spring(duration: 0.4), value: o.sub)
                 }
                 ProgressView(value: o.progress).tint(o.color).scaleEffect(x: 1, y: 1.1, anchor: .center)
+                    .animation(.spring(duration: 0.6, bounce: 0.1), value: o.progress)
             }
             Image(systemName: o.done ? "checkmark.circle.fill" : "circle")
                 .font(.system(size: 18)).foregroundStyle(o.done ? AnyShapeStyle(o.color) : AnyShapeStyle(Color.secondary.opacity(0.4)))
+                .contentTransition(.symbolEffect(.replace))
+                .animation(.spring(duration: 0.35, bounce: 0.4), value: o.done)
         }
     }
 
