@@ -292,7 +292,6 @@ enum AppTheme: String, CaseIterable, Identifiable {
     var isModern: Bool { isNike || isGlass }
 }
 
-<<<<<<< HEAD
 // MARK: - Système d'ombres (3 niveaux)
 
 private struct ShadowModifier: ViewModifier {
