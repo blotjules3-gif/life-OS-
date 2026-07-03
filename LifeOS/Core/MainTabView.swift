@@ -69,14 +69,9 @@ struct MainTabView: View {
         .fullScreenCover(isPresented: $showAIAssistant) {
             AIAssistantView(prefill: aiPrefill)
         }
-<<<<<<< HEAD
-        .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenAIChat)) { _ in
-            openAIAssistant()
-=======
         .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenAIChat)) { note in
             aiPrefill = note.userInfo?["prefill"] as? String
-            showAIAssistant = true
->>>>>>> origin/pote
+            openAIAssistant()
         }
         .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenModule)) { notif in
             if let module = notif.userInfo?["module"] as? String,
