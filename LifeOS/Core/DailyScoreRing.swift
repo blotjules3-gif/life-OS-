@@ -140,39 +140,61 @@ struct DailyScoreRing: View {
         }
     }
 
-    // Orbe central tappable — cadran à graduations (style compteur auto)
-    private let tickCount = 64
+    // Orbe central tappable — anneau « Liquid Glass » (iOS 26 Tahoe)
+    private var ringGradient: AngularGradient {
+        AngularGradient(colors: [Color(hex: 0x4CF810), Color(hex: 0x21D0C6), Color(hex: 0x3E8CF0),
+                                 Color(hex: 0x8A6BFF), Color(hex: 0xEC6FB0), Color(hex: 0x4CF810)],
+                        center: .center, startAngle: .degrees(-90), endAngle: .degrees(270))
+    }
 
     private var orb: some View {
         let s = score(selected)
         let frac = Double(s) / 100
-        let lit = Int((frac * Double(tickCount)).rounded())
         let done = metrics(selected).filter { $0.fraction >= 1 }.count
         let total = metrics(selected).count
         return Button { Haptics.tap(); showDetail = true } label: {
             ZStack {
-                // graduations radiales
-                ForEach(0..<tickCount, id: \.self) { i in
-                    Capsule()
-                        .fill(i < lit ? Theme.textPrimary : Theme.textPrimary.opacity(0.13))
-                        .frame(width: 2.2, height: i % 8 == 0 ? 18 : 13)
-                        .offset(y: -102)
-                        .rotationEffect(.degrees(Double(i) / Double(tickCount) * 360))
-                        .animation(.easeOut(duration: 0.5).delay(Double(i) * 0.004), value: lit)
-                }
-                // liseré extérieur fin
-                Circle().stroke(Theme.textPrimary.opacity(0.16), lineWidth: 1)
-                    .frame(width: 246, height: 246)
+                // halo lumineux diffus (bloom)
+                Circle().fill(ringGradient)
+                    .frame(width: 210, height: 210).blur(radius: 55)
+                    .opacity(0.30 + 0.35 * frac)
+                    .animation(.easeOut(duration: 0.8), value: frac)
+                // piste en verre dépoli
+                Circle().stroke(.ultraThinMaterial, lineWidth: 22)
+                    .overlay(Circle().strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
+                    .overlay(Circle().strokeBorder(Color.black.opacity(0.05), lineWidth: 1).blur(radius: 1).padding(11))
+                    .frame(width: 212, height: 212)
+                // arc de progression vibrant
+                Circle().trim(from: 0, to: max(0.0001, frac))
+                    .stroke(ringGradient, style: StrokeStyle(lineWidth: 22, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .frame(width: 212, height: 212)
+                    .shadow(color: Color(hex: 0x3E8CF0).opacity(0.35), radius: 12)
+                    .animation(.spring(response: 0.85, dampingFraction: 0.85), value: frac)
+                // reflet spéculaire (sheen) sur l'arc
+                Circle().trim(from: 0, to: max(0.0001, frac))
+                    .stroke(LinearGradient(colors: [.white.opacity(0.55), .clear], startPoint: .top, endPoint: .bottom),
+                            style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                    .frame(width: 212, height: 212)
+                    .blendMode(.overlay)
+                    .animation(.spring(response: 0.85, dampingFraction: 0.85), value: frac)
+                // disque central en verre
+                Circle().fill(.ultraThinMaterial)
+                    .overlay(Circle().strokeBorder(Color.white.opacity(0.15), lineWidth: 1))
+                    .frame(width: 150, height: 150)
+                    .shadow(color: .black.opacity(0.10), radius: 10, y: 5)
                 // centre
-                VStack(spacing: 3) {
-                    Text(isToday ? "SCORE DU JOUR" : shortDate(selected).uppercased())
-                        .font(.system(size: 10, weight: .bold, design: .monospaced)).kerning(1.6)
+                VStack(spacing: 1) {
+                    Text(isToday ? "SCORE" : shortDate(selected).uppercased())
+                        .font(.system(size: 11, weight: .semibold)).kerning(1.8)
                         .foregroundStyle(Theme.textSecondary)
                     Text("\(s)")
-                        .font(.system(size: 72, weight: .medium)).monospacedDigit()
+                        .font(.system(size: 60, weight: .bold)).monospacedDigit()
                         .foregroundStyle(Theme.textPrimary)
+                        .contentTransition(.numericText())
                     Text(total == 0 ? "%" : "\(done)/\(total) objectifs")
-                        .font(.system(size: 12, weight: .medium)).kerning(0.5)
+                        .font(.system(size: 11, weight: .medium)).kerning(0.3)
                         .foregroundStyle(Theme.textSecondary)
                 }
             }
