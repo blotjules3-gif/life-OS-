@@ -192,15 +192,10 @@ struct CalAIView: View {
             if dayFoods.isEmpty {
                 Button { showScan = true } label: {
                     HStack(spacing: 14) {
-<<<<<<< HEAD
                         Image(systemName: "fork.knife.circle.fill")
                             .font(.system(size: 34))
                             .foregroundStyle(.secondary)
-                        Text("Touche + pour ajouter ton premier repas").font(.subheadline).foregroundStyle(.secondary)
-=======
-                        Text("🥗").font(.system(size: 34))
                         Text("Scanne un produit ou touche Rechercher pour ajouter ton premier repas").font(.subheadline).foregroundStyle(.secondary)
->>>>>>> origin/pote
                         Spacer()
                     }
                     .padding(16)
