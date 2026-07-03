@@ -86,6 +86,24 @@ async def chat(
     session.add(user_msg)
     await session.flush()
 
+    # ── 5b. Long-term memory injected directly into the system prompt ─────────
+    # Avant : user_notes + insights n'atteignaient le LLM que s'il appelait
+    # get_user_context (une itération LLM complète en plus, souvent jamais faite).
+    memory_lines: list[str] = []
+    if user.user_notes:
+        for key, note in list(user.user_notes.items())[:20]:
+            value = note.get("value") if isinstance(note, dict) else note
+            memory_lines.append(f"- {key}: {value}")
+    try:
+        insights = await compute_insights(session, user.id)
+    except Exception as exc:
+        log.warning("behavioral_insights_failed", user_id=str(user.id), error=str(exc))
+        insights = []
+    if insights:
+        memory_lines.append("Tendances observées (30 derniers jours) :")
+        memory_lines.extend(f"- {i}" for i in insights)
+    memory_context = "\n".join(memory_lines) if memory_lines else None
+
     # ── 6. Run agent ──────────────────────────────────────────────────────────
     try:
         result = await orchestrator.run(
@@ -99,6 +117,7 @@ async def chat(
             conversation_id=conversation.id,
             session=session,
             user_context=body.user_context,
+            memory_context=memory_context,
         )
     except AgentMaxIterationsError as exc:
         log.error("chat_agent_max_iterations", user_id=str(user.id))
