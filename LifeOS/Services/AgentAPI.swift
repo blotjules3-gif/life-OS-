@@ -435,12 +435,8 @@ actor AgentAPI {
         return try decode(T.self, from: data)
     }
 
-<<<<<<< HEAD
     private func post<Body: Encodable, Response: Decodable>(path: String, body: Body, session sessionOverride: URLSession? = nil) async throws -> Response {
-=======
-    private func post<Body: Encodable, Response: Decodable>(path: String, body: Body) async throws -> Response {
         guard AgentAPIConfig.enabled else { throw AgentAPIError.networkError(URLError(.notConnectedToInternet)) }
->>>>>>> origin/pote
         var req = makeRequest(path: path)
         req.httpMethod = "POST"
         req.httpBody = try JSONEncoder().encode(body)
