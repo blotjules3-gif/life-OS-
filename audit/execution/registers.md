@@ -37,6 +37,7 @@
 | F7 | Graphe de tendance (Swift Charts) dans VitalsView : ligne + aire, delta coloré (baisse de poids = vert), min/max, 30 dernières mesures — tous types de mesures | Fait — build vert |
 | F8 | Audit CloudKit : **non activable en l'état** — 45 modèles sans défauts inline, 4 relations non optionnelles, capability iCloud manquante → `audit/execution/cloudkit-audit.md` | Fait (rapport) |
 | F9 | Passe fluidité (2026-07-03) : `.staggered()`/`.scrollFade()` dans Theme, transitions d'onglets fondu+zoom 0.97 (MainTabView), ProgressRing spring + remplissage à l'apparition, chiffres `numericText`+monospaced (MetricRing, goalBar, objectiveRow, score hebdo), coches `symbolEffect(.replace)`, cascade d'entrée accueil 6 sections — reduceMotion respecté partout | Fait — build vert |
+| F10 | Profil : `.surface()` dans Theme (liseré Theme.stroke + shadowSm) appliqué aux 14 cartes (contours enfin lisibles) ; picker Aujourd'hui/Défis : piste creusée `tertiarySystemFill` + pilule surélevée (avant : pilule Theme.card sur fond Theme.card = invisible) | Fait — build vert |
 | Bloqué | Apple Watch (nouveau target = Xcode GUI) ; défis entre amis (backend Railway inaccessible) ; capability iCloud (Xcode GUI) | En attente Jules |
 
 ## Journal d'hypothèses
