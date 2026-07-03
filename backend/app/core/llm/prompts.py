@@ -592,6 +592,7 @@ def build_system_prompt(
     user_name: str | None,
     user_gender: str | None = None,
     user_context: str | None = None,
+    memory_context: str | None = None,
 ) -> str:
     prompt = SYSTEM_PROMPT_BASE.strip()
 
