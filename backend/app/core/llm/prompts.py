@@ -633,6 +633,10 @@ def build_system_prompt(
         prompt += f"\n\n--- SNAPSHOT UTILISATEUR (maintenant) ---\n{user_context}\n--- FIN SNAPSHOT ---"
         prompt += "\n→ Utilise ce snapshot pour répondre en contexte : si l'utilisateur n'a pas encore fait ses habitudes, propose-le. Si son énergie est basse, adapte tes conseils. Si son jeûne est en cours, ne propose pas de repas."
 
+    if memory_context:
+        prompt += f"\n\n--- MÉMOIRE LONG TERME (ce que tu sais déjà de lui) ---\n{memory_context}\n--- FIN MÉMOIRE ---"
+        prompt += "\n→ Ces informations sont déjà en mémoire : utilise-les directement, sans appeler get_user_context pour les relire. Ne redemande JAMAIS une information présente ici — réutilise-la naturellement dans tes réponses et tes connexions."
+
     problems_solutions = _load_ai_file("PROBLEMES_SOLUTIONS.md")
     if problems_solutions:
         prompt += f"\n\n--- DIAGNOSTIC PROBLÈMES → SOLUTIONS ---\n{problems_solutions}\n--- FIN DIAGNOSTIC ---"
