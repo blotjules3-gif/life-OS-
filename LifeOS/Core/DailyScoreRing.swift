@@ -140,48 +140,50 @@ struct DailyScoreRing: View {
         }
     }
 
-    // Orbe central tappable — anneau « Liquid Glass » (iOS 26 Tahoe)
-    private var ringGradient: AngularGradient {
-        AngularGradient(colors: [Color(hex: 0x4CF810), Color(hex: 0x21D0C6), Color(hex: 0x3E8CF0),
-                                 Color(hex: 0x8A6BFF), Color(hex: 0xEC6FB0), Color(hex: 0x4CF810)],
-                        center: .center, startAngle: .degrees(-90), endAngle: .degrees(270))
-    }
+    // Orbe central tappable — anneau « aura » lumineux bleu
+    private let auraGlow = Color(hex: 0x2E63FF)
+    private let auraLite = Color(hex: 0x7AA6FF)
+    private let auraCore = Color(hex: 0xE6EEFF)
 
     private var orb: some View {
         let s = score(selected)
         let frac = Double(s) / 100
+        let f = max(0.0001, frac)
         let done = metrics(selected).filter { $0.fraction >= 1 }.count
         let total = metrics(selected).count
         return Button { Haptics.tap(); showDetail = true } label: {
             ZStack {
-                // halo lumineux diffus (bloom)
-                Circle().fill(ringGradient)
-                    .frame(width: 210, height: 210).blur(radius: 55)
-                    .opacity(0.30 + 0.35 * frac)
-                    .animation(.easeOut(duration: 0.8), value: frac)
-                // piste en verre dépoli
-                Circle().stroke(.ultraThinMaterial, lineWidth: 22)
-                    .overlay(Circle().strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
-                    .overlay(Circle().strokeBorder(Color.black.opacity(0.05), lineWidth: 1).blur(radius: 1).padding(11))
+                // halo ambiant diffus (la lueur qui déborde)
+                Circle()
+                    .fill(RadialGradient(colors: [auraGlow.opacity(0.6), .clear],
+                                         center: .center, startRadius: 30, endRadius: 160))
+                    .frame(width: 320, height: 320).blur(radius: 26)
+                    .opacity(0.35 + 0.5 * frac)
+                    .animation(.easeOut(duration: 0.9), value: frac)
+                // piste faible (repère du cercle complet)
+                Circle().stroke(auraGlow.opacity(0.10), lineWidth: 2)
                     .frame(width: 212, height: 212)
-                // arc de progression vibrant
-                Circle().trim(from: 0, to: max(0.0001, frac))
-                    .stroke(ringGradient, style: StrokeStyle(lineWidth: 22, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .frame(width: 212, height: 212)
-                    .shadow(color: Color(hex: 0x3E8CF0).opacity(0.35), radius: 12)
-                    .animation(.spring(response: 0.85, dampingFraction: 0.85), value: frac)
-                // reflet spéculaire (sheen) sur l'arc
-                Circle().trim(from: 0, to: max(0.0001, frac))
-                    .stroke(LinearGradient(colors: [.white.opacity(0.55), .clear], startPoint: .top, endPoint: .bottom),
-                            style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .frame(width: 212, height: 212)
-                    .blendMode(.overlay)
-                    .animation(.spring(response: 0.85, dampingFraction: 0.85), value: frac)
+                // AURA : couches floutées empilées → lueur, du plus large au cœur brûlant
+                Group {
+                    Circle().trim(from: 0, to: f)
+                        .stroke(auraGlow, style: StrokeStyle(lineWidth: 26, lineCap: .round))
+                        .blur(radius: 22).opacity(0.65)
+                    Circle().trim(from: 0, to: f)
+                        .stroke(auraGlow, style: StrokeStyle(lineWidth: 14, lineCap: .round))
+                        .blur(radius: 9).opacity(0.9)
+                    Circle().trim(from: 0, to: f)
+                        .stroke(auraLite, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                        .blur(radius: 3.5)
+                    Circle().trim(from: 0, to: f)
+                        .stroke(auraCore, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                        .blur(radius: 0.8)
+                }
+                .rotationEffect(.degrees(-90))
+                .frame(width: 212, height: 212)
+                .animation(.spring(response: 0.9, dampingFraction: 0.85), value: frac)
                 // disque central en verre
                 Circle().fill(.ultraThinMaterial)
-                    .overlay(Circle().strokeBorder(Color.white.opacity(0.15), lineWidth: 1))
+                    .overlay(Circle().strokeBorder(Color.white.opacity(0.12), lineWidth: 1))
                     .frame(width: 150, height: 150)
                     .shadow(color: .black.opacity(0.10), radius: 10, y: 5)
                 // centre

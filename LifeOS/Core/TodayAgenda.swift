@@ -9,6 +9,7 @@ struct AgendaItem: Identifiable {
     let detail: String
     let category: AppCategory?   // pour rediriger vers le bon pôle au tap
     let sortKey: Int             // minutes depuis minuit ; 24*60 = toute la journée (fin de liste)
+    var addKind: AddAnythingSheet.Kind? = nil   // action directe au tap (ajouter/logger) plutôt que le hub
 }
 
 /// Section « AUJOURD'HUI » de l'accueil : rassemble TOUT ce qui a été enregistré dans
@@ -27,6 +28,8 @@ struct TodayAgendaSection: View {
     @Query private var events: [SocialEvent]
     @Query private var trips: [Trip]
     @Query private var contacts: [Contact]
+
+    @State private var actionItem: AgendaItem?
 
     private var items: [AgendaItem] { buildItems() }
 
@@ -53,12 +56,19 @@ struct TodayAgendaSection: View {
                 .card(padding: 6, elevated: true)
             }
             .padding(.horizontal, 16)
+            .sheet(item: $actionItem) { item in
+                AddAnythingSheet(initialKind: item.addKind ?? .task)
+            }
         }
     }
 
     @ViewBuilder
     private func agendaRow(_ item: AgendaItem) -> some View {
-        if let cat = item.category {
+        if item.addKind != nil {
+            // Action directe : ouvre la page d'ajout/log ciblée (ex : Eau, Calories, Complément…)
+            Button { Haptics.tap(); actionItem = item } label: { rowContent(item) }
+                .buttonStyle(.plain)
+        } else if let cat = item.category {
             NavigationLink { cat.destination } label: { rowContent(item) }
                 .buttonStyle(.plain)
         } else {
@@ -80,7 +90,11 @@ struct TodayAgendaSection: View {
                     .lineLimit(1)
             }
             Spacer(minLength: 4)
-            if item.category != nil {
+            if item.addKind != nil {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Theme.volt)
+            } else if item.category != nil {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(Theme.textSecondary.opacity(0.5))
@@ -109,7 +123,7 @@ struct TodayAgendaSection: View {
             out.append(.init(icon: "figure.strengthtraining.traditional",
                              title: "Séance : \(gym.title)",
                              detail: gym.focus.isEmpty ? "Jour de sport" : gym.focus,
-                             category: .fitness, sortKey: 7 * 60))
+                             category: .fitness, sortKey: 7 * 60, addKind: .workout))
         }
 
         // 💊 Compléments du jour — REGROUPÉS par heure (Whey + Créatine à 08:00 = 1 seule ligne)
@@ -122,7 +136,7 @@ struct TodayAgendaSection: View {
                                          : "Compléments : \(names.joined(separator: ", "))"
             out.append(.init(icon: "pills.fill", title: title,
                              detail: hm(key / 60, key % 60),
-                             category: .nutrition, sortKey: key))
+                             category: .nutrition, sortKey: key, addKind: .supplement))
         }
 
         // 🔔 Rappels perso (shampoing, soins, routines…)
