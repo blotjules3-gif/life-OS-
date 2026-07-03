@@ -25,6 +25,7 @@ log = get_logger(__name__)
 
 _TECHNICAL_ERROR_REPLY = "Je rencontre un problème technique. Réessaie dans quelques instants."
 _EMPTY_RESPONSE_REPLY = "Je n'arrive pas à formuler une réponse. Reformule ta demande."
+_BUDGET_REPLY = "Cette demande me prend trop de temps. Ce qui a déjà été fait est enregistré — découpe ta demande et réessaie."
 
 
 class _TurnState:
