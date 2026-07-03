@@ -137,7 +137,18 @@ final class AIAssistantViewModel: ObservableObject {
         }
     }
 
+    // Nouvelle conversation serveur chaque jour : le backend ne relit que 20 messages,
+    // sans rotation une vieille conversation finit par masquer les échanges récents.
+    // La mémoire long terme (user_notes) est liée au user, pas à la conversation : elle survit.
+    private func rotateConversationIfNeeded() {
+        let today = Date.now.formatted(.iso8601.year().month().day())
+        guard conversationDay != today else { return }
+        conversationDay = today
+        conversationID = ""
+    }
+
     func loadHistory() {
+        rotateConversationIfNeeded()
         guard let ctx = modelContext else { return }
         let descriptor = FetchDescriptor<AIMessage>(sortBy: [SortDescriptor(\.date)])
         let stored = (try? ctx.fetch(descriptor)) ?? []
