@@ -459,8 +459,7 @@ struct ProfileView: View {
                 .clipShape(Capsule())
             }
         }
-        .background(Theme.card)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .surface(radius: 24)
     }
 
     private func quickStat(icon: String, value: String, unit: String, color: Color, progress: Double) -> some View {
