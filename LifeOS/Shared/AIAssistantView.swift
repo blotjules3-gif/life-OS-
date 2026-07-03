@@ -516,6 +516,12 @@ final class AIAssistantViewModel: ObservableObject {
         withAnimation(.spring(response: 0.42, dampingFraction: 0.75)) {
             messages.append(DisplayMessage(from: msg))
         }
+        Haptics.soft()
+        revealID = msg.id
+        Task { [id = msg.id] in
+            try? await Task.sleep(for: .seconds(3))
+            if revealID == id { revealID = nil }
+        }
     }
 
     private func appendThinking() {
