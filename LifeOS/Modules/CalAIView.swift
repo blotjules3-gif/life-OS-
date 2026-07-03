@@ -82,7 +82,6 @@ struct CalAIView: View {
             }
         }
         .buttonStyle(PressableButtonStyle())
->>>>>>> origin/pote
     }
 
     // MARK: En-tête + streak
