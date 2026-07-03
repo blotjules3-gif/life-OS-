@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     debug: bool = False
     secret_key: str = Field(..., min_length=32)
     internal_api_key: str = Field(..., min_length=16)
+    # Clé de transition pendant une rotation : les builds installés avec
+    # l'ancienne clé continuent de fonctionner. À vider une fois les apps rebuildées.
+    internal_api_key_secondary: Optional[str] = None
 
     # ── Database ──────────────────────────────────────────────────────────────
     database_url: str  # postgresql+asyncpg://...
