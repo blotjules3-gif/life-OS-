@@ -766,6 +766,7 @@ import UserNotifications
 // MARK: - Main View
 
 struct AIAssistantView: View {
+    var prefill: String? = nil
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     @StateObject private var vm = AIAssistantViewModel()
@@ -774,6 +775,7 @@ struct AIAssistantView: View {
     @FocusState private var inputFocused: Bool
     @State private var showClearConfirm = false
     @State private var showServerConfig = false
+    @State private var photoItem: PhotosPickerItem?
 
     // Quick suggestions change per time of day
     private var quickSuggestions: [(label: String, message: String, module: String?)] {
