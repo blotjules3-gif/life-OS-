@@ -36,6 +36,12 @@ enum LocalCoach {
         if let meal = mealPlan(raw) { return meal }
         if let mot = motivation(t) { return mot }
 
+        // Guidance TRANSVERSALE (relie sommeil × sport × nutrition × cycle × humeur…)
+        if matches(t, ["quoi faire", "que faire", "conseil", "conseille", "guidance", "guide moi",
+                      "par quoi commencer", "optimise ma journee", "priorite", "je fais quoi", "aide moi a m'organiser"]) {
+            return LifeBrain.coachSummary(ctx: ctx)
+        }
+
         // --- ACTIONS (écriture) ---
 
         // Créer une habitude
@@ -162,6 +168,10 @@ enum LocalCoach {
         else if ml < goalW { lines.append("👉 Priorité : bois encore \(max(0, goalW - ml)) ml d'eau.") }
         else if !pending.isEmpty { lines.append("👉 Priorité : « \(pending[0].title) ».") }
         else { lines.append("👉 Tout est carré aujourd'hui, continue comme ça 🎯") }
+        // Guidance transversale (relie les domaines entre eux)
+        if let brain = LifeBrain.insights(ctx: ctx).first {
+            lines.append(""); lines.append("🧠 \(brain.title) — \(brain.detail)")
+        }
         return lines.joined(separator: "\n")
     }
 

@@ -195,6 +195,9 @@ struct ShortcutsHomeView: View {
                         reengageBanner(message: msg, suggestion: reengageSuggestion)
                     }
 
+                    LifeBrainCard()
+                        .padding(.horizontal, -Theme.pad)   // guidance transversale, en tête
+
                     if let module = weeklyModuleSuggestion {
                         weeklyModuleCard(module)
                     }
