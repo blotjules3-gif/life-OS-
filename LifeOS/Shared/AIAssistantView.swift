@@ -129,6 +129,14 @@ final class AIAssistantViewModel: ObservableObject {
             return msg
         }
 
+        // ID stable : SwiftUI met à jour la même bulle à chaque token au lieu
+        // d'en recréer une (ce qui rejouerait la transition d'insertion).
+        static let streamingID = UUID()
+
+        static func streaming(_ text: String) -> DisplayMessage {
+            DisplayMessage(id: streamingID, role: "assistant", text: text, date: .now, actions: [])
+        }
+
         private init(id: UUID, role: String, text: String, date: Date, actions: [AIAction]) {
             self.id = id
             self.role = role
