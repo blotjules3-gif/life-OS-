@@ -455,7 +455,6 @@ struct MetricRing: View {
     var body: some View {
         VStack(spacing: 10) {
             ZStack {
-<<<<<<< HEAD
                 ProgressRing(progress: appeared && goal > 0 ? value / goal : 0, lineWidth: 9, tint: color)
                     .frame(width: 84, height: 84)
                 VStack(spacing: 1) {
