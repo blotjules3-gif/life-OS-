@@ -243,6 +243,69 @@ actor AgentAPI {
         return try await post(path: "/api/v1/chat", body: body, session: chatSession)
     }
 
+    /// Chat streamé (SSE) : onToken reçoit chaque fragment de texte au fil de l'eau.
+    /// Lève invalidResponse(404) si le backend déployé n'a pas encore /chat/stream —
+    /// l'appelant retombe alors sur chat() classique.
+    func chatStream(
+        message: String,
+        module: String?,
+        conversationID: String?,
+        onToken: @escaping @MainActor (String) -> Void
+    ) async throws -> ChatResponse {
+        let userContext = await MainActor.run { UserContextBuilder.shared.build() }
+        let body = ChatRequest(
+            device_id: deviceID,
+            message: message,
+            module: module,
+            conversation_id: conversationID,
+            apns_token: await currentAPNsToken(),
+            user_context: userContext
+        )
+        var req = makeRequest(path: "/api/v1/chat/stream")
+        req.httpMethod = "POST"
+        req.httpBody = try JSONEncoder().encode(body)
+        req.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+
+        let bytes: URLSession.AsyncBytes
+        let response: URLResponse
+        do {
+            (bytes, response) = try await chatSession.bytes(for: req)
+        } catch {
+            throw AgentAPIError.networkError(error)
+        }
+        guard let http = response as? HTTPURLResponse else {
+            throw AgentAPIError.networkError(URLError(.badServerResponse))
+        }
+        if http.statusCode == 401 { throw AgentAPIError.unauthorized }
+        guard (200..<300).contains(http.statusCode) else {
+            throw AgentAPIError.invalidResponse(http.statusCode)
+        }
+
+        var currentEvent = ""
+        for try await line in bytes.lines {
+            if line.hasPrefix("event: ") {
+                currentEvent = String(line.dropFirst(7))
+            } else if line.hasPrefix("data: ") {
+                let payload = Data(String(line.dropFirst(6)).utf8)
+                switch currentEvent {
+                case "token":
+                    if let obj = try? JSONDecoder().decode([String: String].self, from: payload),
+                       let t = obj["t"] {
+                        await onToken(t)
+                    }
+                case "done":
+                    return try decode(ChatResponse.self, from: payload)
+                case "error":
+                    throw AgentAPIError.invalidResponse(502)
+                default:
+                    break // "tool" — informatif, pas encore affiché
+                }
+            }
+        }
+        // Stream terminé sans event done : réponse incomplète.
+        throw AgentAPIError.networkError(URLError(.networkConnectionLost))
+    }
+
     // MARK: - Ping
 
     /// Quick reachability check — 1.5s timeout. Returns true if server responds.
