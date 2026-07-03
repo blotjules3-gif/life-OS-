@@ -1086,6 +1086,24 @@ struct AIAssistantView: View {
         VStack(spacing: 0) {
             Divider().opacity(0.4)
             HStack(spacing: 10) {
+                PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(vm.isLoading ? Color.secondary : accent)
+                        .frame(width: 34, height: 34)
+                }
+                .disabled(vm.isLoading)
+                .onChange(of: photoItem) { _, item in
+                    guard let item else { return }
+                    Task {
+                        if let data = try? await item.loadTransferable(type: Data.self),
+                           let ui = UIImage(data: data) {
+                            vm.analyzeImage(ui)
+                        }
+                        photoItem = nil
+                    }
+                }
+
                 TextField("Dis-moi quelque chose…", text: $vm.inputText, axis: .vertical)
                     .font(.system(size: 15))
                     .lineLimit(1...5)
