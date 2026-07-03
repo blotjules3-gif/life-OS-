@@ -48,7 +48,7 @@
 ## Journal d'hypothèses
 | Hypothèse | Confiance | Test |
 |---|---|---|
-| Celery worker/beat ne tournent pas sur Railway (pas de service séparé) | 90 % | Vérifier le dashboard Railway (2 services ?) — seule railway.json fait foi côté repo |
+| ~~Celery worker/beat ne tournent pas sur Railway~~ Confirmé puis résolu (F15) : worker+beat embarqués dans le conteneur API | Résolu | Logs Railway : `celery@… ready` + `beat: Starting` le 2026-07-03 |
 | Le repo GitHub est privé (limite l'exposition B1, ne l'annule pas) | 60 % | `gh repo view jules175/B-compagny-` |
 | Le pré-prompt notifs contextuel double l'opt-in | 80 % | Mesurable après ajout d'un event minimal |
 | Les users prod ont ≥ 6 check-ins → M1 crash déjà en prod | 70 % | Logs Railway : chercher TypeError behavioral_insights |
