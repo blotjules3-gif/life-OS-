@@ -578,12 +578,8 @@ struct ShortcutsHomeView: View {
             HStack(spacing: 14) {
                 Image(systemName: done ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 22))
-<<<<<<< HEAD
-                    .foregroundStyle(done ? Color(hex: 0x4CC38A) : Color.secondary.opacity(0.4))
-                    .contentTransition(.symbolEffect(.replace))
-=======
                     .foregroundStyle(done ? Theme.volt : Color.secondary.opacity(0.4))
->>>>>>> origin/pote
+                    .contentTransition(.symbolEffect(.replace))
                 Text(habit.name)
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(done ? .secondary : .primary)
