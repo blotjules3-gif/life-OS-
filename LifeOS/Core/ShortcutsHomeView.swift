@@ -536,9 +536,10 @@ struct ShortcutsHomeView: View {
                 HStack(alignment: .center, spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("\(Int(weeklyScore * 100))%")
-                            .font(.system(size: 42, weight: .black, design: .rounded))
+                            .font(.system(size: 42, weight: .black, design: .rounded).monospacedDigit())
                             .foregroundStyle(weeklyScoreColor)
                             .contentTransition(.numericText())
+                            .animation(.spring(duration: 0.5), value: weeklyScore)
                         Text(weeklyMotivation)
                             .font(.caption)
                             .foregroundStyle(.secondary)
