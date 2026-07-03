@@ -105,15 +105,9 @@ struct EmptyState: View {
     let icon: String
     let title: String
     var message: String = ""
-<<<<<<< HEAD
-    var actionLabel: String? = nil
-    var action: (() -> Void)? = nil
-
-=======
     var tint: Color = Theme.accent
     var actionTitle: String? = nil
     var action: (() -> Void)? = nil
->>>>>>> origin/pote
     var body: some View {
         VStack(spacing: 14) {
             Image(systemName: icon)
