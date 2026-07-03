@@ -1,6 +1,41 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - Routage « ajout rapide » vers le VRAI outil du pôle
+// Chaque mention d'objectif (calories, protéines, eau…) ouvre l'outil dédié
+// où l'on ajoute/ajuste vraiment cette donnée — pas un formulaire générique.
+
+enum QuickTool: String, Identifiable {
+    case calories, water, workout, habits, tasks, mood, sleep
+    var id: String { rawValue }
+
+    /// Depuis un libellé de métrique du score.
+    static func from(metric label: String) -> QuickTool? {
+        switch label {
+        case "Calories", "Protéines": return .calories
+        case "Eau":       return .water
+        case "Activité":  return .workout
+        case "Habitudes": return .habits
+        case "Tâches":    return .tasks
+        case "Humeur":    return .mood
+        case "Sommeil":   return .sleep
+        default:          return nil
+        }
+    }
+
+    @ViewBuilder var destination: some View {
+        switch self {
+        case .calories: CalAIView()
+        case .water:    HydrationView()
+        case .workout:  StrengthView()
+        case .habits:   HabitTrackerView()
+        case .tasks:    TodoView()
+        case .mood:     MoodJournalView()
+        case .sleep:    SleepDashboardView()
+        }
+    }
+}
+
 // MARK: - Métrique d'un objectif du jour
 
 struct DayMetric: Identifiable {
@@ -270,21 +305,6 @@ struct DailyScoreDetailSheet: View {
     let metrics: [DayMetric]
     let score: Int
 
-    @State private var addKind: AddAnythingSheet.Kind?
-
-    /// Quel ajout ouvrir quand on touche un objectif (calories/protéines → aliment, etc.).
-    static func kind(for label: String) -> AddAnythingSheet.Kind? {
-        switch label {
-        case "Calories", "Protéines": return .food
-        case "Eau":       return .water
-        case "Activité":  return .workout
-        case "Habitudes": return .habit
-        case "Tâches":    return .task
-        case "Humeur":    return .mood
-        default:          return nil
-        }
-    }
-
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -296,13 +316,13 @@ struct DailyScoreDetailSheet: View {
                     if metrics.isEmpty {
                         Text("Aucun objectif pour ce jour.").font(.subheadline).foregroundStyle(.secondary).padding(.top, 40)
                     } else {
-                        Text("Touche un objectif pour l'alimenter")
+                        Text("Touche un objectif pour l'ouvrir")
                             .font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary)
                     }
                     ForEach(metrics) { m in
-                        if let k = Self.kind(for: m.label) {
-                            Button { Haptics.tap(); addKind = k } label: { metricRow(m, tappable: true) }
-                                .buttonStyle(PressableButtonStyle())
+                        if let t = QuickTool.from(metric: m.label) {
+                            NavigationLink { t.destination } label: { metricRow(m, tappable: true) }
+                                .buttonStyle(.plain)
                         } else {
                             metricRow(m, tappable: false)
                         }
@@ -314,7 +334,6 @@ struct DailyScoreDetailSheet: View {
             .navigationTitle(date.formatted(.dateTime.weekday(.wide).day().month()))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("OK") { dismiss() } } }
-            .sheet(item: $addKind) { k in AddAnythingSheet(initialKind: k) }
         }
     }
 
@@ -329,8 +348,10 @@ struct DailyScoreDetailSheet: View {
                     .foregroundStyle(m.fraction >= 1 ? Theme.volt : Theme.textSecondary)
                 if m.fraction >= 1 {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.volt).font(.system(size: 14))
-                } else if tappable {
-                    Image(systemName: "plus.circle.fill").foregroundStyle(Theme.volt).font(.system(size: 16))
+                }
+                if tappable {
+                    Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(Theme.textSecondary.opacity(0.5))
                 }
             }
             GeometryReader { geo in

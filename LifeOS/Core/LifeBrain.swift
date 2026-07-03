@@ -16,7 +16,7 @@ struct BrainInsight: Identifiable {
     let tone: BrainTone
     let category: AppCategory?
     let priority: Int   // plus grand = plus prioritaire
-    var addKind: AddAnythingSheet.Kind? = nil   // si défini, le tap ouvre l'ajout direct
+    var tool: QuickTool? = nil   // si défini, le tap ouvre l'outil dédié (calories, eau…)
 }
 
 @MainActor
@@ -125,7 +125,7 @@ enum LifeBrain {
             out.append(.init(icon: "figure.strengthtraining.traditional",
                              title: "Jour de sport : \(s.trainingTitle)",
                              detail: "Vise ~\(s.proteinGoal) g de protéines aujourd'hui, et prends ta créatine après la séance.",
-                             tone: .info, category: .nutrition, priority: 60, addKind: .food))
+                             tone: .info, category: .nutrition, priority: 60, tool: .calories))
         }
 
         // Cycle → sport + nutrition + skincare (cycle × fitness × nutrition × looks)
@@ -154,7 +154,7 @@ enum LifeBrain {
             out.append(.init(icon: "drop.fill",
                              title: "Hydratation en retard",
                              detail: "Tu es à \(s.waterML)/\(s.waterGoal) ml. Bois ~\(max(250, (s.waterGoal - s.waterML) / 3)) ml maintenant.",
-                             tone: .warn, category: .nutrition, priority: 50, addKind: .water))
+                             tone: .warn, category: .nutrition, priority: 50, tool: .water))
         }
 
         // Humeur en baisse → mental + sport (mood × mind × fitness)
@@ -245,8 +245,6 @@ enum LocalEnergy {
 struct LifeBrainCard: View {
     @Environment(\.modelContext) private var ctx
 
-    @State private var addKind: AddAnythingSheet.Kind?
-
     private var insights: [BrainInsight] { LifeBrain.insights(ctx: ctx) }
 
     var body: some View {
@@ -270,13 +268,12 @@ struct LifeBrainCard: View {
             .card(padding: 8, elevated: true)
         }
         .padding(.horizontal, 16)
-        .sheet(item: $addKind) { k in AddAnythingSheet(initialKind: k) }
     }
 
     @ViewBuilder private func row(_ ins: BrainInsight) -> some View {
-        if let k = ins.addKind {
-            // Mention d'un objectif (protéines/eau…) → ajout direct.
-            Button { Haptics.tap(); addKind = k } label: { content(ins) }.buttonStyle(.plain)
+        if let t = ins.tool {
+            // Mention d'un objectif (protéines/eau…) → outil dédié.
+            NavigationLink { t.destination } label: { content(ins) }.buttonStyle(.plain)
         } else if let cat = ins.category {
             NavigationLink { cat.destination } label: { content(ins) }.buttonStyle(.plain)
         } else {
@@ -297,10 +294,7 @@ struct LifeBrainCard: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 4)
-            if ins.addKind != nil {
-                Image(systemName: "plus.circle.fill").font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Theme.volt).padding(.top, 11)
-            } else if ins.category != nil {
+            if ins.tool != nil || ins.category != nil {
                 Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold))
                     .foregroundStyle(Theme.textSecondary.opacity(0.5)).padding(.top, 12)
             }
