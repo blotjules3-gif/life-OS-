@@ -106,29 +106,131 @@ struct FoodEditor: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""; @State private var meal = "Déjeuner"
     @State private var kcal = ""; @State private var p = ""; @State private var c = ""; @State private var f = ""
+    // Recherche OpenFoodFacts (des millions de produits, ex : Nutella)
+    @State private var results: [FoodProduct] = []
+    @State private var searching = false
+    @State private var picked: FoodProduct? = nil
+    @State private var grams = "100"
+    @State private var searchTask: Task<Void, Never>? = nil
+
+    private var factor: Double { (Double(grams) ?? 0) / 100 }
+
     var body: some View {
         NavigationStack {
             Form {
-                TextField("Aliment", text: $name)
-                Picker("Repas", selection: $meal) {
-                    ForEach(["Petit-déj", "Déjeuner", "Dîner", "Collation"], id: \.self) { Text($0) }
+                Section {
+                    HStack {
+                        Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                        TextField("Rechercher un aliment (ex : Nutella)", text: $name)
+                            .onChange(of: name) { _, q in
+                                // Ne pas relancer la recherche juste après avoir sélectionné un produit.
+                                if let p = picked, q == p.name { return }
+                                scheduleSearch(q)
+                            }
+                        if searching { ProgressView() }
+                    }
+                    Picker("Repas", selection: $meal) {
+                        ForEach(["Petit-déj", "Déjeuner", "Dîner", "Collation"], id: \.self) { Text($0) }
+                    }
                 }
-                Section("Valeurs") {
-                    HStack { Text("Calories"); Spacer(); TextField("kcal", text: $kcal).keyboardType(.numberPad).multilineTextAlignment(.trailing) }
-                    HStack { Text("Protéines"); Spacer(); TextField("g", text: $p).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
-                    HStack { Text("Glucides"); Spacer(); TextField("g", text: $c).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
-                    HStack { Text("Lipides"); Spacer(); TextField("g", text: $f).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
+
+                if picked == nil, !results.isEmpty {
+                    Section("Résultats") {
+                        ForEach(results) { prod in
+                            Button { select(prod) } label: { resultRow(prod) }.buttonStyle(.plain)
+                        }
+                    }
+                } else if picked == nil, !searching, name.trimmingCharacters(in: .whitespaces).count >= 2 {
+                    Section {
+                        Text("Aucun produit trouvé — saisis les valeurs à la main ci-dessous.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+
+                if let prod = picked {
+                    Section("Portion") {
+                        HStack {
+                            Button { picked = nil } label: { Image(systemName: "chevron.left"); Text("Changer") }
+                                .font(.caption).buttonStyle(.plain).foregroundStyle(.blue)
+                            Spacer()
+                            Text(prod.name).font(.subheadline.weight(.semibold)).lineLimit(1)
+                        }
+                        HStack { Text("Quantité (g)"); Spacer()
+                            TextField("g", text: $grams).keyboardType(.numberPad).multilineTextAlignment(.trailing).frame(width: 80) }
+                        LabeledContent("Calories", value: "\(Int((Double(prod.kcal) * factor).rounded())) kcal")
+                        LabeledContent("Protéines", value: String(format: "%.1f g", prod.protein * factor))
+                        LabeledContent("Glucides", value: String(format: "%.1f g", prod.carbs * factor))
+                        LabeledContent("Lipides", value: String(format: "%.1f g", prod.fat * factor))
+                    }
+                } else {
+                    Section("Valeurs (manuel)") {
+                        HStack { Text("Calories"); Spacer(); TextField("kcal", text: $kcal).keyboardType(.numberPad).multilineTextAlignment(.trailing) }
+                        HStack { Text("Protéines"); Spacer(); TextField("g", text: $p).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
+                        HStack { Text("Glucides"); Spacer(); TextField("g", text: $c).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
+                        HStack { Text("Lipides"); Spacer(); TextField("g", text: $f).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
+                    }
                 }
             }
             .navigationTitle("Ajouter un repas").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
-                    ctx.insert(FoodEntry(name: name, calories: Int(kcal) ?? 0, protein: Double(p) ?? 0,
-                                         carbs: Double(c) ?? 0, fat: Double(f) ?? 0, meal: meal)); dismiss()
-                }.disabled(name.isEmpty) }
+                ToolbarItem(placement: .confirmationAction) { Button("Ajouter") { add() }.disabled(name.isEmpty) }
             }
         }
+    }
+
+    private func resultRow(_ prod: FoodProduct) -> some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(prod.name).foregroundStyle(.primary).lineLimit(1)
+                Text("\(prod.brand.isEmpty ? "" : prod.brand + " · ")\(prod.kcal) kcal/100 g")
+                    .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            }
+            Spacer()
+            if let ns = prod.nutriscore {
+                Text(ns.uppercased()).font(.caption2.bold()).foregroundStyle(.white)
+                    .frame(width: 20, height: 20)
+                    .background(nutriColor(ns), in: RoundedRectangle(cornerRadius: 5))
+            }
+        }
+    }
+
+    private func nutriColor(_ g: String) -> Color {
+        switch g { case "a": return .green; case "b": return Color(hex: 0x8BC34A); case "c": return .yellow
+        case "d": return .orange; default: return .red }
+    }
+
+    private func scheduleSearch(_ q: String) {
+        picked = nil
+        searchTask?.cancel()
+        let trimmed = q.trimmingCharacters(in: .whitespaces)
+        guard trimmed.count >= 2 else { results = []; searching = false; return }
+        searching = true
+        searchTask = Task {
+            try? await Task.sleep(nanoseconds: 380_000_000)
+            if Task.isCancelled { return }
+            let r = await FoodSearchService.search(trimmed)
+            if Task.isCancelled { return }
+            await MainActor.run { results = r; searching = false }
+        }
+    }
+
+    private func select(_ prod: FoodProduct) {
+        picked = prod; name = prod.name; results = []; searching = false
+        if grams.isEmpty { grams = "100" }
+    }
+
+    private func add() {
+        if let prod = picked {
+            ctx.insert(FoodEntry(name: prod.name,
+                                 calories: Int((Double(prod.kcal) * factor).rounded()),
+                                 protein: prod.protein * factor, carbs: prod.carbs * factor,
+                                 fat: prod.fat * factor, meal: meal))
+        } else {
+            ctx.insert(FoodEntry(name: name, calories: Int(kcal) ?? 0, protein: Double(p) ?? 0,
+                                 carbs: Double(c) ?? 0, fat: Double(f) ?? 0, meal: meal))
+        }
+        dismiss()
     }
 }
 
@@ -369,7 +471,7 @@ struct HydrationView: View {
         Button { ctx.insert(WaterEntry(amountML: ml)); syncWaterToContext(); Haptics.tap() } label: {
             VStack(spacing: 6) { Image(systemName: icon).font(.title2); Text("\(ml)").font(.caption.bold()) }
                 .frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
                 .foregroundStyle(.nutriTint)
         }
     }
@@ -447,7 +549,7 @@ struct SupplementsView: View {
             .buttonStyle(.borderedProminent).tint(.nutriTint).disabled(name.isEmpty)
         }
         .padding()
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
     }
 
     private func suppRow(_ s: Supplement) -> some View {
@@ -471,7 +573,7 @@ struct SupplementsView: View {
                 .labelsHidden().tint(.nutriTint)
         }
         .padding(12)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
         .contextMenu {
             Button(role: .destructive) { delete(s) } label: { Label("Supprimer", systemImage: "trash") }
         }

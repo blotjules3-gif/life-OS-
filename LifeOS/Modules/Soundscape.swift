@@ -206,7 +206,7 @@ struct SoundscapeView: View {
                             .multilineTextAlignment(.center).lineLimit(2)
                     }
                     .frame(maxWidth: .infinity).padding(.vertical, 16)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                         .stroke(active ? Color.mindTint : .clear, lineWidth: 2))
                 }
@@ -245,7 +245,7 @@ struct SoundscapeView: View {
             }
         }
         .padding(16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 
     private var volumeCard: some View {
@@ -258,7 +258,7 @@ struct SoundscapeView: View {
             }
         }
         .padding(16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 
     private var playBar: some View {

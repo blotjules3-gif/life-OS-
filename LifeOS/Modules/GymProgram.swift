@@ -98,8 +98,12 @@ struct GymProgramView: View {
         for w in 1...7 {
             NotificationManager.shared.cancel(id: "gym.day.\(w)")
             NotificationManager.shared.cancel(id: "gym.day.\(w).confirm")
+            NotificationManager.shared.cancel(id: "gym.day.\(w).protein")
         }
         guard on else { return }
+        // Heure d'entraînement (par défaut 18h) pour caler la collation post-séance.
+        let trainHour = UserDefaults.standard.integer(forKey: "sportHour")
+        let trainStart = (trainHour > 0 ? trainHour : 18) * 60
         for w in 1...7 {
             guard let d = day(w), !d.isRest,
                   !d.title.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
@@ -109,6 +113,16 @@ struct GymProgramView: View {
                 title: "💪 SALLE DE SPORT",
                 body: "Allez, lève-toi ! Aujourd'hui : \(d.title) 🔥" + extra,
                 weekday: w, hour: hour, minute: minute)
+
+            // Post-séance (~10 min après une séance d'~1 h) : protéines + créatine.
+            var pw = w
+            var pwTotal = trainStart + 70
+            if pwTotal >= 1440 { pwTotal -= 1440; pw = w % 7 + 1 }
+            NotificationManager.shared.scheduleWeekly(
+                id: "gym.day.\(w).protein",
+                title: "Fin de séance 💪",
+                body: "Dans la foulée : ~30 g de protéines + ta créatine pour bien récupérer.",
+                weekday: pw, hour: pwTotal / 60, minute: pwTotal % 60)
             if confirm {
                 var cw = w
                 var total = hour * 60 + minute + 90

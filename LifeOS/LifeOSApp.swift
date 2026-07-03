@@ -15,7 +15,10 @@ struct LifeOSApp: App {
     @AppStorage("onboardingDone") private var onboardingDone = false
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
     @AppStorage("appTheme") private var appThemeRaw = "classic"
-    private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
+    private var appTheme: AppTheme {
+        let t = AppTheme(rawValue: appThemeRaw) ?? .classic
+        return t.isSelectable ? t : .classic   // thème archivé → Bright
+    }
     @State private var showBriefingFromWidget = false
     @State private var showSleepCheckFromWidget = false
     @State private var showWeeklyBilan = false
@@ -26,6 +29,30 @@ struct LifeOSApp: App {
         recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
     }
 
+<<<<<<< HEAD
+=======
+    private static let schema = Schema([
+        // Santé
+        DreamEntry.self, SleepNight.self, FoodEntry.self, FastingSession.self, WaterEntry.self,
+        Supplement.self, PantryItem.self, ShoppingItem.self, WorkoutSet.self, StepEntry.self,
+        // Vie
+        ProgressPhoto.self, WardrobeItem.self, MoodEntry.self, TodoItem.self,
+        Habit.self, HabitCompletion.self, Note.self, MemoryEntry.self,
+        Account.self, Txn.self, Envelope.self, Subscription.self, SavingsGoal.self, SplitExpense.self,
+        // Patrimoine & reste
+        Holding.self, NetWorthItem.self, Property.self, JobApplication.self, SkillGap.self,
+        Flashcard.self, BookSummary.self, Chore.self, Pet.self, PetCare.self, Maintenance.self,
+        Vehicle.self, FuelLog.self, Contact.self, SocialEvent.self, DocVault.self, Deadline.self,
+        Trip.self, PackingItem.self,
+        // Cycle
+        CycleEntry.self,
+        // Assistant IA
+        AIMessage.self,
+        // Rappels perso (centre de notifications) + programme de sport
+        CustomReminder.self, GymDay.self
+    ])
+
+>>>>>>> origin/pote
     var body: some Scene {
         WindowGroup {
             ZStack {

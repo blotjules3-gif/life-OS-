@@ -255,7 +255,7 @@ struct LetterDetail: View {
             VStack {
                 TextEditor(text: $text)
                     .font(.callout).scrollContentBackground(.hidden).padding(12)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius)).foregroundStyle(Theme.textPrimary).padding()
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius)).foregroundStyle(Theme.textPrimary).padding()
                 ShareLink(item: text) {
                     Label("Exporter / Copier", systemImage: "square.and.arrow.up").frame(maxWidth: .infinity).padding(.vertical, 14)
                         .background(Color.adminTint, in: RoundedRectangle(cornerRadius: Theme.radiusSmall)).foregroundStyle(.white)

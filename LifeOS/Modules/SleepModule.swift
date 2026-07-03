@@ -7,6 +7,8 @@ import AVFoundation
 struct SleepHubView: View {
     var body: some View {
         HubScaffold(category: .sleep) {
+            ToolRow(icon: "chart.bar.xaxis", title: "Suivi du sommeil",
+                    subtitle: "Durée, dette, régularité · 7 nuits", tint: .sleepTint) { SleepDashboardView() }
             ToolRow(icon: "bed.double.fill", title: "Heure de coucher optimale",
                     subtitle: "Cycles de 90 min · réveil léger", tint: .sleepTint) { BedtimeCalculatorView() }
             ToolRow(icon: "powersleep", title: "Power nap",

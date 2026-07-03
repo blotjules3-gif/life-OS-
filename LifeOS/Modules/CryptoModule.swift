@@ -89,7 +89,11 @@ struct CryptoAppView: View {
 
     private static let barBg = Color.white
     private static let selBg = Color(white: 0.92)
+<<<<<<< HEAD
     private static let accentColor = Theme.invest
+=======
+    private static let tint  = Theme.textPrimary
+>>>>>>> origin/pote
 
     var body: some View {
         VStack(spacing: 0) {
@@ -149,9 +153,13 @@ struct CryptoAppView: View {
                     Button { sendChat() } label: {
                         Image(systemName: "arrow.up")
                             .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.onVolt)
                             .frame(width: 26, height: 26)
+<<<<<<< HEAD
                             .background(Self.accentColor, in: Circle())
+=======
+                            .background(Theme.volt, in: Circle())
+>>>>>>> origin/pote
                     }
                     .buttonStyle(.plain)
                     .transition(.scale(scale: 0.6).combined(with: .opacity))
@@ -319,7 +327,7 @@ struct CryptoMarketTab: View {
 
                     if loading {
                         VStack(spacing: 14) {
-                            ProgressView().controlSize(.large).tint(Color(hex: 0x46C9A8))
+                            ProgressView().controlSize(.large).tint(Theme.volt)
                             Text("Chargement du marché…").font(.subheadline).foregroundStyle(.secondary)
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -373,12 +381,12 @@ struct CryptoMarketTab: View {
             }
         } label: {
             Text(label)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(isSelected ? .white : Color(hex: 0x46C9A8))
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(isSelected ? Theme.onVolt : Theme.textPrimary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(
-                    isSelected ? Color(hex: 0x46C9A8) : Color(hex: 0x46C9A8).opacity(0.1),
+                    isSelected ? Theme.volt : Theme.bg2,
                     in: Capsule()
                 )
         }
@@ -529,7 +537,7 @@ struct CryptoSuiviTab: View {
                             }
                             Spacer()
                             if watchlist.contains(a.id) {
-                                Image(systemName: "checkmark.circle.fill").foregroundStyle(Color(hex: 0x46C9A8))
+                                Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.textPrimary)
                             }
                         }
                     }
@@ -988,11 +996,7 @@ struct CryptoLearnTab: View {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
             } label: {
                 HStack(spacing: 14) {
-                    Image(systemName: lesson.icon)
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(lesson.color)
-                        .frame(width: 44, height: 44)
-                        .background(lesson.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    IconBadge(icon: lesson.icon, size: 44)
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(lesson.title)
@@ -1030,10 +1034,10 @@ struct CryptoLearnTab: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(isExpanded ? lesson.color.opacity(0.3) : Color.clear, lineWidth: 1.5)
+                .stroke(isExpanded ? Theme.line : Color.clear, lineWidth: 1.5)
         )
         .animation(.spring(duration: 0.3), value: isExpanded)
     }
@@ -1054,7 +1058,7 @@ struct CryptoLearnTab: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(notion.term)
                 .font(.system(.subheadline, weight: .bold))
-                .foregroundStyle(notion.color)
+                .foregroundStyle(Theme.textPrimary)
             Text(notion.definition)
                 .font(.system(size: 12))
                 .foregroundStyle(Theme.textSecondary)
@@ -1063,10 +1067,10 @@ struct CryptoLearnTab: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(notion.color.opacity(0.2), lineWidth: 1)
+                .stroke(Theme.hairline, lineWidth: 1)
         )
     }
 }
@@ -1160,7 +1164,7 @@ struct CryptoDetailSheet: View {
                             }
                         }
                         .padding(Theme.pad)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
 
                         // Scores
                         VStack(alignment: .leading, spacing: 12) {
@@ -1173,7 +1177,7 @@ struct CryptoDetailSheet: View {
                                 .font(.caption).foregroundStyle(Theme.textSecondary)
                         }
                         .padding(Theme.pad)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
 
                         // Stats marché
                         VStack(alignment: .leading, spacing: 0) {
@@ -1185,7 +1189,7 @@ struct CryptoDetailSheet: View {
                             detailStatRow("Variation 24h", String(format: "%+.2f%%", asset.change24h))
                         }
                         .padding(Theme.pad)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                     }
                     .padding(Theme.pad)
                 }

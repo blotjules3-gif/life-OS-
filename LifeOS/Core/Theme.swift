@@ -1,19 +1,21 @@
 import SwiftUI
 import UIKit
 
-/// Design system de LifeOS — sobre, natif, adaptatif (clair/sombre), façon app système Apple.
+/// Design system de LifeOS — langage NIKE : noir & blanc haute intensité, accent VOLT,
+/// coins nets, typographie grasse/majuscule, labels techniques monospace, grilles.
 enum Theme {
-    // Couleurs système adaptatives (pas de dégradé, pas de couleurs en dur)
+    // Surfaces système adaptatives (bright = blanc cassé / dark = noir pur — voir AppTheme.bubbleBG).
     static let bg = Color(uiColor: .systemGroupedBackground)
     static let bg2 = Color(uiColor: .tertiarySystemGroupedBackground)
     static let card = Color(uiColor: .secondarySystemGroupedBackground)
-    static let stroke = Color(uiColor: .separator).opacity(0.6)
+    static let stroke = Color.primary.opacity(0.16)
     static let textPrimary = Color.primary
     // UIColor.secondaryLabel meets ≥3:1 on system backgrounds in both light and dark
     static let textSecondary = Color(uiColor: .secondaryLabel)
     static let textTertiary  = Color(uiColor: .tertiaryLabel)
     static let accent = Color.accentColor
 
+<<<<<<< HEAD
     static let radius: CGFloat = 16
     static let radiusSmall: CGFloat = 11
     static let pad: CGFloat = 16
@@ -72,10 +74,113 @@ enum Theme {
     static let space24: CGFloat = 24
     static let space32: CGFloat = 32
     static let space48: CGFloat = 48
+=======
+    /// Accent signature = le VERT de l'icône de l'app (#4CF810). À utiliser en aplat, TEXTE NOIR par-dessus.
+    static let volt = Color(hex: 0x4CF810)
+    static let onVolt = Color.black
+>>>>>>> origin/pote
 
-    /// Fond neutre système (utilisé par les écrans de détail).
-    static var background: some View {
-        Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
+    // Liseré discret + ombre douce (profondeur iOS 26, pas de brutalisme).
+    static let hairline = Color.primary.opacity(0.10)
+    static let line = Color.primary.opacity(0.22)      // trait de grille technique
+    static let shadow = Color.black.opacity(0.10)
+    static let shadowSoft = Color.black.opacity(0.06)
+
+    // Coins GÉNÉREUX arrondis (iOS 26 / Liquid Glass), continus.
+    static let radius: CGFloat = 22
+    static let radiusSmall: CGFloat = 14
+    static let radiusLarge: CGFloat = 30
+    static let pad: CGFloat = 16
+    static let gap: CGFloat = 12
+    static let sectionGap: CGFloat = 24
+
+    /// Thème Verre actif ? (lu depuis les réglages — sert aux fonds adaptatifs).
+    static var isGlassActive: Bool { UserDefaults.standard.string(forKey: "appTheme") == "glass" }
+
+    /// Remplissage de carte adaptatif : verre dépoli en thème Verre, sinon surface opaque.
+    /// À utiliser dans `.background(Theme.cardFill, in: shape)` pour que TOUTES les cartes
+    /// suivent le thème (glass global).
+    static var cardFill: AnyShapeStyle {
+        isGlassActive ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(card)
+    }
+
+    /// Fond d'écran adaptatif : en thème Verre = wallpaper flou (les surfaces se dépolissent
+    /// par-dessus). Sinon fond système. Utilisé par TOUS les écrans (accueil, réveil, chat,
+    /// questionnaires, profil…) pour que le verre soit global.
+    @ViewBuilder static var screenBG: some View {
+        if isGlassActive {
+            GlassBackdrop()
+        } else {
+            Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
+        }
+    }
+
+    /// Ancien nom conservé (mêmes règles que screenBG).
+    @ViewBuilder static var background: some View { screenBG }
+}
+
+/// Fond « verre » global : fond d'écran doux et flou par-dessus lequel toutes les
+/// surfaces `.ultraThinMaterial` (cartes, badges, barre) se dépolissent — façon iOS 26.
+struct GlassBackdrop: View {
+    var body: some View {
+        ZStack {
+            // Fond d'écran doux mais COLORÉ (façon wallpaper iOS) pour que les surfaces
+            // .ultraThinMaterial se dépolissent visiblement — vrai Liquid Glass.
+            LinearGradient(colors: [Color(hex: 0x7C93C8), Color(hex: 0xAE9BC9), Color(hex: 0x8FC4BE)],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+            Circle().fill(Color(hex: 0x9FD0E8).opacity(0.75)).frame(width: 380, height: 380)
+                .blur(radius: 100).offset(x: -140, y: -260)
+            Circle().fill(Color(hex: 0xC7A6D8).opacity(0.7)).frame(width: 360, height: 360)
+                .blur(radius: 110).offset(x: 160, y: 300)
+            Circle().fill(Color(hex: 0xF0C9A8).opacity(0.6)).frame(width: 300, height: 300)
+                .blur(radius: 95).offset(x: 150, y: -140)
+            Circle().fill(Color(hex: 0x8FD6B4).opacity(0.55)).frame(width: 280, height: 280)
+                .blur(radius: 90).offset(x: -150, y: 320)
+        }
+        .ignoresSafeArea()
+    }
+}
+
+/// Style de bouton tactile : léger enfoncement + estompage au press.
+struct PressableButtonStyle: ButtonStyle {
+    var scale: CGFloat = 0.97
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? scale : 1)
+            .opacity(configuration.isPressed ? 0.9 : 1)
+            .animation(.spring(response: 0.28, dampingFraction: 0.6), value: configuration.isPressed)
+    }
+}
+
+extension View {
+    /// Ombre douce diffuse — profondeur flottante iOS 26.
+    func softElevation(_ strong: Bool = false) -> some View {
+        shadow(color: strong ? Theme.shadow : Theme.shadowSoft, radius: strong ? 18 : 11, y: strong ? 8 : 4)
+    }
+    /// Titre NIKE : gras extrême, majuscules, kerning serré.
+    func nikeTitle(_ size: CGFloat = 34) -> some View {
+        self.font(.system(size: size, weight: .black)).textCase(.uppercase).kerning(-0.5)
+    }
+    /// Label technique monospace en majuscules (façon fiches produit Nike ADV).
+    func monoLabel(_ size: CGFloat = 11) -> some View {
+        self.font(.system(size: size, weight: .semibold, design: .monospaced)).textCase(.uppercase).kerning(1.4)
+    }
+}
+
+/// Grille technique fine (motif Nike/Swiss) posée derrière le contenu.
+struct TechGrid: View {
+    var spacing: CGFloat = 46
+    var body: some View {
+        GeometryReader { geo in
+            Path { p in
+                var x: CGFloat = 0
+                while x <= geo.size.width { p.move(to: .init(x: x, y: 0)); p.addLine(to: .init(x: x, y: geo.size.height)); x += spacing }
+                var y: CGFloat = 0
+                while y <= geo.size.height { p.move(to: .init(x: 0, y: y)); p.addLine(to: .init(x: geo.size.width, y: y)); y += spacing }
+            }
+            .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
+        }
+        .allowsHitTesting(false)
     }
 }
 
@@ -89,23 +194,39 @@ extension Color {
             opacity: alpha
         )
     }
+
+    /// "RRGGBB" hex (sans #) — pour persister une couleur choisie par l'utilisateur.
+    var hexString: String {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        UIColor(self).getRed(&r, green: &g, blue: &b, alpha: &a)
+        return String(format: "%02X%02X%02X",
+                      Int(round(max(0, min(1, r)) * 255)),
+                      Int(round(max(0, min(1, g)) * 255)),
+                      Int(round(max(0, min(1, b)) * 255)))
+    }
 }
 
 // MARK: - Thèmes de l'app (Couleur de l'app)
 
 enum AppTheme: String, CaseIterable, Identifiable {
-    case classic   // clair actuel
-    case dark      // sombre (version sombre de l'actuel)
+    case classic   // NIKE bright — blanc cassé + noir + volt
+    case dark      // NIKE dark — noir pur + blanc + volt
+    case glass     // VERRE translucide façon Apple (Liquid Glass)
     case pinky     // rose, féminin, bubbly
     case gothic    // argent liquide sombre, gothique
     case cloud     // nuage blanc, doux
 
     var id: String { rawValue }
 
+    /// Thèmes proposés dans le sélecteur. Rose/Argent/Cloud sont ARCHIVÉS (code gardé, retirés du choix).
+    static let selectable: [AppTheme] = [.classic, .dark, .glass]
+    var isSelectable: Bool { Self.selectable.contains(self) }
+
     var label: String {
         switch self {
-        case .classic: return "Clair"
-        case .dark:    return "Sombre"
+        case .classic: return "Bright"
+        case .dark:    return "Dark"
+        case .glass:   return "Verre"
         case .pinky:   return "Rose"
         case .gothic:  return "Argent"
         case .cloud:   return "Cloud"
@@ -115,6 +236,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
         switch self {
         case .classic: return "sun.max.fill"
         case .dark:    return "moon.fill"
+        case .glass:   return "circle.hexagongrid.fill"
         case .pinky:   return "heart.fill"
         case .gothic:  return "drop.fill"
         case .cloud:   return "cloud.fill"
@@ -127,27 +249,30 @@ enum AppTheme: String, CaseIterable, Identifiable {
         default:             return .light
         }
     }
-    /// Couleur d'accent du thème.
+    /// Couleur d'accent du thème. NIKE = volt.
     var accent: Color {
         switch self {
-        case .classic: return Color(hex: 0x618EF1)
-        case .dark:    return Color(hex: 0x6C9BF1)
+        case .classic: return Theme.volt
+        case .dark:    return Theme.volt
+        case .glass:   return Theme.volt
         case .pinky:   return Color(hex: 0xFF5BA0)
         case .gothic:  return Color(hex: 0xB7C2D0)
         case .cloud:   return Color(hex: 0x9BB2D6)
         }
     }
     /// Fond (mesh 3×3) de l'écran Catégories selon le thème.
+    /// NIKE = aplat (blanc cassé / noir pur), la texture vient de la grille technique.
     var bubbleBG: [Color] {
         switch self {
         case .classic:
-            return [ Color(hex: 0xD4E8FC), Color(hex: 0xEAF4FF), Color(hex: 0xF5EEF8),
-                     Color(hex: 0xE0F2FF), Color(hex: 0xF7FBFF), Color(hex: 0xE6F2FF),
-                     Color(hex: 0xD7ECFF), Color(hex: 0xDEEFFF), Color(hex: 0xE3EFFF) ]
+            return Array(repeating: Color(hex: 0xECECE7), count: 9)
         case .dark:
-            return [ Color(hex: 0x10121F), Color(hex: 0x0D0F1C), Color(hex: 0x161122),
-                     Color(hex: 0x0E1120), Color(hex: 0x121426), Color(hex: 0x100E1F),
-                     Color(hex: 0x0C0E1C), Color(hex: 0x0F1122), Color(hex: 0x11101E) ]
+            return Array(repeating: Color(hex: 0x000000), count: 9)
+        case .glass:
+            // Toile floue neutre/chaude derrière le verre (façon fond d'écran iOS).
+            return [ Color(hex: 0xB8BCC6), Color(hex: 0xC7C2BC), Color(hex: 0xAEB4BE),
+                     Color(hex: 0xC9C4BE), Color(hex: 0xBFC3CB), Color(hex: 0xB2AEA9),
+                     Color(hex: 0xA9AEB8), Color(hex: 0xC4BFB8), Color(hex: 0xB6BAC3) ]
         case .pinky:
             return [ Color(hex: 0xFFE3F1), Color(hex: 0xFFF0F7), Color(hex: 0xFFE7F4),
                      Color(hex: 0xFFEAF4), Color(hex: 0xFFF6FB), Color(hex: 0xFCE7FF),
@@ -162,8 +287,14 @@ enum AppTheme: String, CaseIterable, Identifiable {
                      Color(hex: 0xEDF1F8), Color(hex: 0xF4F7FC), Color(hex: 0xF0F4FA) ]
         }
     }
+    /// Nike = thèmes bright/dark (noir & blanc + volt).
+    var isNike: Bool { self == .classic || self == .dark }
+    var isGlass: Bool { self == .glass }
+    /// Thèmes « modernes » (Nike + Verre) → grille de catégories façon Nike (pas les bulles).
+    var isModern: Bool { isNike || isGlass }
 }
 
+<<<<<<< HEAD
 // MARK: - Système d'ombres (3 niveaux)
 
 private struct ShadowModifier: ViewModifier {
@@ -187,19 +318,34 @@ extension View {
 }
 
 // MARK: - Carte sobre (cellule groupée façon iOS)
+=======
+// MARK: - Carte NIKE (plate, bordure franche, coins nets)
+>>>>>>> origin/pote
 
 struct CardStyle: ViewModifier {
+    @AppStorage("appTheme") private var themeRaw = "classic"
     var padding: CGFloat = Theme.pad
+    var radius: CGFloat = Theme.radius
+    var elevated: Bool = false
     func body(content: Content) -> some View {
+        let glass = themeRaw == "glass"
         content
             .padding(padding)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+            .background(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .fill(glass ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Theme.card))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .strokeBorder(glass ? Color.white.opacity(0.35) : Theme.hairline, lineWidth: glass ? 1 : 0.5)
+            )
+            .softElevation(elevated)
     }
 }
 
 extension View {
-    func card(padding: CGFloat = Theme.pad) -> some View {
-        modifier(CardStyle(padding: padding))
+    func card(padding: CGFloat = Theme.pad, radius: CGFloat = Theme.radius, elevated: Bool = false) -> some View {
+        modifier(CardStyle(padding: padding, radius: radius, elevated: elevated))
     }
 }
 

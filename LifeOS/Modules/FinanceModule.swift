@@ -20,7 +20,7 @@ struct FinanceHubView: View {
             ToolRow(icon: "target", title: "Objectifs d'épargne",
                     subtitle: "Projection temps restant", tint: .finTint) { SavingsView() }
             ToolRow(icon: "link.circle.fill", title: "Agrégation bancaire",
-                    subtitle: "Bankin / Linxo — à brancher", tint: .finTint) { BankScaffold() }
+                    subtitle: "Tous tes comptes agrégés", tint: .finTint) { BankOverviewView() }
         }
     }
 }
@@ -176,8 +176,18 @@ struct BudgetView: View {
                                 HStack {
                                     Text(e.remaining >= 0 ? "Reste \(Int(e.remaining))€" : "Dépassé de \(Int(-e.remaining))€").font(.caption).foregroundStyle(e.remaining < 0 ? .red : Theme.textSecondary)
                                     Spacer()
-                                    Button("-10") { e.spent = max(0, e.spent-10) }.font(.caption).buttonStyle(.bordered).tint(.finTint)
-                                    Button("+10€") { e.spent += 10 }.font(.caption).buttonStyle(.borderedProminent).tint(.finTint)
+                                    Button { e.spent = max(0, e.spent-10) } label: {
+                                        Text("-10").font(.caption.bold())
+                                            .padding(.horizontal, 12).padding(.vertical, 6)
+                                            .background(Theme.bg2, in: Capsule())
+                                            .foregroundStyle(Theme.textPrimary)
+                                    }.buttonStyle(.plain)
+                                    Button { e.spent += 10 } label: {
+                                        Text("+10€").font(.caption.bold())
+                                            .padding(.horizontal, 12).padding(.vertical, 6)
+                                            .background(Theme.volt, in: Capsule())
+                                            .foregroundStyle(Theme.onVolt)
+                                    }.buttonStyle(.plain)
                                 }
                             }.card()
                                 .contextMenu { Button(role: .destructive) { ctx.delete(e) } label: { Label("Supprimer", systemImage: "trash") } }
@@ -397,12 +407,17 @@ struct SavingsView: View {
                     } else {
                         ForEach(goals) { g in
                             VStack(alignment: .leading, spacing: 8) {
-                                HStack { Text(g.name).font(.headline).foregroundStyle(Theme.textPrimary); Spacer(); Text("\(Int(g.current)) / \(Int(g.target)) €").bold().foregroundStyle(.finTint) }
-                                ProgressView(value: g.progress).tint(.finTint)
+                                HStack { Text(g.name).font(.headline).foregroundStyle(Theme.textPrimary); Spacer(); Text("\(Int(g.current)) / \(Int(g.target)) €").bold().foregroundStyle(Theme.textPrimary) }
+                                ProgressView(value: g.progress).tint(Theme.volt)
                                 HStack {
                                     Text(g.monthsLeft > 0 ? "≈ \(g.monthsLeft) mois restants (\(Int(g.monthly))€/mois)" : "Objectif atteint 🎉").font(.caption).foregroundStyle(Theme.textSecondary)
                                     Spacer()
-                                    Button("+\(Int(g.monthly))€") { g.current += g.monthly }.font(.caption).buttonStyle(.borderedProminent).tint(.finTint)
+                                    Button { g.current += g.monthly } label: {
+                                        Text("+\(Int(g.monthly))€").font(.caption.bold())
+                                            .padding(.horizontal, 12).padding(.vertical, 6)
+                                            .background(Theme.volt, in: Capsule())
+                                            .foregroundStyle(Theme.onVolt)
+                                    }.buttonStyle(.plain)
                                 }
                             }.card()
                                 .contextMenu { Button(role: .destructive) { ctx.delete(g) } label: { Label("Supprimer", systemImage: "trash") } }
@@ -440,26 +455,96 @@ struct SavingsEditor: View {
 
 // MARK: - Scaffold agrégation bancaire
 
-struct BankScaffold: View {
+/// Vue « Solde global » : agrège tous les comptes saisis + le cashflow du mois.
+/// (La connexion bancaire automatique DSP2 exige un agrégateur agréé — hors app.)
+struct BankOverviewView: View {
+    @Query private var accounts: [Account]
+    @Query private var txns: [Txn]
+
+    private var total: Double { accounts.reduce(0) { $0 + $1.balance } }
+    private func totalOf(_ kind: String) -> Double {
+        accounts.filter { $0.kind == kind }.reduce(0) { $0 + $1.balance }
+    }
+    private var monthTxns: [Txn] {
+        txns.filter { Calendar.current.isDate($0.date, equalTo: .now, toGranularity: .month) }
+    }
+    private var income: Double { monthTxns.filter { $0.amount > 0 }.reduce(0) { $0 + $1.amount } }
+    private var expense: Double { monthTxns.filter { $0.amount < 0 }.reduce(0) { $0 + $1.amount } }
+
     var body: some View {
         ZStack {
             Theme.background
             ScrollView {
                 VStack(spacing: 16) {
-                    Image(systemName: "link.circle.fill").font(.system(size: 56)).foregroundStyle(.finTint).padding(.top, 30)
-                    Text("Agrégation bancaire").font(.title3.bold()).foregroundStyle(Theme.textPrimary)
-                    IntegrationNotice(text: "Connecter automatiquement tes comptes bancaires (Bankin/Linxo) impose la réglementation DSP2 : tu dois passer par un agrégateur agréé (Bridge by Bankin', Powens/Budget Insight, Tink, Plaid). C'est un service payant avec contrat + agrément. Aucune app ne peut lire tes comptes sans cet intermédiaire — c'est une protection légale.")
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Chemin d'activation").font(.headline).foregroundStyle(Theme.textPrimary)
-                        bullet("Choisir un agrégateur DSP2 (ex: Bridge API)")
-                        bullet("OAuth bancaire : l'utilisateur autorise sa banque")
-                        bullet("Webhook → transactions → catégorisation auto (déjà modélisée ici)")
-                        bullet("La catégorisation, le budget, les abonnements et alertes sont DÉJÀ codés et fonctionnent en saisie manuelle")
+                    VStack(spacing: 6) {
+                        Text("Solde global").font(.subheadline).foregroundStyle(.secondary)
+                        Text(total, format: .currency(code: "EUR"))
+                            .font(.system(size: 40, weight: .bold, design: .rounded))
+                            .foregroundStyle(total < 0 ? .red : Theme.textPrimary)
+                        Text("\(accounts.count) compte\(accounts.count > 1 ? "s" : "") agrégé\(accounts.count > 1 ? "s" : "")")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }.frame(maxWidth: .infinity).padding(.vertical, 22).card()
+
+                    HStack(spacing: 12) {
+                        kindTile("Courant", "creditcard.fill")
+                        kindTile("Épargne", "banknote.fill")
+                        kindTile("Cash", "eurosign.circle.fill")
+                    }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Ce mois-ci").font(.headline).foregroundStyle(Theme.textPrimary)
+                        cashRow("Entrées", income, .green)
+                        cashRow("Sorties", expense, .red)
+                        Divider()
+                        cashRow("Net", income + expense, (income + expense) >= 0 ? .green : .red)
                     }.card()
+
+                    if accounts.isEmpty {
+                        Text("Ajoute des comptes dans « Comptes & dépenses » pour les voir agrégés ici.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading).card()
+                    } else {
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(accounts) { a in
+                                HStack {
+                                    Image(systemName: a.kind == "Épargne" ? "banknote" : a.kind == "Cash" ? "eurosign.circle" : "creditcard")
+                                        .foregroundStyle(.finTint)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(a.name.isEmpty ? a.kind : a.name).foregroundStyle(Theme.textPrimary)
+                                        Text(a.kind).font(.caption).foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    Text(a.balance, format: .currency(code: "EUR")).bold()
+                                        .foregroundStyle(a.balance < 0 ? .red : Theme.textPrimary)
+                                }.padding(.vertical, 11)
+                                Divider().opacity(a.persistentModelID == accounts.last?.persistentModelID ? 0 : 1)
+                            }
+                        }.card()
+                    }
+
+                    Text("Agrégation de tes comptes saisis manuellement. La connexion bancaire automatique (norme DSP2) nécessite un agrégateur agréé et n'est pas incluse.")
+                        .font(.caption2).foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }.padding(Theme.pad)
             }
         }
-        .navigationTitle("Agrégation").navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Solde global").navigationBarTitleDisplayMode(.inline)
     }
-    private func bullet(_ t: String) -> some View { Text("• " + t).font(.footnote).foregroundStyle(Theme.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
+
+    private func kindTile(_ kind: String, _ icon: String) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon).font(.title3).foregroundStyle(.finTint)
+            Text(totalOf(kind), format: .currency(code: "EUR"))
+                .font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.textPrimary)
+                .lineLimit(1).minimumScaleFactor(0.6)
+            Text(kind).font(.caption2).foregroundStyle(.secondary)
+        }.frame(maxWidth: .infinity).padding(.vertical, 14).card()
+    }
+    private func cashRow(_ label: String, _ v: Double, _ color: Color) -> some View {
+        HStack {
+            Text(label).foregroundStyle(Theme.textSecondary)
+            Spacer()
+            Text(v, format: .currency(code: "EUR")).bold().foregroundStyle(color)
+        }
+    }
 }

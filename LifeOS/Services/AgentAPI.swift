@@ -4,6 +4,8 @@ import UIKit
 // MARK: - Configuration (délégué à Configuration.swift)
 
 enum AgentAPIConfig {
+    // Backend Railway déployé — les appels réseau sont actifs.
+    static let enabled = true
     static var baseURL: URL { Configuration.baseURL }
     static var apiKey: String { Configuration.apiKey }
     static let timeoutInterval: TimeInterval = Configuration.timeoutInterval
@@ -422,6 +424,7 @@ actor AgentAPI {
     // MARK: - Helpers
 
     private func get<T: Decodable>(path: String, queryItems: [URLQueryItem] = []) async throws -> T {
+        guard AgentAPIConfig.enabled else { throw AgentAPIError.networkError(URLError(.notConnectedToInternet)) }
         var components = URLComponents(url: AgentAPIConfig.baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
         if !queryItems.isEmpty { components.queryItems = queryItems }
         var req = URLRequest(url: components.url!)
@@ -432,7 +435,12 @@ actor AgentAPI {
         return try decode(T.self, from: data)
     }
 
+<<<<<<< HEAD
     private func post<Body: Encodable, Response: Decodable>(path: String, body: Body, session sessionOverride: URLSession? = nil) async throws -> Response {
+=======
+    private func post<Body: Encodable, Response: Decodable>(path: String, body: Body) async throws -> Response {
+        guard AgentAPIConfig.enabled else { throw AgentAPIError.networkError(URLError(.notConnectedToInternet)) }
+>>>>>>> origin/pote
         var req = makeRequest(path: path)
         req.httpMethod = "POST"
         req.httpBody = try JSONEncoder().encode(body)

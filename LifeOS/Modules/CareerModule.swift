@@ -17,7 +17,7 @@ struct CareerHubView: View {
             ToolRow(icon: "mic.fill", title: "Mock interview",
                     subtitle: "Entraînement entretien", tint: .careerTint) { MockInterviewView() }
             ToolRow(icon: "magnifyingglass", title: "Matching d'offres",
-                    subtitle: "LinkedIn / Indeed — à brancher", tint: .careerTint) { JobMatchScaffold() }
+                    subtitle: "Offres réelles selon tes compétences", tint: .careerTint) { JobMatchView() }
         }
     }
 }
@@ -287,23 +287,172 @@ struct MockInterviewView: View {
 
 // MARK: - Job match scaffold
 
-struct JobMatchScaffold: View {
+// MARK: - Matching d'offres (recherche RÉELLE, API publique gratuite sans clé)
+
+struct JobPosting: Identifiable, Decodable {
+    var id: String { slug }
+    let slug: String
+    let title: String
+    let company_name: String
+    let location: String
+    let remote: Bool
+    let url: String
+    let tags: [String]
+    let job_types: [String]
+}
+
+private struct ArbeitnowResponse: Decodable { let data: [JobPosting] }
+
+enum JobSearchService {
+    /// Flux public gratuit, sans clé (offres tech/remote, majoritairement Europe).
+    static func fetch() async throws -> [JobPosting] {
+        let url = URL(string: "https://www.arbeitnow.com/api/job-board-api")!
+        var req = URLRequest(url: url)
+        req.timeoutInterval = 15
+        let (data, _) = try await URLSession.shared.data(for: req)
+        return try JSONDecoder().decode(ArbeitnowResponse.self, from: data).data
+    }
+}
+
+struct JobMatchView: View {
+    @Environment(\.modelContext) private var ctx
+    @Environment(\.openURL) private var openURL
+    @Query private var skills: [SkillGap]
+
+    @State private var query = ""
+    @State private var remoteOnly = false
+    @State private var all: [JobPosting] = []
+    @State private var loading = false
+    @State private var errorText: String?
+
+    /// Compétences ciblées de l'utilisateur (module « Compétences manquantes »).
+    private var mySkills: [String] {
+        Array(Set(skills.map { $0.skill.lowercased() }.filter { $0.count > 1 }))
+    }
+
+    private func score(_ job: JobPosting) -> Int {
+        let hay = (job.title + " " + job.tags.joined(separator: " ")).lowercased()
+        return mySkills.reduce(0) { $0 + (hay.contains($1) ? 1 : 0) }
+    }
+
+    private var filtered: [JobPosting] {
+        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+        return all
+            .filter { !remoteOnly || $0.remote }
+            .filter { job in
+                q.isEmpty || {
+                    let hay = (job.title + " " + job.company_name + " " + job.location + " " + job.tags.joined(separator: " ")).lowercased()
+                    return hay.contains(q)
+                }()
+            }
+            .sorted { score($0) > score($1) }
+    }
+
     var body: some View {
         ZStack {
             Theme.background
-            ScrollView {
-                VStack(spacing: 16) {
-                    Image(systemName: "magnifyingglass.circle.fill").font(.system(size: 56)).foregroundStyle(.careerTint).padding(.top, 30)
-                    Text("Matching d'offres").font(.title3.bold()).foregroundStyle(Theme.textPrimary)
-                    IntegrationNotice(text: "LinkedIn et Indeed ne donnent pas d'API publique ouverte pour lister/matcher les offres (CGU strictes). Options réelles : l'API LinkedIn Talent (entreprise, payante), des agrégateurs d'offres (Adzuna API gratuite, Jooble), ou la saisie de tes critères + matching contre ces flux. Ton profil (compétences, candidatures) est déjà structuré pour alimenter le matching.")
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Branchable gratuitement").font(.headline).foregroundStyle(Theme.textPrimary)
-                        Text("• Adzuna API (offres FR, gratuit avec clé)").font(.footnote).foregroundStyle(Theme.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
-                        Text("• Matching : compare tes compétences (module Skill gap) aux intitulés").font(.footnote).foregroundStyle(Theme.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
-                    }.card()
-                }.padding(Theme.pad)
+            VStack(spacing: 0) {
+                searchBar
+                if loading && all.isEmpty {
+                    Spacer(); ProgressView("Recherche d'offres…"); Spacer()
+                } else if let errorText, all.isEmpty {
+                    Spacer()
+                    VStack(spacing: 10) {
+                        Image(systemName: "wifi.exclamationmark").font(.largeTitle).foregroundStyle(.secondary)
+                        Text(errorText).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                        Button("Réessayer") { Task { await load() } }.buttonStyle(.borderedProminent).tint(.careerTint)
+                    }.padding(30)
+                    Spacer()
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 12) {
+                            if filtered.isEmpty {
+                                Text("Aucune offre ne correspond.").font(.footnote).foregroundStyle(.secondary).padding(.top, 40)
+                            }
+                            ForEach(filtered) { job in jobCard(job) }
+                        }.padding(Theme.pad)
+                    }
+                    .refreshable { await load() }
+                }
             }
         }
         .navigationTitle("Matching d'offres").navigationBarTitleDisplayMode(.inline)
+        .task { if all.isEmpty { await load() } }
+    }
+
+    private var searchBar: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                TextField("Poste, techno, ville…", text: $query)
+                    .textInputAutocapitalization(.never).autocorrectionDisabled()
+                if !query.isEmpty { Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }.buttonStyle(.plain) }
+            }
+            .padding(10).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            Toggle("Télétravail uniquement", isOn: $remoteOnly).font(.subheadline).tint(.careerTint)
+            if !mySkills.isEmpty {
+                Text("★ = correspond à tes compétences suivies").font(.caption2).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .padding(Theme.pad)
+        .background(Theme.background)
+    }
+
+    private func jobCard(_ job: JobPosting) -> some View {
+        let s = score(job)
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(job.title).font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.textPrimary)
+                    Text(job.company_name).font(.subheadline).foregroundStyle(.secondary)
+                }
+                Spacer()
+                if s > 0 {
+                    Text("★ \(s)").font(.caption.bold()).foregroundStyle(.white)
+                        .padding(.horizontal, 8).padding(.vertical, 4)
+                        .background(Color.careerTint, in: Capsule())
+                }
+            }
+            HStack(spacing: 8) {
+                Label(job.location.isEmpty ? "—" : job.location, systemImage: "mappin.and.ellipse")
+                if job.remote { Label("Remote", systemImage: "house") }
+            }.font(.caption).foregroundStyle(.secondary)
+            if !job.tags.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(job.tags.prefix(6), id: \.self) { t in
+                            Text(t).font(.caption2).foregroundStyle(.careerTint)
+                                .padding(.horizontal, 8).padding(.vertical, 3)
+                                .background(Color.careerTint.opacity(0.1), in: Capsule())
+                        }
+                    }
+                }
+            }
+            HStack(spacing: 10) {
+                Button { if let u = URL(string: job.url) { openURL(u) } } label: {
+                    Label("Voir l'offre", systemImage: "arrow.up.right.square").font(.subheadline.weight(.semibold))
+                }.buttonStyle(.borderedProminent).tint(.careerTint)
+                Button { track(job) } label: {
+                    Label("Suivre", systemImage: "tray.and.arrow.down").font(.subheadline)
+                }.buttonStyle(.bordered).tint(.careerTint)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+    }
+
+    private func track(_ job: JobPosting) {
+        ctx.insert(JobApplication(company: job.company_name, role: job.title, status: "Repéré", url: job.url))
+        try? ctx.save()
+        Haptics.soft()
+    }
+
+    private func load() async {
+        loading = true; errorText = nil
+        do { all = try await JobSearchService.fetch() }
+        catch { errorText = "Impossible de charger les offres (vérifie ta connexion)." }
+        loading = false
     }
 }

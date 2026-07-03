@@ -41,7 +41,14 @@ struct ThemedBubbleBackground: View {
     var body: some View {
         let cols = theme.bubbleBG
         ZStack {
-            if theme == .gothic {
+            if theme.isNike {
+                // NIKE : aplat + grille technique fine (motif Swiss).
+                cols[0]
+                TechGrid(spacing: 46)
+            } else if theme.isGlass {
+                // VERRE : fond d'écran doux et flou, wallpaper unique de toute l'app.
+                GlassBackdrop()
+            } else if theme == .gothic {
                 Color(hex: 0x050506)
                 RadialGradient(colors: [.clear, Color.black.opacity(0.7)],
                                center: .center, startRadius: 60, endRadius: 520)
@@ -82,13 +89,14 @@ enum BubbleSize: String, CaseIterable {
 struct CategoryHubView: View {
     let category: AppCategory
 
-    @AppStorage("catLayout")  private var layoutRaw = "organic"
+    // Les sous-catégories sont verrouillées en bulles libres (voir `layout`).
     @AppStorage("appTheme")   private var appThemeRaw = "classic"
     @AppStorage("bubbleSize") private var bubbleSizeRaw = "medium"
     @State private var cover: CategoryTool?
     @State private var showSetup = false
 
-    private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .organic }
+    // Les sous-catégories restent TOUJOURS en bulles libres (choix verrouillé).
+    private var layout: CatLayout { .organic }
     private var theme: AppTheme   { AppTheme(rawValue: appThemeRaw) ?? .classic }
     private var tools: [CategoryTool] { category.tools }
     private var sizeFactor: CGFloat { BubbleSize(rawValue: bubbleSizeRaw)?.factor ?? 1.0 }
@@ -132,9 +140,9 @@ struct CategoryHubView: View {
     @ViewBuilder
     private func toolLink<L: View>(_ tool: CategoryTool, @ViewBuilder label: () -> L) -> some View {
         if tool.fullScreen {
-            Button { Haptics.soft(); cover = tool } label: { label() }.buttonStyle(.plain)
+            Button { Haptics.soft(); cover = tool } label: { label() }.buttonStyle(PressableButtonStyle())
         } else {
-            NavigationLink { tool.dest() } label: { label() }.buttonStyle(.plain)
+            NavigationLink { tool.dest().floatingBarClearance() } label: { label() }.buttonStyle(PressableButtonStyle())
         }
     }
 
@@ -146,7 +154,7 @@ struct CategoryHubView: View {
                     Button { Haptics.soft(); cover = tool } label: { rowLabel(tool, chevron: true) }
                         .buttonStyle(.plain)
                 } else {
-                    NavigationLink { tool.dest() } label: { rowLabel(tool, chevron: false) }
+                    NavigationLink { tool.dest().floatingBarClearance() } label: { rowLabel(tool, chevron: false) }
                 }
             }
         }
@@ -154,10 +162,7 @@ struct CategoryHubView: View {
 
     private func rowLabel(_ tool: CategoryTool, chevron: Bool) -> some View {
         HStack(spacing: 14) {
-            Image(systemName: tool.icon)
-                .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
-                .frame(width: 30, height: 30)
-                .background(tool.tint, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            IconBadge(icon: tool.icon, tint: themedTint(tool), size: 32)
             VStack(alignment: .leading, spacing: 1) {
                 Text(tool.title).font(.body).foregroundStyle(.primary)
                 if !tool.subtitle.isEmpty {
@@ -178,24 +183,20 @@ struct CategoryHubView: View {
         ZStack {
             ThemedBubbleBackground(theme: theme).ignoresSafeArea()
             ScrollView(showsIndicators: false) {
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 3), spacing: 20) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 3), spacing: 22) {
                     ForEach(tools) { tool in
                         toolLink(tool) {
-                            VStack(spacing: 8) {
-                                Image(systemName: tool.icon)
-                                    .font(.system(size: 26, weight: .semibold)).foregroundStyle(.white)
-                                    .frame(width: 66, height: 66)
-                                    .background(themedTint(tool).gradient, in: RoundedRectangle(cornerRadius: 17, style: .continuous))
-                                    .shadow(color: themedTint(tool).opacity(0.4), radius: 8, y: 4)
+                            VStack(spacing: 9) {
+                                IconBadge(icon: tool.icon, tint: themedTint(tool), size: 66)
                                 Text(tool.title)
-                                    .font(.system(size: 12, weight: .medium)).foregroundStyle(.primary)
+                                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(.primary)
                                     .lineLimit(2).multilineTextAlignment(.center).minimumScaleFactor(0.75)
                                     .frame(height: 30, alignment: .top)
                             }
                         }
                     }
                 }
-                .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 120)
+                .padding(.horizontal, 18).padding(.top, 16).padding(.bottom, 120)
             }
         }
     }
@@ -428,7 +429,7 @@ struct CategoryHubView: View {
     // Teinte selon le thème (même logique que la grille de catégories).
     private func themedTint(_ tool: CategoryTool) -> Color {
         switch theme {
-        case .classic, .dark: return tool.tint
+        case .classic, .dark, .glass: return tool.tint
         case .pinky:  return [Color(hex: 0xFF4F9D), Color(hex: 0xFF77B5), Color(hex: 0xF06EA9),
                               Color(hex: 0xFF8AC4), Color(hex: 0xE85C9E)][stableIndex(tool) % 5]
         case .gothic: return [Color(hex: 0xAEB7C4), Color(hex: 0xC6CED9), Color(hex: 0x99A3B2),
@@ -539,7 +540,7 @@ private let financeTools: [CategoryTool] = [
     .init("repeat.circle.fill", "Abonnements", "Détecte les oubliés + résilie", tint: .finTint) { SubscriptionsView() },
     .init("person.2.circle.fill", "Split entre potes", "Tricount intégré", tint: .finTint) { SplitView() },
     .init("target", "Objectifs d'épargne", "Projection temps restant", tint: .finTint) { SavingsView() },
-    .init("link.circle.fill", "Agrégation bancaire", "Bankin / Linxo — à brancher", tint: .finTint) { BankScaffold() },
+    .init("link.circle.fill", "Solde global", "Tous tes comptes agrégés", tint: .finTint) { BankOverviewView() },
 ]
 
 private let investTools: [CategoryTool] = [
@@ -554,7 +555,7 @@ private let careerTools: [CategoryTool] = [
     .init("doc.text.fill", "Générateur de CV", "Remplis → exporte", tint: .careerTint) { CVBuilderView() },
     .init("checklist.checked", "Compétences manquantes", "Gap + plan pour combler", tint: .careerTint) { SkillGapView() },
     .init("mic.fill", "Mock interview", "Entraînement entretien", tint: .careerTint) { MockInterviewView() },
-    .init("magnifyingglass", "Matching d'offres", "LinkedIn / Indeed — à brancher", tint: .careerTint) { JobMatchScaffold() },
+    .init("magnifyingglass", "Matching d'offres", "Offres réelles selon tes compétences", tint: .careerTint) { JobMatchView() },
 ]
 
 private let learningTools: [CategoryTool] = [
@@ -597,5 +598,5 @@ private let travelTools: [CategoryTool] = [
     .init("coloncurrencysign.circle.fill", "Convertisseur", "12 devises, hors-ligne, repères rapides", tint: .travelTint) { CurrencyConverterView() },
     .init("character.bubble.fill", "Phrases de voyage", "5 langues, prononcées à voix haute", tint: .travelTint) { PhrasebookView() },
     .init("globe", "Traduction", "12 langues, hors-ligne (Apple Translation)", tint: .travelTint) { TranslationView() },
-    .init("airplane.circle.fill", "Suivi des vols", "Statut & retards — à brancher", tint: .travelTint) { FlightScaffold() },
+    .init("airplane.circle.fill", "Suivi des vols", "Compte à rebours & statut", tint: .travelTint) { FlightTrackerView() },
 ]

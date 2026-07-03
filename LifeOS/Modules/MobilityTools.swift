@@ -132,7 +132,7 @@ struct TripCO2View: View {
             }
         }
         .padding(16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
     }
 
     private var tripList: some View {
@@ -157,7 +157,7 @@ struct TripCO2View: View {
                 Divider().padding(.leading, 50)
             }
         }
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
     }
 
     private func add() {
@@ -245,7 +245,7 @@ struct ParkingView: View {
                 .font(.footnote).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 34)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
     }
 
     private var savedCard: some View {
@@ -280,7 +280,7 @@ struct ParkingView: View {
             }
         }
         .padding(16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
     }
 
     private var errorCard: some View {
@@ -331,7 +331,7 @@ private struct StatCard: View {
             Text(label).font(.caption2).foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
     }
 }
 
@@ -344,6 +344,6 @@ private struct EmptyStateCard: View {
             Text(message).font(.footnote).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 30)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
     }
 }

@@ -133,7 +133,7 @@ private struct TranslatorScreen: View {
                 .scrollContentBackground(.hidden)
                 .padding(.horizontal, 10).padding(.vertical, 6).frame(minHeight: 120)
         }
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
     }
 
     private var translateButton: some View {
@@ -164,6 +164,6 @@ private struct TranslatorScreen: View {
                 .frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
         }
         .padding(16).frame(maxWidth: .infinity)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
     }
 }

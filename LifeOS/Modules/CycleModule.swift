@@ -98,11 +98,19 @@ struct CycleTrackerView: View {
                                 Button {
                                     showDatePicker = true
                                 } label: {
+<<<<<<< HEAD
                                     Text("Modifier")
                                         .font(.system(size: 12, weight: .semibold))
                                         .foregroundStyle(phaseColor)
                                         .padding(.horizontal, 12).padding(.vertical, 6)
                                         .background(phaseColor.opacity(0.1), in: Capsule())
+=======
+                                    Text("Réinitialiser")
+                                        .monoLabel(11)
+                                        .foregroundStyle(Theme.textSecondary)
+                                        .padding(.horizontal, 12).padding(.vertical, 6)
+                                        .background(Theme.bg2, in: Capsule())
+>>>>>>> origin/pote
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -115,12 +123,18 @@ struct CycleTrackerView: View {
                                     cycleStartDateTS = Date.now.timeIntervalSince1970
                                     cycle.refresh()
                                 } label: {
+<<<<<<< HEAD
                                     Text("Aujourd'hui")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundStyle(.white)
+=======
+                                    Text("Mes règles ont commencé aujourd'hui")
+                                        .font(.system(size: 14, weight: .black)).textCase(.uppercase).kerning(0.5)
+                                        .foregroundStyle(Theme.onVolt)
+>>>>>>> origin/pote
                                         .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 12)
-                                        .background(Color(hex: 0xE85D9A), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                        .padding(.vertical, 14)
+                                        .background(Theme.volt, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                                 }
                                 .buttonStyle(.plain)
                                 Button {
@@ -138,7 +152,7 @@ struct CycleTrackerView: View {
                         }
                     }
                     .padding(16)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                     // Conseils de la phase
                     if cycleStartDateTS > 0 {
@@ -210,7 +224,7 @@ struct CycleTrackerView: View {
                         }
                     }
                     .padding(16)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                     // Symptômes
                     VStack(alignment: .leading, spacing: 12) {
@@ -228,12 +242,12 @@ struct CycleTrackerView: View {
                                 } label: {
                                     Text(s)
                                         .font(.system(size: 12, weight: .medium))
-                                        .foregroundStyle(selectedSymptoms.contains(s) ? .white : .primary)
+                                        .foregroundStyle(selectedSymptoms.contains(s) ? Theme.onVolt : .primary)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 8)
                                         .background(
                                             selectedSymptoms.contains(s)
-                                                ? Color(hex: 0xE85D9A)
+                                                ? Theme.volt
                                                 : Theme.card,
                                             in: RoundedRectangle(cornerRadius: 10, style: .continuous)
                                         )
@@ -243,7 +257,7 @@ struct CycleTrackerView: View {
                         }
                     }
                     .padding(16)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                     // Humeur
                     VStack(alignment: .leading, spacing: 12) {
@@ -258,11 +272,11 @@ struct CycleTrackerView: View {
                                 } label: {
                                     Text(moods[i])
                                         .font(.system(size: 12, weight: .medium))
-                                        .foregroundStyle(selectedMood == i ? .white : .primary)
+                                        .foregroundStyle(selectedMood == i ? Theme.onVolt : .primary)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 8)
                                         .background(
-                                            selectedMood == i ? Color(hex: 0xE85D9A) : Theme.card,
+                                            selectedMood == i ? Theme.volt : Theme.card,
                                             in: RoundedRectangle(cornerRadius: 10, style: .continuous)
                                         )
                                 }
@@ -271,18 +285,18 @@ struct CycleTrackerView: View {
                         }
                     }
                     .padding(16)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                     // Bouton enregistrer
                     Button {
                         saveEntry()
                     } label: {
                         Text("Enregistrer")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(.white)
+                            .font(.system(size: 15, weight: .black)).textCase(.uppercase).kerning(0.5)
+                            .foregroundStyle(Theme.onVolt)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Color(hex: 0xE85D9A), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .padding(.vertical, 16)
+                            .background(Theme.volt, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                     }
                     .buttonStyle(.plain)
                 }

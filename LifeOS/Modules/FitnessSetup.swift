@@ -138,7 +138,7 @@ struct FitnessSetupView: View {
                     Spacer()
                 }
                 .padding(.vertical, 10).padding(.horizontal, 12)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: 10))
+                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 10))
             }
         }
         .padding(.horizontal, 14)

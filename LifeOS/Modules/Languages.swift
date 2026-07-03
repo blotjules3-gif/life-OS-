@@ -106,7 +106,7 @@ struct LanguagesView: View {
         }
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
     }
     private func stat(_ v: String, _ l: String) -> some View {
         VStack(spacing: 2) {
@@ -140,7 +140,7 @@ struct LanguagesView: View {
         }
         .padding(22)
         .frame(maxWidth: .infinity)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 20))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 20))
     }
 
     private var doneCard: some View {
@@ -151,7 +151,7 @@ struct LanguagesView: View {
                 .font(.caption).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
         }
         .padding(28).frame(maxWidth: .infinity)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 20))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 20))
     }
 
     // MARK: état (Leitner) encodé en JSON dans @AppStorage

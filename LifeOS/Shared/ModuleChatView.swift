@@ -25,6 +25,7 @@ struct ModuleChatView: View {
     let moduleTitle: String
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var ctx
     @AppStorage("appTheme") private var appThemeRaw = "classic"
     private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
 
@@ -127,7 +128,7 @@ struct ModuleChatView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Theme.card)
+                                .fill(Theme.cardFill)
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -149,7 +150,7 @@ struct ModuleChatView: View {
                 .lineLimit(1...5)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .focused($inputFocused)
                 .onSubmit { sendMessage() }
 
@@ -216,6 +217,7 @@ struct ModuleChatView: View {
         messages.append(thinking)
         isLoading = true
 
+<<<<<<< HEAD
         Task {
             do {
                 let response = try await AgentAPI.shared.chat(
@@ -251,6 +253,15 @@ struct ModuleChatView: View {
                     isLoading = false
                 }
             }
+=======
+        // Coach 100% ON-DEVICE (backend non déployé) — comme l'assistant principal.
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            let reply = LocalCoach.respond(to: text, ctx: ctx)
+            messages.removeAll { $0.isThinking }
+            messages.append(ModuleChatMessage(role: .assistant, text: reply))
+            isLoading = false
+>>>>>>> origin/pote
         }
     }
 
@@ -319,7 +330,7 @@ private struct MessageBubble: View {
                 ThinkingDots()
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             } else {
                 Text(message.text)
                     .font(.system(size: 15))

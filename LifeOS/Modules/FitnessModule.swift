@@ -10,6 +10,8 @@ struct FitnessHubView: View {
     @State private var showTabata = false
     var body: some View {
         HubScaffold(category: .fitness) {
+            ToolRow(icon: "figure.strengthtraining.traditional", title: "Séance guidée",
+                    subtitle: "Ta séance du jour, série par série + repos", tint: .fitTint) { GuidedWorkoutView() }
             ToolRow(icon: "figure.walk", title: "Compteur de pas",
                     subtitle: "Aujourd'hui + 7 jours (Santé)", tint: .fitTint) { StepsView() }
             ToolRow(icon: "dumbbell.fill", title: "Muscu & progression",
@@ -107,7 +109,7 @@ struct StrengthView: View {
                                         Button { selectedExercise = e } label: {
                                             Text(e).font(.caption.bold())
                                                 .padding(.horizontal, 12).padding(.vertical, 7)
-                                                .background((e == (selectedExercise ?? exercises.first)) ? Color.fitTint : Theme.card, in: Capsule())
+                                                .background((e == (selectedExercise ?? exercises.first)) ? AnyShapeStyle(Color.fitTint) : Theme.cardFill, in: Capsule())
                                                 .foregroundStyle((e == (selectedExercise ?? exercises.first)) ? .white : Theme.textSecondary)
                                         }
                                     }

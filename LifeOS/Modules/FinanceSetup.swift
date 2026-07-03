@@ -87,7 +87,7 @@ struct FinanceSetupView: View {
             Text(text).font(.subheadline).foregroundStyle(Theme.textPrimary)
             Spacer()
         }
-        .padding(14).background(Theme.card, in: RoundedRectangle(cornerRadius: 12)).padding(.horizontal, 14)
+        .padding(14).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 12)).padding(.horizontal, 14)
     }
 
     private func commit() {

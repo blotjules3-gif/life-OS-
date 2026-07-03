@@ -225,9 +225,10 @@ struct ProductDetailView: View {
                     withAnimation { added = true }
                 } label: {
                     Label(added ? "Ajouté ✓" : "Ajouter au journal", systemImage: added ? "checkmark.circle.fill" : "plus.circle.fill")
-                        .font(.headline).foregroundStyle(.white)
-                        .frame(maxWidth: .infinity).padding(.vertical, 14)
-                        .background(added ? Color.green : Color.accentColor, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .font(.system(size: 15, weight: .black)).textCase(.uppercase).kerning(0.5)
+                        .foregroundStyle(Theme.onVolt)
+                        .frame(maxWidth: .infinity).padding(.vertical, 16)
+                        .background(Theme.volt, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                 }
                 .padding(.top, 4)
             }
