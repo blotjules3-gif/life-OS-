@@ -115,15 +115,9 @@ struct CycleTrackerView: View {
                                     cycleStartDateTS = Date.now.timeIntervalSince1970
                                     cycle.refresh()
                                 } label: {
-<<<<<<< HEAD
-                                    Text("Aujourd'hui")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundStyle(.white)
-=======
                                     Text("Mes règles ont commencé aujourd'hui")
-                                        .font(.system(size: 14, weight: .black)).textCase(.uppercase).kerning(0.5)
+                                        .font(.system(size: 14, weight: .semibold))
                                         .foregroundStyle(Theme.onVolt)
->>>>>>> origin/pote
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 14)
                                         .background(Theme.volt, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
