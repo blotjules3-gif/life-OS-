@@ -16,7 +16,7 @@
 | M2 | `AI/` déplacé dans `backend/AI/` (contexte Docker), chemin `prompts.py` ajusté, chargement vérifié | Fait |
 | M3 | `habit_analyzer` : clé `sport` → `fitness` (config, template, deep link) | Fait |
 | M10 | Retry LLM restreint aux erreurs transitoires (timeout, réseau, 429, 5xx, validation) | Fait |
-| B4 prep | Notifications > 24 h de retard expirées au lieu d'être envoyées (anti-backlog au 1er beat) | Fait — **services Railway à créer par Jules** |
+| B4 prep | Notifications > 24 h de retard expirées au lieu d'être envoyées (anti-backlog au 1er beat) | Fait — beat actif depuis F15 (2026-07-03) |
 | Dette | `.venv` (7 432 fichiers) + `__pycache__` (2 977) désindexés, .gitignore complété | Fait |
 | Tests | `test_orchestrator.py` réparé (FakeSettings, user_gender) — 8/8 verts | Fait |
 | B3 | Migration échouée : store déplacé en backup horodaté (jamais supprimé) + alerte « Données réinitialisées » | Fait |
