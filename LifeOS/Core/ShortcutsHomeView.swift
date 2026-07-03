@@ -323,14 +323,9 @@ struct ShortcutsHomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     HStack(alignment: .bottom) {
-<<<<<<< HEAD
-                        Text(userName.isEmpty ? greeting : "\(greeting), \(userName.prefix(1).uppercased() + userName.dropFirst())")
-                            .font(.largeTitle.bold())
-=======
                         Text(userName.isEmpty ? greeting : "\(greeting), \(userName)")
                             .font(.system(size: 40, weight: .black)).textCase(.uppercase).kerning(-1)
                             .lineLimit(2).minimumScaleFactor(0.7)
->>>>>>> origin/pote
                         Spacer()
                         if todayEnergyScore > 0 {
                             energyBadge
