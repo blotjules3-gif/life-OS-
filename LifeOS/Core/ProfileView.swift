@@ -1320,8 +1320,7 @@ struct ProfileView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(16)
-            .background(Theme.card)
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .surface()
         }
     }
 
