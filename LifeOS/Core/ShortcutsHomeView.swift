@@ -356,6 +356,7 @@ struct ShortcutsHomeView: View {
                 }
             }
             .onAppear {
+                homeAppeared = true
                 if !tutorialDone {
                     withAnimation(.spring(duration: 0.55, bounce: 0.2).delay(1.2)) { showTutorial = true }
                 }
