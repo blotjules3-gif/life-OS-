@@ -224,8 +224,10 @@ final class AIAssistantViewModel: ObservableObject {
     /// Détecte une intention « ajouter » et devine le type + le nom de l'objet.
     static func detectAddIntent(_ raw: String) -> (AddAnythingSheet.Kind, String)? {
         let t = raw.folding(options: .diacriticInsensitive, locale: .current).lowercased()
-        let addWords = ["ajoute", "ajouter", "rajoute", "rajouter", "nouvelle tache", "nouveau ", "creer ", "cree "]
-        guard addWords.contains(where: { t.contains($0) }) || t.hasPrefix("add ") || t == "add" else { return nil }
+        // Uniquement la famille « ajouter » — ne PAS intercepter « créer une séance/habitude »
+        // (gérées par le coach) ni les questions contenant « ajoute ».
+        let addWords = ["ajoute ", "ajouter", "ajoute-", "rajoute", "rajouter"]
+        guard addWords.contains(where: { t.contains($0) }) || t.hasPrefix("add ") || t == "add" || t == "ajouter" else { return nil }
         // Laisser le coach gérer les logs rapides (eau).
         if t.contains(" eau") || t.contains("bois ") || t.contains(" ml") { return nil }
 

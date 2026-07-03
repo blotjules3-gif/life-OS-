@@ -196,7 +196,11 @@ struct FoodEditor: View {
                     HStack {
                         Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
                         TextField("Rechercher un aliment (ex : Nutella)", text: $name)
-                            .onChange(of: name) { _, q in scheduleSearch(q) }
+                            .onChange(of: name) { _, q in
+                                // Ne pas relancer la recherche juste après avoir sélectionné un produit.
+                                if let p = picked, q == p.name { return }
+                                scheduleSearch(q)
+                            }
                         if searching { ProgressView() }
                     }
                     Picker("Repas", selection: $meal) {
