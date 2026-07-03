@@ -837,8 +837,7 @@ struct ProfileView: View {
                 }
                 .padding(.vertical, 24)
                 .frame(maxWidth: .infinity)
-                .background(Theme.card)
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .surface()
             } else {
                 VStack(spacing: 12) {
                     ForEach(stride(from: 0, to: tasks.count, by: 2).map { $0 }, id: \.self) { rowStart in
