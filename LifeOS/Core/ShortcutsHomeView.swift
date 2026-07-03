@@ -281,14 +281,17 @@ struct ShortcutsHomeView: View {
                         }
                     }
                     .padding(.horizontal, 4)
+                    .staggered(0, appeared: homeAppeared)
 
                     if !activeShortcuts.isEmpty {
                         shortcutsSection
+                            .staggered(1, appeared: homeAppeared)
                     }
 
                     if !moodDismissed || editingMood {
                         moodSection
                             .transition(.opacity.combined(with: .move(edge: .top)))
+                            .staggered(2, appeared: homeAppeared)
                     }
 
                     if showReengage, let msg = reengageMessage {
@@ -300,12 +303,20 @@ struct ShortcutsHomeView: View {
                     }
 
                     habitsSection
-                    if !activeHabits.isEmpty { weeklyRecapSection }
+                        .staggered(3, appeared: homeAppeared)
+                        .scrollFade()
+                    if !activeHabits.isEmpty {
+                        weeklyRecapSection
+                            .staggered(4, appeared: homeAppeared)
+                            .scrollFade()
+                    }
                     if isMorningEmpty {
                         morningContextCard
                             .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                     goalsSection
+                        .staggered(5, appeared: homeAppeared)
+                        .scrollFade()
                 }
                 .padding(Theme.pad)
             }
