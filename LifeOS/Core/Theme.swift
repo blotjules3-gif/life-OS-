@@ -203,6 +203,27 @@ extension View {
     }
 }
 
+// MARK: - Surface (carte au contour lisible : liseré hairline + ombre douce)
+
+private struct SurfaceStyle: ViewModifier {
+    var radius: CGFloat = 20
+    func body(content: Content) -> some View {
+        content
+            .background(Theme.card)
+            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .strokeBorder(Theme.stroke, lineWidth: 1)
+            )
+            .shadowSm()
+    }
+}
+
+extension View {
+    /// Fond card + liseré + ombre légère — les bords restent visibles sur tout fond.
+    func surface(radius: CGFloat = 20) -> some View { modifier(SurfaceStyle(radius: radius)) }
+}
+
 // MARK: - Apparition en cascade (stagger ~70 ms par section)
 
 private struct StaggeredAppear: ViewModifier {
