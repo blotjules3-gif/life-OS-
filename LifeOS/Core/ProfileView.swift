@@ -714,7 +714,11 @@ struct ProfileView: View {
             }
         }
         .padding(5)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(Theme.stroke.opacity(0.5), lineWidth: 1)
+        )
     }
 
     // MARK: - Challenges helpers
