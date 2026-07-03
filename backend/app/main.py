@@ -141,7 +141,7 @@ app.include_router(v1_router)
 @app.get("/health", tags=["system"])
 @app.head("/health", tags=["system"])
 async def health() -> dict:
-    return {"status": "ok", "version": "1.0.0"}
+    return {"status": "ok", "version": "1.0.0", "tools": len(registry.list_tools())}
 
 
 # ── Exception handlers ────────────────────────────────────────────────────────
