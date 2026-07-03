@@ -551,8 +551,7 @@ struct ProfileView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
-        .background(Theme.card)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .surface(radius: 24)
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(color.opacity(0.22), lineWidth: 1.5)
