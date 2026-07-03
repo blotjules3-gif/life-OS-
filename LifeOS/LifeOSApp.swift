@@ -18,12 +18,9 @@ struct LifeOSApp: App {
     private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
     @State private var showBriefingFromWidget = false
     @State private var showSleepCheckFromWidget = false
-<<<<<<< HEAD
     @State private var showWeeklyBilan = false
-=======
     @State private var showIntake = false
     @AppStorage("intakeShown") private var intakeShown = false
->>>>>>> origin/pote
 
     private var recommendedModules: [AppCategory] {
         recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
