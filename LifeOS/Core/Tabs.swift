@@ -439,7 +439,7 @@ struct DailyBriefingView: View {
             case .sleep:
                 tasks.append(("moon.stars.fill", "Qualité du sommeil", "Évaluer ta nuit", Color(hex: 0x6C7BF1), false))
             case .mind:
-                tasks.append(("brain.head.profile", "Focus mental", "5 min de méditation ou breathing", Color(hex: 0x9B6CF1), false))
+                tasks.append(("brain.head.profile", "Focus mental", "5 min de méditation ou breathing", Theme.volt, false))
             case .productivity:
                 tasks.append(("checklist", "Habitudes", "\(habitsDone) / \(habits.count) complétées", Color(hex: 0x3CB2E0), habitsDone == habits.count && !habits.isEmpty))
             case .finance:
@@ -734,7 +734,7 @@ struct DailyBriefingView: View {
         VStack(spacing: 14) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text("\(todayEnergyScore)")
-                    .font(.system(size: 56, weight: .black, design: .rounded))
+                    .font(.system(size: 56, weight: .black))
                     .foregroundStyle(scoreColor)
                     .contentTransition(.numericText())
                 VStack(alignment: .leading, spacing: 2) {
@@ -1048,11 +1048,11 @@ struct ProfileView: View {
                 tasks.append(ProfileTaskItem(icon: "figure.run", title: "Activité", subtitle: "\(steps) / \(stepGoal) pas", color: Color(hex: 0xF1746C), progress: sp))
             case .productivity:
                 let hp = habits.isEmpty ? 1.0 : min(1.0, Double(habitsDone) / Double(habits.count))
-                tasks.append(ProfileTaskItem(icon: "checklist", title: "Habitudes", subtitle: "\(habitsDone)/\(habits.count) complétées", color: Color(hex: 0x9B6CF1), progress: hp))
+                tasks.append(ProfileTaskItem(icon: "checklist", title: "Habitudes", subtitle: "\(habitsDone)/\(habits.count) complétées", color: Theme.volt, progress: hp))
             case .sleep:
                 tasks.append(ProfileTaskItem(icon: "moon.stars.fill", title: "Sommeil", subtitle: "Évaluer ta nuit", color: Color(hex: 0x6C7BF1), progress: 0))
             case .mind:
-                tasks.append(ProfileTaskItem(icon: "brain.head.profile", title: "Focus", subtitle: "5 min de méditation", color: Color(hex: 0x9B6CF1), progress: 0))
+                tasks.append(ProfileTaskItem(icon: "brain.head.profile", title: "Focus", subtitle: "5 min de méditation", color: Theme.volt, progress: 0))
             case .finance:
                 tasks.append(ProfileTaskItem(icon: "creditcard.fill", title: "Budget", subtitle: "Vérifier mes dépenses", color: Color(hex: 0x4CC38A), progress: 0))
             default: break
@@ -1226,7 +1226,7 @@ struct ProfileView: View {
                     } label: {
                         HStack(spacing: 6) {
                             Text(name.isEmpty ? "Ton prénom" : name)
-                                .font(.system(size: 32, weight: .black, design: .rounded))
+                                .font(.system(size: 32, weight: .black))
                                 .foregroundStyle(name.isEmpty ? .secondary : .primary)
                             Image(systemName: "pencil")
                                 .font(.system(size: 13, weight: .bold))
@@ -1238,7 +1238,7 @@ struct ProfileView: View {
                 Spacer()
                 VStack(alignment: .trailing, spacing: 1) {
                     Text(Date(), format: .dateTime.hour().minute())
-                        .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
+                        .font(.system(size: 26, weight: .black).monospacedDigit())
                         .foregroundStyle(.primary)
                     Text(Date(), format: .dateTime.weekday(.abbreviated).day().month(.abbreviated))
                         .font(.system(size: 11, weight: .medium))
@@ -1267,7 +1267,7 @@ struct ProfileView: View {
                           progress: min(1, Double(steps) / Double(max(1, stepGoal))))
                 Rectangle().fill(Color.primary.opacity(0.06)).frame(width: 1, height: 40)
                 quickStat(icon: "checkmark.seal.fill", value: "\(habitsDone)/\(habits.count)", unit: "habits",
-                          color: Color(hex: 0x9B6CF1),
+                          color: Theme.volt,
                           progress: habits.isEmpty ? 1 : min(1, Double(habitsDone) / Double(habits.count)))
             }
             .padding(.vertical, 14)
@@ -1296,7 +1296,7 @@ struct ProfileView: View {
             }
             VStack(spacing: 1) {
                 Text(value)
-                    .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
+                    .font(.system(size: 13, weight: .black).monospacedDigit())
                     .foregroundStyle(.primary)
                 Text(unit)
                     .monoLabel(9)
@@ -1338,7 +1338,7 @@ struct ProfileView: View {
 
             VStack(alignment: .trailing, spacing: 0) {
                 Text(hoursRemaining > 0 ? "\(hoursRemaining)h" : "—")
-                    .font(.system(size: 30, weight: .black, design: .rounded).monospacedDigit())
+                    .font(.system(size: 30, weight: .black).monospacedDigit())
                     .foregroundStyle(color)
                 Text("restantes")
                     .font(.system(size: 9, weight: .semibold))
@@ -1391,7 +1391,7 @@ struct ProfileView: View {
                         .foregroundStyle(Theme.textSecondary)
                         .kerning(1.4)
                     Text(String(format: "%02d:%02d", wakeupHour, wakeupMinute))
-                        .font(.system(size: 48, weight: .black, design: .rounded).monospacedDigit())
+                        .font(.system(size: 48, weight: .black).monospacedDigit())
                         .foregroundStyle(wakeupEnabled ? Theme.textPrimary : Theme.textSecondary)
                         .animation(.spring(duration: 0.3), value: wakeupEnabled)
                 }
@@ -1487,7 +1487,7 @@ struct ProfileView: View {
         case "fitness":     return Color(hex: 0xF1746C)
         case "nutrition":   return Color(hex: 0x4CC38A)
         case "sleep":       return Color(hex: 0x6C7BF1)
-        case "mind":        return Color(hex: 0x9B6CF1)
+        case "mind":        return Theme.volt
         case "productivity": return Color(hex: 0x3CB2E0)
         case "finance":     return Color(hex: 0x4CC38A)
         case "invest":      return Color(hex: 0xE0A23C)
@@ -1684,7 +1684,7 @@ struct ProfileView: View {
                 Spacer()
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("\(Int(task.progress * 100))%")
-                        .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
+                        .font(.system(size: 13, weight: .black).monospacedDigit())
                         .foregroundStyle(task.progress >= 1 ? task.color : .secondary)
                     if let end = endDate {
                         let days = max(0, Calendar.current.dateComponents([.day], from: .now, to: end).day ?? 0)
@@ -1702,7 +1702,7 @@ struct ProfileView: View {
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(.primary)
                 Text(task.subtitle)
-                    .font(.system(size: 11, design: .rounded).monospacedDigit())
+                    .font(.system(size: 11).monospacedDigit())
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
@@ -1806,7 +1806,7 @@ struct ProfileView: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.primary)
                     Text(task.subtitle)
-                        .font(.system(size: 12, design: .rounded).monospacedDigit())
+                        .font(.system(size: 12).monospacedDigit())
                         .foregroundStyle(.secondary)
                     if let rem = remainingText(for: task) {
                         Text(rem)
@@ -1835,7 +1835,7 @@ struct ProfileView: View {
                     .frame(width: 64, height: 5)
 
                     Text("\(Int(task.progress * 100))%")
-                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(task.progress >= 1 ? task.color : .secondary)
                         .monospacedDigit()
 
@@ -1843,7 +1843,7 @@ struct ProfileView: View {
                         let daysLeft = Calendar.current.dateComponents([.day], from: .now, to: end).day ?? 0
                         let urgent = daysLeft <= 3
                         Text(daysLeft > 0 ? "J-\(daysLeft)" : "Échéance")
-                            .font(.system(size: 9, weight: .bold, design: .rounded))
+                            .font(.system(size: 9, weight: .bold))
                             .foregroundStyle(urgent ? Color(hex: 0xF1746C) : task.color)
                             .padding(.horizontal, 6).padding(.vertical, 2)
                             .background((urgent ? Color(hex: 0xF1746C) : task.color).opacity(0.12), in: Capsule())
@@ -1861,7 +1861,7 @@ struct ProfileView: View {
 
     private var bentoRow: some View {
         HStack(spacing: 14) {
-            let habitColor = Color(hex: 0x9B6CF1)
+            let habitColor = Theme.volt
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 5) {
                     Image(systemName: "checkmark.seal.fill")
@@ -1873,7 +1873,7 @@ struct ProfileView: View {
                         .kerning(0.4)
                     Spacer()
                     Text("\(habitsDone)/\(habits.count)")
-                        .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
+                        .font(.system(size: 13, weight: .black).monospacedDigit())
                         .foregroundStyle(habitColor)
                 }
                 if habits.isEmpty {
@@ -1913,13 +1913,13 @@ struct ProfileView: View {
                         .kerning(0.4)
                     Spacer()
                     Text("\(glassesToday)/\(glassesGoalCalc)")
-                        .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
+                        .font(.system(size: 13, weight: .black).monospacedDigit())
                         .foregroundStyle(waterColor)
                 }
 
                 HStack(alignment: .lastTextBaseline, spacing: 4) {
                     Text("\(glassesToday)")
-                        .font(.system(size: 26, weight: .black, design: .rounded).monospacedDigit())
+                        .font(.system(size: 26, weight: .black).monospacedDigit())
                         .foregroundStyle(.primary)
                     Text("verres")
                         .font(.system(size: 11, weight: .medium))
@@ -2433,7 +2433,7 @@ struct GoalEditorSheet: View {
                 // Valeur + boutons +/-
                 VStack(alignment: .trailing, spacing: 6) {
                     Text(valueText(for: goal.id))
-                        .font(.system(size: 15, weight: .bold, design: .rounded).monospacedDigit())
+                        .font(.system(size: 15, weight: .bold).monospacedDigit())
                         .foregroundStyle(expired ? Color(hex: 0xF1746C) : color)
                     stepperView(for: goal.id)
                 }
@@ -2667,11 +2667,11 @@ struct ProfileCustomizerSheet: View {
 
     private let sections: [(id: String, label: String, sub: String, icon: String, color: Color)] = [
         ("hero",     "Score",          "Carte principale",   "star.fill",           Color(hex: 0x00D4B4)),
-        ("tasks",    "Tâches",         "Ce qu'il te reste",  "checklist",           Color(hex: 0x9B6CF1)),
+        ("tasks",    "Tâches",         "Ce qu'il te reste",  "checklist",           Theme.volt),
         ("briefing", "Briefing",       "Rappel du matin",    "sunrise.fill",        Color.orange),
-        ("memories", "Mémoire",        "Ce que je retiens",  "brain",               Color(hex: 0x9B6CF1)),
+        ("memories", "Mémoire",        "Ce que je retiens",  "brain",               Theme.volt),
         ("stats",    "Stats",          "Pas · eau · kcal",   "chart.bar.fill",      Color(hex: 0xF1746C)),
-        ("habits",   "Habitudes",      "Suivi & protéines",  "checkmark.seal.fill", Color(hex: 0x9B6CF1)),
+        ("habits",   "Habitudes",      "Suivi & protéines",  "checkmark.seal.fill", Theme.volt),
         ("actions",  "Actions",        "Raccourcis rapides", "bolt.fill",           Color(hex: 0x3CB2E0)),
         ("wakeup",   "Réveil",         "Alarme & briefing",  "alarm.fill",          Color(hex: 0xE07B3C)),
         ("tip",      "Citation",       "Inspiration du jour","quote.bubble.fill",   Color.accentColor),
@@ -2897,7 +2897,7 @@ struct SleepCheckSheet: View {
                                 .frame(width: 48, height: 48).contentShape(Rectangle())
                         }.foregroundStyle(.primary)
                         Text("\(hours)h")
-                            .font(.system(size: 28, weight: .bold, design: .rounded).monospacedDigit())
+                            .font(.system(size: 28, weight: .bold).monospacedDigit())
                             .frame(maxWidth: .infinity)
                         Button { if hours < 14 { hours += 1; Haptics.tap() } } label: {
                             Image(systemName: "plus").font(.system(size: 16, weight: .semibold))
@@ -3062,7 +3062,7 @@ struct SleepCheckSheet: View {
                         .animation(.easeOut(duration: 1.2), value: displayScore)
                     VStack(spacing: 2) {
                         Text("\(displayScore)")
-                            .font(.system(size: 64, weight: .black, design: .rounded))
+                            .font(.system(size: 64, weight: .black))
                             .foregroundStyle(sc)
                             .contentTransition(.numericText())
                             .animation(.easeOut(duration: 1.2), value: displayScore)
@@ -3179,7 +3179,7 @@ struct ChallengeCard: View {
         switch challenge.challenge_type {
         case "water":     return Color(hex: 0x3CB2E0)
         case "sport":     return Color(hex: 0xF1746C)
-        case "smoking":   return Color(hex: 0x9B6CF1)
+        case "smoking":   return Theme.volt
         case "meditation":return Color(hex: 0x4CC38A)
         case "nutrition": return Color(hex: 0xE0A23C)
         case "sleep":     return Color(hex: 0x6C7BF1)
