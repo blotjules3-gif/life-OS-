@@ -127,8 +127,18 @@ class AgentOrchestrator:
             module_type, module_config, user_name, user_gender,
             user_context, memory_context, conversation_history, user_message, user_id,
         )
+        start = time.monotonic()
 
         for iteration in range(self._max_iterations):
+            elapsed = time.monotonic() - start
+            if elapsed > self._hard_budget:
+                log.error("agent_hard_budget_exceeded", elapsed=round(elapsed, 1), iterations=iteration)
+                return state.result(_BUDGET_REPLY)
+            if tools is not None and elapsed > self._soft_budget:
+                # Plus de tools : le LLM est forcé de conclure en texte au prochain appel.
+                log.warning("agent_soft_budget_exceeded", elapsed=round(elapsed, 1), iterations=iteration)
+                tools = None
+
             log.info(
                 "agent_iteration",
                 iteration=iteration + 1,
