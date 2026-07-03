@@ -802,6 +802,10 @@ struct AIAssistantView: View {
                     proxy.scrollTo("bottom", anchor: .bottom)
                 }
             }
+            // Pas d'animation ici : un spring rejoué à chaque token rend le scroll saccadé
+            .onChange(of: vm.streamingText) { _, _ in
+                proxy.scrollTo("bottom", anchor: .bottom)
+            }
             .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
                 let duration = (notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double) ?? 0.28
                 withAnimation(.easeOut(duration: duration)) {
