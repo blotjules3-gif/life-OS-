@@ -757,6 +757,15 @@ struct ShortcutsHomeView: View {
         }
     }
 
+    private func metricDelta(_ m: HomeMetric) -> Int? {
+        switch m {
+        case .steps:    return stepsYesterday > 0 ? steps - stepsYesterday : nil
+        case .water:    return waterYesterday > 0 ? waterToday - waterYesterday : nil
+        case .calories: return kcalYesterday > 0 ? kcalToday - kcalYesterday : nil
+        default:        return nil
+        }
+    }
+
     @ViewBuilder private func metricDestination(_ m: HomeMetric) -> some View {
         switch m {
         case .steps:    StepsView()
