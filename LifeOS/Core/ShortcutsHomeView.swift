@@ -478,7 +478,7 @@ struct ShortcutsHomeView: View {
 
     private var shortcutsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Raccourcis")
+            sectionHeader("Raccourcis", trailing: "Éditer") { editingShortcuts = true }
             LazyVGrid(columns: shortcutCols, spacing: 10) {
                 ForEach(activeShortcuts) { tool in
                     if tool.isFullScreen {
