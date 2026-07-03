@@ -14,6 +14,24 @@ import SwiftData
     }
 }
 
+/// Une nuit de sommeil enregistrée (coucher → lever) avec sa qualité ressentie.
+@Model final class SleepNight {
+    var date: Date         // jour de réveil (rattachement)
+    var bedtime: Date      // heure de coucher (souvent la veille au soir)
+    var wake: Date         // heure de réveil
+    var quality: Int       // 1...5
+    var note: String
+    init(date: Date = .now, bedtime: Date = .now, wake: Date = .now, quality: Int = 3, note: String = "") {
+        self.date = date; self.bedtime = bedtime; self.wake = wake; self.quality = quality; self.note = note
+    }
+    /// Durée de sommeil en heures (gère le passage minuit).
+    var hours: Double {
+        var secs = wake.timeIntervalSince(bedtime)
+        if secs < 0 { secs += 86_400 }
+        return max(0, secs / 3600)
+    }
+}
+
 // MARK: - Nutrition
 
 @Model final class FoodEntry {

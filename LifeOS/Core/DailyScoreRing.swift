@@ -18,8 +18,9 @@ enum DailyScoreEngine {
     static func metrics(for day: Date,
                         foods: [FoodEntry], waters: [WaterEntry], habits: [Habit],
                         steps: [StepEntry], todos: [TodoItem], workouts: [WorkoutSet],
-                        moods: [MoodEntry], dreams: [DreamEntry],
-                        kcalGoal: Int, proteinGoal: Int, waterGoal: Int, stepGoal: Int) -> [DayMetric] {
+                        moods: [MoodEntry], dreams: [DreamEntry], nights: [SleepNight] = [],
+                        kcalGoal: Int, proteinGoal: Int, waterGoal: Int, stepGoal: Int,
+                        sleepGoalHours: Double = 8) -> [DayMetric] {
         let cal = Calendar.current
         func here(_ d: Date) -> Bool { cal.isDate(d, inSameDayAs: day) }
         if cal.startOfDay(for: day) > cal.startOfDay(for: .now) { return [] }  // futur
@@ -63,7 +64,11 @@ enum DailyScoreEngine {
             out.append(.init(label: "Humeur", icon: "face.smiling", value: "\(m.score)/5",
                              fraction: Double(m.score) / 5, color: Color(hex: 0xEC6FB0)))
         }
-        if let s = dreams.first(where: { here($0.date) }) {
+        if let n = nights.first(where: { here($0.date) }) {
+            let m = Int((n.hours * 60).rounded())
+            out.append(.init(label: "Sommeil", icon: "moon.zzz.fill", value: "\(m / 60)h\(m % 60 == 0 ? "" : String(format: "%02d", m % 60))",
+                             fraction: min(1, n.hours / max(1, sleepGoalHours)), color: Color(hex: 0x7C93C8)))
+        } else if let s = dreams.first(where: { here($0.date) }) {
             out.append(.init(label: "Sommeil", icon: "moon.zzz.fill", value: "\(s.mood)/5",
                              fraction: Double(s.mood) / 5, color: Color(hex: 0x7C93C8)))
         }
@@ -84,6 +89,7 @@ struct DailyScoreRing: View {
     @AppStorage("proteinGoal") private var proteinGoal = 0
     @AppStorage("waterGoal") private var waterGoal = 2500
     @AppStorage("stepGoal") private var stepGoal = 10000
+    @AppStorage("sleepGoalHours") private var sleepGoalHours = 8.0
 
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
@@ -93,6 +99,7 @@ struct DailyScoreRing: View {
     @Query private var workouts: [WorkoutSet]
     @Query private var moods: [MoodEntry]
     @Query private var dreams: [DreamEntry]
+    @Query private var nights: [SleepNight]
 
     @State private var selected = Calendar.current.startOfDay(for: .now)
     @State private var showDetail = false
@@ -110,8 +117,9 @@ struct DailyScoreRing: View {
 
     private func metrics(_ day: Date) -> [DayMetric] {
         DailyScoreEngine.metrics(for: day, foods: foods, waters: waters, habits: habits,
-                                 steps: steps, todos: todos, workouts: workouts, moods: moods, dreams: dreams,
-                                 kcalGoal: kcalGoal, proteinGoal: proteinGoal, waterGoal: waterGoal, stepGoal: stepGoal)
+                                 steps: steps, todos: todos, workouts: workouts, moods: moods, dreams: dreams, nights: nights,
+                                 kcalGoal: kcalGoal, proteinGoal: proteinGoal, waterGoal: waterGoal, stepGoal: stepGoal,
+                                 sleepGoalHours: sleepGoalHours)
     }
     private func score(_ day: Date) -> Int { DailyScoreEngine.score(metrics(day)) }
 
@@ -120,7 +128,7 @@ struct DailyScoreRing: View {
         func here(_ d: Date) -> Bool { cal.isDate(d, inSameDayAs: day) }
         return foods.contains { here($0.date) } || waters.contains { here($0.date) }
             || workouts.contains { here($0.date) } || moods.contains { here($0.date) }
-            || dreams.contains { here($0.date) }
+            || dreams.contains { here($0.date) } || nights.contains { here($0.date) }
             || habits.contains { h in h.completions.contains { here($0.date) } }
             || todos.contains { if let d = $0.due { return here(d) && $0.done } else { return false } }
     }

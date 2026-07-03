@@ -26,7 +26,7 @@ struct LifeOSApp: App {
 
     private static let schema = Schema([
         // Santé
-        DreamEntry.self, FoodEntry.self, FastingSession.self, WaterEntry.self,
+        DreamEntry.self, SleepNight.self, FoodEntry.self, FastingSession.self, WaterEntry.self,
         Supplement.self, PantryItem.self, ShoppingItem.self, WorkoutSet.self, StepEntry.self,
         // Vie
         ProgressPhoto.self, WardrobeItem.self, MoodEntry.self, TodoItem.self,
