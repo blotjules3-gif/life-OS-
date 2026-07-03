@@ -32,6 +32,17 @@ class Settings(BaseSettings):
     llm_temperature: float = 0.3        # deterministic coaching (default Mistral is 0.7)
     llm_max_completion_tokens: int = 500  # enforce brevity — prompt says max 2 sentences
 
+    # ── Agent time budget ─────────────────────────────────────────────────────
+    # Soft: on retire les tools pour forcer une réponse texte finale.
+    # Hard: on clôt le tour avec les actions déjà exécutées.
+    # 50s soft + 30s de timeout LLM = 80s, sous le timeout chat iOS de 90s.
+    agent_soft_budget_seconds: float = 50.0
+    agent_hard_budget_seconds: float = 80.0
+
+    # ── Rate limiting chat ────────────────────────────────────────────────────
+    chat_rate_limit_per_minute: int = 10
+    chat_rate_limit_per_hour: int = 80
+
     # ── Redis ─────────────────────────────────────────────────────────────────
     redis_url: str = "redis://localhost:6379/0"
 
