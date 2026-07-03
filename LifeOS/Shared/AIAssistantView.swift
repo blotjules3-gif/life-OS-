@@ -777,6 +777,14 @@ struct AIAssistantView: View {
                             .padding(.bottom, 8)
                     }
 
+                    // Réponse en cours de streaming (mise à jour token par token)
+                    if let streamed = vm.streamingText, !streamed.isEmpty {
+                        MessageRow(message: .streaming(streamed), accent: accent)
+                            .id("streaming")
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 8)
+                    }
+
                     // Quick suggestions — toujours visibles sauf pendant le chargement
                     if !vm.isLoading {
                         quickSuggestionsRow
