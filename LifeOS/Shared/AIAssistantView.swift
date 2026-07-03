@@ -91,6 +91,7 @@ final class AIAssistantViewModel: ObservableObject {
     }
 
     @AppStorage("aiConversationID") private var conversationID = ""
+    @AppStorage("aiConversationDay") private var conversationDay = ""
     @AppStorage("aiFirstLaunchDone") private var firstLaunchDone = false
     @AppStorage("userName") private var userName = ""
     @AppStorage("userGender") private var userGender = ""
