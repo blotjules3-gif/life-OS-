@@ -217,7 +217,6 @@ struct ModuleChatView: View {
         messages.append(thinking)
         isLoading = true
 
-<<<<<<< HEAD
         Task {
             do {
                 let response = try await AgentAPI.shared.chat(
@@ -253,15 +252,6 @@ struct ModuleChatView: View {
                     isLoading = false
                 }
             }
-=======
-        // Coach 100% ON-DEVICE (backend non déployé) — comme l'assistant principal.
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 300_000_000)
-            let reply = LocalCoach.respond(to: text, ctx: ctx)
-            messages.removeAll { $0.isThinking }
-            messages.append(ModuleChatMessage(role: .assistant, text: reply))
-            isLoading = false
->>>>>>> origin/pote
         }
     }
 

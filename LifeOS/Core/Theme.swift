@@ -15,7 +15,6 @@ enum Theme {
     static let textTertiary  = Color(uiColor: .tertiaryLabel)
     static let accent = Color.accentColor
 
-<<<<<<< HEAD
     static let radius: CGFloat = 16
     static let radiusSmall: CGFloat = 11
     static let pad: CGFloat = 16
