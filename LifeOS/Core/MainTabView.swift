@@ -33,6 +33,16 @@ enum AppTab: String, CaseIterable, Identifiable {
     }
 }
 
+// MARK: - Dégagement pour la barre d'onglets flottante
+// La barre flotte AU-DESSUS du contenu. Le safeAreaInset posé sur le conteneur ne
+// traverse pas les NavigationStack internes des pages → il faut réserver l'espace
+// DIRECTEMENT sur chaque vue défilante racine (accueil, réveil, profil, chaque outil).
+extension View {
+    func floatingBarClearance(_ height: CGFloat = 96) -> some View {
+        safeAreaInset(edge: .bottom) { Color.clear.frame(height: height) }
+    }
+}
+
 // MARK: - Conteneur principal
 
 struct MainTabView: View {

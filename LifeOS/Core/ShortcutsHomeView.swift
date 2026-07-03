@@ -213,6 +213,7 @@ struct ShortcutsHomeView: View {
                 }
                 .padding(Theme.pad)
             }
+            .floatingBarClearance()       // le dernier bloc ne passe pas sous la barre flottante
             .scrollContentBackground(.hidden)
             .background(Theme.screenBG)   // verre global : wallpaper dépoli en thème Verre
             .navigationTitle("")
@@ -326,7 +327,7 @@ struct ShortcutsHomeView: View {
                 LazyVGrid(columns: cols, spacing: 12) {
                     ForEach(enabledMetrics) { m in
                         let v = metricValue(m)
-                        NavigationLink { metricDestination(m) } label: {
+                        NavigationLink { metricDestination(m).floatingBarClearance() } label: {
                             MetricRing(value: v.value, goal: v.goal, label: m.label, unit: m.unit, color: m.color, icon: m.icon)
                         }.buttonStyle(.plain)
                     }
@@ -334,7 +335,7 @@ struct ShortcutsHomeView: View {
             }
             VStack(spacing: 4) {
                 ForEach(Array(objectives.enumerated()), id: \.element.title) { i, o in
-                    NavigationLink { objectiveDestination(o.title) } label: { objectiveRow(o) }
+                    NavigationLink { objectiveDestination(o.title).floatingBarClearance() } label: { objectiveRow(o) }
                         .buttonStyle(.plain)
                     if i < objectives.count - 1 { Divider().padding(.leading, 47) }
                 }
@@ -424,7 +425,7 @@ struct ShortcutsHomeView: View {
             } else {
                 LazyVGrid(columns: cols, spacing: 12) {
                     ForEach(enabledShortcuts) { tool in
-                        NavigationLink { tool.destination } label: { shortcutTile(tool) }
+                        NavigationLink { tool.destination.floatingBarClearance() } label: { shortcutTile(tool) }
                             .buttonStyle(.plain)
                     }
                 }

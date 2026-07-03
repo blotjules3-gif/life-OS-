@@ -23,7 +23,9 @@ enum QuickTool: String, Identifiable {
         }
     }
 
-    @ViewBuilder var destination: some View {
+    var destination: some View { toolView.floatingBarClearance() }
+
+    @ViewBuilder private var toolView: some View {
         switch self {
         case .calories: CalAIView()
         case .water:    HydrationView()

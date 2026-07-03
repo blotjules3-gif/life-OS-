@@ -142,7 +142,7 @@ struct CategoryHubView: View {
         if tool.fullScreen {
             Button { Haptics.soft(); cover = tool } label: { label() }.buttonStyle(PressableButtonStyle())
         } else {
-            NavigationLink { tool.dest() } label: { label() }.buttonStyle(PressableButtonStyle())
+            NavigationLink { tool.dest().floatingBarClearance() } label: { label() }.buttonStyle(PressableButtonStyle())
         }
     }
 
@@ -154,7 +154,7 @@ struct CategoryHubView: View {
                     Button { Haptics.soft(); cover = tool } label: { rowLabel(tool, chevron: true) }
                         .buttonStyle(.plain)
                 } else {
-                    NavigationLink { tool.dest() } label: { rowLabel(tool, chevron: false) }
+                    NavigationLink { tool.dest().floatingBarClearance() } label: { rowLabel(tool, chevron: false) }
                 }
             }
         }

@@ -265,6 +265,7 @@ struct WakeUpView: View {
                 }
                 .padding(Theme.pad)
             }
+            .floatingBarClearance()
             .scrollContentBackground(.hidden)
             .background(Theme.screenBG)   // wallpaper dépoli en Verre
             .navigationTitle("Réveil")
@@ -1154,8 +1155,8 @@ struct ProfileView: View {
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
-                    .padding(.bottom, 80)
                 }
+                .floatingBarClearance()
             }
             .navigationTitle("")
             .toolbarBackground(.hidden, for: .navigationBar)
