@@ -94,11 +94,6 @@ final class AIAssistantViewModel: ObservableObject {
         let module: String?
     }
 
-    // Flux « Ajouter » guidé (déclenché depuis le chat)
-    @Published var showAddFlow = false
-    @Published var addFlowKind: AddAnythingSheet.Kind = .task
-    @Published var addFlowPrefill = ""
-
     @AppStorage("aiConversationID") private var conversationID = ""
     @AppStorage("aiConversationDay") private var conversationDay = ""
     @AppStorage("aiFirstLaunchDone") private var firstLaunchDone = false
@@ -210,16 +205,20 @@ final class AIAssistantViewModel: ObservableObject {
     }
 
     private func checkAbandonedChallenges() {
-        // Basé sur un backend distant non déployé → désactivé (coach 100% on-device).
+        Task {
+            guard let challenges = try? await AgentAPI.shared.fetchChallenges() else { return }
+            guard let abandoned = challenges.first(where: { $0.isAbandoned }) else { return }
+            let prompt = "[DÉFI_ABANDONNÉ] Défi : \"\(abandoned.title)\" — streak actuel : \(abandoned.streak_days) jour(s), dernier check-in : \(abandoned.days_since_checkin.map { "\($0) jour(s) ago" } ?? "jamais")"
+            await MainActor.run { triggerProactive(prompt: prompt) }
+        }
     }
 
     private func triggerProactive(prompt: String) {
-        guard !isLoading, prompt.contains("[NOUVEAU_MODULE]") else { return }
-        // Message proactif local quand l'utilisateur vient d'ajouter un module.
+        guard !isLoading else { return }
         appendThinking()
         isLoading = true
+
         Task {
-<<<<<<< HEAD
             do {
                 let response = try await AgentAPI.shared.chat(
                     message: prompt,
@@ -261,98 +260,10 @@ final class AIAssistantViewModel: ObservableObject {
         Haptics.tap()
 
         appendUserMessage(content)
-
-        // Intention « ajouter » → ouvre le flux guidé (choisir quoi ajouter + rappel).
-        if let (kind, prefill) = Self.detectAddIntent(content) {
-            addFlowKind = kind
-            addFlowPrefill = prefill
-            appendAssistantMessage("Ok 👍 dis-moi quoi ajouter — je t'ai ouvert le formulaire. Tu pourras aussi y mettre un rappel.", actions: [])
-            showAddFlow = true
-            return
-        }
-
-        appendThinking()
-        isLoading = true
-
-        // Coach 100% ON-DEVICE (aucun serveur) — lit les vraies données + agit.
-        Task {
-            // Petit délai pour l'effet « réflexion » naturel.
-            try? await Task.sleep(nanoseconds: 350_000_000)
-            let reply: String
-            if let ctx = modelContext {
-                reply = LocalCoach.respond(to: content, ctx: ctx)
-            } else {
-                reply = "Je suis prêt, mais je n'ai pas encore accès à tes données. Réessaie dans un instant."
-            }
-            removeThinking()
-            appendAssistantMessage(reply, actions: [])
-            isLoading = false
-        }
-    }
-
-    /// Détecte une intention « ajouter » et devine le type + le nom de l'objet.
-    static func detectAddIntent(_ raw: String) -> (AddAnythingSheet.Kind, String)? {
-        let t = raw.folding(options: .diacriticInsensitive, locale: .current).lowercased()
-        // Uniquement la famille « ajouter » — ne PAS intercepter « créer une séance/habitude »
-        // (gérées par le coach) ni les questions contenant « ajoute ».
-        let addWords = ["ajoute ", "ajouter", "ajoute-", "rajoute", "rajouter"]
-        guard addWords.contains(where: { t.contains($0) }) || t.hasPrefix("add ") || t == "add" || t == "ajouter" else { return nil }
-
-        let kind: AddAnythingSheet.Kind
-        if t.contains("complement") || t.contains("vitamine") || t.contains("creatine") || t.contains("magnesium") || t.contains("omega") || t.contains("zinc") { kind = .supplement }
-        else if t.contains("course") || t.contains("liste") || t.contains("acheter") || t.contains("panier") { kind = .shopping }
-        else if t.contains(" eau") || t.contains("hydrat") || t.contains("boire") { kind = .water }
-        else if t.contains("humeur") || t.contains("mood") || t.contains("moral") { kind = .mood }
-        else if t.contains("depense") || t.contains("achat") || t.contains("paye") || t.contains("depenser") { kind = .expense }
-        else if t.contains("abonnement") || t.contains("subscription") { kind = .subscription }
-        else if t.contains("seance") || t.contains("entrainement") || t.contains("exercice") || t.contains("muscu") || t.contains("workout") { kind = .workout }
-        else if t.contains("evenement") || t.contains("rendez") || t.contains(" rdv") || t.contains("anniversaire") { kind = .event }
-        else if t.contains("echeance") || t.contains("deadline") || t.contains("facture") { kind = .deadline }
-        else if t.contains("menage") || t.contains("nettoyer") || t.contains("ranger") || t.contains("corvee") { kind = .chore }
-        else if t.contains("plein") || t.contains("essence") || t.contains("carburant") || t.contains("gasoil") { kind = .fuel }
-        else if t.contains("habitude") || t.contains("chaque jour") || t.contains("quotidien") || t.contains("tous les jours") { kind = .habit }
-        else if t.contains("aliment") || t.contains("repas") || t.contains("manger") || t.contains("bouffe") || t.contains("nourriture") || t.contains("calorie") { kind = .food }
-        else if t.contains("note") || t.contains("idee") { kind = .note }
-        else { kind = .task }
-
-        // Extraire un nom lisible en retirant les mots de commande.
-        var name = raw.trimmingCharacters(in: .whitespaces)
-        let leading = ["ajouter", "ajoute", "rajouter", "rajoute", "add", "je veux", "peux-tu", "peux tu", "stp"]
-        var changed = true
-        while changed {
-            changed = false
-            let low = name.lowercased()
-            for w in leading where low.hasPrefix(w) {
-                name = String(name.dropFirst(w.count)).trimmingCharacters(in: CharacterSet(charactersIn: " :,-'"))
-                changed = true; break
-            }
-        }
-        let nouns = ["une tache", "un complement", "un complément", "une habitude", "un aliment", "une note",
-                     "un article", "a ma liste de course", "à ma liste de course", "a ma liste", "à ma liste",
-                     "de course", "quotidienne", "sur ma liste"]
-        for w in nouns {
-            let low = name.lowercased()
-            if low.hasPrefix(w) { name = String(name.dropFirst(w.count)).trimmingCharacters(in: CharacterSet(charactersIn: " :,-'")) }
-            name = name.replacingOccurrences(of: w, with: "", options: [.caseInsensitive]).trimmingCharacters(in: .whitespaces)
-        }
-        for art in ["un ", "une ", "des ", "le ", "la ", "les ", "mon ", "ma ", "mes "] {
-            if name.lowercased().hasPrefix(art) { name = String(name.dropFirst(art.count)) }
-        }
-        name = name.trimmingCharacters(in: CharacterSet(charactersIn: " :,-'"))
-        if name.count < 2 { name = "" }
-        return (kind, name)
-    }
-
-    /// Analyse une image on-device (Vision) et route vers la bonne catégorie — sans backend.
-    func analyzeImage(_ image: UIImage) {
-        guard !isLoading else { return }
-        Haptics.tap()
-        appendUserMessage("📷 Photo envoyée")
         appendThinking()
         isLoading = true
 
         Task {
-<<<<<<< HEAD
             do {
                 let response = try await AgentAPI.shared.chatStream(
                     message: content,
@@ -378,23 +289,11 @@ final class AIAssistantViewModel: ObservableObject {
                 // on retombe sur l'endpoint classique.
                 streamingText = nil
                 await fallbackSend(content: content, module: module)
-=======
-            let result = await ImageIntel.analyze(image)
-            // Effet concret : si c'est un aliment, on le journalise directement.
-            if case let .food(guess) = result.route, let ctx = modelContext {
-                ctx.insert(FoodEntry(name: guess.name, calories: guess.kcal,
-                                     protein: guess.protein, carbs: guess.carbs, fat: guess.fat,
-                                     meal: currentMeal()))
-                try? ctx.save()
->>>>>>> origin/pote
             }
-            removeThinking()
-            appendAssistantMessage(result.reply, actions: result.actions)
             isLoading = false
         }
     }
 
-<<<<<<< HEAD
     private func handleStreamToken(_ token: String) {
         if streamingText == nil {
             removeThinking()
@@ -444,14 +343,6 @@ final class AIAssistantViewModel: ObservableObject {
             } else {
                 errorBanner = error.localizedDescription
             }
-=======
-    private func currentMeal() -> String {
-        switch Calendar.current.component(.hour, from: .now) {
-        case 5..<11:  return "Petit-déj"
-        case 11..<15: return "Déjeuner"
-        case 15..<18: return "Collation"
-        default:      return "Dîner"
->>>>>>> origin/pote
         }
     }
 
@@ -509,7 +400,6 @@ final class AIAssistantViewModel: ObservableObject {
         Instruction: Pour chaque module avec habitudes, pose des questions précises (durée séance, nombre d'exercices, etc.) pour créer des habitudes personnalisées. Demande l'accord avant de créer chaque habitude (action create_habit).
         """
 
-        _ = prompt   // le contexte reste dispo si un LLM est branché plus tard
         appendThinking()
         isLoading = true
         // NE PAS mettre firstLaunchDone = true ici — seulement après succès réseau.
@@ -517,7 +407,6 @@ final class AIAssistantViewModel: ObservableObject {
         aiKnownModulesRaw = recommendedModulesRaw
 
         Task {
-<<<<<<< HEAD
             do {
                 let response = try await AgentAPI.shared.chat(
                     message: prompt,
@@ -545,11 +434,6 @@ final class AIAssistantViewModel: ObservableObject {
                     actions: []
                 )
             }
-=======
-            try? await Task.sleep(nanoseconds: 400_000_000)
-            removeThinking()
-            appendAssistantMessage(LocalCoach.welcome(name: userName), actions: [])
->>>>>>> origin/pote
             isLoading = false
         }
     }
@@ -720,71 +604,9 @@ final class AIAssistantViewModel: ObservableObject {
 
 import UserNotifications
 
-// MARK: - On-device image understanding + routing
-
-enum ImageRoute { case food(FoodGuess), document(String), general(String) }
-
-enum ImageIntel {
-    /// Classe l'image, lit le texte éventuel, et décide vers quel pôle router — 100% on-device.
-    static func analyze(_ image: UIImage) async -> (route: ImageRoute, reply: String, actions: [AIAction]) {
-        let labels = await classify(image)
-
-        // 1) Aliment reconnu → journalisation calories (pôle Nutrition)
-        if let hit = labels.first(where: { FoodCalorieDB.match($0.label) != nil }),
-           let m = FoodCalorieDB.match(hit.label) {
-            let g = FoodGuess(name: m.0, kcal: m.1, protein: m.2, carbs: m.3, fat: m.4, confidence: Double(hit.confidence))
-            let reply = "🍽️ On dirait : \(g.name) (~\(g.kcal) kcal). Je l'ai ajouté à ton journal du jour — tu peux l'ajuster dans Nutrition."
-            return (.food(g), reply, [AIAction(type: .openModule, title: "Nutrition", module: "nutrition")])
-        }
-
-        // 2) Beaucoup de texte → document / justificatif (pôle Admin)
-        let text = await recognizeText(image)
-        if text.count >= 20 {
-            let snippet = String(text.prefix(120)).replacingOccurrences(of: "\n", with: " ")
-            let reply = "📄 J'ai lu du texte sur cette image :\n« \(snippet)… »\nÇa ressemble à un document — tu peux le classer dans Documents / Admin."
-            return (.document(text), reply, [AIAction(type: .openModule, title: "Documents", module: "admin")])
-        }
-
-        // 3) Sinon : description brute + suggestion
-        let top = labels.first?.label.split(separator: ",").first.map(String.init)?.capitalized ?? "quelque chose"
-        let reply = "🔍 J'ai analysé ta photo : \(top). Dis-moi ce que tu veux en faire (l'ajouter quelque part, créer un rappel…)."
-        return (.general(top), reply, [])
-    }
-
-    private static func classify(_ image: UIImage) async -> [(label: String, confidence: Float)] {
-        guard let cg = image.cgImage else { return [] }
-        return await withCheckedContinuation { cont in
-            let req = VNClassifyImageRequest()
-            let handler = VNImageRequestHandler(cgImage: cg, options: [:])
-            DispatchQueue.global(qos: .userInitiated).async {
-                try? handler.perform([req])
-                let obs = (req.results as? [VNClassificationObservation] ?? []).filter { $0.confidence > 0.05 }
-                cont.resume(returning: obs.prefix(15).map { ($0.identifier, $0.confidence) })
-            }
-        }
-    }
-
-    private static func recognizeText(_ image: UIImage) async -> String {
-        guard let cg = image.cgImage else { return "" }
-        return await withCheckedContinuation { cont in
-            let req = VNRecognizeTextRequest()
-            req.recognitionLevel = .fast
-            req.recognitionLanguages = ["fr-FR", "en-US"]
-            let handler = VNImageRequestHandler(cgImage: cg, options: [:])
-            DispatchQueue.global(qos: .userInitiated).async {
-                try? handler.perform([req])
-                let strings = (req.results as? [VNRecognizedTextObservation] ?? [])
-                    .compactMap { $0.topCandidates(1).first?.string }
-                cont.resume(returning: strings.joined(separator: "\n"))
-            }
-        }
-    }
-}
-
 // MARK: - Main View
 
 struct AIAssistantView: View {
-    var prefill: String? = nil
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     @StateObject private var vm = AIAssistantViewModel()
@@ -792,11 +614,7 @@ struct AIAssistantView: View {
     private var accent: Color { (AppTheme(rawValue: appThemeRaw) ?? .classic).accent }
     @FocusState private var inputFocused: Bool
     @State private var showClearConfirm = false
-<<<<<<< HEAD
     @State private var showServerConfig = false
-=======
-    @State private var photoItem: PhotosPickerItem?
->>>>>>> origin/pote
 
     // Quick suggestions change per time of day
     private var quickSuggestions: [(label: String, message: String, module: String?)] {
@@ -835,19 +653,10 @@ struct AIAssistantView: View {
 
     var body: some View {
         NavigationStack {
-<<<<<<< HEAD
             messagesArea
                 .background(Theme.bg.ignoresSafeArea())
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     inputSection
-=======
-            ZStack {
-                Theme.screenBG
-
-                VStack(spacing: 0) {
-                    messagesArea
-                    inputArea
->>>>>>> origin/pote
                 }
             .navigationTitle("Ton coach")
             .navigationBarTitleDisplayMode(.inline)
@@ -868,10 +677,6 @@ struct AIAssistantView: View {
             .confirmationDialog("Effacer la conversation ?", isPresented: $showClearConfirm, titleVisibility: .visible) {
                 Button("Effacer", role: .destructive) { clearHistory() }
                 Button("Annuler", role: .cancel) { }
-            }
-            .sheet(isPresented: $vm.showAddFlow) {
-                AddAnythingSheet(initialKind: vm.addFlowKind, prefillName: vm.addFlowPrefill)
-                    .presentationDetents([.large])
             }
             .alert("Erreur", isPresented: .constant(vm.errorBanner != nil)) {
                 Button("OK") { vm.errorBanner = nil }
@@ -902,10 +707,6 @@ struct AIAssistantView: View {
         .task {
             vm.modelContext = ctx
             vm.loadHistory()
-            if let prefill, vm.inputText.isEmpty {
-                vm.inputText = prefill
-                inputFocused = true
-            }
         }
     }
 
@@ -1068,24 +869,6 @@ struct AIAssistantView: View {
             }
             .padding(.horizontal, 16)
 
-            // Bouton « Ajouter » — flux guidé (tâche, complément, course, aliment, habitude, note + rappel)
-            Button {
-                Haptics.tap()
-                vm.addFlowKind = .task; vm.addFlowPrefill = ""; vm.showAddFlow = true
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "plus.circle.fill").font(.system(size: 17, weight: .bold))
-                    Text("Ajouter quelque chose").font(.system(size: 15, weight: .bold))
-                    Spacer()
-                    Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold)).opacity(0.6)
-                }
-                .foregroundStyle(Theme.onVolt)
-                .padding(.horizontal, 16).padding(.vertical, 14)
-                .background(Theme.volt, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            }
-            .buttonStyle(PressableButtonStyle())
-            .padding(.horizontal, 16)
-
             // Grille 2×2
             let cols = Array(quickSuggestions.prefix(4))
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
@@ -1097,17 +880,13 @@ struct AIAssistantView: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 15)
-                            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .padding(.vertical, 14)
+                            .background(Color(uiColor: .secondarySystemBackground),
+                                        in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .strokeBorder(Theme.hairline, lineWidth: 0.5))
-                            .softElevation()
+                                .stroke(Color(uiColor: .separator).opacity(0.4), lineWidth: 1))
                     }
-<<<<<<< HEAD
                     .buttonStyle(PressScaleButtonStyle())
-=======
-                    .buttonStyle(PressableButtonStyle())
->>>>>>> origin/pote
                 }
             }
             .padding(.horizontal, 16)
@@ -1120,31 +899,12 @@ struct AIAssistantView: View {
         VStack(spacing: 0) {
             Divider().opacity(0.4)
             HStack(spacing: 10) {
-                PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
-                    Image(systemName: "photo.on.rectangle.angled")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(vm.isLoading ? Color.secondary : accent)
-                        .frame(width: 34, height: 34)
-                }
-                .disabled(vm.isLoading)
-                .onChange(of: photoItem) { _, item in
-                    guard let item else { return }
-                    Task {
-                        if let data = try? await item.loadTransferable(type: Data.self),
-                           let ui = UIImage(data: data) {
-                            vm.analyzeImage(ui)
-                        }
-                        photoItem = nil
-                    }
-                }
-
                 TextField("Dis-moi quelque chose…", text: $vm.inputText, axis: .vertical)
                     .font(.system(size: 15))
                     .lineLimit(1...5)
-                    .padding(.horizontal, 15)
-                    .padding(.vertical, 11)
-                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                     .focused($inputFocused)
                     .submitLabel(.send)
                     .onSubmit { vm.send() }
@@ -1152,31 +912,21 @@ struct AIAssistantView: View {
                 Button { vm.send() } label: {
                     ZStack {
                         Circle()
-<<<<<<< HEAD
                             .fill(canSend ? accent : Color.secondary.opacity(0.15))
                             .frame(width: 36, height: 36)
                             .animation(.spring(response: 0.25, dampingFraction: 0.7), value: canSend)
-=======
-                            .fill(canSend ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Color.secondary.opacity(0.15)))
-                            .frame(width: 38, height: 38)
-                            .shadow(color: canSend ? accent.opacity(0.35) : .clear, radius: 6, y: 2)
->>>>>>> origin/pote
                         Image(systemName: vm.isLoading ? "ellipsis" : "arrow.up")
-                            .font(.system(size: 15, weight: .bold))
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(canSend ? .white : .secondary)
                             .contentTransition(.symbolEffect(.replace.downUp.byLayer))
                     }
                 }
-<<<<<<< HEAD
                 .buttonStyle(PressScaleButtonStyle())
-=======
-                .buttonStyle(PressableButtonStyle())
->>>>>>> origin/pote
                 .disabled(!canSend)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
-            .background(Theme.isGlassActive ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Theme.bg))
+            .background(Theme.bg)
         }
     }
 
@@ -1251,13 +1001,6 @@ private struct MessageRow: View {
 
     var isUser: Bool { message.role == "user" }
 
-    /// Rend le markdown inline (**gras**, sauts de ligne) d'une String dynamique.
-    static func markdown(_ s: String) -> AttributedString {
-        var opts = AttributedString.MarkdownParsingOptions()
-        opts.interpretedSyntax = .inlineOnlyPreservingWhitespace
-        return (try? AttributedString(markdown: s, options: opts)) ?? AttributedString(s)
-    }
-
     var body: some View {
         VStack(alignment: isUser ? .trailing : .leading, spacing: 6) {
             HStack(alignment: .bottom, spacing: 8) {
@@ -1271,7 +1014,7 @@ private struct MessageRow: View {
                             .font(.system(size: 15))
                             .foregroundStyle(.primary)
                     } else {
-                        Text(Self.markdown(message.text))
+                        Text(message.text)
                             .font(.system(size: 15))
                             .foregroundStyle(isUser ? .white : .primary)
                             .textSelection(.enabled)
@@ -1280,25 +1023,15 @@ private struct MessageRow: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(
-                    isUser ? AnyShapeStyle(accent.gradient) : Theme.cardFill,
+                    isUser ? accent : Color(uiColor: .secondarySystemBackground),
                     in: RoundedRectangle(cornerRadius: 20, style: .continuous)
                 )
-<<<<<<< HEAD
                 .shadow(
                     color: isUser ? accent.opacity(0.18) : Color.black.opacity(0.06),
                     radius: isUser ? 8 : 4,
                     x: 0,
                     y: isUser ? 3 : 2
                 )
-=======
-                .overlay {
-                    if !isUser {
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .strokeBorder(Theme.hairline, lineWidth: 0.5)
-                    }
-                }
-                .softElevation()
->>>>>>> origin/pote
 
                 if !isUser { Spacer(minLength: 56) }
             }
