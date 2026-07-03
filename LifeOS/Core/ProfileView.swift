@@ -977,8 +977,7 @@ struct ProfileView: View {
             }
         }
         .padding(16)
-        .background(Theme.card)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .surface()
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .stroke(task.color.opacity(task.progress >= 1 ? 0.4 : 0), lineWidth: 1.5)
