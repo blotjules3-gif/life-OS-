@@ -358,7 +358,9 @@ struct ShortcutsHomeView: View {
                         weeklyModuleCard(module)
                     }
 
-<<<<<<< HEAD
+                    TodayAgendaSection()
+                        .padding(.horizontal, -Theme.pad)   // pleine largeur (compense le padding parent)
+
                     habitsSection
                         .staggered(3, appeared: homeAppeared)
                         .scrollFade()
@@ -374,14 +376,6 @@ struct ShortcutsHomeView: View {
                     goalsSection
                         .staggered(5, appeared: homeAppeared)
                         .scrollFade()
-=======
-                    TodayAgendaSection()
-                        .padding(.horizontal, -Theme.pad)   // pleine largeur (compense le padding parent)
-
-                    shortcutsSection
-                    habitsSection
-                    moodSection
->>>>>>> origin/pote
                 }
                 .padding(Theme.pad)
             }
