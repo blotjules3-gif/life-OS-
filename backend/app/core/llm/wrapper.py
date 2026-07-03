@@ -84,6 +84,17 @@ class LLMWrapper:
                 result.append(UserMessage(content=content))
             elif role == "assistant":
                 tool_calls = msg.get("tool_calls")
+                if tool_calls:
+                    # Normalise SDK ToolCall et _StreamedToolCall vers le format dict
+                    # accepté par AssistantMessage.
+                    tool_calls = [
+                        tc if isinstance(tc, dict) else {
+                            "id": tc.id,
+                            "type": "function",
+                            "function": {"name": tc.function.name, "arguments": tc.function.arguments},
+                        }
+                        for tc in tool_calls
+                    ]
                 result.append(AssistantMessage(content=content or "", tool_calls=tool_calls))
             elif role == "tool":
                 result.append(ToolMessage(
