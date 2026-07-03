@@ -884,7 +884,7 @@ struct AIAssistantView: View {
                     vm.isServerOffline = false
                     vm.send(text: vm.inputText.isEmpty ? nil : vm.inputText)
                 } label: {
-                    Text("Reessayer")
+                    Text("Réessayer")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(accent)
                 }
