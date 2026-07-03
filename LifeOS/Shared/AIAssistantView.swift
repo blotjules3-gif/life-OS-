@@ -263,6 +263,16 @@ final class AIAssistantViewModel: ObservableObject {
         Haptics.tap()
 
         appendUserMessage(content)
+
+        // Intention « ajouter » → ouvre le flux guidé (choisir quoi ajouter + rappel).
+        if let (kind, prefill) = Self.detectAddIntent(content) {
+            addFlowKind = kind
+            addFlowPrefill = prefill
+            appendAssistantMessage("Ok, je t'ai ouvert le formulaire. Tu pourras aussi y mettre un rappel.", actions: [])
+            showAddFlow = true
+            return
+        }
+
         appendThinking()
         isLoading = true
 
