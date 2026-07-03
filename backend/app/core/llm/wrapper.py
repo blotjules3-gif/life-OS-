@@ -34,6 +34,24 @@ def _is_transient(exc: BaseException) -> bool:
     return False
 
 
+class _StreamedFunction:
+    __slots__ = ("name", "arguments")
+
+    def __init__(self, name: str, arguments: str) -> None:
+        self.name = name
+        self.arguments = arguments
+
+
+class _StreamedToolCall:
+    # Même forme que le ToolCall du SDK (id + function.name/arguments) pour que
+    # l'orchestrateur traite indifféremment stream et non-stream.
+    __slots__ = ("id", "function")
+
+    def __init__(self, id: str, name: str, arguments: str) -> None:
+        self.id = id
+        self.function = _StreamedFunction(name, arguments)
+
+
 class LLMWrapper:
     """Thin, safe wrapper around Mistral AI.
 
