@@ -156,8 +156,3 @@ async def lifeos_error_handler(request: Request, exc: LifeOSBaseError) -> JSONRe
 async def generic_error_handler(request: Request, exc: Exception) -> JSONResponse:
     log.error("unhandled_error", error=str(exc), path=request.url.path, exc_info=True)
     return JSONResponse(status_code=500, content={"detail": "Erreur inattendue."})
-
-
-@app.get("/health")
-async def health() -> dict:
-    return {"status": "ok", "tools": len(registry.list_tools())}
