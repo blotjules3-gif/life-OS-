@@ -15,9 +15,6 @@ enum Theme {
     static let textTertiary  = Color(uiColor: .tertiaryLabel)
     static let accent = Color.accentColor
 
-    static let radius: CGFloat = 16
-    static let radiusSmall: CGFloat = 11
-    static let pad: CGFloat = 16
     static let padWide: CGFloat = 28   // onboarding / large content areas
 
     // MARK: - Système typographique (Dynamic Type — scales avec les préférences d'accessibilité)
