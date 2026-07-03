@@ -611,6 +611,152 @@ final class AIAssistantViewModel: ObservableObject {
             messages.removeAll { $0.isThinking }
         }
     }
+
+    /// Détecte une intention « ajouter » et devine le type + le nom de l'objet.
+    static func detectAddIntent(_ raw: String) -> (AddAnythingSheet.Kind, String)? {
+        let t = raw.folding(options: .diacriticInsensitive, locale: .current).lowercased()
+        // Uniquement la famille « ajouter » — ne PAS intercepter « créer une séance/habitude »
+        // (gérées par le coach) ni les questions contenant « ajoute ».
+        let addWords = ["ajoute ", "ajouter", "ajoute-", "rajoute", "rajouter"]
+        guard addWords.contains(where: { t.contains($0) }) || t.hasPrefix("add ") || t == "add" || t == "ajouter" else { return nil }
+
+        let kind: AddAnythingSheet.Kind
+        if t.contains("complement") || t.contains("vitamine") || t.contains("creatine") || t.contains("magnesium") || t.contains("omega") || t.contains("zinc") { kind = .supplement }
+        else if t.contains("course") || t.contains("liste") || t.contains("acheter") || t.contains("panier") { kind = .shopping }
+        else if t.contains(" eau") || t.contains("hydrat") || t.contains("boire") { kind = .water }
+        else if t.contains("humeur") || t.contains("mood") || t.contains("moral") { kind = .mood }
+        else if t.contains("depense") || t.contains("achat") || t.contains("paye") || t.contains("depenser") { kind = .expense }
+        else if t.contains("abonnement") || t.contains("subscription") { kind = .subscription }
+        else if t.contains("seance") || t.contains("entrainement") || t.contains("exercice") || t.contains("muscu") || t.contains("workout") { kind = .workout }
+        else if t.contains("evenement") || t.contains("rendez") || t.contains(" rdv") || t.contains("anniversaire") { kind = .event }
+        else if t.contains("echeance") || t.contains("deadline") || t.contains("facture") { kind = .deadline }
+        else if t.contains("menage") || t.contains("nettoyer") || t.contains("ranger") || t.contains("corvee") { kind = .chore }
+        else if t.contains("plein") || t.contains("essence") || t.contains("carburant") || t.contains("gasoil") { kind = .fuel }
+        else if t.contains("habitude") || t.contains("chaque jour") || t.contains("quotidien") || t.contains("tous les jours") { kind = .habit }
+        else if t.contains("aliment") || t.contains("repas") || t.contains("manger") || t.contains("bouffe") || t.contains("nourriture") || t.contains("calorie") { kind = .food }
+        else if t.contains("note") || t.contains("idee") { kind = .note }
+        else { kind = .task }
+
+        // Extraire un nom lisible en retirant les mots de commande.
+        var name = raw.trimmingCharacters(in: .whitespaces)
+        let leading = ["ajouter", "ajoute", "rajouter", "rajoute", "add", "je veux", "peux-tu", "peux tu", "stp"]
+        var changed = true
+        while changed {
+            changed = false
+            let low = name.lowercased()
+            for w in leading where low.hasPrefix(w) {
+                name = String(name.dropFirst(w.count)).trimmingCharacters(in: CharacterSet(charactersIn: " :,-'"))
+                changed = true; break
+            }
+        }
+        let nouns = ["une tache", "un complement", "un complément", "une habitude", "un aliment", "une note",
+                     "un article", "a ma liste de course", "à ma liste de course", "a ma liste", "à ma liste",
+                     "de course", "quotidienne", "sur ma liste"]
+        for w in nouns {
+            let low = name.lowercased()
+            if low.hasPrefix(w) { name = String(name.dropFirst(w.count)).trimmingCharacters(in: CharacterSet(charactersIn: " :,-'")) }
+            name = name.replacingOccurrences(of: w, with: "", options: [.caseInsensitive]).trimmingCharacters(in: .whitespaces)
+        }
+        for art in ["un ", "une ", "des ", "le ", "la ", "les ", "mon ", "ma ", "mes "] {
+            if name.lowercased().hasPrefix(art) { name = String(name.dropFirst(art.count)) }
+        }
+        name = name.trimmingCharacters(in: CharacterSet(charactersIn: " :,-'"))
+        if name.count < 2 { name = "" }
+        return (kind, name)
+    }
+
+    /// Analyse une image on-device (Vision) et route vers la bonne catégorie — sans backend.
+    func analyzeImage(_ image: UIImage) {
+        guard !isLoading else { return }
+        Haptics.tap()
+        appendUserMessage("Photo envoyée")
+        appendThinking()
+        isLoading = true
+
+        Task {
+            let result = await ImageIntel.analyze(image)
+            // Effet concret : si c'est un aliment, on le journalise directement.
+            if case let .food(guess) = result.route, let ctx = modelContext {
+                ctx.insert(FoodEntry(name: guess.name, calories: guess.kcal,
+                                     protein: guess.protein, carbs: guess.carbs, fat: guess.fat,
+                                     meal: currentMeal()))
+                try? ctx.save()
+            }
+            removeThinking()
+            appendAssistantMessage(result.reply, actions: result.actions)
+            isLoading = false
+        }
+    }
+
+    private func currentMeal() -> String {
+        switch Calendar.current.component(.hour, from: .now) {
+        case 5..<11:  return "Petit-déj"
+        case 11..<15: return "Déjeuner"
+        case 15..<18: return "Collation"
+        default:      return "Dîner"
+        }
+    }
+}
+
+// MARK: - On-device image understanding + routing
+
+enum ImageRoute { case food(FoodGuess), document(String), general(String) }
+
+enum ImageIntel {
+    /// Classe l'image, lit le texte éventuel, et décide vers quel pôle router — 100% on-device.
+    static func analyze(_ image: UIImage) async -> (route: ImageRoute, reply: String, actions: [AIAction]) {
+        let labels = await classify(image)
+
+        // 1) Aliment reconnu → journalisation calories (pôle Nutrition)
+        if let hit = labels.first(where: { FoodCalorieDB.match($0.label) != nil }),
+           let m = FoodCalorieDB.match(hit.label) {
+            let g = FoodGuess(name: m.0, kcal: m.1, protein: m.2, carbs: m.3, fat: m.4, confidence: Double(hit.confidence))
+            let reply = "On dirait : \(g.name) (~\(g.kcal) kcal). Je l'ai ajouté à ton journal du jour — tu peux l'ajuster dans Nutrition."
+            return (.food(g), reply, [AIAction(type: .openModule, title: "Nutrition", module: "nutrition")])
+        }
+
+        // 2) Beaucoup de texte → document / justificatif (pôle Admin)
+        let text = await recognizeText(image)
+        if text.count >= 20 {
+            let snippet = String(text.prefix(120)).replacingOccurrences(of: "\n", with: " ")
+            let reply = "J'ai lu du texte sur cette image :\n« \(snippet)… »\nÇa ressemble à un document — tu peux le classer dans Documents / Admin."
+            return (.document(text), reply, [AIAction(type: .openModule, title: "Documents", module: "admin")])
+        }
+
+        // 3) Sinon : description brute + suggestion
+        let top = labels.first?.label.split(separator: ",").first.map(String.init)?.capitalized ?? "quelque chose"
+        let reply = "J'ai analysé ta photo : \(top). Dis-moi ce que tu veux en faire (l'ajouter quelque part, créer un rappel…)."
+        return (.general(top), reply, [])
+    }
+
+    private static func classify(_ image: UIImage) async -> [(label: String, confidence: Float)] {
+        guard let cg = image.cgImage else { return [] }
+        return await withCheckedContinuation { cont in
+            let req = VNClassifyImageRequest()
+            let handler = VNImageRequestHandler(cgImage: cg, options: [:])
+            DispatchQueue.global(qos: .userInitiated).async {
+                try? handler.perform([req])
+                let obs = (req.results as? [VNClassificationObservation] ?? []).filter { $0.confidence > 0.05 }
+                cont.resume(returning: obs.prefix(15).map { ($0.identifier, $0.confidence) })
+            }
+        }
+    }
+
+    private static func recognizeText(_ image: UIImage) async -> String {
+        guard let cg = image.cgImage else { return "" }
+        return await withCheckedContinuation { cont in
+            let req = VNRecognizeTextRequest()
+            req.recognitionLevel = .fast
+            req.recognitionLanguages = ["fr-FR", "en-US"]
+            let handler = VNImageRequestHandler(cgImage: cg, options: [:])
+            DispatchQueue.global(qos: .userInitiated).async {
+                try? handler.perform([req])
+                let strings = (req.results as? [VNRecognizedTextObservation] ?? [])
+                    .compactMap { $0.topCandidates(1).first?.string }
+                cont.resume(returning: strings.joined(separator: "\n"))
+            }
+        }
+    }
 }
 
 // MARK: - Import for notifications
