@@ -241,6 +241,7 @@ final class AIAssistantViewModel: ObservableObject {
     }
 
     func send(text: String? = nil, module: String? = nil) {
+        rotateConversationIfNeeded()
         let content = (text ?? inputText).trimmingCharacters(in: .whitespaces)
         guard !content.isEmpty, !isLoading else { return }
         inputText = ""
