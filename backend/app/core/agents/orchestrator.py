@@ -53,12 +53,15 @@ class AgentOrchestrator:
         conversation_id: uuid.UUID,
         session: AsyncSession,
         user_context: str | None = None,
+        memory_context: str | None = None,
     ) -> AgentResult:
         """Execute one full agent turn and return the result.
 
         Returns AgentResult containing the final text reply and metadata.
         """
-        system_prompt = build_system_prompt(module_type, module_config, user_name, user_gender, user_context)
+        system_prompt = build_system_prompt(
+            module_type, module_config, user_name, user_gender, user_context, memory_context,
+        )
         tools = get_tools_for_module(module_type)
 
         messages: list[dict[str, Any]] = [
