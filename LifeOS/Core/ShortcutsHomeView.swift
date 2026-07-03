@@ -164,7 +164,6 @@ struct ShortcutsHomeView: View {
     @Query(sort: \MoodEntry.date, order: .reverse) private var moods: [MoodEntry]
     @Environment(\.modelContext) private var ctx
 
-<<<<<<< HEAD
     init() {
         let cal = Calendar.current
         let todayStart    = cal.startOfDay(for: Date())
@@ -177,16 +176,9 @@ struct ShortcutsHomeView: View {
         _watersYesterday = Query(filter: #Predicate<WaterEntry> { $0.date >= yesterdayStart && $0.date < todayStart })
         _moods  = Query(filter: #Predicate<MoodEntry>  { $0.date >= fourteenDaysAgo },
                         sort: \MoodEntry.date, order: .reverse)
-=======
-    @State private var steps = 0
-    @State private var editingMood = false
-    @State private var editingShortcuts = false
-    @State private var editingMetrics = false
-
-    private var enabledShortcuts: [ShortcutTool] {
-        enabledRaw.split(separator: ",").compactMap { ShortcutTool(rawValue: String($0)) }
->>>>>>> origin/pote
     }
+
+    @State private var editingMetrics = false
     private var enabledMetrics: [HomeMetric] {
         metricsRaw.split(separator: ",").compactMap { HomeMetric(rawValue: String($0)) }
     }
