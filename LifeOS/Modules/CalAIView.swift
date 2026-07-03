@@ -438,6 +438,7 @@ struct BarcodeAddSheet: View {
                     Haptics.success(); dismiss()
                 } label: { Text("Ajouter au journal").frame(maxWidth: .infinity).bold() }
                     .buttonStyle(.borderedProminent).tint(Theme.volt)
+                    .disabled(factor <= 0)
             }
         }
     }
