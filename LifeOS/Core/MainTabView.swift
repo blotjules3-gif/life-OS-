@@ -478,18 +478,6 @@ struct MetricRing: View {
                         .foregroundStyle(deltaColor)
                         .transition(.opacity)
                 }
-=======
-                ProgressRing(progress: goal > 0 ? value / goal : 0, lineWidth: 9, tint: Theme.volt)
-                    .frame(width: 86, height: 86)
-                VStack(spacing: 1) {
-                    Image(systemName: icon).font(.caption).foregroundStyle(.primary)
-                    Text("\(Int(value))").font(.title3.weight(.bold).monospacedDigit())
-                }
-            }
-            VStack(spacing: 1) {
-                Text(label).font(.system(size: 13, weight: .bold)).textCase(.uppercase).kerning(0.3)
-                Text(goal > 0 ? "/ \(Int(goal)) \(unit)" : "").monoLabel(9).foregroundStyle(.secondary)
->>>>>>> origin/pote
             }
         }
         .frame(maxWidth: .infinity)
