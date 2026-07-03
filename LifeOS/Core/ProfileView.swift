@@ -1062,8 +1062,7 @@ struct ProfileView: View {
             .padding(.horizontal, Theme.space20)
             .padding(.bottom, 14)
         }
-        .background(Theme.card)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .surface()
     }
 
     // MARK: - Energy Score Card
