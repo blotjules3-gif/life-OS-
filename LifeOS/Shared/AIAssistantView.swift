@@ -934,6 +934,10 @@ private struct MessageRow: View {
                 Group {
                     if message.isThinking {
                         ThinkingIndicator()
+                    } else if reveal, !isUser {
+                        TypewriterText(text: message.text)
+                            .font(.system(size: 15))
+                            .foregroundStyle(.primary)
                     } else {
                         Text(message.text)
                             .font(.system(size: 15))
