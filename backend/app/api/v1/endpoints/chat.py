@@ -137,6 +137,7 @@ async def chat(
     orchestrator: AgentOrchestrator = Depends(get_orchestrator),
 ) -> ChatResponse:
     """Main chat endpoint — processes a user message through the AI agent."""
+    _check_rate_limit(body.device_id)
     user, conversation, conversation_history, module_config, memory_context = await _prepare_turn(body, session)
 
     # ── 6. Run agent ──────────────────────────────────────────────────────────
