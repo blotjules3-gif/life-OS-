@@ -249,13 +249,6 @@ final class AIAssistantViewModel: ObservableObject {
                     }
                 }
             }
-=======
-            try? await Task.sleep(nanoseconds: 400_000_000)
-            removeThinking()
-            appendAssistantMessage(
-                "Nouveau module activé 💪 Je l'ai pris en compte. Dis-moi ce que tu veux mettre en place dedans (une habitude, un objectif, un rappel) et je m'en occupe.",
-                actions: [])
->>>>>>> origin/pote
             isLoading = false
         }
     }
