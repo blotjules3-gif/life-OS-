@@ -53,10 +53,6 @@ class Settings(BaseSettings):
     apns_private_key_path: Optional[str] = None
     apns_use_sandbox: bool = True
 
-    # ── Banking (GoCardless Bank Account Data, DSP2) ─────────────────────────
-    gocardless_secret_id: Optional[str] = None
-    gocardless_secret_key: Optional[str] = None
-
     # ── CORS ──────────────────────────────────────────────────────────────────
     allowed_origins: list[str] = ["*"]
 
