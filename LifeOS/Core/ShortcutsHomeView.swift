@@ -848,13 +848,10 @@ struct ShortcutsHomeView: View {
                         }.buttonStyle(.plain)
                     }
                 }
-<<<<<<< HEAD
-=======
                 .padding(16)
                 .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
                 .softElevation()
->>>>>>> origin/pote
             }
         }
     }
