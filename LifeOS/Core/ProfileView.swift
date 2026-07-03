@@ -767,8 +767,7 @@ struct ProfileView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 32)
-        .background(Theme.card)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .surface()
     }
 
     // MARK: - Active Goals
