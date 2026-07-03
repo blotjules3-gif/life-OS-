@@ -89,9 +89,7 @@ enum BubbleSize: String, CaseIterable {
 struct CategoryHubView: View {
     let category: AppCategory
 
-    // Affichage PROPRE aux sous-catégories (indépendant de la grille principale).
-    // Défaut = icônes 3 par ligne. Modifiable via le bouton d'affichage du hub.
-    @AppStorage("hubLayout")  private var layoutRaw = "icons"
+    // Les sous-catégories sont verrouillées en bulles libres (voir `layout`).
     @AppStorage("appTheme")   private var appThemeRaw = "classic"
     @AppStorage("bubbleSize") private var bubbleSizeRaw = "medium"
     @State private var cover: CategoryTool?

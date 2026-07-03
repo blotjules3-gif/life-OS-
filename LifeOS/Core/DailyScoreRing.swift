@@ -178,8 +178,10 @@ struct DailyScoreRing: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 6)
         .sheet(isPresented: $showDetail) {
+            // Plein écran (.large) : quand on touche un objectif, l'outil poussé
+            // a toute la hauteur — pas coincé dans un demi-sheet.
             DailyScoreDetailSheet(date: selected, metrics: metrics(selected), score: score(selected))
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.large])
         }
     }
 
