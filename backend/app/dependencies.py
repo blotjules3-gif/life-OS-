@@ -18,7 +18,10 @@ async def verify_api_key(
     key: str | None = Security(api_key_header),
     settings: Settings = Depends(get_settings),
 ) -> None:
-    if not key or key != settings.internal_api_key:
+    valid_keys = {settings.internal_api_key}
+    if settings.internal_api_key_secondary:
+        valid_keys.add(settings.internal_api_key_secondary)
+    if not key or key not in valid_keys:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing API key.",
