@@ -111,16 +111,11 @@ struct EmptyState: View {
     var body: some View {
         VStack(spacing: 14) {
             Image(systemName: icon)
-<<<<<<< HEAD
-                .font(.system(size: 38))
-                .foregroundStyle(Theme.textSecondary)
-                .accessibilityHidden(true)
-=======
                 .font(.system(size: 32, weight: .bold))
                 .foregroundStyle(Theme.textPrimary)
                 .frame(width: 76, height: 76)
                 .overlay(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous).strokeBorder(Theme.line, lineWidth: 1.5))
->>>>>>> origin/pote
+                .accessibilityHidden(true)
             Text(title)
                 .font(.system(size: 17, weight: .black)).textCase(.uppercase).kerning(-0.2)
                 .foregroundStyle(Theme.textPrimary)
