@@ -151,11 +151,7 @@ struct CryptoAppView: View {
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(Theme.onVolt)
                             .frame(width: 26, height: 26)
-<<<<<<< HEAD
                             .background(Self.accentColor, in: Circle())
-=======
-                            .background(Theme.volt, in: Circle())
->>>>>>> origin/pote
                     }
                     .buttonStyle(.plain)
                     .transition(.scale(scale: 0.6).combined(with: .opacity))
