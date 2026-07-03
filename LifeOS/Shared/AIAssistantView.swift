@@ -228,12 +228,19 @@ final class AIAssistantViewModel: ObservableObject {
         // (gérées par le coach) ni les questions contenant « ajoute ».
         let addWords = ["ajoute ", "ajouter", "ajoute-", "rajoute", "rajouter"]
         guard addWords.contains(where: { t.contains($0) }) || t.hasPrefix("add ") || t == "add" || t == "ajouter" else { return nil }
-        // Laisser le coach gérer les logs rapides (eau).
-        if t.contains(" eau") || t.contains("bois ") || t.contains(" ml") { return nil }
 
         let kind: AddAnythingSheet.Kind
         if t.contains("complement") || t.contains("vitamine") || t.contains("creatine") || t.contains("magnesium") || t.contains("omega") || t.contains("zinc") { kind = .supplement }
         else if t.contains("course") || t.contains("liste") || t.contains("acheter") || t.contains("panier") { kind = .shopping }
+        else if t.contains(" eau") || t.contains("hydrat") || t.contains("boire") { kind = .water }
+        else if t.contains("humeur") || t.contains("mood") || t.contains("moral") { kind = .mood }
+        else if t.contains("depense") || t.contains("achat") || t.contains("paye") || t.contains("depenser") { kind = .expense }
+        else if t.contains("abonnement") || t.contains("subscription") { kind = .subscription }
+        else if t.contains("seance") || t.contains("entrainement") || t.contains("exercice") || t.contains("muscu") || t.contains("workout") { kind = .workout }
+        else if t.contains("evenement") || t.contains("rendez") || t.contains(" rdv") || t.contains("anniversaire") { kind = .event }
+        else if t.contains("echeance") || t.contains("deadline") || t.contains("facture") { kind = .deadline }
+        else if t.contains("menage") || t.contains("nettoyer") || t.contains("ranger") || t.contains("corvee") { kind = .chore }
+        else if t.contains("plein") || t.contains("essence") || t.contains("carburant") || t.contains("gasoil") { kind = .fuel }
         else if t.contains("habitude") || t.contains("chaque jour") || t.contains("quotidien") || t.contains("tous les jours") { kind = .habit }
         else if t.contains("aliment") || t.contains("repas") || t.contains("manger") || t.contains("bouffe") || t.contains("nourriture") || t.contains("calorie") { kind = .food }
         else if t.contains("note") || t.contains("idee") { kind = .note }
