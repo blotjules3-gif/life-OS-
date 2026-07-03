@@ -97,11 +97,7 @@ struct PrimaryButton: View {
             .foregroundStyle(Theme.onVolt)
             .shadow(color: Theme.volt.opacity(0.4), radius: 12, y: 5)
         }
-<<<<<<< HEAD
         .buttonStyle(LifeOSPressStyle())
-=======
-        .buttonStyle(PressableButtonStyle())
->>>>>>> origin/pote
     }
 }
 
