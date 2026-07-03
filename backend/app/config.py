@@ -64,10 +64,6 @@ class Settings(BaseSettings):
         return v
 
     @property
-    def banking_configured(self) -> bool:
-        return bool(self.gocardless_secret_id and self.gocardless_secret_key)
-
-    @property
     def apns_configured(self) -> bool:
         return all([
             self.apns_key_id,
