@@ -140,49 +140,45 @@ struct DailyScoreRing: View {
         }
     }
 
-    // Orbe central tappable
+    // Orbe central tappable — cadran à graduations (style compteur auto)
+    private let tickCount = 64
+
     private var orb: some View {
         let s = score(selected)
         let frac = Double(s) / 100
+        let lit = Int((frac * Double(tickCount)).rounded())
+        let done = metrics(selected).filter { $0.fraction >= 1 }.count
+        let total = metrics(selected).count
         return Button { Haptics.tap(); showDetail = true } label: {
             ZStack {
-                // sphère
-                Circle()
-                    .fill(RadialGradient(colors: sphereColors, center: .init(x: 0.4, y: 0.35),
-                                         startRadius: 6, endRadius: 190))
-                    .overlay(Circle().strokeBorder(Color.white.opacity(scheme == .dark ? 0.06 : 0.5), lineWidth: 1))
-                    .shadow(color: .black.opacity(0.18), radius: 22, y: 12)
-                // anneau de progression
-                Circle().stroke(Color.primary.opacity(0.08), lineWidth: 9)
-                    .padding(10)
-                Circle().trim(from: 0, to: max(0.001, frac))
-                    .stroke(Theme.volt, style: StrokeStyle(lineWidth: 9, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .padding(10)
-                    .animation(.spring(response: 0.7, dampingFraction: 0.85), value: frac)
+                // graduations radiales
+                ForEach(0..<tickCount, id: \.self) { i in
+                    Capsule()
+                        .fill(i < lit ? Theme.textPrimary : Theme.textPrimary.opacity(0.13))
+                        .frame(width: 2.2, height: i % 8 == 0 ? 18 : 13)
+                        .offset(y: -102)
+                        .rotationEffect(.degrees(Double(i) / Double(tickCount) * 360))
+                        .animation(.easeOut(duration: 0.5).delay(Double(i) * 0.004), value: lit)
+                }
+                // liseré extérieur fin
+                Circle().stroke(Theme.textPrimary.opacity(0.16), lineWidth: 1)
+                    .frame(width: 246, height: 246)
                 // centre
-                VStack(spacing: 2) {
+                VStack(spacing: 3) {
                     Text(isToday ? "SCORE DU JOUR" : shortDate(selected).uppercased())
-                        .font(.system(size: 10, weight: .bold, design: .monospaced)).kerning(1.4)
+                        .font(.system(size: 10, weight: .bold, design: .monospaced)).kerning(1.6)
                         .foregroundStyle(Theme.textSecondary)
-                    HStack(alignment: .lastTextBaseline, spacing: 1) {
-                        Text("\(s)").font(.system(size: 62, weight: .black)).monospacedDigit()
-                        Text("%").font(.system(size: 22, weight: .black)).foregroundStyle(Theme.textSecondary)
-                    }
-                    .foregroundStyle(Theme.textPrimary)
-                    Text("\(metrics(selected).filter { $0.fraction >= 1 }.count)/\(metrics(selected).count) objectifs")
-                        .font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.textSecondary)
+                    Text("\(s)")
+                        .font(.system(size: 72, weight: .medium)).monospacedDigit()
+                        .foregroundStyle(Theme.textPrimary)
+                    Text(total == 0 ? "%" : "\(done)/\(total) objectifs")
+                        .font(.system(size: 12, weight: .medium)).kerning(0.5)
+                        .foregroundStyle(Theme.textSecondary)
                 }
             }
-            .frame(width: 240, height: 240)
+            .frame(width: 244, height: 244)
         }
         .buttonStyle(PressableButtonStyle())
-    }
-
-    private var sphereColors: [Color] {
-        scheme == .dark
-            ? [Color(hex: 0x2C2C33), Color(hex: 0x161619)]
-            : [Color.white, Color(hex: 0xE9E9EE)]
     }
 
     // Bande des 7 jours de la semaine
