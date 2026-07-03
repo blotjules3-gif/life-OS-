@@ -276,15 +276,9 @@ struct FloatingTabBar: View {
                         .matchedGeometryEffect(id: "sel", in: ns)
                 }
                 Image(systemName: selected == t ? t.iconFill : t.icon)
-<<<<<<< HEAD
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(selected == t ? Color.primary : Color(uiColor: .systemGray))
-                    .animation(reduceMotion ? nil : .spring(duration: 0.28), value: selected)
-=======
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(selected == t ? Theme.onVolt : Color.primary.opacity(0.55))
-                    .animation(.spring(duration: 0.28), value: selected)
->>>>>>> origin/pote
+                    .animation(reduceMotion ? nil : .spring(duration: 0.28), value: selected)
             }
             .frame(width: 58, height: 58)
         }
