@@ -661,8 +661,7 @@ struct ProfileView: View {
             }
             .buttonStyle(LifeOSPressStyle())
         }
-        .background(Theme.card)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .surface(radius: 24)
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(wakeupEnabled ? accentColor.opacity(0.3) : Color.clear, lineWidth: 1.5)
