@@ -79,41 +79,169 @@ struct MentalSetupView: View {
 struct LooksSetupView: View {
     @AppStorage("skinType")           private var skinType = ""
     @AppStorage("skinConcernsRaw")    private var concernsRaw = ""
+    @AppStorage("skincareLevel")      private var skincareLevelStore = ""
+    @AppStorage("faceShape")          private var faceShapeStore = ""
+    @AppStorage("hairColor")          private var hairColorStore = ""
+    @AppStorage("hairGoalsRaw")       private var hairGoalsRaw = ""
+    @AppStorage("browGoalsRaw")       private var browGoalsRaw = ""
+    @AppStorage("smileGoalsRaw")      private var smileGoalsRaw = ""
+    @AppStorage("groomingRaw")        private var groomingRaw = ""
     @AppStorage("skincareReminders")  private var reminders = false
 
     @State private var type = "Normale"
     @State private var concerns: Set<String> = []
+    @State private var skincareLevel = "Basique"
+    @State private var faceShape = ""
+    @State private var hairColor = "Châtain"
+    @State private var hairGoals: Set<String> = []
+    @State private var browGoals: Set<String> = []
+    @State private var smileGoals: Set<String> = []
+    @State private var grooming: Set<String> = []
     @State private var remind = "Oui"
     private let tint = AppCategory.looks.tint
+
+    private let skinTypes: [(String, String)] = [
+        ("Normale", "Grain fin, ni trop grasse ni sèche, peu d'imperfections."),
+        ("Sèche", "Tiraille, aspect terne, parfois des squames."),
+        ("Grasse", "Brille (zone T), pores dilatés, tendance imperfections."),
+        ("Mixte", "Zone T grasse, joues normales à sèches."),
+        ("Sensible", "Rougeurs, réactive, tiraille avec certains produits."),
+    ]
 
     var body: some View {
         SetupFlow(title: "Looksmaxx", accent: tint, pages: pages) {
             skinType = type
             concernsRaw = concerns.sorted().joined(separator: ",")
+            skincareLevelStore = skincareLevel
+            faceShapeStore = faceShape
+            hairColorStore = hairColor
+            hairGoalsRaw = hairGoals.sorted().joined(separator: ",")
+            browGoalsRaw = browGoals.sorted().joined(separator: ",")
+            smileGoalsRaw = smileGoals.sorted().joined(separator: ",")
+            groomingRaw = grooming.sorted().joined(separator: ",")
             reminders = (remind == "Oui")
             CategorySetup.markDone(.looks); Haptics.success()
         }
         .onAppear {
             if !skinType.isEmpty { type = skinType }
             concerns = Set(concernsRaw.split(separator: ",").map(String.init))
+            if !skincareLevelStore.isEmpty { skincareLevel = skincareLevelStore }
+            faceShape = faceShapeStore
+            if !hairColorStore.isEmpty { hairColor = hairColorStore }
+            hairGoals = Set(hairGoalsRaw.split(separator: ",").map(String.init))
+            browGoals = Set(browGoalsRaw.split(separator: ",").map(String.init))
+            smileGoals = Set(smileGoalsRaw.split(separator: ",").map(String.init))
+            grooming = Set(groomingRaw.split(separator: ",").map(String.init))
             remind = reminders ? "Oui" : "Non"
         }
     }
+
     private var pages: [SetupPage] {
         [
+            // 1 — Analyse IA de la forme du visage → coupe adaptée
             SetupPage { VStack(spacing: 16) {
-                SetupHeader(icon: "face.smiling", title: "Ton type de peau ?", accent: tint)
-                SetupChoice(options: ["Normale", "Sèche", "Grasse", "Mixte", "Sensible"], selection: $type, accent: tint) } },
+                SetupHeader(icon: "face.dashed", title: "Analyse de ton visage",
+                            subtitle: "Prends une photo de face : l'IA (sur ton iPhone) estime la forme de ton visage et te conseille la coupe la plus flatteuse.",
+                            accent: tint)
+                FaceScanView(accent: tint) { shape in faceShape = shape.rawValue }
+            } },
+
+            // 2 — Type de peau ILLUSTRÉ
+            SetupPage { VStack(spacing: 16) {
+                SetupHeader(icon: "drop.fill", title: "Ton type de peau ?",
+                            subtitle: "Regarde ta peau 1 h après nettoyage, sans produit.", accent: tint)
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                    ForEach(skinTypes, id: \.0) { st in
+                        Button { type = st.0; Haptics.soft() } label: {
+                            SkinTypeCard(type: st.0, desc: st.1, selected: type == st.0, accent: tint)
+                        }.buttonStyle(.plain)
+                    }
+                }.padding(.horizontal, 14)
+            } },
+
+            // 3 — Préoccupations peau
             SetupPage { VStack(spacing: 16) {
                 SetupHeader(icon: "sparkles", title: "Tes objectifs peau",
                             subtitle: "On adaptera ta routine skincare.", accent: tint)
-                SetupMultiChoice(options: ["Acné", "Points noirs", "Rides", "Taches", "Cernes", "Pores", "Rougeurs", "Éclat"],
+                SetupMultiChoice(options: ["Acné", "Points noirs", "Rides", "Taches", "Cernes", "Pores", "Rougeurs", "Éclat", "Fermeté"],
                                  selection: $concerns, accent: tint) } },
+
+            // 4 — Niveau de routine skincare
             SetupPage { VStack(spacing: 16) {
-                SetupHeader(icon: "bell.fill", title: "Rappels routine matin/soir ?", accent: tint)
+                SetupHeader(icon: "list.bullet.clipboard", title: "Ta routine actuelle ?",
+                            subtitle: "On te proposera les étapes qui manquent (nettoyant, hydratant, SPF…).", accent: tint)
+                SetupChoice(options: ["Aucune", "Basique (nettoyant + crème)", "Complète (sérums, SPF…)"],
+                            selection: $skincareLevel, accent: tint,
+                            icons: ["xmark.circle", "drop", "sparkles"]) } },
+
+            // 5 — Cheveux (couleur = base pour conseiller les sourcils)
+            SetupPage { VStack(spacing: 16) {
+                SetupHeader(icon: "comb.fill", title: "Couleur de tes cheveux ?",
+                            subtitle: "Sert de repère pour tes sourcils (voir étape suivante).", accent: tint)
+                SetupChoice(options: ["Noir", "Brun", "Châtain", "Blond", "Roux", "Gris/Blanc"],
+                            selection: $hairColor, accent: tint) } },
+
+            // 6 — Sourcils (règle : 1 teinte + foncé que les cheveux, trim)
+            SetupPage { VStack(spacing: 16) {
+                SetupHeader(icon: "eyebrow", title: "Sourcils",
+                            subtitle: "Astuce : teins-les ~1 ton PLUS FONCÉ que tes cheveux pour encadrer le regard, et trim les longueurs qui dépassent.",
+                            accent: tint)
+                LooksTipCard(icon: "paintbrush.pointed.fill",
+                             text: "Ta base cheveux : \(hairColor). Vise une teinte sourcils légèrement plus foncée.",
+                             accent: tint)
+                SetupMultiChoice(options: ["Épaissir", "Redéfinir la ligne", "Teindre plus foncé", "Trim régulier", "Combler les trous"],
+                                 selection: $browGoals, accent: tint) } },
+
+            // 7 — Cheveux : objectifs
+            SetupPage { VStack(spacing: 16) {
+                SetupHeader(icon: "scissors", title: "Objectifs cheveux",
+                            subtitle: faceShape.isEmpty ? "On te guidera selon ta forme de visage." : "Forme détectée : \(faceShape). On adapte les conseils.",
+                            accent: tint)
+                SetupMultiChoice(options: ["Coupe adaptée", "Densité/pousse", "Soin du cuir chevelu", "Antipelliculaire", "Coiffage", "Barbe"],
+                                 selection: $hairGoals, accent: tint) } },
+
+            // 8 — Sourire / dents
+            SetupPage { VStack(spacing: 16) {
+                SetupHeader(icon: "mouth.fill", title: "Sourire & dents",
+                            subtitle: "Un sourire soigné change tout le visage.", accent: tint)
+                SetupMultiChoice(options: ["Blanchiment", "Alignement", "Détartrage régulier", "Haleine fraîche", "Fil dentaire quotidien"],
+                                 selection: $smileGoals, accent: tint) } },
+
+            // 9 — Soins & grooming
+            SetupPage { VStack(spacing: 16) {
+                SetupHeader(icon: "comb", title: "Soins & grooming",
+                            subtitle: "Les détails qui font la différence.", accent: tint)
+                SetupMultiChoice(options: ["Barbe entretenue", "Ongles nets", "Parfum", "Posture", "Sommeil (cernes)", "Hydratation", "Lèvres", "Épilation"],
+                                 selection: $grooming, accent: tint) } },
+
+            // 10 — Rappels
+            SetupPage { VStack(spacing: 16) {
+                SetupHeader(icon: "bell.fill", title: "Rappels routine matin/soir ?",
+                            subtitle: "Skincare, sourcils, fil dentaire… on te rappelle au bon moment.", accent: tint)
                 SetupChoice(options: ["Oui", "Non"], selection: $remind, accent: tint,
                             icons: ["checkmark.circle", "xmark.circle"]) } },
         ]
+    }
+}
+
+/// Petit encart conseil illustré, réutilisable dans les questionnaires.
+struct LooksTipCard: View {
+    let icon: String
+    let text: String
+    var accent: Color = .accentColor
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: icon).font(.system(size: 18, weight: .bold))
+                .foregroundStyle(Theme.onVolt).frame(width: 40, height: 40)
+                .background(accent, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+            Text(text).font(.subheadline).foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
+        .padding(.horizontal, 14)
     }
 }
 

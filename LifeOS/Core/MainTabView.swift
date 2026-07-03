@@ -253,26 +253,26 @@ struct FloatingTabBar: View {
                 .transition(.move(edge: .leading).combined(with: .opacity))
             }
 
-            // AI Chat au centre — même forme que l'onglet actif (rectangle arrondi) mais NOIR, plus grand, logo blanc.
+            // AI Chat au centre — pastille RONDE noire, logo blanc, qui déborde légèrement en HAUT et en BAS de la barre.
             Button {
                 Haptics.medium()
                 onOpenAssistant()
             } label: {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    Circle()
                         .fill(Color.black)
-                        .frame(width: 62, height: 48)
-                        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.5))
-                        .shadow(color: Color.black.opacity(0.20), radius: 6, y: 2)
+                        .frame(width: 70, height: 70)
+                        .overlay(Circle().strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.5))
+                        .shadow(color: Color.black.opacity(0.22), radius: 8, y: 3)
                     Image(systemName: "sparkles")
-                        .font(.system(size: 22, weight: .bold))
+                        .font(.system(size: 24, weight: .bold))
                         .foregroundStyle(.white)
                 }
-                .frame(width: 62, height: 58)
+                .frame(width: 70, height: 70)
             }
             .buttonStyle(PressableButtonStyle())
             .frame(maxWidth: .infinity)
+            .zIndex(1)
 
             // Onglets droite — masqués quand clavier ouvert
             if !chatMode {

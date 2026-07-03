@@ -82,20 +82,52 @@ final class ContextualNotifications {
             hour: 20, minute: 30
         )
 
-        // — Coucher (bedtime - 30 min) —
-        if modules.contains("sleep") {
-            let bedHour = UserDefaults.standard.integer(forKey: "bedHour")
-            let bedMin  = UserDefaults.standard.integer(forKey: "bedMinute")
-            let bedTotal = (bedHour > 0 ? bedHour : 23) * 60 + bedMin
-            let reminderTotal = ((bedTotal - 30) + 24 * 60) % (24 * 60)
+        // — Rituels du soir calés sur l'heure de coucher —
+        let bedHour = UserDefaults.standard.integer(forKey: "bedHour")
+        let bedMin  = UserDefaults.standard.integer(forKey: "bedMinute")
+        let bedTotal = (bedHour > 0 ? bedHour : 23) * 60 + bedMin
+        func beforeBed(_ mins: Int) -> Int { ((bedTotal - mins) + 24 * 60) % (24 * 60) }
+
+        // Skincare — 1 h avant le coucher (si l'utilisateur a activé les rappels routine).
+        if UserDefaults.standard.bool(forKey: "skincareReminders") {
+            let t = beforeBed(60)
             scheduleDaily(
-                id: "bedtime_reminder",
-                title: "Bientôt l'heure de dormir",
-                body: "Prépare-toi pour une bonne nuit. Évite les écrans encore 20 minutes.",
-                hour: reminderTotal / 60,
-                minute: reminderTotal % 60
+                id: "skincare_evening",
+                title: "Skincare du soir ✨",
+                body: "Nettoyant + soin avant de dormir — 5 min pour ta peau.",
+                hour: t / 60, minute: t % 60
             )
         }
+
+        // Compléments — 30 min avant le coucher (magnésium, zinc, oméga…).
+        if modules.contains("nutrition") || modules.contains("fitness") || modules.contains("looks") || modules.isEmpty {
+            let t = beforeBed(30)
+            scheduleDaily(
+                id: "supplements_evening",
+                title: "Compléments 💊",
+                body: "Avant de dormir : pense à tes compléments du soir (magnésium, oméga…).",
+                hour: t / 60, minute: t % 60
+            )
+        }
+
+        // Préparation au sommeil — 15 min avant (coupe les écrans).
+        if modules.contains("sleep") {
+            let t = beforeBed(15)
+            scheduleDaily(
+                id: "bedtime_reminder",
+                title: "Bientôt l'heure de dormir 🌙",
+                body: "Coupe les écrans, tamise la lumière — prépare une bonne nuit.",
+                hour: t / 60, minute: t % 60
+            )
+        }
+
+        // — Point de mi-journée (13h) : rappel des objectifs du jour —
+        scheduleDaily(
+            id: "midday_objectives",
+            title: "Point de mi-journée 🎯",
+            body: "Où en es-tu sur tes objectifs du jour ? Un coup d'œil pour rester sur les rails.",
+            hour: 13, minute: 0
+        )
 
         // — Mind / Méditation (8h) —
         if modules.contains("mind") {

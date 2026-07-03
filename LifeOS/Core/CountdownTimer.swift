@@ -99,4 +99,9 @@ enum Haptics {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         #endif
     }
+    static func warning() {
+        #if canImport(UIKit)
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
+        #endif
+    }
 }
