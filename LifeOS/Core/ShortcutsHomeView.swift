@@ -195,6 +195,8 @@ struct ShortcutsHomeView: View {
                         reengageBanner(message: msg, suggestion: reengageSuggestion)
                     }
 
+                    DailyScoreRing()   // score unique du jour (mélange tous les objectifs)
+
                     LifeBrainCard()
                         .padding(.horizontal, -Theme.pad)   // guidance transversale, en tête
 
@@ -207,7 +209,6 @@ struct ShortcutsHomeView: View {
 
                     shortcutsSection
                     habitsSection
-                    goalsSection
                     moodSection
                 }
                 .padding(Theme.pad)
