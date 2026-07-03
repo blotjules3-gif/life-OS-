@@ -140,10 +140,13 @@ struct DailyScoreRing: View {
         }
     }
 
-    // Orbe central tappable — anneau « aura » lumineux bleu
-    private let auraGlow = Color(hex: 0x2E63FF)
-    private let auraLite = Color(hex: 0x7AA6FF)
-    private let auraCore = Color(hex: 0xE6EEFF)
+    // Orbe central tappable — anneau iridescent « bulle de savon » (bleu→magenta→or)
+    private var iridescent: AngularGradient {
+        AngularGradient(
+            colors: [Color(hex: 0x3B6FF5), Color(hex: 0x9B6BF0), Color(hex: 0xEC5B9E),
+                     Color(hex: 0xF0A65A), Color(hex: 0x6FD0F5), Color(hex: 0x3B6FF5)],
+            center: .center, startAngle: .degrees(-90), endAngle: .degrees(270))
+    }
 
     private var orb: some View {
         let s = score(selected)
@@ -153,30 +156,29 @@ struct DailyScoreRing: View {
         let total = metrics(selected).count
         return Button { Haptics.tap(); showDetail = true } label: {
             ZStack {
-                // halo ambiant diffus (la lueur qui déborde)
-                Circle()
-                    .fill(RadialGradient(colors: [auraGlow.opacity(0.6), .clear],
-                                         center: .center, startRadius: 30, endRadius: 160))
-                    .frame(width: 320, height: 320).blur(radius: 26)
-                    .opacity(0.35 + 0.5 * frac)
+                // halo ambiant diffus irisé (la lueur qui déborde)
+                Circle().fill(iridescent)
+                    .frame(width: 300, height: 300).blur(radius: 42)
+                    .opacity(0.28 + 0.4 * frac)
                     .animation(.easeOut(duration: 0.9), value: frac)
                 // piste faible (repère du cercle complet)
-                Circle().stroke(auraGlow.opacity(0.10), lineWidth: 2)
+                Circle().stroke(Color.white.opacity(0.08), lineWidth: 2)
                     .frame(width: 212, height: 212)
-                // AURA : couches floutées empilées → lueur, du plus large au cœur brûlant
+                // AURA irisée : couches floutées empilées → verre soufflé lumineux
                 Group {
                     Circle().trim(from: 0, to: f)
-                        .stroke(auraGlow, style: StrokeStyle(lineWidth: 26, lineCap: .round))
-                        .blur(radius: 22).opacity(0.65)
+                        .stroke(iridescent, style: StrokeStyle(lineWidth: 24, lineCap: .round))
+                        .blur(radius: 20).opacity(0.6)
                     Circle().trim(from: 0, to: f)
-                        .stroke(auraGlow, style: StrokeStyle(lineWidth: 14, lineCap: .round))
-                        .blur(radius: 9).opacity(0.9)
+                        .stroke(iridescent, style: StrokeStyle(lineWidth: 13, lineCap: .round))
+                        .blur(radius: 7).opacity(0.95)
                     Circle().trim(from: 0, to: f)
-                        .stroke(auraLite, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                        .blur(radius: 3.5)
+                        .stroke(iridescent, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                        .blur(radius: 2)
+                    // reflet glossy (bord brillant façon bulle)
                     Circle().trim(from: 0, to: f)
-                        .stroke(auraCore, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
-                        .blur(radius: 0.8)
+                        .stroke(Color.white.opacity(0.85), style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
+                        .blur(radius: 0.5)
                 }
                 .rotationEffect(.degrees(-90))
                 .frame(width: 212, height: 212)
