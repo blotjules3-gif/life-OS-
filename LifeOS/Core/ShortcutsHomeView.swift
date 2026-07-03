@@ -146,6 +146,7 @@ struct ShortcutsHomeView: View {
     @AppStorage("tutorialDone") private var tutorialDone = false
     @State private var showTutorial = false
     @State private var editingShortcuts = false
+    @State private var homeAppeared = false
 
     private let cols = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
 
