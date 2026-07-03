@@ -24,6 +24,18 @@ from app.core.logging import get_logger
 router = APIRouter(prefix="/chat", tags=["chat"])
 log = get_logger(__name__)
 
+_RATE_LIMIT_REPLY = "Doucement — trop de messages d'un coup. Réessaie dans une minute."
+
+
+def _check_rate_limit(device_id: str) -> None:
+    minute, hour = get_chat_limiters()
+    if not minute.allow(device_id) or not hour.allow(device_id):
+        log.warning("chat_rate_limited", device_id=device_id)
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=_RATE_LIMIT_REPLY,
+        )
+
 
 async def _prepare_turn(
     body: ChatRequest,
