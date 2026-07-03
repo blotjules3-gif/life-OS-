@@ -141,6 +141,82 @@ class LLMWrapper:
         # Should never reach here — satisfy type checker
         raise LLMMaxRetriesError("Unexpected state in LLMWrapper.chat")
 
+    async def chat_stream(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None = None,
+    ) -> AsyncIterator[tuple[str, Any]]:
+        """Stream one LLM call. Yields ("token", str) as text arrives, then
+        exactly one terminal event: ("text", full_text) or ("tool_calls", [...]).
+
+        Pas de retry ici : un stream interrompu à mi-réponse ne se rejoue pas
+        proprement — l'appelant (endpoint SSE) émet un event error et le client
+        iOS retombe sur l'endpoint non-streamé.
+        """
+        mistral_messages = self._build_mistral_messages(messages)
+        tool_choice = "auto" if tools else "none"
+
+        log.info(
+            "llm_stream_start",
+            model=self._model,
+            message_count=len(mistral_messages),
+            has_tools=bool(tools),
+        )
+
+        stream = await asyncio.wait_for(
+            self._client.chat.stream_async(
+                model=self._model,
+                messages=mistral_messages,
+                tools=tools or [],
+                tool_choice=tool_choice,
+                temperature=self._temperature,
+                max_tokens=self._max_completion_tokens,
+            ),
+            timeout=self._timeout,
+        )
+
+        text_parts: list[str] = []
+        # Les tool calls arrivent en deltas indexés : on les recompose par index.
+        pending_tools: dict[int, dict[str, Any]] = {}
+
+        async for event in stream:
+            chunk = getattr(event, "data", event)
+            choices = getattr(chunk, "choices", None)
+            if not choices:
+                continue
+            delta = choices[0].delta
+
+            content = getattr(delta, "content", None)
+            if content:
+                text_parts.append(content)
+                yield ("token", content)
+
+            for i, tc in enumerate(getattr(delta, "tool_calls", None) or []):
+                idx = getattr(tc, "index", None)
+                idx = idx if idx is not None else i
+                slot = pending_tools.setdefault(idx, {"id": "", "name": "", "arguments": ""})
+                if getattr(tc, "id", None):
+                    slot["id"] = tc.id
+                fn = getattr(tc, "function", None)
+                if fn is not None:
+                    if getattr(fn, "name", None):
+                        slot["name"] = fn.name
+                    args = getattr(fn, "arguments", None)
+                    if args:
+                        slot["arguments"] += args if isinstance(args, str) else str(args)
+
+        if pending_tools:
+            tool_calls = [
+                _StreamedToolCall(slot["id"], slot["name"], slot["arguments"])
+                for _, slot in sorted(pending_tools.items())
+            ]
+            log.info("llm_stream_success", has_text=False, tool_call_count=len(tool_calls))
+            yield ("tool_calls", tool_calls)
+        else:
+            full_text = "".join(text_parts)
+            log.info("llm_stream_success", has_text=bool(full_text), tool_call_count=0)
+            yield ("text", full_text)
+
     def build_tool_result_message(
         self,
         tool_call_id: str,
