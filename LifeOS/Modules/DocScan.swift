@@ -110,7 +110,7 @@ struct DocScanView: View {
                         .font(.caption).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity).padding(.vertical, 34)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: 16))
+                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
             }
         }
     }
@@ -160,7 +160,7 @@ struct DocScanView: View {
             }.buttonStyle(.borderedProminent).tint(.adminTint)
         }
         .padding()
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
     }
 
     private var toast: some View {

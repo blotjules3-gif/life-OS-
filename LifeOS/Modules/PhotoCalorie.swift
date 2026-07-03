@@ -136,7 +136,7 @@ struct PhotoCalorieView: View {
                     Text("Photographie ton assiette").font(.subheadline).foregroundStyle(Theme.textSecondary)
                 }
                 .frame(maxWidth: .infinity).padding(.vertical, 40)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: 16))
+                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
             }
         }
     }
@@ -164,7 +164,7 @@ struct PhotoCalorieView: View {
                 .font(.footnote).foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16).background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+        .padding(16).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
     }
 
     private var errorCard: some View {
@@ -196,7 +196,7 @@ struct PhotoCalorieView: View {
             Text("Estimation indicative — ajuste les kcal si la portion diffère.")
                 .font(.caption2).foregroundStyle(Theme.textSecondary)
         }
-        .padding(16).background(Theme.card, in: RoundedRectangle(cornerRadius: 16))
+        .padding(16).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
     }
 
     private func stepperBox(_ label: String, value: Binding<Int>, step: Int) -> some View {

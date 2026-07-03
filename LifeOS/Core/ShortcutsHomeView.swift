@@ -213,6 +213,7 @@ struct ShortcutsHomeView: View {
                 .padding(Theme.pad)
             }
             .scrollContentBackground(.hidden)
+            .background(Theme.screenBG)   // verre global : wallpaper dépoli en thème Verre
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $editingShortcuts) {
@@ -275,7 +276,7 @@ struct ShortcutsHomeView: View {
                         habitRow(habit, isLast: idx == habits.count - 1)
                     }
                 }
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
                 .softElevation()
             }
@@ -338,7 +339,7 @@ struct ShortcutsHomeView: View {
                 }
             }
             .padding(16)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
                 .softElevation()
         }
@@ -414,7 +415,7 @@ struct ShortcutsHomeView: View {
                         Spacer()
                     }
                     .padding(16).frame(maxWidth: .infinity)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
                 .softElevation()
                 }
@@ -457,7 +458,7 @@ struct ShortcutsHomeView: View {
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
                 .padding(16)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
                 .softElevation()
             } else {
@@ -471,7 +472,7 @@ struct ShortcutsHomeView: View {
                     }
                 }
                 .padding(16)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
                 .softElevation()
             }
@@ -530,7 +531,7 @@ struct ShortcutsHomeView: View {
             }
         }
         .padding(14)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
                 .softElevation()
         .overlay(

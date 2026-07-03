@@ -1254,7 +1254,7 @@ struct CryptoLearnTab: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(isExpanded ? Theme.line : Color.clear, lineWidth: 1.5)
@@ -1287,7 +1287,7 @@ struct CryptoLearnTab: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .stroke(Theme.hairline, lineWidth: 1)
@@ -1384,7 +1384,7 @@ struct CryptoDetailSheet: View {
                             }
                         }
                         .padding(Theme.pad)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
 
                         // Scores
                         VStack(alignment: .leading, spacing: 12) {
@@ -1397,7 +1397,7 @@ struct CryptoDetailSheet: View {
                                 .font(.caption).foregroundStyle(Theme.textSecondary)
                         }
                         .padding(Theme.pad)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
 
                         // Stats marché
                         VStack(alignment: .leading, spacing: 0) {
@@ -1409,7 +1409,7 @@ struct CryptoDetailSheet: View {
                             detailStatRow("Variation 24h", String(format: "%+.2f%%", asset.change24h))
                         }
                         .padding(Theme.pad)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                     }
                     .padding(Theme.pad)
                 }

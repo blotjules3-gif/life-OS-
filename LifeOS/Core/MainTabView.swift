@@ -233,6 +233,8 @@ struct FloatingTabBar: View {
     @FocusState private var inputFocused: Bool
     @State private var chatMode = false
     @Namespace private var ns
+    @Environment(\.colorScheme) private var scheme
+    @AppStorage("appTheme") private var themeRaw = "classic"
 
     private static let barBg  = Color(uiColor: .secondarySystemBackground)   // blanc en clair, sombre en dark
     private static let selBg  = Color(uiColor: .systemGray5)
@@ -253,20 +255,21 @@ struct FloatingTabBar: View {
                 .transition(.move(edge: .leading).combined(with: .opacity))
             }
 
-            // AI Chat au centre — pastille RONDE noire, logo blanc, qui déborde légèrement en HAUT et en BAS de la barre.
+            // AI Chat au centre — pastille RONDE qui INVERSE ses couleurs selon le thème
+            // (clair : noir + logo blanc / sombre : blanc + logo noir), débordant en haut et en bas.
             Button {
                 Haptics.medium()
                 onOpenAssistant()
             } label: {
                 ZStack {
                     Circle()
-                        .fill(Color.black)
+                        .fill(Color(uiColor: .label))          // noir en clair, blanc en dark
                         .frame(width: 70, height: 70)
                         .overlay(Circle().strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.5))
                         .shadow(color: Color.black.opacity(0.22), radius: 8, y: 3)
                     Image(systemName: "sparkles")
                         .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color(uiColor: .systemBackground))   // blanc en clair, noir en dark
                 }
                 .frame(width: 70, height: 70)
             }
@@ -285,7 +288,9 @@ struct FloatingTabBar: View {
         .frame(height: 60)
         .padding(.horizontal, 10)
         // iOS 26 : barre flottante en verre (Liquid Glass), coins concentriques.
-        .background(.regularMaterial, in: ConcentricRectangle(corners: .concentric, isUniform: true))
+        // En thème Verre → matériau plus fin/translucide pour un vrai effet dépoli.
+        .background(themeRaw == "glass" ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(.regularMaterial),
+                    in: ConcentricRectangle(corners: .concentric, isUniform: true))
         .overlay(ConcentricRectangle(corners: .concentric, isUniform: true)
             .stroke(Theme.hairline, lineWidth: 0.5))
         .softElevation(true)
@@ -476,7 +481,7 @@ struct MetricRing: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 18)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .strokeBorder(Theme.hairline, lineWidth: 0.5)

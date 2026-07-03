@@ -239,7 +239,7 @@ struct FlightTrackerView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         }
         .buttonStyle(.plain)
         .contextMenu { Button(role: .destructive) { remove(f) } label: { Label("Supprimer", systemImage: "trash") } }

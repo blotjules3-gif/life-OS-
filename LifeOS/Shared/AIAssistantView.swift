@@ -493,7 +493,7 @@ struct AIAssistantView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Theme.bg.ignoresSafeArea()
+                Theme.screenBG
 
                 VStack(spacing: 0) {
                     messagesArea
@@ -635,7 +635,7 @@ struct AIAssistantView: View {
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 15)
-                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .strokeBorder(Theme.hairline, lineWidth: 0.5))
                             .softElevation()
@@ -676,7 +676,7 @@ struct AIAssistantView: View {
                     .lineLimit(1...5)
                     .padding(.horizontal, 15)
                     .padding(.vertical, 11)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
                     .focused($inputFocused)
                     .onSubmit { vm.send() }

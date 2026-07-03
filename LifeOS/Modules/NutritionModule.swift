@@ -437,7 +437,7 @@ struct HydrationView: View {
         Button { ctx.insert(WaterEntry(amountML: ml)); Haptics.tap() } label: {
             VStack(spacing: 6) { Image(systemName: icon).font(.title2); Text("\(ml)").font(.caption.bold()) }
                 .frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
                 .foregroundStyle(.nutriTint)
         }
     }
@@ -515,7 +515,7 @@ struct SupplementsView: View {
             .buttonStyle(.borderedProminent).tint(.nutriTint).disabled(name.isEmpty)
         }
         .padding()
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
     }
 
     private func suppRow(_ s: Supplement) -> some View {
@@ -536,7 +536,7 @@ struct SupplementsView: View {
                 .labelsHidden().tint(.nutriTint)
         }
         .padding(12)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
         .contextMenu {
             Button(role: .destructive) { delete(s) } label: { Label("Supprimer", systemImage: "trash") }
         }

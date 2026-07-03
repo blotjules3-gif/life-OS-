@@ -239,7 +239,7 @@ struct LooksTipCard: View {
             Spacer(minLength: 0)
         }
         .padding(14)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
         .padding(.horizontal, 14)
     }
@@ -271,7 +271,7 @@ struct CycleSetupView: View {
                 DatePicker("", selection: $start, in: ...Date(), displayedComponents: .date)
                     .datePickerStyle(.graphical).tint(tint)
                     .padding(.horizontal, 14)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 14)).padding(.horizontal, 14) } },
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14)).padding(.horizontal, 14) } },
             SetupPage { VStack(spacing: 16) {
                 SetupHeader(icon: "arrow.triangle.2.circlepath", title: "Durée de ton cycle",
                             subtitle: "En moyenne 28 jours.", accent: tint)

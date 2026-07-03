@@ -144,7 +144,7 @@ struct NutritionSetupView: View {
                     }.buttonStyle(.plain)
                 }
                 .padding(12)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(on ? tint : .clear, lineWidth: 1.5))
             }
             DisclosureGroup("Ajouter d'autres compléments") {
@@ -201,7 +201,7 @@ struct NutritionSetupView: View {
             Text(l).font(.caption2).foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 14)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
     }
     private func row(_ icon: String, _ text: String) -> some View {
         HStack(spacing: 10) {
@@ -209,7 +209,7 @@ struct NutritionSetupView: View {
             Text(text).font(.subheadline).foregroundStyle(Theme.textPrimary)
             Spacer()
         }
-        .padding(14).background(Theme.card, in: RoundedRectangle(cornerRadius: 12)).padding(.horizontal, 14)
+        .padding(14).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 12)).padding(.horizontal, 14)
     }
 
     // MARK: enregistrement

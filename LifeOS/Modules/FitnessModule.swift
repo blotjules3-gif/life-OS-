@@ -107,7 +107,7 @@ struct StrengthView: View {
                                         Button { selectedExercise = e } label: {
                                             Text(e).font(.caption.bold())
                                                 .padding(.horizontal, 12).padding(.vertical, 7)
-                                                .background((e == (selectedExercise ?? exercises.first)) ? Color.fitTint : Theme.card, in: Capsule())
+                                                .background((e == (selectedExercise ?? exercises.first)) ? AnyShapeStyle(Color.fitTint) : Theme.cardFill, in: Capsule())
                                                 .foregroundStyle((e == (selectedExercise ?? exercises.first)) ? .white : Theme.textSecondary)
                                         }
                                     }

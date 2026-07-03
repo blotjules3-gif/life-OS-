@@ -153,7 +153,7 @@ struct SetupChoice: View {
                             .foregroundStyle(selection == opt ? AnyShapeStyle(accent) : AnyShapeStyle(Color.secondary.opacity(0.4)))
                     }
                     .padding(16)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .stroke(selection == opt ? accent : .clear, lineWidth: 2))
                 }
@@ -213,7 +213,7 @@ struct SetupNumber: View {
             }
         }
         .frame(maxWidth: .infinity).padding(.vertical, 24)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 18)).padding(.horizontal, 14)
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18)).padding(.horizontal, 14)
     }
     private func stepBtn(_ icon: String, _ action: @escaping () -> Void) -> some View {
         Button { action(); Haptics.soft() } label: {
@@ -295,7 +295,7 @@ struct ProfileCompletionCard: View {
             }
         }
         .padding(16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 }
 
@@ -352,7 +352,7 @@ struct IntakeHubView: View {
                 .font(.caption).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity).padding(20)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
     }
 
     @ViewBuilder private func row(_ c: AppCategory) -> some View {
@@ -375,7 +375,7 @@ struct IntakeHubView: View {
                 }
             }
             .padding(14)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
             .opacity(has ? 1 : 0.5)
         }
         .buttonStyle(.plain).disabled(!has)

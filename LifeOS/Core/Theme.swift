@@ -31,9 +31,50 @@ enum Theme {
     static let gap: CGFloat = 12
     static let sectionGap: CGFloat = 24
 
-    /// Fond neutre système (écrans de détail).
-    static var background: some View {
-        Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
+    /// Thème Verre actif ? (lu depuis les réglages — sert aux fonds adaptatifs).
+    static var isGlassActive: Bool { UserDefaults.standard.string(forKey: "appTheme") == "glass" }
+
+    /// Remplissage de carte adaptatif : verre dépoli en thème Verre, sinon surface opaque.
+    /// À utiliser dans `.background(Theme.cardFill, in: shape)` pour que TOUTES les cartes
+    /// suivent le thème (glass global).
+    static var cardFill: AnyShapeStyle {
+        isGlassActive ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(card)
+    }
+
+    /// Fond d'écran adaptatif : en thème Verre = wallpaper flou (les surfaces se dépolissent
+    /// par-dessus). Sinon fond système. Utilisé par TOUS les écrans (accueil, réveil, chat,
+    /// questionnaires, profil…) pour que le verre soit global.
+    @ViewBuilder static var screenBG: some View {
+        if isGlassActive {
+            GlassBackdrop()
+        } else {
+            Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
+        }
+    }
+
+    /// Ancien nom conservé (mêmes règles que screenBG).
+    @ViewBuilder static var background: some View { screenBG }
+}
+
+/// Fond « verre » global : fond d'écran doux et flou par-dessus lequel toutes les
+/// surfaces `.ultraThinMaterial` (cartes, badges, barre) se dépolissent — façon iOS 26.
+struct GlassBackdrop: View {
+    var body: some View {
+        ZStack {
+            // Fond d'écran doux mais COLORÉ (façon wallpaper iOS) pour que les surfaces
+            // .ultraThinMaterial se dépolissent visiblement — vrai Liquid Glass.
+            LinearGradient(colors: [Color(hex: 0x7C93C8), Color(hex: 0xAE9BC9), Color(hex: 0x8FC4BE)],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+            Circle().fill(Color(hex: 0x9FD0E8).opacity(0.75)).frame(width: 380, height: 380)
+                .blur(radius: 100).offset(x: -140, y: -260)
+            Circle().fill(Color(hex: 0xC7A6D8).opacity(0.7)).frame(width: 360, height: 360)
+                .blur(radius: 110).offset(x: 160, y: 300)
+            Circle().fill(Color(hex: 0xF0C9A8).opacity(0.6)).frame(width: 300, height: 300)
+                .blur(radius: 95).offset(x: 150, y: -140)
+            Circle().fill(Color(hex: 0x8FD6B4).opacity(0.55)).frame(width: 280, height: 280)
+                .blur(radius: 90).offset(x: -150, y: 320)
+        }
+        .ignoresSafeArea()
     }
 }
 
@@ -113,6 +154,10 @@ enum AppTheme: String, CaseIterable, Identifiable {
     case cloud     // nuage blanc, doux
 
     var id: String { rawValue }
+
+    /// Thèmes proposés dans le sélecteur. Rose/Argent/Cloud sont ARCHIVÉS (code gardé, retirés du choix).
+    static let selectable: [AppTheme] = [.classic, .dark, .glass]
+    var isSelectable: Bool { Self.selectable.contains(self) }
 
     var label: String {
         switch self {

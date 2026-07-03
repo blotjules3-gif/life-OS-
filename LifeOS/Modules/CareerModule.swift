@@ -388,7 +388,7 @@ struct JobMatchView: View {
                     .textInputAutocapitalization(.never).autocorrectionDisabled()
                 if !query.isEmpty { Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }.buttonStyle(.plain) }
             }
-            .padding(10).background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(10).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             Toggle("Télétravail uniquement", isOn: $remoteOnly).font(.subheadline).tint(.careerTint)
             if !mySkills.isEmpty {
                 Text("★ = correspond à tes compétences suivies").font(.caption2).foregroundStyle(.secondary)
@@ -440,7 +440,7 @@ struct JobMatchView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 
     private func track(_ job: JobPosting) {

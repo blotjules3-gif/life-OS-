@@ -196,7 +196,7 @@ struct FaceAnalysisView: View {
                     Text("Photo de face, bien éclairée").font(.subheadline).foregroundStyle(Theme.textSecondary)
                 }
                 .frame(maxWidth: .infinity).padding(.vertical, 40)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: 18))
+                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18))
             }
         }
     }
@@ -208,7 +208,7 @@ struct FaceAnalysisView: View {
                 .font(.footnote).foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16).background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .padding(16).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
     }
 
     private var errorCard: some View {
@@ -228,7 +228,7 @@ struct FaceAnalysisView: View {
                 Text("indicatif — géométrie, pas un jugement").font(.caption2).foregroundStyle(Theme.textSecondary)
             }
             .frame(maxWidth: .infinity).padding(.vertical, 18)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 18))
+            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18))
 
             ForEach(m) { metric in metricRow(metric) }
         }
@@ -249,7 +249,7 @@ struct FaceAnalysisView: View {
                 Text(m.note).font(.caption2).foregroundStyle(Theme.textSecondary)
             }
         }
-        .padding(14).background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .padding(14).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
     }
 
     private var disclaimer: some View {

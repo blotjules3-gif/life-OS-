@@ -67,7 +67,7 @@ struct SleepSetupView: View {
             Text(l).font(.caption2).foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 14)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
     }
 
     private func commit() {

@@ -49,7 +49,7 @@ struct CalAIView: View {
                 Text("\(streak)").font(.headline.bold())
             }
             .padding(.horizontal, 12).padding(.vertical, 7)
-            .background(Theme.card, in: Capsule())
+            .background(Theme.cardFill, in: Capsule())
         }
     }
 
@@ -132,7 +132,7 @@ struct CalAIView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     // MARK: Repas du jour
@@ -149,7 +149,7 @@ struct CalAIView: View {
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                 }.buttonStyle(.plain)
             } else {
                 ForEach(dayFoods) { f in
@@ -162,7 +162,7 @@ struct CalAIView: View {
                         Text("\(f.calories) kcal").font(.subheadline.bold()).foregroundStyle(Theme.textPrimary)
                     }
                     .padding(14)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .contextMenu { Button(role: .destructive) { ctx.delete(f) } label: { Label("Supprimer", systemImage: "trash") } }
                 }
             }

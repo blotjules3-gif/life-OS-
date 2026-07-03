@@ -119,7 +119,7 @@ struct SkinTypeCard: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(10)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
             .stroke(selected ? accent : Color.clear, lineWidth: 2.5))
     }
@@ -343,7 +343,7 @@ struct FaceScanView: View {
             recBlock(title: "🧔 Barbe", items: [r.shape.beard])
         }
         .padding(16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
     }
 

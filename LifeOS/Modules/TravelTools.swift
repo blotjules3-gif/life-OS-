@@ -85,7 +85,7 @@ struct CurrencyConverterView: View {
             }
         }
         .padding()
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 18))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18))
     }
 
     private func currencyPicker(_ label: String, selection: Binding<String>) -> some View {
@@ -118,7 +118,7 @@ struct CurrencyConverterView: View {
                 .font(.caption).foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 22)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 18))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18))
     }
 
     private var quickTable: some View {
@@ -138,7 +138,7 @@ struct CurrencyConverterView: View {
             }
         }
         .padding()
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
     }
 
     private func fmt(_ v: Double) -> String {
@@ -268,7 +268,7 @@ struct PhrasebookView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14))
+            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(.plain)
     }

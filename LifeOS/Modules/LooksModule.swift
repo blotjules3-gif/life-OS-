@@ -302,11 +302,11 @@ struct SkinProfileSetupView: View {
             VStack(spacing: 10) {
                 Button { hasTreatment = false } label: {
                     HStack { Text("Non, aucun traitement"); Spacer(); if !hasTreatment { Image(systemName: "checkmark.circle.fill").foregroundStyle(.looksTint) } }
-                        .padding(14).background(!hasTreatment ? Color.looksTint.opacity(0.1) : Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .padding(14).background(!hasTreatment ? AnyShapeStyle(Color.looksTint.opacity(0.1)) : Theme.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }.buttonStyle(.plain)
                 Button { hasTreatment = true } label: {
                     HStack { Text("Oui, j'ai un traitement"); Spacer(); if hasTreatment { Image(systemName: "checkmark.circle.fill").foregroundStyle(.looksTint) } }
-                        .padding(14).background(hasTreatment ? Color.looksTint.opacity(0.1) : Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .padding(14).background(hasTreatment ? AnyShapeStyle(Color.looksTint.opacity(0.1)) : Theme.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }.buttonStyle(.plain)
                 if hasTreatment {
                     TextField("Nom du traitement (ex: tretinoin 0,025%)", text: $treatmentText)

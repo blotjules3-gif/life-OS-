@@ -145,7 +145,7 @@ struct CycleTrackerView: View {
                         }
                     }
                     .padding(16)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                     // Flux du jour
                     VStack(alignment: .leading, spacing: 12) {
@@ -176,7 +176,7 @@ struct CycleTrackerView: View {
                         }
                     }
                     .padding(16)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                     // Symptômes
                     VStack(alignment: .leading, spacing: 12) {
@@ -209,7 +209,7 @@ struct CycleTrackerView: View {
                         }
                     }
                     .padding(16)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                     // Humeur
                     VStack(alignment: .leading, spacing: 12) {
@@ -237,7 +237,7 @@ struct CycleTrackerView: View {
                         }
                     }
                     .padding(16)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                     // Bouton enregistrer
                     Button {

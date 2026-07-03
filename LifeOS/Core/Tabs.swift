@@ -295,7 +295,7 @@ struct WakeUpView: View {
                 }
         }
         .padding(20)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     private var planPreviewSection: some View {
@@ -319,7 +319,7 @@ struct WakeUpView: View {
                         .foregroundStyle(.tertiary)
                 }
                 .padding(14)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(.plain)
 
@@ -346,7 +346,7 @@ struct WakeUpView: View {
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     .buttonStyle(.plain)
                 }
@@ -453,7 +453,7 @@ struct DailyBriefingView: View {
 
     var body: some View {
         ZStack {
-            Theme.bg.ignoresSafeArea()
+            Theme.screenBG
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 28) {
@@ -553,7 +553,7 @@ struct DailyBriefingView: View {
                                     }
                                     .padding(12)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 }
                             }
                         }
@@ -716,7 +716,7 @@ struct DailyBriefingView: View {
                 .disabled(sleepQuality == 0 || morningMood == 0 || morningFatigue == 0 || checkinSubmitting)
             }
             .padding(18)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         }
     }
 
@@ -830,7 +830,7 @@ struct DailyBriefingView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .stroke(Theme.hairline, lineWidth: 1)
@@ -858,7 +858,7 @@ struct DailyBriefingView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
             .transition(.opacity)
@@ -879,7 +879,7 @@ struct DailyBriefingView: View {
                 }
             }
             .padding(14)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         } else if let text = aiBriefing {
             HStack(alignment: .top, spacing: 12) {
                 IconBadge(icon: "sparkles", size: 32)
@@ -890,7 +890,7 @@ struct DailyBriefingView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(14)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
         }
     }
@@ -952,7 +952,7 @@ struct DailyBriefingView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     private func quickActionBtn(icon: String, label: String, color: Color, action: @escaping () -> Void) -> some View {
@@ -2063,31 +2063,50 @@ struct ProfileView: View {
         }
     }
 
+    /// Pastille d'aperçu d'un thème, rendue DANS son propre style (pas de vert).
+    @ViewBuilder private func themeSwatch(_ th: AppTheme, selected: Bool) -> some View {
+        let ring: CGFloat = selected ? 3 : 0
+        ZStack {
+            switch th {
+            case .dark:
+                Circle().fill(Color.black)
+                Image(systemName: th.symbol).font(.system(size: 17, weight: .semibold)).foregroundStyle(.white)
+            case .glass:
+                Circle().fill(.ultraThinMaterial)
+                    .background(
+                        Circle().fill(LinearGradient(colors: [Color(hex: 0xC9CDD6), Color(hex: 0xB6BECC)],
+                                                     startPoint: .topLeading, endPoint: .bottomTrailing))
+                    )
+                    .overlay(Circle().strokeBorder(Color.white.opacity(0.55), lineWidth: 1))
+                Image(systemName: th.symbol).font(.system(size: 16, weight: .semibold)).foregroundStyle(.primary.opacity(0.75))
+            default: // classic / bright
+                Circle().fill(Color.white)
+                    .overlay(Circle().strokeBorder(Color.black.opacity(0.10), lineWidth: 1))
+                Image(systemName: th.symbol).font(.system(size: 17, weight: .semibold)).foregroundStyle(.black)
+            }
+        }
+        .frame(width: 52, height: 52)
+        .overlay(Circle().stroke(Color.primary, lineWidth: ring))
+        .shadow(color: .black.opacity(selected ? 0.14 : 0.06), radius: selected ? 7 : 3, y: 2)
+        .padding(2)
+    }
+
     private var appearanceSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Couleur de l'app")
                 .font(.system(size: 15, weight: .semibold))
                 .padding(.horizontal, 4)
             VStack(spacing: 12) {
-                HStack(spacing: 10) {
-                    ForEach(AppTheme.allCases) { th in
+                HStack(spacing: 14) {
+                    ForEach(AppTheme.selectable) { th in
                         let selected = appThemeRaw == th.rawValue
                         Button {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { appThemeRaw = th.rawValue }
                         } label: {
-                            VStack(spacing: 6) {
-                                ZStack {
-                                    Circle().fill(th.accent.gradient)
-                                        .frame(width: 42, height: 42)
-                                        .shadow(color: selected ? th.accent.opacity(0.35) : .clear, radius: 6, x: 2, y: 3)
-                                    Image(systemName: th.symbol)
-                                        .font(.system(size: 16, weight: .semibold))
-                                        .foregroundStyle(.white)
-                                }
-                                .overlay(Circle().stroke(Color.primary, lineWidth: selected ? 2.5 : 0))
-                                .padding(2)
+                            VStack(spacing: 8) {
+                                themeSwatch(th, selected: selected)
                                 Text(th.label)
-                                    .font(.system(size: 11, weight: selected ? .semibold : .regular))
+                                    .font(.system(size: 12, weight: selected ? .bold : .regular))
                                     .foregroundStyle(selected ? .primary : .secondary)
                                     .lineLimit(1).minimumScaleFactor(0.7)
                             }
@@ -2095,6 +2114,10 @@ struct ProfileView: View {
                         }
                         .buttonStyle(.plain)
                     }
+                }
+                .onAppear {
+                    // Migration : un thème archivé (rose/argent/cloud) revient sur Bright.
+                    if AppTheme(rawValue: appThemeRaw)?.isSelectable != true { appThemeRaw = AppTheme.classic.rawValue }
                 }
                 Text("Tout l'app suit le thème : menu, sections, fond et bulles. Tu peux changer à tout moment.")
                     .font(.caption).foregroundStyle(.secondary)
@@ -2786,7 +2809,7 @@ struct SleepCheckSheet: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Theme.bg.ignoresSafeArea()
+                Theme.screenBG
                 if step == 1 {
                     sleepStep
                         .transition(.asymmetric(
@@ -2881,7 +2904,7 @@ struct SleepCheckSheet: View {
                                 .frame(width: 48, height: 48).contentShape(Rectangle())
                         }.foregroundStyle(.primary)
                     }
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .padding(.horizontal, 20)
                 .opacity(appeared ? 1 : 0).animation(.spring(duration: 0.5).delay(0.22), value: appeared)
@@ -2891,7 +2914,7 @@ struct SleepCheckSheet: View {
                         .font(.system(size: 13, weight: .semibold)).foregroundStyle(.secondary)
                     TextField("Cauchemar, réveil nocturne, rêve…", text: $note, axis: .vertical)
                         .font(.system(size: 14)).lineLimit(3).padding(12)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 .padding(.horizontal, 20)
                 .opacity(appeared ? 1 : 0).animation(.spring(duration: 0.5).delay(0.28), value: appeared)
@@ -3242,7 +3265,7 @@ struct ChallengeCard: View {
                 .padding(.bottom, 12)
             }
         }
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .stroke(challenge.isAbandoned ? Color.orange.opacity(0.4) : Color.clear, lineWidth: 1.5)
