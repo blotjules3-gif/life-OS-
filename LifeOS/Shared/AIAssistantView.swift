@@ -922,6 +922,7 @@ struct AIAssistantView: View {
 private struct MessageRow: View {
     let message: AIAssistantViewModel.DisplayMessage
     let accent: Color
+    var reveal: Bool = false
 
     var isUser: Bool { message.role == "user" }
 
