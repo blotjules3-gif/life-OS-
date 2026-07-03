@@ -81,6 +81,10 @@ final class AIAssistantViewModel: ObservableObject {
     @Published var inputText = ""
     @Published var isLoading = false
     @Published var errorBanner: String? = nil
+    // Flux « Ajouter » guidé (déclenché depuis le chat)
+    @Published var showAddFlow = false
+    @Published var addFlowKind: AddAnythingSheet.Kind = .task
+    @Published var addFlowPrefill = ""
 
     @AppStorage("aiConversationID") private var conversationID = ""
     @AppStorage("aiFirstLaunchDone") private var firstLaunchDone = false
@@ -188,6 +192,16 @@ final class AIAssistantViewModel: ObservableObject {
         Haptics.tap()
 
         appendUserMessage(content)
+
+        // Intention « ajouter » → ouvre le flux guidé (choisir quoi ajouter + rappel).
+        if let (kind, prefill) = Self.detectAddIntent(content) {
+            addFlowKind = kind
+            addFlowPrefill = prefill
+            appendAssistantMessage("Ok 👍 dis-moi quoi ajouter — je t'ai ouvert le formulaire. Tu pourras aussi y mettre un rappel.", actions: [])
+            showAddFlow = true
+            return
+        }
+
         appendThinking()
         isLoading = true
 
@@ -205,6 +219,50 @@ final class AIAssistantViewModel: ObservableObject {
             appendAssistantMessage(reply, actions: [])
             isLoading = false
         }
+    }
+
+    /// Détecte une intention « ajouter » et devine le type + le nom de l'objet.
+    static func detectAddIntent(_ raw: String) -> (AddAnythingSheet.Kind, String)? {
+        let t = raw.folding(options: .diacriticInsensitive, locale: .current).lowercased()
+        let addWords = ["ajoute", "ajouter", "rajoute", "rajouter", "nouvelle tache", "nouveau ", "creer ", "cree "]
+        guard addWords.contains(where: { t.contains($0) }) || t.hasPrefix("add ") || t == "add" else { return nil }
+        // Laisser le coach gérer les logs rapides (eau).
+        if t.contains(" eau") || t.contains("bois ") || t.contains(" ml") { return nil }
+
+        let kind: AddAnythingSheet.Kind
+        if t.contains("complement") || t.contains("vitamine") || t.contains("creatine") || t.contains("magnesium") || t.contains("omega") || t.contains("zinc") { kind = .supplement }
+        else if t.contains("course") || t.contains("liste") || t.contains("acheter") || t.contains("panier") { kind = .shopping }
+        else if t.contains("habitude") || t.contains("chaque jour") || t.contains("quotidien") || t.contains("tous les jours") { kind = .habit }
+        else if t.contains("aliment") || t.contains("repas") || t.contains("manger") || t.contains("bouffe") || t.contains("nourriture") || t.contains("calorie") { kind = .food }
+        else if t.contains("note") || t.contains("idee") { kind = .note }
+        else { kind = .task }
+
+        // Extraire un nom lisible en retirant les mots de commande.
+        var name = raw.trimmingCharacters(in: .whitespaces)
+        let leading = ["ajouter", "ajoute", "rajouter", "rajoute", "add", "je veux", "peux-tu", "peux tu", "stp"]
+        var changed = true
+        while changed {
+            changed = false
+            let low = name.lowercased()
+            for w in leading where low.hasPrefix(w) {
+                name = String(name.dropFirst(w.count)).trimmingCharacters(in: CharacterSet(charactersIn: " :,-'"))
+                changed = true; break
+            }
+        }
+        let nouns = ["une tache", "un complement", "un complément", "une habitude", "un aliment", "une note",
+                     "un article", "a ma liste de course", "à ma liste de course", "a ma liste", "à ma liste",
+                     "de course", "quotidienne", "sur ma liste"]
+        for w in nouns {
+            let low = name.lowercased()
+            if low.hasPrefix(w) { name = String(name.dropFirst(w.count)).trimmingCharacters(in: CharacterSet(charactersIn: " :,-'")) }
+            name = name.replacingOccurrences(of: w, with: "", options: [.caseInsensitive]).trimmingCharacters(in: .whitespaces)
+        }
+        for art in ["un ", "une ", "des ", "le ", "la ", "les ", "mon ", "ma ", "mes "] {
+            if name.lowercased().hasPrefix(art) { name = String(name.dropFirst(art.count)) }
+        }
+        name = name.trimmingCharacters(in: CharacterSet(charactersIn: " :,-'"))
+        if name.count < 2 { name = "" }
+        return (kind, name)
     }
 
     /// Analyse une image on-device (Vision) et route vers la bonne catégorie — sans backend.
@@ -520,6 +578,10 @@ struct AIAssistantView: View {
                 Button("Effacer", role: .destructive) { clearHistory() }
                 Button("Annuler", role: .cancel) { }
             }
+            .sheet(isPresented: $vm.showAddFlow) {
+                AddAnythingSheet(initialKind: vm.addFlowKind, prefillName: vm.addFlowPrefill)
+                    .presentationDetents([.large])
+            }
             .alert("Erreur", isPresented: .constant(vm.errorBanner != nil)) {
                 Button("OK") { vm.errorBanner = nil }
             } message: {
@@ -621,6 +683,24 @@ struct AIAssistantView: View {
                     .buttonStyle(.plain)
                 }
             }
+            .padding(.horizontal, 16)
+
+            // Bouton « Ajouter » — flux guidé (tâche, complément, course, aliment, habitude, note + rappel)
+            Button {
+                Haptics.tap()
+                vm.addFlowKind = .task; vm.addFlowPrefill = ""; vm.showAddFlow = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus.circle.fill").font(.system(size: 17, weight: .bold))
+                    Text("Ajouter quelque chose").font(.system(size: 15, weight: .bold))
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold)).opacity(0.6)
+                }
+                .foregroundStyle(Theme.onVolt)
+                .padding(.horizontal, 16).padding(.vertical, 14)
+                .background(Theme.volt, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .buttonStyle(PressableButtonStyle())
             .padding(.horizontal, 16)
 
             // Grille 2×2
