@@ -433,12 +433,19 @@ struct CategoryHubView: View {
     private var bubbleStyle: BubbleStyle {
         var s = BubbleStyle()
         if theme == .gothic { s.metal = 1; s.colorGlow = 0; s.whiteGlow = 0 }
+        else {
+            // Bulles noir & blanc : verre plus dense (pas de teinte colorée), halo discret.
+            s.coreAlpha = 0.55
+            s.rimAlpha  = 0.72
+            s.colorGlow = 0.16
+            s.whiteGlow = 0.22
+        }
         return s
     }
 
-    // Bulles MONOCHROMES : toutes les bulles d'un hub partagent la teinte du pôle
-    // (plus de palette multicolore par index). Design frosted cohérent dans tous les thèmes.
-    private func themedTint(_ tool: CategoryTool) -> Color { tool.tint }
+    // Bulles NOIR & BLANC : plus aucune couleur, verre noir uniforme dans tous les thèmes
+    // (glyphe + label blancs). Le thème Argent (gothic) garde son rendu chrome.
+    private func themedTint(_ tool: CategoryTool) -> Color { Color(white: 0.11) }
 }
 
 // MARK: - Données : outils par catégorie (référencent les vues détail des modules)
