@@ -872,6 +872,10 @@ struct AIAssistantView: View {
         .task {
             vm.modelContext = ctx
             vm.loadHistory()
+            if let prefill, vm.inputText.isEmpty {
+                vm.inputText = prefill
+                inputFocused = true
+            }
         }
     }
 
