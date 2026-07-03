@@ -801,69 +801,17 @@ struct ShortcutsHomeView: View {
                         .contentTransition(.numericText())
                         .animation(.spring(duration: 0.4), value: o.sub)
                 }
-<<<<<<< HEAD
-                ProgressView(value: o.progress).tint(o.color).scaleEffect(x: 1, y: 1.1, anchor: .center)
+                ProgressView(value: o.progress).tint(Theme.volt).scaleEffect(x: 1, y: 1.1, anchor: .center)
                     .animation(.spring(duration: 0.6, bounce: 0.1), value: o.progress)
             }
             Image(systemName: o.done ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 18)).foregroundStyle(o.done ? AnyShapeStyle(o.color) : AnyShapeStyle(Color.secondary.opacity(0.4)))
+                .font(.system(size: 18)).foregroundStyle(o.done ? AnyShapeStyle(Theme.volt) : AnyShapeStyle(Color.secondary.opacity(0.4)))
                 .contentTransition(.symbolEffect(.replace))
                 .animation(.spring(duration: 0.35, bounce: 0.4), value: o.done)
         }
     }
 
     // MARK: Humeur — compact, en haut, disparaît après vote
-=======
-                ProgressView(value: o.progress).tint(Theme.volt).scaleEffect(x: 1, y: 1.1, anchor: .center)
-            }
-            Image(systemName: o.done ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 18)).foregroundStyle(o.done ? AnyShapeStyle(Theme.volt) : AnyShapeStyle(Color.secondary.opacity(0.4)))
-        }
-    }
-
-    // MARK: Section — Raccourcis épinglés
-    private var shortcutsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Raccourcis", trailing: "Éditer") { editingShortcuts = true }
-            if enabledShortcuts.isEmpty {
-                Button { editingShortcuts = true } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 22)).foregroundStyle(.secondary)
-                        Text("Épingle tes outils favoris ici")
-                            .font(.subheadline).foregroundStyle(.secondary)
-                        Spacer()
-                    }
-                    .padding(16).frame(maxWidth: .infinity)
-                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
-                .softElevation()
-                }
-                .buttonStyle(.plain)
-            } else {
-                LazyVGrid(columns: cols, spacing: 12) {
-                    ForEach(enabledShortcuts) { tool in
-                        NavigationLink { tool.destination.floatingBarClearance() } label: { shortcutTile(tool) }
-                            .buttonStyle(.plain)
-                    }
-                }
-            }
-        }
-    }
-
-    private func shortcutTile(_ tool: ShortcutTool) -> some View {
-        VStack(spacing: 11) {
-            IconBadge(icon: tool.icon, tint: tool.tint, size: 48)
-            Text(tool.label)
-                .font(.system(size: 13, weight: .semibold)).foregroundStyle(.primary)
-                .lineLimit(1).minimumScaleFactor(0.75)
-        }
-        .frame(maxWidth: .infinity)
-        .card(padding: 18, elevated: true)
-    }
-
-    // MARK: Section 3 — Humeur du jour (check-in)
->>>>>>> origin/pote
     private var moodSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
