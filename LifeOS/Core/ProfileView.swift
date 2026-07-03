@@ -893,8 +893,7 @@ struct ProfileView: View {
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 10)
-                            .background(Theme.card)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .surface(radius: 16)
                     }
                     .buttonStyle(LifeOSPressStyle())
                 }
