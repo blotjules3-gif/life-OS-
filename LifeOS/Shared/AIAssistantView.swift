@@ -83,6 +83,7 @@ final class AIAssistantViewModel: ObservableObject {
     @Published var pendingModuleSetup: AppCategory? = nil
     @Published var actionToast: ActionToast? = nil
     @Published var revealID: UUID? = nil
+    @Published var streamingText: String? = nil
 
     struct ActionToast: Identifiable {
         let id = UUID()
