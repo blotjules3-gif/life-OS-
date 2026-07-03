@@ -125,19 +125,6 @@ struct EmptyState: View {
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
             }
-<<<<<<< HEAD
-            if let actionLabel, let action {
-                Button(action: action) {
-                    Text(actionLabel)
-                        .font(.subheadline.bold())
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                        .background(Theme.accent.opacity(0.12), in: Capsule())
-                        .foregroundStyle(Theme.accent)
-                }
-                .buttonStyle(LifeOSPressStyle())
-                .padding(.top, 4)
-=======
             if let actionTitle, let action {
                 Button(action: action) {
                     Text(actionTitle).font(.system(size: 14, weight: .black)).textCase(.uppercase).kerning(0.5)
@@ -145,9 +132,8 @@ struct EmptyState: View {
                         .background(Theme.volt, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                         .foregroundStyle(Theme.onVolt)
                 }
-                .buttonStyle(PressableButtonStyle())
+                .buttonStyle(LifeOSPressStyle())
                 .padding(.top, 2)
->>>>>>> origin/pote
             }
         }
         .frame(maxWidth: .infinity)
