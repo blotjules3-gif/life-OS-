@@ -832,15 +832,10 @@ struct ShortcutsHomeView: View {
                     Button("Modifier") { withAnimation(.spring(duration: 0.3)) { editingMood = true } }
                         .font(.caption).foregroundStyle(.secondary)
                 }
-<<<<<<< HEAD
-                .padding(.horizontal, 14).padding(.vertical, 10)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-=======
                 .padding(16)
                 .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
                 .softElevation()
->>>>>>> origin/pote
             } else {
                 HStack(spacing: 6) {
                     ForEach(1...5, id: \.self) { s in
