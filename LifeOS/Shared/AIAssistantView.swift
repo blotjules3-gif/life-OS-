@@ -87,6 +87,9 @@ final class AIAssistantViewModel: ObservableObject {
     @Published var actionToast: ActionToast? = nil
     @Published var revealID: UUID? = nil
     @Published var streamingText: String? = nil
+    @Published var showAddFlow = false
+    @Published var addFlowKind: AddAnythingSheet.Kind = .task
+    @Published var addFlowPrefill = ""
 
     struct ActionToast: Identifiable {
         let id = UUID()
