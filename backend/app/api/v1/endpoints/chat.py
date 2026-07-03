@@ -198,6 +198,7 @@ async def chat_stream(
       done  → ChatResponse JSON     terminal (réponse complète + actions)
       error → {"message": "..."}    terminal (le client retombe sur POST /chat)
     """
+    _check_rate_limit(body.device_id)
     user, conversation, conversation_history, module_config, memory_context = await _prepare_turn(body, session)
 
     async def event_generator():
