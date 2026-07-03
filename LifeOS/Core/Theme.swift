@@ -139,7 +139,7 @@ struct GlassBackdrop: View {
 /// Style de bouton tactile : léger enfoncement + estompage au press.
 struct PressableButtonStyle: ButtonStyle {
     var scale: CGFloat = 0.97
-    func makeBody(configuration: Configuration) -> some View {
+    func makeBody(configuration: ButtonStyleConfiguration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? scale : 1)
             .opacity(configuration.isPressed ? 0.9 : 1)
