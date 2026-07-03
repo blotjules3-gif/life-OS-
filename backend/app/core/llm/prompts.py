@@ -9,12 +9,23 @@ from typing import Any
 _AI_DIR = Path(__file__).parent.parent.parent.parent / "AI"
 
 
+# 37 KB de .md relus du disque à chaque requête sinon — cache invalidé par mtime
+# pour que les éditions des fichiers AI/*.md restent prises en compte sans redémarrage.
+_ai_file_cache: dict[str, tuple[float, str]] = {}
+
+
 def _load_ai_file(filename: str) -> str:
     path = _AI_DIR / filename
     try:
-        return path.read_text(encoding="utf-8")
+        mtime = path.stat().st_mtime
     except FileNotFoundError:
         return ""
+    cached = _ai_file_cache.get(filename)
+    if cached and cached[0] == mtime:
+        return cached[1]
+    content = path.read_text(encoding="utf-8")
+    _ai_file_cache[filename] = (mtime, content)
+    return content
 
 
 # ─────────────────────────────────────────────────────────────────────────────
