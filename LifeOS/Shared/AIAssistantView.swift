@@ -262,47 +262,84 @@ final class AIAssistantViewModel: ObservableObject {
 
         Task {
             do {
-                let response = try await AgentAPI.shared.chat(
+                let response = try await AgentAPI.shared.chatStream(
                     message: content,
                     module: module,
                     conversationID: conversationID.isEmpty ? nil : conversationID
-                )
+                ) { [weak self] token in
+                    self?.handleStreamToken(token)
+                }
                 conversationID = response.conversation_id
                 isServerOffline = false
                 removeThinking()
-                appendAssistantMessage(response.reply, actions: response.actions ?? [])
+                let wasStreamed = streamingText != nil
+                streamingText = nil
+                // Pas de machine à écrire après un stream : le texte est déjà apparu token par token.
+                appendAssistantMessage(response.reply, actions: response.actions ?? [], animateReveal: !wasStreamed)
 
                 // Execute local iOS actions
                 for action in (response.actions ?? []) {
                     await execute(action: action)
                 }
             } catch {
-                removeThinking()
-                if let apiErr = error as? AgentAPIError {
-                    switch apiErr {
-                    case .networkError(let underlying):
-                        let urlErr = underlying as? URLError
-                        let offlineCodes: [URLError.Code] = [
-                            .notConnectedToInternet, .networkConnectionLost,
-                            .cannotConnectToHost, .cannotFindHost
-                        ]
-                        if urlErr?.code == .timedOut {
-                            errorBanner = "Ton coach met trop de temps à répondre. Réessaie."
-                        } else if let code = urlErr?.code, offlineCodes.contains(code) {
-                            isServerOffline = true
-                            // Le chat ne reste pas muet : réponse composée depuis les données locales.
-                            appendAssistantMessage(OfflineCoach.reply(to: content, ctx: modelContext), actions: [])
-                        } else {
-                            errorBanner = "Erreur réseau. Réessaie dans un instant."
-                        }
-                    case .invalidResponse(404): conversationID = ""
-                    default: errorBanner = apiErr.errorDescription
-                    }
-                } else {
-                    errorBanner = error.localizedDescription
-                }
+                // Serveur pas encore à jour (404 sur /chat/stream) ou flux interrompu :
+                // on retombe sur l'endpoint classique.
+                streamingText = nil
+                await fallbackSend(content: content, module: module)
             }
             isLoading = false
+        }
+    }
+
+    private func handleStreamToken(_ token: String) {
+        if streamingText == nil {
+            removeThinking()
+            streamingText = token
+        } else {
+            streamingText? += token
+        }
+    }
+
+    private func fallbackSend(content: String, module: String?) async {
+        if !messages.contains(where: { $0.isThinking }) { appendThinking() }
+        do {
+            let response = try await AgentAPI.shared.chat(
+                message: content,
+                module: module,
+                conversationID: conversationID.isEmpty ? nil : conversationID
+            )
+            conversationID = response.conversation_id
+            isServerOffline = false
+            removeThinking()
+            appendAssistantMessage(response.reply, actions: response.actions ?? [])
+            for action in (response.actions ?? []) {
+                await execute(action: action)
+            }
+        } catch {
+            removeThinking()
+            if let apiErr = error as? AgentAPIError {
+                switch apiErr {
+                case .networkError(let underlying):
+                    let urlErr = underlying as? URLError
+                    let offlineCodes: [URLError.Code] = [
+                        .notConnectedToInternet, .networkConnectionLost,
+                        .cannotConnectToHost, .cannotFindHost
+                    ]
+                    if urlErr?.code == .timedOut {
+                        errorBanner = "Ton coach met trop de temps à répondre. Réessaie."
+                    } else if let code = urlErr?.code, offlineCodes.contains(code) {
+                        isServerOffline = true
+                        // Le chat ne reste pas muet : réponse composée depuis les données locales.
+                        appendAssistantMessage(OfflineCoach.reply(to: content, ctx: modelContext), actions: [])
+                    } else {
+                        errorBanner = "Erreur réseau. Réessaie dans un instant."
+                    }
+                case .invalidResponse(404): conversationID = ""
+                default: errorBanner = apiErr.errorDescription
+                }
+            } else {
+                errorBanner = error.localizedDescription
+            }
         }
     }
 
