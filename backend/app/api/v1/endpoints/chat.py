@@ -57,13 +57,15 @@ async def chat(
     is_system_init = "[PREMIER_LANCEMENT]" in body.message
 
     # ── 3. Build conversation history (last 20 messages, skip system init) ────
+    # desc + reversed : les 20 plus RÉCENTS en ordre chronologique — asc()
+    # renvoyait les 20 plus anciens et figeait le coach sur le début de la conversation.
     history_result = await session.execute(
         select(Message)
         .where(Message.conversation_id == conversation.id)
-        .order_by(Message.created_at.asc())
+        .order_by(Message.created_at.desc())
         .limit(20)
     )
-    history_messages = history_result.scalars().all()
+    history_messages = list(reversed(history_result.scalars().all()))
     conversation_history = [
         {"role": m.role, "content": m.content}
         for m in history_messages
