@@ -266,6 +266,7 @@ struct WakeUpView: View {
                 .padding(Theme.pad)
             }
             .scrollContentBackground(.hidden)
+            .background(Theme.screenBG)   // wallpaper dépoli en Verre
             .navigationTitle("Réveil")
             .fullScreenCover(isPresented: $showBriefing) {
                 DailyBriefingView(modules: recommendedModules)
@@ -1133,6 +1134,7 @@ struct ProfileView: View {
     var body: some View {
         NavigationStack {
             ZStack {
+                Theme.screenBG   // fond thématique (wallpaper dépoli en Verre)
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
                         profileHeader
@@ -1465,7 +1467,7 @@ struct ProfileView: View {
             }
         }
         .padding(5)
-        .background(Theme.screenBG)
+        .background(Theme.cardFill)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: neoShadowDark, radius: 6, x: 3, y: 3)
         .shadow(color: neoShadowLight, radius: 6, x: -3, y: -3)
