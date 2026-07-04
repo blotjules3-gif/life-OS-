@@ -642,10 +642,10 @@ struct ProfileView: View {
     private var quickAccessSection: some View {
         let pinned = Set(profilePinnedRaw.split(separator: ",").map(String.init))
         return VStack(alignment: .leading, spacing: 12) {
-            Text("ACCÈS RAPIDES")
-                .font(.system(size: 10, weight: .bold))
-                .foregroundStyle(.secondary)
-                .kerning(1.2)
+            Text("Accès rapides")
+                .font(.system(size: 20, weight: .black))
+                .textCase(.uppercase)
+                .kerning(-0.3)
                 .padding(.horizontal, 4)
 
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
