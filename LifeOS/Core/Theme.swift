@@ -269,6 +269,20 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .cloud:   return Color(hex: 0x9BB2D6)
         }
     }
+    /// Hex de l'accent — synchronisé vers l'app group pour les widgets
+    /// (un widget ne voit pas le tint racine de l'app).
+    /// Noir/blanc sont interprétés côté widget comme `.primary` (adaptatif).
+    var accentHex: Int {
+        switch self {
+        case .classic: return 0x000000
+        case .dark:    return 0xFFFFFF
+        case .volt:    return 0x4CF810
+        case .glass:   return 0x4CF810
+        case .pinky:   return 0xFF5BA0
+        case .gothic:  return 0xB7C2D0
+        case .cloud:   return 0x9BB2D6
+        }
+    }
     /// Couleur du contenu posé SUR l'accent (texte d'un bouton plein, etc.).
     var onAccent: Color {
         switch self {
