@@ -40,7 +40,13 @@ final class TabataSound {
     // Fin de séance : arpège montant.
     func finish()    { play("fin", [(880, 0.16), (0, 0.05), (1108, 0.16), (0, 0.05), (1318, 0.36)], vol: 1.0) }
 
+    /// Réglage global (Profil › Sons & vibrations). Absent = activé par défaut.
+    private var soundEnabled: Bool {
+        UserDefaults.standard.object(forKey: "timerSoundEnabled") as? Bool ?? true
+    }
+
     private func play(_ key: String, _ segments: [(Double, Double)], vol: Double) {
+        guard soundEnabled else { return }
         activateSession()
         let player: AVAudioPlayer
         if let existing = players[key] {

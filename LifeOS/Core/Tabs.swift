@@ -2013,6 +2013,22 @@ struct ProfileView: View {
                 }
                 .buttonStyle(.plain)
                 Divider().opacity(0.1).padding(.leading, 50)
+                NavigationLink {
+                    SoundHapticsSettingsView()
+                } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "speaker.wave.2.fill")
+                            .font(.system(size: 12, weight: .bold)).foregroundStyle(.white)
+                            .frame(width: 30, height: 30)
+                            .background(Color(hex: 0x5B8DEF), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        Text("Sons & vibrations").font(.subheadline).foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 13)
+                }
+                .buttonStyle(.plain)
+                Divider().opacity(0.1).padding(.leading, 50)
                 settingsRow(icon: "slider.horizontal.3", iconColor: Color.accentColor, label: "Modifier mes objectifs") {
                     Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
                 } action: {
@@ -3253,5 +3269,43 @@ struct ChallengeCard: View {
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .stroke(challenge.isAbandoned ? Color.orange.opacity(0.4) : Color.clear, lineWidth: 1.5)
         )
+    }
+}
+
+// MARK: - Réglages Sons & vibrations
+
+struct SoundHapticsSettingsView: View {
+    @AppStorage("timerSoundEnabled") private var timerSound = true
+    @AppStorage("hapticsEnabled")    private var haptics = true
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle(isOn: $timerSound) {
+                    Label("Sons du minuteur", systemImage: "timer")
+                }
+                Button {
+                    TabataSound.shared.work()
+                } label: {
+                    Label("Tester le son", systemImage: "play.circle.fill")
+                }
+                .disabled(!timerSound)
+            } header: {
+                Text("Minuteur")
+            } footer: {
+                Text("Bips au décompte, au début d'effort/repos et en fin de séance (Tabata/HIIT). Sortent sur l'enceinte, les écouteurs ou le Bluetooth connecté, même en silencieux.")
+            }
+
+            Section {
+                Toggle(isOn: $haptics.animation()) {
+                    Label("Vibrations", systemImage: "iphone.radiowaves.left.and.right")
+                }
+                .onChange(of: haptics) { _, on in if on { Haptics.tap() } }
+            } footer: {
+                Text("Retours haptiques dans toute l'app (appuis, validations, transitions du minuteur).")
+            }
+        }
+        .navigationTitle("Sons & vibrations")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
