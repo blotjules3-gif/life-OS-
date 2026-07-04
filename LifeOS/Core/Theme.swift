@@ -213,23 +213,25 @@ extension Color {
 // MARK: - Thèmes de l'app (Couleur de l'app)
 
 enum AppTheme: String, CaseIterable, Identifiable {
-    case classic   // NIKE bright — blanc cassé + noir + volt
-    case dark      // NIKE dark — noir pur + blanc + volt
-    case glass     // VERRE translucide façon Apple (Liquid Glass)
-    case pinky     // rose, féminin, bubbly
-    case gothic    // argent liquide sombre, gothique
-    case cloud     // nuage blanc, doux
+    case classic   // Clair — blanc cassé + accent noir
+    case dark      // Sombre — noir pur + accent blanc
+    case volt      // Vert — clair + accent volt (le vert de l'icône)
+    case glass     // VERRE translucide façon Apple (Liquid Glass) — ARCHIVÉ
+    case pinky     // Rose — clair rosé + accent rose
+    case gothic    // argent liquide sombre, gothique — ARCHIVÉ
+    case cloud     // nuage blanc, doux — ARCHIVÉ
 
     var id: String { rawValue }
 
-    /// Thèmes proposés dans le sélecteur. Rose/Argent/Cloud sont ARCHIVÉS (code gardé, retirés du choix).
-    static let selectable: [AppTheme] = [.classic, .dark, .glass]
+    /// Thèmes proposés dans le sélecteur. Verre/Argent/Cloud sont ARCHIVÉS (code gardé, retirés du choix).
+    static let selectable: [AppTheme] = [.classic, .dark, .volt, .pinky]
     var isSelectable: Bool { Self.selectable.contains(self) }
 
     var label: String {
         switch self {
-        case .classic: return "Bright"
-        case .dark:    return "Dark"
+        case .classic: return "Clair"
+        case .dark:    return "Sombre"
+        case .volt:    return "Vert"
         case .glass:   return "Verre"
         case .pinky:   return "Rose"
         case .gothic:  return "Argent"
@@ -240,6 +242,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
         switch self {
         case .classic: return "sun.max.fill"
         case .dark:    return "moon.fill"
+        case .volt:    return "bolt.fill"
         case .glass:   return "circle.hexagongrid.fill"
         case .pinky:   return "heart.fill"
         case .gothic:  return "drop.fill"
@@ -253,23 +256,37 @@ enum AppTheme: String, CaseIterable, Identifiable {
         default:             return .light
         }
     }
-    /// Couleur d'accent du thème. NIKE = volt.
+    /// Couleur d'accent du thème — UNE couleur par thème, visible partout
+    /// via `Color.accentColor` (injecté par `.tint()` à la racine).
     var accent: Color {
         switch self {
-        case .classic: return Theme.volt
-        case .dark:    return Theme.volt
+        case .classic: return .black
+        case .dark:    return .white
+        case .volt:    return Theme.volt
         case .glass:   return Theme.volt
         case .pinky:   return Color(hex: 0xFF5BA0)
         case .gothic:  return Color(hex: 0xB7C2D0)
         case .cloud:   return Color(hex: 0x9BB2D6)
         }
     }
-    /// Pastille du sélecteur de thème : la vraie couleur de fond du thème,
-    /// pas son accent (sinon les 3 thèmes NIKE affichent tous le volt).
+    /// Couleur du contenu posé SUR l'accent (texte d'un bouton plein, etc.).
+    var onAccent: Color {
+        switch self {
+        case .classic: return .white
+        case .dark:    return .black
+        case .volt:    return .black
+        case .glass:   return .black
+        case .pinky:   return .white
+        case .gothic:  return .black
+        case .cloud:   return .black
+        }
+    }
+    /// Pastille du sélecteur de thème : la couleur signature du thème.
     var previewFill: Color {
         switch self {
         case .classic: return Color(hex: 0xECECE7)
         case .dark:    return Color(hex: 0x0A0A0A)
+        case .volt:    return Theme.volt
         case .glass:   return Color(hex: 0xB8BCC6)
         case .pinky:   return Color(hex: 0xFFE3F1)
         case .gothic:  return Color(hex: 0x2A2E36)
@@ -279,7 +296,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
     var previewIcon: Color {
         switch self {
         case .classic: return .black
-        case .dark:    return Theme.volt
+        case .dark:    return .white
+        case .volt:    return .black
         case .glass:   return .white
         case .pinky:   return Color(hex: 0xFF5BA0)
         case .gothic:  return Color(hex: 0xB7C2D0)
