@@ -724,10 +724,9 @@ struct ProfileView: View {
                                 .foregroundStyle(accentColor)
                         }
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("RÉVEIL")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(accentColor.opacity(0.8))
-                                .kerning(1.2)
+                            Text("Réveil")
+                                .monoLabel(10)
+                                .foregroundStyle(.secondary)
                             HStack(alignment: .lastTextBaseline, spacing: 5) {
                                 Text(String(format: "%02d:%02d", wakeupHour, wakeupMinute))
                                     .font(.system(size: 24, weight: .black, design: .rounded).monospacedDigit())
