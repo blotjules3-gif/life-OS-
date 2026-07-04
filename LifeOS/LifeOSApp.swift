@@ -92,27 +92,26 @@ struct LifeOSApp: App {
         .modelContainer(container)
         .animation(.easeInOut(duration: 0.35), value: onboardingDone)
         .onChange(of: onboardingDone) { _, done in
+            guard done else { return }
             // Après l'onboarding identité, propose l'intake complet (une fois).
-            if done && !intakeShown { intakeShown = true; showIntake = true }
+            if !intakeShown { intakeShown = true; showIntake = true }
+            // On demande les notifications ICI — une fois l'onboarding terminé, quand
+            // l'utilisateur est engagé — et PAS au tout premier lancement (moins intrusif).
+            Task.detached(priority: .background) {
+                let granted = await NotificationManager.shared.requestAuthorization()
+                if granted { await MainActor.run { ContextualNotifications.shared.reschedule() } }
+            }
         }
         .onAppear {
             resetDailyValuesIfNeeded()
             EngagementTracker.shared.recordOpen()
-            Task.detached(priority: .background) {
-                let granted = await NotificationManager.shared.requestAuthorization()
-                if granted {
-                    await MainActor.run {
-                        ContextualNotifications.shared.reschedule()
-                    }
-                }
-            }
+            // Ré-arme les notifications si l'utilisateur est déjà passé par l'onboarding.
+            // reschedule() ne DEMANDE aucune autorisation (no-op si non autorisé).
+            if onboardingDone { ContextualNotifications.shared.reschedule() }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             resetDailyValuesIfNeeded()
             MorningReminder.checkAndArm()
-        }
-        .onChange(of: onboardingDone) { _, done in
-            if done { ContextualNotifications.shared.reschedule() }
         }
         .onChange(of: recommendedModulesRaw) { _, _ in
             ContextualNotifications.shared.reschedule()
