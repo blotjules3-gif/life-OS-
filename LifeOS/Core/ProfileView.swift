@@ -1121,9 +1121,9 @@ private struct OrbitHero: View {
     private var statsRow: some View {
         HStack(spacing: 0) {
             heroStat("\(streak)", "d'affilée")
-            Rectangle().fill(.white.opacity(0.08)).frame(width: 1, height: 30)
+            Rectangle().fill(Color.primary.opacity(0.06)).frame(width: 1, height: 30)
             heroStat("\(totalDays)", "jours actifs")
-            Rectangle().fill(.white.opacity(0.08)).frame(width: 1, height: 30)
+            Rectangle().fill(Color.primary.opacity(0.06)).frame(width: 1, height: 30)
             heroStat("\(habitsWeek)", "habitudes / 7 j")
         }
     }
@@ -1132,11 +1132,11 @@ private struct OrbitHero: View {
         VStack(spacing: 2) {
             Text(value)
                 .font(.system(size: 17, weight: .black, design: .rounded).monospacedDigit())
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
                 .contentTransition(.numericText())
             Text(label)
                 .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(.white.opacity(0.55))
+                .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
         }
