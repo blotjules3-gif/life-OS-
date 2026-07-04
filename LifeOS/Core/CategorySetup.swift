@@ -267,7 +267,7 @@ struct ProfileCompletionCard: View {
                 ZStack {
                     Circle().stroke(Theme.bg2, lineWidth: 7).frame(width: 54, height: 54)
                     Circle().trim(from: 0, to: CGFloat(max(0.02, CategorySetup.fraction)))
-                        .stroke(Theme.volt, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                        .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 7, lineCap: .round))
                         .rotationEffect(.degrees(-90)).frame(width: 54, height: 54)
                     Text("\(pct)%").font(.caption.bold().monospacedDigit()).foregroundStyle(Theme.textPrimary)
                 }
@@ -286,9 +286,9 @@ struct ProfileCompletionCard: View {
                         Button { launch = c; Haptics.soft() } label: {
                             Label("Configurer \(c.title)", systemImage: c.icon)
                                 .font(.system(size: 12, weight: .black)).textCase(.uppercase).kerning(0.3)
-                                .foregroundStyle(Theme.onVolt)
+                                .foregroundStyle(Theme.onAccent)
                                 .padding(.horizontal, 14).padding(.vertical, 9)
-                                .background(Theme.volt, in: Capsule())
+                                .background(Color.accentColor, in: Capsule())
                         }.buttonStyle(PressableButtonStyle())
                     }
                 }
@@ -342,7 +342,7 @@ struct IntakeHubView: View {
             ZStack {
                 Circle().stroke(Theme.bg2, lineWidth: 9).frame(width: 84, height: 84)
                 Circle().trim(from: 0, to: CGFloat(max(0.02, CategorySetup.fraction)))
-                    .stroke(Theme.volt, style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                    .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 9, lineCap: .round))
                     .rotationEffect(.degrees(-90)).frame(width: 84, height: 84)
                 Text("\(CategorySetup.percent)%").font(.title3.bold().monospacedDigit())
             }

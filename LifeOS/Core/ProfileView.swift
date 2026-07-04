@@ -282,7 +282,7 @@ struct ProfileView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(code)
                     .monoLabel(9)
-                    .foregroundStyle(facet == idx ? AnyShapeStyle(Theme.volt) : AnyShapeStyle(.tertiary))
+                    .foregroundStyle(facet == idx ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.tertiary))
                 Text(title)
                     .font(.system(size: 20, weight: .black))
                     .textCase(.uppercase)
@@ -291,7 +291,7 @@ struct ProfileView: View {
                 ZStack {
                     if facet == idx {
                         Capsule()
-                            .fill(Theme.volt)
+                            .fill(Color.accentColor)
                             .frame(height: 3)
                             .matchedGeometryEffect(id: "facetline", in: facetNS)
                     } else {
@@ -590,7 +590,7 @@ struct ProfileView: View {
     // MARK: - Réveil compact
 
     private var wakeupCompact: some View {
-        let accentColor = Theme.volt
+        let accentColor = Color.accentColor
         return VStack(spacing: 0) {
             HStack(spacing: 14) {
                 Button { showWakeupDetail = true } label: {

@@ -71,9 +71,9 @@ enum Theme {
     static let space32: CGFloat = 32
     static let space48: CGFloat = 48
 
-    // Accent signature = le vert de l'icône de l'app. Aplat avec texte noir par-dessus.
+    // Vert signature de l'icône de l'app — utilisé UNIQUEMENT par le thème Vert.
+    // Dans les vues : toujours Color.accentColor + Theme.onAccent, jamais volt en dur.
     static let volt = Color(hex: 0x4CF810)
-    static let onVolt = Color.black
 
     // Liseré discret + ombre douce (profondeur iOS 26, pas de brutalisme).
     static let hairline = Color.primary.opacity(0.10)

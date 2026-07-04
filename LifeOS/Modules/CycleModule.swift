@@ -117,10 +117,10 @@ struct CycleTrackerView: View {
                                 } label: {
                                     Text("Mes règles ont commencé aujourd'hui")
                                         .font(.system(size: 14, weight: .semibold))
-                                        .foregroundStyle(Theme.onVolt)
+                                        .foregroundStyle(Theme.onAccent)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 14)
-                                        .background(Theme.volt, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                                 }
                                 .buttonStyle(.plain)
                                 Button {
@@ -228,12 +228,12 @@ struct CycleTrackerView: View {
                                 } label: {
                                     Text(s)
                                         .font(.system(size: 12, weight: .medium))
-                                        .foregroundStyle(selectedSymptoms.contains(s) ? Theme.onVolt : .primary)
+                                        .foregroundStyle(selectedSymptoms.contains(s) ? Theme.onAccent : .primary)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 8)
                                         .background(
                                             selectedSymptoms.contains(s)
-                                                ? Theme.volt
+                                                ? Color.accentColor
                                                 : Theme.card,
                                             in: RoundedRectangle(cornerRadius: 10, style: .continuous)
                                         )
@@ -258,11 +258,11 @@ struct CycleTrackerView: View {
                                 } label: {
                                     Text(moods[i])
                                         .font(.system(size: 12, weight: .medium))
-                                        .foregroundStyle(selectedMood == i ? Theme.onVolt : .primary)
+                                        .foregroundStyle(selectedMood == i ? Theme.onAccent : .primary)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 8)
                                         .background(
-                                            selectedMood == i ? Theme.volt : Theme.card,
+                                            selectedMood == i ? Color.accentColor : Theme.card,
                                             in: RoundedRectangle(cornerRadius: 10, style: .continuous)
                                         )
                                 }
@@ -279,10 +279,10 @@ struct CycleTrackerView: View {
                     } label: {
                         Text("Enregistrer")
                             .font(.system(size: 15, weight: .black)).textCase(.uppercase).kerning(0.5)
-                            .foregroundStyle(Theme.onVolt)
+                            .foregroundStyle(Theme.onAccent)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(Theme.volt, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                            .background(Color.accentColor, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                     }
                     .buttonStyle(.plain)
                 }

@@ -551,7 +551,7 @@ struct HabitEditor: View {
                     LazyVGrid(columns: Array(repeating: GridItem(), count: 5)) {
                         ForEach(icons, id: \.self) { i in
                             Image(systemName: i).font(.title3).frame(width: 40, height: 40)
-                                .background(icon == i ? Theme.volt.opacity(0.3) : Color.clear, in: RoundedRectangle(cornerRadius: 8))
+                                .background(icon == i ? Color.accentColor.opacity(0.3) : Color.clear, in: RoundedRectangle(cornerRadius: 8))
                                 .onTapGesture { icon = i }
                         }
                     }
@@ -626,7 +626,7 @@ struct FocusTimerView: View {
                     }.font(.footnote).card()
                 }
                 Text(isFocus ? "CONCENTRATION" : "PAUSE").font(.caption.bold()).foregroundStyle(isFocus ? .prodTint : .green)
-                TimerDial(engine: engine, tint: isFocus ? Theme.volt : .green, caption: "Session \(sessions+1)")
+                TimerDial(engine: engine, tint: isFocus ? Color.accentColor : .green, caption: "Session \(sessions+1)")
                 Label("\(sessions) sessions terminées", systemImage: "checkmark.seal").font(.footnote).foregroundStyle(Theme.textSecondary)
                 if !running {
                     PrimaryButton(title: "Démarrer le focus", icon: "play.fill", tint: .prodTint) { startFocus() }

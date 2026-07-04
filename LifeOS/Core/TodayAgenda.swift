@@ -98,7 +98,7 @@ struct TodayAgendaSection: View {
             if item.addKind != nil {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(Theme.volt)
+                    .foregroundStyle(Color.accentColor)
             } else if item.tool != nil || item.category != nil {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .bold))

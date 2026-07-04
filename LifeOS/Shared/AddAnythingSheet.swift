@@ -152,7 +152,7 @@ struct AddAnythingSheet: View {
         case .water:
             numberField("Quantité", $amount, unit: "ml")
             HStack(spacing: 8) { ForEach([250, 330, 500], id: \.self) { v in
-                Button("\(v) ml") { amount = "\(v)" }.buttonStyle(.bordered).tint(Theme.volt) } }
+                Button("\(v) ml") { amount = "\(v)" }.buttonStyle(.bordered).tint(Color.accentColor) } }
         case .workout:
             numberField("Poids", $weight, unit: "kg", decimal: true)
             numberField("Répétitions", $reps, unit: "reps")
@@ -205,9 +205,9 @@ struct AddAnythingSheet: View {
                 Image(systemName: k.icon).font(.system(size: 17, weight: .semibold))
                 Text(k.label).font(.system(size: 11, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.8)
             }
-            .foregroundStyle(on ? Theme.onVolt : Color.primary)
+            .foregroundStyle(on ? Theme.onAccent : Color.primary)
             .frame(maxWidth: .infinity).frame(height: 58)
-            .background(on ? AnyShapeStyle(Theme.volt) : Theme.cardFill,
+            .background(on ? AnyShapeStyle(Color.accentColor) : Theme.cardFill,
                         in: RoundedRectangle(cornerRadius: 13, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 13, style: .continuous).strokeBorder(Theme.hairline, lineWidth: on ? 0 : 0.5))
         }

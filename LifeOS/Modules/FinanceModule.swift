@@ -185,8 +185,8 @@ struct BudgetView: View {
                                     Button { e.spent += 10 } label: {
                                         Text("+10€").font(.caption.bold())
                                             .padding(.horizontal, 12).padding(.vertical, 6)
-                                            .background(Theme.volt, in: Capsule())
-                                            .foregroundStyle(Theme.onVolt)
+                                            .background(Color.accentColor, in: Capsule())
+                                            .foregroundStyle(Theme.onAccent)
                                     }.buttonStyle(.plain)
                                 }
                             }.card()
@@ -408,15 +408,15 @@ struct SavingsView: View {
                         ForEach(goals) { g in
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack { Text(g.name).font(.headline).foregroundStyle(Theme.textPrimary); Spacer(); Text("\(Int(g.current)) / \(Int(g.target)) €").bold().foregroundStyle(Theme.textPrimary) }
-                                ProgressView(value: g.progress).tint(Theme.volt)
+                                ProgressView(value: g.progress).tint(Color.accentColor)
                                 HStack {
                                     Text(g.monthsLeft > 0 ? "≈ \(g.monthsLeft) mois restants (\(Int(g.monthly))€/mois)" : "Objectif atteint 🎉").font(.caption).foregroundStyle(Theme.textSecondary)
                                     Spacer()
                                     Button { g.current += g.monthly } label: {
                                         Text("+\(Int(g.monthly))€").font(.caption.bold())
                                             .padding(.horizontal, 12).padding(.vertical, 6)
-                                            .background(Theme.volt, in: Capsule())
-                                            .foregroundStyle(Theme.onVolt)
+                                            .background(Color.accentColor, in: Capsule())
+                                            .foregroundStyle(Theme.onAccent)
                                     }.buttonStyle(.plain)
                                 }
                             }.card()

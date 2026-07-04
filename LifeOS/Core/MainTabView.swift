@@ -270,14 +270,14 @@ struct FloatingTabBar: View {
             ZStack {
                 if selected == t {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Theme.volt)
+                        .fill(Color.accentColor)
                         .frame(width: 52, height: 42)
-                        .shadow(color: Theme.volt.opacity(0.45), radius: 8, y: 3)
+                        .shadow(color: Color.accentColor.opacity(0.45), radius: 8, y: 3)
                         .matchedGeometryEffect(id: "sel", in: ns)
                 }
                 Image(systemName: selected == t ? t.iconFill : t.icon)
                     .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(selected == t ? Theme.onVolt : Color.primary.opacity(0.55))
+                    .foregroundStyle(selected == t ? Theme.onAccent : Color.primary.opacity(0.55))
                     .animation(reduceMotion ? nil : .spring(duration: 0.28), value: selected)
             }
             .frame(width: 58, height: 58)

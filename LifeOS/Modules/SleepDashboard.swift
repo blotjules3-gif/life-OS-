@@ -46,7 +46,7 @@ struct SleepDashboardView: View {
             }
             Spacer()
             HStack(spacing: 5) {
-                Image(systemName: "flame.fill").foregroundStyle(Theme.volt)
+                Image(systemName: "flame.fill").foregroundStyle(Color.accentColor)
                 Text("\(streak)").font(.headline.bold())
             }
             .padding(.horizontal, 12).padding(.vertical, 7).background(Theme.cardFill, in: Capsule())
@@ -174,9 +174,9 @@ struct SleepDashboardView: View {
 
     private var logButton: some View {
         Button { showLog = true } label: {
-            Text("Enregistrer une nuit").font(.system(size: 17, weight: .black)).foregroundStyle(Theme.onVolt)
+            Text("Enregistrer une nuit").font(.system(size: 17, weight: .black)).foregroundStyle(Theme.onAccent)
                 .frame(maxWidth: .infinity).padding(.vertical, 16)
-                .background(Theme.volt, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }.buttonStyle(PressableButtonStyle())
     }
 

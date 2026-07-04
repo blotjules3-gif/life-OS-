@@ -252,8 +252,8 @@ struct LifeBrainCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "brain.head.profile").font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Theme.onVolt).frame(width: 30, height: 30)
-                    .background(Theme.volt, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    .foregroundStyle(Theme.onAccent).frame(width: 30, height: 30)
+                    .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
                 Text("Pour toi aujourd'hui")
                     .font(.system(size: 20, weight: .black)).textCase(.uppercase).kerning(-0.3)
                     .foregroundStyle(Theme.textPrimary)
@@ -305,14 +305,14 @@ struct LifeBrainCard: View {
 
     private func glyphColor(_ t: BrainTone) -> Color {
         switch t {
-        case .good, .push: return Theme.onVolt
+        case .good, .push: return Theme.onAccent
         case .warn:        return .white
         case .info:        return Color(uiColor: .systemBackground)
         }
     }
     private func badgeBG(_ t: BrainTone) -> Color {
         switch t {
-        case .good, .push: return Theme.volt
+        case .good, .push: return Color.accentColor
         case .warn:        return Color(hex: 0xE8863C)
         case .info:        return Color.primary
         }

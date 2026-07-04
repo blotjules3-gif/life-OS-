@@ -41,11 +41,11 @@ struct ProfileCustomizerSheet: View {
 
     private let sections: [(id: String, label: String, sub: String, icon: String, color: Color)] = [
         ("hero",     "Score",          "Carte principale",   "star.fill",           Color(hex: 0x00D4B4)),
-        ("tasks",    "Tâches",         "Ce qu'il te reste",  "checklist",           Theme.volt),
+        ("tasks",    "Tâches",         "Ce qu'il te reste",  "checklist",           Color.accentColor),
         ("briefing", "Briefing",       "Rappel du matin",    "sunrise.fill",        Color.orange),
-        ("memories", "Mémoire",        "Ce que je retiens",  "brain",               Theme.volt),
+        ("memories", "Mémoire",        "Ce que je retiens",  "brain",               Color.accentColor),
         ("stats",    "Stats",          "Pas · eau · kcal",   "chart.bar.fill",      Color(hex: 0xF1746C)),
-        ("habits",   "Habitudes",      "Suivi & protéines",  "checkmark.seal.fill", Theme.volt),
+        ("habits",   "Habitudes",      "Suivi & protéines",  "checkmark.seal.fill", Color.accentColor),
         ("actions",  "Actions",        "Raccourcis rapides", "bolt.fill",           Color(hex: 0x3CB2E0)),
         ("wakeup",   "Réveil",         "Alarme & briefing",  "alarm.fill",          Color(hex: 0xE07B3C)),
         ("tip",      "Citation",       "Inspiration du jour","quote.bubble.fill",   Color.accentColor),

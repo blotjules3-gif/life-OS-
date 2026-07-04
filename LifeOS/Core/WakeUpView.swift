@@ -180,7 +180,7 @@ struct WakeUpView: View {
                 Spacer()
                 Toggle("", isOn: $wakeupEnabled)
                     .labelsHidden()
-                    .tint(Theme.volt)
+                    .tint(Color.accentColor)
                     .onChange(of: wakeupEnabled) { _, on in
                         if on { scheduleWakeupAlarm() } else { cancelAlarm() }
                     }
@@ -215,11 +215,11 @@ struct WakeUpView: View {
                     } label: {
                         Text(letter)
                             .font(.system(size: 13, weight: .black, design: .rounded))
-                            .foregroundStyle(on ? Theme.onVolt : .secondary)
+                            .foregroundStyle(on ? Theme.onAccent : .secondary)
                             .frame(maxWidth: .infinity)
                             .frame(height: 40)
                             .background(
-                                on ? AnyShapeStyle(Theme.volt) : AnyShapeStyle(Color.primary.opacity(0.05)),
+                                on ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(Color.primary.opacity(0.05)),
                                 in: RoundedRectangle(cornerRadius: Theme.radiusSmall - 2, style: .continuous)
                             )
                             .contentShape(RoundedRectangle(cornerRadius: Theme.radiusSmall - 2, style: .continuous))
@@ -313,10 +313,10 @@ struct WakeUpView: View {
                     .textCase(.uppercase)
                     .kerning(0.5)
             }
-            .foregroundStyle(Theme.onVolt)
+            .foregroundStyle(Theme.onAccent)
             .frame(maxWidth: .infinity)
             .frame(height: 54)
-            .background(Theme.volt, in: RoundedRectangle(cornerRadius: Theme.radiusSmall + 2, style: .continuous))
+            .background(Color.accentColor, in: RoundedRectangle(cornerRadius: Theme.radiusSmall + 2, style: .continuous))
         }
         .buttonStyle(LifeOSPressStyle())
     }

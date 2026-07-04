@@ -135,8 +135,8 @@ struct GuidedWorkoutView: View {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
                     Text(p.title).font(.system(size: 17, weight: .bold)).foregroundStyle(Theme.textPrimary)
-                    Text(p.subtitle).font(.caption2.weight(.bold)).foregroundStyle(Theme.onVolt)
-                        .padding(.horizontal, 6).padding(.vertical, 2).background(Theme.volt, in: Capsule())
+                    Text(p.subtitle).font(.caption2.weight(.bold)).foregroundStyle(Theme.onAccent)
+                        .padding(.horizontal, 6).padding(.vertical, 2).background(Color.accentColor, in: Capsule())
                 }
                 Text("\(p.exercises.count) exercices · \(p.exercises.map(\.name).joined(separator: ", "))")
                     .font(.caption).foregroundStyle(Theme.textSecondary).lineLimit(2)
@@ -166,9 +166,9 @@ struct GuidedWorkoutView: View {
                         Text("EXERCICE \(exIndex + 1)/\(plan.exercises.count)")
                             .font(.system(size: 12, weight: .heavy)).foregroundStyle(Theme.textSecondary)
                         Spacer()
-                        Text(plan.title.uppercased()).font(.system(size: 12, weight: .heavy)).foregroundStyle(Theme.volt)
+                        Text(plan.title.uppercased()).font(.system(size: 12, weight: .heavy)).foregroundStyle(Color.accentColor)
                     }
-                    ProgressView(value: sessionProgress).tint(Theme.volt)
+                    ProgressView(value: sessionProgress).tint(Color.accentColor)
                 }
 
                 // carte exercice
@@ -186,7 +186,7 @@ struct GuidedWorkoutView: View {
                     // pastilles séries faites
                     HStack(spacing: 6) {
                         ForEach(0..<ex.sets, id: \.self) { i in
-                            Circle().fill(i < setNumber - 1 ? Theme.volt : Theme.textSecondary.opacity(0.2))
+                            Circle().fill(i < setNumber - 1 ? Color.accentColor : Theme.textSecondary.opacity(0.2))
                                 .frame(width: 9, height: 9)
                         }
                     }
@@ -203,9 +203,9 @@ struct GuidedWorkoutView: View {
                 Button { validateSet(ex) } label: {
                     Text(setNumber < ex.sets ? "Valider la série" :
                             (exIndex < plan.exercises.count - 1 ? "Exercice suivant" : "Terminer la séance"))
-                        .font(.system(size: 17, weight: .black)).foregroundStyle(Theme.onVolt)
+                        .font(.system(size: 17, weight: .black)).foregroundStyle(Theme.onAccent)
                         .frame(maxWidth: .infinity).padding(.vertical, 17)
-                        .background(Theme.volt, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
                 .buttonStyle(PressableButtonStyle())
                 .disabled((Double(reps) ?? 0) <= 0)
@@ -236,7 +236,7 @@ struct GuidedWorkoutView: View {
     private func refPill(_ label: String, _ value: String, accent: Bool = false) -> some View {
         VStack(spacing: 2) {
             Text(label).font(.system(size: 9, weight: .heavy)).foregroundStyle(Theme.textSecondary)
-            Text(value).font(.system(size: 15, weight: .black)).foregroundStyle(accent ? Theme.volt : Theme.textPrimary)
+            Text(value).font(.system(size: 15, weight: .black)).foregroundStyle(accent ? Color.accentColor : Theme.textPrimary)
         }
         .padding(.horizontal, 14).padding(.vertical, 8)
         .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -279,7 +279,7 @@ struct GuidedWorkoutView: View {
                     .font(.system(size: 88, weight: .black, design: .rounded)).monospacedDigit().foregroundStyle(.white)
                 if lastWasPR {
                     Label("Nouveau record 💪", systemImage: "trophy.fill")
-                        .font(.headline.bold()).foregroundStyle(Theme.volt)
+                        .font(.headline.bold()).foregroundStyle(Color.accentColor)
                 }
                 Text("Prochaine : \(nextSetLabel)").font(.subheadline).foregroundStyle(.white.opacity(0.7))
                 HStack(spacing: 14) {
@@ -289,7 +289,7 @@ struct GuidedWorkoutView: View {
                 Button { endRest() } label: {
                     Text("Passer le repos").font(.system(size: 16, weight: .black)).foregroundStyle(.black)
                         .frame(maxWidth: .infinity).padding(.vertical, 15)
-                        .background(Theme.volt, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .padding(.horizontal, 40).padding(.top, 6)
             }
@@ -318,7 +318,7 @@ struct GuidedWorkoutView: View {
         let mins = max(1, Int(Date().timeIntervalSince(logged.first?.date ?? .now) / 60) + 1)
         return ScrollView {
             VStack(spacing: 18) {
-                Image(systemName: "checkmark.seal.fill").font(.system(size: 64)).foregroundStyle(Theme.volt).padding(.top, 20)
+                Image(systemName: "checkmark.seal.fill").font(.system(size: 64)).foregroundStyle(Color.accentColor).padding(.top, 20)
                 Text("Séance terminée").nikeTitle(26)
                 HStack(spacing: 12) {
                     summaryStat("\(logged.count)", "SÉRIES")
@@ -329,9 +329,9 @@ struct GuidedWorkoutView: View {
                     Text("Aucune série loggée.").font(.subheadline).foregroundStyle(Theme.textSecondary)
                 }
                 Button { dismiss() } label: {
-                    Text("Terminer").font(.system(size: 17, weight: .black)).foregroundStyle(Theme.onVolt)
+                    Text("Terminer").font(.system(size: 17, weight: .black)).foregroundStyle(Theme.onAccent)
                         .frame(maxWidth: .infinity).padding(.vertical, 16)
-                        .background(Theme.volt, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }.padding(.top, 8)
             }
             .padding(Theme.pad)

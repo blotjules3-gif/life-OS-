@@ -280,7 +280,7 @@ struct FaceScanView: View {
                     Label("Prendre une photo", systemImage: "camera.fill")
                         .font(.subheadline.weight(.bold)).frame(maxWidth: .infinity).padding(.vertical, 13)
                         .background(accent, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-                        .foregroundStyle(Theme.onVolt)
+                        .foregroundStyle(Theme.onAccent)
                 }.buttonStyle(.plain)
                 PhotosPicker(selection: $pickerItem, matching: .images) {
                     Label("Galerie", systemImage: "photo.on.rectangle")

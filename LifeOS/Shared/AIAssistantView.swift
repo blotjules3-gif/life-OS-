@@ -1049,9 +1049,9 @@ struct AIAssistantView: View {
                     Spacer()
                     Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold)).opacity(0.6)
                 }
-                .foregroundStyle(Theme.onVolt)
+                .foregroundStyle(Theme.onAccent)
                 .padding(.horizontal, 16).padding(.vertical, 14)
-                .background(Theme.volt, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(PressScaleButtonStyle())
             .padding(.horizontal, 16)

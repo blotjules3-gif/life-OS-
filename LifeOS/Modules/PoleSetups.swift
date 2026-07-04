@@ -232,7 +232,7 @@ struct LooksTipCard: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon).font(.system(size: 18, weight: .bold))
-                .foregroundStyle(Theme.onVolt).frame(width: 40, height: 40)
+                .foregroundStyle(Theme.onAccent).frame(width: 40, height: 40)
                 .background(accent, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
             Text(text).font(.subheadline).foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)

@@ -149,7 +149,7 @@ struct CryptoAppView: View {
                     Button { sendChat() } label: {
                         Image(systemName: "arrow.up")
                             .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(Theme.onVolt)
+                            .foregroundStyle(Theme.onAccent)
                             .frame(width: 26, height: 26)
                             .background(Self.accentColor, in: Circle())
                     }
@@ -319,7 +319,7 @@ struct CryptoMarketTab: View {
 
                     if loading {
                         VStack(spacing: 14) {
-                            ProgressView().controlSize(.large).tint(Theme.volt)
+                            ProgressView().controlSize(.large).tint(Color.accentColor)
                             Text("Chargement du marché…").font(.subheadline).foregroundStyle(.secondary)
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -374,11 +374,11 @@ struct CryptoMarketTab: View {
         } label: {
             Text(label)
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(isSelected ? Theme.onVolt : Theme.textPrimary)
+                .foregroundStyle(isSelected ? Theme.onAccent : Theme.textPrimary)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(
-                    isSelected ? Theme.volt : Theme.bg2,
+                    isSelected ? Color.accentColor : Theme.bg2,
                     in: Capsule()
                 )
         }

@@ -67,9 +67,9 @@ struct CalAIView: View {
                     Image(systemName: "barcode.viewfinder").font(.system(size: 17, weight: .bold))
                     Text("Scanner").font(.system(size: 15, weight: .bold))
                 }
-                .foregroundStyle(Theme.onVolt)
+                .foregroundStyle(Theme.onAccent)
                 .frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(Theme.volt, in: Capsule())
+                .background(Color.accentColor, in: Capsule())
             }
             Button { showAdd = true } label: {
                 HStack(spacing: 8) {
@@ -94,7 +94,7 @@ struct CalAIView: View {
             }
             Spacer()
             HStack(spacing: 5) {
-                Image(systemName: "flame.fill").foregroundStyle(Theme.volt)
+                Image(systemName: "flame.fill").foregroundStyle(Color.accentColor)
                 Text("\(streak)").font(.headline.bold())
             }
             .padding(.horizontal, 12).padding(.vertical, 7)
@@ -147,7 +147,7 @@ struct CalAIView: View {
             }
             Spacer()
             ZStack {
-                ProgressRing(progress: kcalGoal == 0 ? 0 : Double(consumed) / Double(kcalGoal), lineWidth: 11, tint: Theme.volt)
+                ProgressRing(progress: kcalGoal == 0 ? 0 : Double(consumed) / Double(kcalGoal), lineWidth: 11, tint: Color.accentColor)
                 Image(systemName: "flame.fill").font(.title2).foregroundStyle(Theme.textPrimary)
             }
             .frame(width: 92, height: 92)
@@ -225,7 +225,7 @@ struct CalAIView: View {
                 Text(meal.uppercased()).font(.system(size: 12, weight: .heavy)).kerning(0.5)
                     .foregroundStyle(Theme.textSecondary)
                 Spacer()
-                Text("\(kcal) kcal").font(.system(size: 12, weight: .heavy)).foregroundStyle(Theme.volt)
+                Text("\(kcal) kcal").font(.system(size: 12, weight: .heavy)).foregroundStyle(Color.accentColor)
             }
             .padding(.horizontal, 14).padding(.top, 12).padding(.bottom, 6)
             ForEach(items.sorted(by: { $0.date < $1.date })) { f in
@@ -281,7 +281,7 @@ struct CalAIView: View {
                             .lineLimit(1).minimumScaleFactor(0.6)
                         RoundedRectangle(cornerRadius: 5, style: .continuous)
                             .fill(e.kcal == 0 ? AnyShapeStyle(Color.primary.opacity(0.08))
-                                              : AnyShapeStyle(over ? Color(hex: 0xF0584B) : Theme.volt))
+                                              : AnyShapeStyle(over ? Color(hex: 0xF0584B) : Color.accentColor))
                             .frame(height: max(4, 96 * CGFloat(e.kcal) / CGFloat(maxV)))
                         Text(weekdayLetter(e.day))
                             .font(.system(size: 11, weight: .bold))
@@ -292,7 +292,7 @@ struct CalAIView: View {
             }
             .frame(height: 130, alignment: .bottom)
             HStack(spacing: 6) {
-                Circle().fill(Theme.volt).frame(width: 7, height: 7)
+                Circle().fill(Color.accentColor).frame(width: 7, height: 7)
                 Text("Objectif \(kcalGoal) kcal").font(.caption2).foregroundStyle(.secondary)
             }
         }
@@ -447,7 +447,7 @@ struct BarcodeAddSheet: View {
                                          fat: p.fat * factor, meal: meal))
                     Haptics.success(); dismiss()
                 } label: { Text("Ajouter au journal").frame(maxWidth: .infinity).bold() }
-                    .buttonStyle(.borderedProminent).tint(Theme.volt)
+                    .buttonStyle(.borderedProminent).tint(Color.accentColor)
                     .disabled(factor <= 0)
             }
         }

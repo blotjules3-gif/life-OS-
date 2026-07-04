@@ -277,13 +277,13 @@ struct DailyScoreRing: View {
                 Haptics.tap(); withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { selected = day }
             } label: {
                 ZStack {
-                    Circle().fill(isSel ? AnyShapeStyle(Theme.volt)
+                    Circle().fill(isSel ? AnyShapeStyle(Color.accentColor)
                                         : AnyShapeStyle(future ? AnyShapeStyle(Color.primary.opacity(0.05)) : Theme.cardFill))
-                        .overlay(Circle().strokeBorder(today && !isSel ? Theme.volt : Theme.hairline,
+                        .overlay(Circle().strokeBorder(today && !isSel ? Color.accentColor : Theme.hairline,
                                                        lineWidth: today && !isSel ? 1.5 : 0.5))
                     if showScore {
                         Text("\(sc)").font(.system(size: 13, weight: .black)).monospacedDigit()
-                            .foregroundStyle(isSel ? Theme.onVolt : Theme.textPrimary)
+                            .foregroundStyle(isSel ? Theme.onAccent : Theme.textPrimary)
                     } else {
                         Image(systemName: "circle.dashed").font(.system(size: 12)).foregroundStyle(Theme.textSecondary.opacity(0.5))
                     }
@@ -349,9 +349,9 @@ struct DailyScoreDetailSheet: View {
                 Text(m.label).font(.system(size: 15, weight: .bold)).foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Text(m.value).font(.system(size: 13, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(m.fraction >= 1 ? Theme.volt : Theme.textSecondary)
+                    .foregroundStyle(m.fraction >= 1 ? Color.accentColor : Theme.textSecondary)
                 if m.fraction >= 1 {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.volt).font(.system(size: 14))
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.accentColor).font(.system(size: 14))
                 }
                 if tappable {
                     Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold))
@@ -361,7 +361,7 @@ struct DailyScoreDetailSheet: View {
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color.primary.opacity(0.08)).frame(height: 8)
-                    Capsule().fill(m.fraction >= 1 ? Theme.volt : m.color)
+                    Capsule().fill(m.fraction >= 1 ? Color.accentColor : m.color)
                         .frame(width: max(8, geo.size.width * m.fraction), height: 8)
                 }
             }

@@ -327,7 +327,7 @@ struct BubbleCategoriesView: View {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Capsule().fill(Color.primary.opacity(0.10)).frame(height: 8)
-                        Capsule().fill(Theme.volt)
+                        Capsule().fill(Color.accentColor)
                             .frame(width: max(8, geo.size.width * CategorySetup.fraction), height: 8)
                     }
                 }

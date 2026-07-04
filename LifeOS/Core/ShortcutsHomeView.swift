@@ -578,7 +578,7 @@ struct ShortcutsHomeView: View {
             HStack(spacing: 14) {
                 Image(systemName: done ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 22))
-                    .foregroundStyle(done ? Theme.volt : Color.secondary.opacity(0.4))
+                    .foregroundStyle(done ? Color.accentColor : Color.secondary.opacity(0.4))
                     .contentTransition(.symbolEffect(.replace))
                 Text(habit.name)
                     .font(.system(size: 15, weight: .medium))
@@ -801,11 +801,11 @@ struct ShortcutsHomeView: View {
                         .contentTransition(.numericText())
                         .animation(.spring(duration: 0.4), value: o.sub)
                 }
-                ProgressView(value: o.progress).tint(Theme.volt).scaleEffect(x: 1, y: 1.1, anchor: .center)
+                ProgressView(value: o.progress).tint(Color.accentColor).scaleEffect(x: 1, y: 1.1, anchor: .center)
                     .animation(.spring(duration: 0.6, bounce: 0.1), value: o.progress)
             }
             Image(systemName: o.done ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 18)).foregroundStyle(o.done ? AnyShapeStyle(Theme.volt) : AnyShapeStyle(Color.secondary.opacity(0.4)))
+                .font(.system(size: 18)).foregroundStyle(o.done ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(Color.secondary.opacity(0.4)))
                 .contentTransition(.symbolEffect(.replace))
                 .animation(.spring(duration: 0.35, bounce: 0.4), value: o.done)
         }
@@ -917,10 +917,10 @@ struct ShortcutsHomeView: View {
                 } label: {
                     Text("Ajouter")
                         .font(.system(size: 14, weight: .black)).textCase(.uppercase).kerning(0.5)
-                        .foregroundStyle(Theme.onVolt)
+                        .foregroundStyle(Theme.onAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 11)
-                        .background(Theme.volt, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 Button {
