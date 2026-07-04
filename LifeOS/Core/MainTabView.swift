@@ -157,6 +157,7 @@ private struct HabitWidgetSyncer: View {
         defaults.set(Date(), forKey: "widget_habits_sync_date")
         defaults.set(entries.filter { $0["done"] as? Bool == true }.count, forKey: "habits_done_today")
         defaults.set(entries.count, forKey: "habits_total_today")
+        defaults.set(Theme.currentTheme.accentHex, forKey: "widget_accent_hex")
         WidgetCenter.shared.reloadAllTimelines()
     }
 }
