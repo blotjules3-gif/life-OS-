@@ -179,6 +179,7 @@ struct BubbleCategoriesView: View {
     @AppStorage("catColors")     private var catColorsRaw = ""   // "titre:RRGGBB,…" — couleur perso par catégorie
     @State private var editing = false
     @State private var showAdd = false
+    @State private var showSearch = false
     @State private var showCatIntake = false
     @State private var tappedID: UUID?
     @State private var drag: [UUID: CGSize] = [:]
@@ -295,9 +296,11 @@ struct BubbleCategoriesView: View {
             layoutContent
         }
         .overlay(alignment: .topLeading) { if !theme.isModern { layoutSwitcher } }
+        .overlay(alignment: .top) { if !theme.isModern { bubbleSearchButton } }
         .overlay(alignment: .topTrailing) { if !theme.isModern { editButton } }
         .overlay(alignment: .bottomTrailing) { if !theme.isModern && editing && (layout == .organic || layout == .tidy) { addButton } }
         .sheet(isPresented: $showAdd) { addSheet }
+        .sheet(isPresented: $showSearch) { ToolSearchView() }
         .sheet(item: $colorEditTarget) { target in
             CategoryColorSheet(
                 title: target.title,
@@ -361,6 +364,7 @@ struct BubbleCategoriesView: View {
                     .font(.system(size: 34, weight: .black)).textCase(.uppercase).kerning(-1)
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 4)
+                searchPill
                 if CategorySetup.fraction < 1.0 { catProgressHeader }
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                     ForEach(Array(mains.enumerated()), id: \.element.id) { i, cat in
@@ -371,6 +375,35 @@ struct BubbleCategoriesView: View {
             }
             .padding(.horizontal, 16).padding(.top, 66).padding(.bottom, 120)
         }
+    }
+
+    // Bouton loupe pour les thèmes à bulles (pas de header défilant).
+    private var bubbleSearchButton: some View {
+        Button { Haptics.tap(); showSearch = true } label: {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 38, height: 38)
+                .background(.regularMaterial, in: Circle())
+        }
+        .padding(.top, 8)
+    }
+
+    // Barre de recherche globale : trouve n'importe quel outil de tous les pôles.
+    private var searchPill: some View {
+        Button { Haptics.tap(); showSearch = true } label: {
+            HStack(spacing: 9) {
+                Image(systemName: "magnifyingglass").font(.system(size: 15, weight: .semibold))
+                Text("Rechercher un outil").font(.system(size: 15, weight: .medium))
+                Spacer()
+            }
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 14).padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
+        }
+        .buttonStyle(.plain)
     }
 
     private func nikeTile(_ cat: BubbleCategory, index: Int) -> some View {
@@ -971,4 +1004,83 @@ extension AppCategory {
 
 #Preview {
     BubbleCategoriesView()
+}
+
+// MARK: - Recherche globale d'outils (tous les pôles)
+
+struct ToolSearchView: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var query = ""
+    @State private var coverTool: CategoryTool?
+
+    private struct Hit: Identifiable { let id = UUID(); let cat: AppCategory; let tool: CategoryTool }
+
+    private var allTools: [Hit] {
+        AppCategory.allCases.flatMap { c in c.tools.map { Hit(cat: c, tool: $0) } }
+    }
+
+    private var results: [Hit] {
+        let q = query.folding(options: .diacriticInsensitive, locale: .current)
+            .trimmingCharacters(in: .whitespaces).lowercased()
+        guard !q.isEmpty else { return [] }
+        func norm(_ s: String) -> String {
+            s.folding(options: .diacriticInsensitive, locale: .current).lowercased()
+        }
+        return allTools.filter {
+            norm($0.tool.title).contains(q) || norm($0.tool.subtitle).contains(q) || norm($0.cat.title).contains(q)
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if query.trimmingCharacters(in: .whitespaces).isEmpty {
+                    ContentUnavailableView("Rechercher un outil",
+                                           systemImage: "magnifyingglass",
+                                           description: Text("Tabata, hydratation, budget, sommeil, CV… parmi tous les pôles."))
+                } else if results.isEmpty {
+                    ContentUnavailableView.search(text: query)
+                } else {
+                    List(results) { hit in row(hit) }
+                        .listStyle(.plain)
+                }
+            }
+            .navigationTitle("Rechercher")
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always),
+                        prompt: "Nom d'un outil…")
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } } }
+            .fullScreenCover(item: $coverTool) { $0.dest() }
+        }
+    }
+
+    @ViewBuilder private func row(_ hit: Hit) -> some View {
+        if hit.tool.fullScreen {
+            Button { Haptics.tap(); coverTool = hit.tool } label: { rowLabel(hit) }
+                .buttonStyle(.plain)
+        } else {
+            NavigationLink { hit.tool.dest() } label: { rowLabel(hit) }
+        }
+    }
+
+    private func rowLabel(_ hit: Hit) -> some View {
+        HStack(spacing: 12) {
+            IconBadge(icon: hit.tool.icon, size: 40)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(hit.tool.title).font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary).lineLimit(1)
+                Text(hit.cat.title.uppercased()).font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Theme.textSecondary).lineLimit(1)
+            }
+            Spacer(minLength: 4)
+            // Les outils poussés ont déjà le chevron natif de la List ; on n'ajoute
+            // un indicateur QUE pour les outils plein écran (présentés en cover).
+            if hit.tool.fullScreen {
+                Image(systemName: "arrow.up.forward.square")
+                    .font(.system(size: 13, weight: .bold)).foregroundStyle(Theme.textSecondary.opacity(0.6))
+            }
+        }
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+    }
 }
