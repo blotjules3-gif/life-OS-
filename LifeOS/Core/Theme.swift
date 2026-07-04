@@ -255,6 +255,29 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .cloud:   return Color(hex: 0x9BB2D6)
         }
     }
+    /// Pastille du sélecteur de thème : la vraie couleur de fond du thème,
+    /// pas son accent (sinon les 3 thèmes NIKE affichent tous le volt).
+    var previewFill: Color {
+        switch self {
+        case .classic: return Color(hex: 0xECECE7)
+        case .dark:    return Color(hex: 0x0A0A0A)
+        case .glass:   return Color(hex: 0xB8BCC6)
+        case .pinky:   return Color(hex: 0xFFE3F1)
+        case .gothic:  return Color(hex: 0x2A2E36)
+        case .cloud:   return Color(hex: 0xEAF0F9)
+        }
+    }
+    var previewIcon: Color {
+        switch self {
+        case .classic: return .black
+        case .dark:    return Theme.volt
+        case .glass:   return .white
+        case .pinky:   return Color(hex: 0xFF5BA0)
+        case .gothic:  return Color(hex: 0xB7C2D0)
+        case .cloud:   return Color(hex: 0x9BB2D6)
+        }
+    }
+
     /// Fond (mesh 3×3) de l'écran Catégories selon le thème.
     /// NIKE = aplat (blanc cassé / noir pur), la texture vient de la grille technique.
     var bubbleBG: [Color] {
