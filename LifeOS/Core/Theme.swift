@@ -309,7 +309,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// NIKE = aplat (blanc cassé / noir pur), la texture vient de la grille technique.
     var bubbleBG: [Color] {
         switch self {
-        case .classic:
+        case .classic, .volt:
             return Array(repeating: Color(hex: 0xECECE7), count: 9)
         case .dark:
             return Array(repeating: Color(hex: 0x000000), count: 9)
