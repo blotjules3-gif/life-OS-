@@ -72,10 +72,6 @@ struct ProfileView: View {
     private var lifeScore: Int {
         Int((waterRatio * 0.25 + kcalRatio * 0.25 + habitRatio * 0.30 + stepRatio * 0.20) * 100)
     }
-    private func scoreColor(_ s: Int) -> Color {
-        s >= 75 ? Color(hex: 0x00D4B4) : s >= 50 ? Color(hex: 0xE0A23C) : Color(hex: 0xF1746C)
-    }
-
     private var habitsWeekCount: Int {
         let cal = Calendar.current
         guard let start = cal.date(byAdding: .day, value: -6, to: cal.startOfDay(for: .now)) else { return 0 }
