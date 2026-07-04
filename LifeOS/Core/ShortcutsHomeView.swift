@@ -391,10 +391,10 @@ struct ShortcutsHomeView: View {
                 HomeMetricPickerSheet(metricsRaw: $metricsRaw)
             }
             .task {
-                if await HealthService.shared.requestAuthorization() {
-                    steps = await HealthService.shared.cachedStepsToday()
-                    stepsYesterday = await HealthService.shared.stepsYesterday()
-                }
+                // Lecture SILENCIEUSE des pas : pas de pop-up d'autorisation au lancement.
+                // La demande Santé se fait uniquement via Profil › Connecter Apple Santé.
+                steps = await HealthService.shared.cachedStepsToday()
+                stepsYesterday = await HealthService.shared.stepsYesterday()
                 reengageMessage    = EngagementTracker.shared.reengagementMessage
                 reengageSuggestion = EngagementTracker.shared.simplificationSuggestion
                 weeklyModuleSuggestion = WeeklyModuleSuggester.shared.currentSuggestion()
@@ -402,11 +402,8 @@ struct ShortcutsHomeView: View {
                 if todayMood != nil { moodDismissed = true }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
-                Task {
-                    if await HealthService.shared.requestAuthorization() {
-                        steps = await HealthService.shared.cachedStepsToday()
-                    }
-                }
+                // Lecture silencieuse au retour au premier plan, sans pop-up.
+                Task { steps = await HealthService.shared.cachedStepsToday() }
                 if todayMood == nil { withAnimation { moodDismissed = false } }
             }
             .sheet(isPresented: $showBilan) { WeeklyBilanView() }
