@@ -1063,10 +1063,10 @@ private struct OrbitHero: View {
         NavigationLink(value: sat.category) {
             ZStack {
                 Circle()
-                    .fill(.white.opacity(0.08))
+                    .fill(sat.category.tint.opacity(0.12))
                     .frame(width: 52, height: 52)
                 Circle()
-                    .strokeBorder(.white.opacity(0.10), lineWidth: 1)
+                    .strokeBorder(sat.category.tint.opacity(0.18), lineWidth: 1)
                     .frame(width: 52, height: 52)
                 if let progress = sat.progress {
                     Circle()
