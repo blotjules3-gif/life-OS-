@@ -967,7 +967,7 @@ private struct OrbitHero: View {
                     .truncatingRemainder(dividingBy: 360) * (2 * .pi / 360)
             ZStack {
                 Circle()
-                    .stroke(.white.opacity(0.10), style: StrokeStyle(lineWidth: 1, dash: [2, 6]))
+                    .stroke(Color.primary.opacity(0.12), style: StrokeStyle(lineWidth: 1, dash: [2, 6]))
                     .frame(width: 252, height: 252)
 
                 connections(phase: phase)
