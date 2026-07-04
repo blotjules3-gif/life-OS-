@@ -924,10 +924,10 @@ struct ProfileView: View {
 
     private var appearanceSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("APPARENCE")
-                .font(.system(size: 10, weight: .bold))
-                .foregroundStyle(.secondary)
-                .kerning(1.2)
+            Text("Apparence")
+                .font(.system(size: 20, weight: .black))
+                .textCase(.uppercase)
+                .kerning(-0.3)
                 .padding(.horizontal, 4)
             VStack(spacing: 12) {
                 HStack(spacing: 10) {
