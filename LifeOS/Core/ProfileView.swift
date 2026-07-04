@@ -389,9 +389,7 @@ struct ProfileView: View {
     // MARK: - Ma semaine
 
     private var weekCard: some View {
-        let cal = Calendar.current
-        let todayStart = cal.startOfDay(for: .now)
-        return VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 Text("Ma semaine")
                     .font(.system(size: 20, weight: .black))
