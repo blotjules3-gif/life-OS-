@@ -160,7 +160,6 @@ struct ProfileView: View {
                         initial: userInitial,
                         greeting: greeting,
                         score: lifeScore,
-                        scoreColor: scoreColor(lifeScore),
                         streak: EngagementTracker.shared.consecutiveDays,
                         totalDays: EngagementTracker.shared.totalDays,
                         habitsWeek: habitsWeekCount,
