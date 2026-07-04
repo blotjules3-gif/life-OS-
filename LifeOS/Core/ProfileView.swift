@@ -254,10 +254,9 @@ struct ProfileView: View {
                             .foregroundStyle(.white)
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(greeting.uppercased())
-                            .font(.system(size: 10, weight: .semibold))
+                        Text(greeting)
+                            .monoLabel(10)
                             .foregroundStyle(.white.opacity(0.55))
-                            .kerning(2)
                         Text(displayName)
                             .font(.system(size: 22, weight: .black, design: .rounded))
                             .foregroundStyle(.white)
