@@ -1,6 +1,97 @@
 import SwiftUI
 import SwiftData
 import Combine
+import AVFoundation
+
+// MARK: - Sons du minuteur (bips synthétisés, routés vers la sortie connectée)
+// Joue via AVAudioSession .playback : passe sur les enceintes, les écouteurs filaires
+// OU le Bluetooth connecté, même en mode silencieux, en se mélangeant à la musique.
+final class TabataSound {
+    static let shared = TabataSound()
+    private var players: [String: AVAudioPlayer] = [:]
+    private var sessionActive = false
+
+    /// À appeler au démarrage : prépare la session pour un premier bip sans latence.
+    func prime() { activateSession() }
+
+    private func activateSession() {
+        guard !sessionActive else { return }
+        let s = AVAudioSession.sharedInstance()
+        // .playback => sortie courante (Bluetooth/écouteurs/enceinte) + joue en mode silencieux.
+        // mixWithOthers + duckOthers => la musique continue mais baisse pendant le bip.
+        try? s.setCategory(.playback, mode: .default, options: [.mixWithOthers, .duckOthers])
+        try? s.setActive(true)
+        sessionActive = true
+    }
+
+    /// Libère la session (rend le volume à la musique). Appelé à la fin / sortie.
+    func end() {
+        guard sessionActive else { return }
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        sessionActive = false
+    }
+
+    // Décompte 3-2-1 : bip court et léger.
+    func countdown() { play("cd", [(1046, 0.08)], vol: 0.6) }
+    // Début d'effort : double bip aigu et net.
+    func work()      { play("work", [(1400, 0.15), (0, 0.05), (1400, 0.15)], vol: 1.0) }
+    // Début de repos/récup : bip grave plus long.
+    func rest()      { play("rest", [(620, 0.30)], vol: 0.95) }
+    // Fin de séance : arpège montant.
+    func finish()    { play("fin", [(880, 0.16), (0, 0.05), (1108, 0.16), (0, 0.05), (1318, 0.36)], vol: 1.0) }
+
+    private func play(_ key: String, _ segments: [(Double, Double)], vol: Double) {
+        activateSession()
+        let player: AVAudioPlayer
+        if let existing = players[key] {
+            player = existing
+        } else {
+            let data = Self.toneWAV(segments: segments.map { (freq: $0.0, dur: $0.1) }, volume: vol)
+            guard let p = try? AVAudioPlayer(data: data) else { return }
+            p.prepareToPlay()
+            players[key] = p
+            player = p
+        }
+        player.currentTime = 0
+        player.play()
+    }
+
+    // MARK: Synthèse d'un WAV PCM 16 bits mono en mémoire (aucun fichier bundle).
+    private static func toneWAV(segments: [(freq: Double, dur: Double)],
+                                sampleRate: Double = 44_100, volume: Double) -> Data {
+        var samples: [Int16] = []
+        let fade = 0.008 * sampleRate   // fondu 8 ms pour éviter les clics
+        for seg in segments {
+            let n = Int(seg.dur * sampleRate)
+            guard n > 0 else { continue }
+            if seg.freq <= 0 {
+                samples.append(contentsOf: repeatElement(0, count: n))
+                continue
+            }
+            for i in 0..<n {
+                let t = Double(i) / sampleRate
+                let env = min(1.0, min(Double(i) / fade, Double(n - i) / fade))
+                let v = sin(2 * .pi * seg.freq * t) * volume * env
+                samples.append(Int16(max(-1, min(1, v)) * 32_767))
+            }
+        }
+        return wavData(samples: samples, sampleRate: Int(sampleRate))
+    }
+
+    private static func wavData(samples: [Int16], sampleRate: Int) -> Data {
+        let dataSize = samples.count * 2
+        var d = Data(capacity: 44 + dataSize)
+        func u32(_ v: Int) { var x = UInt32(v).littleEndian; withUnsafeBytes(of: &x) { d.append(contentsOf: $0) } }
+        func u16(_ v: Int) { var x = UInt16(v).littleEndian; withUnsafeBytes(of: &x) { d.append(contentsOf: $0) } }
+        d.append(contentsOf: Array("RIFF".utf8)); u32(36 + dataSize)
+        d.append(contentsOf: Array("WAVE".utf8))
+        d.append(contentsOf: Array("fmt ".utf8)); u32(16); u16(1); u16(1)
+        u32(sampleRate); u32(sampleRate * 2); u16(2); u16(16)
+        d.append(contentsOf: Array("data".utf8)); u32(dataSize)
+        for s in samples { var x = UInt16(bitPattern: s).littleEndian; withUnsafeBytes(of: &x) { d.append(contentsOf: $0) } }
+        return d
+    }
+}
 
 // MARK: - Configuration
 
@@ -102,11 +193,12 @@ final class TabataEngine {
 
     func begin() {
         phase = .prepare; remaining = cfg.prepare; intervalTotal = cfg.prepare; round = 1; cycle = 1
-        Haptics.tap(); run()
+        Haptics.tap(); TabataSound.shared.prime(); run()
     }
 
     func reset() {
         pause(); phase = .idle; remaining = cfg.prepare; intervalTotal = cfg.prepare; round = 1; cycle = 1
+        TabataSound.shared.end()
     }
 
     private func run() {
@@ -117,8 +209,13 @@ final class TabataEngine {
     private func pause() { running = false; cancellable?.cancel() }
 
     private func tick() {
-        if remaining > 1 { remaining -= 1; return }
-        advance()
+        if remaining > 1 {
+            remaining -= 1
+            // Décompte sonore sur les 3 dernières secondes de chaque intervalle.
+            if remaining <= 3, phase != .idle, phase != .done { TabataSound.shared.countdown() }
+            return
+        }
+        advance()   // remaining == 1 → transition (son joué dans enter/finish)
     }
 
     private func advance() {
@@ -151,9 +248,18 @@ final class TabataEngine {
         phase = p
         remaining = max(1, secs)
         intervalTotal = max(1, secs)
+        // Bip de transition : aigu pour l'effort, grave pour repos/récup/retour au calme.
+        switch p {
+        case .work:                          TabataSound.shared.work()
+        case .rest, .restCycle, .cooldown:   TabataSound.shared.rest()
+        default:                             break
+        }
         if secs <= 0 { advance() }
     }
-    private func finish() { pause(); phase = .done; remaining = 0 }
+    private func finish() {
+        pause(); phase = .done; remaining = 0
+        TabataSound.shared.finish()
+    }
 
     // Navigation manuelle entre les séries (ex: j'ai loupé/fini une série).
     func skipForward() {
@@ -297,6 +403,7 @@ struct TabataView: View {
         .animation(.easeInOut(duration: 0.25), value: engine.phase)
         .statusBarHidden()
         .onAppear { engine.cfg = config; if engine.phase == .idle { engine.remaining = prepare } }
+        .onDisappear { TabataSound.shared.end() }   // libère la session audio (musique dé-duckée)
         .sheet(isPresented: $showSettings) {
             TabataSettings(prepare: $prepare, work: $work, rest: $rest, rounds: $rounds, cycles: $cycles, restCycle: $restCycle, cooldown: $cooldown, sets: $sets)
                 .onDisappear { engine.cfg = config; if engine.phase == .idle { engine.remaining = prepare } }
