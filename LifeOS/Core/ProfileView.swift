@@ -737,7 +737,7 @@ struct ProfileView: View {
                                 if alarmRingsNextDay {
                                     Text("demain")
                                         .font(.system(size: 11, weight: .semibold))
-                                        .foregroundStyle(accentColor.opacity(0.8))
+                                        .foregroundStyle(.secondary)
                                 }
                             }
                         }
