@@ -887,7 +887,6 @@ private struct OrbitHero: View {
     let initial: String
     let greeting: String
     let score: Int
-    let scoreColor: Color
     let streak: Int
     let totalDays: Int
     let habitsWeek: Int
