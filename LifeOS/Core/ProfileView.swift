@@ -710,7 +710,7 @@ struct ProfileView: View {
     // MARK: - Réveil compact
 
     private var wakeupCompact: some View {
-        let accentColor = Color(hex: 0xE07B3C)
+        let accentColor = Theme.volt
         return VStack(spacing: 0) {
             HStack(spacing: 14) {
                 Button { showWakeupDetail = true } label: {
