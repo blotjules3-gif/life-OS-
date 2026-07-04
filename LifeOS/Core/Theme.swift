@@ -92,6 +92,15 @@ enum Theme {
     /// Thème Verre actif ? (lu depuis les réglages — sert aux fonds adaptatifs).
     static var isGlassActive: Bool { UserDefaults.standard.string(forKey: "appTheme") == "glass" }
 
+    /// Thème courant (lu depuis les réglages — même pattern que isGlassActive).
+    static var currentTheme: AppTheme {
+        AppTheme(rawValue: UserDefaults.standard.string(forKey: "appTheme") ?? "classic") ?? .classic
+    }
+
+    /// Couleur du texte posé sur l'accent du thème (bouton plein, badge…).
+    /// À utiliser partout à la place de `onVolt`.
+    static var onAccent: Color { currentTheme.onAccent }
+
     /// Remplissage de carte adaptatif : verre dépoli en thème Verre, sinon surface opaque.
     /// À utiliser dans `.background(Theme.cardFill, in: shape)` pour que TOUTES les cartes
     /// suivent le thème (glass global).
