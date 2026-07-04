@@ -2,6 +2,12 @@ import SwiftUI
 import SwiftData
 import WidgetKit
 
+private struct OrbitSatellite: Identifiable {
+    let category: AppCategory
+    let progress: Double?
+    var id: String { category.rawValue }
+}
+
 struct ProfileView: View {
     @AppStorage("appTheme") private var appThemeRaw = "classic"
     @AppStorage("userName") private var name = ""
@@ -46,6 +52,8 @@ struct ProfileView: View {
     @State private var appLockEnabled = AppLock.shared.isEnabled
     @State private var checkinToast: String? = nil
     @State private var energyScore: EnergyScoreOut? = nil
+    @State private var facet = 0
+    @Namespace private var facetNS
     @ObservedObject private var serverStatus = ServerStatusMonitor.shared
 
     private var recommendedModules: [AppCategory] {
@@ -110,31 +118,73 @@ struct ProfileView: View {
         return wakeupHour < h || (wakeupHour == h && wakeupMinute <= m)
     }
 
+    // MARK: - Identité
+
+    private var displayName: String {
+        name.isEmpty ? "Mon profil" : name.prefix(1).uppercased() + name.dropFirst()
+    }
+    private var userInitial: String {
+        name.isEmpty ? "L" : String(name.prefix(1)).uppercased()
+    }
+    private var greeting: String {
+        switch Calendar.current.component(.hour, from: .now) {
+        case 5..<12: return "Bonjour"
+        case 12..<18: return "Bon après-midi"
+        default: return "Bonsoir"
+        }
+    }
+
+    // MARK: - Satellites
+
+    private var orbitSatellites: [OrbitSatellite] {
+        quickAccessModules.map { cat in
+            let progress: Double?
+            switch cat {
+            case .nutrition:    progress = kcalRatio
+            case .fitness:      progress = stepRatio
+            case .productivity: progress = habitRatio
+            default:            progress = nil
+            }
+            return OrbitSatellite(category: cat, progress: progress)
+        }
+    }
+
     // MARK: - Body
 
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
-                LazyVStack(spacing: 20) {
-                    heroCard
-                        .staggered(0, appeared: appeared)
-                    weekCard
+                VStack(spacing: 24) {
+                    OrbitHero(
+                        displayName: displayName,
+                        initial: userInitial,
+                        greeting: greeting,
+                        score: lifeScore,
+                        scoreColor: scoreColor(lifeScore),
+                        streak: EngagementTracker.shared.consecutiveDays,
+                        totalDays: EngagementTracker.shared.totalDays,
+                        habitsWeek: habitsWeekCount,
+                        satellites: orbitSatellites,
+                        appeared: appeared,
+                        pinnedIDs: Set(profilePinnedRaw.split(separator: ",").map(String.init)),
+                        onPin: { cat in
+                            withAnimation(.spring(duration: 0.38, bounce: 0.1)) { pinGoal(cat.rawValue) }
+                        },
+                        onHide: { cat in
+                            withAnimation(.spring(duration: 0.38, bounce: 0.1)) { toggleHideGoal(cat.rawValue) }
+                        }
+                    )
+                    .staggered(0, appeared: appeared)
+
+                    if !hiddenGoals.isEmpty {
+                        restoreHiddenButton
+                    }
+
+                    facetBar
                         .staggered(1, appeared: appeared)
-                        .scrollFade()
-                    challengesSection
+
+                    facetContent
                         .staggered(2, appeared: appeared)
-                        .scrollFade()
-                    quickAccessSection
-                        .staggered(3, appeared: appeared)
-                        .scrollFade()
-                    wakeupCompact
-                        .staggered(4, appeared: appeared)
-                        .scrollFade()
-                    settingsSection
-                        .staggered(5, appeared: appeared)
-                        .scrollFade()
-                    appearanceSection
-                        .staggered(6, appeared: appeared)
                         .scrollFade()
                 }
                 .padding(.horizontal, 16)
@@ -218,170 +268,75 @@ struct ProfileView: View {
         }
     }
 
-    // MARK: - Hero identité + Life Score
+    // MARK: - Facettes
 
-    private var heroCard: some View {
-        let score = lifeScore
-        let ringColor = scoreColor(score)
-        let streak = EngagementTracker.shared.consecutiveDays
-        let displayName = name.isEmpty ? "Mon profil" : name.prefix(1).uppercased() + name.dropFirst()
-        let initial = name.isEmpty ? "L" : String(name.prefix(1)).uppercased()
-        let greeting: String = {
-            switch Calendar.current.component(.hour, from: .now) {
-            case 5..<12: return "Bonjour"
-            case 12..<18: return "Bon après-midi"
-            default: return "Bonsoir"
-            }
-        }()
-
-        return ZStack(alignment: .topTrailing) {
-            Circle()
-                .fill(RadialGradient(colors: [ringColor.opacity(0.30), .clear],
-                                     center: .center, startRadius: 0, endRadius: 130))
-                .frame(width: 260, height: 260)
-                .blur(radius: 20)
-                .offset(x: 70, y: -70)
-                .allowsHitTesting(false)
-
-            VStack(spacing: 18) {
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(.white.opacity(0.12))
-                            .frame(width: 44, height: 44)
-                        Text(initial)
-                            .font(.system(size: 18, weight: .black, design: .rounded))
-                            .foregroundStyle(.white)
-                    }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(greeting)
-                            .monoLabel(10)
-                            .foregroundStyle(.white.opacity(0.55))
-                        Text(displayName)
-                            .font(.system(size: 22, weight: .black, design: .rounded))
-                            .foregroundStyle(.white)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-                    Spacer()
-                    if streak > 0 {
-                        HStack(spacing: 5) {
-                            Image(systemName: "flame.fill")
-                                .font(.system(size: 13, weight: .bold))
-                                .foregroundStyle(Color(hex: 0xE0A23C))
-                            Text("\(streak)")
-                                .font(.system(size: 14, weight: .black, design: .rounded).monospacedDigit())
-                                .foregroundStyle(.white)
-                                .contentTransition(.numericText())
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(.white.opacity(0.10), in: Capsule())
-                    }
-                }
-
-                HStack(spacing: 24) {
-                    ZStack {
-                        Circle()
-                            .stroke(.white.opacity(0.08), lineWidth: 10)
-                            .frame(width: 110, height: 110)
-                        Circle()
-                            .trim(from: 0, to: appeared ? CGFloat(score) / 100 : 0)
-                            .stroke(ringColor, style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                            .frame(width: 110, height: 110)
-                            .rotationEffect(.degrees(-90))
-                            .animation(
-                                reduceMotion ? .easeOut(duration: 0.2)
-                                             : .spring(duration: 1.2, bounce: 0.1).delay(0.4),
-                                value: appeared
-                            )
-                        VStack(spacing: 0) {
-                            Text("\(score)")
-                                .font(.system(size: 34, weight: .black, design: .rounded).monospacedDigit())
-                                .foregroundStyle(.white)
-                                .contentTransition(.numericText())
-                                .animation(.spring(duration: 0.5), value: score)
-                            Text("/ 100")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.5))
-                        }
-                    }
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Life Score")
-                            .monoLabel(10)
-                            .foregroundStyle(.white.opacity(0.55))
-                        heroComponent(icon: "drop.fill", ratio: waterRatio, color: Color(hex: 0x3CB2E0))
-                        heroComponent(icon: "flame.fill", ratio: kcalRatio, color: Color(hex: 0xF1746C))
-                        heroComponent(icon: "checklist", ratio: habitRatio, color: Color(hex: 0x9B6CF1))
-                        heroComponent(icon: "figure.run", ratio: stepRatio, color: Color(hex: 0x4CC38A))
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-
-                Rectangle()
-                    .fill(.white.opacity(0.08))
-                    .frame(height: 1)
-
-                HStack(spacing: 0) {
-                    heroStat("\(streak)", "d'affilée")
-                    Rectangle().fill(.white.opacity(0.08)).frame(width: 1, height: 30)
-                    heroStat("\(EngagementTracker.shared.totalDays)", "jours actifs")
-                    Rectangle().fill(.white.opacity(0.08)).frame(width: 1, height: 30)
-                    heroStat("\(habitsWeekCount)", "habitudes / 7 j")
-                }
-            }
-            .padding(20)
+    private var facetBar: some View {
+        HStack(alignment: .top, spacing: 28) {
+            facetTab(0, "01", "Pulse")
+            facetTab(1, "02", "Contrôle")
+            Spacer()
         }
-        .background(
-            LinearGradient(colors: [Color(hex: 0x0D1B2A), Color(hex: 0x162636)],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(.white.opacity(0.06), lineWidth: 1)
-        )
-        .shadowMd()
+        .padding(.horizontal, 4)
+        .sensoryFeedback(.selection, trigger: facet)
     }
 
-    private func heroComponent(icon: String, ratio: Double, color: Color) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 10, weight: .bold))
-                .foregroundStyle(color)
-                .frame(width: 16)
-            GeometryReader { g in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(.white.opacity(0.08))
-                        .frame(height: 4)
-                    Capsule()
-                        .fill(color)
-                        .frame(width: g.size.width * (appeared ? ratio : 0), height: 4)
-                        .animation(
-                            reduceMotion ? .easeOut(duration: 0.2)
-                                         : .spring(duration: 0.9, bounce: 0.1).delay(0.5),
-                            value: appeared
-                        )
+    private func facetTab(_ idx: Int, _ code: String, _ title: String) -> some View {
+        Button {
+            withAnimation(.spring(duration: 0.4, bounce: 0.15)) { facet = idx }
+        } label: {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(code)
+                    .monoLabel(9)
+                    .foregroundStyle(facet == idx ? AnyShapeStyle(Theme.volt) : AnyShapeStyle(.tertiary))
+                Text(title)
+                    .font(.system(size: 20, weight: .black))
+                    .textCase(.uppercase)
+                    .kerning(-0.3)
+                    .foregroundStyle(facet == idx ? Color.primary : Color.secondary.opacity(0.45))
+                ZStack {
+                    if facet == idx {
+                        Capsule()
+                            .fill(Theme.volt)
+                            .frame(height: 3)
+                            .matchedGeometryEffect(id: "facetline", in: facetNS)
+                    } else {
+                        Color.clear.frame(height: 3)
+                    }
                 }
             }
-            .frame(height: 4)
+        }
+        .buttonStyle(LifeOSPressStyle())
+    }
+
+    @ViewBuilder private var facetContent: some View {
+        if facet == 0 {
+            VStack(spacing: 24) {
+                weekCard
+                challengesSection
+            }
+            .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
+        } else {
+            VStack(spacing: 24) {
+                wakeupCompact
+                settingsSection
+                appearanceSection
+            }
+            .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
         }
     }
 
-    private func heroStat(_ value: String, _ label: String) -> some View {
-        VStack(spacing: 2) {
-            Text(value)
-                .font(.system(size: 17, weight: .black, design: .rounded).monospacedDigit())
-                .foregroundStyle(.white)
-                .contentTransition(.numericText())
-            Text(label)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(.white.opacity(0.55))
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+    private var restoreHiddenButton: some View {
+        Button {
+            withAnimation(.spring(duration: 0.38, bounce: 0.1)) { profileHiddenRaw = "" }
+        } label: {
+            Text("Afficher \(hiddenGoals.count) module\(hiddenGoals.count > 1 ? "s" : "") masqué\(hiddenGoals.count > 1 ? "s" : "")")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .surface(radius: 16)
         }
-        .frame(maxWidth: .infinity)
+        .buttonStyle(LifeOSPressStyle())
     }
 
     // MARK: - Ma semaine
@@ -604,7 +559,7 @@ struct ProfileView: View {
         .surface()
     }
 
-    // MARK: - Accès rapides
+    // MARK: - Modules (épingler / masquer)
 
     private var hiddenGoals: Set<String> {
         Set(profileHiddenRaw.split(separator: ",").map(String.init))
@@ -634,77 +589,7 @@ struct ProfileView: View {
             if lp != rp { return lp }
             return l.offset < r.offset
         }.map(\.element)
-        return Array(ordered.prefix(4))
-    }
-
-    private var quickAccessSection: some View {
-        let pinned = Set(profilePinnedRaw.split(separator: ",").map(String.init))
-        return VStack(alignment: .leading, spacing: 12) {
-            Text("Accès rapides")
-                .font(.system(size: 20, weight: .black))
-                .textCase(.uppercase)
-                .kerning(-0.3)
-                .padding(.horizontal, 4)
-
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-                ForEach(quickAccessModules, id: \.rawValue) { mod in
-                    NavigationLink(value: mod) {
-                        quickTile(mod)
-                    }
-                    .buttonStyle(LifeOSPressStyle())
-                    .contextMenu {
-                        Button {
-                            withAnimation(.spring(duration: 0.38, bounce: 0.1)) { pinGoal(mod.rawValue) }
-                        } label: {
-                            Label(pinned.contains(mod.rawValue) ? "Désépingler" : "Épingler en premier",
-                                  systemImage: pinned.contains(mod.rawValue) ? "pin.slash" : "pin.fill")
-                        }
-                        Button(role: .destructive) {
-                            withAnimation(.spring(duration: 0.38, bounce: 0.1)) { toggleHideGoal(mod.rawValue) }
-                        } label: { Label("Masquer", systemImage: "eye.slash") }
-                    }
-                }
-            }
-
-            if !hiddenGoals.isEmpty {
-                Button {
-                    withAnimation(.spring(duration: 0.38, bounce: 0.1)) { profileHiddenRaw = "" }
-                } label: {
-                    Text("Afficher \(hiddenGoals.count) module\(hiddenGoals.count > 1 ? "s" : "") masqué\(hiddenGoals.count > 1 ? "s" : "")")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .surface(radius: 16)
-                }
-                .buttonStyle(LifeOSPressStyle())
-            }
-        }
-    }
-
-    private func quickTile(_ mod: AppCategory) -> some View {
-        HStack(spacing: 10) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .fill(mod.tint.opacity(0.14))
-                    .frame(width: 36, height: 36)
-                Image(systemName: mod.icon)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(mod.tint)
-            }
-            Text(mod.title)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-            Spacer(minLength: 0)
-            Image(systemName: "chevron.right")
-                .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(.tertiary)
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
-        .surface(radius: 16)
+        return Array(ordered.prefix(6))
     }
 
     // MARK: - Réveil compact
@@ -997,5 +882,274 @@ struct ProfileView: View {
                 await AlarmLiveActivityManager.shared.startScheduled(alarmTimeString: timeString)
             }
         }
+    }
+}
+
+// MARK: - OrbitHero — système orbital (orbe Life Score + satellites)
+
+private struct OrbitHero: View {
+    let displayName: String
+    let initial: String
+    let greeting: String
+    let score: Int
+    let scoreColor: Color
+    let streak: Int
+    let totalDays: Int
+    let habitsWeek: Int
+    let satellites: [OrbitSatellite]
+    let appeared: Bool
+    let pinnedIDs: Set<String>
+    let onPin: (AppCategory) -> Void
+    let onHide: (AppCategory) -> Void
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        VStack(spacing: 16) {
+            identityRow
+            orbitalField
+                .frame(height: 340)
+            Rectangle()
+                .fill(.white.opacity(0.08))
+                .frame(height: 1)
+            statsRow
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity)
+        .background(
+            LinearGradient(colors: [Color(hex: 0x0D1B2A), Color(hex: 0x162636)],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .strokeBorder(.white.opacity(0.06), lineWidth: 1)
+        )
+        .shadowMd()
+    }
+
+    // MARK: Identité
+
+    private var identityRow: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(.white.opacity(0.12))
+                    .frame(width: 40, height: 40)
+                Text(initial)
+                    .font(.system(size: 16, weight: .black, design: .rounded))
+                    .foregroundStyle(.white)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(greeting)
+                    .monoLabel(10)
+                    .foregroundStyle(.white.opacity(0.55))
+                Text(displayName)
+                    .font(.system(size: 22, weight: .black, design: .rounded))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            Spacer()
+            if streak > 0 {
+                HStack(spacing: 5) {
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(Color(hex: 0xE0A23C))
+                    Text("\(streak)")
+                        .font(.system(size: 14, weight: .black, design: .rounded).monospacedDigit())
+                        .foregroundStyle(.white)
+                        .contentTransition(.numericText())
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(.white.opacity(0.10), in: Capsule())
+            }
+        }
+    }
+
+    // MARK: Champ orbital
+
+    private var orbitalField: some View {
+        TimelineView(.animation(minimumInterval: 0.1, paused: reduceMotion)) { tl in
+            let phase = reduceMotion ? 0.0
+                : tl.date.timeIntervalSinceReferenceDate
+                    .truncatingRemainder(dividingBy: 360) * (2 * .pi / 360)
+            ZStack {
+                Circle()
+                    .stroke(.white.opacity(0.10), style: StrokeStyle(lineWidth: 1, dash: [2, 6]))
+                    .frame(width: 252, height: 252)
+
+                connections(phase: phase)
+
+                coreOrb
+
+                ForEach(Array(satellites.enumerated()), id: \.element.id) { i, sat in
+                    satelliteNode(sat, index: i)
+                        .offset(x: cos(angle(i, phase)) * 126,
+                                y: sin(angle(i, phase)) * 126)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private func angle(_ i: Int, _ phase: Double) -> Double {
+        -Double.pi / 2 + Double(i) * (2 * .pi / Double(max(1, satellites.count))) + phase
+    }
+
+    private func connections(phase: Double) -> some View {
+        Canvas { ctx, size in
+            let c = CGPoint(x: size.width / 2, y: size.height / 2)
+            for (i, sat) in satellites.enumerated() {
+                let a = angle(i, phase)
+                var p = Path()
+                p.move(to: CGPoint(x: c.x + cos(a) * 92, y: c.y + sin(a) * 92))
+                p.addLine(to: CGPoint(x: c.x + cos(a) * 100, y: c.y + sin(a) * 100))
+                ctx.stroke(p, with: .color(sat.category.tint.opacity(0.35)),
+                           style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    // MARK: Orbe central
+
+    private var coreOrb: some View {
+        ZStack {
+            Circle()
+                .fill(RadialGradient(colors: [scoreColor.opacity(0.35), .clear],
+                                     center: .center, startRadius: 0, endRadius: 110))
+                .frame(width: 220, height: 220)
+                .blur(radius: 18)
+                .allowsHitTesting(false)
+
+            ForEach(0..<60, id: \.self) { i in
+                Capsule()
+                    .fill(.white.opacity(i % 5 == 0 ? 0.30 : 0.12))
+                    .frame(width: 1.5, height: i % 5 == 0 ? 7 : 4)
+                    .offset(y: -84)
+                    .rotationEffect(.degrees(Double(i) * 6))
+            }
+
+            Circle()
+                .stroke(.white.opacity(0.08), lineWidth: 9)
+                .frame(width: 144, height: 144)
+            Circle()
+                .trim(from: 0, to: appeared ? CGFloat(score) / 100 : 0)
+                .stroke(AngularGradient(colors: [scoreColor.opacity(0.25), scoreColor], center: .center),
+                        style: StrokeStyle(lineWidth: 9, lineCap: .round))
+                .frame(width: 144, height: 144)
+                .rotationEffect(.degrees(-90))
+                .animation(
+                    reduceMotion ? .easeOut(duration: 0.2)
+                                 : .spring(duration: 1.3, bounce: 0.1).delay(0.4),
+                    value: appeared
+                )
+
+            Circle()
+                .fill(.white.opacity(0.05))
+                .frame(width: 118, height: 118)
+            Circle()
+                .strokeBorder(.white.opacity(0.08), lineWidth: 1)
+                .frame(width: 118, height: 118)
+
+            VStack(spacing: 2) {
+                Text("\(score)")
+                    .font(.system(size: 40, weight: .black, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.white)
+                    .contentTransition(.numericText())
+                    .animation(.spring(duration: 0.5), value: score)
+                Text("Life Score")
+                    .monoLabel(8)
+                    .foregroundStyle(.white.opacity(0.5))
+            }
+        }
+    }
+
+    // MARK: Satellites
+
+    private func satelliteNode(_ sat: OrbitSatellite, index i: Int) -> some View {
+        NavigationLink(value: sat.category) {
+            ZStack {
+                Circle()
+                    .fill(.white.opacity(0.08))
+                    .frame(width: 52, height: 52)
+                Circle()
+                    .strokeBorder(.white.opacity(0.10), lineWidth: 1)
+                    .frame(width: 52, height: 52)
+                if let progress = sat.progress {
+                    Circle()
+                        .trim(from: 0, to: appeared ? CGFloat(progress) : 0)
+                        .stroke(sat.category.tint, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                        .frame(width: 52, height: 52)
+                        .rotationEffect(.degrees(-90))
+                        .animation(
+                            reduceMotion ? .easeOut(duration: 0.2)
+                                         : .spring(duration: 0.9, bounce: 0.1).delay(0.5 + Double(i) * 0.08),
+                            value: appeared
+                        )
+                }
+                Image(systemName: sat.category.icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(sat.category.tint)
+            }
+            .overlay(alignment: .center) {
+                Text(sat.category.title)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.65))
+                    .lineLimit(1)
+                    .fixedSize()
+                    .offset(y: 36)
+            }
+        }
+        .buttonStyle(LifeOSPressStyle())
+        .contextMenu {
+            Button {
+                onPin(sat.category)
+            } label: {
+                Label(pinnedIDs.contains(sat.category.rawValue) ? "Désépingler" : "Épingler en premier",
+                      systemImage: pinnedIDs.contains(sat.category.rawValue) ? "pin.slash" : "pin.fill")
+            }
+            Button(role: .destructive) {
+                onHide(sat.category)
+            } label: {
+                Label("Masquer", systemImage: "eye.slash")
+            }
+        }
+        .scaleEffect(appeared ? 1 : 0.5)
+        .opacity(appeared ? 1 : 0)
+        .animation(
+            reduceMotion ? .easeOut(duration: 0.2)
+                         : .spring(duration: 0.6, bounce: 0.25).delay(0.3 + Double(i) * 0.07),
+            value: appeared
+        )
+    }
+
+    // MARK: Stats
+
+    private var statsRow: some View {
+        HStack(spacing: 0) {
+            heroStat("\(streak)", "d'affilée")
+            Rectangle().fill(.white.opacity(0.08)).frame(width: 1, height: 30)
+            heroStat("\(totalDays)", "jours actifs")
+            Rectangle().fill(.white.opacity(0.08)).frame(width: 1, height: 30)
+            heroStat("\(habitsWeek)", "habitudes / 7 j")
+        }
+    }
+
+    private func heroStat(_ value: String, _ label: String) -> some View {
+        VStack(spacing: 2) {
+            Text(value)
+                .font(.system(size: 17, weight: .black, design: .rounded).monospacedDigit())
+                .foregroundStyle(.white)
+                .contentTransition(.numericText())
+            Text(label)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(.white.opacity(0.55))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
