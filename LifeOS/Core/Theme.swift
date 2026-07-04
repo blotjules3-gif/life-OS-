@@ -332,8 +332,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
                      Color(hex: 0xEDF1F8), Color(hex: 0xF4F7FC), Color(hex: 0xF0F4FA) ]
         }
     }
-    /// Nike = thèmes bright/dark (noir & blanc + volt).
-    var isNike: Bool { self == .classic || self == .dark }
+    /// Nike = thèmes à grille technique (clair/sombre/vert).
+    var isNike: Bool { self == .classic || self == .dark || self == .volt }
     var isGlass: Bool { self == .glass }
     /// Thèmes « modernes » (Nike + Verre) → grille de catégories façon Nike (pas les bulles).
     var isModern: Bool { isNike || isGlass }
