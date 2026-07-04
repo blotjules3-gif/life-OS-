@@ -1008,7 +1008,7 @@ private struct OrbitHero: View {
     private var coreOrb: some View {
         ZStack {
             Circle()
-                .fill(RadialGradient(colors: [scoreColor.opacity(0.35), .clear],
+                .fill(RadialGradient(colors: [Color.accentColor.opacity(0.16), .clear],
                                      center: .center, startRadius: 0, endRadius: 110))
                 .frame(width: 220, height: 220)
                 .blur(radius: 18)
@@ -1016,18 +1016,18 @@ private struct OrbitHero: View {
 
             ForEach(0..<60, id: \.self) { i in
                 Capsule()
-                    .fill(.white.opacity(i % 5 == 0 ? 0.30 : 0.12))
+                    .fill(Color.primary.opacity(i % 5 == 0 ? 0.30 : 0.10))
                     .frame(width: 1.5, height: i % 5 == 0 ? 7 : 4)
                     .offset(y: -84)
                     .rotationEffect(.degrees(Double(i) * 6))
             }
 
             Circle()
-                .stroke(.white.opacity(0.08), lineWidth: 9)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 9)
                 .frame(width: 144, height: 144)
             Circle()
                 .trim(from: 0, to: appeared ? CGFloat(score) / 100 : 0)
-                .stroke(AngularGradient(colors: [scoreColor.opacity(0.25), scoreColor], center: .center),
+                .stroke(AngularGradient(colors: [Color.accentColor.opacity(0.25), Color.accentColor], center: .center),
                         style: StrokeStyle(lineWidth: 9, lineCap: .round))
                 .frame(width: 144, height: 144)
                 .rotationEffect(.degrees(-90))
@@ -1038,21 +1038,21 @@ private struct OrbitHero: View {
                 )
 
             Circle()
-                .fill(.white.opacity(0.05))
+                .fill(Color.primary.opacity(0.03))
                 .frame(width: 118, height: 118)
             Circle()
-                .strokeBorder(.white.opacity(0.08), lineWidth: 1)
+                .strokeBorder(Theme.hairline, lineWidth: 1)
                 .frame(width: 118, height: 118)
 
             VStack(spacing: 2) {
                 Text("\(score)")
                     .font(.system(size: 40, weight: .black, design: .rounded).monospacedDigit())
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
                     .contentTransition(.numericText())
                     .animation(.spring(duration: 0.5), value: score)
                 Text("Life Score")
                     .monoLabel(8)
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(.secondary)
             }
         }
     }
