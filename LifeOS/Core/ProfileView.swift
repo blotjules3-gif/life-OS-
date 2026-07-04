@@ -1087,7 +1087,7 @@ private struct OrbitHero: View {
             .overlay(alignment: .center) {
                 Text(sat.category.title)
                     .font(.system(size: 9, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.65))
+                    .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .fixedSize()
                     .offset(y: 36)
