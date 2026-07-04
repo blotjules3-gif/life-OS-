@@ -391,12 +391,12 @@ struct ProfileView: View {
     private var weekCard: some View {
         let cal = Calendar.current
         let todayStart = cal.startOfDay(for: .now)
-        return VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Text("MA SEMAINE")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.secondary)
-                    .kerning(1.2)
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Ma semaine")
+                    .font(.system(size: 20, weight: .black))
+                    .textCase(.uppercase)
+                    .kerning(-0.3)
                 Spacer()
                 if let delta = weekDelta {
                     let up = delta >= 0
@@ -412,7 +412,16 @@ struct ProfileView: View {
                     .background((up ? Color(hex: 0x4CC38A) : Color(hex: 0xF1746C)).opacity(0.12), in: Capsule())
                 }
             }
+            .padding(.horizontal, 4)
 
+            weekCardBody
+        }
+    }
+
+    @ViewBuilder private var weekCardBody: some View {
+        let cal = Calendar.current
+        let todayStart = cal.startOfDay(for: .now)
+        VStack(alignment: .leading, spacing: 14) {
             if habits.isEmpty {
                 Text("Crée des habitudes pour suivre ta progression semaine par semaine.")
                     .font(.system(size: 12))
