@@ -89,14 +89,17 @@ enum BubbleSize: String, CaseIterable {
 struct CategoryHubView: View {
     let category: AppCategory
 
-    // Les sous-catégories sont verrouillées en bulles libres (voir `layout`).
+    // Affichage propre aux sous-catégories, réglable via le bouton du hub.
+    // Défaut = tuiles d'icônes (propre, label sous la tuile).
+    @AppStorage("hubLayout")  private var layoutRaw = "icons"
+    // Bascule une seule fois les anciens réglages (bulles) vers le nouveau défaut.
+    @AppStorage("hubLayoutMigratedToIcons") private var hubMigrated = false
     @AppStorage("appTheme")   private var appThemeRaw = "classic"
     @AppStorage("bubbleSize") private var bubbleSizeRaw = "medium"
     @State private var cover: CategoryTool?
     @State private var showSetup = false
 
-    // Les sous-catégories restent TOUJOURS en bulles libres (choix verrouillé).
-    private var layout: CatLayout { .organic }
+    private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .organic }
     private var theme: AppTheme   { AppTheme(rawValue: appThemeRaw) ?? .classic }
     private var tools: [CategoryTool] { category.tools }
     private var sizeFactor: CGFloat { BubbleSize(rawValue: bubbleSizeRaw)?.factor ?? 1.0 }
@@ -107,6 +110,15 @@ struct CategoryHubView: View {
             .navigationBarTitleDisplayMode(layout == .list ? .large : .inline)
             .fullScreenCover(item: $cover) { $0.dest() }
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Picker("Affichage", selection: $layoutRaw) {
+                            ForEach(CatLayout.allCases, id: \.rawValue) { l in
+                                Label(l.label, systemImage: l.symbol).tag(l.rawValue)
+                            }
+                        }
+                    } label: { Image(systemName: layout.symbol) }
+                }
                 if CategorySetup.hasFlow(category) {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button { showSetup = true } label: { Image(systemName: "slider.horizontal.3") }
@@ -116,6 +128,7 @@ struct CategoryHubView: View {
             }
             .fullScreenCover(isPresented: $showSetup) { setupFlow }
             .onAppear {
+                if !hubMigrated { hubMigrated = true; layoutRaw = "icons" }
                 if CategorySetup.shouldAutoPrompt(category) {
                     CategorySetup.markPrompted(category)
                     showSetup = true
@@ -274,9 +287,19 @@ struct CategoryHubView: View {
             rows[rows.count - 2] -= 1; rows[rows.count - 1] = 2
         }
 
-        let rowH = d + gap * 0.5
+        // Répartition verticale : on centre le cluster et on étale les rangées pour
+        // remplir l'écran (plus de gros vide en bas), sans jamais faire chevaucher.
+        let topPad: CGFloat = 20
+        let barClear: CGFloat = 120                    // dégage la barre d'onglets flottante
+        let usableH = max(availH - topPad - barClear, d)
+        let rowsN = rows.count
+        let rowStep: CGFloat = rowsN > 1
+            ? max(d + gap * 0.5, min((usableH - d) / CGFloat(rowsN - 1), d + 44))
+            : 0
+        let usedH = rowStep * CGFloat(max(rowsN - 1, 0)) + d
+
         var result: [(CGPoint, CGFloat)] = []
-        var y = d / 2 + 18
+        var y = topPad + max(0, (usableH - usedH) / 2) + d / 2
         for c in rows {
             let rowW = CGFloat(c) * d + CGFloat(c - 1) * gap
             let startX = (w - rowW) / 2
@@ -284,9 +307,10 @@ struct CategoryHubView: View {
                 let x = startX + CGFloat(col) * (d + gap) + d / 2
                 result.append((CGPoint(x: x, y: y), d))
             }
-            y += rowH
+            y += rowStep
         }
-        let contentH = max(availH, y + d / 2 + 130)   // +130 = dégage la barre d'onglets flottante
+        let lastCenterY = y - rowStep
+        let contentH = max(availH, lastCenterY + d / 2 + barClear)
         return (result, contentH)
     }
 
@@ -423,22 +447,20 @@ struct CategoryHubView: View {
     private var bubbleStyle: BubbleStyle {
         var s = BubbleStyle()
         if theme == .gothic { s.metal = 1; s.colorGlow = 0; s.whiteGlow = 0 }
+        else {
+            // Bulles NOIRES : centre quasi opaque (pas de fond qui traverse → vrai noir),
+            // on garde juste le reflet glossy en haut.
+            s.coreAlpha = 0.97
+            s.rimAlpha  = 0.95
+            s.colorGlow = 0
+            s.whiteGlow = 0.08
+        }
         return s
     }
 
-    // Teinte selon le thème (même logique que la grille de catégories).
-    private func themedTint(_ tool: CategoryTool) -> Color {
-        switch theme {
-        case .classic, .dark, .glass: return tool.tint
-        case .pinky:  return [Color(hex: 0xFF4F9D), Color(hex: 0xFF77B5), Color(hex: 0xF06EA9),
-                              Color(hex: 0xFF8AC4), Color(hex: 0xE85C9E)][stableIndex(tool) % 5]
-        case .gothic: return [Color(hex: 0xAEB7C4), Color(hex: 0xC6CED9), Color(hex: 0x99A3B2),
-                              Color(hex: 0xD2D8E1), Color(hex: 0xB4BCC8)][stableIndex(tool) % 5]
-        case .cloud:  return [Color(hex: 0xC3D2E8), Color(hex: 0xD2DEEE), Color(hex: 0xB7C8E2),
-                              Color(hex: 0xCBD8EC), Color(hex: 0xDCE5F2)][stableIndex(tool) % 5]
-        }
-    }
-    private func stableIndex(_ tool: CategoryTool) -> Int { tools.firstIndex(of: tool) ?? 0 }
+    // Bulles NOIR & BLANC : plus aucune couleur, verre noir uniforme dans tous les thèmes
+    // (glyphe + label blancs). Le thème Argent (gothic) garde son rendu chrome.
+    private func themedTint(_ tool: CategoryTool) -> Color { Color(white: 0.02) }
 }
 
 // MARK: - Données : outils par catégorie (référencent les vues détail des modules)

@@ -79,28 +79,37 @@ struct TimerDial: View {
 }
 
 enum Haptics {
+    /// Réglage global (Profil › Sons & vibrations). Absent = activé par défaut.
+    static var enabled: Bool {
+        UserDefaults.standard.object(forKey: "hapticsEnabled") as? Bool ?? true
+    }
     static func success() {
         #if canImport(UIKit)
+        guard enabled else { return }
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         #endif
     }
     static func tap() {
         #if canImport(UIKit)
+        guard enabled else { return }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         #endif
     }
     static func soft() {
         #if canImport(UIKit)
+        guard enabled else { return }
         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
         #endif
     }
     static func medium() {
         #if canImport(UIKit)
+        guard enabled else { return }
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         #endif
     }
     static func warning() {
         #if canImport(UIKit)
+        guard enabled else { return }
         UINotificationFeedbackGenerator().notificationOccurred(.warning)
         #endif
     }
