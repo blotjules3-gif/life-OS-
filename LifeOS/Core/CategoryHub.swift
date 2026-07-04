@@ -90,8 +90,10 @@ struct CategoryHubView: View {
     let category: AppCategory
 
     // Affichage propre aux sous-catégories, réglable via le bouton du hub.
-    // Défaut = bulles libres.
-    @AppStorage("hubLayout")  private var layoutRaw = "organic"
+    // Défaut = tuiles d'icônes (propre, label sous la tuile).
+    @AppStorage("hubLayout")  private var layoutRaw = "icons"
+    // Bascule une seule fois les anciens réglages (bulles) vers le nouveau défaut.
+    @AppStorage("hubLayoutMigratedToIcons") private var hubMigrated = false
     @AppStorage("appTheme")   private var appThemeRaw = "classic"
     @AppStorage("bubbleSize") private var bubbleSizeRaw = "medium"
     @State private var cover: CategoryTool?
@@ -126,6 +128,7 @@ struct CategoryHubView: View {
             }
             .fullScreenCover(isPresented: $showSetup) { setupFlow }
             .onAppear {
+                if !hubMigrated { hubMigrated = true; layoutRaw = "icons" }
                 if CategorySetup.shouldAutoPrompt(category) {
                     CategorySetup.markPrompted(category)
                     showSetup = true
