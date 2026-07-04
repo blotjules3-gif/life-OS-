@@ -307,10 +307,9 @@ struct ProfileView: View {
                         }
                     }
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("LIFE SCORE")
-                            .font(.system(size: 10, weight: .bold))
+                        Text("Life Score")
+                            .monoLabel(10)
                             .foregroundStyle(.white.opacity(0.55))
-                            .kerning(1.5)
                         heroComponent(icon: "drop.fill", ratio: waterRatio, color: Color(hex: 0x3CB2E0))
                         heroComponent(icon: "flame.fill", ratio: kcalRatio, color: Color(hex: 0xF1746C))
                         heroComponent(icon: "checklist", ratio: habitRatio, color: Color(hex: 0x9B6CF1))
