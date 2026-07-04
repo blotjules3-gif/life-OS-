@@ -904,20 +904,16 @@ private struct OrbitHero: View {
             orbitalField
                 .frame(height: 340)
             Rectangle()
-                .fill(.white.opacity(0.08))
+                .fill(Color.primary.opacity(0.06))
                 .frame(height: 1)
             statsRow
         }
         .padding(20)
         .frame(maxWidth: .infinity)
-        .background(
-            LinearGradient(colors: [Color(hex: 0x0D1B2A), Color(hex: 0x162636)],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(.white.opacity(0.06), lineWidth: 1)
+                .strokeBorder(Theme.hairline, lineWidth: 1)
         )
         .shadowMd()
     }
