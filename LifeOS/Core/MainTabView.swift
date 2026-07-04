@@ -442,12 +442,11 @@ struct HomeDashboardContent: View {
             .background(Theme.bg)
             .navigationTitle(greeting)
             .task {
-                if await HealthService.shared.requestAuthorization() {
-                    async let s = HealthService.shared.cachedStepsToday()
-                    async let w = HealthService.shared.workoutsThisWeek()
-                    steps = await s
-                    weekWorkouts = await w
-                }
+                // Lecture silencieuse (pas de pop-up Santé au lancement).
+                async let s = HealthService.shared.cachedStepsToday()
+                async let w = HealthService.shared.workoutsThisWeek()
+                steps = await s
+                weekWorkouts = await w
             }
     }
 

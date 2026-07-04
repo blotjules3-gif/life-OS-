@@ -173,8 +173,9 @@ struct DailyScoreRing: View {
     private var isToday: Bool { Calendar.current.isDateInToday(selected) }
 
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 14) {
             orb
+            streakPill
             weekStrip
         }
         .frame(maxWidth: .infinity)
@@ -252,6 +253,35 @@ struct DailyScoreRing: View {
             .frame(width: 244, height: 244)
         }
         .buttonStyle(PressableButtonStyle())
+    }
+
+    // Série : jours consécutifs (jusqu'à aujourd'hui) avec un score « bonne journée ».
+    // La journée en cours ne casse pas la série tant qu'elle n'est pas finie.
+    private func computeStreak(threshold: Int = 50) -> Int {
+        let cal = Calendar.current
+        var day = cal.startOfDay(for: .now)
+        if score(day) < threshold { day = cal.date(byAdding: .day, value: -1, to: day) ?? day }
+        var n = 0
+        while score(day) >= threshold, n < 400 {
+            n += 1
+            day = cal.date(byAdding: .day, value: -1, to: day) ?? day
+        }
+        return n
+    }
+
+    private var streakPill: some View {
+        let n = computeStreak()
+        let on = n > 0
+        let flame = Color(hex: 0xFF7A1A)
+        return HStack(spacing: 6) {
+            Image(systemName: "flame.fill").font(.system(size: 13, weight: .bold))
+                .foregroundStyle(on ? flame : Theme.textSecondary.opacity(0.55))
+            Text(on ? "\(n) jour\(n > 1 ? "s" : "") de série" : "Démarre ta série aujourd'hui")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(on ? Theme.textPrimary : Theme.textSecondary)
+        }
+        .padding(.horizontal, 13).padding(.vertical, 7)
+        .background(on ? flame.opacity(0.13) : Color.primary.opacity(0.05), in: Capsule())
     }
 
     // Bande des 7 jours de la semaine
