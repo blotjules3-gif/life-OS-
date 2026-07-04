@@ -1169,8 +1169,9 @@ struct ProfileView: View {
             }
             .onAppear { appeared = true }
             .task {
-                if await HealthService.shared.requestAuthorization() {
-                    healthConnected = true
+                // Ne PAS demander Santé à l'ouverture du profil : lecture silencieuse
+                // uniquement si déjà connecté (bouton « Connecter Apple Santé »).
+                if healthConnected {
                     steps = await HealthService.shared.stepsToday()
                     activeCalories = await HealthService.shared.activeCaloriesToday()
                 }

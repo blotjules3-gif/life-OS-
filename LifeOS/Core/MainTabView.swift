@@ -417,9 +417,8 @@ struct HomeDashboardContent: View {
             .background(Theme.bg)
             .navigationTitle(greeting)
             .task {
-                if await HealthService.shared.requestAuthorization() {
-                    steps = await HealthService.shared.stepsToday()
-                }
+                // Lecture silencieuse (pas de pop-up Santé au lancement).
+                steps = await HealthService.shared.stepsToday()
             }
     }
 
