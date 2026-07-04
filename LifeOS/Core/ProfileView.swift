@@ -813,23 +813,23 @@ struct ProfileView: View {
                 .padding(.horizontal, 4)
             VStack(spacing: 12) {
                 HStack(spacing: 10) {
-                    ForEach(AppTheme.allCases) { th in
+                    ForEach(AppTheme.selectable) { th in
                         let selected = appThemeRaw == th.rawValue
                         Button {
                             withAnimation(.spring(duration: 0.38, bounce: 0.1)) { appThemeRaw = th.rawValue }
                         } label: {
                             VStack(spacing: 6) {
                                 ZStack {
-                                    Circle().fill(th.accent.gradient)
+                                    Circle().fill(th.previewFill)
                                         .frame(width: 42, height: 42)
-                                        .shadow(color: selected ? th.accent.opacity(0.35) : .clear, radius: 6, x: 2, y: 3)
+                                        .shadow(color: selected ? Color.black.opacity(0.18) : .clear, radius: 6, x: 0, y: 3)
                                     Image(systemName: th.symbol)
                                         .font(.system(size: 16, weight: .semibold))
-                                        .foregroundStyle(.white)
+                                        .foregroundStyle(th.previewIcon)
                                 }
                                 .overlay(
                                     Circle()
-                                        .stroke(th.accent, lineWidth: selected ? 2.5 : 0)
+                                        .stroke(selected ? Color.accentColor : Theme.hairline, lineWidth: selected ? 2.5 : 1)
                                         .animation(.spring(duration: 0.38, bounce: 0.15), value: selected)
                                 )
                                 .padding(2)
