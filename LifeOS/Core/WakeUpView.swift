@@ -110,7 +110,7 @@ struct WakeUpView: View {
             TimelineView(.periodic(from: .now, by: 60)) { context in
                 Text(countdownLabel(from: context.date))
                     .monoLabel(11)
-                    .foregroundStyle(wakeupEnabled ? Theme.textSecondary : .tertiary)
+                    .foregroundStyle(wakeupEnabled ? AnyShapeStyle(Theme.textSecondary) : AnyShapeStyle(.tertiary))
                     .contentTransition(.opacity)
             }
         }
