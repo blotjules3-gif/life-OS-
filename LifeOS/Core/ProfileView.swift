@@ -924,19 +924,19 @@ private struct OrbitHero: View {
         HStack(spacing: 12) {
             ZStack {
                 Circle()
-                    .fill(.white.opacity(0.12))
+                    .fill(Color.primary.opacity(0.06))
                     .frame(width: 40, height: 40)
                 Text(initial)
                     .font(.system(size: 16, weight: .black, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(greeting)
                     .monoLabel(10)
-                    .foregroundStyle(.white.opacity(0.55))
+                    .foregroundStyle(.secondary)
                 Text(displayName)
                     .font(.system(size: 22, weight: .black, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
@@ -948,12 +948,12 @@ private struct OrbitHero: View {
                         .foregroundStyle(Color(hex: 0xE0A23C))
                     Text("\(streak)")
                         .font(.system(size: 14, weight: .black, design: .rounded).monospacedDigit())
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
                         .contentTransition(.numericText())
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(.white.opacity(0.10), in: Capsule())
+                .background(Color(hex: 0xE0A23C).opacity(0.12), in: Capsule())
             }
         }
     }
