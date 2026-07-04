@@ -798,10 +798,10 @@ struct ProfileView: View {
 
     private var settingsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("RÉGLAGES")
-                .font(.system(size: 10, weight: .bold))
-                .foregroundStyle(.secondary)
-                .kerning(1.2)
+            Text("Réglages")
+                .font(.system(size: 20, weight: .black))
+                .textCase(.uppercase)
+                .kerning(-0.3)
                 .padding(.horizontal, 4)
             VStack(spacing: 0) {
                 settingsRow(icon: "heart.fill", iconColor: Color(hex: 0xF1746C),
