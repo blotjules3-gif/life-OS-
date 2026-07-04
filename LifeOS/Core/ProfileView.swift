@@ -494,15 +494,15 @@ struct ProfileView: View {
 
     private var challengesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("MES DÉFIS")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.secondary)
-                    .kerning(1.2)
+            HStack(alignment: .firstTextBaseline) {
+                Text("Mes défis")
+                    .font(.system(size: 20, weight: .black))
+                    .textCase(.uppercase)
+                    .kerning(-0.3)
                 if !challenges.isEmpty {
                     Spacer()
                     Text("\(challenges.count) actif\(challenges.count > 1 ? "s" : "")")
-                        .font(.system(size: 12, weight: .semibold))
+                        .monoLabel(10)
                         .foregroundStyle(.secondary)
                 }
             }
