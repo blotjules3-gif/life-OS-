@@ -31,5 +31,4 @@ backend/.venv/
 __pycache__/
 *.pyc
 .pytest_cache/
-.build-device/
 .last-deploy-hash
