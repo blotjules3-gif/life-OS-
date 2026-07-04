@@ -41,6 +41,7 @@ struct ProfileView: View {
     @State private var healthConnected = false
     @State private var showGoalEditor = false
     @State private var showNotificationSettings = false
+    @State private var showSoundSettings = false
     @State private var showWakeupDetail = false
     @State private var showBriefing = false
     @State private var appeared = false
@@ -223,6 +224,9 @@ struct ProfileView: View {
                     wakeupHour: $wakeupHour,
                     wakeupMinute: $wakeupMinute
                 )
+            }
+            .sheet(isPresented: $showSoundSettings) {
+                SoundHapticsSettingsView()
             }
             .sheet(isPresented: $showWakeupDetail) {
                 WakeUpPersonalizationSheet(
@@ -708,6 +712,12 @@ struct ProfileView: View {
                     showNotificationSettings = true
                 }
                 Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
+                settingsRow(icon: "speaker.wave.2.fill", iconColor: Color(hex: 0x5B8DEF), label: "Sons & vibrations") {
+                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
+                } action: {
+                    showSoundSettings = true
+                }
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
                 settingsRow(icon: "slider.horizontal.3", iconColor: Color.accentColor, label: "Modifier mes objectifs") {
                     Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
                 } action: {
@@ -1144,5 +1154,51 @@ private struct OrbitHero: View {
                 .minimumScaleFactor(0.7)
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Réglages Sons & vibrations
+
+struct SoundHapticsSettingsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage("timerSoundEnabled") private var timerSound = true
+    @AppStorage("hapticsEnabled")    private var haptics = true
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Toggle(isOn: $timerSound) {
+                        Label("Sons du minuteur", systemImage: "timer")
+                    }
+                    Button {
+                        TabataSound.shared.work()
+                    } label: {
+                        Label("Tester le son", systemImage: "play.circle.fill")
+                    }
+                    .disabled(!timerSound)
+                } header: {
+                    Text("Minuteur")
+                } footer: {
+                    Text("Bips au décompte, au début d'effort/repos et en fin de séance (Tabata/HIIT). Sortent sur l'enceinte, les écouteurs ou le Bluetooth connecté, même en silencieux.")
+                }
+
+                Section {
+                    Toggle(isOn: $haptics.animation()) {
+                        Label("Vibrations", systemImage: "iphone.radiowaves.left.and.right")
+                    }
+                    .onChange(of: haptics) { _, on in if on { Haptics.tap() } }
+                } footer: {
+                    Text("Retours haptiques dans toute l'app (appuis, validations, transitions du minuteur).")
+                }
+            }
+            .navigationTitle("Sons & vibrations")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("OK") { dismiss() }
+                }
+            }
+        }
     }
 }
