@@ -464,7 +464,7 @@ struct HabitsWidget: Widget {
             HabitsWidgetView(entry: entry)
         }
         .configurationDisplayName("Habitudes")
-        .description("Tes habitudes du jour — et ton défi en cours sur le grand format.")
+        .description("Tes habitudes du jour et ta progression.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryCircular, .accessoryRectangular])
     }
 }
