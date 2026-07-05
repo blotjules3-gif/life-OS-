@@ -284,7 +284,7 @@ struct ProfileView: View {
         if facet == 0 {
             VStack(spacing: 24) {
                 weekCard
-                challengesSection
+                habitsSection
             }
             .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
         } else {
