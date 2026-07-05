@@ -338,7 +338,7 @@ struct HabitsWidgetView: View {
         .padding(14)
     }
 
-    // MARK: Large — habitudes + défi
+    // MARK: Large — habitudes
 
     private var largeView: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -362,81 +362,20 @@ struct HabitsWidgetView: View {
                 .padding(.top, 12)
 
             VStack(alignment: .leading, spacing: 7) {
-                ForEach(entry.sortedHabits.prefix(5)) { h in
+                ForEach(entry.sortedHabits.prefix(8)) { h in
                     habitRow(h, chip: 23, font: 12)
                 }
-                if entry.total > 5 {
-                    Text("+ \(entry.total - 5) autre\(entry.total - 5 > 1 ? "s" : "")")
+                if entry.total > 8 {
+                    Text("+ \(entry.total - 8) autre\(entry.total - 8 > 1 ? "s" : "")")
                         .font(.system(size: 8, weight: .medium, design: .monospaced))
                         .foregroundStyle(.tertiary)
                 }
             }
             .padding(.top, 9)
 
-            Spacer(minLength: 8)
-
-            FacetHeader(code: "02", title: "Défi", accent: accent)
-
-            Group {
-                if let c = entry.challenge {
-                    challengeRow(c)
-                } else {
-                    Text("Aucun défi actif — lance-en un depuis le Profil.")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .padding(.top, 8)
+            Spacer(minLength: 0)
         }
         .padding(15)
-    }
-
-    private func challengeRow(_ c: WidgetChallengeData) -> some View {
-        HStack(spacing: 10) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(c.color.opacity(0.14))
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(c.color.opacity(0.2), lineWidth: 1)
-                Image(systemName: c.icon)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(c.color)
-            }
-            .frame(width: 34, height: 34)
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(c.title)
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.primary)
-                        .lineLimit(1)
-                    Spacer(minLength: 6)
-                    if c.durationDays > 0 {
-                        Text("J\(c.daysElapsed)/\(c.durationDays)")
-                            .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                HStack(spacing: 8) {
-                    HStack(spacing: 3) {
-                        Image(systemName: "flame.fill")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(.orange)
-                        Text("\(c.streak) j de suite")
-                            .font(.system(size: 9, weight: .semibold))
-                            .foregroundStyle(.secondary)
-                    }
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(Color.primary.opacity(0.07))
-                            Capsule().fill(c.color)
-                                .frame(width: max(4, geo.size.width * CGFloat(c.progressFraction)))
-                        }
-                    }
-                    .frame(height: 4)
-                }
-            }
-        }
     }
 
     // MARK: Lock screen – cercle
