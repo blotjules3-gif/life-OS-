@@ -472,11 +472,11 @@ final class AIAssistantViewModel: ObservableObject {
         case .createChallenge:
             if let title = action.title, let days = action.durationDays {
                 scheduleLocalNotification(
-                    title: "Défi démarré",
+                    title: "Nouvelle habitude",
                     body: "\(title) — \(days) jours. Tu peux le faire !",
                     delay: 2
                 )
-                showToast("Défi créé : \(title)", module: nil)
+                showToast("Habitude créée : \(title)", module: nil)
             }
         case .createHabit:
             if let title = action.title {
