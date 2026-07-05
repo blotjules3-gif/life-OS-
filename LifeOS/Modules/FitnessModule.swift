@@ -400,7 +400,7 @@ struct StreaksView: View {
         let comps = Calendar.current.dateComponents([.year, .month], from: .now)
         return trainingDays.filter { Calendar.current.dateComponents([.year,.month], from: $0) == comps }.count
     }
-    private func challengeRow(_ name: String, _ value: Int, _ goal: Int) -> some View {
+    private func habitProgressRow(_ name: String, _ value: Int, _ goal: Int) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack { Text(name).font(.subheadline).foregroundStyle(Theme.textPrimary); Spacer(); Text("\(value)/\(goal)").font(.caption.bold()).foregroundStyle(value >= goal ? .green : Theme.textSecondary) }
             ProgressView(value: Double(min(value, goal)), total: Double(goal)).tint(value >= goal ? .green : .fitTint)
