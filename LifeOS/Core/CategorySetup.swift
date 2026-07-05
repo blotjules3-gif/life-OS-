@@ -46,7 +46,9 @@ struct SetupFlow: View {
     @Environment(\.dismiss) private var dismiss
     @State private var idx = 0
 
-    private var isLast: Bool { idx == pages.count - 1 }
+    private var isLast: Bool { idx >= pages.count - 1 }
+    // Sûr même si `pages` est vide (sinon pages[idx] crashe → index out of range).
+    private var canAdvance: Bool { pages.indices.contains(idx) ? pages[idx].canAdvance() : true }
 
     var body: some View {
         ZStack {
@@ -100,12 +102,14 @@ struct SetupFlow: View {
         } label: {
             Text(isLast ? "Terminer" : "Suivant")
                 .font(.headline).frame(maxWidth: .infinity).padding(.vertical, 16)
-                .background((pages[idx].canAdvance() ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Color.gray.opacity(0.3))),
+                .background((canAdvance ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Color.gray.opacity(0.3))),
                            in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .foregroundStyle(.white)
         }
-        .disabled(!pages[idx].canAdvance())
+        .disabled(!canAdvance)
         .padding(.horizontal, 18).padding(.bottom, 14).padding(.top, 6)
+        // Un setup sans page ne sert à rien → on le termine directement (évite un écran vide).
+        .onAppear { if pages.isEmpty { onComplete(); dismiss() } }
     }
 }
 
