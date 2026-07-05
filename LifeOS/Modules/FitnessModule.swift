@@ -352,7 +352,7 @@ struct GuidedStretchView: View {
     }
 }
 
-// MARK: - Streaks & défis
+// MARK: - Streaks & habitudes
 
 struct StreaksView: View {
     @Query(sort: \WorkoutSet.date, order: .reverse) private var sets: [WorkoutSet]
