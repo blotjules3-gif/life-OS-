@@ -864,10 +864,11 @@ struct ProfileView: View {
                                       @ViewBuilder trailing: () -> T, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 12) {
+                // Pastille noire + glyphe blanc, cohérent avec les tuiles (sobre). iconColor ignoré.
                 Image(systemName: icon)
-                    .font(.system(size: 12, weight: .bold)).foregroundStyle(iconColor)
+                    .font(.system(size: 12, weight: .bold)).foregroundStyle(Color(uiColor: .systemBackground))
                     .frame(width: 30, height: 30)
-                    .background(iconColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .background(Color.primary, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 Text(label).font(.system(size: 15, weight: .regular)).foregroundStyle(.primary)
                 Spacer()
                 trailing()
@@ -1009,7 +1010,7 @@ private struct OrbitHero: View {
                 var p = Path()
                 p.move(to: CGPoint(x: c.x + cos(a) * 92, y: c.y + sin(a) * 92))
                 p.addLine(to: CGPoint(x: c.x + cos(a) * 100, y: c.y + sin(a) * 100))
-                ctx.stroke(p, with: .color(sat.category.tint.opacity(0.35)),
+                ctx.stroke(p, with: .color(Color.primary.opacity(0.35)),
                            style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
             }
         }
@@ -1076,15 +1077,15 @@ private struct OrbitHero: View {
         NavigationLink(value: sat.category) {
             ZStack {
                 Circle()
-                    .fill(sat.category.tint.opacity(0.12))
+                    .fill(Color.primary.opacity(0.12))
                     .frame(width: 52, height: 52)
                 Circle()
-                    .strokeBorder(sat.category.tint.opacity(0.18), lineWidth: 1)
+                    .strokeBorder(Color.primary.opacity(0.18), lineWidth: 1)
                     .frame(width: 52, height: 52)
                 if let progress = sat.progress {
                     Circle()
                         .trim(from: 0, to: appeared ? CGFloat(progress) : 0)
-                        .stroke(sat.category.tint, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                        .stroke(Color.primary, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
                         .frame(width: 52, height: 52)
                         .rotationEffect(.degrees(-90))
                         .animation(
@@ -1095,7 +1096,7 @@ private struct OrbitHero: View {
                 }
                 Image(systemName: sat.category.icon)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(sat.category.tint)
+                    .foregroundStyle(Color.primary)
             }
             .overlay(alignment: .center) {
                 Text(sat.category.title)
