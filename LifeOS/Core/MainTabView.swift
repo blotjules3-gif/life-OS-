@@ -47,7 +47,13 @@ extension View {
 // MARK: - Conteneur principal
 
 struct MainTabView: View {
-    @State private var tab: AppTab = .home
+    // -initialTab <wakeup|home|categories|profile> : démarre sur un onglet (tests/captures).
+    @State private var tab: AppTab = {
+        if let i = ProcessInfo.processInfo.arguments.firstIndex(of: "-initialTab"),
+           i + 1 < ProcessInfo.processInfo.arguments.count,
+           let t = AppTab(rawValue: ProcessInfo.processInfo.arguments[i + 1]) { return t }
+        return .home
+    }()
     @State private var catPath: [AppCategory] = []
     @State private var showAIAssistant = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
