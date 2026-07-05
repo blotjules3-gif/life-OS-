@@ -326,40 +326,6 @@ struct EveningSummaryView: View {
         }
     }
 
-    // MARK: Active challenges card
-
-    private var activeChallengesCard: some View {
-        let active = challenges.filter { $0.is_active }
-        guard !active.isEmpty else { return AnyView(EmptyView()) }
-        return AnyView(
-            VStack(alignment: .leading, spacing: 12) {
-                Label("Défis en cours", systemImage: "flag.fill")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.primary)
-                ForEach(active.prefix(3)) { ch in
-                    HStack(spacing: 12) {
-                        Image(systemName: "flag.fill")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(AppCategory.productivity.tint)
-                            .frame(width: 30, height: 30)
-                            .background(AppCategory.productivity.tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(ch.title)
-                                .font(.system(size: 14, weight: .medium))
-                                .lineLimit(1)
-                            Text("\(ch.days_elapsed) jour\(ch.days_elapsed > 1 ? "s" : "")")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                    }
-                }
-            }
-            .padding(16)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-        )
-    }
-
     // MARK: Tomorrow prompt
 
     private var tomorrowPrompt: some View {
