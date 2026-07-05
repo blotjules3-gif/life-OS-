@@ -65,7 +65,6 @@ struct WidgetHabitsData {
 struct HabitsEntry: TimelineEntry {
     let date: Date
     let data: WidgetHabitsData
-    let challenge: WidgetChallengeData?
 
     var habits: [WidgetHabit] { data.habits }
     /// À faire d'abord, faites ensuite — l'utilisateur voit ce qui reste.
