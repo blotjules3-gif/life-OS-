@@ -611,7 +611,7 @@ struct DailyBriefingView: View {
         }
 
         if !challenges.isEmpty {
-            lines.append("Défis actifs :")
+            lines.append("Habitudes actives :")
             for ch in challenges.prefix(3) {
                 var info = "- \"\(ch.title)\" — streak \(ch.streak_days) jour\(ch.streak_days > 1 ? "s" : "")"
                 if let dur = ch.duration_days { info += ", J\(ch.days_elapsed)/\(dur)" }
