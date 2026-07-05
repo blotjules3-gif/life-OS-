@@ -70,7 +70,6 @@ struct EveningSummaryView: View {
                     metricsGrid
                     if habitsTotal > 0 { habitsCard }
                     if todayMood != nil { moodCard }
-                    activeChallengesCard
                     tomorrowPrompt
                 }
                 .padding(Theme.pad)
