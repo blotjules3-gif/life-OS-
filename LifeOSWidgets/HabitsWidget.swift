@@ -93,10 +93,6 @@ struct HabitsProvider: TimelineProvider {
                 appGroupWorking: true,
                 lastSync: .now,
                 accentHex: 0
-            ),
-            challenge: WidgetChallengeData(
-                title: "Boire 8 verres d'eau",
-                streak: 5, durationDays: 21, daysElapsed: 8, challengeType: "water"
             )
         )
     }
@@ -106,13 +102,11 @@ struct HabitsProvider: TimelineProvider {
     func getSnapshot(in context: Context, completion: @escaping (HabitsEntry) -> Void) {
         completion(context.isPreview
                    ? demoEntry()
-                   : HabitsEntry(date: .now, data: WidgetHabitsData.load(),
-                                 challenge: WidgetChallengeData.fromSharedDefaults))
+                   : HabitsEntry(date: .now, data: WidgetHabitsData.load()))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<HabitsEntry>) -> Void) {
-        let entry = HabitsEntry(date: .now, data: WidgetHabitsData.load(),
-                                challenge: WidgetChallengeData.fromSharedDefaults)
+        let entry = HabitsEntry(date: .now, data: WidgetHabitsData.load())
         let midnight = Calendar.current.startOfDay(for: Calendar.current.date(byAdding: .day, value: 1, to: .now)!)
         completion(Timeline(entries: [entry], policy: .after(midnight)))
     }
