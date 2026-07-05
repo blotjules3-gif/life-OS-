@@ -503,9 +503,9 @@ struct ShortcutsHomeView: View {
         VStack(spacing: 8) {
             Image(systemName: tool.icon)
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(tool.tint)
+                .foregroundStyle(Color(uiColor: .systemBackground))          // glyphe blanc
                 .frame(width: 44, height: 44)
-                .background(tool.tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(Color.primary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))  // tuile noire (sobre, cohérent avec les catégories)
             Text(tool.label)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.primary)
