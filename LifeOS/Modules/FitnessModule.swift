@@ -386,15 +386,15 @@ struct StreaksView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
-                        SectionHeader(title: "Défis")
-                        challengeRow("7 jours d'affilée", min(streak, 7), 7)
-                        challengeRow("30 séances ce mois", monthlySessions, 30)
-                        challengeRow("100 séries au total", min(sets.count, 100), 100)
+                        SectionHeader(title: "Habitudes")
+                        habitProgressRow("7 jours d'affilée", min(streak, 7), 7)
+                        habitProgressRow("30 séances ce mois", monthlySessions, 30)
+                        habitProgressRow("100 séries au total", min(sets.count, 100), 100)
                     }.card()
                 }.padding(Theme.pad)
             }
         }
-        .navigationTitle("Streaks & défis").navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Streaks & habitudes").navigationBarTitleDisplayMode(.inline)
     }
     private var monthlySessions: Int {
         let comps = Calendar.current.dateComponents([.year, .month], from: .now)
