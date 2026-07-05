@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import WidgetKit
+import UIKit
 
 private struct OrbitSatellite: Identifiable {
     let category: AppCategory
