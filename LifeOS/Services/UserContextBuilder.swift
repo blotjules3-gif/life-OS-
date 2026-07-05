@@ -94,15 +94,16 @@ final class UserContextBuilder {
         if appStreak > 1 { lines.append("Jours consécutifs dans l'app: \(appStreak)") }
         if totalDays > 0 { lines.append("Jours actifs au total: \(totalDays)") }
 
-        // ── Défi principal en cours ──────────────────────────────────────────
-        if let title = grp.string(forKey: "widget_challenge_title"), !title.isEmpty {
-            let elapsed  = grp.integer(forKey: "widget_challenge_elapsed")
-            let duration = grp.integer(forKey: "widget_challenge_duration")
-            let streak   = grp.integer(forKey: "widget_challenge_streak")
-            var line = "Défi en cours: \(title)"
-            if duration > 0 { line += " — jour \(elapsed)/\(duration)" }
-            if streak > 0   { line += ", streak \(streak) j" }
-            lines.append(line)
+        // ── Habitudes du jour (via shared defaults du widget) ────────────────
+        if let data = grp.data(forKey: "widget_habits"),
+           let raw = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
+           !raw.isEmpty {
+            let names = raw.compactMap { $0["name"] as? String }
+            let done = raw.filter { $0["done"] as? Bool == true }.count
+            if !names.isEmpty {
+                lines.append("Habitudes du jour: \(done)/\(names.count) validées")
+                lines.append("Liste: \(names.prefix(6).joined(separator: ", "))")
+            }
         }
 
         return lines.joined(separator: "\n")
