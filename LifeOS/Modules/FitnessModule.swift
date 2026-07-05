@@ -35,7 +35,7 @@ struct FitnessHubView: View {
             .buttonStyle(.plain)
             ToolRow(icon: "figure.cooldown", title: "Mobilité & stretching",
                     subtitle: "Routines guidées", tint: .fitTint) { MobilityRoutineView() }
-            ToolRow(icon: "flame.fill", title: "Streaks & défis",
+            ToolRow(icon: "flame.fill", title: "Streaks & habitudes",
                     subtitle: "Régularité d'entraînement", tint: .fitTint) { StreaksView() }
         }
         .fullScreenCover(isPresented: $showTabata) { TabataView() }
