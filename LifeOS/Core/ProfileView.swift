@@ -415,108 +415,140 @@ struct ProfileView: View {
         }
     }
 
-    // MARK: - Mes défis
+    // MARK: - Mes habitudes
 
-    private var challengesSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+    private var activeHabits: [Habit] {
+        habits.filter { !$0.isArchived && !$0.isPending }
+    }
+
+    private var habitsSection: some View {
+        let active = activeHabits
+        return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Mes défis")
+                Text("Mes habitudes")
                     .font(.system(size: 20, weight: .black))
                     .textCase(.uppercase)
                     .kerning(-0.3)
-                if !challenges.isEmpty {
+                if !active.isEmpty {
                     Spacer()
-                    Text("\(challenges.count) actif\(challenges.count > 1 ? "s" : "")")
+                    Text("\(habitsDone)/\(active.count) aujourd'hui")
                         .monoLabel(10)
                         .foregroundStyle(.secondary)
                 }
             }
             .padding(.horizontal, 4)
 
-            if challengesLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 36)
-                    .surface()
-                    .transition(.opacity)
-            } else if challenges.isEmpty {
-                challengesEmptyState
+            if active.isEmpty {
+                habitsEmptyState
                     .transition(.opacity)
             } else {
-                ForEach(challenges) { challenge in
-                    ChallengeCard(challenge: challenge, onCheckin: {
-                        Task {
-                            guard let result = try? await AgentAPI.shared.checkinChallenge(id: challenge.id),
-                                  let idx = challenges.firstIndex(where: { $0.id == challenge.id })
-                            else { return }
-
-                            let status = result["status"]?.value as? String ?? ""
-                            if status == "already_checked_in" {
-                                let streak = (result["streak_days"]?.value as? Int) ?? challenge.streak_days
-                                checkinToast = "Déjà validé aujourd'hui — streak \(streak)j"
-                                Task { try? await Task.sleep(nanoseconds: 2_500_000_000); checkinToast = nil }
-                                return
-                            }
-
-                            let newStreak = (result["streak_days"]?.value as? Int) ?? challenges[idx].streak_days + 1
-                            let updated = challenges[idx]
-                            challenges[idx] = ChallengeOut(
-                                id: updated.id, title: updated.title,
-                                challenge_type: updated.challenge_type,
-                                daily_target: updated.daily_target, unit: updated.unit,
-                                duration_days: updated.duration_days, streak_days: newStreak,
-                                days_elapsed: updated.days_elapsed, days_since_checkin: 0,
-                                last_checkin_at: ISO8601DateFormatter().string(from: .now),
-                                notes: updated.notes, is_active: updated.is_active,
-                                started_at: updated.started_at
-                            )
-                            saveChallengesForWidget(challenges)
-                        }
-                    })
+                VStack(spacing: 8) {
+                    ForEach(active) { habit in
+                        habitRow(habit)
+                    }
                 }
                 .transition(.opacity)
             }
         }
-        .animation(.spring(duration: 0.35, bounce: 0.1), value: challengesLoading)
     }
 
-    private func saveChallengesForWidget(_ list: [ChallengeOut]) {
-        guard let top = list.first,
-              let defaults = UserDefaults(suiteName: "group.lifeos.app") else { return }
-        defaults.set(top.title, forKey: "widget_challenge_title")
-        defaults.set(top.streak_days, forKey: "widget_challenge_streak")
-        defaults.set(top.duration_days ?? 30, forKey: "widget_challenge_duration")
-        defaults.set(top.days_elapsed, forKey: "widget_challenge_elapsed")
-        defaults.set(top.challenge_type, forKey: "widget_challenge_type")
-        WidgetCenter.shared.reloadTimelines(ofKind: "ChallengeStreakWidget")
+    private func habitRow(_ habit: Habit) -> some View {
+        let cal = Calendar.current
+        let done = habit.completions.contains { cal.isDateInToday($0.date) }
+        let color = Color(hex: habit.colorHex)
+        let streak = habitStreak(habit)
+        return Button {
+            withAnimation(.spring(duration: 0.32, bounce: 0.25)) {
+                toggleHabit(habit)
+            }
+            let gen = UIImpactFeedbackGenerator(style: done ? .light : .medium)
+            gen.impactOccurred()
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(done ? color : color.opacity(0.12))
+                        .frame(width: 34, height: 34)
+                    Image(systemName: done ? "checkmark" : habit.icon)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(done ? .white : color)
+                        .scaleEffect(done ? 1.0 : 0.92)
+                }
+                .animation(.spring(duration: 0.35, bounce: 0.3), value: done)
+                Text(habit.name)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .strikethrough(done, color: .secondary)
+                    .lineLimit(1)
+                Spacer()
+                if streak > 0 {
+                    HStack(spacing: 3) {
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 10, weight: .bold))
+                        Text("\(streak)j")
+                            .font(.system(size: 11, weight: .bold).monospacedDigit())
+                    }
+                    .foregroundStyle(Color(hex: 0xE0A23C))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(hex: 0xE0A23C).opacity(0.12), in: Capsule())
+                }
+            }
+            .padding(12)
+            .surface(radius: 14)
+        }
+        .buttonStyle(LifeOSPressStyle())
+        .accessibilityLabel(done ? "\(habit.name) — validée aujourd'hui" : "Valider \(habit.name)")
     }
 
-    private var challengesEmptyState: some View {
+    private func toggleHabit(_ habit: Habit) {
+        let cal = Calendar.current
+        if let existing = habit.completions.first(where: { cal.isDateInToday($0.date) }) {
+            habit.completions.removeAll { $0.id == existing.id }
+            ctx.delete(existing)
+        } else {
+            let completion = HabitCompletion(date: .now)
+            habit.completions.append(completion)
+        }
+        try? ctx.save()
+    }
+
+    private func habitStreak(_ habit: Habit) -> Int {
+        let cal = Calendar.current
+        var streak = 0
+        var date = cal.startOfDay(for: .now)
+        while habit.completions.contains(where: { cal.isDate($0.date, inSameDayAs: date) }) {
+            streak += 1
+            guard let prev = cal.date(byAdding: .day, value: -1, to: date) else { break }
+            date = prev
+        }
+        return streak
+    }
+
+    private var habitsEmptyState: some View {
         VStack(spacing: 16) {
             ZStack {
                 Circle()
                     .fill(Color.accentColor.opacity(0.10))
                     .frame(width: 64, height: 64)
-                Image(systemName: "flag.checkered")
+                Image(systemName: "checkmark.circle")
                     .font(.system(size: 26, weight: .semibold))
                     .foregroundStyle(Color.accentColor.opacity(0.75))
             }
             VStack(spacing: 6) {
-                Text("Aucun défi actif")
+                Text("Aucune habitude")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.primary)
-                Text("Crée un défi avec ton coach.")
+                Text("Ajoute-en une depuis Productivité.")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
-            Button {
-                NotificationCenter.default.post(name: Notification.Name("lifeOSOpenAIChat"), object: nil)
-            } label: {
+            NavigationLink(value: AppCategory.productivity) {
                 HStack(spacing: 6) {
-                    Image(systemName: "sparkles")
+                    Image(systemName: "plus.circle.fill")
                         .font(.system(size: 12, weight: .semibold))
-                    Text("Ouvrir l'assistant")
+                    Text("Ouvrir Productivité")
                         .font(.system(size: 13, weight: .semibold))
                 }
                 .foregroundStyle(Color.accentColor)
