@@ -334,22 +334,24 @@ struct ShortcutsHomeView: View {
                     .padding(.horizontal, 4)
                     .staggered(0, appeared: homeAppeared)
 
+                    // Score du jour EN PREMIER, au-dessus des raccourcis (demande explicite).
+                    DailyScoreRing()   // score unique du jour (mélange tous les objectifs)
+                        .staggered(1, appeared: homeAppeared)
+
                     if !activeShortcuts.isEmpty {
                         shortcutsSection
-                            .staggered(1, appeared: homeAppeared)
+                            .staggered(2, appeared: homeAppeared)
                     }
 
                     if !moodDismissed || editingMood {
                         moodSection
                             .transition(.opacity.combined(with: .move(edge: .top)))
-                            .staggered(2, appeared: homeAppeared)
+                            .staggered(3, appeared: homeAppeared)
                     }
 
                     if showReengage, let msg = reengageMessage {
                         reengageBanner(message: msg, suggestion: reengageSuggestion)
                     }
-
-                    DailyScoreRing()   // score unique du jour (mélange tous les objectifs)
 
                     LifeBrainCard()
                         .padding(.horizontal, -Theme.pad)   // guidance transversale, en tête
@@ -501,9 +503,9 @@ struct ShortcutsHomeView: View {
         VStack(spacing: 8) {
             Image(systemName: tool.icon)
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(tool.tint)
+                .foregroundStyle(Color(uiColor: .systemBackground))          // glyphe blanc
                 .frame(width: 44, height: 44)
-                .background(tool.tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(Color.primary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))  // tuile noire (sobre, cohérent avec les catégories)
             Text(tool.label)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.primary)

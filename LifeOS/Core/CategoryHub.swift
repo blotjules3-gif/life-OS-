@@ -89,14 +89,14 @@ enum BubbleSize: String, CaseIterable {
 struct CategoryHubView: View {
     let category: AppCategory
 
-    // Les sous-catégories sont verrouillées en bulles libres (voir `layout`).
     @AppStorage("appTheme")   private var appThemeRaw = "classic"
     @AppStorage("bubbleSize") private var bubbleSizeRaw = "medium"
     @State private var cover: CategoryTool?
     @State private var showSetup = false
 
-    // Les sous-catégories restent TOUJOURS en bulles libres (choix verrouillé).
-    private var layout: CatLayout { .organic }
+    // Sous-catégories = TUILES D'ICÔNES propres (tuile noire, glyphe blanc, label sous
+    // la tuile, grille 3 colonnes). Choix design du proprio (pas de bulles colorées).
+    private var layout: CatLayout { .icons }
     private var theme: AppTheme   { AppTheme(rawValue: appThemeRaw) ?? .classic }
     private var tools: [CategoryTool] { category.tools }
     private var sizeFactor: CGFloat { BubbleSize(rawValue: bubbleSizeRaw)?.factor ?? 1.0 }

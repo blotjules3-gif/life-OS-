@@ -108,7 +108,9 @@ struct LifeOSApp: App {
             // en contexte (pré-prompt) juste après la création des habitudes.
             guard onboardingDone else { return }
             Task.detached(priority: .background) {
-                let granted = await NotificationManager.shared.requestAuthorization()
+                // -noNotifPrompt : saute la demande système (tests/captures d'écran).
+                let skipPrompt = ProcessInfo.processInfo.arguments.contains("-noNotifPrompt")
+                let granted = skipPrompt ? false : await NotificationManager.shared.requestAuthorization()
                 if granted {
                     await MainActor.run {
                         ContextualNotifications.shared.reschedule()
