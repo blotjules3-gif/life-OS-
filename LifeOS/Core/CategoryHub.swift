@@ -506,7 +506,7 @@ private let fitnessTools: [CategoryTool] = [
     .init("dumbbell.fill", "Muscu & progression", "Charges, volume, 1RM, courbe", tint: .fitTint) { StrengthView() },
     .init("timer", "HIIT / Tabata", "Minuteur sportif plein écran", tint: .fitTint, fullScreen: true) { TabataView() },
     .init("figure.cooldown", "Mobilité & stretching", "Routines guidées", tint: .fitTint) { MobilityRoutineView() },
-    .init("flame.fill", "Streaks & défis", "Régularité d'entraînement", tint: .fitTint) { StreaksView() },
+    .init("flame.fill", "Streaks & habitudes", "Régularité d'entraînement", tint: .fitTint) { StreaksView() },
 ]
 
 private let looksTools: [CategoryTool] = [
