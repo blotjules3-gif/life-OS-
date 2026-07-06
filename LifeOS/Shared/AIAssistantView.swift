@@ -1189,25 +1189,7 @@ struct AIAssistantView: View {
 
     @ViewBuilder private var sendOrMicButton: some View {
         if speech.isRecording {
-            Button { stopVoiceAndSend() } label: {
-                ZStack {
-                    Circle()
-                        .fill(Color(hex: 0xF1746C).opacity(micPulse ? 0.35 : 0.15))
-                        .frame(width: 52, height: 52)
-                        .scaleEffect(micPulse ? 1.15 : 1.0)
-                    Circle()
-                        .fill(Color(hex: 0xF1746C))
-                        .frame(width: 36, height: 36)
-                    Image(systemName: "stop.fill")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-                .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: micPulse)
-            }
-            .buttonStyle(PressScaleButtonStyle())
-            .accessibilityLabel("Terminer et envoyer")
-            .onAppear { micPulse = true }
-            .onDisappear { micPulse = false }
+            recordingStopButton
         } else if canSend {
             Button { vm.send() } label: {
                 ZStack {
