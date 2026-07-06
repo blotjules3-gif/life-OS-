@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 /// Sheet compact — l'utilisateur renseigne poids, taille, niveau et 1RM.
 /// Ces données sont lues par le coach IA via UserContextBuilder pour calculer
