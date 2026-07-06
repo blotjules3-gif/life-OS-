@@ -110,6 +110,29 @@ _STARTUP_INDEXES = [
 ]
 
 
+async def _probe_llm() -> dict:
+    """Ping minimal du provider LLM (Mistral). Retourne un dict {ok, provider, model, error}."""
+    try:
+        from mistralai import Mistral
+
+        client = Mistral(api_key=settings.mistral_api_key)
+        # Un seul token demandé, message minimal → coûte quasi rien.
+        resp = await client.chat.complete_async(
+            model=settings.mistral_model,
+            messages=[{"role": "user", "content": "ping"}],
+            max_tokens=1,
+        )
+        _ = resp.choices[0].message
+        return {"ok": True, "provider": "mistral", "model": settings.mistral_model, "error": None}
+    except Exception as exc:  # noqa: BLE001 — on veut tout capturer pour le health
+        return {
+            "ok": False,
+            "provider": "mistral",
+            "model": settings.mistral_model,
+            "error": f"{type(exc).__name__}: {str(exc)[:200]}",
+        }
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     log.info("lifeos_agent_starting", version="1.0.0", debug=settings.debug)
@@ -119,6 +142,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             await conn.execute(text(stmt))
     log.info("startup_indexes_ensured", count=len(_STARTUP_INDEXES))
     _register_all_tools()
+    # Test de la clé LLM au démarrage — log en clair pour repérer immédiatement
+    # une clé absente / invalide au déploiement.
+    llm_state = await _probe_llm()
+    if llm_state["ok"]:
+        log.info("llm_key_valid", provider=llm_state["provider"], model=llm_state["model"])
+    else:
+        log.error(
+            "llm_key_invalid",
+            provider=llm_state["provider"],
+            model=llm_state["model"],
+            error=llm_state["error"],
+        )
     yield
     log.info("lifeos_agent_shutdown")
 
