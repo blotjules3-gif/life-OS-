@@ -165,6 +165,14 @@ final class UserContextBuilder {
         if !expertise.isEmpty {
             context += "\n\n" + expertise
         }
+        // Filet de sécurité : le backend limite user_context à 20000 chars.
+        // On tronque à 19500 pour garder une marge et éviter les 422 même si
+        // le backend n'est pas encore redéployé avec la nouvelle limite.
+        let maxLen = 19500
+        if context.count > maxLen {
+            let idx = context.index(context.startIndex, offsetBy: maxLen)
+            context = String(context[..<idx])
+        }
         return context
     }
 }
