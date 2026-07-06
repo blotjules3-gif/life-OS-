@@ -776,6 +776,9 @@ struct AIAssistantView: View {
     @State private var showClearConfirm = false
     @State private var showServerConfig = false
     @State private var photoItem: PhotosPickerItem?
+    @State private var speech = SpeechRecognizer()
+    @State private var textBeforeVoice: String = ""
+    @State private var micPulse = false
 
     // Quick suggestions change per time of day
     private var quickSuggestions: [(label: String, message: String, module: String?)] {
