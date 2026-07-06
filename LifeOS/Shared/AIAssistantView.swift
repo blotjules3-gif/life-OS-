@@ -779,6 +779,8 @@ struct AIAssistantView: View {
     @State private var speech = SpeechRecognizer()
     @State private var textBeforeVoice: String = ""
     @State private var micPulse = false
+    @State private var voiceDragOffset: CGFloat = 0
+    private let cancelThreshold: CGFloat = 90
 
     // Quick suggestions change per time of day
     private var quickSuggestions: [(label: String, message: String, module: String?)] {
