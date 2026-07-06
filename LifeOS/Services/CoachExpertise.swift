@@ -661,6 +661,20 @@ enum CoachExpertise {
                 "point noir", "peeling", "hydrater ma peau", "eclat"]) {
             topics.insert("looks")
         }
+        // Cardio / endurance
+        if hit(["cardio", "vo2", "vo2max", "z2", "zone 2", "endurance", "running",
+                "courir", "course a pied", "trail", "marathon", "10km", "10 km",
+                "semi", "hiit", "seuil", "tempo", "fartlek", "frequence cardiaque",
+                "fcmax", "polar", "garmin"]) {
+            topics.insert("cardio")
+        }
+        // Apprentissage
+        if hit(["apprendre", "apprentissage", "memoire", "memoriser", "revision",
+                "anki", "flashcard", "langue", "vocabulaire", "instrument",
+                "guitare", "piano", "code", "coder", "programmer", "cours",
+                "etude", "etudes", "spaced repetition", "pratique deliberee"]) {
+            topics.insert("learning")
+        }
 
         return topics
     }
