@@ -108,14 +108,34 @@ struct FitnessHubView: View {
         .fullScreenCover(isPresented: $showTabata) { TabataView() }
         .sheet(isPresented: $showFitnessProfile) { FitnessProfileSheet() }
         .onAppear {
-            // Première ouverture de Muscu + profil vide → auto-lance le coach avec les questions.
+            // Première ouverture de Muscu + profil vide → auto-lance le coach + programme rappel J+1.
             guard !coachIntroShown, profileIsIncomplete else { return }
             coachIntroShown = true
+            scheduleCoachIntroFollowup()
             Task { @MainActor in
                 try? await Task.sleep(nanoseconds: 500_000_000)
                 openCoachForIntro()
             }
         }
+        .onChange(of: profileIsIncomplete) { _, incomplete in
+            // Dès que le profil est complet, annule le rappel J+1.
+            if !incomplete { cancelCoachIntroFollowup() }
+        }
+    }
+
+    private func scheduleCoachIntroFollowup() {
+        let content = UNMutableNotificationContent()
+        content.title = "Ta séance t'attend"
+        content.body = "2 min pour répondre au coach et il te calibre une séance parfaite."
+        content.sound = .default
+        content.userInfo = ["deeplink": "lifeos://fitness"]
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 24 * 60 * 60, repeats: false)
+        let request = UNNotificationRequest(identifier: "fitnessCoachIntroFollowup", content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request)
+    }
+
+    private func cancelCoachIntroFollowup() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["fitnessCoachIntroFollowup"])
     }
 
     private var coachIntroBanner: some View {
