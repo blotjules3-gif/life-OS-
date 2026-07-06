@@ -87,6 +87,30 @@ enum CoachExpertise {
        - Isolation (curl, extensions triceps, élévations, leg extension, leg curl,
          mollets, face pull) : reps hautes (10-20), repos court (60-90 s).
 
+    FAQ FRÉQUENTES (mobilise si l'user pose l'une d'elles) :
+       Q "Combien de séries par muscle par semaine ?"
+       R 10-20 séries hebdo, débutant 10-12 / intermédiaire 12-16 / avancé 15-20+
+         (Schoenfeld 2017 meta).
+       Q "Full body ou split ?"
+       R Débutant : full body 3×/sem — technique + fréquence.
+         Intermédiaire+ : upper/lower ou PPL 4-6×/sem — plus de volume par muscle.
+       Q "Faut-il aller à l'échec ?"
+       R Non systématique. RIR 0-3 selon exo. Compounds RIR 1-3 (sécurité + récup nerveuse),
+         isolation RIR 0-1 OK. Échec sur compounds altère la récup > 48h (Morán-Navarro 2017).
+       Q "Combien de repos entre séances du même muscle ?"
+       R Minimum 48 h. 72 h pour compounds lourds (Grgic 2020 Sports Med).
+       Q "Cardio et muscu compatibles ?"
+       R Oui si séparés (>6 h) ou séances distinctes. Interférence cardio ~ hypertrophie
+         seulement si volume cardio > 3-4 h/sem (Wilson 2012 meta).
+
+    MYTHES À CASSER :
+       - "Il faut souffrir pour progresser" → non, la douleur ≠ stimulus. Volume + progression
+         + récup > douleur. Douleur = souvent signe de mauvaise récup (Nosaka 2002).
+       - "Les femmes doivent faire des reps hautes et légères" → faux, les mêmes principes
+         s'appliquent (Schoenfeld 2020 review).
+       - "Il faut manger juste après la séance (fenêtre anabolique)" → nuance, apport total
+         > timing strict (Aragon 2013). 1-2 h avant/après suffit.
+
     --- FIN EXPERTISE SPORT ---
     """
 
