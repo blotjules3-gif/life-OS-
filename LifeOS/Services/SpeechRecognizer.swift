@@ -96,7 +96,25 @@ final class SpeechRecognizer {
         request = nil
         isRecording = false
         transcript = ""
+        audioLevel = 0
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+
+    /// Calcule le RMS d'un buffer PCM float32, normalisé perceptuellement (0…1).
+    private static func rms(from buffer: AVAudioPCMBuffer) -> Float {
+        guard let channel = buffer.floatChannelData?[0] else { return 0 }
+        let count = Int(buffer.frameLength)
+        guard count > 0 else { return 0 }
+        var sum: Float = 0
+        for i in 0..<count {
+            let s = channel[i]
+            sum += s * s
+        }
+        let rms = sqrt(sum / Float(count))
+        // Perceptuel : compresser via log, mapper -50dB..0dB → 0..1
+        let db = 20 * log10(max(rms, 0.0000001))
+        let norm = max(0, min(1, (db + 50) / 50))
+        return norm
     }
 
     private func stopEngineIfNeeded() {
