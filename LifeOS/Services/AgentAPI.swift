@@ -233,7 +233,7 @@ actor AgentAPI {
         module: String?,
         conversationID: String?
     ) async throws -> ChatResponse {
-        let userContext = await MainActor.run { UserContextBuilder.shared.build() }
+        let userContext = await MainActor.run { UserContextBuilder.shared.build(message: message) }
         let body = ChatRequest(
             device_id: deviceID,
             message: message,
@@ -254,7 +254,7 @@ actor AgentAPI {
         conversationID: String?,
         onToken: @escaping @MainActor (String) -> Void
     ) async throws -> ChatResponse {
-        let userContext = await MainActor.run { UserContextBuilder.shared.build() }
+        let userContext = await MainActor.run { UserContextBuilder.shared.build(message: message) }
         let body = ChatRequest(
             device_id: deviceID,
             message: message,
