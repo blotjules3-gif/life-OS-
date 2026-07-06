@@ -86,6 +86,80 @@ struct FitnessHubView: View {
         }
         .fullScreenCover(isPresented: $showTabata) { TabataView() }
         .sheet(isPresented: $showFitnessProfile) { FitnessProfileSheet() }
+        .onAppear {
+            // Première ouverture de Muscu + profil vide → auto-lance le coach avec les questions.
+            guard !coachIntroShown, profileIsIncomplete else { return }
+            coachIntroShown = true
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                openCoachForIntro()
+            }
+        }
+    }
+
+    private var coachIntroBanner: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 28)
+                    .background(Color.fitTint, in: Circle())
+                Text("Profil sportif à compléter")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.primary)
+                Spacer()
+            }
+            Text("Pour que le coach calibre tes séances, il a besoin de connaître ton objectif, ton niveau, ton équipement, tes records et ton poids. Choisis ton mode.")
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 8) {
+                Button { openCoachForIntro() } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "message.fill")
+                            .font(.system(size: 11, weight: .bold))
+                        Text("Le coach me guide")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.fitTint, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                Button { showFitnessProfile = true } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "square.and.pencil")
+                            .font(.system(size: 11, weight: .bold))
+                        Text("Je remplis moi-même")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundStyle(Color.fitTint)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.fitTint.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(14)
+        .background(Color.fitTint.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Color.fitTint.opacity(0.25), lineWidth: 1)
+        )
+        .padding(.bottom, 4)
+    }
+
+    private func openCoachForIntro() {
+        NotificationCenter.default.post(
+            name: .lifeOSOpenAIChat,
+            object: nil,
+            userInfo: ["prefill": "Je viens d'ouvrir la catégorie Muscu et je veux progresser. Pose-moi les questions nécessaires (objectif, niveau, équipement, fréquence hebdo, blessures, records bench/squat/deadlift, poids et taille) et explique-moi le pourquoi de chaque question. Une fois que j'ai répondu, propose-moi une première séance calibrée."]
+        )
     }
 
     private func openCoachForSessionRequest() {
