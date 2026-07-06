@@ -231,6 +231,9 @@ struct ProfileView: View {
                 DataExportSheet()
             }
             #if DEBUG
+            .sheet(isPresented: $showCoachDebug) {
+                CoachExpertisePreviewSheet()
+            }
             .sheet(isPresented: $showServerConfig) {
                 ServerConfigView {
                     showServerConfig = false
