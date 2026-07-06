@@ -48,6 +48,7 @@ struct ProfileView: View {
     @State private var showOnboardingReset = false
     @State private var showServerConfig = false
     @State private var showExportSheet = false
+    @State private var showCoachDebug = false
     @State private var appLockEnabled = AppLock.shared.isEnabled
     @State private var energyScore: EnergyScoreOut? = nil
     @State private var facet = 0
