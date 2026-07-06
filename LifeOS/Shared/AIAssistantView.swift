@@ -956,17 +956,23 @@ struct AIAssistantView: View {
 
                     // Réponse en cours de streaming (mise à jour token par token)
                     if let streamed = vm.streamingText, !streamed.isEmpty {
-                        MessageRow(message: .streaming(streamed), accent: accent)
+                        MessageRow(message: .streaming(CoachTextCleaner.clean(streamed)), accent: accent)
                             .id("streaming")
                             .padding(.horizontal, 16)
                             .padding(.bottom, 8)
                     }
 
-                    // Quick suggestions — toujours visibles sauf pendant le chargement
+                    // Quick suggestions — cachées après l'envoi d'un message,
+                    // réapparaissent après 1 h sans nouveau message. TimelineView
+                    // force une réévaluation toutes les 60 s.
                     if !vm.isLoading {
-                        quickSuggestionsRow
-                            .padding(.top, 8)
-                            .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .bottom)))
+                        TimelineView(.periodic(from: .now, by: 60)) { context in
+                            if shouldShowSuggestions(at: context.date) {
+                                quickSuggestionsRow
+                                    .padding(.top, 8)
+                                    .transition(.opacity.combined(with: .scale(scale: 0.97, anchor: .bottom)))
+                            }
+                        }
                     }
 
                     Color.clear.frame(height: 24).id("bottom")
