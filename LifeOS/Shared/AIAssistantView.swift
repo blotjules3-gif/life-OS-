@@ -1120,9 +1120,13 @@ struct AIAssistantView: View {
                     .disabled(speech.isRecording)
                     .onChange(of: speech.transcript) { _, new in
                         guard speech.isRecording else { return }
-                        vm.inputText = textBeforeVoice.isEmpty
-                            ? new
-                            : textBeforeVoice + " " + new
+                        if textBeforeVoice.isEmpty {
+                            vm.inputText = new
+                        } else if new.isEmpty {
+                            vm.inputText = textBeforeVoice
+                        } else {
+                            vm.inputText = textBeforeVoice + " " + new
+                        }
                     }
 
                 sendOrMicButton
