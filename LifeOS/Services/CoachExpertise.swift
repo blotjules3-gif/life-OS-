@@ -683,14 +683,17 @@ enum CoachExpertise {
     static func blocks(forTopics topics: Set<String>) -> String {
         guard !topics.isEmpty else { return metaRule }
         var out: [String] = [metaRule]
-        let ordered = ["fitness", "nutrition", "sleep", "mind", "productivity", "cycle", "medical", "looks"]
+        let ordered = ["fitness", "cardio", "nutrition", "sleep", "mind",
+                       "productivity", "learning", "cycle", "medical", "looks"]
         for topic in ordered where topics.contains(topic) {
             switch topic {
             case "fitness":      out.append(workoutBlock)
+            case "cardio":       out.append(cardioBlock)
             case "nutrition":    out.append(nutritionBlock)
             case "sleep":        out.append(sleepBlock)
             case "mind":         out.append(mindBlock)
             case "productivity": out.append(productivityBlock)
+            case "learning":     out.append(learningBlock)
             case "cycle":        out.append(cycleBlock)
             case "medical":      out.append(longevityBlock)
             case "looks":        out.append(looksBlock)
