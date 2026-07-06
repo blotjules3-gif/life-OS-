@@ -109,7 +109,10 @@ final class UserContextBuilder {
         }
 
         var context = lines.joined(separator: "\n")
-        context += "\n\n" + CoachExpertise.workoutBlock
+        // N'injecter l'expertise sport que si le module fitness est actif (économise des tokens)
+        if activeModules.lowercased().contains("fitness") {
+            context += "\n\n" + CoachExpertise.workoutBlock
+        }
         return context
     }
 }
