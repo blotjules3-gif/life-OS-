@@ -204,6 +204,15 @@ async def health() -> dict:
     return {"status": "ok", "version": "1.0.0", "tools": len(registry.list_tools())}
 
 
+@app.get("/health/llm", tags=["system"])
+async def health_llm() -> dict:
+    """Vérifie que la clé LLM est valide et que le provider répond.
+    Retourne 200 même si le LLM est down (le champ `ok` indique le vrai statut) —
+    l'app iOS lit ce champ pour bloquer/débloquer l'envoi de messages.
+    """
+    return await _probe_llm()
+
+
 # ── Exception handlers ────────────────────────────────────────────────────────
 
 @app.exception_handler(LifeOSBaseError)
