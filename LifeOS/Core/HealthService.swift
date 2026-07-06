@@ -54,14 +54,51 @@ final class HealthService {
         return set
     }
 
+    private var writeTypes: Set<HKSampleType> {
+        var set = Set<HKSampleType>()
+        set.insert(HKObjectType.workoutType())
+        if let cal = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) { set.insert(cal) }
+        return set
+    }
+
     func requestAuthorization() async -> Bool {
         guard isAvailable else { return false }
         do {
-            try await store.requestAuthorization(toShare: [], read: readTypes)
+            try await store.requestAuthorization(toShare: writeTypes, read: readTypes)
             authorized = true
             // Marqueur pour HealthAutoSync : le prompt a déjà été montré en contexte,
             // la sync silencieuse peut tourner sans déclencher de popup.
             UserDefaults.standard.set(true, forKey: "healthAuthRequested")
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    /// Enregistre une séance de musculation dans Apple Santé (Traditional Strength Training)
+    /// avec durée + kcal actives. Retourne `true` si l'écriture a réussi.
+    /// À appeler juste après le tap "Terminer" d'un tracker de séance, ou depuis un
+    /// débrief coach ("séance de 55 min, ~350 kcal").
+    @discardableResult
+    func saveStrengthWorkout(start: Date, end: Date, kcal: Double) async -> Bool {
+        guard isAvailable else { return false }
+        let config = HKWorkoutConfiguration()
+        config.activityType = .traditionalStrengthTraining
+        config.locationType = .indoor
+        let builder = HKWorkoutBuilder(healthStore: store, configuration: config, device: .local())
+        do {
+            try await builder.beginCollection(at: start)
+            if kcal > 0, let type = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned) {
+                let sample = HKQuantitySample(
+                    type: type,
+                    quantity: HKQuantity(unit: .kilocalorie(), doubleValue: kcal),
+                    start: start,
+                    end: end
+                )
+                try await builder.addSamples([sample])
+            }
+            try await builder.endCollection(at: end)
+            _ = try await builder.finishWorkout()
             return true
         } catch {
             return false
