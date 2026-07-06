@@ -9,8 +9,19 @@ extension ShapeStyle where Self == Color { static var fitTint: Color { AppCatego
 struct FitnessHubView: View {
     @State private var showTabata = false
     @State private var showFitnessProfile = false
+    @AppStorage("fitnessCoachIntroShown") private var coachIntroShown = false
+    @AppStorage("userWeightKg") private var userWeightKg: Double = 0
+    @AppStorage("userStrengthLevel") private var userStrengthLevel: String = ""
+
+    private var profileIsIncomplete: Bool {
+        userWeightKg == 0 || userStrengthLevel.isEmpty
+    }
+
     var body: some View {
         HubScaffold(category: .fitness) {
+            if profileIsIncomplete {
+                coachIntroBanner
+            }
             Button { openCoachForSessionRequest() } label: {
                 HStack(spacing: 14) {
                     Image(systemName: "sparkles")
