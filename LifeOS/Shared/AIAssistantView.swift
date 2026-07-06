@@ -1107,7 +1107,8 @@ struct AIAssistantView: View {
                     }
                 }
 
-                TextField("Dis-moi quelque chose…", text: $vm.inputText, axis: .vertical)
+                TextField(speech.isRecording ? "J'écoute…" : "Dis-moi quelque chose…",
+                          text: $vm.inputText, axis: .vertical)
                     .font(.system(size: 15))
                     .lineLimit(1...5)
                     .padding(.horizontal, 14)
@@ -1116,26 +1117,107 @@ struct AIAssistantView: View {
                     .focused($inputFocused)
                     .submitLabel(.send)
                     .onSubmit { vm.send() }
-
-                Button { vm.send() } label: {
-                    ZStack {
-                        Circle()
-                            .fill(canSend ? accent : Color.secondary.opacity(0.15))
-                            .frame(width: 36, height: 36)
-                            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: canSend)
-                        Image(systemName: vm.isLoading ? "ellipsis" : "arrow.up")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(canSend ? .white : .secondary)
-                            .contentTransition(.symbolEffect(.replace.downUp.byLayer))
+                    .disabled(speech.isRecording)
+                    .onChange(of: speech.transcript) { _, new in
+                        guard speech.isRecording else { return }
+                        vm.inputText = textBeforeVoice.isEmpty
+                            ? new
+                            : textBeforeVoice + " " + new
                     }
-                }
-                .buttonStyle(PressScaleButtonStyle())
-                .disabled(!canSend)
+
+                sendOrMicButton
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .background(Theme.bg)
+            .overlay(alignment: .top) {
+                if let msg = speech.errorMessage {
+                    Text(msg)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color(hex: 0xF1746C), in: Capsule())
+                        .offset(y: -18)
+                        .transition(.opacity)
+                }
+            }
         }
+    }
+
+    @ViewBuilder private var sendOrMicButton: some View {
+        if speech.isRecording {
+            Button { stopVoiceAndSend() } label: {
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: 0xF1746C).opacity(micPulse ? 0.35 : 0.15))
+                        .frame(width: 52, height: 52)
+                        .scaleEffect(micPulse ? 1.15 : 1.0)
+                    Circle()
+                        .fill(Color(hex: 0xF1746C))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "stop.fill")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: micPulse)
+            }
+            .buttonStyle(PressScaleButtonStyle())
+            .accessibilityLabel("Terminer et envoyer")
+            .onAppear { micPulse = true }
+            .onDisappear { micPulse = false }
+        } else if canSend {
+            Button { vm.send() } label: {
+                ZStack {
+                    Circle()
+                        .fill(accent)
+                        .frame(width: 36, height: 36)
+                    Image(systemName: vm.isLoading ? "ellipsis" : "arrow.up")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.white)
+                        .contentTransition(.symbolEffect(.replace.downUp.byLayer))
+                }
+            }
+            .buttonStyle(PressScaleButtonStyle())
+            .disabled(vm.isLoading)
+            .accessibilityLabel("Envoyer")
+        } else {
+            Button { startVoice() } label: {
+                ZStack {
+                    Circle()
+                        .fill(accent.opacity(0.12))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: "mic.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(accent)
+                }
+            }
+            .buttonStyle(PressScaleButtonStyle())
+            .disabled(vm.isLoading)
+            .accessibilityLabel("Message vocal")
+        }
+    }
+
+    private func startVoice() {
+        Task {
+            let ok = await speech.requestAuthorization()
+            guard ok else { return }
+            textBeforeVoice = vm.inputText.trimmingCharacters(in: .whitespaces)
+            let gen = UIImpactFeedbackGenerator(style: .medium)
+            gen.impactOccurred()
+            speech.start()
+            inputFocused = false
+        }
+    }
+
+    private func stopVoiceAndSend() {
+        speech.stop()
+        let gen = UIImpactFeedbackGenerator(style: .light)
+        gen.impactOccurred()
+        let trimmed = vm.inputText.trimmingCharacters(in: .whitespaces)
+        textBeforeVoice = ""
+        guard !trimmed.isEmpty, !vm.isLoading else { return }
+        vm.send()
     }
 
     private var canSend: Bool {
