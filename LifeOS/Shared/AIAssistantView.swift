@@ -1398,11 +1398,11 @@ private struct MessageRow: View {
                     if message.isThinking {
                         ThinkingIndicator()
                     } else if reveal, !isUser {
-                        TypewriterText(text: message.text)
+                        TypewriterText(text: CoachTextCleaner.clean(message.text))
                             .font(.system(size: 15))
                             .foregroundStyle(.primary)
                     } else {
-                        Text(message.text)
+                        Text(isUser ? message.text : CoachTextCleaner.clean(message.text))
                             .font(.system(size: 15))
                             .foregroundStyle(isUser ? .white : .primary)
                             .textSelection(.enabled)
