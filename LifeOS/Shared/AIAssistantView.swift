@@ -1328,6 +1328,15 @@ struct AIAssistantView: View {
         !vm.inputText.trimmingCharacters(in: .whitespaces).isEmpty && !vm.isLoading
     }
 
+    /// Affiche les suggestions rapides tant que l'utilisateur n'a pas encore parlé,
+    /// ou après 1 h de silence depuis son dernier message.
+    private func shouldShowSuggestions(at now: Date) -> Bool {
+        guard let lastUserMsg = vm.messages.last(where: { $0.role == "user" }) else {
+            return true // aucun message envoyé → visible
+        }
+        return now.timeIntervalSince(lastUserMsg.date) >= 3600
+    }
+
     private var offlineBanner: some View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
