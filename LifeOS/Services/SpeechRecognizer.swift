@@ -122,8 +122,10 @@ final class SpeechRecognizer {
 
         let inputNode = audioEngine.inputNode
         let format = inputNode.outputFormat(forBus: 0)
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
             req.append(buffer)
+            let level = Self.rms(from: buffer)
+            Task { @MainActor in self?.audioLevel = level }
         }
 
         audioEngine.prepare()
