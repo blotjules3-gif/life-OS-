@@ -94,18 +94,22 @@ final class UserContextBuilder {
         if appStreak > 1 { lines.append("Jours consécutifs dans l'app: \(appStreak)") }
         if totalDays > 0 { lines.append("Jours actifs au total: \(totalDays)") }
 
-        // ── Habitudes du jour (via shared defaults du widget) ────────────────
-        if let data = grp.data(forKey: "widget_habits"),
-           let raw = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
-           !raw.isEmpty {
-            let names = raw.compactMap { $0["name"] as? String }
-            let done = raw.filter { $0["done"] as? Bool == true }.count
-            if !names.isEmpty {
-                lines.append("Habitudes du jour: \(done)/\(names.count) validées")
-                lines.append("Liste: \(names.prefix(6).joined(separator: ", "))")
-            }
+        // ── Séances muscu récentes (via shared defaults) ─────────────────────
+        let fitSummary = grp.string(forKey: "fitness_summary_7d") ?? ""
+        if !fitSummary.isEmpty {
+            lines.append(fitSummary)
+        }
+        let fitLastExercises = grp.string(forKey: "fitness_last_exercises") ?? ""
+        if !fitLastExercises.isEmpty {
+            lines.append("Exos travaillés (7 j): \(fitLastExercises)")
+        }
+        let fitTopLift = grp.string(forKey: "fitness_top_lift") ?? ""
+        if !fitTopLift.isEmpty {
+            lines.append("PR récent: \(fitTopLift)")
         }
 
-        return lines.joined(separator: "\n")
+        var context = lines.joined(separator: "\n")
+        context += "\n\n" + CoachExpertise.workoutBlock
+        return context
     }
 }
