@@ -106,6 +106,10 @@ final class SpeechRecognizer {
                 }
                 if error != nil || (result?.isFinal ?? false) {
                     self.stopEngineIfNeeded()
+                    self.request = nil
+                    self.task = nil
+                    self.isRecording = false
+                    try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
                 }
             }
         }
