@@ -8,8 +8,43 @@ extension ShapeStyle where Self == Color { static var fitTint: Color { AppCatego
 
 struct FitnessHubView: View {
     @State private var showTabata = false
+    @State private var showFitnessProfile = false
     var body: some View {
         HubScaffold(category: .fitness) {
+            Button { openCoachForSessionRequest() } label: {
+                HStack(spacing: 14) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
+                        .frame(width: 30, height: 30)
+                        .background(Color.fitTint, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Génère ma séance du jour").font(.body).foregroundStyle(.primary)
+                        Text("Le coach te pose 6 questions et construit ta séance").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                }
+                .padding(.vertical, 3)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            Button { showFitnessProfile = true } label: {
+                HStack(spacing: 14) {
+                    Image(systemName: "person.crop.circle.badge.checkmark")
+                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
+                        .frame(width: 30, height: 30)
+                        .background(Color.fitTint, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Mon profil sportif").font(.body).foregroundStyle(.primary)
+                        Text("Poids, taille, niveau, 1RM — le coach s'en sert").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+                }
+                .padding(.vertical, 3)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
             ToolRow(icon: "figure.strengthtraining.traditional", title: "Séance guidée",
                     subtitle: "Ta séance du jour, série par série + repos", tint: .fitTint) { GuidedWorkoutView() }
             ToolRow(icon: "figure.walk", title: "Compteur de pas",
