@@ -9,7 +9,11 @@ final class UserContextBuilder {
 
     private static let group = UserDefaults(suiteName: "group.lifeos.app")
 
-    func build() -> String {
+    /// Construit le snapshot utilisateur + l'expertise coach.
+    /// - Parameter message: message courant de l'utilisateur (optionnel). S'il est fourni
+    ///   on ne prend QUE les blocs d'expertise détectés dedans (économie de tokens).
+    ///   Sinon on retombe sur un dispatch par modules actifs.
+    func build(message: String? = nil) -> String {
         var lines: [String] = []
         let ud = UserDefaults.standard
         guard let grp = Self.group else { return "" }
