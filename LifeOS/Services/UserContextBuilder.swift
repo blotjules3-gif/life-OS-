@@ -94,6 +94,34 @@ final class UserContextBuilder {
         if appStreak > 1 { lines.append("Jours consécutifs dans l'app: \(appStreak)") }
         if totalDays > 0 { lines.append("Jours actifs au total: \(totalDays)") }
 
+        // ── Profil sportif renseigné manuellement ────────────────────────────
+        let weightKg = ud.double(forKey: "userWeightKg")
+        let heightCm = ud.double(forKey: "userHeightCm")
+        let level = ud.string(forKey: "userStrengthLevel") ?? ""
+        let bench = ud.double(forKey: "userBench1RM")
+        let squat = ud.double(forKey: "userSquat1RM")
+        let deadlift = ud.double(forKey: "userDeadlift1RM")
+        let trainingYears = ud.integer(forKey: "userTrainingYears")
+        let weeklyFreq = ud.integer(forKey: "userWeeklyFrequency")
+        if weightKg > 0 { lines.append("Poids: \(String(format: "%.1f", weightKg)) kg") }
+        if heightCm > 0 { lines.append("Taille: \(Int(heightCm)) cm") }
+        if !level.isEmpty { lines.append("Niveau muscu: \(level)") }
+        if trainingYears > 0 { lines.append("Années d'entraînement: \(trainingYears)") }
+        if weeklyFreq > 0 { lines.append("Fréquence hebdo cible: \(weeklyFreq) séances") }
+        var prs: [String] = []
+        if bench > 0    { prs.append("Bench \(Int(bench)) kg") }
+        if squat > 0    { prs.append("Squat \(Int(squat)) kg") }
+        if deadlift > 0 { prs.append("Deadlift \(Int(deadlift)) kg") }
+        if !prs.isEmpty { lines.append("PR (1RM estimé): \(prs.joined(separator: ", "))") }
+        // Ratios force/poids si dispo
+        if weightKg > 0 {
+            var ratios: [String] = []
+            if bench > 0    { ratios.append(String(format: "Bench ×%.2f", bench/weightKg)) }
+            if squat > 0    { ratios.append(String(format: "Squat ×%.2f", squat/weightKg)) }
+            if deadlift > 0 { ratios.append(String(format: "Deadlift ×%.2f", deadlift/weightKg)) }
+            if !ratios.isEmpty { lines.append("Ratios force/poids: \(ratios.joined(separator: ", "))") }
+        }
+
         // ── Séances muscu récentes (via shared defaults) ─────────────────────
         let fitSummary = grp.string(forKey: "fitness_summary_7d") ?? ""
         if !fitSummary.isEmpty {
