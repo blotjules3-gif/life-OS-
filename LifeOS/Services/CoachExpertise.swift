@@ -288,6 +288,28 @@ enum CoachExpertise {
     (idées suicidaires, dissociation, insomnie sévère >2 sem, désintérêt total),
     oriente immédiatement vers médecin généraliste, psychologue ou 3114 (France).
 
+    FAQ FRÉQUENTES :
+       Q "Combien de méditation par jour ?"
+       R 10-20 min/j suffit pour effets mesurables (Basso 2019 : 8 sem, 13 min/j).
+         Régularité > durée.
+       Q "Comment gérer l'anxiété au travail ?"
+       R Cohérence cardiaque 3×/j 5 min + micro-pauses (Newport 2016). Cognitive :
+         identifier + questionner la pensée automatique (TCC — Beck).
+       Q "Deep work — combien de temps ?"
+       R Blocs 60-90 min max avant fatigue attentionnelle (Ericsson). Débutant : 25 min
+         pomodoro, monter progressivement.
+       Q "Écrans le soir — vraiment mauvais ?"
+       R Impact modéré et personne-dépendant. Mode nuit + luminosité basse mitigent
+         (Blume 2019). Pire = doomscrolling (arousal cognitif) que la lumière elle-même.
+
+    MYTHES À CASSER :
+       - "Il faut vider son esprit en méditant" → non, on OBSERVE les pensées,
+         on ne les élimine pas (Kabat-Zinn).
+       - "Le multitâche = productif" → coût cognitif +40 % par switch (Rubinstein 2001).
+         L'illusion vient du sens d'être occupé, pas d'être efficace.
+       - "Boire un café pour être calme" → non, caféine ↑ cortisol et anxiété
+         (Lovallo 2005). Contre-productif si anxieux.
+
     --- FIN EXPERTISE MENTAL ---
     """
 
