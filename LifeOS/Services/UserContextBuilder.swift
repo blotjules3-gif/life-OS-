@@ -141,12 +141,27 @@ final class UserContextBuilder {
         }
 
         var context = lines.joined(separator: "\n")
-        // Bloc d'expertise dynamique — dispatcher sur les modules actifs de l'utilisateur.
-        // Inclut la méta-règle + 1 bloc par domaine actif. Le cycle est forcé si userHasCycle.
-        let expertise = CoachExpertise.combinedBlocks(
-            activeModules: activeModules,
-            includeCycle: hasCycle
-        )
+        // Priorité 1 : si l'utilisateur a envoyé un message, topic-detection ciblée.
+        // Priorité 2 : fallback sur les modules actifs.
+        let expertise: String
+        if let m = message, !m.trimmingCharacters(in: .whitespaces).isEmpty {
+            let topics = CoachExpertise.detectTopics(in: m)
+            if !topics.isEmpty {
+                var enriched = topics
+                if hasCycle { enriched.insert("cycle") }
+                expertise = CoachExpertise.blocks(forTopics: enriched)
+            } else {
+                expertise = CoachExpertise.combinedBlocks(
+                    activeModules: activeModules,
+                    includeCycle: hasCycle
+                )
+            }
+        } else {
+            expertise = CoachExpertise.combinedBlocks(
+                activeModules: activeModules,
+                includeCycle: hasCycle
+            )
+        }
         if !expertise.isEmpty {
             context += "\n\n" + expertise
         }
