@@ -1222,13 +1222,62 @@ struct AIAssistantView: View {
         }
     }
 
+    private var recordingStopButton: some View {
+        let progress = min(1, abs(voiceDragOffset) / cancelThreshold)
+        return ZStack {
+            Circle()
+                .fill(Color(hex: 0xF1746C).opacity(micPulse ? 0.35 : 0.15))
+                .frame(width: 52, height: 52)
+                .scaleEffect(micPulse ? 1.15 : 1.0)
+            Circle()
+                .fill(Color(hex: 0xF1746C))
+                .frame(width: 36, height: 36)
+            Image(systemName: progress >= 1 ? "xmark" : "stop.fill")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(.white)
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: micPulse)
+        .offset(x: max(-cancelThreshold, voiceDragOffset))
+        .scaleEffect(1 - progress * 0.15)
+        .gesture(
+            DragGesture(minimumDistance: 4)
+                .onChanged { value in
+                    let dx = min(0, value.translation.width)
+                    voiceDragOffset = dx
+                    if abs(dx) >= cancelThreshold, micPulse {
+                        // haptique une seule fois au franchissement
+                        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+                        micPulse = false
+                    } else if abs(dx) < cancelThreshold, !micPulse {
+                        micPulse = true
+                    }
+                }
+                .onEnded { value in
+                    let dx = min(0, value.translation.width)
+                    if abs(dx) >= cancelThreshold {
+                        cancelVoice()
+                    } else {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            voiceDragOffset = 0
+                        }
+                        stopVoiceAndSend()
+                    }
+                }
+        )
+        .onAppear { micPulse = true }
+        .onDisappear { micPulse = false }
+        .accessibilityLabel("Terminer et envoyer, glisser pour annuler")
+    }
+
     private func startVoice() {
         Task {
             let ok = await speech.requestAuthorization()
             guard ok else { return }
+            speech.setLanguage(preferredSpeechLocale())
             textBeforeVoice = vm.inputText.trimmingCharacters(in: .whitespaces)
-            let gen = UIImpactFeedbackGenerator(style: .medium)
-            gen.impactOccurred()
+            voiceDragOffset = 0
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             speech.start()
             inputFocused = false
         }
@@ -1236,12 +1285,36 @@ struct AIAssistantView: View {
 
     private func stopVoiceAndSend() {
         speech.stop()
-        let gen = UIImpactFeedbackGenerator(style: .light)
-        gen.impactOccurred()
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         let trimmed = vm.inputText.trimmingCharacters(in: .whitespaces)
         textBeforeVoice = ""
+        voiceDragOffset = 0
         guard !trimmed.isEmpty, !vm.isLoading else { return }
         vm.send()
+    }
+
+    private func cancelVoice() {
+        speech.cancel()
+        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        // restaure le texte pré-enregistrement
+        vm.inputText = textBeforeVoice
+        textBeforeVoice = ""
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            voiceDragOffset = 0
+        }
+    }
+
+    private func preferredSpeechLocale() -> String {
+        let raw = Locale.preferredLanguages.first ?? "fr-FR"
+        let code = String(raw.prefix(2)).lowercased()
+        switch code {
+        case "en": return "en-US"
+        case "es": return "es-ES"
+        case "de": return "de-DE"
+        case "it": return "it-IT"
+        case "pt": return "pt-BR"
+        default:   return "fr-FR"
+        }
     }
 
     private var canSend: Bool {
