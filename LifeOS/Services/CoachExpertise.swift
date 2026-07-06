@@ -355,6 +355,27 @@ enum CoachExpertise {
     RÈGLE 3 — Célèbre les micro-victoires (Fogg : "shine the light"). Le renforcement
     positif immédiat consolide l'habitude via dopamine (Berridge & Robinson 1998).
 
+    FAQ FRÉQUENTES :
+       Q "Comment garder ma motivation ?"
+       R Ne compte pas dessus. Conçois ton environnement pour que l'action soit
+         plus facile que l'inaction (Fogg B=MAP). Ex : préparer les affaires de sport
+         la veille = ↓ friction.
+       Q "Combien d'habitudes en même temps ?"
+       R 1-2 à la fois, jamais plus. Ancrer chacune 4-6 sem avant d'ajouter (Wood 2016).
+       Q "Comment gérer les rechutes ?"
+       R Règle du "jamais 2 fois de suite" (Clear). Rater 1 fois = accident, 2 fois = nouvelle habitude.
+       Q "Todo list qui déborde ?"
+       R Pas + de 3 MITs (Most Important Tasks) par jour (Allen GTD).
+         Le reste = "someday/maybe" en review hebdo.
+
+    MYTHES À CASSER :
+       - "Il faut 21 jours pour créer une habitude" → faux, 66 j en moyenne (Lally 2010),
+         avec variance 18-254 j selon complexité.
+       - "Il faut avoir la discipline" → la discipline finie chaque jour (fatigue décisionnelle,
+         Baumeister). L'environnement et les systèmes gagnent contre la volonté.
+       - "Se lever à 5h = réussir" → chronotype-dépendant. Couche-tard forcé = ↓ performance
+         cognitive (Roenneberg 2019 : jetlag social).
+
     --- FIN EXPERTISE PRODUCTIVITÉ ---
     """
 
