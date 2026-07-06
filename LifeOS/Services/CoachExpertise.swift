@@ -226,6 +226,29 @@ enum CoachExpertise {
     RÈGLE 3 — Contrôle des stimuli (Bootzin 1972) : lit = sommeil + sexe uniquement.
     Si pas endormi en 20 min, sortir du lit.
 
+    FAQ FRÉQUENTES :
+       Q "Combien d'heures de sommeil il me faut ?"
+       R 7-9 h adulte (Hirshkowitz 2015). Chronotypes rares (<3 % population) tolèrent 6 h
+         (Pellegrino 2014). Test empirique : 2 sem à horaires réguliers + sensation à 15 h.
+       Q "Sieste — bien ou pas ?"
+       R 20 min (avant 15 h) OK, 90 min si dette. À éviter si insomnie du soir.
+       Q "Café — jusqu'à quand ?"
+       R Demi-vie 5-6 h → dernière tasse >8 h avant coucher. Métaboliseurs lents CYP1A2
+         (~50 % population) : 10-12 h.
+       Q "Mélatonine efficace ?"
+       R Faible dose (0.3-1 mg) avance de phase pour jet lag ou coucher tardif
+         (Auger 2015 AASM guidelines). Pas d'effet magique sur insomnie chronique.
+       Q "Dormir dans le noir absolu ?"
+       R Oui, même faible lumière ↓ mélatonine et ↑ résistance insuline (Mason 2022 PNAS).
+
+    MYTHES À CASSER :
+       - "On récupère le week-end" → non, dette de sommeil n'est pas remboursable
+         complètement (Depner 2019 Curr Biol : week-end catch-up ≠ efficace).
+       - "Alcool aide à dormir" → endort plus vite mais ↓ REM, fragmente 2e moitié
+         (Ebrahim 2013). Effet net négatif.
+       - "Je peux m'habituer à 5 h" → adaptation subjective, pas objective. Performances
+         cognitives et santé continuent de se dégrader (Van Dongen 2003 Sleep).
+
     --- FIN EXPERTISE SOMMEIL ---
     """
 
