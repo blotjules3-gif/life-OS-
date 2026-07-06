@@ -10,11 +10,42 @@ final class SpeechRecognizer {
     var transcript: String = ""
     var isRecording: Bool = false
     var errorMessage: String? = nil
+    /// Niveau audio moyen normalisé (0…1) recalculé à chaque tap buffer.
+    var audioLevel: Float = 0
+    /// Locale actif (ex. "fr-FR", "en-US"). Change via `setLanguage`.
+    private(set) var locale: Locale
 
-    private let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "fr-FR"))
+    private var recognizer: SFSpeechRecognizer?
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
     private let audioEngine = AVAudioEngine()
+
+    init() {
+        let preferred = Self.detectPreferredLocale()
+        self.locale = preferred
+        self.recognizer = SFSpeechRecognizer(locale: preferred)
+    }
+
+    /// Détecte la langue préférée de l'utilisateur (fr / en) via Locale.preferredLanguages.
+    /// Fallback: fr-FR.
+    private static func detectPreferredLocale() -> Locale {
+        let raw = Locale.preferredLanguages.first ?? "fr-FR"
+        let code = String(raw.prefix(2)).lowercased()
+        switch code {
+        case "en": return Locale(identifier: "en-US")
+        case "es": return Locale(identifier: "es-ES")
+        case "de": return Locale(identifier: "de-DE")
+        case "it": return Locale(identifier: "it-IT")
+        case "pt": return Locale(identifier: "pt-BR")
+        default:   return Locale(identifier: "fr-FR")
+        }
+    }
+
+    func setLanguage(_ code: String) {
+        let loc = Locale(identifier: code)
+        locale = loc
+        recognizer = SFSpeechRecognizer(locale: loc)
+    }
 
     /// Demande les deux permissions (reconnaissance vocale + micro).
     func requestAuthorization() async -> Bool {
