@@ -137,9 +137,14 @@ final class UserContextBuilder {
         }
 
         var context = lines.joined(separator: "\n")
-        // N'injecter l'expertise sport que si le module fitness est actif (économise des tokens)
-        if activeModules.lowercased().contains("fitness") {
-            context += "\n\n" + CoachExpertise.workoutBlock
+        // Bloc d'expertise dynamique — dispatcher sur les modules actifs de l'utilisateur.
+        // Inclut la méta-règle + 1 bloc par domaine actif. Le cycle est forcé si userHasCycle.
+        let expertise = CoachExpertise.combinedBlocks(
+            activeModules: activeModules,
+            includeCycle: hasCycle
+        )
+        if !expertise.isEmpty {
+            context += "\n\n" + expertise
         }
         return context
     }
