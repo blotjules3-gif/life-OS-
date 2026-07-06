@@ -1,11 +1,23 @@
 import Foundation
 import SwiftUI
 
+/// Statut réel du chat : le backend peut être debout mais le LLM KO.
+enum CoachStatus: Equatable {
+    case unknown            // pas encore pingé
+    case online             // backend + LLM valides
+    case backendDown        // /health injoignable
+    case llmDown(String?)   // backend OK mais /health/llm renvoie ok=false
+}
+
 @MainActor
 final class ServerStatusMonitor: ObservableObject {
     static let shared = ServerStatusMonitor()
 
     @Published private(set) var isOnline: Bool? = nil
+    @Published private(set) var coach: CoachStatus = .unknown
+
+    /// Backwards-compat pour dotColor / bannière existante.
+    var canSendChatMessages: Bool { coach == .online }
 
     private init() {
         Task { await ping() }
@@ -13,10 +25,19 @@ final class ServerStatusMonitor: ObservableObject {
     }
 
     var dotColor: Color {
-        switch isOnline {
-        case .some(true):  return .green
-        case .some(false): return .orange
-        case .none:        return .clear
+        switch coach {
+        case .online:                 return .green
+        case .backendDown, .llmDown:  return .orange
+        case .unknown:                return .clear
+        }
+    }
+
+    var statusLabel: String {
+        switch coach {
+        case .online:            return "Coach en ligne"
+        case .backendDown:       return "Coach hors ligne — serveur injoignable"
+        case .llmDown(let err):  return "Coach indisponible — \(err ?? "clé LLM invalide")"
+        case .unknown:           return "…"
         }
     }
 
@@ -32,16 +53,39 @@ final class ServerStatusMonitor: ObservableObject {
     }
 
     private func ping() async {
-        let url = Configuration.baseURL.appendingPathComponent("health")
-        var request = URLRequest(url: url)
-        request.httpMethod = "HEAD"
-        request.timeoutInterval = 5
+        // 1) Backend joignable ?
+        let healthURL = Configuration.baseURL.appendingPathComponent("health")
+        var healthReq = URLRequest(url: healthURL)
+        healthReq.httpMethod = "HEAD"
+        healthReq.timeoutInterval = 5
         do {
-            let (_, response) = try await URLSession.shared.data(for: request)
+            let (_, response) = try await URLSession.shared.data(for: healthReq)
             let code = (response as? HTTPURLResponse)?.statusCode ?? 0
-            isOnline = (200..<300).contains(code)
+            let ok = (200..<300).contains(code)
+            isOnline = ok
+            if !ok {
+                coach = .backendDown
+                return
+            }
         } catch {
             isOnline = false
+            coach = .backendDown
+            return
+        }
+
+        // 2) Clé LLM valide ?
+        let llmURL = Configuration.baseURL.appendingPathComponent("health/llm")
+        var llmReq = URLRequest(url: llmURL)
+        llmReq.httpMethod = "GET"
+        llmReq.timeoutInterval = 10
+        do {
+            let (data, _) = try await URLSession.shared.data(for: llmReq)
+            struct LLMStatus: Decodable { let ok: Bool; let error: String? }
+            let status = try JSONDecoder().decode(LLMStatus.self, from: data)
+            coach = status.ok ? .online : .llmDown(status.error)
+        } catch {
+            // Backend up mais /health/llm rejeté → considère le coach down.
+            coach = .llmDown(nil)
         }
     }
 }
