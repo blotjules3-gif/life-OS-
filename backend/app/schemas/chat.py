@@ -13,7 +13,9 @@ class ChatRequest(BaseModel):
     module: Optional[str] = None  # 'sport', 'nutrition', etc. — None = general
     conversation_id: Optional[uuid.UUID] = None
     apns_token: Optional[str] = None  # update token on each request
-    user_context: Optional[str] = Field(None, max_length=2000)  # real-time snapshot from iOS
+    # Snapshot iOS + expertise coach injectée (méta + jusqu'à 3 blocs domaine).
+    # Passe de 2000 à 20000 pour laisser passer les blocs d'expertise scientifiques.
+    user_context: Optional[str] = Field(None, max_length=20000)
 
 
 class MessageOut(BaseModel):
