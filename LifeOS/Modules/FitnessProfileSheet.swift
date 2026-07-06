@@ -14,6 +14,9 @@ struct FitnessProfileSheet: View {
     @AppStorage("userDeadlift1RM") private var deadlift1RM: Double = 0
     @AppStorage("userTrainingYears") private var trainingYears: Int = 0
     @AppStorage("userWeeklyFrequency") private var weeklyFrequency: Int = 3
+    @AppStorage("fitnessCoachIntroShown") private var coachIntroShown = false
+    @State private var showResetConfirm = false
+    @State private var resetDone = false
 
     private let levels: [(key: String, label: String, hint: String)] = [
         ("debutant",       "Débutant",       "Moins d'1 an de pratique régulière"),
