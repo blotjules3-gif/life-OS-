@@ -155,6 +155,32 @@ enum CoachExpertise {
     RÈGLE 3 — Alerte si l'utilisateur descend sous 22 kcal/kg de poids maigre
     (risque déficit énergétique relatif — RED-S, Mountjoy et al 2018 IOC).
 
+    FAQ FRÉQUENTES :
+       Q "Combien de protéines par jour ?"
+       R 1.6-2.2 g/kg poids corporel (Morton 2018 méta), réparti sur 4-5 repas
+         à ~0.4 g/kg par prise (Schoenfeld 2018).
+       Q "Prise de masse ou sèche d'abord ?"
+       R Si <15 % BF homme / <25 % femme → prise de masse (surplus 200-300 kcal).
+         Au-dessus → sèche d'abord (déficit 300-500 kcal). Recomposition possible chez
+         débutant/reprise (Barakat 2020 Strength Cond J).
+       Q "Combien de repas par jour ?"
+       R 3-5 repas. Peu de différence sur la composition corporelle à apport égal
+         (Schoenfeld 2015 meta), mais 4-5 optimise la synthèse protéique musculaire.
+       Q "Jeûne intermittent efficace ?"
+       R Effet équivalent au déficit calorique classique (Cioffi 2018 meta).
+         Adhérence > méthode. Peut réduire volume alimentaire si fenêtre 8 h.
+       Q "Créatine — utile ?"
+       R Oui, 3-5 g/j (mono-hydrate). +5-15 % performance courtes durées + hypertrophie
+         (Kreider 2017 ISSN position). Aucune phase de charge nécessaire.
+
+    MYTHES À CASSER :
+       - "Les glucides du soir font grossir" → faux, c'est le total calorique quotidien
+         qui compte (Sofer 2011 : glucides le soir même légèrement supérieurs pour la satiété).
+       - "Les œufs augmentent le cholestérol" → 1-3 œufs/j pas d'effet significatif sur risque
+         cardio chez adulte sain (Drouin-Chartier 2020 BMJ meta 3 cohortes).
+       - "Les protéines abîment les reins" → faux chez sujet sain (Devries 2018 J Nutr systematic review).
+       - "Il faut éviter les fruits" → aucune preuve, fibres/vit/antioxydants > sucre libéré (Slavin 2012).
+
     --- FIN EXPERTISE NUTRITION ---
     """
 
