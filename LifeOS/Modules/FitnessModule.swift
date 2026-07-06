@@ -11,9 +11,30 @@ struct FitnessHubView: View {
     @State private var showFitnessProfile = false
     @AppStorage("fitnessCoachIntroShown") private var coachIntroShown = false
     @AppStorage("userWeightKg") private var userWeightKg: Double = 0
+    @AppStorage("userHeightCm") private var userHeightCm: Double = 0
     @AppStorage("userStrengthLevel") private var userStrengthLevel: String = ""
+    @AppStorage("userBench1RM") private var userBench1RM: Double = 0
+    @AppStorage("userSquat1RM") private var userSquat1RM: Double = 0
+    @AppStorage("userDeadlift1RM") private var userDeadlift1RM: Double = 0
+    @AppStorage("userWeeklyFrequency") private var userWeeklyFrequency: Int = 3
 
+    private var profileFields: [Bool] {
+        [
+            userWeightKg > 0,
+            userHeightCm > 0,
+            !userStrengthLevel.isEmpty,
+            userBench1RM > 0,
+            userSquat1RM > 0,
+            userDeadlift1RM > 0,
+        ]
+    }
+    private var filledCount: Int { profileFields.filter { $0 }.count }
+    private var totalFields: Int { profileFields.count }
+    private var profileProgress: Double {
+        totalFields > 0 ? Double(filledCount) / Double(totalFields) : 0
+    }
     private var profileIsIncomplete: Bool {
+        // On considère "incomplet" tant qu'on n'a ni poids ni niveau (les 2 minimums pour calibrer).
         userWeightKg == 0 || userStrengthLevel.isEmpty
     }
 
