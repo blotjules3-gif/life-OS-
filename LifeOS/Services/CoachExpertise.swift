@@ -714,10 +714,12 @@ enum CoachExpertise {
         var out: [String] = [metaRule]
 
         if mods.contains("fitness")      { out.append(workoutBlock) }
+        if mods.contains("fitness")      { out.append(cardioBlock) }
         if mods.contains("nutrition")    { out.append(nutritionBlock) }
         if mods.contains("sleep")        { out.append(sleepBlock) }
         if mods.contains("mind")         { out.append(mindBlock) }
         if mods.contains("productivity") { out.append(productivityBlock) }
+        if mods.contains("learning")     { out.append(learningBlock) }
         if mods.contains("cycle") || includeCycle { out.append(cycleBlock) }
         if mods.contains("medical") || mods.contains("longevity") { out.append(longevityBlock) }
         if mods.contains("looks")        { out.append(looksBlock) }
