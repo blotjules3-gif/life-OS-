@@ -1324,8 +1324,72 @@ struct AIAssistantView: View {
         }
     }
 
+    @ObservedObject private var serverStatus = ServerStatusMonitor.shared
+
     private var canSend: Bool {
-        !vm.inputText.trimmingCharacters(in: .whitespaces).isEmpty && !vm.isLoading
+        !vm.inputText.trimmingCharacters(in: .whitespaces).isEmpty
+            && !vm.isLoading
+            && serverStatus.canSendChatMessages
+    }
+
+    /// Bannière affichée en haut du chat quand le coach est indisponible.
+    /// Se met à jour automatiquement via l'ObservedObject serverStatus.
+    @ViewBuilder private var coachDownBanner: some View {
+        switch serverStatus.coach {
+        case .online, .unknown:
+            EmptyView()
+        case .backendDown:
+            coachBannerContent(
+                icon: "moon.zzz.fill",
+                title: "Le coach dort",
+                subtitle: "Serveur en veille — réessaie dans 30 s"
+            )
+        case .llmDown(let err):
+            coachBannerContent(
+                icon: "exclamationmark.triangle.fill",
+                title: "Coach indisponible",
+                subtitle: err ?? "Le service IA ne répond pas"
+            )
+        }
+    }
+
+    private func coachBannerContent(icon: String, title: String, subtitle: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 28, height: 28)
+                .background(Color(hex: 0xE0A23C), in: Circle())
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.primary)
+                Text(subtitle)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+            Spacer()
+            Button {
+                serverStatus.pingNow()
+            } label: {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(Color(hex: 0xE0A23C))
+                    .frame(width: 30, height: 30)
+                    .background(Color(hex: 0xE0A23C).opacity(0.15), in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Vérifier à nouveau")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color(hex: 0xE0A23C).opacity(0.08))
+        .overlay(
+            Rectangle().fill(Color(hex: 0xE0A23C).opacity(0.4)).frame(height: 0.5),
+            alignment: .bottom
+        )
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 
     /// Affiche les suggestions rapides tant que l'utilisateur n'a pas encore parlé,
