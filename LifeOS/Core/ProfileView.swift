@@ -456,7 +456,7 @@ struct ProfileView: View {
     private func habitRow(_ habit: Habit) -> some View {
         let cal = Calendar.current
         let done = habit.completions.contains { cal.isDateInToday($0.date) }
-        let color = Color(hex: habit.colorHex)
+        let color = Color(hex: UInt(habit.colorHex))
         let streak = habitStreak(habit)
         return Button {
             withAnimation(.spring(duration: 0.32, bounce: 0.25)) {
