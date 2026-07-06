@@ -1091,26 +1091,32 @@ struct AIAssistantView: View {
         VStack(spacing: 0) {
             Divider().opacity(0.4)
             HStack(spacing: 10) {
-                PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
-                    Image(systemName: "photo.on.rectangle.angled")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(vm.isLoading ? Color.secondary : accent)
+                if speech.isRecording {
+                    WaveformView(level: speech.audioLevel, accent: Color(hex: 0xF1746C))
                         .frame(width: 34, height: 34)
-                }
-                .disabled(vm.isLoading)
-                .onChange(of: photoItem) { _, item in
-                    guard let item else { return }
-                    Task {
-                        if let data = try? await item.loadTransferable(type: Data.self),
-                           let ui = UIImage(data: data) {
-                            vm.analyzeImage(ui)
-                        }
-                        photoItem = nil
+                        .transition(.scale.combined(with: .opacity))
+                } else {
+                    PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
+                        Image(systemName: "photo.on.rectangle.angled")
+                            .font(.system(size: 20, weight: .medium))
+                            .foregroundStyle(vm.isLoading ? Color.secondary : accent)
+                            .frame(width: 34, height: 34)
                     }
+                    .disabled(vm.isLoading)
+                    .onChange(of: photoItem) { _, item in
+                        guard let item else { return }
+                        Task {
+                            if let data = try? await item.loadTransferable(type: Data.self),
+                               let ui = UIImage(data: data) {
+                                vm.analyzeImage(ui)
+                            }
+                            photoItem = nil
+                        }
+                    }
+                    .transition(.scale.combined(with: .opacity))
                 }
 
-                TextField(speech.isRecording ? "J'écoute…" : "Dis-moi quelque chose…",
-                          text: $vm.inputText, axis: .vertical)
+                TextField(recordingPlaceholder, text: $vm.inputText, axis: .vertical)
                     .font(.system(size: 15))
                     .lineLimit(1...5)
                     .padding(.horizontal, 14)
@@ -1120,6 +1126,7 @@ struct AIAssistantView: View {
                     .submitLabel(.send)
                     .onSubmit { vm.send() }
                     .disabled(speech.isRecording)
+                    .opacity(speech.isRecording ? max(0.3, 1 - abs(voiceDragOffset) / cancelThreshold) : 1)
                     .onChange(of: speech.transcript) { _, new in
                         guard speech.isRecording else { return }
                         if textBeforeVoice.isEmpty {
@@ -1136,6 +1143,7 @@ struct AIAssistantView: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .background(Theme.bg)
+            .animation(.spring(response: 0.3, dampingFraction: 0.75), value: speech.isRecording)
             .overlay(alignment: .top) {
                 if let msg = speech.errorMessage {
                     Text(msg)
@@ -1148,7 +1156,35 @@ struct AIAssistantView: View {
                         .transition(.opacity)
                 }
             }
+            .overlay(alignment: .top) {
+                if speech.isRecording {
+                    cancelHint
+                        .offset(y: -22)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
         }
+    }
+
+    private var recordingPlaceholder: String {
+        guard speech.isRecording else { return "Dis-moi quelque chose…" }
+        return speech.locale.identifier.hasPrefix("en") ? "Listening…" : "J'écoute…"
+    }
+
+    private var cancelHint: some View {
+        let progress = min(1, abs(voiceDragOffset) / cancelThreshold)
+        return HStack(spacing: 6) {
+            Image(systemName: "chevron.left")
+                .font(.system(size: 10, weight: .bold))
+            Text(progress >= 1 ? "Relâche pour annuler" : "Glisse pour annuler")
+                .font(.system(size: 11, weight: .semibold))
+        }
+        .foregroundStyle(progress >= 1 ? Color(hex: 0xF1746C) : Color.secondary)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(.ultraThinMaterial, in: Capsule())
+        .overlay(Capsule().stroke(Color.secondary.opacity(0.15), lineWidth: 0.5))
+        .opacity(1 - progress * 0.3)
     }
 
     @ViewBuilder private var sendOrMicButton: some View {
