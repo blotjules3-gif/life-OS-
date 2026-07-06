@@ -1610,6 +1610,53 @@ private struct TypewriterText: View {
     }
 }
 
+// MARK: - Coach text sanitizer
+
+/// Nettoie les réponses du coach : retire les caractères markdown parasites
+/// (astérisques de gras/italique, dièses de titres, chevrons de citation,
+/// séparateurs ===/---, puces "- " ou "* " en début de ligne).
+/// Reste tolérant si le coach envoie du texte propre.
+enum CoachTextCleaner {
+    static func clean(_ raw: String) -> String {
+        var s = raw
+
+        // 1) Emphases markdown : **gras**, *italique*, __gras__, _italique_
+        s = s.replacingOccurrences(of: "**", with: "")
+        s = s.replacingOccurrences(of: "__", with: "")
+        // Astérisques et underscores isolés (autour d'un mot) → retirer
+        s = s.replacingOccurrences(of: #"(?<!\w)\*(?=\S)"#, with: "", options: .regularExpression)
+        s = s.replacingOccurrences(of: #"(?<=\S)\*(?!\w)"#, with: "", options: .regularExpression)
+        s = s.replacingOccurrences(of: #"(?<!\w)_(?=\S)"#, with: "", options: .regularExpression)
+        s = s.replacingOccurrences(of: #"(?<=\S)_(?!\w)"#, with: "", options: .regularExpression)
+
+        // 2) Backticks code inline
+        s = s.replacingOccurrences(of: "`", with: "")
+
+        // 3) Titres markdown en début de ligne (### Titre → Titre)
+        s = s.replacingOccurrences(of: #"(?m)^\s*#{1,6}\s+"#, with: "", options: .regularExpression)
+
+        // 4) Puces "- " / "* " / "• " en début de ligne
+        s = s.replacingOccurrences(of: #"(?m)^\s*[-*•]\s+"#, with: "", options: .regularExpression)
+
+        // 5) Chevrons de citation "> " en début de ligne
+        s = s.replacingOccurrences(of: #"(?m)^\s*>\s+"#, with: "", options: .regularExpression)
+
+        // 6) Séparateurs horizontaux (---, ***, ===) sur ligne entière
+        s = s.replacingOccurrences(of: #"(?m)^\s*(?:-{3,}|\*{3,}|={3,})\s*$"#, with: "", options: .regularExpression)
+
+        // 7) Boîtes ASCII (═══, ──, ▬▬) sur ligne entière
+        s = s.replacingOccurrences(of: #"(?m)^\s*[═─▬━┈┄]{3,}\s*$"#, with: "", options: .regularExpression)
+
+        // 8) Puces numérotées "1. " → conserver le chiffre naturellement (on ne touche pas)
+
+        // 9) Écraser 3+ lignes vides consécutives à 2 max
+        s = s.replacingOccurrences(of: #"\n{3,}"#, with: "\n\n", options: .regularExpression)
+
+        // 10) Trim final
+        return s.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
 // MARK: - PressScaleButtonStyle
 
 private struct PressScaleButtonStyle: ButtonStyle {
