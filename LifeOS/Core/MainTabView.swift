@@ -163,6 +163,58 @@ private struct HabitWidgetSyncer: View {
     }
 }
 
+// MARK: - Syncer invisible fitness → shared defaults (pour le coach)
+
+private struct FitnessWidgetSyncer: View {
+    @Query(sort: \WorkoutSet.date, order: .reverse) private var sets: [WorkoutSet]
+
+    var body: some View {
+        Color.clear.frame(width: 0, height: 0)
+            .onAppear { sync() }
+            .task {
+                try? await Task.sleep(for: .milliseconds(300))
+                sync()
+            }
+            .onChange(of: sets.count) { _, _ in sync() }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in sync() }
+    }
+
+    private func sync() {
+        guard let defaults = UserDefaults(suiteName: "group.lifeos.app") else { return }
+        let cal = Calendar.current
+        guard let weekAgo = cal.date(byAdding: .day, value: -7, to: .now) else { return }
+        let recent = sets.filter { $0.date >= weekAgo }
+
+        let daysTrained = Set(recent.map { cal.startOfDay(for: $0.date) }).count
+        let totalSets = recent.count
+        let totalVolumeKg = Int(recent.reduce(0.0) { $0 + $1.volume })
+
+        let summary = "Séances muscu 7 derniers jours: \(daysTrained) jour\(daysTrained > 1 ? "s" : ""), \(totalSets) séries, \(totalVolumeKg) kg de volume"
+        defaults.set(summary, forKey: "fitness_summary_7d")
+
+        // Top 5 exos par nombre de séries
+        var counts: [String: Int] = [:]
+        for s in recent where !s.exercise.isEmpty {
+            counts[s.exercise, default: 0] += 1
+        }
+        let topExos = counts.sorted { $0.value > $1.value }.prefix(5)
+            .map { "\($0.key) (\($0.value)s)" }
+            .joined(separator: ", ")
+        defaults.set(topExos, forKey: "fitness_last_exercises")
+
+        // PR récent (1RM estimé max sur les 30 derniers jours)
+        guard let monthAgo = cal.date(byAdding: .day, value: -30, to: .now) else { return }
+        let recent30 = sets.filter { $0.date >= monthAgo }
+        if let best = recent30.max(by: { $0.estimated1RM < $1.estimated1RM }), !best.exercise.isEmpty {
+            let pr = String(format: "%@ 1RM ≈ %.0f kg (%.1fkg × %d reps)",
+                            best.exercise, best.estimated1RM, best.weightKg, best.reps)
+            defaults.set(pr, forKey: "fitness_top_lift")
+        } else {
+            defaults.set("", forKey: "fitness_top_lift")
+        }
+    }
+}
+
 // MARK: - Barre flottante : [2 onglets] [assistant] [2 onglets]
 
 struct FloatingTabBar: View {
