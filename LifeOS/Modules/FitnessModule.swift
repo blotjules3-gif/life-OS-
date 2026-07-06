@@ -74,6 +74,23 @@ struct FitnessHubView: View {
                     subtitle: "Régularité d'entraînement", tint: .fitTint) { StreaksView() }
         }
         .fullScreenCover(isPresented: $showTabata) { TabataView() }
+        .sheet(isPresented: $showFitnessProfile) { FitnessProfileSheet() }
+    }
+
+    private func openCoachForSessionRequest() {
+        let hour = Calendar.current.component(.hour, from: .now)
+        let timeHint: String
+        switch hour {
+        case 5..<11:  timeHint = "ce matin"
+        case 11..<14: timeHint = "ce midi"
+        case 14..<18: timeHint = "cet après-midi"
+        default:      timeHint = "ce soir"
+        }
+        NotificationCenter.default.post(
+            name: .lifeOSOpenAIChat,
+            object: nil,
+            userInfo: ["prefill": "Génère-moi ma séance pour \(timeHint). Pose-moi les questions nécessaires (objectif, équipement, temps dispo, blessures) avant de proposer, puis explique tes choix."]
+        )
     }
 }
 
