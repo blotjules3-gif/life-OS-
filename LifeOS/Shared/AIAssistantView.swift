@@ -926,6 +926,7 @@ struct AIAssistantView: View {
 
     private var inputSection: some View {
         VStack(spacing: 0) {
+            coachDownBanner
             if vm.isServerOffline {
                 offlineBanner
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -934,6 +935,7 @@ struct AIAssistantView: View {
         }
         .background(Theme.bg)
         .animation(.spring(response: 0.35, dampingFraction: 0.82), value: vm.isServerOffline)
+        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: serverStatus.coach)
     }
 
     // MARK: - Messages area
