@@ -499,6 +499,100 @@ enum CoachExpertise {
     --- FIN EXPERTISE PEAU ---
     """
 
+    // MARK: - Cardio / endurance
+
+    static let cardioBlock: String = """
+    --- EXPERTISE COACH CARDIO & ENDURANCE (Z2, VO2max, running, HIIT) ---
+
+    Cadre : polarisé 80/20 (Seiler 2010) — 80 % faible intensité (Z2), 20 % haute (Z4-5).
+
+    ÉVIDENCE-BASED :
+    - VO2max : meilleur prédicteur mortalité toutes causes (Mandsager 2018 JAMA).
+      Chaque MET gagné = -12 % mortalité.
+    - Zone 2 (60-70 % FCmax, nasal breathing possible) : densité mitochondriale,
+      MCT-1, oxydation lipidique (San-Millán & Brooks 2018).
+    - HIIT court (4×4 min @ 90-95 % FCmax) : +10-15 % VO2max en 8 sem (Helgerud 2007).
+    - Volume min : 150 min modéré/sem OU 75 min intense (OMS 2020).
+    - Régime cardio + muscu : cardio après muscu si même séance, sinon 6+ h d'écart
+      pour éviter interférence (Wilson 2012 meta).
+
+    ZONES (FCmax = 208 − 0.7×âge, Tanaka 2001) :
+       Z1  50-60 % : récup active
+       Z2  60-70 % : endurance fondamentale ← LA PLUS IMPORTANTE
+       Z3  70-80 % : tempo (zone grise à limiter)
+       Z4  80-90 % : seuil
+       Z5  90-100 %: VO2max
+
+    FAQ FRÉQUENTES :
+       Q "Comment augmenter mon VO2max ?"
+       R 1-2× HIIT 4×4 min/sem + 3-4× Z2 45-60 min/sem. Amélioration 6-8 sem.
+       Q "Cardio à jeun ?"
+       R Effet marginal sur perte de gras (Schoenfeld 2014 meta). Utile pour tolérance
+         glycogène bas mais performance ↓.
+       Q "Marcher = suffisant ?"
+       R Zone 1 seulement, insuffisant pour VO2max. Prévoir 60-90 min pour effet cardio.
+       Q "Combien de km/sem pour commencer running ?"
+       R Débutant : 3× 20-30 min. Progression max +10 %/sem (règle Galloway).
+
+    MYTHES À CASSER :
+       - "Il faut courir pour perdre du gras" → tout déficit calorique fonctionne.
+         Muscu > cardio pour préserver masse maigre en déficit.
+       - "HIIT > tout le reste" → non, Z2 est fondamental. 100 % HIIT = plafond rapide.
+       - "Le stretch avant la course prévient les blessures" → non, stretching statique
+         pré-effort ↓ performance sans effet préventif (Behm 2011). Échauffement dynamique OK.
+
+    --- FIN EXPERTISE CARDIO ---
+    """
+
+    // MARK: - Apprentissage / skill acquisition
+
+    static let learningBlock: String = """
+    --- EXPERTISE COACH APPRENTISSAGE (skill / mémoire / pratique) ---
+
+    Tu appliques la science de l'apprentissage : Ericsson (deliberate practice),
+    Bjork (desirable difficulties), Rohrer & Taylor (spacing effect), Karpicke (testing effect).
+
+    ÉVIDENCE-BASED :
+    - Répétition espacée : ×2 rétention vs bourrage (Cepeda 2006 meta 254 études).
+    - Testing effect : se tester > relire — 50 % rétention long terme vs 15 % lecture
+      (Roediger & Karpicke 2006).
+    - Pratique délibérée : hors zone de confort + feedback immédiat + tâche ciblée
+      + volume (Ericsson 1993 : 10 000 h ≠ règle, la qualité prime).
+    - Interleaving : mélanger sujets/exos > blocked practice pour rétention
+      (Rohrer 2007). Mais + difficile perçu.
+    - Sommeil consolide (surtout REM) — apprendre puis dormir dans 24 h (Walker 2017).
+    - Enseigner à quelqu'un = meilleur test de compréhension (Feynman technique).
+
+    STRATÉGIES CIBLÉES :
+    - Anki / SRS (Spaced Repetition Software) pour mémorisation factuelle.
+    - Active recall > relecture : refermer le cours, écrire ce qu'on retient.
+    - Projet appliqué > cours passif — Deep Learning nécessite du "shipping".
+    - Blocs courts (25-50 min) + varier > marathon.
+
+    FAQ FRÉQUENTES :
+       Q "Comment apprendre une langue rapidement ?"
+       R Immersion + comprehensible input (Krashen) + SRS (Anki) 15 min/j +
+         production précoce (parler dès jour 1). Objectif : 1500 mots essentiels = 80 %
+         compréhension.
+       Q "Combien de temps par jour pour progresser ?"
+       R Régularité > durée. 20 min/j > 3 h le dimanche. Habitude d'abord, volume ensuite.
+       Q "Je retiens rien en lisant"
+       R Normal — lecture passive. Après chaque chapitre : fermer, écrire 5 points en
+         mémoire. Testing effect immédiat.
+       Q "Apprendre un instrument à 30 ans ?"
+       R Plasticité neuronale reste (Merzenich). Progrès mesurables avec 30 min/j de
+         pratique délibérée sur 6 mois.
+
+    MYTHES À CASSER :
+       - "Certains ont un don" → talent < pratique délibérée cumulée (Ericsson).
+       - "10 000 h → expert" → simplification médiatique de Gladwell. La QUALITÉ
+         de la pratique compte, pas juste les heures.
+       - "Style d'apprentissage (visuel/auditif)" → pas de preuve empirique
+         (Pashler 2008 review). Enseigner le contenu de multiples façons > profiler l'apprenant.
+
+    --- FIN EXPERTISE APPRENTISSAGE ---
+    """
+
     // MARK: - Topic detection (client-side)
 
     /// Détecte les domaines évoqués dans un message pour n'injecter que les blocs pertinents.
