@@ -83,6 +83,47 @@ struct FitnessProfileSheet: View {
                         Text("Ratios force / poids de corps")
                     }
                 }
+
+                Section {
+                    Button {
+                        showResetConfirm = true
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "arrow.counterclockwise")
+                                .font(.system(size: 13, weight: .semibold))
+                            Text("Recommencer l'intro coach")
+                                .font(.system(size: 14, weight: .medium))
+                            Spacer()
+                            if resetDone {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(Color(hex: 0x4CC38A))
+                                    .transition(.scale.combined(with: .opacity))
+                            }
+                        }
+                    }
+                    .foregroundStyle(Color(hex: 0x9B6CF1))
+                } footer: {
+                    Text("Le coach relancera ses questions à ta prochaine ouverture du hub Muscu. Utile pour recalibrer un nouveau programme.")
+                        .font(.system(size: 11))
+                }
+            }
+            .confirmationDialog(
+                "Relancer l'intro coach à la prochaine ouverture de Muscu ?",
+                isPresented: $showResetConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Relancer", role: .destructive) {
+                    coachIntroShown = false
+                    UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["fitnessCoachIntroFollowup"])
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                        resetDone = true
+                    }
+                    Task { @MainActor in
+                        try? await Task.sleep(nanoseconds: 2_000_000_000)
+                        withAnimation(.easeOut(duration: 0.3)) { resetDone = false }
+                    }
+                }
+                Button("Annuler", role: .cancel) { }
             }
             .navigationTitle("Profil sportif")
             .navigationBarTitleDisplayMode(.inline)
