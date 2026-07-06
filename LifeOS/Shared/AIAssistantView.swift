@@ -1240,13 +1240,14 @@ struct AIAssistantView: View {
         .animation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true), value: micPulse)
         .offset(x: max(-cancelThreshold, voiceDragOffset))
         .scaleEffect(1 - progress * 0.15)
-        .gesture(
-            DragGesture(minimumDistance: 4)
+        .contentShape(Circle().size(width: 60, height: 60))
+        .onTapGesture { stopVoiceAndSend() }
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 10)
                 .onChanged { value in
                     let dx = min(0, value.translation.width)
                     voiceDragOffset = dx
                     if abs(dx) >= cancelThreshold, micPulse {
-                        // haptique une seule fois au franchissement
                         UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
                         micPulse = false
                     } else if abs(dx) < cancelThreshold, !micPulse {
