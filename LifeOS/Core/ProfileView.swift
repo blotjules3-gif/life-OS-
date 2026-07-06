@@ -727,6 +727,14 @@ struct ProfileView: View {
                 } action: {
                     showGoalEditor = true
                 }
+                #if DEBUG
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
+                settingsRow(icon: "text.magnifyingglass", iconColor: Color(hex: 0x9B6CF1), label: "Coach — inspecter contexte") {
+                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
+                } action: {
+                    showCoachDebug = true
+                }
+                #endif
                 Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
                 settingsRow(icon: "sparkles", iconColor: Color.accentColor, label: "Coach — serveur") {
                     HStack(spacing: 6) {
