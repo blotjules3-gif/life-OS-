@@ -383,7 +383,101 @@ enum CoachExpertise {
     --- FIN EXPERTISE PEAU ---
     """
 
-    // MARK: - Dispatch
+    // MARK: - Topic detection (client-side)
+
+    /// Détecte les domaines évoqués dans un message pour n'injecter que les blocs pertinents.
+    /// Retourne un set de "topics" identifiés (fitness / nutrition / sleep / mind / productivity /
+    /// cycle / medical / looks). Vide si rien de reconnu.
+    static func detectTopics(in message: String) -> Set<String> {
+        let m = " " + message.lowercased().folding(options: .diacriticInsensitive, locale: .current) + " "
+        var topics: Set<String> = []
+
+        // Chaque mot-clé est encadré d'espaces pour éviter faux positifs (ex. "repas" ≠ "reprise").
+        // La comparaison est faite en minuscule + sans accents.
+        func hit(_ terms: [String]) -> Bool {
+            terms.contains { m.contains(" " + $0 + " ") || m.contains($0 + "s ") || m.contains(" " + $0 + ".") }
+        }
+
+        // Sport / muscu
+        if hit(["muscu", "musculation", "seance", "entrainement", "entraine", "sport",
+                "bench", "squat", "deadlift", "souleve", "curl", "traction", "developpe",
+                "reps", "serie", "series", "kg", "1rm", "workout", "gym", "exo",
+                "exercice", "training", "cardio", "hiit", "running", "course",
+                "streaks", "streak", "sportif", "programmee", "programme"]) {
+            topics.insert("fitness")
+        }
+        // Nutrition
+        if hit(["kcal", "calorie", "calories", "proteine", "proteines", "glucide", "lipide",
+                "manger", "mange", "repas", "diete", "regime", "aliment", "food",
+                "eau", "hydratation", "prise de masse", "seche", "deficit", "surplus",
+                "bmr", "tdee", "vitamine", "nutriment", "hydrate", "hydrater",
+                "collation", "petit dej", "diner", "dejeuner"]) {
+            topics.insert("nutrition")
+        }
+        // Sommeil
+        if hit(["sommeil", "dormir", "dors", "dormi", "dort", "nuit", "coucher",
+                "reveil", "endormir", "endormi", "insomnie", "sieste", "circadien",
+                "melatonine", "rem", "somnolent", "somnolence", "reposer", "repose"]) {
+            topics.insert("sleep")
+        }
+        // Mental
+        if hit(["stress", "anxiete", "anxieux", "meditation", "medite", "focus",
+                "concentration", "attention", "emotion", "humeur", "rumination",
+                "mind", "mental", "respiration", "coherence cardiaque", "burnout",
+                "deprime", "depression", "peur", "panique"]) {
+            topics.insert("mind")
+        }
+        // Productivité / habitudes
+        if hit(["habitude", "productivite", "procrastination", "deep work", "pomodoro",
+                "objectif", "goal", "routine", "planning", "todo", "tache",
+                "priorite", "flow", "efficace", "efficacite"]) {
+            topics.insert("productivity")
+        }
+        // Cycle
+        if hit(["regles", "cycle", "menstruel", "menstruation", "ovulation", "luteale",
+                "folliculaire", "spm", "premenstruel", "menstrues"]) {
+            topics.insert("cycle")
+        }
+        // Longévité / santé
+        if hit(["longevite", "sante", "cholesterol", "vo2", "vo2max", "prise de sang",
+                "biomarqueur", "biomarqueurs", "depistage", "prevention", "attia",
+                "apo-b", "lp(a)", "hba1c", "insuline", "vieillissement",
+                "vieillir", "esperance de vie"]) {
+            topics.insert("medical")
+        }
+        // Peau
+        if hit(["peau", "acne", "skincare", "retinoide", "retinol", "spf", "solaire",
+                "vitamine c", "collagene", "mewing", "posture", "boutons",
+                "point noir", "peeling", "hydrater ma peau", "eclat"]) {
+            topics.insert("looks")
+        }
+
+        return topics
+    }
+
+    /// Compose méta-règle + blocs correspondant aux topics détectés (méta + 3 blocs max).
+    static func blocks(forTopics topics: Set<String>) -> String {
+        guard !topics.isEmpty else { return metaRule }
+        var out: [String] = [metaRule]
+        let ordered = ["fitness", "nutrition", "sleep", "mind", "productivity", "cycle", "medical", "looks"]
+        for topic in ordered where topics.contains(topic) {
+            switch topic {
+            case "fitness":      out.append(workoutBlock)
+            case "nutrition":    out.append(nutritionBlock)
+            case "sleep":        out.append(sleepBlock)
+            case "mind":         out.append(mindBlock)
+            case "productivity": out.append(productivityBlock)
+            case "cycle":        out.append(cycleBlock)
+            case "medical":      out.append(longevityBlock)
+            case "looks":        out.append(looksBlock)
+            default: break
+            }
+            if out.count >= 4 { break } // méta + 3 blocs = plafond
+        }
+        return out.joined(separator: "\n\n")
+    }
+
+    // MARK: - Dispatch (fallback module-based)
 
     /// Renvoie la méta-règle + les blocs pertinents selon les modules actifs
     /// de l'utilisateur (chaîne CSV du type "fitness,nutrition,sleep,...").
