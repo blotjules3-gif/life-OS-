@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Sheet de debug — inspecte ce que le coach reçoit dans son contexte à un instant T.
 /// Utilise en local pour tuner l'injection d'expertise sans envoyer un vrai message.
