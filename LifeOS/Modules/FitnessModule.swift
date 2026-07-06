@@ -130,8 +130,30 @@ struct FitnessHubView: View {
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(.primary)
                 Spacer()
+                Text("\(filledCount)/\(totalFields)")
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundStyle(Color.fitTint)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.fitTint.opacity(0.15), in: Capsule())
             }
-            Text("Pour que le coach calibre tes séances, il a besoin de connaître ton objectif, ton niveau, ton équipement, tes records et ton poids. Choisis ton mode.")
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color.primary.opacity(0.07))
+                        .frame(height: 5)
+                    Capsule()
+                        .fill(LinearGradient(colors: [Color.fitTint.opacity(0.7), Color.fitTint], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: max(6, geo.size.width * CGFloat(profileProgress)), height: 5)
+                        .animation(.spring(response: 0.45, dampingFraction: 0.75), value: profileProgress)
+                }
+            }
+            .frame(height: 5)
+
+            Text(filledCount == 0
+                 ? "Pour que le coach calibre tes séances, choisis ton mode."
+                 : "Encore \(totalFields - filledCount) infos pour un plan sur mesure.")
                 .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
