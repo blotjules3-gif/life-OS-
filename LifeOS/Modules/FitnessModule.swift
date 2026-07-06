@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import Charts
+import UserNotifications
 
 extension ShapeStyle where Self == Color { static var fitTint: Color { AppCategory.fitness.tint } }
 
