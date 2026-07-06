@@ -1603,3 +1603,35 @@ private struct PressScaleButtonStyle: ButtonStyle {
             .animation(.spring(response: 0.2, dampingFraction: 0.65), value: configuration.isPressed)
     }
 }
+
+// MARK: - Waveform (feedback vocal live)
+
+private struct WaveformView: View {
+    let level: Float
+    let accent: Color
+    /// Historique lissé des 5 dernières mesures pour rendre le mouvement continu.
+    @State private var levels: [Float] = Array(repeating: 0, count: 5)
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 2) {
+            ForEach(0..<levels.count, id: \.self) { i in
+                Capsule()
+                    .fill(accent)
+                    .frame(width: 3, height: barHeight(for: levels[i]))
+            }
+        }
+        .frame(width: 34, height: 34)
+        .onChange(of: level) { _, new in
+            withAnimation(.easeOut(duration: 0.09)) {
+                levels.removeFirst()
+                levels.append(new)
+            }
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func barHeight(for value: Float) -> CGFloat {
+        let clamped = CGFloat(max(0.05, min(1, value)))
+        return 6 + clamped * 22
+    }
+}
