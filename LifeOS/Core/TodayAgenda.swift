@@ -144,7 +144,7 @@ struct TodayAgendaSection: View {
                              category: .nutrition, sortKey: key, addKind: .supplement))
         }
 
-        // 🔔 Rappels perso (shampoing, soins, routines…)
+        // Rappels perso (shampoing, soins, routines…)
         for r in reminders.filter({ $0.enabled }) {
             out.append(.init(icon: "bell.fill",
                              title: r.title,
@@ -152,14 +152,14 @@ struct TodayAgendaSection: View {
                              category: nil, sortKey: r.hour * 60 + r.minute))
         }
 
-        // 🔁 Abonnements à renouveler
+        // Abonnements à renouveler
         for sub in subscriptions.filter({ isToday($0.nextDate) }) {
             out.append(.init(icon: "arrow.triangle.2.circlepath",
                              title: "Renouvellement : \(sub.name)",
                              detail: "Abonnement", category: .finance, sortKey: 24 * 60))
         }
 
-        // 📦 Échéances / livraisons (aujourd'hui ou en retard)
+        // Échéances / livraisons (aujourd'hui ou en retard)
         for d in deadlines.filter({ isDueBy($0.date) }) {
             let overdue = cal.startOfDay(for: d.date) < today
             out.append(.init(icon: "shippingbox.fill",
@@ -168,33 +168,33 @@ struct TodayAgendaSection: View {
                              category: .admin, sortKey: 24 * 60))
         }
 
-        // 🧹 Tâches ménagères dues
+        // Tâches ménagères dues
         for c in chores.filter({ $0.lastDone == nil || isDueBy($0.nextDue) }) {
             out.append(.init(icon: "spray.and.wipe.fill",
                              title: c.name, detail: "À faire (\(c.assigneeShort))",
                              category: .home, sortKey: 24 * 60))
         }
 
-        // 🐾 Soins animaux
+        // Soins animaux
         for p in petCares.filter({ isToday($0.date) }) {
             out.append(.init(icon: "pawprint.fill", title: p.type,
                              detail: p.note.isEmpty ? "Soin animal" : p.note,
                              category: .home, sortKey: 24 * 60))
         }
 
-        // 🔧 Entretien maison
+        // Entretien maison
         for m in maintenances.filter({ isDueBy($0.nextDue) }) {
             out.append(.init(icon: "wrench.and.screwdriver.fill", title: m.name, detail: "Entretien",
                              category: .home, sortKey: 24 * 60))
         }
 
-        // 🚗 Révision véhicule
+        // Révision véhicule
         for v in vehicles.filter({ isDueBy($0.nextService) }) {
             out.append(.init(icon: "car.fill", title: "Révision : \(v.name)", detail: "Véhicule",
                              category: .mobility, sortKey: 24 * 60))
         }
 
-        // 🎉 Événements sociaux
+        // Événements sociaux
         for e in events.filter({ isToday($0.date) }) {
             out.append(.init(icon: "party.popper.fill", title: e.title, detail: "Événement",
                              category: .social, sortKey: cal.component(.hour, from: e.date) * 60 + cal.component(.minute, from: e.date)))
@@ -213,7 +213,7 @@ struct TodayAgendaSection: View {
             }
         }
 
-        // 🎁 Anniversaires + prises de nouvelles
+        // Anniversaires + prises de nouvelles
         for c in contacts {
             if let b = c.birthday, cal.component(.month, from: b) == cal.component(.month, from: now),
                cal.component(.day, from: b) == cal.component(.day, from: now) {
