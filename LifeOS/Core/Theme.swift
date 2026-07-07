@@ -89,6 +89,18 @@ enum Theme {
     static let gap: CGFloat = 12
     static let sectionGap: CGFloat = 24
 
+    // MARK: - Tokens Animation (spring physique iOS 26 — remplace les valeurs éparpillées)
+    //
+    // Règle : préfère TOUJOURS l'un de ces 4 tokens plutôt qu'un `.spring(response: X)` inline.
+    // - animMicro   : pressions boutons, toggle instantané           (< 200 ms perçu)
+    // - animQuick   : chip toggles, apparitions courtes              (~300 ms perçu)
+    // - animDefault : navigation, transitions écran/section standard (~500 ms perçu)
+    // - animSlow    : hero entries, staggered orchestrations         (~700 ms perçu)
+    static let animMicro   = Animation.spring(response: 0.20, dampingFraction: 0.70)
+    static let animQuick   = Animation.spring(response: 0.28, dampingFraction: 0.75)
+    static let animDefault = Animation.spring(response: 0.35, dampingFraction: 0.80)
+    static let animSlow    = Animation.spring(response: 0.45, dampingFraction: 0.90)
+
     /// Thème Verre actif ? (lu depuis les réglages — sert aux fonds adaptatifs).
     static var isGlassActive: Bool { UserDefaults.standard.string(forKey: "appTheme") == "glass" }
 
