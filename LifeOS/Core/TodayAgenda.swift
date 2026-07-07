@@ -123,7 +123,7 @@ struct TodayAgendaSection: View {
         func isToday(_ d: Date) -> Bool { cal.isDateInToday(d) }
         func isDueBy(_ d: Date?) -> Bool { guard let d else { return false }; return cal.startOfDay(for: d) <= today }
 
-        // 🏋️ Séance de sport du jour
+        // Séance de sport du jour
         if let gym = gymDays.first(where: { $0.weekday == weekday && !$0.isRest && !$0.title.isEmpty }) {
             out.append(.init(icon: "figure.strengthtraining.traditional",
                              title: "Séance : \(gym.title)",
