@@ -202,6 +202,7 @@ struct FitnessHubView: View {
                     .background(Color.fitTint, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Le coach me guide pour remplir mon profil")
                 Button { showFitnessProfile = true } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "square.and.pencil")
@@ -216,6 +217,7 @@ struct FitnessHubView: View {
                     .background(Color.fitTint.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Remplir mon profil sportif manuellement")
             }
         }
         .padding(14)
