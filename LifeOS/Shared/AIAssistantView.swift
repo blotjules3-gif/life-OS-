@@ -1111,6 +1111,7 @@ struct AIAssistantView: View {
                             .frame(width: 34, height: 34)
                     }
                     .disabled(vm.isLoading)
+                    .accessibilityLabel("Ajouter une photo")
                     .onChange(of: photoItem) { _, item in
                         guard let item else { return }
                         Task {
