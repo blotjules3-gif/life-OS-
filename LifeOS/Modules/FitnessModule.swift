@@ -107,6 +107,9 @@ struct FitnessHubView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Minuteur HIIT plein écran")
+            .accessibilityHint("Lance le tabata")
             ToolRow(icon: "figure.cooldown", title: "Mobilité & stretching",
                     subtitle: "Routines guidées", tint: .fitTint) { MobilityRoutineView() }
             ToolRow(icon: "flame.fill", title: "Streaks & habitudes",
