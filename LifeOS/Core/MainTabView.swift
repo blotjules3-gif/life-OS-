@@ -323,7 +323,7 @@ struct FloatingTabBar: View {
         } label: {
             ZStack {
                 if selected == t {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                         .fill(Color.accentColor)
                         .frame(width: 52, height: 42)
                         .shadow(color: Color.accentColor.opacity(0.45), radius: 8, y: 3)

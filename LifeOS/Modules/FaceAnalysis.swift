@@ -161,7 +161,7 @@ struct FaceAnalysisView: View {
                         Label(image == nil ? "Choisir un portrait" : "Changer de photo",
                               systemImage: "photo.on.rectangle")
                             .frame(maxWidth: .infinity).padding(.vertical, 12)
-                            .background(Color.looksTint.gradient, in: RoundedRectangle(cornerRadius: 14))
+                            .background(Color.looksTint.gradient, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
                             .foregroundStyle(.white).font(.headline)
                     }
                     if busy { ProgressView("Analyse des points du visage…").padding() }
@@ -216,7 +216,7 @@ struct FaceAnalysisView: View {
               systemImage: "exclamationmark.triangle.fill")
             .font(.subheadline).foregroundStyle(.orange)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14).background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+            .padding(14).background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
     private func results(_ m: [FaceMetric]) -> some View {

@@ -15,8 +15,8 @@ struct SkinTypeArt: View {
             texture
         }
         .frame(height: 96)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
     }
 
     private var skinTone: Color { Color(hex: 0xE8C4A8) }

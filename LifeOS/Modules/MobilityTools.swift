@@ -288,7 +288,7 @@ struct ParkingView: View {
               systemImage: "location.slash.fill")
             .font(.subheadline).foregroundStyle(.orange)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14).background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+            .padding(14).background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
     private var saveButton: some View {

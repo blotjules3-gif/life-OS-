@@ -180,7 +180,7 @@ struct MoodJournalView: View {
                         }
                         .padding(20)
                         .frame(maxWidth: .infinity)
-                        .background(Color.mindTint.opacity(0.07), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(Color.mindTint.opacity(0.07), in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                     } else {
                         VStack(alignment: .leading, spacing: 10) {
                             SectionHeader(title: "Historique", subtitle: "Humeur moyenne : \(avgMood)")

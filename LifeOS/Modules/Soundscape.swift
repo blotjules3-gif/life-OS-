@@ -172,7 +172,7 @@ struct SoundscapeView: View {
             .font(.subheadline).foregroundStyle(.orange)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(14)
-            .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+            .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
     private var soundGrid: some View {

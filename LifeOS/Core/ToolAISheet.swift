@@ -35,7 +35,7 @@ struct ToolAISheet: View {
                             .padding(.horizontal, 10).padding(.vertical, 6)
                             .frame(minHeight: 110)
                     }
-                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
 
                     if let result {
                         Label(result, systemImage: "checkmark.circle.fill")
@@ -50,7 +50,7 @@ struct ToolAISheet: View {
                         text = ""
                     } label: {
                         Text("Appliquer").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 14)
-                            .background(Color.accentColor.gradient, in: RoundedRectangle(cornerRadius: 14))
+                            .background(Color.accentColor.gradient, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
                             .foregroundStyle(.white)
                     }
                     .disabled(text.trimmingCharacters(in: .whitespaces).isEmpty)

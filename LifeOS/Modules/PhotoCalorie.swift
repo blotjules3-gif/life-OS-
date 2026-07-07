@@ -164,14 +164,14 @@ struct PhotoCalorieView: View {
                 .font(.footnote).foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
+        .padding(16).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
     private var errorCard: some View {
         Label("Plat non reconnu. Reprends la photo de plus près, ou ajoute manuellement.", systemImage: "exclamationmark.triangle.fill")
             .font(.subheadline).foregroundStyle(.orange)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14).background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 14))
+            .padding(14).background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
     private func resultCard(_ g: FoodGuess) -> some View {

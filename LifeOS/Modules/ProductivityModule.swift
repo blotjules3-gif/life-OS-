@@ -308,7 +308,7 @@ struct HabitTrackerView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                 .padding(.horizontal, Theme.pad)
                 .padding(.bottom, 16)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -471,7 +471,7 @@ struct HabitRow: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
         .contextMenu {
             Button { duplicate() } label: { Label("Dupliquer", systemImage: "doc.on.doc") }
             Divider()

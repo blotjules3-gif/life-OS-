@@ -153,8 +153,8 @@ struct SetupChoice: View {
                             .foregroundStyle(selection == opt ? AnyShapeStyle(accent) : AnyShapeStyle(Color.secondary.opacity(0.4)))
                     }
                     .padding(16)
-                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                         .stroke(selection == opt ? accent : .clear, lineWidth: 2))
                 }
                 .buttonStyle(.plain)
@@ -375,7 +375,7 @@ struct IntakeHubView: View {
                 }
             }
             .padding(14)
-            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
+            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
             .opacity(has ? 1 : 0.5)
         }
         .buttonStyle(.plain).disabled(!has)

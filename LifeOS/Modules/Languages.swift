@@ -86,8 +86,8 @@ struct LanguagesView: View {
                         }
                         .frame(width: 72, height: 60)
                         .background(lang == p.id ? Color.learnTint.opacity(0.18) : Theme.card,
-                                    in: RoundedRectangle(cornerRadius: 14))
-                        .overlay(RoundedRectangle(cornerRadius: 14)
+                                    in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+                        .overlay(RoundedRectangle(cornerRadius: Theme.radiusSmall)
                             .stroke(lang == p.id ? Color.learnTint : .clear, lineWidth: 2))
                         .foregroundStyle(Theme.textPrimary)
                     }
@@ -106,7 +106,7 @@ struct LanguagesView: View {
         }
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
     private func stat(_ v: String, _ l: String) -> some View {
         VStack(spacing: 2) {

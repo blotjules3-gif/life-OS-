@@ -912,9 +912,9 @@ struct AIAssistantView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 11)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                 .stroke(Color.primary.opacity(0.06), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 3)
@@ -1101,14 +1101,17 @@ struct AIAssistantView: View {
             HStack(spacing: 10) {
                 if speech.isRecording {
                     WaveformView(level: speech.audioLevel, accent: Color(hex: 0xF1746C))
-                        .frame(width: 34, height: 34)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                         .transition(.scale.combined(with: .opacity))
+                        .accessibilityHidden(true)
                 } else {
                     PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
                         Image(systemName: "photo.on.rectangle.angled")
                             .font(.system(size: 20, weight: .medium))
                             .foregroundStyle(vm.isLoading ? Color.secondary : accent)
-                            .frame(width: 34, height: 34)
+                            .frame(width: 44, height: 44)
+                            .contentShape(Rectangle())
                     }
                     .disabled(vm.isLoading)
                     .accessibilityLabel("Ajouter une photo")

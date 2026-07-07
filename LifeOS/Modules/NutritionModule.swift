@@ -573,7 +573,7 @@ struct SupplementsView: View {
                 .labelsHidden().tint(.nutriTint)
         }
         .padding(12)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
         .contextMenu {
             Button(role: .destructive) { delete(s) } label: { Label("Supprimer", systemImage: "trash") }
         }

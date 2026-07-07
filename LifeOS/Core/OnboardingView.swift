@@ -381,7 +381,7 @@ struct OnboardingName: View {
                     .multilineTextAlignment(.center)
                     .padding(.vertical, 16)
                     .padding(.horizontal, 20)
-                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                     .focused($focused)
                     .onSubmit { if canContinue { onNext() } }
                     .submitLabel(.done)
@@ -405,7 +405,7 @@ struct OnboardingName: View {
                                         .frame(width: 52, height: 52)
                                         .background(
                                             gender == opt.value ? opt.color : opt.color.opacity(0.12),
-                                            in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                            in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                                         )
                                     Text(opt.label)
                                         .font(.footnote.weight(gender == opt.value ? .semibold : .regular))
@@ -502,9 +502,9 @@ struct OnboardingHormonalContext: View {
                             }
                             .padding(.horizontal, 14)
                             .padding(.vertical, 12)
-                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                             .overlay(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                                     .stroke(hormonalContext == opt.id ? Color(hex: 0xE85D9A) : Color.clear, lineWidth: 1.5)
                             )
                         }
@@ -722,7 +722,7 @@ struct GoalCard: View {
                     .frame(width: 54, height: 54)
                     .background(
                         isSelected ? goal.color : goal.color.opacity(0.12),
-                        in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                     )
                 Text(goal.label)
                     .font(.footnote.weight(.medium))
@@ -1046,7 +1046,7 @@ struct OnboardingResults: View {
                                 }
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 12)
-                                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                                 .opacity(isOn ? 1 : 0.6)
                             }
                             .buttonStyle(.plain)
@@ -1410,7 +1410,7 @@ struct OnboardingModuleSetup: View {
                             }
                             .padding(.horizontal, 14)
                             .padding(.vertical, 12)
-                            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                             .opacity(on ? 1 : 0.6)
                         }
                         .buttonStyle(.plain)

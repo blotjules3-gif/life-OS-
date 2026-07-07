@@ -101,7 +101,7 @@ struct DocScanView: View {
             if let image {
                 Image(uiImage: image).resizable().scaledToFit()
                     .frame(maxHeight: 240)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.radiusSmall))
             } else {
                 VStack(spacing: 10) {
                     Image(systemName: "doc.viewfinder.fill").font(.system(size: 46)).foregroundStyle(.adminTint)

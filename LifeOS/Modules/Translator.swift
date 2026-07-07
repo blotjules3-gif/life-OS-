@@ -133,7 +133,7 @@ private struct TranslatorScreen: View {
                 .scrollContentBackground(.hidden)
                 .padding(.horizontal, 10).padding(.vertical, 6).frame(minHeight: 120)
         }
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
     private var translateButton: some View {
@@ -144,7 +144,7 @@ private struct TranslatorScreen: View {
             config = .init(source: lang(source).language, target: lang(target).language)
         } label: {
             Label("Traduire", systemImage: "globe").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(Color.travelTint.gradient, in: RoundedRectangle(cornerRadius: 14)).foregroundStyle(.white)
+                .background(Color.travelTint.gradient, in: RoundedRectangle(cornerRadius: Theme.radiusSmall)).foregroundStyle(.white)
         }
         .buttonStyle(.plain)
         .disabled(input.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -164,6 +164,6 @@ private struct TranslatorScreen: View {
                 .frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
         }
         .padding(16).frame(maxWidth: .infinity)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 }

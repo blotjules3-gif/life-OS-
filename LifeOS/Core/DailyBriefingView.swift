@@ -145,10 +145,10 @@ struct DailyBriefingView: View {
                                 .padding(.vertical, 12)
                                 .background(
                                     task.done ? task.color.opacity(0.08) : Theme.card,
-                                    in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                                 )
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                                         .stroke(task.done ? task.color.opacity(0.25) : Color.clear, lineWidth: 1)
                                 )
                             }
@@ -188,7 +188,7 @@ struct DailyBriefingView: View {
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 12)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                                 }
                             }
                         }
@@ -356,7 +356,7 @@ struct DailyBriefingView: View {
                         sleepQuality > 0 && morningMood > 0 && morningFatigue > 0
                         ? Color.accentColor
                         : Color.secondary.opacity(0.3),
-                        in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                     )
                 }
                 .buttonStyle(LifeOSPressStyle())
@@ -480,9 +480,9 @@ struct DailyBriefingView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .background(Color(hex: 0xFF9F0A).opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(Color(hex: 0xFF9F0A).opacity(0.08), in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                     .stroke(Color(hex: 0xFF9F0A).opacity(0.18), lineWidth: 1)
             )
             .transition(.scale(scale: 0.88, anchor: .top).combined(with: .opacity))
@@ -507,7 +507,7 @@ struct DailyBriefingView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
             }
             .buttonStyle(LifeOSPressStyle())
             .transition(.opacity)
@@ -641,7 +641,7 @@ struct DailyBriefingView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
     }
 
     private func quickActionBtn(icon: String, label: String, color: Color, action: @escaping () -> Void) -> some View {
@@ -652,7 +652,7 @@ struct DailyBriefingView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
         }
         .buttonStyle(LifeOSPressStyle())
     }

@@ -210,9 +210,9 @@ struct FitnessHubView: View {
             }
         }
         .padding(14)
-        .background(Color.fitTint.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Color.fitTint.opacity(0.06), in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                 .strokeBorder(Color.fitTint.opacity(0.25), lineWidth: 1)
         )
         .padding(.bottom, 4)

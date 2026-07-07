@@ -99,9 +99,9 @@ struct SleepCheckSheet: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .background(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                                 .fill(sel ? q.color.opacity(0.1) : Theme.card))
-                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .overlay(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                                 .stroke(sel ? q.color.opacity(0.5) : Color.clear, lineWidth: 1.5))
                         }
                         .buttonStyle(LifeOSPressStyle())
@@ -133,7 +133,7 @@ struct SleepCheckSheet: View {
                         .foregroundStyle(.primary)
                         .buttonStyle(LifeOSPressStyle())
                     }
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                 }
                 .padding(.horizontal, 20)
                 .opacity(appeared ? 1 : 0).animation(.spring(duration: 0.5).delay(0.22), value: appeared)
@@ -144,7 +144,7 @@ struct SleepCheckSheet: View {
                     TextField("Cauchemar, réveil nocturne, rêve…", text: $note, axis: .vertical)
                         .font(.system(size: 14)).lineLimit(3)
                         .padding(.horizontal, 14).padding(.vertical, 12)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                 }
                 .padding(.horizontal, 20)
                 .opacity(appeared ? 1 : 0).animation(.spring(duration: 0.5).delay(0.28), value: appeared)
@@ -160,7 +160,7 @@ struct SleepCheckSheet: View {
                         }
                         .frame(maxWidth: .infinity).padding(.vertical, 16)
                         .background(quality > 0 ? Color.accentColor : Color.secondary.opacity(0.2),
-                                    in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                    in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                         .foregroundStyle(quality > 0 ? .white : .secondary)
                     }
                     .buttonStyle(LifeOSPressStyle()).disabled(quality == 0)
@@ -234,7 +234,7 @@ struct SleepCheckSheet: View {
                                             .foregroundStyle(sel ? Color(hex: 0x4CC38A) : .secondary)
                                     }
                                     .frame(maxWidth: .infinity).padding(.vertical, 12)
-                                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .background(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                                         .fill(sel ? Color(hex: 0x4CC38A).opacity(0.1) : Theme.card))
                                 }.buttonStyle(LifeOSPressStyle())
                             }
@@ -261,7 +261,7 @@ struct SleepCheckSheet: View {
                     }
                     .frame(maxWidth: .infinity).padding(.vertical, 16)
                     .background(mood > 0 && fatigue > 0 ? Color.accentColor : Color.secondary.opacity(0.2),
-                                in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                     .foregroundStyle(mood > 0 && fatigue > 0 ? .white : .secondary)
                 }
                 .buttonStyle(LifeOSPressStyle())
@@ -317,7 +317,7 @@ struct SleepCheckSheet: View {
                     Text("Lancer mon briefing").font(.system(size: 16, weight: .semibold))
                 }
                 .frame(maxWidth: .infinity).padding(.vertical, 16)
-                .background(sc, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .background(sc, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                 .foregroundStyle(.white)
             }
             .buttonStyle(LifeOSPressStyle())

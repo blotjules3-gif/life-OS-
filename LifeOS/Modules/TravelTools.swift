@@ -234,8 +234,8 @@ struct PhrasebookView: View {
                         }
                         .frame(width: 74, height: 60)
                         .background(langKey == l.key ? Color.travelTint.opacity(0.18) : Theme.card,
-                                    in: RoundedRectangle(cornerRadius: 14))
-                        .overlay(RoundedRectangle(cornerRadius: 14)
+                                    in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+                        .overlay(RoundedRectangle(cornerRadius: Theme.radiusSmall)
                             .stroke(langKey == l.key ? Color.travelTint : .clear, lineWidth: 2))
                         .foregroundStyle(Theme.textPrimary)
                     }
@@ -268,7 +268,7 @@ struct PhrasebookView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity)
-            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
+            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
         }
         .buttonStyle(.plain)
     }

@@ -60,8 +60,8 @@ struct SkincareView: View {
                                 Image(systemName: "chevron.right").foregroundStyle(.secondary)
                             }
                             .padding(14)
-                            .background(Color.looksTint.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.looksTint.opacity(0.2), lineWidth: 1))
+                            .background(Color.looksTint.opacity(0.06), in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous).stroke(Color.looksTint.opacity(0.2), lineWidth: 1))
                         }.buttonStyle(.plain)
                     }
 
@@ -262,7 +262,7 @@ struct SkinProfileSetupView: View {
                 Text("Continuer").font(.headline).foregroundStyle(.white)
                     .frame(maxWidth: .infinity).padding(.vertical, 14)
                     .background(selectedType.isEmpty ? Color.secondary.opacity(0.3) : Color.looksTint,
-                                in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
             }
             .buttonStyle(.plain).disabled(selectedType.isEmpty).padding(.horizontal, 24).padding(.bottom, 32)
         }
@@ -289,7 +289,7 @@ struct SkinProfileSetupView: View {
             Button { withAnimation { step = 2 } } label: {
                 Text("Continuer").font(.headline).foregroundStyle(.white)
                     .frame(maxWidth: .infinity).padding(.vertical, 14)
-                    .background(Color.looksTint, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(Color.looksTint, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
             }
             .buttonStyle(.plain).padding(.horizontal, 24).padding(.bottom, 32)
         }
@@ -324,7 +324,7 @@ struct SkinProfileSetupView: View {
             } label: {
                 Text("Enregistrer mon profil").font(.headline).foregroundStyle(.white)
                     .frame(maxWidth: .infinity).padding(.vertical, 14)
-                    .background(Color.looksTint, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(Color.looksTint, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
             }
             .buttonStyle(.plain).padding(.horizontal, 24).padding(.bottom, 32)
         }

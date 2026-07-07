@@ -281,7 +281,7 @@ struct ModuleSetupView: View {
                         .font(.system(size: 17, weight: .semibold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(module.tint, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(module.tint, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                         .foregroundStyle(.white)
                 }
                 .padding(.horizontal, 24)
@@ -366,7 +366,7 @@ struct ModuleSetupView: View {
                 .padding(.vertical, 18)
                 .background(
                     value ? module.tint : Color.secondary.opacity(0.1),
-                    in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                 )
                 .foregroundStyle(value ? .white : .primary)
         }
@@ -452,7 +452,7 @@ struct ModuleSetupView: View {
                 .font(.system(size: 17, weight: .semibold))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(module.tint, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .background(module.tint, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 32)

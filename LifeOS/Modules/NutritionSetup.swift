@@ -144,8 +144,8 @@ struct NutritionSetupView: View {
                     }.buttonStyle(.plain)
                 }
                 .padding(12)
-                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(on ? tint : .clear, lineWidth: 1.5))
+                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+                .overlay(RoundedRectangle(cornerRadius: Theme.radiusSmall).stroke(on ? tint : .clear, lineWidth: 1.5))
             }
             DisclosureGroup("Ajouter d'autres compléments") {
                 SetupMultiChoice(options: SupplementPlan.extra, selection: $extraSupps, accent: tint)
@@ -201,7 +201,7 @@ struct NutritionSetupView: View {
             Text(l).font(.caption2).foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 14)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 14))
+        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
     private func row(_ icon: String, _ text: String) -> some View {
         HStack(spacing: 10) {
