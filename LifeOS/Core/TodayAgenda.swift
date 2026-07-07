@@ -131,7 +131,7 @@ struct TodayAgendaSection: View {
                              category: .fitness, sortKey: 7 * 60, tool: .workout))
         }
 
-        // 💊 Compléments du jour — REGROUPÉS par heure (Whey + Créatine à 08:00 = 1 seule ligne)
+        // Compléments du jour — REGROUPÉS par heure (Whey + Créatine à 08:00 = 1 seule ligne)
         let activeSupps = supplements.filter { $0.active }
         let byTime = Dictionary(grouping: activeSupps) { $0.hour * 60 + $0.minute }
         for (key, group) in byTime.sorted(by: { $0.key < $1.key }) {
