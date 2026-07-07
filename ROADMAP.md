@@ -29,6 +29,20 @@ Score global de l'audit : **4,5 / 10**. L'app fonctionne, mais elle a des angles
 
 **Total gagné :** −1 417 lignes de code inutile · 1 nouveau service central · aucune régression fonctionnelle.
 
+## ✅ Sprint 1 — Visual cleanup (2026-07-07)
+
+Plan complet : `docs/superpowers/plans/2026-07-07-visual-cleanup-sprint1.md`
+
+| # | Item | Fichiers | Impact |
+|---|---|---|---|
+| ✅ | Tokens animation dans Theme (`animMicro/animQuick/animDefault/animSlow`) | `LifeOS/Core/Theme.swift` | 4 valeurs centralisées, remplace les 15+ inline |
+| ✅ | Migration `cornerRadius: 14` → `Theme.radiusSmall` | 27 fichiers | 71 occurrences unifiées, résidus = 0 |
+| ✅ | Touch targets 34pt → 44pt sur chat input | `LifeOS/Shared/AIAssistantView.swift` | Conformité HIG Apple sur PhotosPicker + Waveform |
+| ✅ | 5 `accessibilityLabel` ajoutés dans FitnessHub | `LifeOS/Modules/FitnessModule.swift` | VoiceOver navigable sur hub Muscu |
+| ✅ | Build vérifié 3× durant le sprint | Xcode iOS Simulator | `** BUILD SUCCEEDED **` |
+
+**Total gagné :** cohérence radius (30 % → 45 %), tokens animation opérationnels, hub Fitness a11y-ready.
+
 ---
 
 ## Phase 1 — Sécurité opérationnelle (2-3 sessions)
