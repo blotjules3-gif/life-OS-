@@ -200,7 +200,7 @@ struct TodayAgendaSection: View {
                              category: .social, sortKey: cal.component(.hour, from: e.date) * 60 + cal.component(.minute, from: e.date)))
         }
 
-        // ✈️ Voyage : départ ou en cours
+        // Voyage : départ ou en cours
         for t in trips {
             if isToday(t.start) {
                 out.append(.init(icon: "airplane.departure", title: "Départ : \(t.name)",
