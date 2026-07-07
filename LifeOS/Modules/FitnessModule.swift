@@ -61,6 +61,9 @@ struct FitnessHubView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Génère ma séance du jour avec le coach")
+            .accessibilityHint("Ouvre le chat coach avec les six questions préparatoires")
             Button { showFitnessProfile = true } label: {
                 HStack(spacing: 14) {
                     Image(systemName: "person.crop.circle.badge.checkmark")
@@ -78,6 +81,9 @@ struct FitnessHubView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Éditer mon profil sportif")
+            .accessibilityHint("Poids, taille, niveau et records — utilisés par le coach")
             ToolRow(icon: "figure.strengthtraining.traditional", title: "Séance guidée",
                     subtitle: "Ta séance du jour, série par série + repos", tint: .fitTint) { GuidedWorkoutView() }
             ToolRow(icon: "figure.walk", title: "Compteur de pas",
