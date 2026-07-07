@@ -40,16 +40,6 @@ enum Configuration {
         ["52d68e22", "039657e3", "06f5023c", "44ad0b16"].joined()
     }
 
-    // MARK: - Crypto proxy
-
-    static var cryptoProxyURL: String {
-        if let override = UserDefaults.standard.string(forKey: "dev.cryptoProxyURL"),
-           !override.isEmpty { return override }
-        if let plist = Bundle.main.object(forInfoDictionaryKey: "CRYPTO_PROXY_URL") as? String,
-           !plist.isEmpty, !plist.hasPrefix("$(") { return plist }
-        return "https://riskcrypto-proxy.httpsrisckcryptoproxyworkersdev.workers.dev/market"
-    }
-
     // MARK: - Réseau
 
     static let timeoutInterval: TimeInterval = 30
