@@ -308,6 +308,14 @@ struct BubbleCategoriesView: View {
             )
             .presentationDetents([.height(320), .medium])
         }
+        .sheet(item: $sizePickerTarget) { target in
+            BubbleSizePickerSheet(
+                categoryTitle: target.title,
+                categoryTint: target.tint,
+                selection: target.current,
+                onSelect: { setCatSize(target.title, $0) }
+            )
+        }
         .fullScreenCover(isPresented: $showCatIntake) { IntakeHubView() }
     }
 
