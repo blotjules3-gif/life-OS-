@@ -650,17 +650,15 @@ struct BubbleCategoriesView: View {
         )
         .contextMenu {
             if !cat.isFiller {
-                // Les 3 tailles directement au 1er niveau (plus de sous-menu) → un seul tap.
-                Section("Taille de la bulle") {
-                    Button { setCatSize(cat.title, .large) } label: {
-                        Label("Grande", systemImage: effectiveSize(cat) == .large ? "checkmark" : "circle.fill")
-                    }
-                    Button { setCatSize(cat.title, .medium) } label: {
-                        Label("Moyenne", systemImage: effectiveSize(cat) == .medium ? "checkmark" : "circle.lefthalf.filled")
-                    }
-                    Button { setCatSize(cat.title, .small) } label: {
-                        Label("Petite", systemImage: effectiveSize(cat) == .small ? "checkmark" : "circle")
-                    }
+                // Ouvre le sélecteur premium (sheet dédié) au lieu d'un sous-menu système.
+                Button {
+                    sizePickerTarget = BubbleSizePickerTarget(
+                        title: cat.title,
+                        tint: themedTint(cat),
+                        current: effectiveSize(cat)
+                    )
+                } label: {
+                    Label("Taille de la bulle…", systemImage: "circle.grid.2x1.fill")
                 }
                 Section("Couleur") {
                     Button {
