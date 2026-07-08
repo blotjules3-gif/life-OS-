@@ -197,7 +197,7 @@ struct DailyBriefingView: View {
                     Button { dismiss() } label: {
                         Text("Commencer la journée")
                             .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.onAccent)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 16, style: .continuous))

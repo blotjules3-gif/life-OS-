@@ -449,7 +449,7 @@ struct ShortcutsHomeView: View {
             } label: {
                 Text("Compris")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.onAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 11)
                     .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
