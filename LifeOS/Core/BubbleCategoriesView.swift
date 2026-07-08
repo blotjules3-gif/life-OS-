@@ -183,6 +183,7 @@ struct BubbleCategoriesView: View {
     @State private var tappedID: UUID?
     @State private var drag: [UUID: CGSize] = [:]
     @State private var colorEditTarget: ColorEditTarget?
+    @State private var sizePickerTarget: BubbleSizePickerTarget?
 
     private struct ColorEditTarget: Identifiable { let id = UUID(); let title: String; let initial: Color }
     @Environment(\.colorScheme) private var scheme
