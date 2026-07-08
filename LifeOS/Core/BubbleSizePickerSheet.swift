@@ -21,15 +21,21 @@ struct BubbleSizePickerTarget: Identifiable {
 struct BubbleSizePickerSheet: View {
     let categoryTitle: String
     let categoryTint: Color
-    @State var selection: BubbleSize
-    var onSelect: (BubbleSize) -> Void
+    @State private var selection: BubbleSize
+    private let onSelect: (BubbleSize) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var appeared = false
 
+    init(categoryTitle: String, categoryTint: Color, selection: BubbleSize, onSelect: @escaping (BubbleSize) -> Void) {
+        self.categoryTitle = categoryTitle
+        self.categoryTint = categoryTint
+        self._selection = State(initialValue: selection)
+        self.onSelect = onSelect
+    }
+
     private var isStacked: Bool { typeSize >= .accessibility1 }
-    private var confirmedMessage: String? = nil
 
     var body: some View {
         VStack(spacing: Theme.space24) {
