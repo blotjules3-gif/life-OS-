@@ -1489,7 +1489,7 @@ private struct MessageRow: View {
                     } else {
                         Text(isUser ? message.text : CoachTextCleaner.clean(message.text))
                             .font(.system(size: 15))
-                            .foregroundStyle(isUser ? .white : .primary)
+                            .foregroundStyle(isUser ? Theme.onAccent : .primary)
                             .textSelection(.enabled)
                     }
                 }
