@@ -109,8 +109,29 @@ enum Theme {
         AppTheme(rawValue: UserDefaults.standard.string(forKey: "appTheme") ?? "classic") ?? .classic
     }
 
-    /// Couleur du texte posé sur l'accent du thème (bouton plein, badge…).
-    /// À utiliser partout à la place de `onVolt`.
+    // MARK: - Matrice foreground — quand utiliser quoi
+    //
+    // Choisir la bonne couleur de contenu texte/icône selon le fond sur lequel il est posé.
+    //
+    // ┌────────────────────────────────────────────┬─────────────────────────────┐
+    // │ Fond                                       │ Foreground à utiliser       │
+    // ├────────────────────────────────────────────┼─────────────────────────────┤
+    // │ `Color.accentColor` / `accent`             │ `Theme.onAccent`  (adapte)  │
+    // │ `Theme.card` / `Theme.bg` / cardFill       │ `.primary` / `.secondary`   │
+    // │ Palette sémantique fixe (fitness/sleep/…)  │ `.white`  (couleurs = OK)   │
+    // │ `Color(hex: 0x…)` fixe (gradient, badge)   │ `.white` si contraste OK    │
+    // │ `.regularMaterial` / `.ultraThinMaterial`  │ `.primary` / `.secondary`   │
+    // └────────────────────────────────────────────┴─────────────────────────────┘
+    //
+    // Piège à éviter : `.foregroundStyle(.white)` sur `.background(Color.accentColor, …)`
+    // → INVISIBLE en thème Sombre (blanc sur blanc) et illisible en thème Vert (blanc sur
+    // vert clair 0x4CF810). Toujours utiliser `Theme.onAccent` sur ce fond.
+    //
+    // Vérification anti-régression : voir `LifeOSTests/ThemeContrastTests.swift`.
+
+    /// Couleur du texte/icône posé sur l'accent du thème (bouton plein, badge sélectionné,
+    /// bulle de message user…). Retourne blanc ou noir selon le thème actif pour garantir
+    /// un contraste WCAG AA (≥ 4.5:1).
     static var onAccent: Color { currentTheme.onAccent }
 
     /// Remplissage de carte adaptatif : verre dépoli en thème Verre, sinon surface opaque.
