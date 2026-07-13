@@ -141,7 +141,7 @@ struct LooksSetupView: View {
             // 1 — Analyse IA de la forme du visage → coupe adaptée
             SetupPage { VStack(spacing: 16) {
                 SetupHeader(icon: "face.dashed", title: "Analyse de ton visage",
-                            subtitle: "Prends une photo de face : l'IA (sur ton iPhone) estime la forme de ton visage et te conseille la coupe la plus flatteuse.",
+                            subtitle: "Prends une photo de face : ton iPhone estime la forme de ton visage et te conseille la coupe la plus flatteuse.",
                             accent: tint)
                 FaceScanView(accent: tint) { shape in faceShape = shape.rawValue }
             } },
