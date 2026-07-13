@@ -272,3 +272,31 @@ async def get_conversation(
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found.")
     return ConversationOut.model_validate(conv)
+
+
+# ── Signalement de contenu (Guideline App Store 1.2) ────────────────────────────
+# Les signalements sont loggés en structured logs (Railway) ; à faible volume
+# suffisant pour la revue Apple. Passage en table dédiée si volume > 100/jour.
+
+
+from pydantic import BaseModel, Field
+
+
+class ReportRequest(BaseModel):
+    device_id: str
+    conversation_id: uuid.UUID | None = None
+    message_content: str = Field(..., max_length=8000)
+    reason: str = Field(default="user_flagged", max_length=64)
+
+
+@router.post("/report", dependencies=[Depends(verify_api_key)])
+async def report_message(body: ReportRequest) -> dict[str, str]:
+    log.warning(
+        "coach_message_reported",
+        device_id=body.device_id,
+        conversation_id=str(body.conversation_id) if body.conversation_id else None,
+        reason=body.reason,
+        content_preview=body.message_content[:400],
+        content_length=len(body.message_content),
+    )
+    return {"status": "received"}
