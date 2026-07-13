@@ -208,12 +208,9 @@ final class AIAssistantViewModel: ObservableObject {
     }
 
     private func checkAbandonedChallenges() {
-        Task {
-            guard let challenges = try? await AgentAPI.shared.fetchChallenges() else { return }
-            guard let abandoned = challenges.first(where: { $0.isAbandoned }) else { return }
-            let prompt = "[HABITUDE_ABANDONNEE] Habitude : \"\(abandoned.title)\" — streak actuel : \(abandoned.streak_days) jour(s), dernier check-in : \(abandoned.days_since_checkin.map { "\($0) jour(s) ago" } ?? "jamais")"
-            await MainActor.run { triggerProactive(prompt: prompt) }
-        }
+        // Les challenges vivaient côté Railway ; feature retirée depuis Option C.
+        // Un tracker local pourra revenir en Phase 2B.5 quand on aura un modèle
+        // SwiftData `LifeChallenge` local.
     }
 
     private func triggerProactive(prompt: String) {
