@@ -57,7 +57,7 @@ enum FoodVision {
             let handler = VNImageRequestHandler(cgImage: cg, options: [:])
             DispatchQueue.global(qos: .userInitiated).async {
                 try? handler.perform([request])
-                let obs = (request.results as? [VNClassificationObservation] ?? [])
+                let obs = (request.results ?? [])
                     .filter { $0.confidence > 0.05 }
                 // 1) premier label reconnu présent dans la base alimentaire
                 for o in obs.prefix(15) {
