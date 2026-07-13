@@ -1,28 +1,25 @@
 import SwiftUI
 
-// Signalement d'un message coach (Guideline App Store 1.2).
-// Mutualise le double alert "confirmer / merci" partagé entre ModuleChatView
-// et AIAssistantView : chacune passe simplement son type de message et l'ID
-// de conversation courant.
+// Guideline App Store 1.2 — signalement d'un message coach (confirmation + accusé).
 
 extension View {
     func coachReportAlerts<M: Identifiable>(
         for target: Binding<M?>,
-        content: @escaping (M) -> String,
+        messageText: @escaping (M) -> String,
         conversationID: @escaping () -> String?
     ) -> some View {
-        modifier(CoachReportAlerts(target: target, content: content, conversationID: conversationID))
+        modifier(CoachReportAlerts(target: target, messageText: messageText, conversationID: conversationID))
     }
 }
 
 private struct CoachReportAlerts<M: Identifiable>: ViewModifier {
     @Binding var target: M?
-    let content: (M) -> String
+    let messageText: (M) -> String
     let conversationID: () -> String?
     @State private var didSubmit = false
 
-    func body(content view: Content) -> some View {
-        view
+    func body(content: Content) -> some View {
+        content
             .alert(
                 "Signaler cette réponse ?",
                 isPresented: Binding(
@@ -30,8 +27,8 @@ private struct CoachReportAlerts<M: Identifiable>: ViewModifier {
                     set: { if !$0 { target = nil } }
                 ),
                 presenting: target
-            ) { msg in
-                Button("Signaler", role: .destructive) { submit(msg) }
+            ) { message in
+                Button("Signaler", role: .destructive) { submit(message) }
                 Button("Annuler", role: .cancel) { target = nil }
             } message: { _ in
                 Text("Nous relisons chaque signalement pour bloquer les réponses inappropriées.")
@@ -44,7 +41,7 @@ private struct CoachReportAlerts<M: Identifiable>: ViewModifier {
     }
 
     private func submit(_ message: M) {
-        let text = content(message)
+        let text = messageText(message)
         let convID = conversationID()
         target = nil
         Haptics.tap()
