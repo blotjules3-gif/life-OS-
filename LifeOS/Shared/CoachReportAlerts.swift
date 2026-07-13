@@ -45,17 +45,32 @@ private struct CoachReportAlerts<M: Identifiable>: ViewModifier {
         let convID = conversationID()
         target = nil
         Haptics.tap()
-        Task {
-            do {
-                try await AgentAPI.shared.reportMessage(
-                    conversationID: convID,
-                    messageContent: text,
-                    reason: "user_flagged"
-                )
-                didSubmit = true
-            } catch {
-                // Envoi échoué : on n'affiche pas d'accusé — sinon on ment à l'utilisateur.
-            }
+        // Depuis Option C, les signalements sont écrits en local dans un
+        // fichier JSON du sandbox app. Ils peuvent être partagés/exportés par
+        // l'utilisateur via l'écran d'export. Aucun réseau, aucun envoi tiers.
+        writeLocalReport(content: text, conversationID: convID, reason: "user_flagged")
+        didSubmit = true
+    }
+
+    private func writeLocalReport(content: String, conversationID: String?, reason: String) {
+        let entry: [String: Any] = [
+            "reported_at": ISO8601DateFormatter().string(from: Date()),
+            "conversation_id": conversationID ?? "",
+            "reason": reason,
+            "content": String(content.prefix(4000))
+        ]
+        guard let dir = try? FileManager.default.url(
+            for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true
+        ) else { return }
+        let file = dir.appendingPathComponent("coach_reports.jsonl")
+        var line = (try? JSONSerialization.data(withJSONObject: entry)) ?? Data()
+        line.append(0x0A) // newline
+        if let handle = try? FileHandle(forWritingTo: file) {
+            defer { try? handle.close() }
+            try? handle.seekToEnd()
+            try? handle.write(contentsOf: line)
+        } else {
+            try? line.write(to: file, options: .atomic)
         }
     }
 }
