@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 import PhotosUI
-import Vision
+@preconcurrency import Vision
 import UIKit
 
 // MARK: - Calories par photo : caméra + classification on-device (Vision) + estimation
