@@ -1540,6 +1540,13 @@ private struct MessageRow: View {
                     x: 0,
                     y: isUser ? 3 : 2
                 )
+                .contextMenu {
+                    if !isUser, !message.isThinking, let onReport {
+                        Button(role: .destructive, action: onReport) {
+                            Label("Signaler cette réponse", systemImage: "flag")
+                        }
+                    }
+                }
 
                 if !isUser { Spacer(minLength: 56) }
             }
