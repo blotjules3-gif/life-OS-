@@ -280,7 +280,7 @@ struct AddAnythingSheet: View {
         switch kind {
         case .supplement: return "N'oublie pas de prendre \(n) (\(moment))."
         case .habit:      return "C'est l'heure de ton habitude : \(n)."
-        case .water:      return "Pense à boire 💧"
+        case .water:      return "Pense à boire"
         case .workout:    return "Séance prévue : \(n)."
         case .event:      return "Événement : \(n)."
         case .deadline:   return "Échéance : \(n)."

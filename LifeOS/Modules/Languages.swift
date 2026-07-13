@@ -102,7 +102,7 @@ struct LanguagesView: View {
             Divider().frame(height: 30)
             stat("\(dueCount)", "à revoir")
             Divider().frame(height: 30)
-            stat("🔥 \(streak)", "jours")
+            stat("\(streak)", "jours")
         }
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity)

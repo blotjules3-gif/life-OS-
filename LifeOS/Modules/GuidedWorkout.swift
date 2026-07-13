@@ -278,7 +278,7 @@ struct GuidedWorkoutView: View {
                 Text(formatHMS(restRemaining))
                     .font(.system(size: 88, weight: .black, design: .rounded)).monospacedDigit().foregroundStyle(.white)
                 if lastWasPR {
-                    Label("Nouveau record 💪", systemImage: "trophy.fill")
+                    Label("Nouveau record", systemImage: "trophy.fill")
                         .font(.headline.bold()).foregroundStyle(Color.accentColor)
                 }
                 Text("Prochaine : \(nextSetLabel)").font(.subheadline).foregroundStyle(.white.opacity(0.7))

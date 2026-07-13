@@ -219,7 +219,7 @@ struct PhotoCalorieView: View {
 
     private var toast: some View {
         VStack { Spacer()
-            Label("Ajouté au journal ✓", systemImage: "checkmark.circle.fill")
+            Label("Ajouté au journal", systemImage: "checkmark.circle.fill")
                 .font(.subheadline.weight(.semibold)).foregroundStyle(.white)
                 .padding(.horizontal, 18).padding(.vertical, 12)
                 .background(Color.green, in: Capsule()).padding(.bottom, 30)

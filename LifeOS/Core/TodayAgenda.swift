@@ -218,7 +218,7 @@ struct TodayAgendaSection: View {
             if let b = c.birthday, cal.component(.month, from: b) == cal.component(.month, from: now),
                cal.component(.day, from: b) == cal.component(.day, from: now) {
                 out.append(.init(icon: "gift.fill", title: "Anniversaire : \(c.name)",
-                                 detail: "Pense à souhaiter 🎂", category: .social, sortKey: 24 * 60))
+                                 detail: "Pense à souhaiter", category: .social, sortKey: 24 * 60))
             } else if let last = c.lastSeen, c.cadenceDays > 0,
                       let due = cal.date(byAdding: .day, value: c.cadenceDays, to: last), isDueBy(due) {
                 out.append(.init(icon: "phone.fill", title: "Prendre des nouvelles : \(c.name)",

@@ -53,7 +53,7 @@ struct DocVaultView: View {
                             }
                         }
                     }
-                    Text("🔒 Tes documents sont stockés localement sur ton iPhone (chiffré par iOS), pas sur un serveur.").font(.caption).foregroundStyle(Theme.textSecondary)
+                    Text("Tes documents sont stockés localement sur ton iPhone (chiffré par iOS), pas sur un serveur.").font(.caption).foregroundStyle(Theme.textSecondary)
                 }.padding(Theme.pad)
             }
         }
@@ -78,7 +78,7 @@ struct DocEditor: View {
                 if hasExpiry { DatePicker("Expire le", selection: $expiry, displayedComponents: .date) }
                 Section("Photo du document") {
                     PhotoPickerButton(label: "Prendre / choisir", prefix: "doc") { filename = $0 }
-                    if filename != nil { Text("Document ajouté ✓").foregroundStyle(.green).font(.caption) }
+                    if filename != nil { Text("Document ajouté").foregroundStyle(.green).font(.caption) }
                 }
             }
             .navigationTitle("Nouveau document").navigationBarTitleDisplayMode(.inline)

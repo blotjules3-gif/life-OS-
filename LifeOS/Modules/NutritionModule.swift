@@ -477,7 +477,7 @@ struct HydrationView: View {
     }
     private func scheduleReminders() {
         for h in stride(from: 9, through: 21, by: 2) {
-            NotificationManager.shared.scheduleDaily(id: "water\(h)", title: "Hydrate-toi 💧", body: "Un verre d'eau, ça fait du bien.", hour: h, minute: 0)
+            NotificationManager.shared.scheduleDaily(id: "water\(h)", title: "Hydrate-toi", body: "Un verre d'eau, ça fait du bien.", hour: h, minute: 0)
         }
     }
     private func cancelReminders() { for h in stride(from: 9, through: 21, by: 2) { NotificationManager.shared.cancel(id: "water\(h)") } }
@@ -616,13 +616,13 @@ struct SupplementsView: View {
         NotificationManager.shared.cancel(id: confirmId)
         guard s.active else { return }
         NotificationManager.shared.scheduleDaily(
-            id: id, title: "💊 \(s.name)",
+            id: id, title: "\(s.name)",
             body: "C'est le moment — \(momentLabel(s.moment).lowercased()), \(s.withFood ? "avec un repas" : "à jeun").",
             hour: s.hour, minute: s.minute)
         if s.confirm {
             let total = s.hour * 60 + s.minute + 90
             NotificationManager.shared.scheduleDailyAction(
-                id: confirmId, title: "Petite vérif 💊",
+                id: confirmId, title: "Petite vérif",
                 body: "Tu as bien pris ton \(s.name) ?",
                 hour: (total / 60) % 24, minute: total % 60,
                 categoryId: "LIFEOS_CONFIRM",
@@ -661,7 +661,7 @@ struct DietProfileView: View {
                         if !test.isEmpty {
                             let issues = AllergenChecker.check(test, against: flags)
                             if issues.isEmpty {
-                                Label("Compatible avec ton profil ✓", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
+                                Label("Compatible avec ton profil", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
                             } else {
                                 ForEach(issues, id: \.self) { Label($0, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange) }
                             }

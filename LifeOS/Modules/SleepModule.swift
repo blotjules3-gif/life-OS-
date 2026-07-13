@@ -134,7 +134,7 @@ struct PowerNapView: View {
                 HStack(spacing: 14) {
                     if !started {
                         PrimaryButton(title: "Démarrer la sieste", icon: "play.fill", tint: .sleepTint) {
-                            engine.onFinish = { NotificationManager.shared.scheduleAfter(id: "nap", title: "Réveil 😴", body: "Ta sieste est terminée, debout en douceur !", seconds: 1) }
+                            engine.onFinish = { NotificationManager.shared.scheduleAfter(id: "nap", title: "Réveil", body: "Ta sieste est terminée, debout en douceur !", seconds: 1) }
                             engine.start(seconds: minutes * 60)
                             started = true
                         }
@@ -197,7 +197,7 @@ struct WindDownView: View {
     private func schedule() {
         let c = Calendar.current.dateComponents([.hour, .minute], from: time)
         hour = c.hour ?? 22; minute = c.minute ?? 30
-        NotificationManager.shared.scheduleDaily(id: "winddown", title: "Heure de décompresser 🌙",
+        NotificationManager.shared.scheduleDaily(id: "winddown", title: "Heure de décompresser",
             body: "Baisse les lumières, mode nuit ON, écrans en pause. Au lit dans 45 min.", hour: hour, minute: minute)
     }
     private func checklistRow(_ icon: String, _ title: String, _ sub: String) -> some View {
@@ -300,7 +300,7 @@ struct DreamEditor: View {
                               systemImage: recorder.isRecording ? "stop.circle.fill" : "mic.circle.fill")
                             .foregroundStyle(recorder.isRecording ? .red : .sleepTint)
                     }
-                    if recorder.filename != nil { Text("Note vocale enregistrée ✓").font(.caption).foregroundStyle(.green) }
+                    if recorder.filename != nil { Text("Note vocale enregistrée").font(.caption).foregroundStyle(.green) }
                 }
                 Section("Ressenti") {
                     Stepper("Intensité : \(mood)/5", value: $mood, in: 1...5)
@@ -406,7 +406,7 @@ struct RecoveryScoreView: View {
     }
     private func scoreColor(_ s: Int) -> Color { s >= 66 ? .green : (s >= 40 ? .yellow : .red) }
     private func advice(_ s: Int) -> String {
-        s >= 66 ? "Bien récupéré. Tu peux pousser fort aujourd'hui 💪"
+        s >= 66 ? "Bien récupéré. Tu peux pousser fort aujourd'hui"
         : s >= 40 ? "Récup moyenne. Entraînement modéré conseillé."
         : "Faible récup. Privilégie repos, mobilité et sommeil."
     }

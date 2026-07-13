@@ -34,7 +34,7 @@ struct NotificationsSettingsView: View {
             // ---- Rappels perso ----
             Section {
                 if reminders.isEmpty {
-                    Text("Aucun rappel. Ajoute ceux qui te sont utiles 👇")
+                    Text("Aucun rappel. Ajoute ceux qui te sont utiles")
                         .foregroundStyle(.secondary).font(.subheadline)
                 }
                 ForEach(reminders) { r in reminderRow(r) }
@@ -110,7 +110,7 @@ struct NotificationsSettingsView: View {
             let total = r.hour * 60 + r.minute + 90
             NotificationManager.shared.scheduleDailyAction(
                 id: id + ".confirm",
-                title: "Petite vérif ✅",
+                title: "Petite vérif",
                 body: "Tu as bien fait : \(r.title.isEmpty ? "ton rappel" : r.title) ?",
                 hour: (total / 60) % 24, minute: total % 60,
                 categoryId: "LIFEOS_CONFIRM",
@@ -141,7 +141,7 @@ struct ReminderEditor: View {
                 Section {
                     Toggle("Vérification « bien fait ? » ~1h30 après", isOn: $confirm)
                 } footer: {
-                    Text("Une 2e notif avec « Oui ✓ / Pas encore » pour construire ta série 🔥.")
+                    Text("Une 2e notif avec « Oui / Pas encore » pour construire ta série.")
                 }
             }
             .navigationTitle("Nouveau rappel").navigationBarTitleDisplayMode(.inline)

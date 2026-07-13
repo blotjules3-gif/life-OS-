@@ -115,7 +115,7 @@ enum LifeBrain {
                              tone: .warn, category: .sleep, priority: 90))
         } else if (s.sleepQuality >= 4 || s.sleepHours >= 7.5) && s.isTrainingDay {
             out.append(.init(icon: "bolt.fill",
-                             title: "Bien récupéré 💪",
+                             title: "Bien récupéré",
                              detail: "Nuit solide + jour de sport (\(s.trainingTitle)) : tu peux pousser l'intensité aujourd'hui.",
                              tone: .good, category: .fitness, priority: 70))
         }
@@ -185,7 +185,7 @@ enum LifeBrain {
         // Tout est aligné (fallback positif)
         if out.isEmpty {
             out.append(.init(icon: "checkmark.seal.fill",
-                             title: "Tout est aligné aujourd'hui 🎯",
+                             title: "Tout est aligné aujourd'hui",
                              detail: "Sommeil, hydratation, objectifs : tu es sur les rails. Continue comme ça.",
                              tone: .good, category: nil, priority: 10))
         }
@@ -198,7 +198,7 @@ enum LifeBrain {
     static func coachSummary(ctx: ModelContext) -> String {
         let items = insights(ctx: ctx)
         let top = items.prefix(3)
-        var lines = ["🧠 **Ta guidance du jour**", ""]
+        var lines = ["**Ta guidance du jour**", ""]
         for i in top { lines.append("• **\(i.title)** — \(i.detail)") }
         return lines.joined(separator: "\n")
     }

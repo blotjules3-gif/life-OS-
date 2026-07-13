@@ -130,7 +130,7 @@ struct BirthdaysView: View {
                                     Text(c.name).font(.headline).foregroundStyle(Theme.textPrimary)
                                     Spacer()
                                     let d = daysUntil(c.birthday!)
-                                    Text(d == 0 ? "Aujourd'hui 🎉" : "Dans \(d) j").font(.subheadline.bold()).foregroundStyle(d <= 7 ? .orange : .socialTint)
+                                    Text(d == 0 ? "Aujourd'hui" : "Dans \(d) j").font(.subheadline.bold()).foregroundStyle(d <= 7 ? .orange : .socialTint)
                                 }
                                 Text(c.birthday!, format: .dateTime.day().month(.wide)).font(.caption).foregroundStyle(Theme.textSecondary)
                                 if !c.giftIdeas.isEmpty { Label(c.giftIdeas, systemImage: "lightbulb.fill").font(.caption).foregroundStyle(.socialTint) }
@@ -173,10 +173,10 @@ struct BirthdaysView: View {
             let remindDate = cal.date(byAdding: .day, value: -3, to: c.birthday!) ?? c.birthday!
             let m = cal.component(.month, from: remindDate)
             let d = cal.component(.day, from: remindDate)
-            let body = c.giftIdeas.isEmpty ? "Pense à lui souhaiter 🎉" : "💡 Idées : \(c.giftIdeas)"
+            let body = c.giftIdeas.isEmpty ? "Pense à lui souhaiter" : "Idées : \(c.giftIdeas)"
             NotificationManager.shared.scheduleYearly(
                 id: bdayID(c),
-                title: "🎁 Anniversaire de \(c.name) dans 3 jours",
+                title: "Anniversaire de \(c.name) dans 3 jours",
                 body: body, month: m, day: d, hour: 10, minute: 0)
         }
     }
@@ -249,7 +249,7 @@ struct EventEditor: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
                     ctx.insert(SocialEvent(title: title, date: date, location: location))
-                    if remind { NotificationManager.shared.schedule(id: "event-\(title)-\(Int(date.timeIntervalSince1970))", title: "Demain : \(title)", body: location.isEmpty ? "" : "📍 \(location)", at: Calendar.current.date(byAdding: .day, value: -1, to: date) ?? date) }
+                    if remind { NotificationManager.shared.schedule(id: "event-\(title)-\(Int(date.timeIntervalSince1970))", title: "Demain : \(title)", body: location.isEmpty ? "" : "\(location)", at: Calendar.current.date(byAdding: .day, value: -1, to: date) ?? date) }
                     dismiss()
                 }.disabled(title.isEmpty) }
             }

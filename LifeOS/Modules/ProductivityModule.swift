@@ -45,7 +45,7 @@ struct TodoView: View {
                 Picker("", selection: $filter) { Text("À faire").tag(0); Text("Toutes").tag(1) }
                     .pickerStyle(.segmented).padding()
                 if visible.isEmpty {
-                    EmptyState(icon: "checklist", title: "Rien à faire 🎉", message: "Ajoute une tâche avec le +.")
+                    EmptyState(icon: "checklist", title: "Rien à faire", message: "Ajoute une tâche avec le +.")
                     Spacer()
                 } else {
                     List {

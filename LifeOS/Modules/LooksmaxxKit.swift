@@ -339,8 +339,8 @@ struct FaceScanView: View {
                 }
                 Spacer()
             }
-            recBlock(title: "✂️ Coupes recommandées", items: r.shape.haircuts)
-            recBlock(title: "🧔 Barbe", items: [r.shape.beard])
+            recBlock(title: "️ Coupes recommandées", items: r.shape.haircuts)
+            recBlock(title: "Barbe", items: [r.shape.beard])
         }
         .padding(16)
         .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))

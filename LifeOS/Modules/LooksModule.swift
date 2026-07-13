@@ -401,7 +401,7 @@ struct MewingPostureView: View {
                         .tint(.looksTint)
                         .onChange(of: posture) { _, on in
                             for h in stride(from: 9, through: 19, by: 2) {
-                                if on { NotificationManager.shared.scheduleDaily(id: "posture\(h)", title: "Redresse-toi 🧍", body: "Épaules en arrière, menton rentré, langue au palais.", hour: h, minute: 0) }
+                                if on { NotificationManager.shared.scheduleDaily(id: "posture\(h)", title: "Redresse-toi", body: "Épaules en arrière, menton rentré, langue au palais.", hour: h, minute: 0) }
                                 else { NotificationManager.shared.cancel(id: "posture\(h)") }
                             }
                         }.card()
@@ -429,7 +429,7 @@ struct WardrobeView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         SectionHeader(title: "Outfit du jour", subtitle: "Selon la météo")
                         Picker("Météo", selection: $weather) {
-                            Text("❄️ Froid").tag(0); Text("🌤️ Doux").tag(1); Text("☀️ Chaud").tag(2)
+                            Text("️ Froid").tag(0); Text("️ Doux").tag(1); Text("️ Chaud").tag(2)
                         }.pickerStyle(.segmented)
                         let outfit = OutfitEngine.suggest(items: items, weather: weather)
                         if outfit.isEmpty {
@@ -501,7 +501,7 @@ struct WardrobeEditor: View {
                 Picker("Chaleur", selection: $warmth) { Text("Léger").tag(1); Text("Moyen").tag(2); Text("Chaud").tag(3) }
                 Section("Photo") {
                     PhotoPickerButton(label: "Choisir une photo", prefix: "wardrobe") { filename = $0 }
-                    if filename != nil { Text("Photo ajoutée ✓").foregroundStyle(.green).font(.caption) }
+                    if filename != nil { Text("Photo ajoutée").foregroundStyle(.green).font(.caption) }
                 }
             }
             .navigationTitle("Ajouter une pièce").navigationBarTitleDisplayMode(.inline)
