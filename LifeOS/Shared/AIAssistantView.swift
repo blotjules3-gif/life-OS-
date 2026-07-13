@@ -275,46 +275,12 @@ final class AIAssistantViewModel: ObservableObject {
     }
 
     private func fallbackSend(content: String, module: String?) async {
+        // Legacy fallback : depuis Option C, tout passe par OnDeviceLLM. Ce
+        // chemin reste comme filet en cas d'appel externe imprévu.
         if !messages.contains(where: { $0.isThinking }) { appendThinking() }
-        do {
-            let response = try await AgentAPI.shared.chat(
-                message: content,
-                module: module,
-                conversationID: conversationID.isEmpty ? nil : conversationID
-            )
-            conversationID = response.conversation_id
-            isServerOffline = false
-            removeThinking()
-            appendAssistantMessage(response.reply, actions: response.actions ?? [])
-            for action in (response.actions ?? []) {
-                await execute(action: action)
-            }
-        } catch {
-            removeThinking()
-            if let apiErr = error as? AgentAPIError {
-                switch apiErr {
-                case .networkError(let underlying):
-                    let urlErr = underlying as? URLError
-                    let offlineCodes: [URLError.Code] = [
-                        .notConnectedToInternet, .networkConnectionLost,
-                        .cannotConnectToHost, .cannotFindHost
-                    ]
-                    if urlErr?.code == .timedOut {
-                        errorBanner = "Ton coach met trop de temps à répondre. Réessaie."
-                    } else if let code = urlErr?.code, offlineCodes.contains(code) {
-                        isServerOffline = true
-                        // Le chat ne reste pas muet : réponse composée depuis les données locales.
-                        appendAssistantMessage(OfflineCoach.reply(to: content, ctx: modelContext), actions: [])
-                    } else {
-                        errorBanner = "Erreur réseau. Réessaie dans un instant."
-                    }
-                case .invalidResponse(404): conversationID = ""
-                default: errorBanner = apiErr.errorDescription
-                }
-            } else {
-                errorBanner = error.localizedDescription
-            }
-        }
+        let reply = await OnDeviceLLM.respond(to: content, ctx: modelContext, moduleContext: module)
+        removeThinking()
+        appendAssistantMessage(reply.text, actions: [])
     }
 
     private func triggerWelcome() {
