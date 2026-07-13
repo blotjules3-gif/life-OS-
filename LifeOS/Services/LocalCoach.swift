@@ -17,13 +17,13 @@ enum LocalCoach {
 
         // Salutations
         if matches(t, ["bonjour", "salut", "coucou", "hello", "hey", "yo ", "cava", "ca va", "comment vas"]) && t.count < 30 {
-            return "\(greet(name)) Je suis ton coach LifeOS, et je marche entièrement sur ton iPhone."
+            return "\(greet(name)) 👋 Je suis ton coach LifeOS, et je marche entièrement sur ton iPhone. "
                 + statusLine(ctx) + "\n\nJe peux te créer une habitude, une tâche, une note, logger un verre d'eau, ou te faire un bilan. Dis-moi."
         }
 
         // Remerciement
         if matches(t, ["merci", "thanks", "nickel", "parfait", "super"]) && t.count < 20 {
-            return "Avec plaisir On continue quand tu veux."
+            return "Avec plaisir 💪 On continue quand tu veux."
         }
 
         // Aide / capacités
@@ -50,9 +50,9 @@ enum LocalCoach {
             if let clean = meaningful(subject) {
                 let h = Habit(name: clean, icon: iconFor(clean), colorHex: 0x4CF810)
                 ctx.insert(h); try? ctx.save()
-                return "Nouvelle habitude créée : **\(clean)**. Elle est dans ton suivi d'habitudes — coche-la chaque jour pour bâtir ta série."
+                return "✅ Nouvelle habitude créée : **\(clean)**. Elle est dans ton suivi d'habitudes — coche-la chaque jour pour bâtir ta série 🔥."
             }
-            return "Bonne idée Quelle habitude veux-tu créer? Donne-moi juste son nom (ex. « Méditer 10 min », « Boire 2 L d'eau », « Lire 20 pages »)."
+            return "Bonne idée 💪 Quelle habitude veux-tu créer ? Donne-moi juste son nom (ex. « Méditer 10 min », « Boire 2 L d'eau », « Lire 20 pages »)."
         }
 
         // Créer une tâche / rappel
@@ -61,7 +61,7 @@ enum LocalCoach {
             if let clean = meaningful(subject) {
                 let todo = TodoItem(title: clean, priority: matches(t, ["urgent", "vite", "important"]) ? 2 : 0)
                 ctx.insert(todo); try? ctx.save()
-                return "️ C'est noté : **\(clean)** est ajouté à ta liste de tâches (module To-do)."
+                return "🗒️ C'est noté : **\(clean)** est ajouté à ta liste de tâches (module To-do)."
             }
             return "Dis-moi quoi ajouter à ta liste et je le note tout de suite (ex. « rappelle-moi d'appeler le dentiste »)."
         }
@@ -71,7 +71,7 @@ enum LocalCoach {
             let glass = 250
             ctx.insert(WaterEntry(amountML: glass)); try? ctx.save()
             let (ml, goal, _) = water(ctx)
-            return "+1 verre (\(glass) ml) enregistré. Tu es à \(ml) / \(goal) ml aujourd'hui. \(ml >= goal ? "Objectif atteint, bravo." : "Continue comme ça !")"
+            return "💧 +1 verre (\(glass) ml) enregistré. Tu es à \(ml) / \(goal) ml aujourd'hui. \(ml >= goal ? "Objectif atteint, bravo 🎉" : "Continue comme ça !")"
         }
 
         // Créer une note
@@ -79,7 +79,7 @@ enum LocalCoach {
             let subject = subject(from: raw, after: ["une note", "note que", "noter que", "note", "noter"])
             if let clean = meaningful(subject) {
                 ctx.insert(Note(title: String(clean.prefix(40)), body: clean)); try? ctx.save()
-                return "Note enregistrée : « \(clean) »."
+                return "📝 Note enregistrée : « \(clean) »."
             }
         }
 
@@ -108,14 +108,14 @@ enum LocalCoach {
         // Eau (question)
         if matches(t, ["eau", "hydrat", "verres", "boire"]) {
             let (ml, goal, glasses) = water(ctx)
-            return "Aujourd'hui : \(ml) / \(goal) ml (\(glasses) verre\(glasses > 1?"s" : "")). "
-                + (ml >= goal ? "Objectif atteint" : "Il te reste \(max(0, goal - ml)) ml. Dis « j'ai bu un verre » et je l'ajoute.")
+            return "💧 Aujourd'hui : \(ml) / \(goal) ml (\(glasses) verre\(glasses > 1 ? "s" : "")). "
+                + (ml >= goal ? "Objectif atteint 🎉" : "Il te reste \(max(0, goal - ml)) ml. Dis « j'ai bu un verre » et je l'ajoute.")
         }
 
         // Calories / repas
         if matches(t, ["calorie", "kcal", "manger", "mange", "repas", "nutrition"]) {
             let (kcal, goal) = calories(ctx)
-            return "️ Aujourd'hui : \(kcal) / \(goal) kcal."
+            return "🍽️ Aujourd'hui : \(kcal) / \(goal) kcal. "
                 + (kcal == 0 ? "Rien de logué pour l'instant — scanne un produit ou envoie-moi une photo de ton assiette." : "Il te reste ~\(max(0, goal - kcal)) kcal pour la journée.")
         }
 
@@ -125,13 +125,13 @@ enum LocalCoach {
         }
 
         // Fallback utile
-        return "Je suis là pour t'aider" + statusLine(ctx)
+        return "Je suis là pour t'aider 💪 " + statusLine(ctx)
             + "\n\nQuelques exemples de ce que tu peux me dire :\n• « Crée une habitude Méditer 10 min »\n• « Rappelle-moi d'appeler le dentiste »\n• « J'ai bu un verre d'eau »\n• « Fais-moi un bilan »\n• « Comment j'ai dormi ? »"
     }
 
     /// Message d'accueil au premier lancement — local, sans serveur.
     static func welcome(name: String) -> String {
-        "\(greet(name)) Je suis ton coach LifeOS — je fonctionne directement sur ton iPhone, sans connexion.\n\n"
+        "\(greet(name)) 👋 Je suis ton coach LifeOS — je fonctionne directement sur ton iPhone, sans connexion.\n\n"
         + "Je connais tes données (habitudes, eau, calories, tâches, sommeil) et je peux agir pour toi : créer une habitude, ajouter une tâche, logger un verre d'eau, ou te faire un bilan.\n\n"
         + "Par quoi veux-tu commencer ?"
     }
@@ -143,9 +143,9 @@ enum LocalCoach {
         let (done, total) = habitsToday(ctx)
         let pending = pendingTodos(ctx).count
         var bits: [String] = []
-        bits.append("\(ml)/\(goalW) ml")
-        if total > 0 { bits.append("\(done)/\(total) habitudes") }
-        if pending > 0 { bits.append("️ \(pending) tâche\(pending > 1?"s" : "") en attente") }
+        bits.append("💧 \(ml)/\(goalW) ml")
+        if total > 0 { bits.append("🔥 \(done)/\(total) habitudes") }
+        if pending > 0 { bits.append("🗒️ \(pending) tâche\(pending > 1 ? "s" : "") en attente") }
         return "Aujourd'hui : " + bits.joined(separator: " · ") + "."
     }
 
@@ -156,7 +156,7 @@ enum LocalCoach {
         let pending = pendingTodos(ctx)
         let mood = todayMood(ctx)
 
-        var lines = ["**Ton bilan\(name.isEmpty?"" : ", \(name)")**", ""]
+        var lines = ["📊 **Ton bilan\(name.isEmpty ? "" : ", \(name)")**", ""]
         lines.append("• Habitudes : \(done)/\(total) faites aujourd'hui\(total == 0 ? " (aucune encore — on en crée une ?)" : "")")
         lines.append("• Hydratation : \(glasses) verre\(glasses > 1 ? "s" : "") (\(ml)/\(goalW) ml)")
         lines.append("• Calories : \(kcal)/\(goalK) kcal")
@@ -164,13 +164,13 @@ enum LocalCoach {
         lines.append("• Tâches en attente : \(pending.count)")
         lines.append("")
         // Conseil ciblé
-        if total > 0 && done < total { lines.append("Priorité : boucler tes \(total - done) habitude(s) restante(s).") }
-        else if ml < goalW { lines.append("Priorité : bois encore \(max(0, goalW - ml)) ml d'eau.") }
-        else if !pending.isEmpty { lines.append("Priorité : « \(pending[0].title) ».") }
-        else { lines.append("Tout est carré aujourd'hui, continue comme ça") }
+        if total > 0 && done < total { lines.append("👉 Priorité : boucler tes \(total - done) habitude(s) restante(s).") }
+        else if ml < goalW { lines.append("👉 Priorité : bois encore \(max(0, goalW - ml)) ml d'eau.") }
+        else if !pending.isEmpty { lines.append("👉 Priorité : « \(pending[0].title) ».") }
+        else { lines.append("👉 Tout est carré aujourd'hui, continue comme ça 🎯") }
         // Guidance transversale (relie les domaines entre eux)
         if let brain = LifeBrain.insights(ctx: ctx).first {
-            lines.append(""); lines.append("\(brain.title) — \(brain.detail)")
+            lines.append(""); lines.append("🧠 \(brain.title) — \(brain.detail)")
         }
         return lines.joined(separator: "\n")
     }
@@ -182,15 +182,15 @@ enum LocalCoach {
         let wh = d.integer(forKey: "wakeupHour"); let wm = d.integer(forKey: "wakeupMinute")
         let wake = String(format: "%02d:%02d", wh, wm)
         if q == 0 && h == 0 {
-            return "Je n'ai pas encore de données de sommeil pour cette nuit. Fais le check du réveil et je pourrai suivre ta qualité de sommeil. Ton réveil est réglé à \(wake)."
+            return "😴 Je n'ai pas encore de données de sommeil pour cette nuit. Fais le check du réveil et je pourrai suivre ta qualité de sommeil. Ton réveil est réglé à \(wake)."
         }
-        var s = "**Ton sommeil**\n"
+        var s = "😴 **Ton sommeil**\n"
         if h > 0 { s += "• Durée : \(String(format: "%.1f", h)) h\n" }
         if q > 0 { s += "• Qualité : \(q)/5\n" }
         s += "• Réveil réglé : \(wake)\n\n"
-        if h > 0 && h < 7 { s += "Moins de 7 h — vise un coucher plus tôt ce soir pour récupérer." }
-        else if q >= 4 { s += "Belle nuit! Garde ce rythme régulier." }
-        else { s += "Régularité + écran coupé 1 h avant = meilleure récup." }
+        if h > 0 && h < 7 { s += "💡 Moins de 7 h — vise un coucher plus tôt ce soir pour récupérer." }
+        else if q >= 4 { s += "💪 Belle nuit ! Garde ce rythme régulier." }
+        else { s += "💡 Régularité + écran coupé 1 h avant = meilleure récup." }
         return s
     }
 
@@ -199,13 +199,13 @@ enum LocalCoach {
         let pending = pendingTodos(ctx)
         let d = UserDefaults.standard
         let wake = String(format: "%02d:%02d", d.integer(forKey: "wakeupHour"), d.integer(forKey: "wakeupMinute"))
-        var lines = ["️ **Ton plan**", "", "• Réveil : \(wake)"]
+        var lines = ["🗓️ **Ton plan**", "", "• Réveil : \(wake)"]
         if total > 0 { lines.append("• Habitudes : \(done)/\(total) faites — \(max(0, total - done)) à cocher") }
         if pending.isEmpty {
-            lines.append("• Tâches : aucune en attente")
+            lines.append("• Tâches : aucune en attente ✅")
         } else {
             lines.append("• Tâches (\(pending.count)) :")
-            for todo in pending.prefix(5) { lines.append("   ◦ \(todo.title)\(todo.priority == 2 ? "️" : "")") }
+            for todo in pending.prefix(5) { lines.append("   ◦ \(todo.title)\(todo.priority == 2 ? " ⚡️" : "")") }
             if pending.count > 5 { lines.append("   … +\(pending.count - 5) autres") }
         }
         return lines.joined(separator: "\n")
@@ -214,13 +214,13 @@ enum LocalCoach {
     private static func habitsReport(_ ctx: ModelContext) -> String {
         let habits = (try? ctx.fetch(FetchDescriptor<Habit>())) ?? []
         if habits.isEmpty {
-            return "Tu n'as pas encore d'habitude Dis-moi laquelle créer (ex. « crée une habitude Méditer 10 min ») et je m'en occupe."
+            return "Tu n'as pas encore d'habitude 🌱 Dis-moi laquelle créer (ex. « crée une habitude Méditer 10 min ») et je m'en occupe."
         }
-        var lines = ["**Tes habitudes**", ""]
+        var lines = ["🔥 **Tes habitudes**", ""]
         for h in habits {
             let streak = currentStreak(h)
             let doneToday = h.completions.contains { Calendar.current.isDateInToday($0.date) }
-            lines.append("• \(doneToday ? "✅" : "⬜️") \(h.name)\(streak > 0 ? "— série \(streak) j" : "")")
+            lines.append("• \(doneToday ? "✅" : "⬜️") \(h.name)\(streak > 0 ? " — série \(streak) j 🔥" : "")")
         }
         return lines.joined(separator: "\n")
     }
@@ -377,7 +377,7 @@ enum LocalCoach {
         // Nombre d'exos par groupe selon le nombre de groupes ciblés.
         let perGroup = picked.count == 1 ? 5 : (picked.count == 2 ? 3 : 2)
 
-        var lines = ["**Séance \(picked.map(\.title).joined(separator:" + "))** — ~45-55 min", ""]
+        var lines = ["💪 **Séance \(picked.map(\.title).joined(separator: " + "))** — ~45-55 min", ""]
         lines.append("Échauffement : 5-10 min de cardio léger + mobilité articulaire.")
         lines.append("")
         for g in picked {
@@ -419,9 +419,9 @@ enum LocalCoach {
         guard matches(t, ["motive", "motivation", "pas envie", "flemme", "demotive", "demotivation",
                           "j'abandonne", "jabandonne", "dur", "decourage"]) else { return nil }
         let lines = [
-            "Tu n'as pas à être motivé, juste à commencer 5 min — le reste suit.",
+            "Tu n'as pas à être motivé, juste à commencer 5 min — le reste suit. 💪",
             "Le futur toi te remerciera pour ce que tu fais MAINTENANT. On y va, une action.",
-            "La discipline bat la motivation. Fais juste la première étape, même minuscule.",
+            "La discipline bat la motivation. Fais juste la première étape, même minuscule. 🔥",
             "Chaque jour où tu tiens, tu deviens quelqu'un sur qui tu peux compter. Go.",
         ]
         // Choix « pseudo-aléatoire » stable dans la journée (pas de Date.now interdit ici → heure).
@@ -431,11 +431,11 @@ enum LocalCoach {
 
     private static func capabilities() -> String {
         "Voici ce que je sais faire, directement sur ton iPhone :\n\n"
-        + "**Programme sport** — « fais-moi un plan de salle, objectif épaules / pecs »\n"
-        + "️ **Plan alimentaire** — « donne-moi une journée type de repas »\n"
+        + "💪 **Programme sport** — « fais-moi un plan de salle, objectif épaules / pecs »\n"
+        + "🍽️ **Plan alimentaire** — « donne-moi une journée type de repas »\n"
         + "🆕 **Créer** — « crée une habitude Méditer 10 min », « rappelle-moi d'appeler le dentiste »\n"
-        + "**Logger** — « j'ai bu un verre d'eau »\n"
-        + "**Bilan / sommeil / planning** — « fais-moi un bilan », « comment j'ai dormi? », « mes tâches »\n\n"
+        + "💧 **Logger** — « j'ai bu un verre d'eau »\n"
+        + "📊 **Bilan / sommeil / planning** — « fais-moi un bilan », « comment j'ai dormi ? », « mes tâches »\n\n"
         + "Envoie-moi aussi une photo (assiette → calories, document → à classer)."
     }
 }

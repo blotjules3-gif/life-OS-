@@ -232,7 +232,7 @@ struct NutritionSetupView: View {
                                   moment: r.moment, withFood: r.withFood, advice: advice, confirm: true))
             NotificationManager.shared.scheduleDaily(
                 id: "supp.\(name)",
-                title: "\(name)\(dose!= nil?" · \(dose!)" : "")",
+                title: "\(name)\(dose != nil ? " · \(dose!)" : "")",
                 body: advice.isEmpty ? "\(r.momentLabel) · \(r.foodLabel)" : advice,
                 hour: r.hour, minute: r.minute)
         }
