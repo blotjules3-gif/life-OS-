@@ -61,7 +61,7 @@ enum LocalCoach {
             if let clean = meaningful(subject) {
                 let todo = TodoItem(title: clean, priority: matches(t, ["urgent", "vite", "important"]) ? 2 : 0)
                 ctx.insert(todo); try? ctx.save()
-                return "🗒️ C'est noté : **\(clean)** est ajouté à ta liste de tâches (module To-do)."
+                return "C'est noté : **\(clean)** est ajouté à ta liste de tâches (module To-do)."
             }
             return "Dis-moi quoi ajouter à ta liste et je le note tout de suite (ex. « rappelle-moi d'appeler le dentiste »)."
         }
