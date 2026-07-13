@@ -17,7 +17,7 @@ struct AlarmActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: AlarmAttributes.self) { context in
             LockScreenAlarmView(state: context.state)
-                .widgetURL(URL(string: "lifeos://briefing")!)
+                .widgetURL(URL(string: "lifeos://briefing"))
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
