@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LifeOS — Toute ta vie. Une seule app.</title>
-<meta name="description" content="LifeOS : la super-app iOS qui réunit 16 pôles de ta vie. 100 % local, 100 % privé. Expérience 3D.">
+<meta name="description" content="LifeOS : la super-app iOS qui réunit 16 pôles de ta vie. 100 % local, 100 % privé.">
 <link rel="icon" type="image/png" href="icon.png">
 <meta property="og:title" content="LifeOS — Toute ta vie. Une seule app.">
 <meta property="og:description" content="16 pôles, 142 écrans, 0 donnée qui quitte ton iPhone.">
@@ -16,220 +16,173 @@
     --bg:#050505;
     --ink:#f4f4f2;
     --ink-soft:#9a9a9e;
-    --line:rgba(255,255,255,.08);
-    --glass:rgba(255,255,255,.04);
+    --line:rgba(255,255,255,.09);
+    --glass:rgba(255,255,255,.035);
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  html{scroll-behavior:auto}
   body{
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:var(--bg);color:var(--ink);
-    -webkit-font-smoothing:antialiased;line-height:1.5;overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;line-height:1.5;
+    overflow-x:hidden;
   }
   a{color:inherit;text-decoration:none}
   ::selection{background:var(--green);color:#000}
-  @media(hover:hover){ body.has-cursor, body.has-cursor a, body.has-cursor .pole, body.has-cursor .hl{cursor:none} }
+  @media(hover:hover) and (pointer:fine){ body.has-cursor *{cursor:none !important} }
 
   /* ---------- LOADER ---------- */
-  #loader{
-    position:fixed;inset:0;z-index:300;background:var(--bg);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
-    transition:clip-path .9s cubic-bezier(.7,0,.2,1);
-    clip-path:inset(0 0 0 0);
-  }
-  #loader.done{clip-path:inset(0 0 100% 0)}
-  #loader .inf{
-    font-size:64px;font-weight:800;color:var(--green);line-height:1;
-    text-shadow:0 0 40px rgba(60,224,25,.6);
-    animation:pulse 1.6s ease-in-out infinite;
-  }
-  @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.12);opacity:.7}}
-  #loader .pct{font-size:13px;letter-spacing:.3em;color:var(--ink-soft);font-variant-numeric:tabular-nums}
-  #loader .bar{width:180px;height:1px;background:var(--line);overflow:hidden}
-  #loader .bar i{display:block;height:100%;width:0%;background:var(--green);box-shadow:0 0 12px var(--green);transition:width .2s}
+  #loader{position:fixed;inset:0;z-index:400;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px}
+  #loader .inf{font-size:70px;font-weight:800;color:var(--green);line-height:1;text-shadow:0 0 50px rgba(60,224,25,.6);animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.14) rotate(3deg)}}
+  #loader .bar{width:200px;height:1px;background:rgba(255,255,255,.12);overflow:hidden}
+  #loader .bar i{display:block;height:100%;width:0%;background:var(--green);box-shadow:0 0 14px var(--green)}
+  #loader .pct{font-size:12px;letter-spacing:.35em;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+  #loader .curtain{position:absolute;inset:0;background:var(--bg);transform-origin:bottom}
 
-  /* ---------- CANVAS & GRAIN ---------- */
+  /* ---------- WEBGL / GRAIN ---------- */
   #gl{position:fixed;inset:0;z-index:0;display:block}
-  .grain{
-    position:fixed;inset:-100%;z-index:1;pointer-events:none;opacity:.06;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-    animation:grain 8s steps(10) infinite;
-  }
-  @keyframes grain{
-    0%,100%{transform:translate(0,0)}10%{transform:translate(-5%,-8%)}30%{transform:translate(3%,-5%)}
-    50%{transform:translate(-8%,3%)}70%{transform:translate(6%,8%)}90%{transform:translate(-3%,5%)}
-  }
+  .grain{position:fixed;inset:-100%;z-index:1;pointer-events:none;opacity:.055;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grain 8s steps(10) infinite}
+  @keyframes grain{0%,100%{transform:translate(0,0)}10%{transform:translate(-5%,-8%)}30%{transform:translate(3%,-5%)}50%{transform:translate(-8%,3%)}70%{transform:translate(6%,8%)}90%{transform:translate(-3%,5%)}}
+  .vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.55) 100%)}
 
   /* ---------- CURSOR ---------- */
-  #cur,#curring{position:fixed;top:0;left:0;z-index:400;pointer-events:none;border-radius:50%;opacity:0}
-  #cur{width:8px;height:8px;background:var(--green);box-shadow:0 0 12px var(--green);margin:-4px 0 0 -4px}
-  #curring{width:36px;height:36px;border:1px solid rgba(60,224,25,.55);margin:-18px 0 0 -18px;transition:width .25s,height .25s,margin .25s,border-color .25s}
+  #cur,#curring{position:fixed;top:0;left:0;z-index:500;pointer-events:none;border-radius:50%;opacity:0;will-change:transform}
+  #cur{width:7px;height:7px;background:var(--green);box-shadow:0 0 14px var(--green);margin:-3.5px 0 0 -3.5px}
+  #curring{width:38px;height:38px;border:1px solid rgba(60,224,25,.5);margin:-19px 0 0 -19px;display:grid;place-items:center;
+    font-size:8px;letter-spacing:.15em;color:var(--green);text-transform:uppercase;transition:width .3s,height .3s,margin .3s,border-color .3s,background .3s}
   body.cur-on #cur,body.cur-on #curring{opacity:1}
-  #curring.big{width:64px;height:64px;margin:-32px 0 0 -32px;border-color:rgba(60,224,25,.9)}
+  #curring.big{width:78px;height:78px;margin:-39px 0 0 -39px;border-color:var(--green);background:rgba(60,224,25,.08)}
+  #curring.drag{width:96px;height:96px;margin:-48px 0 0 -48px;border-color:var(--green);background:rgba(60,224,25,.1)}
 
-  /* ---------- PROGRESS + DOTS ---------- */
-  #progress{position:fixed;top:0;left:0;height:2px;width:0%;z-index:150;background:linear-gradient(90deg,var(--green-dark),var(--green));box-shadow:0 0 14px rgba(60,224,25,.7)}
-  #dots{
-    position:fixed;right:26px;top:50%;transform:translateY(-50%);z-index:120;
-    display:flex;flex-direction:column;gap:18px;
-  }
+  /* ---------- HUD ---------- */
+  #progress{position:fixed;top:0;left:0;height:2px;width:0%;z-index:150;background:linear-gradient(90deg,var(--green-dark),var(--green));box-shadow:0 0 14px rgba(60,224,25,.75)}
+  #dots{position:fixed;right:26px;top:50%;transform:translateY(-50%);z-index:120;display:flex;flex-direction:column;gap:18px}
   #dots a{display:flex;align-items:center;gap:10px;flex-direction:row-reverse}
   #dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.22);transition:.35s;display:block}
-  #dots span{
-    font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--green);
-    opacity:0;transform:translateX(8px);transition:.35s;
-  }
-  #dots a.on i{background:var(--green);box-shadow:0 0 12px var(--green);transform:scale(1.5)}
+  #dots span{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--green);opacity:0;transform:translateX(8px);transition:.35s}
+  #dots a.on i{background:var(--green);box-shadow:0 0 12px var(--green);transform:scale(1.6)}
   #dots a.on span,#dots a:hover span{opacity:1;transform:none}
-  @media(max-width:900px){#dots{display:none}}
+  @media(max-width:1000px){#dots{display:none}}
+  #hud{position:fixed;left:26px;bottom:22px;z-index:120;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);display:flex;gap:16px;align-items:center}
+  #hud b{color:var(--green);font-weight:700;font-variant-numeric:tabular-nums}
+  @media(max-width:1000px){#hud{display:none}}
 
   /* ---------- NAV ---------- */
-  nav{
-    position:fixed;top:0;left:0;right:0;z-index:100;
-    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-    background:rgba(5,5,5,.5);border-bottom:1px solid var(--line);
-  }
-  .nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);background:rgba(5,5,5,.45);border-bottom:1px solid var(--line)}
+  .nav-inner{max-width:1240px;margin:0 auto;padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between}
   .nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:.02em}
-  .nav-brand img{width:26px;height:26px;border-radius:7px;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
-  .nav-brand:hover img{transform:rotate(180deg)}
-  .nav-links{display:flex;gap:24px;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
-  .nav-links a{position:relative;padding:4px 0}
-  .nav-links a::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:1px;background:var(--green);transform:scaleX(0);transform-origin:right;transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+  .nav-brand img{width:26px;height:26px;border-radius:7px;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+  .nav-brand:hover img{transform:rotate(180deg) scale(1.1)}
+  .nav-links{display:flex;gap:26px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft)}
+  .nav-links a{position:relative;padding:4px 0;overflow:hidden;display:inline-block}
+  .nav-links a::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:1px;background:var(--green);transform:scaleX(0);transform-origin:right;transition:transform .45s cubic-bezier(.2,.8,.2,1)}
   .nav-links a:hover{color:var(--green)}
   .nav-links a:hover::after{transform:scaleX(1);transform-origin:left}
-  @media(max-width:640px){.nav-links{display:none}}
-  .nav-cta{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:8px 18px;border-radius:99px;border:1px solid var(--line);transition:border-color .3s,color .3s,box-shadow .3s;display:inline-block}
-  .nav-cta:hover{border-color:var(--green);color:var(--green);box-shadow:0 0 24px rgba(60,224,25,.25)}
+  @media(max-width:760px){.nav-links{display:none}}
+  .nav-cta{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:9px 20px;border-radius:99px;border:1px solid var(--line);transition:border-color .35s,color .35s,box-shadow .35s;will-change:transform}
+  .nav-cta:hover{border-color:var(--green);color:var(--green);box-shadow:0 0 26px rgba(60,224,25,.28)}
 
-  /* ---------- CONTENT ---------- */
+  /* ---------- LAYOUT ---------- */
   main{position:relative;z-index:2}
-  .chapter{min-height:100vh;display:flex;align-items:center;padding:120px 24px;position:relative;overflow:hidden}
-  .wrap{max-width:1150px;margin:0 auto;width:100%;position:relative}
+  .chapter{min-height:100vh;display:flex;align-items:center;padding:130px 24px;position:relative}
+  .wrap{max-width:1180px;margin:0 auto;width:100%;position:relative}
+  .skewed{will-change:transform}
 
-  .ghost{
-    position:absolute;top:-6vh;right:-4%;z-index:-1;
-    font-size:36vh;font-weight:800;line-height:1;letter-spacing:-.03em;
-    color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.055);
-    pointer-events:none;user-select:none;font-variant-numeric:tabular-nums;
-  }
-  #privacy .ghost{-webkit-text-stroke:1.5px rgba(60,224,25,.12)}
+  .ghost{position:absolute;top:-8vh;right:-3%;z-index:-1;font-size:38vh;font-weight:800;line-height:1;letter-spacing:-.04em;
+    color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.05);pointer-events:none;user-select:none;font-variant-numeric:tabular-nums;will-change:transform}
+  #privacy .ghost{-webkit-text-stroke:1.5px rgba(60,224,25,.14)}
 
-  .kicker{
-    font-size:12px;font-weight:700;color:var(--green);
-    text-transform:uppercase;letter-spacing:.28em;margin-bottom:20px;display:flex;align-items:center;gap:12px;
-  }
-  .kicker::before{content:"";width:34px;height:1px;background:var(--green)}
-  h1{font-size:clamp(52px,10vw,128px);line-height:.98;letter-spacing:-.04em;font-weight:800}
-  h1 .accent, h2 .accent{
-    background:linear-gradient(110deg,var(--green) 20%,#baff9e 50%,var(--green-dark) 80%);
-    -webkit-background-clip:text;background-clip:text;color:transparent;
-  }
-  h2{font-size:clamp(36px,6vw,72px);letter-spacing:-.035em;line-height:1.04;font-weight:800;max-width:820px}
-  .sub{font-size:clamp(16px,2vw,20px);color:var(--ink-soft);max-width:560px;margin-top:24px;font-weight:400}
+  .kicker{font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.3em;margin-bottom:22px;display:flex;align-items:center;gap:12px}
+  .kicker::before{content:"";width:36px;height:1px;background:var(--green);transform-origin:left}
+  h1{font-size:clamp(50px,9.5vw,124px);line-height:.96;letter-spacing:-.045em;font-weight:800}
+  h2{font-size:clamp(34px,5.6vw,68px);letter-spacing:-.038em;line-height:1.04;font-weight:800;max-width:860px}
+  .accent{background:linear-gradient(110deg,var(--green) 15%,#c9ffb4 50%,var(--green-dark) 85%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{font-size:clamp(16px,1.9vw,20px);color:var(--ink-soft);max-width:560px;margin-top:26px}
 
-  /* split words */
-  .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.12em;margin-bottom:-.12em}
-  .wi{display:inline-block;transform:translateY(115%) rotate(4deg);transition:transform .9s cubic-bezier(.2,.8,.2,1)}
-  .in .wi{transform:none}
+  /* char/word split */
+  .ln{display:block;overflow:hidden;padding-bottom:.08em;margin-bottom:-.08em}
+  .ch{display:inline-block;will-change:transform,opacity}
 
   /* hero */
-  #hero{align-items:flex-end;padding-bottom:12vh}
-  #hero .badge{
-    display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;letter-spacing:.08em;
-    color:var(--ink-soft);border:1px solid var(--line);background:rgba(5,5,5,.4);
-    padding:8px 16px;border-radius:99px;margin-bottom:30px;backdrop-filter:blur(8px);
-    position:relative;overflow:hidden;
-  }
-  #hero .badge::after{
-    content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;
-    background:linear-gradient(100deg,transparent,rgba(60,224,25,.18),transparent);
-    animation:shine 3.2s ease-in-out infinite;
-  }
-  @keyframes shine{0%,60%{left:-60%}100%{left:130%}}
-  #hero .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
-  .scroll-hint{
-    position:absolute;bottom:34px;left:50%;transform:translateX(-50%);
-    font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--ink-soft);
-    display:flex;flex-direction:column;align-items:center;gap:10px;
-  }
-  .scroll-hint::after{
-    content:"";width:1px;height:44px;
-    background:linear-gradient(to bottom,var(--green),transparent);
-    animation:drop 1.8s ease-in-out infinite;
-  }
+  #hero{align-items:flex-end;padding-bottom:13vh}
+  .badge{display:inline-flex;align-items:center;gap:9px;font-size:12px;font-weight:600;letter-spacing:.1em;color:var(--ink-soft);
+    border:1px solid var(--line);background:rgba(5,5,5,.4);padding:9px 17px;border-radius:99px;margin-bottom:32px;backdrop-filter:blur(8px);position:relative;overflow:hidden}
+  .badge::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(60,224,25,.2),transparent);animation:shine 3.4s ease-in-out infinite}
+  @keyframes shine{0%,60%{left:-60%}100%{left:140%}}
+  .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+  .scroll-hint{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.45em;text-transform:uppercase;color:var(--ink-soft);display:flex;flex-direction:column;align-items:center;gap:10px}
+  .scroll-hint::after{content:"";width:1px;height:46px;background:linear-gradient(to bottom,var(--green),transparent);animation:drop 1.9s ease-in-out infinite}
   @keyframes drop{0%{transform:scaleY(0);transform-origin:top}45%{transform:scaleY(1);transform-origin:top}55%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
 
-  /* bands (marquee) */
-  .band{
-    position:relative;z-index:2;padding:26px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
-    overflow:hidden;white-space:nowrap;background:rgba(5,5,5,.35);backdrop-filter:blur(6px);
-    transform:rotate(-1.2deg) scale(1.02);
-  }
-  .band.rev{transform:rotate(1.2deg) scale(1.02)}
-  .band-track{display:inline-block;will-change:transform;font-size:clamp(18px,2.6vw,28px);font-weight:800;letter-spacing:.14em;text-transform:uppercase}
-  .band-track b{color:transparent;-webkit-text-stroke:1px rgba(60,224,25,.8);font-weight:800}
-  .band-track span{color:rgba(255,255,255,.85)}
-  .band-track i{font-style:normal;color:var(--green);margin:0 26px}
+  /* marquee bands */
+  .band{position:relative;z-index:2;padding:24px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    overflow:hidden;white-space:nowrap;background:rgba(5,5,5,.3);backdrop-filter:blur(6px);transform:rotate(-1.2deg) scale(1.03)}
+  .band.rev{transform:rotate(1.2deg) scale(1.03)}
+  .band-track{display:inline-block;will-change:transform;font-size:clamp(17px,2.4vw,26px);font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+  .band-track b{color:transparent;-webkit-text-stroke:1px rgba(60,224,25,.75);font-weight:800}
+  .band-track span{color:rgba(255,255,255,.82)}
+  .band-track i{font-style:normal;color:var(--green);margin:0 24px}
 
   /* stats */
-  .stats{margin-top:64px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
-  .stat{background:rgba(5,5,5,.55);backdrop-filter:blur(8px);padding:38px 26px;position:relative;overflow:hidden}
-  .stat::after{content:"";position:absolute;bottom:0;left:0;height:2px;width:0%;background:var(--green);transition:width 1.2s cubic-bezier(.2,.8,.2,1) .3s;box-shadow:0 0 10px var(--green)}
-  .in .stat::after{width:100%}
-  .stat b{display:block;font-size:clamp(38px,5.5vw,68px);letter-spacing:-.04em;font-weight:800;font-variant-numeric:tabular-nums}
-  .stat b em{font-style:normal;color:var(--green);text-shadow:0 0 30px rgba(60,224,25,.4)}
-  .stat span{font-size:13px;color:var(--ink-soft);letter-spacing:.05em;text-transform:uppercase}
+  .stats{margin-top:66px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+  .stat{background:rgba(5,5,5,.5);backdrop-filter:blur(8px);padding:38px 26px;position:relative;overflow:hidden}
+  .stat .ln2{position:absolute;bottom:0;left:0;height:2px;width:100%;background:var(--green);box-shadow:0 0 10px var(--green);transform:scaleX(0);transform-origin:left}
+  .stat b{display:block;font-size:clamp(36px,5.2vw,64px);letter-spacing:-.04em;font-weight:800;font-variant-numeric:tabular-nums}
+  .stat b em{font-style:normal;color:var(--green);text-shadow:0 0 34px rgba(60,224,25,.45)}
+  .stat span{font-size:12px;color:var(--ink-soft);letter-spacing:.08em;text-transform:uppercase}
   @media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
 
-  /* poles */
-  .poles{margin-top:60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;perspective:900px}
-  .pole{
-    background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:24px 22px;
-    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-    transition:transform .5s cubic-bezier(.2,.8,.2,1),border-color .4s,box-shadow .4s,opacity 1s,filter 1s;
-    will-change:transform;position:relative;
+  /* ---- POLES : horizontal pinned rail ---- */
+  #rail{position:relative;height:100vh;overflow:hidden}
+  .rail-head{position:absolute;top:14vh;left:0;right:0;padding:0 24px;z-index:3;pointer-events:none}
+  .rail-head .inner{max-width:1180px;margin:0 auto}
+  .rail-track{position:absolute;top:12vh;left:0;height:86%;display:flex;align-items:center;gap:22px;padding:0 8vw;will-change:transform}
+  .pcard{
+    flex:0 0 300px;height:380px;border-radius:22px;padding:28px 26px;position:relative;overflow:hidden;
+    background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(12px);
+    display:flex;flex-direction:column;justify-content:space-between;will-change:transform;
   }
-  .pole::after{
-    content:"";position:absolute;inset:0;border-radius:16px;pointer-events:none;
-    background:radial-gradient(260px circle at var(--gx,50%) var(--gy,50%),rgba(60,224,25,.13),transparent 60%);
-    opacity:0;transition:opacity .35s;
-  }
-  .pole:hover{border-color:rgba(60,224,25,.5);box-shadow:0 24px 50px -20px rgba(60,224,25,.25)}
-  .pole:hover::after{opacity:1}
-  .pole .num{font-size:11px;color:var(--green);letter-spacing:.2em;display:block;margin-bottom:14px;font-variant-numeric:tabular-nums}
-  .pole h3{font-size:16px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
-  .pole p{font-size:13px;color:var(--ink-soft);line-height:1.55}
+  .pcard::after{content:"";position:absolute;inset:0;border-radius:22px;pointer-events:none;
+    background:radial-gradient(300px circle at var(--gx,50%) var(--gy,50%),rgba(60,224,25,.16),transparent 62%);opacity:0;transition:opacity .4s}
+  .pcard:hover::after{opacity:1}
+  .pcard:hover{border-color:rgba(60,224,25,.5)}
+  .pcard .num{font-size:11px;letter-spacing:.3em;color:var(--green);font-variant-numeric:tabular-nums}
+  .pcard h3{font-size:26px;font-weight:800;letter-spacing:-.025em;margin-bottom:10px}
+  .pcard p{font-size:13.5px;color:var(--ink-soft);line-height:1.6}
+  .pcard .glyph{font-size:40px;line-height:1;opacity:.9}
+  .rail-hint{position:absolute;bottom:7vh;left:50%;transform:translateX(-50%);z-index:3;font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:var(--ink-soft)}
+  .rail-bar{position:absolute;bottom:5vh;left:50%;transform:translateX(-50%);z-index:3;width:220px;height:1px;background:rgba(255,255,255,.14)}
+  .rail-bar i{display:block;height:100%;width:0%;background:var(--green);box-shadow:0 0 10px var(--green)}
 
-  /* features */
-  .highlights{margin-top:60px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;perspective:900px}
-  .hl{
-    border:1px solid var(--line);border-radius:20px;padding:34px 28px;min-height:230px;
-    display:flex;flex-direction:column;justify-content:flex-end;position:relative;
-    background:var(--glass);backdrop-filter:blur(10px);
-    transition:transform .5s cubic-bezier(.2,.8,.2,1),border-color .4s,opacity 1s,filter 1s;will-change:transform;
-  }
-  .hl::after{
-    content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;
-    background:radial-gradient(320px circle at var(--gx,50%) var(--gy,50%),rgba(60,224,25,.12),transparent 60%);
-    opacity:0;transition:opacity .35s;
-  }
-  .hl:hover{border-color:rgba(60,224,25,.45)}
-  .hl:hover::after{opacity:1}
-  .hl.green{background:linear-gradient(150deg,rgba(60,224,25,.16),rgba(60,224,25,.05));border-color:rgba(60,224,25,.3)}
-  .hl .tag{position:absolute;top:26px;left:28px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:var(--green)}
-  .hl h3{font-size:21px;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
-  .hl p{font-size:14px;color:var(--ink-soft)}
-  @media(max-width:820px){.highlights{grid-template-columns:1fr}}
+  /* ---- FEATURES (device pinned) ---- */
+  #features{min-height:100vh}
+  .feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+  @media(max-width:900px){.feat-grid{grid-template-columns:1fr;gap:30px}}
+  .feat-list{display:flex;flex-direction:column;gap:14px}
+  .feat{border:1px solid var(--line);border-radius:18px;padding:24px 26px;background:var(--glass);backdrop-filter:blur(10px);
+    transition:border-color .4s,background .4s;position:relative;overflow:hidden}
+  .feat::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(300px circle at var(--gx,50%) var(--gy,50%),rgba(60,224,25,.12),transparent 60%);opacity:0;transition:opacity .35s}
+  .feat:hover::after{opacity:1}
+  .feat.on{border-color:rgba(60,224,25,.55);background:linear-gradient(120deg,rgba(60,224,25,.1),rgba(60,224,25,.02))}
+  .feat .tag{font-size:10px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--green);display:block;margin-bottom:8px}
+  .feat h3{font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+  .feat p{font-size:14px;color:var(--ink-soft)}
+  .device-slot{height:70vh;min-height:420px;position:relative}
+  .device-slot .hintline{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.35em;text-transform:uppercase;color:var(--ink-soft)}
 
   /* privacy */
   #privacy .wrap{text-align:center}
-  #privacy h2{margin:0 auto;text-shadow:0 0 60px rgba(60,224,25,.25)}
+  #privacy h2{margin:0 auto}
   #privacy .kicker{justify-content:center}
-  #privacy .kicker::after{content:"";width:34px;height:1px;background:var(--green)}
-  .priv-grid{margin:60px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:980px;text-align:left}
-  .priv{background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:26px;backdrop-filter:blur(10px);transition:border-color .4s,transform .5s}
-  .priv:hover{border-color:rgba(60,224,25,.4);transform:translateY(-4px)}
+  #privacy .kicker::after{content:"";width:36px;height:1px;background:var(--green)}
+  #privacy .sub{margin-left:auto;margin-right:auto}
+  .priv-grid{margin:62px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:1000px;text-align:left}
+  .priv{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:28px;backdrop-filter:blur(10px);transition:border-color .4s,transform .5s}
+  .priv:hover{border-color:rgba(60,224,25,.45);transform:translateY(-5px)}
   .priv b{display:block;font-size:15px;margin-bottom:8px;color:var(--green)}
   .priv span{font-size:13.5px;color:var(--ink-soft)}
   @media(max-width:820px){.priv-grid{grid-template-columns:1fr}}
@@ -237,57 +190,52 @@
   /* cta */
   #cta{text-align:center}
   #cta .wrap{display:flex;flex-direction:column;align-items:center}
-  .btn{
-    display:inline-flex;align-items:center;gap:10px;padding:16px 36px;border-radius:99px;
-    font-size:15px;font-weight:700;letter-spacing:.02em;border:1px solid var(--line);
-    transition:box-shadow .3s,border-color .3s,color .3s;will-change:transform;position:relative;overflow:hidden;
-  }
+  .btn{display:inline-flex;align-items:center;gap:10px;padding:17px 38px;border-radius:99px;font-size:15px;font-weight:700;
+    border:1px solid var(--line);transition:box-shadow .35s,border-color .35s,color .35s;will-change:transform}
   .btn-primary{background:var(--green);color:#031a00;border-color:var(--green)}
-  .btn-primary:hover{box-shadow:0 0 60px rgba(60,224,25,.55)}
-  .btn-ghost{color:var(--ink)}
+  .btn-primary:hover{box-shadow:0 0 70px rgba(60,224,25,.6)}
   .btn-ghost:hover{border-color:var(--green);color:var(--green)}
-  .cta-row{display:flex;gap:14px;margin-top:44px;flex-wrap:wrap;justify-content:center}
+  .cta-row{display:flex;gap:14px;margin-top:46px;flex-wrap:wrap;justify-content:center}
 
-  footer{
-    position:relative;z-index:2;border-top:1px solid var(--line);
-    padding:36px 24px;text-align:center;font-size:12.5px;color:var(--ink-soft);
-    background:rgba(5,5,5,.7);backdrop-filter:blur(10px);
-  }
+  footer{position:relative;z-index:2;border-top:1px solid var(--line);padding:38px 24px;text-align:center;font-size:12.5px;color:var(--ink-soft);background:rgba(5,5,5,.65);backdrop-filter:blur(10px)}
   footer a{color:var(--ink);font-weight:600;margin:0 10px}
   footer a:hover{color:var(--green)}
   footer p+p{margin-top:10px}
 
-  /* reveal */
-  .reveal{opacity:0;transform:translateY(44px);filter:blur(10px);transition:opacity 1s ease,transform 1s cubic-bezier(.2,.8,.2,1),filter 1s ease}
-  .reveal.in{opacity:1;transform:none;filter:none}
-  @media (prefers-reduced-motion: reduce){
-    .reveal,.wi{opacity:1;transform:none;filter:none;transition:none}
-    .grain,.scroll-hint::after,#loader .inf,#hero .badge::after{animation:none}
-  }
+  .fade{opacity:0;transform:translateY(38px);filter:blur(8px)}
+  @media (prefers-reduced-motion: reduce){ .fade{opacity:1;transform:none;filter:none} .grain,.badge::after,.scroll-hint::after,#loader .inf{animation:none} }
 </style>
 </head>
 <body>
 
-<div id="loader"><div class="inf">∞</div><div class="bar"><i id="loadbar"></i></div><div class="pct" id="loadpct">0%</div></div>
+<div id="loader">
+  <div class="inf">∞</div>
+  <div class="bar"><i id="loadbar"></i></div>
+  <div class="pct" id="loadpct">0%</div>
+</div>
+
 <canvas id="gl"></canvas>
 <div class="grain"></div>
+<div class="vignette"></div>
 <div id="cur"></div><div id="curring"></div>
 <div id="progress"></div>
 
 <div id="dots">
   <a href="#hero" data-i="0"><i></i><span>Intro</span></a>
   <a href="#promesse" data-i="1"><i></i><span>Système</span></a>
-  <a href="#poles" data-i="2"><i></i><span>Pôles</span></a>
+  <a href="#rail" data-i="2"><i></i><span>16 pôles</span></a>
   <a href="#features" data-i="3"><i></i><span>Signature</span></a>
   <a href="#privacy" data-i="4"><i></i><span>Privé</span></a>
   <a href="#cta" data-i="5"><i></i><span>Go</span></a>
 </div>
 
+<div id="hud"><span>LifeOS · iOS</span><span>SCROLL <b id="hudpct">000</b></span><span id="hudsec">INTRO</span></div>
+
 <nav>
   <div class="nav-inner">
-    <a class="nav-brand" href="#"><img src="icon.png" alt="LifeOS">LifeOS</a>
+    <a class="nav-brand" href="#hero"><img src="icon.png" alt="LifeOS">LifeOS</a>
     <div class="nav-links">
-      <a href="#poles">Pôles</a>
+      <a href="#rail">Pôles</a>
       <a href="#features">Fonctionnalités</a>
       <a href="#privacy">Confidentialité</a>
       <a href="support.html">Support</a>
@@ -300,68 +248,53 @@
 
   <section class="chapter" id="hero">
     <div class="wrap" id="herowrap">
-      <div class="badge reveal"><span class="dot"></span>iOS 17+ · SWIFTUI · 100 % LOCAL</div>
-      <h1 class="split">Toute ta vie. <span class="accent">Une seule app.</span></h1>
-      <p class="sub reveal">LifeOS remplace la vingtaine d'apps qui se partagent ta vie par un seul système, entièrement sur ton iPhone.</p>
+      <div class="badge fade"><span class="dot"></span>iOS 17+ · SWIFTUI · 100 % LOCAL</div>
+      <h1 class="split" data-accent="Une seule app.">Toute ta vie.|Une seule app.</h1>
+      <p class="sub fade">LifeOS remplace la vingtaine d'apps qui se partagent ta vie par un seul système, entièrement sur ton iPhone.</p>
     </div>
     <div class="scroll-hint">Scroll</div>
   </section>
 
   <section class="chapter" id="promesse">
-    <span class="ghost" data-sp="-.1">01</span>
-    <div class="wrap">
-      <p class="kicker reveal">Le système</p>
-      <h2 class="split">Un OS pour ta <span class="accent">vie entière.</span></h2>
-      <p class="sub reveal" data-sp=".04">Sommeil, sport, argent, mental, carrière — chaque pôle est un hub complet, et tout communique.</p>
-      <div class="stats reveal">
-        <div class="stat"><b><em data-count="16">0</em></b><span>pôles de vie</span></div>
-        <div class="stat"><b data-count="142">0</b><span>écrans</span></div>
-        <div class="stat"><b data-count="41">0</b><span>entités de données</span></div>
-        <div class="stat"><b><em>0</em></b><span>donnée dans le cloud</span></div>
+    <span class="ghost" data-sp="-.14">01</span>
+    <div class="wrap skewed">
+      <p class="kicker fade">Le système</p>
+      <h2 class="split" data-accent="vie entière.">Un OS pour ta|vie entière.</h2>
+      <p class="sub fade">Sommeil, sport, argent, mental, carrière — chaque pôle est un hub complet, et tout communique.</p>
+      <div class="stats">
+        <div class="stat fade"><b><em data-count="16">0</em></b><span>pôles de vie</span><i class="ln2"></i></div>
+        <div class="stat fade"><b data-count="142">0</b><span>écrans</span><i class="ln2"></i></div>
+        <div class="stat fade"><b data-count="41">0</b><span>entités de données</span><i class="ln2"></i></div>
+        <div class="stat fade"><b><em>0</em></b><span>donnée dans le cloud</span><i class="ln2"></i></div>
       </div>
     </div>
   </section>
 
   <div class="band"><div class="band-track" data-dir="-1"></div></div>
 
-  <section class="chapter" id="poles">
-    <span class="ghost" data-sp="-.12">16</span>
-    <div class="wrap">
-      <p class="kicker reveal">Les pôles</p>
-      <h2 class="split">16 univers. <span class="accent">Zéro friction.</span></h2>
-      <div class="poles">
-        <div class="pole reveal tilt"><span class="num">01</span><h3>Sommeil</h3><p>Cycles, power-nap, journal de rêves vocal, score de récupération HealthKit.</p></div>
-        <div class="pole reveal tilt"><span class="num">02</span><h3>Nutrition</h3><p>Jeûne intermittent, macros, frigo intelligent, recettes, hydratation.</p></div>
-        <div class="pole reveal tilt"><span class="num">03</span><h3>Fitness</h3><p>Muscu avec courbe de progression, HIIT/Tabata, mobilité guidée, streaks.</p></div>
-        <div class="pole reveal tilt"><span class="num">04</span><h3>Looksmaxx</h3><p>Skincare avec rappels, photos avant/après, posture, outfit selon la météo.</p></div>
-        <div class="pole reveal tilt"><span class="num">05</span><h3>Mental</h3><p>Cohérence cardiaque animée, méditation, humeur, détox écran, briefing matin.</p></div>
-        <div class="pole reveal tilt"><span class="num">06</span><h3>Productivité</h3><p>To-do, time-blocking automatique, habitudes, focus Pomodoro, notes.</p></div>
-        <div class="pole reveal tilt"><span class="num">07</span><h3>Finances</h3><p>Comptes avec alertes, budget enveloppes, abonnements, split façon Tricount.</p></div>
-        <div class="pole reveal tilt"><span class="num">08</span><h3>Investissement</h3><p>Portefeuille, net worth, projection FIRE, immo et cashflow, simulateur IR.</p></div>
-        <div class="pole reveal tilt"><span class="num">09</span><h3>Carrière</h3><p>Suivi de candidatures, CV builder avec export, skill gap, mock interview.</p></div>
-        <div class="pole reveal tilt"><span class="num">10</span><h3>Apprentissage</h3><p>Flashcards SM-2, micro-learning, résumés, plans de compétences.</p></div>
-        <div class="pole reveal tilt"><span class="num">11</span><h3>Maison</h3><p>Anti-gaspi, recettes de restes, tâches ménagères, animaux, maintenance.</p></div>
-        <div class="pole reveal tilt"><span class="num">12</span><h3>Mobilité</h3><p>Voiture : assurance, révisions, consommation et coût carburant.</p></div>
-        <div class="pole reveal tilt"><span class="num">13</span><h3>Social</h3><p>CRM personnel, relances, anniversaires et idées cadeaux, événements.</p></div>
-        <div class="pole reveal tilt"><span class="num">14</span><h3>Admin</h3><p>Coffre-fort de documents chiffré local, échéances, générateur de courriers.</p></div>
-        <div class="pole reveal tilt"><span class="num">15</span><h3>Voyage</h3><p>Itinéraires avec budget, checklist de valise générée automatiquement.</p></div>
-        <div class="pole reveal tilt"><span class="num">16</span><h3>Santé &amp; Cycle</h3><p>Suivi médical, cycle, données HealthKit traitées sur l'appareil.</p></div>
-      </div>
-    </div>
+  <section id="rail">
+    <div class="rail-head"><div class="inner">
+      <p class="kicker fade">Les pôles</p>
+      <h2 class="split" data-accent="Zéro friction.">16 univers.|Zéro friction.</h2>
+    </div></div>
+    <div class="rail-track" id="railtrack"></div>
+    <div class="rail-hint">Défile</div>
+    <div class="rail-bar"><i id="railbar"></i></div>
   </section>
 
   <section class="chapter" id="features">
-    <span class="ghost" data-sp="-.1">02</span>
+    <span class="ghost" data-sp="-.12">02</span>
     <div class="wrap">
-      <p class="kicker reveal">Signature</p>
-      <h2 class="split">Des détails qu'aucune autre app <span class="accent">n'assemble.</span></h2>
-      <div class="highlights">
-        <div class="hl reveal tilt"><span class="tag">Sommeil</span><div><h3>Journal de rêves vocal</h3><p>Tu murmures ton rêve au réveil, LifeOS le transcrit avant qu'il s'efface.</p></div></div>
-        <div class="hl green reveal tilt"><span class="tag">Productivité</span><div><h3>Time-blocking auto</h3><p>Ta to-do se transforme seule en blocs dans ta journée.</p></div></div>
-        <div class="hl reveal tilt"><span class="tag">Investissement</span><div><h3>Projection FIRE</h3><p>Net worth en temps réel et date d'indépendance financière projetée.</p></div></div>
-        <div class="hl reveal tilt"><span class="tag">Apprentissage</span><div><h3>Flashcards SM-2</h3><p>Le vrai algorithme de répétition espacée, intégré nativement.</p></div></div>
-        <div class="hl green reveal tilt"><span class="tag">Admin</span><div><h3>Coffre-fort chiffré</h3><p>Documents sensibles chiffrés localement, générateur de courriers inclus.</p></div></div>
-        <div class="hl reveal tilt"><span class="tag">Fitness</span><div><h3>Score de récupération</h3><p>Pas, HRV et sommeil croisés pour te dire quand pousser — ou pas.</p></div></div>
+      <p class="kicker fade">Signature</p>
+      <h2 class="split" data-accent="n'assemble.">Des détails qu'aucune app|n'assemble.</h2>
+      <div class="feat-grid" style="margin-top:54px">
+        <div class="feat-list" id="featlist">
+          <div class="feat tilt" data-screen="0"><span class="tag">Sommeil</span><h3>Journal de rêves vocal</h3><p>Tu murmures ton rêve au réveil, LifeOS le transcrit avant qu'il s'efface.</p></div>
+          <div class="feat tilt" data-screen="1"><span class="tag">Productivité</span><h3>Time-blocking automatique</h3><p>Ta to-do se transforme seule en blocs dans ta journée.</p></div>
+          <div class="feat tilt" data-screen="2"><span class="tag">Investissement</span><h3>Projection FIRE</h3><p>Net worth en temps réel et date d'indépendance financière projetée.</p></div>
+          <div class="feat tilt" data-screen="3"><span class="tag">Fitness</span><h3>Score de récupération</h3><p>Pas, HRV et sommeil croisés pour te dire quand pousser — ou pas.</p></div>
+        </div>
+        <div class="device-slot" id="deviceslot"><span class="hintline">rendu 3D temps réel</span></div>
       </div>
     </div>
   </section>
@@ -369,25 +302,25 @@
   <div class="band rev"><div class="band-track" data-dir="1"></div></div>
 
   <section class="chapter" id="privacy">
-    <span class="ghost" data-sp="-.08">∞</span>
+    <span class="ghost" data-sp="-.1">∞</span>
     <div class="wrap">
-      <p class="kicker reveal">Confidentialité</p>
+      <p class="kicker fade">Confidentialité</p>
       <h2 id="crypt" data-final="Ta vie reste dans ta poche.">Ta vie reste dans ta poche.</h2>
-      <p class="sub reveal" style="margin-left:auto;margin-right:auto">Pas de compte. Pas de serveur. Pas de tracking. Tout vit en SwiftData sur ton iPhone — point final.</p>
+      <p class="sub fade">Pas de compte. Pas de serveur. Pas de tracking. Tout vit en SwiftData sur ton iPhone — point final.</p>
       <div class="priv-grid">
-        <div class="priv reveal"><b>100 % on-device</b><span>Les 41 entités de données vivent en local. Rien ne transite par un cloud.</span></div>
-        <div class="priv reveal"><b>Capteurs natifs</b><span>Pas, HRV, sommeil : lus via HealthKit sur l'appareil, jamais exportés.</span></div>
-        <div class="priv reveal"><b>Chiffrement local</b><span>Le coffre-fort de documents est chiffré sur ton téléphone, clé comprise.</span></div>
+        <div class="priv fade"><b>100 % on-device</b><span>Les 41 entités de données vivent en local. Rien ne transite par un cloud.</span></div>
+        <div class="priv fade"><b>Capteurs natifs</b><span>Pas, HRV, sommeil : lus via HealthKit sur l'appareil, jamais exportés.</span></div>
+        <div class="priv fade"><b>Chiffrement local</b><span>Le coffre-fort de documents est chiffré sur ton téléphone, clé comprise.</span></div>
       </div>
     </div>
   </section>
 
   <section class="chapter" id="cta">
-    <span class="ghost" data-sp="-.1">GO</span>
+    <span class="ghost" data-sp="-.12">GO</span>
     <div class="wrap">
-      <p class="kicker reveal" style="justify-content:center">LifeOS</p>
-      <h2 class="split">Une app. <span class="accent">Zéro limite.</span></h2>
-      <div class="cta-row reveal">
+      <p class="kicker fade" style="justify-content:center">LifeOS</p>
+      <h2 class="split" data-accent="Zéro limite.">Une app.|Zéro limite.</h2>
+      <div class="cta-row fade">
         <a class="btn btn-primary magnet" href="https://github.com/blotjules3-gif/life-OS-" target="_blank" rel="noopener">Explorer sur GitHub</a>
         <a class="btn btn-ghost magnet" href="support.html">Support &amp; FAQ</a>
       </div>
@@ -401,400 +334,715 @@
   <p><a href="privacy.html">Politique de confidentialité</a> · <a href="terms.html">Conditions d'utilisation</a> · <a href="support.html">Support</a></p>
 </footer>
 
+<script src="vendor/gsap.min.js"></script>
+<script src="vendor/ScrollTrigger.min.js"></script>
+<script src="vendor/lenis.min.js"></script>
+
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
 import {RoomEnvironment} from './vendor/RoomEnvironment.js';
+import {EffectComposer} from './vendor/jsm/postprocessing/EffectComposer.js';
+import {RenderPass} from './vendor/jsm/postprocessing/RenderPass.js';
+import {UnrealBloomPass} from './vendor/jsm/postprocessing/UnrealBloomPass.js';
+import {ShaderPass} from './vendor/jsm/postprocessing/ShaderPass.js';
+import {OutputPass} from './vendor/jsm/postprocessing/OutputPass.js';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const fine = matchMedia('(hover:hover) and (pointer:fine)').matches;
 const q = new URLSearchParams(location.search);
+const SHOT = q.has('once');
+gsap.registerPlugin(ScrollTrigger);
 
-/* ---------- loader ---------- */
-const loader = document.getElementById('loader');
-const pctEl = document.getElementById('loadpct');
-const barEl = document.getElementById('loadbar');
-let fake = 0, loaded = false;
+/* ================= POLES DATA ================= */
+const POLES = [
+  ['01','😴','Sommeil','Cycles, power-nap, journal de rêves vocal, score de récupération HealthKit.'],
+  ['02','🥗','Nutrition','Jeûne intermittent, macros, frigo intelligent, recettes, hydratation.'],
+  ['03','💪','Fitness','Muscu avec courbe de progression, HIIT/Tabata, mobilité guidée, streaks.'],
+  ['04','✨','Looksmaxx','Skincare avec rappels, photos avant/après, posture, outfit météo.'],
+  ['05','🧘','Mental','Cohérence cardiaque animée, méditation, humeur, détox écran.'],
+  ['06','⚡️','Productivité','To-do, time-blocking automatique, habitudes, focus Pomodoro.'],
+  ['07','💶','Finances','Comptes, budget enveloppes, abonnements, split façon Tricount.'],
+  ['08','📈','Investissement','Portefeuille, net worth, projection FIRE, immo, simulateur IR.'],
+  ['09','💼','Carrière','Candidatures, CV builder avec export, skill gap, mock interview.'],
+  ['10','🎓','Apprentissage','Flashcards SM-2, micro-learning, résumés, plans de compétences.'],
+  ['11','🏠','Maison','Anti-gaspi, recettes de restes, tâches, animaux, maintenance.'],
+  ['12','🚗','Mobilité','Voiture : assurance, révisions, consommation, coût carburant.'],
+  ['13','🫶','Social','CRM personnel, relances, anniversaires, cadeaux, événements.'],
+  ['14','🗂','Admin','Coffre-fort chiffré local, échéances, générateur de courriers.'],
+  ['15','✈️','Voyage','Itinéraires avec budget, checklist de valise automatique.'],
+  ['16','🩺','Santé & Cycle','Suivi médical, cycle, données HealthKit sur l\'appareil.'],
+];
+const railTrack = document.getElementById('railtrack');
+railTrack.innerHTML = POLES.map(([n,g,t,d])=>`
+  <article class="pcard tilt">
+    <div><span class="num">${n}</span></div>
+    <div><span class="glyph">${g}</span><h3 style="margin-top:14px">${t}</h3><p>${d}</p></div>
+  </article>`).join('');
+
+/* ================= LOADER ================= */
+const loader = document.getElementById('loader'), pctEl = document.getElementById('loadpct'), barEl = document.getElementById('loadbar');
+let fake = 0, done = false;
 const fakeTimer = setInterval(()=>{
-  fake = Math.min(fake + Math.random()*14, 92);
-  pctEl.textContent = Math.round(fake) + '%';
-  barEl.style.width = fake + '%';
-}, 90);
+  fake = Math.min(fake + Math.random()*13, 92);
+  pctEl.textContent = Math.round(fake)+'%'; barEl.style.width = fake+'%';
+}, 85);
 function finishLoad(){
-  if(loaded) return; loaded = true;
+  if(done) return; done = true;
   clearInterval(fakeTimer);
   pctEl.textContent = '100%'; barEl.style.width = '100%';
-  setTimeout(()=>{
-    loader.classList.add('done');
-    document.querySelector('#hero .split')?.classList.add('in');
-  }, 300);
+  if(SHOT){ loader.style.display='none'; return; }
+  gsap.timeline({delay:.25})
+    .to(loader, {clipPath:'inset(0 0 100% 0)', duration:1, ease:'power4.inOut'})
+    .set(loader, {display:'none'})
+    .add(()=>heroIntro(), '-=.5');
 }
-setTimeout(finishLoad, 3500);
+setTimeout(finishLoad, 4000);
 
-/* ---------- split words ---------- */
-document.querySelectorAll('.split').forEach(el=>{
-  const frag = document.createDocumentFragment();
-  let idx = 0;
-  el.childNodes.forEach(node=>{
-    const isAccent = node.nodeType === 1 && node.classList.contains('accent');
-    const text = node.textContent;
-    text.split(/\s+/).filter(Boolean).forEach(word=>{
-      const w = document.createElement('span'); w.className = 'w';
-      const wi = document.createElement('span'); wi.className = 'wi' + (isAccent ? ' accent' : '');
-      wi.textContent = word;
-      wi.style.transitionDelay = (idx++ * 60) + 'ms';
-      w.appendChild(wi); frag.appendChild(w);
-      frag.appendChild(document.createTextNode(' '));
+/* ================= SPLIT TEXT ================= */
+function split(el){
+  const lines = el.dataset.accent ? el.textContent.split('|') : [el.textContent];
+  const acc = el.dataset.accent;
+  el.textContent = '';
+  const chars = [];
+  lines.forEach(line=>{
+    const ln = document.createElement('span'); ln.className = 'ln';
+    const isAcc = acc && line.trim() === acc.trim();
+    [...line].forEach(c=>{
+      const s = document.createElement('span');
+      s.className = 'ch' + (isAcc ? ' accent' : '');
+      s.textContent = c === ' ' ? ' ' : c;
+      ln.appendChild(s); chars.push(s);
     });
+    el.appendChild(ln);
   });
-  el.textContent = ''; el.appendChild(frag);
+  el._chars = chars;
+  return chars;
+}
+document.querySelectorAll('.split').forEach(el=>{
+  const chars = split(el);
+  gsap.set(chars, {yPercent:118, rotate:6, opacity:0});
 });
-const splitIO = new IntersectionObserver(es=>{
-  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); splitIO.unobserve(e.target);} });
-},{threshold:.35});
-document.querySelectorAll('.split').forEach(el=>{ if(el.closest('#hero')) return; splitIO.observe(el); });
 
-/* ---------- reveals (stagger par section) ---------- */
-document.querySelectorAll('.chapter').forEach(ch=>{
-  ch.querySelectorAll('.reveal').forEach((el,i)=>el.style.transitionDelay = Math.min(i*90, 540) + 'ms');
-});
-const io = new IntersectionObserver(es=>{
-  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
-},{threshold:.15});
-document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-
-/* ---------- compteurs ---------- */
-const cio = new IntersectionObserver(es=>{
-  es.forEach(e=>{
-    if(!e.isIntersecting) return;
-    cio.unobserve(e.target);
-    const t = +e.target.dataset.count, d = 1400, t0 = performance.now();
-    (function tick(now){
-      const k = Math.min((now-t0)/d, 1);
-      e.target.textContent = Math.round(t*(1-Math.pow(1-k,3)));
-      if(k<1) requestAnimationFrame(tick);
-    })(t0);
-  });
-},{threshold:.6});
-document.querySelectorAll('[data-count]').forEach(el=>cio.observe(el));
-
-/* ---------- texte crypté (privacy) ---------- */
-const crypt = document.getElementById('crypt');
-if(crypt && !q.has('once') && !reduced){
-  const FINAL = crypt.dataset.final, CHARS = '█▓▒░<>/\\|#*+=@01';
-  crypt.textContent = '';
-  const dio = new IntersectionObserver(es=>{
-    if(!es[0].isIntersecting) return;
-    dio.disconnect();
-    const t0 = performance.now(), D = 1500;
-    (function tick(now){
-      const k = Math.min((now-t0)/D, 1);
-      const solved = Math.floor(FINAL.length * k);
-      let s = FINAL.slice(0, solved);
-      for(let i=solved;i<FINAL.length;i++){
-        s += FINAL[i] === ' ' ? ' ' : CHARS[(Math.random()*CHARS.length)|0];
-      }
-      crypt.textContent = s;
-      if(k<1) requestAnimationFrame(tick);
-    })(t0);
-  },{threshold:.5});
-  dio.observe(crypt);
+function heroIntro(){
+  const h = document.querySelector('#hero .split');
+  const tl = gsap.timeline();
+  tl.to(h._chars, {yPercent:0, rotate:0, opacity:1, duration:1.1, ease:'power4.out', stagger:{each:.022}})
+    .from('#hero .badge', {y:22, opacity:0, duration:.8, ease:'power3.out'}, .15)
+    .from('#hero .sub', {y:26, opacity:0, filter:'blur(8px)', duration:.9, ease:'power3.out'}, .35)
+    .from('.scroll-hint', {opacity:0, duration:.6}, .8);
+  gsap.set('#hero .badge, #hero .sub', {clearProps:'opacity,filter'});
+}
+if(SHOT){
+  document.querySelectorAll('.split').forEach(el=>gsap.set(el._chars, {yPercent:0, rotate:0, opacity:1}));
+  gsap.set('.fade', {opacity:1, y:0, filter:'none'});
 }
 
-/* ---------- bandeaux marquee ---------- */
-const WORDS = ['Sommeil','Nutrition','Fitness','Mental','Finances','Carrière','Maison','Social','Voyage','Admin'];
+/* ================= LENIS ================= */
+let lenis = null;
+if(!SHOT && !reduced){
+  lenis = new Lenis({duration:1.15, easing:t=>Math.min(1, 1.001 - Math.pow(2, -10*t)), smoothWheel:true});
+  lenis.on('scroll', ScrollTrigger.update);
+  gsap.ticker.add(t=>lenis.raf(t*1000));
+  gsap.ticker.lagSmoothing(0);
+}
+
+/* ================= SCROLL-DRIVEN DOM ================= */
+let vel = 0;                                    // scroll velocity (normalized)
+ScrollTrigger.defaults({});
+
+/* fades */
+gsap.utils.toArray('.fade').forEach(el=>{
+  if(SHOT) return;
+  gsap.to(el, {
+    opacity:1, y:0, filter:'blur(0px)', duration:1, ease:'power3.out',
+    scrollTrigger:{trigger:el, start:'top 88%'}
+  });
+});
+/* splits (hors hero) */
+gsap.utils.toArray('.split').forEach(el=>{
+  if(el.closest('#hero') || SHOT) return;
+  gsap.to(el._chars, {
+    yPercent:0, rotate:0, opacity:1, duration:1, ease:'power4.out', stagger:{each:.016},
+    scrollTrigger:{trigger:el, start:'top 85%'}
+  });
+});
+/* kicker line grow */
+gsap.utils.toArray('.kicker').forEach(k=>{
+  if(SHOT) return;
+  gsap.fromTo(k, {'--kw':0}, {scrollTrigger:{trigger:k, start:'top 90%'}});
+});
+/* counters */
+gsap.utils.toArray('[data-count]').forEach(el=>{
+  const v = {n:0}, t = +el.dataset.count;
+  if(SHOT){ el.textContent = t; return; }
+  gsap.to(v, {n:t, duration:1.6, ease:'power3.out', snap:{n:1},
+    onUpdate:()=>el.textContent = v.n,
+    scrollTrigger:{trigger:el, start:'top 85%'}});
+});
+/* stat underlines */
+gsap.utils.toArray('.stat .ln2').forEach((el,i)=>{
+  if(SHOT){ gsap.set(el,{scaleX:1}); return; }
+  gsap.to(el, {scaleX:1, duration:1.1, ease:'power3.out', delay:i*.08, scrollTrigger:{trigger:el, start:'top 92%'}});
+});
+/* ghosts parallax */
+gsap.utils.toArray('.ghost').forEach(g=>{
+  gsap.fromTo(g, {y:0}, {y:()=>innerHeight*parseFloat(g.dataset.sp)*2.4, ease:'none',
+    scrollTrigger:{trigger:g.closest('section'), start:'top bottom', end:'bottom top', scrub:true}});
+});
+/* hero parallax out */
+gsap.to('#herowrap', {y:-90, opacity:0, ease:'none',
+  scrollTrigger:{trigger:'#hero', start:'top top', end:'bottom top', scrub:true}});
+
+/* marquees */
+const WORDS = ['Sommeil','Nutrition','Fitness','Mental','Finances','Carrière','Maison','Social','Voyage','Admin','Sommeil','Investir'];
 document.querySelectorAll('.band-track').forEach(track=>{
-  let html = '';
-  for(let r=0;r<4;r++) WORDS.forEach((w,i)=>{ html += (i%2 ? `<b>${w}</b>` : `<span>${w}</span>`) + '<i>∞</i>'; });
-  track.innerHTML = html + track.innerHTML;
+  let html='';
+  for(let r=0;r<4;r++) WORDS.forEach((w,i)=>{ html += (i%2?`<b>${w}</b>`:`<span>${w}</span>`)+'<i>∞</i>'; });
+  track.innerHTML = html;
+  const dir = +track.dataset.dir;
+  const w = track.scrollWidth/4;
+  const tween = gsap.to(track, {x: dir<0 ? -w : 0, duration:22, ease:'none', repeat:-1,
+    modifiers:{x: gsap.utils.unitize(x=>((parseFloat(x) % w) + (dir<0?0:-w)) + 'px')}});
+  gsap.set(track, {x: dir<0 ? 0 : -w});
+  track._tween = tween;
 });
 
-/* ---------- curseur custom ---------- */
+/* skew on velocity */
+const skewSetters = gsap.utils.toArray('.skewed, .pcard').map(el=>gsap.quickSetter(el, 'skewY', 'deg'));
+
+/* ================= RAIL (pinned horizontal) ================= */
+const railBar = document.getElementById('railbar');
+let railST = null;
+function buildRail(){
+  const dist = () => railTrack.scrollWidth - innerWidth + innerWidth*0.06;
+  railST = gsap.to(railTrack, {
+    x: () => -dist(), ease:'none',
+    scrollTrigger:{
+      trigger:'#rail', pin:!SHOT, scrub:.8, invalidateOnRefresh:true,
+      start:'top top', end: () => '+=' + dist()*1.15,
+      onUpdate: self => { railBar.style.width = (self.progress*100).toFixed(1)+'%'; }
+    }
+  });
+  /* cards scale/rotate as they cross center */
+  gsap.utils.toArray('.pcard').forEach(card=>{
+    gsap.fromTo(card, {scale:.9, rotateY:14, opacity:.55},
+      {scale:1, rotateY:0, opacity:1, ease:'none',
+        scrollTrigger:{trigger:card, containerAnimation:railST, start:'left 92%', end:'center 55%', scrub:true}});
+    gsap.to(card, {scale:.9, rotateY:-14, opacity:.55, ease:'none',
+      scrollTrigger:{trigger:card, containerAnimation:railST, start:'center 45%', end:'right 8%', scrub:true}});
+  });
+}
+buildRail();
+
+/* ================= FEATURES : active card ================= */
+const feats = gsap.utils.toArray('.feat');
+let activeScreen = 0;
+feats.forEach((f,i)=>{
+  ScrollTrigger.create({
+    trigger:f, start:'top 65%', end:'bottom 45%',
+    onToggle:self=>{
+      if(self.isActive){
+        feats.forEach(x=>x.classList.remove('on'));
+        f.classList.add('on');
+        activeScreen = i;
+        if(window.__setScreen) window.__setScreen(i);
+      }
+    }
+  });
+});
+feats[0]?.classList.add('on');
+
+/* ================= CRYPT TEXT ================= */
+const crypt = document.getElementById('crypt');
+if(crypt && !SHOT && !reduced){
+  const FINAL = crypt.dataset.final, CH = '█▓▒░/\\|<>#*+=@01∞';
+  crypt.textContent = '';
+  ScrollTrigger.create({trigger:crypt, start:'top 72%', once:true, onEnter:()=>{
+    const o = {k:0};
+    gsap.to(o, {k:1, duration:1.7, ease:'power2.inOut', onUpdate:()=>{
+      const solved = Math.floor(FINAL.length*o.k);
+      let s = FINAL.slice(0,solved);
+      for(let i=solved;i<FINAL.length;i++) s += FINAL[i]===' ' ? ' ' : CH[(Math.random()*CH.length)|0];
+      crypt.textContent = s;
+    }});
+  }});
+}
+
+/* ================= HUD / DOTS ================= */
+const progressEl = document.getElementById('progress'), hudPct = document.getElementById('hudpct'), hudSec = document.getElementById('hudsec');
+const dots = [...document.querySelectorAll('#dots a')];
+const SECS = ['hero','promesse','rail','features','privacy','cta'];
+SECS.forEach((id,i)=>{
+  ScrollTrigger.create({trigger:'#'+id, start:'top 55%', end:'bottom 45%',
+    onToggle:self=>{ if(self.isActive){
+      dots.forEach((d,di)=>d.classList.toggle('on', di===i));
+      hudSec.textContent = dots[i].querySelector('span').textContent.toUpperCase();
+      if(window.__setChapter) window.__setChapter(i);
+    }}});
+});
+dots.forEach(d=>d.addEventListener('click', e=>{
+  e.preventDefault();
+  const t = document.querySelector(d.getAttribute('href'));
+  lenis ? lenis.scrollTo(t, {offset:0}) : t.scrollIntoView();
+}));
+
+/* ================= CURSOR / MAGNET / TILT ================= */
 const cur = document.getElementById('cur'), ring = document.getElementById('curring');
-let cx = innerWidth/2, cy = innerHeight/2, rx = cx, ry = cy;
-if(fine && !reduced){
+let mx = .5, my = .5, cx = innerWidth/2, cy = innerHeight/2, rx = cx, ry = cy;
+addEventListener('pointermove', e=>{
+  cx = e.clientX; cy = e.clientY;
+  mx = e.clientX/innerWidth; my = e.clientY/innerHeight;
+  if(fine) document.body.classList.add('cur-on');
+}, {passive:true});
+if(fine && !reduced && !SHOT){
   document.body.classList.add('has-cursor');
-  addEventListener('pointermove', e=>{
-    cx = e.clientX; cy = e.clientY;
-    document.body.classList.add('cur-on');
-  }, {passive:true});
   document.addEventListener('mouseleave', ()=>document.body.classList.remove('cur-on'));
-  document.querySelectorAll('a,.pole,.hl,button').forEach(el=>{
+  document.querySelectorAll('a,button,.pcard,.feat,.priv').forEach(el=>{
     el.addEventListener('pointerenter', ()=>ring.classList.add('big'));
     el.addEventListener('pointerleave', ()=>ring.classList.remove('big'));
   });
-}
-
-/* ---------- tilt + halo cartes ---------- */
-if(fine && !reduced){
   document.querySelectorAll('.tilt').forEach(card=>{
+    const qx = gsap.quickTo(card,'rotationY',{duration:.5,ease:'power3'});
+    const qy = gsap.quickTo(card,'rotationX',{duration:.5,ease:'power3'});
     card.addEventListener('pointermove', e=>{
       const r = card.getBoundingClientRect();
-      const px = (e.clientX - r.left)/r.width, py = (e.clientY - r.top)/r.height;
-      card.style.setProperty('--gx', (px*100)+'%');
-      card.style.setProperty('--gy', (py*100)+'%');
-      card.style.transform = `translateY(-5px) rotateX(${(0.5-py)*7}deg) rotateY(${(px-0.5)*7}deg)`;
+      const px = (e.clientX-r.left)/r.width, py = (e.clientY-r.top)/r.height;
+      card.style.setProperty('--gx',(px*100)+'%'); card.style.setProperty('--gy',(py*100)+'%');
+      qx((px-.5)*10); qy((.5-py)*10);
     });
-    card.addEventListener('pointerleave', ()=>{ card.style.transform = ''; });
+    card.addEventListener('pointerleave', ()=>{ qx(0); qy(0); });
   });
-  /* boutons magnétiques */
   document.querySelectorAll('.magnet').forEach(btn=>{
+    const qx = gsap.quickTo(btn,'x',{duration:.5,ease:'power3'});
+    const qy = gsap.quickTo(btn,'y',{duration:.5,ease:'power3'});
     btn.addEventListener('pointermove', e=>{
       const r = btn.getBoundingClientRect();
-      btn.style.transform = `translate(${(e.clientX-r.left-r.width/2)*.25}px, ${(e.clientY-r.top-r.height/2)*.35}px)`;
+      qx((e.clientX-r.left-r.width/2)*.35); qy((e.clientY-r.top-r.height/2)*.5);
     });
-    btn.addEventListener('pointerleave', ()=>{ btn.style.transform = ''; });
+    btn.addEventListener('pointerleave', ()=>{ qx(0); qy(0); });
   });
 }
 
-/* ---------- 3D ---------- */
+/* ================= WEBGL ================= */
 let renderer;
-try{
-  renderer = new THREE.WebGLRenderer({canvas:document.getElementById('gl'), antialias:true, preserveDrawingBuffer:q.has('once')});
-}catch(e){ finishLoad(); }
-
-const progressBar = document.getElementById('progress');
-const dots = [...document.querySelectorAll('#dots a')];
-const heroWrap = document.getElementById('herowrap');
-const ghosts = [...document.querySelectorAll('[data-sp]')].map(el=>({el, sp:parseFloat(el.dataset.sp), top:0}));
-const bands = [...document.querySelectorAll('.band-track')].map(el=>({el, dir:+el.dataset.dir, x:0, w:0}));
-
-function measureDom(){
-  ghosts.forEach(g=>{
-    g.el.style.transform = '';
-    const r = g.el.getBoundingClientRect();
-    g.top = r.top + scrollY + r.height/2;
-  });
-  bands.forEach(b=>{ b.w = b.el.scrollWidth/2; });
-}
-measureDom();
+try{ renderer = new THREE.WebGLRenderer({canvas:document.getElementById('gl'), antialias:true, preserveDrawingBuffer:SHOT}); }
+catch(e){ finishLoad(); }
 
 if(renderer){
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(innerWidth, innerHeight);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.35;
+  renderer.toneMappingExposure = 1.15;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x050505);
-  scene.fog = new THREE.FogExp2(0x050505, 0.028);
-
-  const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, .1, 100);
+  const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, .1, 200);
   camera.position.set(0,0,7);
 
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
 
-  scene.add(new THREE.AmbientLight(0xffffff, .25));
-  const key = new THREE.DirectionalLight(0xffffff, 3.2); key.position.set(3,5,6); scene.add(key);
-  const back = new THREE.DirectionalLight(0xdfffd2, 1.6); back.position.set(-4,-2,-6); scene.add(back);
-  const rim1 = new THREE.PointLight(0x3ce019, 160, 50); rim1.position.set(-7,3,-3); scene.add(rim1);
-  const rim2 = new THREE.PointLight(0x3ce019, 90, 50); rim2.position.set(6,-4,3); scene.add(rim2);
+  /* ---------- SHADER BACKGROUND (fBm aurora) ---------- */
+  const bgUni = {
+    uTime:{value:0}, uScroll:{value:0}, uVel:{value:0},
+    uMouse:{value:new THREE.Vector2(.5,.5)},
+    uRes:{value:new THREE.Vector2(innerWidth, innerHeight)},
+    uTint:{value:new THREE.Color(0x14501a)}
+  };
+  const bgMat = new THREE.ShaderMaterial({
+    uniforms:bgUni, depthWrite:false, depthTest:false,
+    vertexShader:`varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.999, 1.0); }`,
+    fragmentShader:`
+      precision highp float;
+      varying vec2 vUv;
+      uniform float uTime, uScroll, uVel;
+      uniform vec2 uMouse, uRes;
+      uniform vec3 uTint;
+      vec3 hash3(vec2 p){ vec3 q = vec3(dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3)), dot(p,vec2(419.2,371.9)));
+        return fract(sin(q)*43758.5453); }
+      float noise(vec2 p){
+        vec2 i = floor(p), f = fract(p); vec2 u = f*f*(3.0-2.0*f);
+        float a = hash3(i).x, b = hash3(i+vec2(1,0)).x, c = hash3(i+vec2(0,1)).x, d = hash3(i+vec2(1,1)).x;
+        return mix(mix(a,b,u.x), mix(c,d,u.x), u.y);
+      }
+      float fbm(vec2 p){
+        float v = 0.0, a = 0.5;
+        for(int i=0;i<5;i++){ v += a*noise(p); p *= 2.03; p += vec2(1.7,9.2); a *= 0.5; }
+        return v;
+      }
+      void main(){
+        vec2 uv = vUv;
+        vec2 p = (uv - 0.5) * vec2(uRes.x/uRes.y, 1.0);
+        float t = uTime*0.05 + uScroll*1.6;
+        vec2 warp = vec2(fbm(p*1.6 + t), fbm(p*1.6 - t + 4.0));
+        float f = fbm(p*2.1 + warp*1.3 + vec2(0.0, -uScroll*2.2));
+        float glow = smoothstep(0.35, 0.95, f);
+        /* halo souris */
+        vec2 m = (uMouse - 0.5) * vec2(uRes.x/uRes.y, 1.0);
+        float d = length(p - m);
+        float halo = exp(-d*d*5.5) * 0.05;
+        /* vagues au scroll rapide */
+        float streak = smoothstep(0.82, 1.0, f) * abs(uVel) * 3.0;
+        vec3 col = vec3(0.017);
+        col += uTint * glow * (0.10 + uScroll*0.16);
+        col += vec3(0.24,0.88,0.10) * (halo + streak*0.10);
+        col += vec3(0.012,0.03,0.016) * fbm(p*7.0 + t*2.0);
+        /* vignette radiale pour garder les bords noirs */
+        col *= 1.0 - smoothstep(0.35, 1.15, length(p)) * 0.75;
+        gl_FragColor = vec4(col, 1.0);
+      }`
+  });
+  const bgMesh = new THREE.Mesh(new THREE.PlaneGeometry(2,2), bgMat);
+  bgMesh.frustumCulled = false; bgMesh.renderOrder = -1;
+  scene.add(bgMesh);
 
+  /* ---------- LIGHTS ---------- */
+  scene.add(new THREE.AmbientLight(0xffffff,.22));
+  const key = new THREE.DirectionalLight(0xffffff, 3.4); key.position.set(3,5,6); scene.add(key);
+  const back = new THREE.DirectionalLight(0xdfffd2, 1.7); back.position.set(-4,-2,-6); scene.add(back);
+  const rim1 = new THREE.PointLight(0x3ce019, 170, 60); rim1.position.set(-7,3,-3); scene.add(rim1);
+  const rim2 = new THREE.PointLight(0x3ce019, 95, 60); rim2.position.set(6,-4,3); scene.add(rim2);
+
+  /* ---------- INFINITY (physical + shader displacement) ---------- */
   class Lemniscate extends THREE.Curve{
     getPoint(t, target = new THREE.Vector3()){
-      const a = 2.3, u = t * Math.PI * 2, d = 1 + Math.sin(u)*Math.sin(u);
-      return target.set(
-        a * Math.cos(u) / d,
-        a * Math.sin(u) * Math.cos(u) / d,
-        Math.sin(u*2) * .35
-      );
+      const a=2.3, u=t*Math.PI*2, d=1+Math.sin(u)*Math.sin(u);
+      return target.set(a*Math.cos(u)/d, a*Math.sin(u)*Math.cos(u)/d, Math.sin(u*2)*.35);
     }
   }
   const curve = new Lemniscate();
   const group = new THREE.Group();
-  const tube = new THREE.Mesh(
-    new THREE.TubeGeometry(curve, 400, .5, 48, true),
-    new THREE.MeshPhysicalMaterial({
-      color:0x1c1c1f, roughness:.18, metalness:.25,
-      clearcoat:1, clearcoatRoughness:.1, envMapIntensity:2.4,
-      emissive:0x3ce019, emissiveIntensity:.05
-    })
-  );
+
+  const infUni = { uTime:{value:0}, uAmp:{value:0}, uVel:{value:0} };
+  const infMat = new THREE.MeshPhysicalMaterial({
+    color:0x1b1b1e, roughness:.24, metalness:.42, clearcoat:1, clearcoatRoughness:.14,
+    envMapIntensity:1.6, emissive:0x3ce019, emissiveIntensity:.05
+  });
+  infMat.onBeforeCompile = (sh)=>{
+    sh.uniforms.uTime = infUni.uTime; sh.uniforms.uAmp = infUni.uAmp; sh.uniforms.uVel = infUni.uVel;
+    sh.vertexShader = `uniform float uTime; uniform float uAmp; uniform float uVel;
+      float snoise(vec3 p){
+        return sin(p.x*1.7 + uTime*1.2) * sin(p.y*2.1 - uTime*0.9) * sin(p.z*1.4 + uTime*1.6);
+      }\n` + sh.vertexShader.replace(
+      '#include <begin_vertex>',
+      `#include <begin_vertex>
+       float n = snoise(position*1.4);
+       transformed += normal * n * (uAmp*0.24 + abs(uVel)*3.2);`
+    );
+    infMat.userData.shader = sh;
+  };
+  const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 480, .5, 64, true), infMat);
   group.add(tube);
 
-  /* double wireframe fantôme, contre-rotation */
   const wire = new THREE.Mesh(
-    new THREE.TubeGeometry(curve, 140, .62, 10, true),
-    new THREE.MeshBasicMaterial({color:0x3ce019, wireframe:true, transparent:true, opacity:.07})
+    new THREE.TubeGeometry(curve, 90, .68, 6, true),
+    new THREE.MeshBasicMaterial({color:0x3ce019, wireframe:true, transparent:true, opacity:.028})
   );
   group.add(wire);
 
-  /* satellites en orbite */
   const sats = new THREE.Group();
-  const satGeo = new THREE.SphereGeometry(.055, 12, 12);
-  const satMat = new THREE.MeshBasicMaterial({color:0x3ce019});
-  const SATN = 6;
+  const satGeo = new THREE.SphereGeometry(.06, 14, 14);
+  const satMat = new THREE.MeshBasicMaterial({color:0x9dff7e});
+  const SATN = 8;
   for(let i=0;i<SATN;i++) sats.add(new THREE.Mesh(satGeo, satMat));
   group.add(sats);
-
   scene.add(group);
 
-  /* deux couches de particules (parallaxe de profondeur) */
+  /* ---------- iPHONE 3D (features) ---------- */
+  function roundedBox(w,h,d,r,seg=6){
+    const shape = new THREE.Shape();
+    const x = -w/2, y = -h/2;
+    shape.moveTo(x, y+r);
+    shape.lineTo(x, y+h-r); shape.quadraticCurveTo(x, y+h, x+r, y+h);
+    shape.lineTo(x+w-r, y+h); shape.quadraticCurveTo(x+w, y+h, x+w, y+h-r);
+    shape.lineTo(x+w, y+r); shape.quadraticCurveTo(x+w, y, x+w-r, y);
+    shape.lineTo(x+r, y); shape.quadraticCurveTo(x, y, x, y+r);
+    const g = new THREE.ExtrudeGeometry(shape, {depth:d, bevelEnabled:true, bevelThickness:.03, bevelSize:.03, bevelSegments:seg, curveSegments:24});
+    g.center();
+    return g;
+  }
+  const phone = new THREE.Group();
+  const body = new THREE.Mesh(roundedBox(2.1, 4.3, .22, .34),
+    new THREE.MeshPhysicalMaterial({color:0x121214, roughness:.32, metalness:.85, envMapIntensity:1.8, clearcoat:.6}));
+  phone.add(body);
+
+  /* écran : texture canvas dessinée (4 vues de l'app) */
+  const SCREENS = [
+    {title:'Sommeil', kicker:'RÊVES', rings:[.86,.52,.31], rows:['Cycle 4 · 06:12','Rêve vocal · 22s','Récup 86 %'], big:'86'},
+    {title:'Journée', kicker:'FOCUS', rings:[.62,.78,.44], rows:['09:00 Deep work','11:30 Sport','14:00 Appels'], big:'7h'},
+    {title:'FIRE', kicker:'NET WORTH', rings:[.71,.39,.58], rows:['Net worth 128 k€','Épargne 42 %','FIRE en 2039'], big:'42%'},
+    {title:'Récup', kicker:'HRV', rings:[.93,.66,.4], rows:['Pas 11 240','HRV 68 ms','Sommeil 7 h 42'], big:'93'},
+  ];
+  const scr = document.createElement('canvas'); scr.width = 512; scr.height = 1024;
+  const sctx = scr.getContext('2d');
+  const scrTex = new THREE.CanvasTexture(scr);
+  scrTex.colorSpace = THREE.SRGBColorSpace;
+  function drawScreen(i, glow=1){
+    const S = SCREENS[i] || SCREENS[0];
+    sctx.fillStyle = '#050505'; sctx.fillRect(0,0,512,1024);
+    const g = sctx.createRadialGradient(256,300,20,256,300,420);
+    g.addColorStop(0, `rgba(60,224,25,${.22*glow})`); g.addColorStop(1,'rgba(5,5,5,0)');
+    sctx.fillStyle = g; sctx.fillRect(0,0,512,700);
+    sctx.fillStyle = '#3ce019'; sctx.font = 'bold 20px -apple-system,Helvetica';
+    sctx.fillText(S.kicker, 42, 108);
+    sctx.fillStyle = '#f4f4f2'; sctx.font = 'bold 52px -apple-system,Helvetica';
+    sctx.fillText(S.title, 42, 172);
+    /* anneaux */
+    const cxp = 256, cyp = 400;
+    S.rings.forEach((v,ri)=>{
+      const r = 130 - ri*32;
+      sctx.lineWidth = 20; sctx.lineCap = 'round';
+      sctx.strokeStyle = 'rgba(255,255,255,.07)';
+      sctx.beginPath(); sctx.arc(cxp,cyp,r,0,Math.PI*2); sctx.stroke();
+      sctx.strokeStyle = ri===0 ? '#3ce019' : (ri===1 ? '#8bff6b' : '#1f8b0c');
+      sctx.beginPath(); sctx.arc(cxp,cyp,r,-Math.PI/2, -Math.PI/2 + Math.PI*2*v); sctx.stroke();
+    });
+    sctx.fillStyle = '#fff'; sctx.font = 'bold 46px -apple-system,Helvetica'; sctx.textAlign='center';
+    sctx.fillText(S.big, cxp, cyp+16); sctx.textAlign='left';
+    /* lignes */
+    S.rows.forEach((row,ri)=>{
+      const y = 620 + ri*88;
+      sctx.fillStyle = 'rgba(255,255,255,.05)';
+      sctx.beginPath(); sctx.roundRect(42, y, 428, 68, 20); sctx.fill();
+      sctx.strokeStyle = 'rgba(60,224,25,.25)'; sctx.lineWidth = 1; sctx.stroke();
+      sctx.fillStyle = '#e9e9e7'; sctx.font = '26px -apple-system,Helvetica';
+      sctx.fillText(row, 68, y+43);
+      sctx.fillStyle = '#3ce019';
+      sctx.beginPath(); sctx.arc(438, y+34, 7, 0, Math.PI*2); sctx.fill();
+    });
+    /* barre home */
+    sctx.fillStyle = 'rgba(255,255,255,.35)';
+    sctx.beginPath(); sctx.roundRect(196, 968, 120, 8, 4); sctx.fill();
+    scrTex.needsUpdate = true;
+  }
+  drawScreen(0);
+  const screenMat = new THREE.MeshBasicMaterial({map:scrTex, toneMapped:false});
+  const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.88, 4.05), screenMat);
+  screen.position.z = .175;
+  phone.add(screen);
+  /* encoche */
+  const notch = new THREE.Mesh(new THREE.CapsuleGeometry(.075,.28,4,12),
+    new THREE.MeshBasicMaterial({color:0x000000}));
+  notch.rotation.z = Math.PI/2; notch.position.set(0,1.78,.185);
+  phone.add(notch);
+  phone.visible = false;
+  phone.position.set(0,0,0);
+  scene.add(phone);
+
+  let screenIdx = 0;
+  window.__setScreen = (i)=>{
+    if(i === screenIdx) return;
+    screenIdx = i;
+    gsap.to({k:0}, {k:1, duration:.5, onUpdate(){ drawScreen(i, this.targets()[0].k); }});
+    gsap.fromTo(phone.rotation, {y: phone.rotation.y - .5}, {y: phone.rotation.y, duration:1, ease:'power3.out'});
+  };
+
+  /* ---------- PARTICLES ---------- */
   function makePoints(n, spread, size, opacity, zoff){
     const arr = new Float32Array(n*3);
     for(let i=0;i<n;i++){
-      arr[i*3]   = (Math.random()-.5)*spread[0];
-      arr[i*3+1] = (Math.random()-.5)*spread[1];
-      arr[i*3+2] = (Math.random()-.5)*spread[2] + zoff;
+      arr[i*3]=(Math.random()-.5)*spread[0];
+      arr[i*3+1]=(Math.random()-.5)*spread[1];
+      arr[i*3+2]=(Math.random()-.5)*spread[2]+zoff;
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(arr,3));
     const p = new THREE.Points(g, new THREE.PointsMaterial({color:0x3ce019, size, transparent:true, opacity, depthWrite:false}));
     scene.add(p); return p;
   }
-  const ptsFar  = makePoints(700, [40,26,20], .03, .35, -8);
-  const ptsNear = makePoints(250, [30,18,10], .05, .5, -1);
+  const ptsFar = makePoints(800,[44,28,22],.03,.35,-9);
+  const ptsNear = makePoints(280,[32,20,10],.05,.5,-1);
 
-  const KF = [
-    {id:'hero',     cam:[0,-.4,7.2], pos:[0,.7,0],    rot:[.45,.2,0],   scale:1,    emi:0,   fov:42, bg:0x050505},
-    {id:'promesse', cam:[0,0,6.2],   pos:[2.6,.3,-1], rot:[.2,2.4,.15], scale:.8,   emi:0,   fov:42, bg:0x050607},
-    {id:'poles',    cam:[0,0,8],     pos:[-3,.9,-2.5],rot:[.9,4.6,.4],  scale:.6,   emi:0,   fov:46, bg:0x050505},
-    {id:'features', cam:[0,0,6.4],   pos:[2.7,-.3,-1],rot:[-.5,6.8,0],  scale:.75,  emi:0,   fov:42, bg:0x060506},
-    {id:'privacy',  cam:[0,0,6],     pos:[0,.25,-2.2],rot:[.35,9.4,1.57],scale:.62, emi:.22, fov:42, bg:0x03100a},
-    {id:'cta',      cam:[0,.1,6.6],  pos:[0,.15,0],   rot:[.45,12.57,0],scale:.92,  emi:.04, fov:40, bg:0x050505},
-  ];
-  let marks = [];
-  function measure(){
-    const H = document.documentElement.scrollHeight - innerHeight;
-    marks = KF.map(k=>{
-      const s = document.getElementById(k.id);
-      return Math.min(Math.max(s.offsetTop / H, 0), 1);
-    });
-    marks[0] = 0; marks[marks.length-1] = 1;
-  }
-  measure();
+  /* ---------- POST ---------- */
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .34, .62, .92);
+  composer.addPass(bloom);
+  const RGBShift = {
+    uniforms:{ tDiffuse:{value:null}, amount:{value:0.0}, angle:{value:0.0} },
+    vertexShader:`varying vec2 vUv; void main(){ vUv=uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+    fragmentShader:`uniform sampler2D tDiffuse; uniform float amount; uniform float angle; varying vec2 vUv;
+      void main(){ vec2 off = amount * vec2(cos(angle), sin(angle));
+        vec4 cga = texture2D(tDiffuse, vUv + off);
+        vec4 cgb = texture2D(tDiffuse, vUv);
+        vec4 cgc = texture2D(tDiffuse, vUv - off);
+        gl_FragColor = vec4(cga.r, cgb.g, cgc.b, cgb.a); }`
+  };
+  const rgbPass = new ShaderPass(RGBShift);
+  composer.addPass(rgbPass);
+  composer.addPass(new OutputPass());
+  composer.setSize(innerWidth, innerHeight);
 
-  const lerp = (a,b,k)=>a+(b-a)*k;
-  const ease = k=>k<.5 ? 2*k*k : 1-Math.pow(-2*k+2,2)/2;
-  const bgA = new THREE.Color(), bgB = new THREE.Color();
+  /* ---------- CHAPTER CHOREO (GSAP-driven) ---------- */
+  const S3 = {
+    px:0, py:.7, pz:0, rx:.45, ry:.2, rz:0, scale:1,
+    camz:7.2, camy:-.4, fov:42, emi:.05, amp:0, lookX:0, lookY:0, tint:new THREE.Color(0x14501a),
+    phoneOpacity:0, phoneY:0, phoneRotY:-.5, phoneScale:.8, bloom:.34
+  };
+  const setTint = (hex, dur=1.2)=>{
+    const c = new THREE.Color(hex);
+    gsap.to(bgUni.uTint.value, {r:c.r, g:c.g, b:c.b, duration:dur, ease:'power2.out'});
+  };
 
-  let target = 0, smooth = 0, mx = 0, my = 0, smx = 0, smy = 0, vel = 0, svel = 0, prevT = 0;
-  let curSeg = -1;
-  function readScroll(){
-    const H = document.documentElement.scrollHeight - innerHeight;
-    target = H > 0 ? scrollY / H : 0;
-  }
-  addEventListener('scroll', readScroll, {passive:true});
-  addEventListener('pointermove', e=>{
-    mx = (e.clientX/innerWidth - .5);
-    my = (e.clientY/innerHeight - .5);
-  }, {passive:true});
+  /* hero → promesse */
+  gsap.timeline({scrollTrigger:{trigger:'#promesse', start:'top bottom', end:'top top', scrub:1}})
+    .to(S3, {px:2.6, py:.3, pz:-1, rx:.2, ry:2.4, scale:.82, camz:6.3, camy:0, ease:'none'});
+
+  /* promesse → rail */
+  gsap.timeline({scrollTrigger:{trigger:'#rail', start:'top bottom', end:'top top', scrub:1}})
+    .to(S3, {px:-3.2, py:1, pz:-3, rx:.9, ry:4.6, scale:.55, camz:8.2, fov:46, ease:'none'});
+
+  /* pendant le rail : l'infini roule */
+  gsap.to(S3, {ry:'+=3.2', rz:'+=.6', ease:'none',
+    scrollTrigger:{trigger:'#rail', start:'top top', end:'bottom bottom', scrub:1}});
+
+  /* rail → features : le téléphone arrive */
+  gsap.timeline({scrollTrigger:{trigger:'#features', start:'top 85%', end:'top 25%', scrub:1,
+    onEnter:()=>{ phone.visible = true; }, onLeaveBack:()=>{ phone.visible = false; }}})
+    .to(S3, {px:-4.4, py:-.4, pz:-4.5, scale:.42, ry:7.2, camz:7, fov:42, lookX:.75, ease:'none'}, 0)
+    .to(S3, {phoneOpacity:1, phoneScale:1, phoneRotY:.32, ease:'none'}, 0);
+
+  /* features → privacy : phone sort, infini revient vert */
+  gsap.timeline({scrollTrigger:{trigger:'#privacy', start:'top bottom', end:'top 30%', scrub:1,
+    onLeave:()=>{ phone.visible = false; }, onEnterBack:()=>{ phone.visible = true; }}})
+    .to(S3, {phoneOpacity:0, phoneScale:.7, phoneRotY:1.2, lookX:0, ease:'none'}, 0)
+    .to(S3, {px:0, py:.25, pz:-2, rx:.35, ry:9.4, rz:1.57, scale:.66, emi:.3, amp:1, camz:6, ease:'none'}, 0);
+  ScrollTrigger.create({trigger:'#privacy', start:'top 60%', end:'bottom 40%',
+    onToggle:self=>{ setTint(self.isActive ? 0x2b9c1c : 0x14501a); gsap.to(bloom, {strength: self.isActive ? .72 : .34, duration:1.2}); }});
+
+  /* privacy → cta */
+  gsap.timeline({scrollTrigger:{trigger:'#cta', start:'top bottom', end:'bottom bottom', scrub:1}})
+    .to(S3, {px:0, py:.15, pz:0, rx:.42, ry:12.57, rz:0, scale:.95, emi:.08, amp:.25, camz:6.6, fov:40, ease:'none'});
+
+  window.__setChapter = (i)=>{};
+
+  /* ---------- RESIZE ---------- */
   addEventListener('resize', ()=>{
-    camera.aspect = innerWidth/innerHeight;
-    camera.updateProjectionMatrix();
+    camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
-    measure(); measureDom(); readScroll();
+    composer.setSize(innerWidth, innerHeight);
+    bgUni.uRes.value.set(innerWidth, innerHeight);
+    ScrollTrigger.refresh();
   });
 
-  function apply(p, t){
-    let i = 0;
-    while(i < marks.length-2 && p >= marks[i+1]) i++;
-    const span = marks[i+1]-marks[i] || 1;
-    const k = ease(Math.min(Math.max((p-marks[i])/span, 0), 1));
-    const A = KF[i], B = KF[i+1];
+  /* ---------- LOOP ---------- */
+  let smx=0, smy=0, started=false, lastY=scrollY, lastMs=performance.now();
+  const clock = new THREE.Clock();
+  const maxScroll = ()=>document.documentElement.scrollHeight - innerHeight;
 
-    camera.position.set(lerp(A.cam[0],B.cam[0],k), lerp(A.cam[1],B.cam[1],k), lerp(A.cam[2],B.cam[2],k));
-    camera.fov = lerp(A.fov,B.fov,k) + Math.min(Math.abs(svel)*260, 5);
+  function frame(){
+    const t = clock.getElapsedTime();
+    const now = performance.now(), dt = Math.min((now-lastMs)/1000, .05); lastMs = now;
+
+    /* vitesse de scroll normalisée */
+    const y = lenis ? lenis.scroll : scrollY;
+    const raw = (y - lastY) / innerHeight; lastY = y;
+    vel += (raw - vel) * .12;
+    const p = Math.min(Math.max(y / (maxScroll()||1), 0), 1);
+
+    /* souris lissée */
+    smx += ((mx-.5) - smx) * .05; smy += ((my-.5) - smy) * .05;
+
+    /* fond */
+    bgUni.uTime.value = t;
+    bgUni.uScroll.value = p;
+    bgUni.uVel.value = vel;
+    bgUni.uMouse.value.set(mx, 1-my);
+
+    /* infini */
+    group.position.set(S3.px, S3.py, S3.pz);
+    group.scale.setScalar(S3.scale);
+    group.rotation.set(S3.rx + smy*.22, S3.ry + t*.06 + smx*.35 + vel*4, S3.rz);
+    infMat.emissiveIntensity = S3.emi;
+    infUni.uTime.value = t; infUni.uAmp.value = S3.amp; infUni.uVel.value = vel;
+    wire.rotation.y = -t*.14 - vel*3;
+    wire.material.opacity = .028 + Math.min(Math.abs(vel)*5, .10);
+    for(let i=0;i<SATN;i++){
+      const a = t*.4 + i*(Math.PI*2/SATN) + p*10;
+      sats.children[i].position.set(Math.cos(a)*3.1, Math.sin(a*1.3)*.95, Math.sin(a)*1.7);
+      sats.children[i].scale.setScalar(.65 + Math.sin(t*2+i)*.35);
+    }
+
+    /* téléphone */
+    if(phone.visible){
+      phone.position.set(1.72 + smx*.25, S3.phoneY + Math.sin(t*.8)*.1 - smy*.2, 1.2);
+      phone.scale.setScalar(S3.phoneScale*.60);
+      phone.rotation.set(smy*.25 - .04, S3.phoneRotY + Math.sin(t*.45)*.14 + smx*.4, Math.sin(t*.6)*.03);
+      screenMat.opacity = S3.phoneOpacity; screenMat.transparent = true;
+      body.material.opacity = S3.phoneOpacity; body.material.transparent = true;
+    }
+
+    /* caméra */
+    camera.position.set(smx*.5, S3.camy + smy*-.35, S3.camz);
+    camera.fov = S3.fov + Math.min(Math.abs(vel)*140, 6);
     camera.updateProjectionMatrix();
+    camera.lookAt(S3.lookX + group.position.x*.14, S3.lookY + group.position.y*.14, 0);
 
-    group.position.set(lerp(A.pos[0],B.pos[0],k), lerp(A.pos[1],B.pos[1],k), lerp(A.pos[2],B.pos[2],k));
-    const s = lerp(A.scale,B.scale,k); group.scale.setScalar(s);
-    group.rotation.set(
-      lerp(A.rot[0],B.rot[0],k) + smy*.25,
-      lerp(A.rot[1],B.rot[1],k) + (reduced ? 0 : t*.07) + smx*.4 + svel*6,
-      lerp(A.rot[2],B.rot[2],k)
-    );
-    tube.material.emissiveIntensity = lerp(A.emi,B.emi,k);
-    wire.rotation.y = -t*.12 - svel*4;
-    wire.material.opacity = .05 + Math.min(Math.abs(svel)*8, .14);
+    ptsFar.rotation.y = t*.01; ptsFar.position.y = p*3;
+    ptsNear.rotation.y = -t*.016; ptsNear.position.y = p*6;
 
-    for(let j=0;j<SATN;j++){
-      const a = t*.35 + j*(Math.PI*2/SATN) + p*9;
-      sats.children[j].position.set(Math.cos(a)*3.1, Math.sin(a*1.3)*.9, Math.sin(a)*1.6);
-      sats.children[j].scale.setScalar(.7 + Math.sin(t*2+j)*.3);
-    }
+    /* post */
+    rgbPass.uniforms.amount.value = Math.min(Math.abs(vel)*.02, .0055);
+    rgbPass.uniforms.angle.value = t*.6;
 
-    bgA.setHex(A.bg); bgB.setHex(B.bg);
-    scene.background.lerpColors(bgA, bgB, k);
-    scene.fog.color.copy(scene.background);
-
-    camera.lookAt(group.position.x*.35, group.position.y*.35, 0);
-    ptsFar.rotation.y = t*.01;  ptsFar.position.y = p*2.5;
-    ptsNear.rotation.y = -t*.016; ptsNear.position.y = p*5;
-
-    /* ------- DOM vivant ------- */
-    const scY = p * (document.documentElement.scrollHeight - innerHeight);
-    progressBar.style.width = (p*100).toFixed(2) + '%';
-    const ai = k > .55 ? Math.min(i+1, dots.length-1) : i;
-    if(ai !== curSeg){
-      curSeg = ai;
-      dots.forEach((d,di)=>d.classList.toggle('on', di === ai));
-    }
-    if(!reduced){
-      const hp = Math.min(scY/innerHeight, 1);
-      heroWrap.style.transform = `translateY(${hp*-70}px)`;
-      heroWrap.style.opacity = String(1 - hp*1.15);
-      ghosts.forEach(g=>{
-        const rel = (scY + innerHeight/2) - g.top;
-        if(Math.abs(rel) < innerHeight*1.6) g.el.style.transform = `translate3d(0,${(rel*g.sp).toFixed(1)}px,0)`;
-      });
-    }
-  }
-
-  let started = false, lastMs = 0;
-  renderer.setAnimationLoop((ms)=>{
-    const t = ms/1000, dt = Math.min((ms-lastMs)/1000 || .016, .05); lastMs = ms;
-    vel = target - prevT; prevT = target;
-    svel += (vel - svel)*.08;
-    smooth += (target-smooth) * (reduced ? 1 : .065);
-    smx += (mx-smx)*.05; smy += (my-smy)*.05;
-    apply(smooth, t);
-
-    if(!reduced) bands.forEach(b=>{
-      b.x += b.dir * (55 + Math.min(Math.abs(svel)*26000, 340)) * dt;
-      const w = b.w || 1;
-      b.el.style.transform = `translateX(${-(((b.x % w) + w) % w)}px)`;
+    /* DOM lié à la vitesse */
+    progressEl.style.width = (p*100).toFixed(2)+'%';
+    hudPct.textContent = String(Math.round(p*100)).padStart(3,'0');
+    const sk = gsap.utils.clamp(-4, 4, vel*22);
+    skewSetters.forEach(s=>s(sk));
+    document.querySelectorAll('.band-track').forEach(tr=>{
+      if(tr._tween) tr._tween.timeScale(1 + Math.min(Math.abs(vel)*30, 7));
     });
-
-    if(fine && !reduced){
+    if(fine && !SHOT){
       rx += (cx-rx)*.16; ry += (cy-ry)*.16;
       cur.style.transform = `translate(${cx}px,${cy}px)`;
-      ring.style.transform = `translate(${rx}px,${ry}px)`;
+      ring.style.transform = `translate(${rx}px,${ry}px) scale(${1 + Math.min(Math.abs(vel)*3,.5)})`;
     }
 
-    renderer.render(scene, camera);
+    composer.render();
     if(!started){ started = true; finishLoad(); }
-  });
-
-  /* position de départ (debug/screenshot : ?s=0..1, ?kf=N, ?vh=N, ?once=1) */
-  if(q.has('s')){
-    const H = document.documentElement.scrollHeight - innerHeight;
-    scrollTo(0, parseFloat(q.get('s')) * H);
-    readScroll(); smooth = target;
-    document.querySelectorAll('.reveal,.split').forEach(el=>el.classList.add('in'));
-  } else {
-    readScroll();
   }
-  if(q.has('once')){
-    renderer.setAnimationLoop(null);
-    requestAnimationFrame(()=>{
-      if(q.has('kf')) target = marks[Math.min(+q.get('kf'), marks.length-1)];
-      if(q.has('vh')){
-        document.querySelector('main').style.marginTop = `-${parseFloat(q.get('vh'))*100}vh`;
-        document.querySelectorAll('.reveal,.split').forEach(el=>el.classList.add('in'));
+
+  if(SHOT){
+    /* mode capture : pas de boucle, une frame figée */
+    const doShot = ()=>{
+      if(q.has('vh')) document.querySelector('main').style.marginTop = `-${parseFloat(q.get('vh'))*100}vh`;
+      if(q.has('sec')){
+        const el = document.getElementById(q.get('sec'));
+        const off = parseFloat(q.get('off')||0);
+        if(el) document.querySelector('main').style.marginTop = `-${el.offsetTop - off}px`;
       }
-      smooth = target; smx = mx; smy = my; svel = 0;
-      apply(smooth, 1.5);
-      renderer.render(scene, camera);
+      if(q.has('kf')){
+        const kf = +q.get('kf');
+        const P = [
+          {px:0,py:.7,pz:0,rx:.45,ry:.2,rz:0,scale:1,camz:7.2,camy:-.4,fov:42,emi:.05,amp:0,lookX:0,lookY:0,tint:0x14501a,ph:0},
+          {px:2.6,py:.3,pz:-1,rx:.2,ry:2.4,rz:0,scale:.82,camz:6.3,camy:0,fov:42,emi:.05,amp:0,lookX:0,lookY:0,tint:0x14501a,ph:0},
+          {px:-3.2,py:1,pz:-3,rx:.9,ry:4.6,rz:0,scale:.55,camz:8.2,camy:0,fov:46,emi:.05,amp:0,lookX:0,lookY:0,tint:0x14501a,ph:0},
+          {px:-4.4,py:-.4,pz:-4.5,rx:.9,ry:7.2,rz:0,scale:.42,camz:7,camy:0,fov:42,emi:.05,amp:0,lookX:.75,lookY:0,tint:0x14501a,ph:1},
+          {px:0,py:.25,pz:-2,rx:.35,ry:9.4,rz:1.57,scale:.66,camz:6,camy:0,fov:42,emi:.3,amp:1,lookX:0,lookY:0,tint:0x2b9c1c,ph:0},
+          {px:0,py:.15,pz:0,rx:.42,ry:12.57,rz:0,scale:.95,camz:6.6,camy:0,fov:40,emi:.08,amp:.25,lookX:0,lookY:0,tint:0x14501a,ph:0},
+        ][Math.min(kf,5)];
+        Object.assign(S3, P);
+        bgUni.uTint.value.setHex(P.tint);
+        bgUni.uScroll.value = kf/5;
+        bloom.strength = kf===4 ? .72 : .34;
+        if(P.ph){ phone.visible = true; S3.phoneOpacity = 1; S3.phoneScale = 1; S3.phoneRotY = .32; drawScreen(+(q.get('screen')||0)); }
+      }
+      clock.start();
+      for(let i=0;i<3;i++) frame();
       const img = new Image();
       img.src = renderer.domElement.toDataURL('image/png');
       img.style.cssText = 'position:fixed;inset:0;z-index:0;width:100vw;height:100vh;object-fit:cover';
       renderer.domElement.replaceWith(img);
-      finishLoad(); loader.style.display = 'none';
+      finishLoad();
       document.title = 'RENDERED';
-    });
+    };
+    requestAnimationFrame(()=>requestAnimationFrame(doShot));
+  }else{
+    gsap.ticker.add(frame);
   }
+
+  setTimeout(()=>ScrollTrigger.refresh(), 400);
 }else{
   finishLoad();
 }
