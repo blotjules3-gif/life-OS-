@@ -204,7 +204,7 @@ enum FaceShapeAnalyzer {
             let handler = VNImageRequestHandler(cgImage: cg, orientation: orientation, options: [:])
             DispatchQueue.global(qos: .userInitiated).async {
                 try? handler.perform([req])
-                guard let face = (req.results as? [VNFaceObservation])?.first else {
+                guard let face = req.results?.first else {
                     cont.resume(returning: nil); return
                 }
                 cont.resume(returning: classify(face, imgW: CGFloat(cg.width), imgH: CGFloat(cg.height)))
