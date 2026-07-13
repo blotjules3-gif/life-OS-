@@ -13,7 +13,7 @@ L'ordre est fixe pour ne pas mélanger les passes.
 | 4 | Modules (features par domaine, 41 fichiers) | FAIT 2026-07-13 | pass-04-modules.md |
 | 5 | Models (SwiftData) | FAIT 2026-07-13 | pass-05-models.md |
 | 6 | Widgets (LifeOSWidgets) | FAIT 2026-07-13 | pass-06-widgets.md |
-| 7 | Backend Python (FastAPI) | à faire | — |
+| 7 | Backend Python (FastAPI) | FAIT 2026-07-13 | pass-07-backend.md |
 | 8 | Config / Assets / Info.plist / xcconfig | à faire | — |
 
 ## Règles
