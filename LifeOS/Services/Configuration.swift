@@ -54,6 +54,10 @@ enum Configuration {
     static var baseURL: URL {
         // apiBaseURL peut venir d'un override UserDefaults saisi à la main :
         // une chaîne invalide ne doit pas crasher l'app, on retombe sur la prod.
-        URL(string: apiBaseURL) ?? URL(string: "https://lifeos-api-production-91e2.up.railway.app")!
+        URL(string: apiBaseURL) ?? Self.fallbackProductionURL
     }
+
+    // URL statique constante — construite une seule fois, garantie non-nil.
+    private static let fallbackProductionURL = URL(string: "https://lifeos-api-production-91e2.up.railway.app")
+        ?? URL(fileURLWithPath: "/")
 }
