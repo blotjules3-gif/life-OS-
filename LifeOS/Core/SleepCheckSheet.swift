@@ -376,24 +376,21 @@ struct SleepCheckSheet: View {
 
     private func submitAndReveal() {
         submitting = true
-        Task {
-            if let result = try? await AgentAPI.shared.logCheckin(
-                sleepQuality: quality > 0 ? quality : nil,
-                sleepHours: Double(hours),
-                mood: mood > 0 ? mood : nil,
-                fatigue: fatigue > 0 ? fatigue : nil
-            ) {
-                await MainActor.run {
-                    todayEnergyScore = result.energy_score ?? 0
-                    todayEnergyLabel = result.label ?? ""
-                }
-            }
-            await MainActor.run {
-                submitting = false
-                if mood > 0 { ctx.insert(MoodEntry(score: mood, note: "")) }
-                withAnimation(.spring(duration: 0.35)) { step = 3 }
-            }
+        // Écriture locale : SleepNight + MoodEntry en SwiftData, drapeaux
+        // UserDefaults lus par EnergyScore.today. Aucun POST réseau.
+        if quality > 0 || hours > 0 {
+            UserDefaults.standard.set(quality, forKey: "lastSleepQuality")
+            UserDefaults.standard.set(Double(hours), forKey: "lastSleepHours")
+            UserDefaults.standard.set(Date.now.timeIntervalSince1970, forKey: "lastSleepCheckDate")
         }
+        if mood > 0 { ctx.insert(MoodEntry(score: mood, note: "")) }
+        do { try ctx.save() } catch { print("[SwiftData] saveCheckin failed: \(error)") }
+
+        let result = EnergyScore.today(ctx)
+        todayEnergyScore = result?.score ?? 0
+        todayEnergyLabel = result?.label ?? ""
+        submitting = false
+        withAnimation(.spring(duration: 0.35)) { step = 3 }
     }
 
     private func animateScore() {
