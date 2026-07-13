@@ -210,9 +210,10 @@ actor AgentAPI {
 
     private let session: URLSession
     private let chatSession: URLSession
-    private var deviceID: String {
-        UIDevice.current.identifierForVendor?.uuidString ?? "unknown"
-    }
+    /// Identifiant du device — lu une fois à l'init. `AgentAPI.shared` étant
+    /// toujours touché en premier depuis l'UI SwiftUI, l'init tourne bien sur
+    /// le MainActor, donc `assumeIsolated` est safe.
+    private let deviceID: String
 
     private init() {
         let config = URLSessionConfiguration.default
@@ -224,6 +225,10 @@ actor AgentAPI {
         chatConfig.timeoutIntervalForRequest = Configuration.chatTimeoutInterval
         chatConfig.timeoutIntervalForResource = Configuration.chatTimeoutInterval
         chatSession = URLSession(configuration: chatConfig)
+
+        deviceID = MainActor.assumeIsolated {
+            UIDevice.current.identifierForVendor?.uuidString ?? "unknown"
+        }
     }
 
     // MARK: - Chat
