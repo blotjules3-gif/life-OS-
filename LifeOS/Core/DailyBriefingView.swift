@@ -215,11 +215,9 @@ struct DailyBriefingView: View {
             // Goals / challenges / insights vivaient côté Railway.
             // Depuis Option C, on part de listes vides — les habitudes et l'état
             // du jour (SwiftData) suffisent à alimenter le prompt du briefing.
-            briefingGoals = []
-            briefingChallenges = []
             behavioralInsights = []
 
-            let prompt = buildBriefingPrompt(goals: [], challenges: [])
+            let prompt = buildBriefingPrompt()
             let reply = await OnDeviceLLM.respond(to: prompt, ctx: ctx)
             aiBriefing = reply.text
             UserDefaults.standard.set(reply.text, forKey: "lastAIBriefing")
