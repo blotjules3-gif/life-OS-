@@ -252,32 +252,15 @@ final class AIAssistantViewModel: ObservableObject {
         isLoading = true
 
         Task {
-            do {
-                let response = try await AgentAPI.shared.chatStream(
-                    message: content,
-                    module: module,
-                    conversationID: conversationID.isEmpty ? nil : conversationID
-                ) { [weak self] token in
-                    self?.handleStreamToken(token)
-                }
-                conversationID = response.conversation_id
-                isServerOffline = false
-                removeThinking()
-                let wasStreamed = streamingText != nil
-                streamingText = nil
-                // Pas de machine à écrire après un stream : le texte est déjà apparu token par token.
-                appendAssistantMessage(response.reply, actions: response.actions ?? [], animateReveal: !wasStreamed)
-
-                // Execute local iOS actions
-                for action in (response.actions ?? []) {
-                    await execute(action: action)
-                }
-            } catch {
-                // Serveur pas encore à jour (404 sur /chat/stream) ou flux interrompu :
-                // on retombe sur l'endpoint classique.
-                streamingText = nil
-                await fallbackSend(content: content, module: module)
-            }
+            let reply = await OnDeviceLLM.respond(
+                to: content,
+                ctx: modelContext,
+                moduleContext: module
+            )
+            isServerOffline = false
+            removeThinking()
+            streamingText = nil
+            appendAssistantMessage(reply.text, actions: [], animateReveal: true)
             isLoading = false
         }
     }
