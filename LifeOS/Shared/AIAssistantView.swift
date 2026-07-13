@@ -865,6 +865,24 @@ struct AIAssistantView: View {
             } message: {
                 Text(vm.errorBanner ?? "")
             }
+            .alert(
+                "Signaler cette réponse ?",
+                isPresented: Binding(
+                    get: { messageToReport != nil },
+                    set: { if !$0 { messageToReport = nil } }
+                ),
+                presenting: messageToReport
+            ) { msg in
+                Button("Signaler", role: .destructive) { submitReport(msg) }
+                Button("Annuler", role: .cancel) { messageToReport = nil }
+            } message: { _ in
+                Text("Nous relisons chaque signalement pour bloquer les réponses inappropriées.")
+            }
+            .alert("Signalement envoyé", isPresented: $reportConfirmed) {
+                Button("OK") { reportConfirmed = false }
+            } message: {
+                Text("Merci, nous allons relire cette réponse.")
+            }
             #if DEBUG
             .sheet(isPresented: $showServerConfig) {
                 ServerConfigView {
