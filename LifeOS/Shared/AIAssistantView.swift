@@ -1134,14 +1134,15 @@ struct AIAssistantView: View {
                         .transition(.scale.combined(with: .opacity))
                         .accessibilityHidden(true)
                 } else {
+                    let loading = vm.isLoading
                     PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
                         Image(systemName: "photo.on.rectangle.angled")
                             .font(.system(size: 20, weight: .medium))
-                            .foregroundStyle(vm.isLoading ? Color.secondary : accent)
+                            .foregroundStyle(loading ? Color.secondary : accent)
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
                     }
-                    .disabled(vm.isLoading)
+                    .disabled(loading)
                     .accessibilityLabel("Ajouter une photo")
                     .onChange(of: photoItem) { _, item in
                         guard let item else { return }
