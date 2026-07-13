@@ -222,14 +222,10 @@ struct DailyBriefingView: View {
             behavioralInsights = ins
 
             let prompt = buildBriefingPrompt(goals: g, challenges: c)
-            if let resp = try? await AgentAPI.shared.chat(message: prompt, module: nil, conversationID: nil) {
-                aiBriefing = resp.reply
-                UserDefaults.standard.set(resp.reply, forKey: "lastAIBriefing")
-                lastBriefingDate = Date.now.timeIntervalSince1970
-            } else {
-                briefingFailed = true
-                aiBriefing = UserDefaults.standard.string(forKey: "lastAIBriefing")
-            }
+            let reply = await OnDeviceLLM.respond(to: prompt, ctx: ctx)
+            aiBriefing = reply.text
+            UserDefaults.standard.set(reply.text, forKey: "lastAIBriefing")
+            lastBriefingDate = Date.now.timeIntervalSince1970
             briefingLoading = false
 
             if speakOnAppear {
