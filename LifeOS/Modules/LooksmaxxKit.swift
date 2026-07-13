@@ -1,5 +1,5 @@
 import SwiftUI
-import Vision
+@preconcurrency import Vision
 import PhotosUI
 import UIKit
 
