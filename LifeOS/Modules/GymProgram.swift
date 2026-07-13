@@ -129,7 +129,7 @@ struct GymProgramView: View {
                 if total >= 1440 { total -= 1440; cw = w % 7 + 1 }   // dépasse minuit → jour suivant
                 NotificationManager.shared.scheduleWeekly(
                     id: "gym.day.\(w).confirm",
-                    title: "Séance faite?",
+                    title: "Séance faite ?",
                     body: "Tu as bien été à la salle (\(d.title)) ?",
                     weekday: cw, hour: total / 60, minute: total % 60,
                     categoryId: "LIFEOS_CONFIRM",
