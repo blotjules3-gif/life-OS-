@@ -79,7 +79,7 @@ enum LocalCoach {
             let subject = subject(from: raw, after: ["une note", "note que", "noter que", "note", "noter"])
             if let clean = meaningful(subject) {
                 ctx.insert(Note(title: String(clean.prefix(40)), body: clean)); try? ctx.save()
-                return "📝 Note enregistrée : « \(clean) »."
+                return "Note enregistrée : « \(clean) »."
             }
         }
 
