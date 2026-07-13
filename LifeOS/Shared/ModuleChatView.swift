@@ -367,6 +367,7 @@ struct ModuleChatView: View {
 private struct MessageBubble: View {
     let message: ModuleChatMessage
     let accentColor: Color
+    var onReport: (() -> Void)? = nil
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
@@ -393,6 +394,13 @@ private struct MessageBubble: View {
                         )
                     )
                     .frame(maxWidth: .infinity, alignment: message.role == .user ? .trailing : .leading)
+                    .contextMenu {
+                        if let onReport {
+                            Button(role: .destructive, action: onReport) {
+                                Label("Signaler cette réponse", systemImage: "flag")
+                            }
+                        }
+                    }
             }
 
             if message.role == .assistant { Spacer(minLength: 48) }
