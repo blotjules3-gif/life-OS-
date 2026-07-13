@@ -1032,6 +1032,7 @@ struct ShortcutsHomeView: View {
 
 struct WeeklyBilanView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var ctx
     @Query(sort: \Habit.createdAt) private var habits: [Habit]
     @Query private var waters: [WaterEntry]
     @Query private var foods: [FoodEntry]
