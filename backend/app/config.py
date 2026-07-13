@@ -55,8 +55,9 @@ class Settings(BaseSettings):
     apns_private_key_path: str | None = None
     apns_use_sandbox: bool = True
 
-    # ── CORS ──────────────────────────────────────────────────────────────────
-    allowed_origins: list[str] = ["*"]
+    # L'app iOS n'a pas d'origine web ; on ne s'ouvre à des domaines qu'à la demande.
+    # Override via env var ALLOWED_ORIGINS='https://lifeos.app,https://admin.lifeos.app'.
+    allowed_origins: list[str] = Field(default_factory=list)
 
     @field_validator("database_url")
     @classmethod
