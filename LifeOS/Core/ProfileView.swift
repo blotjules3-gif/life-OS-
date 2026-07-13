@@ -50,7 +50,7 @@ struct ProfileView: View {
     @State private var showExportSheet = false
     @State private var showCoachDebug = false
     @State private var appLockEnabled = AppLock.shared.isEnabled
-    @State private var energyScore: EnergyScoreOut?
+    @State private var energyScore: EnergyScore.Result?
     @State private var facet = 0
     @Namespace private var facetNS
     @ObservedObject private var serverStatus = ServerStatusMonitor.shared
