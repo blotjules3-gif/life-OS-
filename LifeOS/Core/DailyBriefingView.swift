@@ -27,7 +27,6 @@ struct DailyBriefingView: View {
     @State private var aiBriefing: String?
     @State private var briefingFailed = false
     @State private var briefingLoading = false
-    @State private var behavioralInsightsUnused: Bool = false // placeholder — voir behavioralInsights
     @State private var morningMood = 0
     @State private var morningFatigue = 0
     @State private var checkinSubmitting = false
