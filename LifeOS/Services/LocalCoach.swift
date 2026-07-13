@@ -143,9 +143,9 @@ enum LocalCoach {
         let (done, total) = habitsToday(ctx)
         let pending = pendingTodos(ctx).count
         var bits: [String] = []
-        bits.append("💧 \(ml)/\(goalW) ml")
-        if total > 0 { bits.append("🔥 \(done)/\(total) habitudes") }
-        if pending > 0 { bits.append("🗒️ \(pending) tâche\(pending > 1 ? "s" : "") en attente") }
+        bits.append("\(ml)/\(goalW) ml")
+        if total > 0 { bits.append("\(done)/\(total) habitudes") }
+        if pending > 0 { bits.append("\(pending) tâche\(pending > 1 ? "s" : "") en attente") }
         return "Aujourd'hui : " + bits.joined(separator: " · ") + "."
     }
 
