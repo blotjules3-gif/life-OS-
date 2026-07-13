@@ -170,7 +170,7 @@ enum LocalCoach {
         else { lines.append("Tout est carré aujourd'hui, continue comme ça.") }
         // Guidance transversale (relie les domaines entre eux)
         if let brain = LifeBrain.insights(ctx: ctx).first {
-            lines.append(""); lines.append("🧠 \(brain.title) — \(brain.detail)")
+            lines.append(""); lines.append("\(brain.title) — \(brain.detail)")
         }
         return lines.joined(separator: "\n")
     }
