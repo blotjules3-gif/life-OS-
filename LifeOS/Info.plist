@@ -52,7 +52,7 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>LifeOS utilise ta position pour le suivi running GPS et le partage de localisation.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>LifeOS utilise le micro pour tes messages vocaux au coach et ton journal de reves vocal.</string>
+	<string>LifeOS utilise le micro pour tes messages vocaux au coach et ton journal de rêves vocal.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>LifeOS transcrit ta voix en texte pour envoyer tes messages au coach.</string>
 	<key>NSContactsUsageDescription</key>
