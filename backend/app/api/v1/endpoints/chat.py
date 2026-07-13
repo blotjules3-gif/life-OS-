@@ -280,21 +280,8 @@ async def get_conversation(
     return ConversationOut.model_validate(conv)
 
 
-# ── Signalement de contenu (Guideline App Store 1.2) ────────────────────────────
-# Les signalements sont loggés en structured logs (Railway) ; à faible volume
-# suffisant pour la revue Apple. Passage en table dédiée si volume > 100/jour.
-
-
-from pydantic import BaseModel, Field
-
-
-class ReportRequest(BaseModel):
-    device_id: str
-    conversation_id: uuid.UUID | None = None
-    message_content: str = Field(..., max_length=8000)
-    reason: str = Field(default="user_flagged", max_length=64)
-
-
+# Guideline App Store 1.2 — les signalements sont loggés (Railway).
+# Passer à une table dédiée quand le volume dépasse ~100 par jour.
 @router.post("/report", dependencies=[Depends(verify_api_key)])
 async def report_message(body: ReportRequest) -> dict[str, str]:
     log.warning(
