@@ -138,7 +138,7 @@ struct LooksSetupView: View {
 
     private var pages: [SetupPage] {
         [
-            // 1 — Analyse IA de la forme du visage → coupe adaptée
+            // 1 — Analyse de la forme du visage (on-device) → coupe adaptée
             SetupPage { VStack(spacing: 16) {
                 SetupHeader(icon: "face.dashed", title: "Analyse de ton visage",
                             subtitle: "Prends une photo de face : ton iPhone estime la forme de ton visage et te conseille la coupe la plus flatteuse.",
