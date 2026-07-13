@@ -441,7 +441,6 @@ final class AIAssistantViewModel: ObservableObject {
                     isServerOffline = true
                 }
                 // firstLaunchDone reste false → réessai au prochain lancement
-                let name = userName.isEmpty ? "" : " \(userName)"
                 appendAssistantMessage(
                     "Connexion impossible. Je te retrouve dès que le réseau est disponible. En attendant, dis-moi par où tu veux commencer.",
                     actions: []
