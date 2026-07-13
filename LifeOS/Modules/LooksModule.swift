@@ -429,7 +429,7 @@ struct WardrobeView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         SectionHeader(title: "Outfit du jour", subtitle: "Selon la météo")
                         Picker("Météo", selection: $weather) {
-                            Text("️ Froid").tag(0); Text("️ Doux").tag(1); Text("️ Chaud").tag(2)
+                            Text("Froid").tag(0); Text("Doux").tag(1); Text("Chaud").tag(2)
                         }.pickerStyle(.segmented)
                         let outfit = OutfitEngine.suggest(items: items, weather: weather)
                         if outfit.isEmpty {
