@@ -10,7 +10,6 @@ final class UIVocabularySanityTests: XCTestCase {
     /// Fichiers historiques contenant encore un « IA » / « LLM » dans une chaîne UI.
     /// Chemins relatifs à la racine du repo.
     private let grandfathered: Set<String> = [
-        "LifeOS/Shared/AIAssistantView.swift",
         "LifeOS/Modules/PoleSetups.swift",
     ]
 
