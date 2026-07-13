@@ -220,7 +220,7 @@ enum LocalCoach {
         for h in habits {
             let streak = currentStreak(h)
             let doneToday = h.completions.contains { Calendar.current.isDateInToday($0.date) }
-            lines.append("• \(doneToday ? "✅" : "⬜️") \(h.name)\(streak > 0 ? " — série \(streak) j 🔥" : "")")
+            lines.append("• \(doneToday ? "[x]" : "[ ]") \(h.name)\(streak > 0 ? " — série \(streak) j" : "")")
         }
         return lines.joined(separator: "\n")
     }
