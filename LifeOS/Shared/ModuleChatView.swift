@@ -122,8 +122,14 @@ struct ModuleChatView: View {
                         suggestionsView
                     }
                     ForEach(messages) { msg in
-                        MessageBubble(message: msg, accentColor: appTheme.accent)
-                            .id(msg.id)
+                        MessageBubble(
+                            message: msg,
+                            accentColor: appTheme.accent,
+                            onReport: msg.role == .assistant && !msg.isThinking
+                                ? { messageToReport = msg }
+                                : nil
+                        )
+                        .id(msg.id)
                     }
                 }
                 .padding(.horizontal, 16)
