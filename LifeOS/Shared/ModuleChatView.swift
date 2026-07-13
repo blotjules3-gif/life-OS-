@@ -43,15 +43,13 @@ struct ModuleChatView: View {
     }
 
     var body: some View {
-        Group {
-            if !disclaimerAccepted {
-                CoachDisclaimerSheet(
-                    onAccept: { disclaimerAccepted = true },
-                    onDismiss: { dismiss() }
-                )
-            } else {
-                chatContent
-            }
+        if !disclaimerAccepted {
+            CoachDisclaimerSheet(
+                onAccept: { disclaimerAccepted = true },
+                onDismiss: { dismiss() }
+            )
+        } else {
+            chatContent
         }
     }
 
@@ -79,29 +77,14 @@ struct ModuleChatView: View {
             } message: {
                 Text(errorMessage ?? "")
             }
-            .alert(
-                "Signaler cette réponse ?",
-                isPresented: Binding(
-                    get: { messageToReport != nil },
-                    set: { if !$0 { messageToReport = nil } }
-                ),
-                presenting: messageToReport
-            ) { msg in
-                Button("Signaler", role: .destructive) { submitReport(msg) }
-                Button("Annuler", role: .cancel) { messageToReport = nil }
-            } message: { _ in
-                Text("Nous relisons chaque signalement pour bloquer les réponses inappropriées.")
-            }
-            .alert("Signalement envoyé", isPresented: $reportConfirmed) {
-                Button("OK") { reportConfirmed = false }
-            } message: {
-                Text("Merci, nous allons relire cette réponse.")
-            }
+            .coachReportAlerts(
+                for: $messageToReport,
+                content: { $0.text },
+                conversationID: { conversationID }
+            )
         }
-        .onAppear {
-            sendWelcomeMessage()
-            Task { await RemoteConfig.shared.refreshIfNeeded() }
-        }
+        .onAppear { sendWelcomeMessage() }
+        .task { await RemoteConfig.shared.refreshIfNeeded() }
     }
 
     // MARK: - Messages Scroll
