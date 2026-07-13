@@ -1492,25 +1492,6 @@ struct AIAssistantView: View {
         vm.loadHistory()
     }
 
-    // MARK: - Signalement
-
-    private func submitReport(_ msg: AIAssistantViewModel.DisplayMessage) {
-        let content = msg.text
-        let convID: String? = {
-            let raw = UserDefaults.standard.string(forKey: "aiConversationID") ?? ""
-            return raw.isEmpty ? nil : raw
-        }()
-        messageToReport = nil
-        Haptics.tap()
-        Task {
-            try? await AgentAPI.shared.reportMessage(
-                conversationID: convID,
-                messageContent: content,
-                reason: "user_flagged"
-            )
-            await MainActor.run { reportConfirmed = true }
-        }
-    }
 }
 
 // MARK: - MessageRow
