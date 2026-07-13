@@ -339,7 +339,7 @@ struct FaceScanView: View {
                 }
                 Spacer()
             }
-            recBlock(title: "️ Coupes recommandées", items: r.shape.haircuts)
+            recBlock(title: "Coupes recommandées", items: r.shape.haircuts)
             recBlock(title: "Barbe", items: [r.shape.beard])
         }
         .padding(16)
