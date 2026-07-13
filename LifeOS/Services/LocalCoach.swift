@@ -377,7 +377,7 @@ enum LocalCoach {
         // Nombre d'exos par groupe selon le nombre de groupes ciblés.
         let perGroup = picked.count == 1 ? 5 : (picked.count == 2 ? 3 : 2)
 
-        var lines = ["💪 **Séance \(picked.map(\.title).joined(separator: " + "))** — ~45-55 min", ""]
+        var lines = ["**Séance \(picked.map(\.title).joined(separator: " + "))** — ~45-55 min", ""]
         lines.append("Échauffement : 5-10 min de cardio léger + mobilité articulaire.")
         lines.append("")
         for g in picked {
