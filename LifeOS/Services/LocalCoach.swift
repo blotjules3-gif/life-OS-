@@ -205,7 +205,7 @@ enum LocalCoach {
             lines.append("• Tâches : aucune en attente.")
         } else {
             lines.append("• Tâches (\(pending.count)) :")
-            for todo in pending.prefix(5) { lines.append("   ◦ \(todo.title)\(todo.priority == 2 ? " ⚡️" : "")") }
+            for todo in pending.prefix(5) { lines.append("   ◦ \(todo.title)\(todo.priority == 2 ? " (urgent)" : "")") }
             if pending.count > 5 { lines.append("   … +\(pending.count - 5) autres") }
         }
         return lines.joined(separator: "\n")
