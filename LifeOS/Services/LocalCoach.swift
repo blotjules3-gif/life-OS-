@@ -182,9 +182,9 @@ enum LocalCoach {
         let wh = d.integer(forKey: "wakeupHour"); let wm = d.integer(forKey: "wakeupMinute")
         let wake = String(format: "%02d:%02d", wh, wm)
         if q == 0 && h == 0 {
-            return "😴 Je n'ai pas encore de données de sommeil pour cette nuit. Fais le check du réveil et je pourrai suivre ta qualité de sommeil. Ton réveil est réglé à \(wake)."
+            return "Je n'ai pas encore de données de sommeil pour cette nuit. Fais le check du réveil et je pourrai suivre ta qualité de sommeil. Ton réveil est réglé à \(wake)."
         }
-        var s = "😴 **Ton sommeil**\n"
+        var s = "**Ton sommeil**\n"
         if h > 0 { s += "• Durée : \(String(format: "%.1f", h)) h\n" }
         if q > 0 { s += "• Qualité : \(q)/5\n" }
         s += "• Réveil réglé : \(wake)\n\n"
