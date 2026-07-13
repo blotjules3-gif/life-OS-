@@ -15,7 +15,13 @@ from app.core.ratelimit import get_chat_limiters
 from app.database import get_session
 from app.dependencies import get_orchestrator, verify_api_key
 from app.models.db import Conversation, Message, User
-from app.schemas.chat import ChatAction, ChatRequest, ChatResponse, ConversationOut
+from app.schemas.chat import (
+    ChatAction,
+    ChatRequest,
+    ChatResponse,
+    ConversationOut,
+    ReportRequest,
+)
 from app.services import module_config as config_svc
 from app.services.behavioral_insights import compute_insights
 from app.services.user import get_or_create_user
