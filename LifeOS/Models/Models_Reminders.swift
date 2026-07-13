@@ -64,7 +64,7 @@ enum MorningReminder {
 
         NotificationManager.shared.scheduleAfter(
             id: "lifeos.morningReminder",
-            title: "Bien réveillé? ️",
+            title: "Bien réveillé ?",
             body: text,
             seconds: 5 * 60
         )
