@@ -750,7 +750,7 @@ enum ImageIntel {
             let handler = VNImageRequestHandler(cgImage: cg, options: [:])
             DispatchQueue.global(qos: .userInitiated).async {
                 try? handler.perform([req])
-                let strings = (req.results as? [VNRecognizedTextObservation] ?? [])
+                let strings = (req.results ?? [])
                     .compactMap { $0.topCandidates(1).first?.string }
                 cont.resume(returning: strings.joined(separator: "\n"))
             }
