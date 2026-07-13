@@ -64,7 +64,7 @@ struct TripEditor: View {
                 DatePicker("Départ", selection: $start, displayedComponents: .date)
                 DatePicker("Retour", selection: $end, in: start..., displayedComponents: .date)
                 HStack { Text("Budget"); Spacer(); TextField("0", text: $budget).keyboardType(.numberPad).multilineTextAlignment(.trailing) }
-                Picker("Climat", selection: $climate) { Text("️ Froid").tag(0); Text("️ Tempéré").tag(1); Text("️ Chaud").tag(2) }
+                Picker("Climat", selection: $climate) { Text("Froid").tag(0); Text("Tempéré").tag(1); Text("Chaud").tag(2) }
             }
             .navigationTitle("Nouveau voyage").navigationBarTitleDisplayMode(.inline)
             .toolbar {
