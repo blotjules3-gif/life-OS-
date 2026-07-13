@@ -156,7 +156,7 @@ enum LocalCoach {
         let pending = pendingTodos(ctx)
         let mood = todayMood(ctx)
 
-        var lines = ["📊 **Ton bilan\(name.isEmpty ? "" : ", \(name)")**", ""]
+        var lines = ["**Ton bilan\(name.isEmpty ? "" : ", \(name)")**", ""]
         lines.append("• Habitudes : \(done)/\(total) faites aujourd'hui\(total == 0 ? " (aucune encore — on en crée une ?)" : "")")
         lines.append("• Hydratation : \(glasses) verre\(glasses > 1 ? "s" : "") (\(ml)/\(goalW) ml)")
         lines.append("• Calories : \(kcal)/\(goalK) kcal")
