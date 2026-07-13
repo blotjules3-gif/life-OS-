@@ -202,7 +202,7 @@ enum LocalCoach {
         var lines = ["🗓️ **Ton plan**", "", "• Réveil : \(wake)"]
         if total > 0 { lines.append("• Habitudes : \(done)/\(total) faites — \(max(0, total - done)) à cocher") }
         if pending.isEmpty {
-            lines.append("• Tâches : aucune en attente ✅")
+            lines.append("• Tâches : aucune en attente.")
         } else {
             lines.append("• Tâches (\(pending.count)) :")
             for todo in pending.prefix(5) { lines.append("   ◦ \(todo.title)\(todo.priority == 2 ? " ⚡️" : "")") }
