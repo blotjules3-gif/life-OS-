@@ -46,12 +46,16 @@ private struct CoachReportAlerts<M: Identifiable>: ViewModifier {
         target = nil
         Haptics.tap()
         Task {
-            try? await AgentAPI.shared.reportMessage(
-                conversationID: convID,
-                messageContent: text,
-                reason: "user_flagged"
-            )
-            didSubmit = true
+            do {
+                try await AgentAPI.shared.reportMessage(
+                    conversationID: convID,
+                    messageContent: text,
+                    reason: "user_flagged"
+                )
+                didSubmit = true
+            } catch {
+                // Envoi échoué : on n'affiche pas d'accusé — sinon on ment à l'utilisateur.
+            }
         }
     }
 }
