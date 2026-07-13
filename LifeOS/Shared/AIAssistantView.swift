@@ -1379,11 +1379,11 @@ struct AIAssistantView: View {
                 title: "Le coach dort",
                 subtitle: "Serveur en veille — réessaie dans 30 s"
             )
-        case .llmDown(let err):
+        case .llmDown:
             coachBannerContent(
                 icon: "exclamationmark.triangle.fill",
                 title: "Coach indisponible",
-                subtitle: err ?? "Le service IA ne répond pas"
+                subtitle: "Service momentanément en panne — réessaie plus tard"
             )
         }
     }
