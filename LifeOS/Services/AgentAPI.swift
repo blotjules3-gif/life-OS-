@@ -421,6 +421,36 @@ actor AgentAPI {
         try validateResponse(data: data, response: response)
     }
 
+    // MARK: - Signalement d'un message coach
+
+    func reportMessage(
+        conversationID: String?,
+        messageContent: String,
+        reason: String
+    ) async throws {
+        struct Body: Encodable {
+            let device_id: String
+            let conversation_id: String?
+            let message_content: String
+            let reason: String
+        }
+        let body = Body(
+            device_id: deviceID,
+            conversation_id: conversationID,
+            message_content: messageContent,
+            reason: reason
+        )
+        let _: [String: String] = try await post(path: "/api/v1/chat/report", body: body)
+    }
+
+    // MARK: - Remote config (feature flags)
+
+    func fetchRemoteConfig() async throws -> CachedConfig {
+        return try await get(path: "/api/v1/config", queryItems: [
+            URLQueryItem(name: "device_id", value: deviceID)
+        ])
+    }
+
     // MARK: - Helpers
 
     private func get<T: Decodable>(path: String, queryItems: [URLQueryItem] = []) async throws -> T {
