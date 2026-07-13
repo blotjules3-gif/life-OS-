@@ -349,12 +349,6 @@ final class AIAssistantViewModel: ObservableObject {
             isServerOffline = false
             removeThinking()
             appendAssistantMessage(reply.text, actions: [])
-            _ = {
-                appendAssistantMessage(
-                    "Connexion impossible. Je te retrouve dès que le réseau est disponible. En attendant, dis-moi par où tu veux commencer.",
-                    actions: []
-                )
-            }
             isLoading = false
         }
     }
