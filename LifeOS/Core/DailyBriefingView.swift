@@ -213,15 +213,14 @@ struct DailyBriefingView: View {
             briefingLoading = true
             briefingFailed = false
 
-            async let goalsTask = (try? await AgentAPI.shared.listGoals()) ?? []
-            async let challengesTask = (try? await AgentAPI.shared.fetchChallenges()) ?? []
-            async let insightsTask = (try? await AgentAPI.shared.fetchBehavioralInsights()) ?? []
-            let (g, c, ins) = await (goalsTask, challengesTask, insightsTask)
-            briefingGoals = g
-            briefingChallenges = c
-            behavioralInsights = ins
+            // Goals / challenges / insights vivaient côté Railway.
+            // Depuis Option C, on part de listes vides — les habitudes et l'état
+            // du jour (SwiftData) suffisent à alimenter le prompt du briefing.
+            briefingGoals = []
+            briefingChallenges = []
+            behavioralInsights = []
 
-            let prompt = buildBriefingPrompt(goals: g, challenges: c)
+            let prompt = buildBriefingPrompt(goals: [], challenges: [])
             let reply = await OnDeviceLLM.respond(to: prompt, ctx: ctx)
             aiBriefing = reply.text
             UserDefaults.standard.set(reply.text, forKey: "lastAIBriefing")
