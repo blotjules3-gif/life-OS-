@@ -79,7 +79,7 @@ struct ModuleChatView: View {
             }
             .coachReportAlerts(
                 for: $messageToReport,
-                content: { $0.text },
+                messageText: { $0.text },
                 conversationID: { conversationID }
             )
         }
