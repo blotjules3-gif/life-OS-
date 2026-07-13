@@ -194,7 +194,7 @@ struct ProfileView: View {
                     healthConnected = true
                     steps = await HealthService.shared.cachedStepsToday()
                 }
-                energyScore = try? await AgentAPI.shared.fetchEnergyScore()
+                energyScore = EnergyScore.today(ctx)
             }
             .sheet(isPresented: $showGoalEditor) {
                 GoalEditorSheet(
