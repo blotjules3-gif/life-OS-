@@ -577,7 +577,7 @@ struct DailyBriefingView: View {
         }
     }
 
-    private func buildBriefingPrompt(goals: [GoalOut], challenges: [ChallengeOut]) -> String {
+    private func buildBriefingPrompt() -> String {
         var lines = ["[BRIEFING_MATIN]"]
         lines.append("Heure du réveil : \(String(format: "%02d:%02d", wakeupHour, wakeupMinute))")
         if !userName.isEmpty { lines.append("Utilisateur : \(userName)") }
@@ -601,23 +601,6 @@ struct DailyBriefingView: View {
         if !yesterdayLines.isEmpty {
             lines.append("Données d'hier :")
             lines.append(contentsOf: yesterdayLines.map { "- \($0)" })
-        }
-
-        if !challenges.isEmpty {
-            lines.append("Habitudes actives :")
-            for ch in challenges.prefix(3) {
-                var info = "- \"\(ch.title)\" — streak \(ch.streak_days) jour\(ch.streak_days > 1 ? "s" : "")"
-                if let dur = ch.duration_days { info += ", J\(ch.days_elapsed)/\(dur)" }
-                if ch.checkedInToday { info += " (validé aujourd'hui)" }
-                lines.append(info)
-            }
-        }
-
-        if !goals.isEmpty {
-            lines.append("Objectifs en cours :")
-            for g in goals.prefix(3) {
-                lines.append("- \(g.title) (\(Int(g.progress_pct))%)")
-            }
         }
 
         return lines.joined(separator: "\n")
