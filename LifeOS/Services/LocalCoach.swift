@@ -23,7 +23,7 @@ enum LocalCoach {
 
         // Remerciement
         if matches(t, ["merci", "thanks", "nickel", "parfait", "super"]) && t.count < 20 {
-            return "Avec plaisir 💪 On continue quand tu veux."
+            return "Avec plaisir, on continue quand tu veux."
         }
 
         // Aide / capacités
