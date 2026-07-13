@@ -13,13 +13,6 @@ struct ModuleChatMessage: Identifiable {
 
 // MARK: - ModuleChatView
 
-/// Full-screen chat interface for personalizing any module through conversation with the AI.
-/// Usage: presented as a sheet from any module hub.
-///
-///     .sheet(isPresented: $showChat) {
-///         ModuleChatView(module: "sport", moduleTitle: "Sport")
-///     }
-///
 struct ModuleChatView: View {
     let module: String
     let moduleTitle: String
