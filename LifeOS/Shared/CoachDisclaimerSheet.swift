@@ -1,17 +1,6 @@
 import SwiftUI
 
-// Sheet obligatoire au premier lancement du chat coach.
-// Répond à la Guideline App Store 1.4.1 (avis santé/nutrition/finance) et 5.1
-// (transparence sur l'usage d'IA). Une fois acceptée, ne s'affiche plus —
-// l'utilisateur peut retirer son consentement via Réglages > Confidentialité.
-//
-// Usage : gate d'entrée avant ModuleChatView / AIAssistantView.
-//
-//     @AppStorage("coachDisclaimerAccepted") private var accepted = false
-//     .sheet(isPresented: $showChat) {
-//         if accepted { ModuleChatView(module: m, moduleTitle: t) }
-//         else { CoachDisclaimerSheet(onAccept: { accepted = true }) }
-//     }
+// Guideline App Store 1.4.1 / 5.1 : consentement obligatoire au premier lancement.
 
 struct CoachDisclaimerSheet: View {
     var onAccept: () -> Void
