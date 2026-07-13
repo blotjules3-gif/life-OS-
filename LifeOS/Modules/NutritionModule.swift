@@ -59,7 +59,7 @@ struct FastingView: View {
                         VStack(spacing: 4) {
                             Text(formatHMS(elapsed)).font(.system(size: 40, weight: .bold, design: .rounded))
                                 .monospacedDigit().foregroundStyle(Theme.textPrimary)
-                            Text(active == nil ? "Prêt à jeûner" : "Objectif \(active!.targetHours)h")
+                            Text(active.map { "Objectif \($0.targetHours)h" } ?? "Prêt à jeûner")
                                 .font(.caption).foregroundStyle(Theme.textSecondary)
                         }
                     }
