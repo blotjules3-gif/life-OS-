@@ -125,7 +125,7 @@ enum LocalCoach {
         }
 
         // Fallback utile
-        return "Je suis là pour t'aider 💪 " + statusLine(ctx)
+        return "Je suis là pour t'aider. " + statusLine(ctx)
             + "\n\nQuelques exemples de ce que tu peux me dire :\n• « Crée une habitude Méditer 10 min »\n• « Rappelle-moi d'appeler le dentiste »\n• « J'ai bu un verre d'eau »\n• « Fais-moi un bilan »\n• « Comment j'ai dormi ? »"
     }
 
