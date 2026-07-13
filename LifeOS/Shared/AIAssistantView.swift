@@ -820,15 +820,13 @@ struct AIAssistantView: View {
     }
 
     var body: some View {
-        Group {
-            if !disclaimerAccepted {
-                CoachDisclaimerSheet(
-                    onAccept: { disclaimerAccepted = true },
-                    onDismiss: { dismiss() }
-                )
-            } else {
-                chatContent
-            }
+        if !disclaimerAccepted {
+            CoachDisclaimerSheet(
+                onAccept: { disclaimerAccepted = true },
+                onDismiss: { dismiss() }
+            )
+        } else {
+            chatContent
         }
     }
 
