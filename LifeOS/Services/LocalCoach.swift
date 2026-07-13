@@ -431,11 +431,11 @@ enum LocalCoach {
 
     private static func capabilities() -> String {
         "Voici ce que je sais faire, directement sur ton iPhone :\n\n"
-        + "💪 **Programme sport** — « fais-moi un plan de salle, objectif épaules / pecs »\n"
-        + "🍽️ **Plan alimentaire** — « donne-moi une journée type de repas »\n"
-        + "🆕 **Créer** — « crée une habitude Méditer 10 min », « rappelle-moi d'appeler le dentiste »\n"
-        + "💧 **Logger** — « j'ai bu un verre d'eau »\n"
-        + "📊 **Bilan / sommeil / planning** — « fais-moi un bilan », « comment j'ai dormi ? », « mes tâches »\n\n"
+        + "**Programme sport** — « fais-moi un plan de salle, objectif épaules / pecs »\n"
+        + "**Plan alimentaire** — « donne-moi une journée type de repas »\n"
+        + "**Créer** — « crée une habitude Méditer 10 min », « rappelle-moi d'appeler le dentiste »\n"
+        + "**Logger** — « j'ai bu un verre d'eau »\n"
+        + "**Bilan / sommeil / planning** — « fais-moi un bilan », « comment j'ai dormi ? », « mes tâches »\n\n"
         + "Envoie-moi aussi une photo (assiette → calories, document → à classer)."
     }
 }
