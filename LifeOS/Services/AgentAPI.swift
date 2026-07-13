@@ -449,9 +449,15 @@ actor AgentAPI {
 
     private func get<T: Decodable>(path: String, queryItems: [URLQueryItem] = []) async throws -> T {
         guard AgentAPIConfig.enabled else { throw AgentAPIError.networkError(URLError(.notConnectedToInternet)) }
-        var components = URLComponents(url: AgentAPIConfig.baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
+        let base = AgentAPIConfig.baseURL.appendingPathComponent(path)
+        guard var components = URLComponents(url: base, resolvingAgainstBaseURL: false) else {
+            throw AgentAPIError.networkError(URLError(.badURL))
+        }
         if !queryItems.isEmpty { components.queryItems = queryItems }
-        var req = URLRequest(url: components.url!)
+        guard let url = components.url else {
+            throw AgentAPIError.networkError(URLError(.badURL))
+        }
+        var req = URLRequest(url: url)
         req.httpMethod = "GET"
         req.setValue(AgentAPIConfig.apiKey, forHTTPHeaderField: "X-API-Key")
         let (data, response) = try await session.data(for: req)
