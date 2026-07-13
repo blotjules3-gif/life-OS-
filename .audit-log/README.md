@@ -14,7 +14,7 @@ L'ordre est fixe pour ne pas mélanger les passes.
 | 5 | Models (SwiftData) | FAIT 2026-07-13 | pass-05-models.md |
 | 6 | Widgets (LifeOSWidgets) | FAIT 2026-07-13 | pass-06-widgets.md |
 | 7 | Backend Python (FastAPI) | FAIT 2026-07-13 | pass-07-backend.md |
-| 8 | Config / Assets / Info.plist / xcconfig | à faire | — |
+| 8 | Config / Assets / Info.plist / xcconfig | FAIT 2026-07-13 | pass-08-config.md |
 
 ## Règles
 
