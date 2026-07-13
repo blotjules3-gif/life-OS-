@@ -164,10 +164,10 @@ enum LocalCoach {
         lines.append("• Tâches en attente : \(pending.count)")
         lines.append("")
         // Conseil ciblé
-        if total > 0 && done < total { lines.append("👉 Priorité : boucler tes \(total - done) habitude(s) restante(s).") }
-        else if ml < goalW { lines.append("👉 Priorité : bois encore \(max(0, goalW - ml)) ml d'eau.") }
-        else if !pending.isEmpty { lines.append("👉 Priorité : « \(pending[0].title) ».") }
-        else { lines.append("👉 Tout est carré aujourd'hui, continue comme ça 🎯") }
+        if total > 0 && done < total { lines.append("Priorité : boucler tes \(total - done) habitude(s) restante(s).") }
+        else if ml < goalW { lines.append("Priorité : bois encore \(max(0, goalW - ml)) ml d'eau.") }
+        else if !pending.isEmpty { lines.append("Priorité : « \(pending[0].title) ».") }
+        else { lines.append("Tout est carré aujourd'hui, continue comme ça.") }
         // Guidance transversale (relie les domaines entre eux)
         if let brain = LifeBrain.insights(ctx: ctx).first {
             lines.append(""); lines.append("🧠 \(brain.title) — \(brain.detail)")
