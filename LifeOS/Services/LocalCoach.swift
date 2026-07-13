@@ -262,10 +262,13 @@ enum LocalCoach {
         var streak = 0
         var day = Calendar.current.startOfDay(for: .now)
         // Autorise la série à compter même si aujourd'hui pas encore fait (on part d'hier).
-        if !days.contains(day) { day = Calendar.current.date(byAdding: .day, value: -1, to: day)! }
+        if !days.contains(day), let prev = Calendar.current.date(byAdding: .day, value: -1, to: day) {
+            day = prev
+        }
         while days.contains(day) {
             streak += 1
-            day = Calendar.current.date(byAdding: .day, value: -1, to: day)!
+            guard let prev = Calendar.current.date(byAdding: .day, value: -1, to: day) else { break }
+            day = prev
         }
         return streak
     }
