@@ -771,6 +771,7 @@ struct AIAssistantView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var vm = AIAssistantViewModel()
     @AppStorage("appTheme") private var appThemeRaw = "classic"
+    @AppStorage("coachDisclaimerAccepted") private var disclaimerAccepted = false
     private var accent: Color { (AppTheme(rawValue: appThemeRaw) ?? .classic).accent }
     @FocusState private var inputFocused: Bool
     @State private var showClearConfirm = false
@@ -780,6 +781,8 @@ struct AIAssistantView: View {
     @State private var textBeforeVoice: String = ""
     @State private var micPulse = false
     @State private var voiceDragOffset: CGFloat = 0
+    @State private var messageToReport: AIAssistantViewModel.DisplayMessage? = nil
+    @State private var reportConfirmed = false
     private let cancelThreshold: CGFloat = 90
 
     // Quick suggestions change per time of day
