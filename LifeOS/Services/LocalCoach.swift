@@ -419,9 +419,9 @@ enum LocalCoach {
         guard matches(t, ["motive", "motivation", "pas envie", "flemme", "demotive", "demotivation",
                           "j'abandonne", "jabandonne", "dur", "decourage"]) else { return nil }
         let lines = [
-            "Tu n'as pas à être motivé, juste à commencer 5 min — le reste suit. 💪",
+            "Tu n'as pas à être motivé, juste à commencer 5 min — le reste suit.",
             "Le futur toi te remerciera pour ce que tu fais MAINTENANT. On y va, une action.",
-            "La discipline bat la motivation. Fais juste la première étape, même minuscule. 🔥",
+            "La discipline bat la motivation. Fais juste la première étape, même minuscule.",
             "Chaque jour où tu tiens, tu deviens quelqu'un sur qui tu peux compter. Go.",
         ]
         // Choix « pseudo-aléatoire » stable dans la journée (pas de Date.now interdit ici → heure).
