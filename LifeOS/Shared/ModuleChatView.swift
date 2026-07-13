@@ -234,39 +234,12 @@ struct ModuleChatView: View {
         isLoading = true
 
         Task {
-            do {
-                let response = try await AgentAPI.shared.chat(
-                    message: text,
-                    module: module,
-                    conversationID: conversationID
-                )
-                conversationID = response.conversation_id
-
-                // Replace thinking bubble
-                await MainActor.run {
-                    messages.removeAll { $0.isThinking }
-                    messages.append(ModuleChatMessage(role: .assistant, text: response.reply))
-                    isServerOffline = false
-
-                    if response.module_config_updated {
-                        configBadge = true
-                        Haptics.success()
-                    }
-                    if response.goals_updated {
-                        goalsBadge = true
-                    }
-                    isLoading = false
-                }
-            } catch {
-                await MainActor.run {
-                    messages.removeAll { $0.isThinking }
-                    if let apiErr = error as? AgentAPIError, case .networkError = apiErr {
-                        isServerOffline = true
-                    } else {
-                        errorMessage = (error as? AgentAPIError)?.errorDescription ?? error.localizedDescription
-                    }
-                    isLoading = false
-                }
+            let reply = await OnDeviceLLM.respond(to: text, ctx: ctx, moduleContext: module)
+            await MainActor.run {
+                messages.removeAll { $0.isThinking }
+                messages.append(ModuleChatMessage(role: .assistant, text: reply.text))
+                isServerOffline = false
+                isLoading = false
             }
         }
     }
