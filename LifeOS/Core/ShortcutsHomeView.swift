@@ -567,7 +567,7 @@ struct ShortcutsHomeView: View {
         guard !newIDs.isEmpty else { return }
         for (i, id) in newIDs.sorted(by: { $0.hashValue < $1.hashValue }).enumerated() {
             withAnimation(.spring(duration: 0.45, bounce: 0.2).delay(Double(i) * 0.07)) {
-                animatedHabitIDs.insert(id)
+                _ = animatedHabitIDs.insert(id)
             }
         }
     }
