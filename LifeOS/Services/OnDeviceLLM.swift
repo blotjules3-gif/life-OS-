@@ -39,14 +39,14 @@ enum OnDeviceLLM {
     ///     injecté dans les instructions système pour cibler la réponse.
     static func respond(
         to message: String,
-        ctx: ModelContext,
+        ctx: ModelContext?,
         moduleContext: String? = nil
     ) async -> Reply {
         // Étape 1 — si le message ressemble à une action locale (créer une
         // habitude, logger un verre d'eau, ajouter une tâche), on laisse
         // LocalCoach l'exécuter directement. Sinon un LLM répondrait « ok je
         // vais créer ça » sans rien créer côté SwiftData.
-        if isLikelyLocalAction(message) {
+        if isLikelyLocalAction(message), let ctx {
             return Reply(
                 text: LocalCoach.respond(to: message, ctx: ctx),
                 source: .localRules
@@ -71,9 +71,15 @@ enum OnDeviceLLM {
         }
         #endif
 
-        // Étape 3 — LocalCoach rule-based comme filet.
+        // Étape 3 — LocalCoach rule-based comme filet, sinon message générique.
+        if let ctx {
+            return Reply(
+                text: LocalCoach.respond(to: message, ctx: ctx),
+                source: .localRules
+            )
+        }
         return Reply(
-            text: LocalCoach.respond(to: message, ctx: ctx),
+            text: "Je te retrouve dès que ton coach est prêt.",
             source: .localRules
         )
     }
