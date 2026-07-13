@@ -781,8 +781,7 @@ struct AIAssistantView: View {
     @State private var textBeforeVoice: String = ""
     @State private var micPulse = false
     @State private var voiceDragOffset: CGFloat = 0
-    @State private var messageToReport: AIAssistantViewModel.DisplayMessage? = nil
-    @State private var reportConfirmed = false
+    @State private var messageToReport: AIAssistantViewModel.DisplayMessage?
     private let cancelThreshold: CGFloat = 90
 
     // Quick suggestions change per time of day
