@@ -60,7 +60,7 @@ struct CoachDisclaimerSheet: View {
                 .font(.system(size: 30, weight: .semibold))
                 .foregroundStyle(Theme.accent)
                 .padding(.top, 8)
-            Text("Ton coach fonctionne avec de l'intelligence artificielle.")
+            Text("Ton coach répond avec des messages générés automatiquement.")
                 .font(Theme.fontTitle2)
                 .foregroundStyle(Theme.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
