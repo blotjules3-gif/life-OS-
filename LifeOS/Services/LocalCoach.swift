@@ -50,9 +50,9 @@ enum LocalCoach {
             if let clean = meaningful(subject) {
                 let h = Habit(name: clean, icon: iconFor(clean), colorHex: 0x4CF810)
                 ctx.insert(h); try? ctx.save()
-                return "✅ Nouvelle habitude créée : **\(clean)**. Elle est dans ton suivi d'habitudes — coche-la chaque jour pour bâtir ta série 🔥."
+                return "Nouvelle habitude créée : **\(clean)**. Elle est dans ton suivi d'habitudes — coche-la chaque jour pour bâtir ta série."
             }
-            return "Bonne idée 💪 Quelle habitude veux-tu créer ? Donne-moi juste son nom (ex. « Méditer 10 min », « Boire 2 L d'eau », « Lire 20 pages »)."
+            return "Bonne idée. Quelle habitude veux-tu créer ? Donne-moi juste son nom (ex. « Méditer 10 min », « Boire 2 L d'eau », « Lire 20 pages »)."
         }
 
         // Créer une tâche / rappel
