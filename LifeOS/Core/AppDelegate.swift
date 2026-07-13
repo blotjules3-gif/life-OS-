@@ -116,7 +116,7 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                 NotificationManager.shared.scheduleAfter(
                     id: "\(key).snooze",
                     title: "Petit rappel",
-                    body: "\(label) — quand tu peux 😉",
+                    body: "\(label) — quand tu peux.",
                     seconds: 30 * 60
                 )
             }
