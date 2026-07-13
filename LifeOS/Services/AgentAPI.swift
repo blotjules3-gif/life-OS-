@@ -1,5 +1,5 @@
 import Foundation
-import UIKit
+@preconcurrency import UIKit
 
 // MARK: - Configuration (délégué à Configuration.swift)
 
