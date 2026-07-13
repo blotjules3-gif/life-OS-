@@ -385,7 +385,7 @@ struct ProfileView: View {
                 }
             }
 
-            if let score = energyScore?.energy_score {
+            if let score = energyScore?.score {
                 Rectangle()
                     .fill(Color.primary.opacity(0.06))
                     .frame(height: 1)
