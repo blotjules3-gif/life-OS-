@@ -344,27 +344,12 @@ final class AIAssistantViewModel: ObservableObject {
         aiKnownModulesRaw = recommendedModulesRaw
 
         Task {
-            do {
-                let response = try await AgentAPI.shared.chat(
-                    message: prompt,
-                    module: nil,
-                    conversationID: nil
-                )
-                // Succès — on marque le welcome comme vu seulement maintenant
-                firstLaunchDone = true
-                conversationID = response.conversation_id
-                isServerOffline = false
-                removeThinking()
-                appendAssistantMessage(response.reply, actions: response.actions ?? [])
-                for action in (response.actions ?? []) {
-                    await execute(action: action)
-                }
-            } catch {
-                removeThinking()
-                if let apiErr = error as? AgentAPIError, case .networkError = apiErr {
-                    isServerOffline = true
-                }
-                // firstLaunchDone reste false → réessai au prochain lancement
+            let reply = await OnDeviceLLM.respond(to: prompt, ctx: modelContext)
+            firstLaunchDone = true
+            isServerOffline = false
+            removeThinking()
+            appendAssistantMessage(reply.text, actions: [])
+            _ = {
                 appendAssistantMessage(
                     "Connexion impossible. Je te retrouve dès que le réseau est disponible. En attendant, dis-moi par où tu veux commencer.",
                     actions: []
