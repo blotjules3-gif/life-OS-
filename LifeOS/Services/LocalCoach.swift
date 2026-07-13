@@ -131,7 +131,7 @@ enum LocalCoach {
 
     /// Message d'accueil au premier lancement — local, sans serveur.
     static func welcome(name: String) -> String {
-        "\(greet(name)) 👋 Je suis ton coach LifeOS — je fonctionne directement sur ton iPhone, sans connexion.\n\n"
+        "\(greet(name)) Je suis ton coach LifeOS — je fonctionne directement sur ton iPhone, sans connexion.\n\n"
         + "Je connais tes données (habitudes, eau, calories, tâches, sommeil) et je peux agir pour toi : créer une habitude, ajouter une tâche, logger un verre d'eau, ou te faire un bilan.\n\n"
         + "Par quoi veux-tu commencer ?"
     }
