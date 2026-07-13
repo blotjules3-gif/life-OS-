@@ -43,6 +43,19 @@ Fix : aligner la valeur sur `"lifeProfile"` (nom Swift conservé pour compat fut
 2. ServerStatusMonitor.swift ligne 39 : neutraliser le message d'erreur
 3. AppStorageKeys.swift ligne 20 : `"userLifeProfile"` → `"lifeProfile"`
 
+## Application
+
+Les trois fixes ont été appliqués et commit par le processus auto :
+
+- `0bf098a1` — UserContextBuilder.swift (bug B1)
+- `0eb439e2` — ServerStatusMonitor.swift (violation UI I1)
+- `5c0c3203` — AppStorageKeys.swift (cohérence C1)
+
+Vérifications :
+- Brace check sur les 3 fichiers → Diff: 0
+- Les autres occurrences de « LLM » dans ServerStatusMonitor sont en commentaires, noms de case, chemin d'endpoint et struct decoder — jamais montrés à l'utilisateur
+- Ligne 30 de UserContextBuilder lit maintenant la même clé que l'onboarding écrit → le profil sera présent dans le contexte du coach
+
 ## Hors périmètre (autre passe)
 
 - Double registre de clés (`AppStorageKeys` en Services, `UserPreferencesKeys` en Core) → passe Core
