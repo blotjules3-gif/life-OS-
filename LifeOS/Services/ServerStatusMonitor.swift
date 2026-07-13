@@ -36,7 +36,7 @@ final class ServerStatusMonitor: ObservableObject {
         switch coach {
         case .online:            return "Coach en ligne"
         case .backendDown:       return "Coach hors ligne — serveur injoignable"
-        case .llmDown(let err):  return "Coach indisponible — \(err ?? "clé LLM invalide")"
+        case .llmDown:           return "Coach indisponible — service momentanément en panne"
         case .unknown:           return "…"
         }
     }
