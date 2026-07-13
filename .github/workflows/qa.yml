@@ -1,0 +1,56 @@
+name: QA — plist lint + tests
+
+on:
+  push:
+    branches: [main, jules, pote]
+  pull_request:
+    branches: [main]
+
+jobs:
+  plist-lint:
+    name: plutil lint
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint tous les plists et entitlements
+        run: |
+          set -e
+          find LifeOS LifeOSWidgets -name "*.plist" -o -name "*.entitlements" \
+            | while read f; do
+                echo "→ $f"
+                plutil -lint "$f"
+              done
+
+  ios-tests:
+    name: Tests iOS
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sélectionne Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+      - name: Lance UIVocabularySanity + UserContextBuilder
+        run: |
+          xcodebuild test \
+            -project LifeOS.xcodeproj \
+            -scheme LifeOS \
+            -destination "platform=iOS Simulator,name=iPhone 17 Pro" \
+            -only-testing:LifeOSTests/UIVocabularySanityTests \
+            -only-testing:LifeOSTests/UserContextBuilderTests \
+            -only-testing:LifeOSTests/CalendarSafetyTests \
+            -only-testing:LifeOSTests/ThemeContrastTests \
+            -only-testing:LifeOSTests/ImageStoreTests \
+            -only-testing:LifeOSTests/AlarmManagerTests \
+            | xcpretty && exit ${PIPESTATUS[0]}
+
+  backend-syntax:
+    name: Backend Python syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile check tous les .py
+        run: |
+          python -m compileall -q backend/app
