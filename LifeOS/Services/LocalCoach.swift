@@ -399,7 +399,7 @@ enum LocalCoach {
         let bkf = Int(Double(goal) * 0.25), lunch = Int(Double(goal) * 0.35)
         let snack = Int(Double(goal) * 0.10), dinner = goal - bkf - lunch - snack
         return """
-        🍽️ **Journée type (~\(goal) kcal)**
+        **Journée type (~\(goal) kcal)**
 
         **Petit-déj (~\(bkf) kcal)**
         • Flocons d'avoine + fruits + 2 œufs, ou skyr + granola.
