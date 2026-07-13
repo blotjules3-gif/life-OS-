@@ -58,3 +58,14 @@ class ConversationOut(BaseModel):
     messages: list[MessageOut] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
+
+
+class ReportRequest(BaseModel):
+    device_id: str
+    conversation_id: Optional[uuid.UUID] = None
+    message_content: str = Field(..., max_length=8000)
+    reason: str = Field(default="user_flagged", max_length=64)
+
+
+class RemoteConfigResponse(BaseModel):
+    chat_enabled: bool
