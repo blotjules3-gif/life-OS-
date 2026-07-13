@@ -735,7 +735,7 @@ enum ImageIntel {
             let handler = VNImageRequestHandler(cgImage: cg, options: [:])
             DispatchQueue.global(qos: .userInitiated).async {
                 try? handler.perform([req])
-                let obs = (req.results as? [VNClassificationObservation] ?? []).filter { $0.confidence > 0.05 }
+                let obs = (req.results ?? []).filter { $0.confidence > 0.05 }
                 cont.resume(returning: obs.prefix(15).map { ($0.identifier, $0.confidence) })
             }
         }
