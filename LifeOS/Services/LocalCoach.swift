@@ -189,7 +189,7 @@ enum LocalCoach {
         if q > 0 { s += "• Qualité : \(q)/5\n" }
         s += "• Réveil réglé : \(wake)\n\n"
         if h > 0 && h < 7 { s += "💡 Moins de 7 h — vise un coucher plus tôt ce soir pour récupérer." }
-        else if q >= 4 { s += "💪 Belle nuit ! Garde ce rythme régulier." }
+        else if q >= 4 { s += "Belle nuit ! Garde ce rythme régulier." }
         else { s += "💡 Régularité + écran coupé 1 h avant = meilleure récup." }
         return s
     }
