@@ -27,6 +27,7 @@ struct ModuleChatView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var ctx
     @AppStorage("appTheme") private var appThemeRaw = "classic"
+    @AppStorage("coachDisclaimerAccepted") private var disclaimerAccepted = false
     private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
 
     @State private var messages: [ModuleChatMessage] = []
@@ -37,6 +38,8 @@ struct ModuleChatView: View {
     @State private var isServerOffline = false
     @State private var goalsBadge = false
     @State private var configBadge = false
+    @State private var messageToReport: ModuleChatMessage? = nil
+    @State private var reportConfirmed = false
     @FocusState private var inputFocused: Bool
 
     private let suggestedMessages: [String]
