@@ -544,7 +544,7 @@ struct DailyBriefingView: View {
                         briefingFailed = false
                         briefingLoading = true
                         Task {
-                            let prompt = buildBriefingPrompt(goals: briefingGoals, challenges: briefingChallenges)
+                            let prompt = buildBriefingPrompt()
                             let reply = await OnDeviceLLM.respond(to: prompt, ctx: ctx)
                             aiBriefing = reply.text
                             UserDefaults.standard.set(reply.text, forKey: "lastAIBriefing")
