@@ -71,7 +71,7 @@ enum LocalCoach {
             let glass = 250
             ctx.insert(WaterEntry(amountML: glass)); try? ctx.save()
             let (ml, goal, _) = water(ctx)
-            return "💧 +1 verre (\(glass) ml) enregistré. Tu es à \(ml) / \(goal) ml aujourd'hui. \(ml >= goal ? "Objectif atteint, bravo 🎉" : "Continue comme ça !")"
+            return "+1 verre (\(glass) ml) enregistré. Tu es à \(ml) / \(goal) ml aujourd'hui. \(ml >= goal ? "Objectif atteint, bravo." : "Continue comme ça !")"
         }
 
         // Créer une note
