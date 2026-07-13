@@ -8,7 +8,7 @@ L'ordre est fixe pour ne pas mélanger les passes.
 | # | Secteur | Statut | Fichier passe |
 |---|---------|--------|---------------|
 | 1 | Services (Swift, /LifeOS/Services) | FAIT 2026-07-13 | pass-01-services.md |
-| 2 | Core (vues principales, lifecycle) | à faire | — |
+| 2 | Core (vues principales, lifecycle) | FAIT 2026-07-13 | pass-02-core.md |
 | 3 | Shared (composants transverses, AIAssistantView) | à faire | — |
 | 4 | Modules (features par domaine, 41 fichiers) | à faire | — |
 | 5 | Models (SwiftData) | à faire | — |
