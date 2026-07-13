@@ -42,6 +42,18 @@ enum OnDeviceLLM {
         ctx: ModelContext,
         moduleContext: String? = nil
     ) async -> Reply {
+        // Étape 1 — si le message ressemble à une action locale (créer une
+        // habitude, logger un verre d'eau, ajouter une tâche), on laisse
+        // LocalCoach l'exécuter directement. Sinon un LLM répondrait « ok je
+        // vais créer ça » sans rien créer côté SwiftData.
+        if isLikelyLocalAction(message) {
+            return Reply(
+                text: LocalCoach.respond(to: message, ctx: ctx),
+                source: .localRules
+            )
+        }
+
+        // Étape 2 — Apple Intelligence si dispo pour du vrai coaching.
         #if canImport(FoundationModels)
         if #available(iOS 26.0, *) {
             let model = SystemLanguageModel.default
@@ -58,10 +70,28 @@ enum OnDeviceLLM {
             }
         }
         #endif
+
+        // Étape 3 — LocalCoach rule-based comme filet.
         return Reply(
             text: LocalCoach.respond(to: message, ctx: ctx),
             source: .localRules
         )
+    }
+
+    /// Détecte les intentions à effet local (SwiftData) déjà gérées par
+    /// LocalCoach.respond : création d'habitude, tâche, note, log d'eau.
+    /// Priorité au chemin déterministe : un LLM ne peut pas écrire dans SwiftData.
+    private static func isLikelyLocalAction(_ message: String) -> Bool {
+        let m = message.folding(options: .diacriticInsensitive, locale: .current).lowercased()
+        let createVerbs = ["cree ", "creer ", "ajoute ", "ajouter ", "nouvelle ",
+                           "nouveau ", "note moi ", "rappelle", "faut que", "il faut"]
+        let objects = ["habitude", "habit", "tache", "tâche", "todo", "to-do",
+                       "note", "rappel", "verre d'eau", "verre deau", "j'ai bu",
+                       "jai bu", "bu de l'eau", "ajoute de l'eau"]
+        let hasVerb = createVerbs.contains { m.contains($0) }
+        let hasObject = objects.contains { m.contains($0) }
+        return hasVerb && hasObject
+            || objects.contains(where: { m.contains($0) && m.count < 50 })
     }
 
     /// Vrai si Apple Intelligence est prêt à répondre localement.
