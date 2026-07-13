@@ -25,14 +25,13 @@ struct ModuleChatView: View {
 
     @State private var messages: [ModuleChatMessage] = []
     @State private var inputText = ""
-    @State private var conversationID: String? = nil
+    @State private var conversationID: String?
     @State private var isLoading = false
-    @State private var errorMessage: String? = nil
+    @State private var errorMessage: String?
     @State private var isServerOffline = false
     @State private var goalsBadge = false
     @State private var configBadge = false
-    @State private var messageToReport: ModuleChatMessage? = nil
-    @State private var reportConfirmed = false
+    @State private var messageToReport: ModuleChatMessage?
     @FocusState private var inputFocused: Bool
 
     private let suggestedMessages: [String]
