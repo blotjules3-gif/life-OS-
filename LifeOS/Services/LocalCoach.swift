@@ -199,7 +199,7 @@ enum LocalCoach {
         let pending = pendingTodos(ctx)
         let d = UserDefaults.standard
         let wake = String(format: "%02d:%02d", d.integer(forKey: "wakeupHour"), d.integer(forKey: "wakeupMinute"))
-        var lines = ["🗓️ **Ton plan**", "", "• Réveil : \(wake)"]
+        var lines = ["**Ton plan**", "", "• Réveil : \(wake)"]
         if total > 0 { lines.append("• Habitudes : \(done)/\(total) faites — \(max(0, total - done)) à cocher") }
         if pending.isEmpty {
             lines.append("• Tâches : aucune en attente.")
