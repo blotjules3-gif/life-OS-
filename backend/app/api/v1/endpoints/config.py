@@ -1,10 +1,4 @@
-"""Remote feature flags — permet de désactiver le coach côté serveur
-sans nouveau build iOS si Apple rejette la review ou en cas d'incident.
-
-Actuellement statique. Ajouter un backing store (env var, DB, Redis) si
-besoin de flip dynamique. Kill switch : passer CHAT_ENABLED=false dans
-les env vars Railway et redémarrer.
-"""
+"""Feature flags serveur : kill switch coach sans redéploiement iOS."""
 from __future__ import annotations
 
 import os
@@ -12,6 +6,7 @@ import os
 from fastapi import APIRouter, Depends
 
 from app.dependencies import verify_api_key
+from app.schemas.chat import RemoteConfigResponse
 
 router = APIRouter(prefix="/config", tags=["config"])
 
@@ -23,8 +18,6 @@ def _env_bool(key: str, default: bool) -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
-@router.get("", dependencies=[Depends(verify_api_key)])
-async def get_config(device_id: str | None = None) -> dict[str, bool]:
-    return {
-        "chat_enabled": _env_bool("CHAT_ENABLED", True),
-    }
+@router.get("", response_model=RemoteConfigResponse, dependencies=[Depends(verify_api_key)])
+async def get_config() -> RemoteConfigResponse:
+    return RemoteConfigResponse(chat_enabled=_env_bool("CHAT_ENABLED", True))
