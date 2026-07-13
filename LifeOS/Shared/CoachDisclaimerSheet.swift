@@ -15,11 +15,11 @@ struct CoachDisclaimerSheet: View {
                     header
                     section(
                         title: "Ton coach n'est pas un professionnel",
-                        body: "Ses réponses sont générées automatiquement à partir de tes messages. Pour toute question médicale, sportive ou financière importante, consulte un professionnel qualifié."
+                        body: "Ses réponses sont générées automatiquement. Pour toute question médicale, sportive ou financière importante, consulte un professionnel qualifié."
                     )
                     section(
                         title: "Ce que tu partages",
-                        body: "Tes messages sont envoyés à notre serveur puis à un modèle de langage (Mistral AI) pour générer une réponse. Ils ne sont pas utilisés pour entraîner de modèle."
+                        body: "Tes messages sont envoyés à nos serveurs et à notre partenaire Mistral pour générer une réponse. Ils ne servent pas à entraîner de futur coach."
                     )
                     section(
                         title: "Ce que tu peux faire",
