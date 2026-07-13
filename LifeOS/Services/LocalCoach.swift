@@ -108,8 +108,8 @@ enum LocalCoach {
         // Eau (question)
         if matches(t, ["eau", "hydrat", "verres", "boire"]) {
             let (ml, goal, glasses) = water(ctx)
-            return "💧 Aujourd'hui : \(ml) / \(goal) ml (\(glasses) verre\(glasses > 1 ? "s" : "")). "
-                + (ml >= goal ? "Objectif atteint 🎉" : "Il te reste \(max(0, goal - ml)) ml. Dis « j'ai bu un verre » et je l'ajoute.")
+            return "Aujourd'hui : \(ml) / \(goal) ml (\(glasses) verre\(glasses > 1 ? "s" : "")). "
+                + (ml >= goal ? "Objectif atteint." : "Il te reste \(max(0, goal - ml)) ml. Dis « j'ai bu un verre » et je l'ajoute.")
         }
 
         // Calories / repas
