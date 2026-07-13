@@ -28,14 +28,16 @@
   }
   a{color:inherit;text-decoration:none}
   ::selection{background:var(--green);color:#000}
+  @media(hover:hover){ body.has-cursor, body.has-cursor a, body.has-cursor .pole, body.has-cursor .hl{cursor:none} }
 
   /* ---------- LOADER ---------- */
   #loader{
     position:fixed;inset:0;z-index:300;background:var(--bg);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
-    transition:opacity .8s ease,visibility .8s;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+    transition:clip-path .9s cubic-bezier(.7,0,.2,1);
+    clip-path:inset(0 0 0 0);
   }
-  #loader.done{opacity:0;visibility:hidden}
+  #loader.done{clip-path:inset(0 0 100% 0)}
   #loader .inf{
     font-size:64px;font-weight:800;color:var(--green);line-height:1;
     text-shadow:0 0 40px rgba(60,224,25,.6);
@@ -43,6 +45,8 @@
   }
   @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.12);opacity:.7}}
   #loader .pct{font-size:13px;letter-spacing:.3em;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+  #loader .bar{width:180px;height:1px;background:var(--line);overflow:hidden}
+  #loader .bar i{display:block;height:100%;width:0%;background:var(--green);box-shadow:0 0 12px var(--green);transition:width .2s}
 
   /* ---------- CANVAS & GRAIN ---------- */
   #gl{position:fixed;inset:0;z-index:0;display:block}
@@ -56,6 +60,29 @@
     50%{transform:translate(-8%,3%)}70%{transform:translate(6%,8%)}90%{transform:translate(-3%,5%)}
   }
 
+  /* ---------- CURSOR ---------- */
+  #cur,#curring{position:fixed;top:0;left:0;z-index:400;pointer-events:none;border-radius:50%;opacity:0}
+  #cur{width:8px;height:8px;background:var(--green);box-shadow:0 0 12px var(--green);margin:-4px 0 0 -4px}
+  #curring{width:36px;height:36px;border:1px solid rgba(60,224,25,.55);margin:-18px 0 0 -18px;transition:width .25s,height .25s,margin .25s,border-color .25s}
+  body.cur-on #cur,body.cur-on #curring{opacity:1}
+  #curring.big{width:64px;height:64px;margin:-32px 0 0 -32px;border-color:rgba(60,224,25,.9)}
+
+  /* ---------- PROGRESS + DOTS ---------- */
+  #progress{position:fixed;top:0;left:0;height:2px;width:0%;z-index:150;background:linear-gradient(90deg,var(--green-dark),var(--green));box-shadow:0 0 14px rgba(60,224,25,.7)}
+  #dots{
+    position:fixed;right:26px;top:50%;transform:translateY(-50%);z-index:120;
+    display:flex;flex-direction:column;gap:18px;
+  }
+  #dots a{display:flex;align-items:center;gap:10px;flex-direction:row-reverse}
+  #dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.22);transition:.35s;display:block}
+  #dots span{
+    font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--green);
+    opacity:0;transform:translateX(8px);transition:.35s;
+  }
+  #dots a.on i{background:var(--green);box-shadow:0 0 12px var(--green);transform:scale(1.5)}
+  #dots a.on span,#dots a:hover span{opacity:1;transform:none}
+  @media(max-width:900px){#dots{display:none}}
+
   /* ---------- NAV ---------- */
   nav{
     position:fixed;top:0;left:0;right:0;z-index:100;
@@ -64,17 +91,29 @@
   }
   .nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
   .nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:.02em}
-  .nav-brand img{width:26px;height:26px;border-radius:7px}
+  .nav-brand img{width:26px;height:26px;border-radius:7px;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+  .nav-brand:hover img{transform:rotate(180deg)}
   .nav-links{display:flex;gap:24px;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+  .nav-links a{position:relative;padding:4px 0}
+  .nav-links a::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:1px;background:var(--green);transform:scaleX(0);transform-origin:right;transition:transform .4s cubic-bezier(.2,.8,.2,1)}
   .nav-links a:hover{color:var(--green)}
+  .nav-links a:hover::after{transform:scaleX(1);transform-origin:left}
   @media(max-width:640px){.nav-links{display:none}}
-  .nav-cta{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:8px 18px;border-radius:99px;border:1px solid var(--line);transition:.3s}
+  .nav-cta{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:8px 18px;border-radius:99px;border:1px solid var(--line);transition:border-color .3s,color .3s,box-shadow .3s;display:inline-block}
   .nav-cta:hover{border-color:var(--green);color:var(--green);box-shadow:0 0 24px rgba(60,224,25,.25)}
 
   /* ---------- CONTENT ---------- */
   main{position:relative;z-index:2}
-  .chapter{min-height:100vh;display:flex;align-items:center;padding:120px 24px}
-  .wrap{max-width:1150px;margin:0 auto;width:100%}
+  .chapter{min-height:100vh;display:flex;align-items:center;padding:120px 24px;position:relative;overflow:hidden}
+  .wrap{max-width:1150px;margin:0 auto;width:100%;position:relative}
+
+  .ghost{
+    position:absolute;top:-6vh;right:-4%;z-index:-1;
+    font-size:36vh;font-weight:800;line-height:1;letter-spacing:-.03em;
+    color:transparent;-webkit-text-stroke:1.5px rgba(255,255,255,.055);
+    pointer-events:none;user-select:none;font-variant-numeric:tabular-nums;
+  }
+  #privacy .ghost{-webkit-text-stroke:1.5px rgba(60,224,25,.12)}
 
   .kicker{
     font-size:12px;font-weight:700;color:var(--green);
@@ -82,20 +121,32 @@
   }
   .kicker::before{content:"";width:34px;height:1px;background:var(--green)}
   h1{font-size:clamp(52px,10vw,128px);line-height:.98;letter-spacing:-.04em;font-weight:800}
-  h1 .accent{
+  h1 .accent, h2 .accent{
     background:linear-gradient(110deg,var(--green) 20%,#baff9e 50%,var(--green-dark) 80%);
     -webkit-background-clip:text;background-clip:text;color:transparent;
   }
-  h2{font-size:clamp(36px,6vw,72px);letter-spacing:-.035em;line-height:1.02;font-weight:800;max-width:820px}
+  h2{font-size:clamp(36px,6vw,72px);letter-spacing:-.035em;line-height:1.04;font-weight:800;max-width:820px}
   .sub{font-size:clamp(16px,2vw,20px);color:var(--ink-soft);max-width:560px;margin-top:24px;font-weight:400}
 
+  /* split words */
+  .w{display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:.12em;margin-bottom:-.12em}
+  .wi{display:inline-block;transform:translateY(115%) rotate(4deg);transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+  .in .wi{transform:none}
+
   /* hero */
-  #hero{align-items:flex-end;padding-bottom:12vh;position:relative}
+  #hero{align-items:flex-end;padding-bottom:12vh}
   #hero .badge{
     display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;letter-spacing:.08em;
     color:var(--ink-soft);border:1px solid var(--line);background:rgba(5,5,5,.4);
     padding:8px 16px;border-radius:99px;margin-bottom:30px;backdrop-filter:blur(8px);
+    position:relative;overflow:hidden;
   }
+  #hero .badge::after{
+    content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;
+    background:linear-gradient(100deg,transparent,rgba(60,224,25,.18),transparent);
+    animation:shine 3.2s ease-in-out infinite;
+  }
+  @keyframes shine{0%,60%{left:-60%}100%{left:130%}}
   #hero .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
   .scroll-hint{
     position:absolute;bottom:34px;left:50%;transform:translateX(-50%);
@@ -109,38 +160,62 @@
   }
   @keyframes drop{0%{transform:scaleY(0);transform-origin:top}45%{transform:scaleY(1);transform-origin:top}55%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
 
+  /* bands (marquee) */
+  .band{
+    position:relative;z-index:2;padding:26px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    overflow:hidden;white-space:nowrap;background:rgba(5,5,5,.35);backdrop-filter:blur(6px);
+    transform:rotate(-1.2deg) scale(1.02);
+  }
+  .band.rev{transform:rotate(1.2deg) scale(1.02)}
+  .band-track{display:inline-block;will-change:transform;font-size:clamp(18px,2.6vw,28px);font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+  .band-track b{color:transparent;-webkit-text-stroke:1px rgba(60,224,25,.8);font-weight:800}
+  .band-track span{color:rgba(255,255,255,.85)}
+  .band-track i{font-style:normal;color:var(--green);margin:0 26px}
+
   /* stats */
   .stats{margin-top:64px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
-  .stat{background:rgba(5,5,5,.55);backdrop-filter:blur(8px);padding:38px 26px}
+  .stat{background:rgba(5,5,5,.55);backdrop-filter:blur(8px);padding:38px 26px;position:relative;overflow:hidden}
+  .stat::after{content:"";position:absolute;bottom:0;left:0;height:2px;width:0%;background:var(--green);transition:width 1.2s cubic-bezier(.2,.8,.2,1) .3s;box-shadow:0 0 10px var(--green)}
+  .in .stat::after{width:100%}
   .stat b{display:block;font-size:clamp(38px,5.5vw,68px);letter-spacing:-.04em;font-weight:800;font-variant-numeric:tabular-nums}
   .stat b em{font-style:normal;color:var(--green);text-shadow:0 0 30px rgba(60,224,25,.4)}
   .stat span{font-size:13px;color:var(--ink-soft);letter-spacing:.05em;text-transform:uppercase}
   @media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
 
   /* poles */
-  .poles{margin-top:60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+  .poles{margin-top:60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;perspective:900px}
   .pole{
     background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:24px 22px;
     backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-    transition:transform .4s cubic-bezier(.2,.8,.2,1),border-color .4s,box-shadow .4s;
-    will-change:transform;
+    transition:transform .5s cubic-bezier(.2,.8,.2,1),border-color .4s,box-shadow .4s,opacity 1s,filter 1s;
+    will-change:transform;position:relative;
   }
-  .pole:hover{
-    transform:translateY(-5px);border-color:rgba(60,224,25,.5);
-    box-shadow:0 24px 50px -20px rgba(60,224,25,.25);
+  .pole::after{
+    content:"";position:absolute;inset:0;border-radius:16px;pointer-events:none;
+    background:radial-gradient(260px circle at var(--gx,50%) var(--gy,50%),rgba(60,224,25,.13),transparent 60%);
+    opacity:0;transition:opacity .35s;
   }
+  .pole:hover{border-color:rgba(60,224,25,.5);box-shadow:0 24px 50px -20px rgba(60,224,25,.25)}
+  .pole:hover::after{opacity:1}
   .pole .num{font-size:11px;color:var(--green);letter-spacing:.2em;display:block;margin-bottom:14px;font-variant-numeric:tabular-nums}
   .pole h3{font-size:16px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
   .pole p{font-size:13px;color:var(--ink-soft);line-height:1.55}
 
   /* features */
-  .highlights{margin-top:60px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .highlights{margin-top:60px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;perspective:900px}
   .hl{
     border:1px solid var(--line);border-radius:20px;padding:34px 28px;min-height:230px;
     display:flex;flex-direction:column;justify-content:flex-end;position:relative;
-    background:var(--glass);backdrop-filter:blur(10px);transition:.4s;
+    background:var(--glass);backdrop-filter:blur(10px);
+    transition:transform .5s cubic-bezier(.2,.8,.2,1),border-color .4s,opacity 1s,filter 1s;will-change:transform;
+  }
+  .hl::after{
+    content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;
+    background:radial-gradient(320px circle at var(--gx,50%) var(--gy,50%),rgba(60,224,25,.12),transparent 60%);
+    opacity:0;transition:opacity .35s;
   }
   .hl:hover{border-color:rgba(60,224,25,.45)}
+  .hl:hover::after{opacity:1}
   .hl.green{background:linear-gradient(150deg,rgba(60,224,25,.16),rgba(60,224,25,.05));border-color:rgba(60,224,25,.3)}
   .hl .tag{position:absolute;top:26px;left:28px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:var(--green)}
   .hl h3{font-size:21px;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
@@ -149,11 +224,12 @@
 
   /* privacy */
   #privacy .wrap{text-align:center}
-  #privacy h2{margin:0 auto}
+  #privacy h2{margin:0 auto;text-shadow:0 0 60px rgba(60,224,25,.25)}
   #privacy .kicker{justify-content:center}
   #privacy .kicker::after{content:"";width:34px;height:1px;background:var(--green)}
   .priv-grid{margin:60px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:980px;text-align:left}
-  .priv{background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:26px;backdrop-filter:blur(10px)}
+  .priv{background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:26px;backdrop-filter:blur(10px);transition:border-color .4s,transform .5s}
+  .priv:hover{border-color:rgba(60,224,25,.4);transform:translateY(-4px)}
   .priv b{display:block;font-size:15px;margin-bottom:8px;color:var(--green)}
   .priv span{font-size:13.5px;color:var(--ink-soft)}
   @media(max-width:820px){.priv-grid{grid-template-columns:1fr}}
@@ -163,10 +239,11 @@
   #cta .wrap{display:flex;flex-direction:column;align-items:center}
   .btn{
     display:inline-flex;align-items:center;gap:10px;padding:16px 36px;border-radius:99px;
-    font-size:15px;font-weight:700;letter-spacing:.02em;transition:.3s;border:1px solid var(--line);
+    font-size:15px;font-weight:700;letter-spacing:.02em;border:1px solid var(--line);
+    transition:box-shadow .3s,border-color .3s,color .3s;will-change:transform;position:relative;overflow:hidden;
   }
   .btn-primary{background:var(--green);color:#031a00;border-color:var(--green)}
-  .btn-primary:hover{box-shadow:0 0 60px rgba(60,224,25,.5);transform:translateY(-2px)}
+  .btn-primary:hover{box-shadow:0 0 60px rgba(60,224,25,.55)}
   .btn-ghost{color:var(--ink)}
   .btn-ghost:hover{border-color:var(--green);color:var(--green)}
   .cta-row{display:flex;gap:14px;margin-top:44px;flex-wrap:wrap;justify-content:center}
@@ -184,16 +261,27 @@
   .reveal{opacity:0;transform:translateY(44px);filter:blur(10px);transition:opacity 1s ease,transform 1s cubic-bezier(.2,.8,.2,1),filter 1s ease}
   .reveal.in{opacity:1;transform:none;filter:none}
   @media (prefers-reduced-motion: reduce){
-    .reveal{opacity:1;transform:none;filter:none;transition:none}
-    .grain,.scroll-hint::after,#loader .inf{animation:none}
+    .reveal,.wi{opacity:1;transform:none;filter:none;transition:none}
+    .grain,.scroll-hint::after,#loader .inf,#hero .badge::after{animation:none}
   }
 </style>
 </head>
 <body>
 
-<div id="loader"><div class="inf">∞</div><div class="pct" id="loadpct">0%</div></div>
+<div id="loader"><div class="inf">∞</div><div class="bar"><i id="loadbar"></i></div><div class="pct" id="loadpct">0%</div></div>
 <canvas id="gl"></canvas>
 <div class="grain"></div>
+<div id="cur"></div><div id="curring"></div>
+<div id="progress"></div>
+
+<div id="dots">
+  <a href="#hero" data-i="0"><i></i><span>Intro</span></a>
+  <a href="#promesse" data-i="1"><i></i><span>Système</span></a>
+  <a href="#poles" data-i="2"><i></i><span>Pôles</span></a>
+  <a href="#features" data-i="3"><i></i><span>Signature</span></a>
+  <a href="#privacy" data-i="4"><i></i><span>Privé</span></a>
+  <a href="#cta" data-i="5"><i></i><span>Go</span></a>
+</div>
 
 <nav>
   <div class="nav-inner">
@@ -204,26 +292,27 @@
       <a href="#privacy">Confidentialité</a>
       <a href="support.html">Support</a>
     </div>
-    <a class="nav-cta" href="https://github.com/blotjules3-gif/life-OS-" target="_blank" rel="noopener">GitHub</a>
+    <a class="nav-cta magnet" href="https://github.com/blotjules3-gif/life-OS-" target="_blank" rel="noopener">GitHub</a>
   </div>
 </nav>
 
 <main>
 
   <section class="chapter" id="hero">
-    <div class="wrap">
+    <div class="wrap" id="herowrap">
       <div class="badge reveal"><span class="dot"></span>iOS 17+ · SWIFTUI · 100 % LOCAL</div>
-      <h1 class="reveal">Toute ta vie.<br><span class="accent">Une seule app.</span></h1>
+      <h1 class="split">Toute ta vie. <span class="accent">Une seule app.</span></h1>
       <p class="sub reveal">LifeOS remplace la vingtaine d'apps qui se partagent ta vie par un seul système, entièrement sur ton iPhone.</p>
     </div>
     <div class="scroll-hint">Scroll</div>
   </section>
 
   <section class="chapter" id="promesse">
+    <span class="ghost" data-sp="-.1">01</span>
     <div class="wrap">
       <p class="kicker reveal">Le système</p>
-      <h2 class="reveal">Un OS pour ta vie entière.</h2>
-      <p class="sub reveal">Sommeil, sport, argent, mental, carrière — chaque pôle est un hub complet, et tout communique.</p>
+      <h2 class="split">Un OS pour ta <span class="accent">vie entière.</span></h2>
+      <p class="sub reveal" data-sp=".04">Sommeil, sport, argent, mental, carrière — chaque pôle est un hub complet, et tout communique.</p>
       <div class="stats reveal">
         <div class="stat"><b><em data-count="16">0</em></b><span>pôles de vie</span></div>
         <div class="stat"><b data-count="142">0</b><span>écrans</span></div>
@@ -233,50 +322,57 @@
     </div>
   </section>
 
+  <div class="band"><div class="band-track" data-dir="-1"></div></div>
+
   <section class="chapter" id="poles">
+    <span class="ghost" data-sp="-.12">16</span>
     <div class="wrap">
       <p class="kicker reveal">Les pôles</p>
-      <h2 class="reveal">16 univers.<br>Zéro friction.</h2>
+      <h2 class="split">16 univers. <span class="accent">Zéro friction.</span></h2>
       <div class="poles">
-        <div class="pole reveal"><span class="num">01</span><h3>Sommeil</h3><p>Cycles, power-nap, journal de rêves vocal, score de récupération HealthKit.</p></div>
-        <div class="pole reveal"><span class="num">02</span><h3>Nutrition</h3><p>Jeûne intermittent, macros, frigo intelligent, recettes, hydratation.</p></div>
-        <div class="pole reveal"><span class="num">03</span><h3>Fitness</h3><p>Muscu avec courbe de progression, HIIT/Tabata, mobilité guidée, streaks.</p></div>
-        <div class="pole reveal"><span class="num">04</span><h3>Looksmaxx</h3><p>Skincare avec rappels, photos avant/après, posture, outfit selon la météo.</p></div>
-        <div class="pole reveal"><span class="num">05</span><h3>Mental</h3><p>Cohérence cardiaque animée, méditation, humeur, détox écran, briefing matin.</p></div>
-        <div class="pole reveal"><span class="num">06</span><h3>Productivité</h3><p>To-do, time-blocking automatique, habitudes, focus Pomodoro, notes.</p></div>
-        <div class="pole reveal"><span class="num">07</span><h3>Finances</h3><p>Comptes avec alertes, budget enveloppes, abonnements, split façon Tricount.</p></div>
-        <div class="pole reveal"><span class="num">08</span><h3>Investissement</h3><p>Portefeuille, net worth, projection FIRE, immo et cashflow, simulateur IR.</p></div>
-        <div class="pole reveal"><span class="num">09</span><h3>Carrière</h3><p>Suivi de candidatures, CV builder avec export, skill gap, mock interview.</p></div>
-        <div class="pole reveal"><span class="num">10</span><h3>Apprentissage</h3><p>Flashcards SM-2, micro-learning, résumés, plans de compétences.</p></div>
-        <div class="pole reveal"><span class="num">11</span><h3>Maison</h3><p>Anti-gaspi, recettes de restes, tâches ménagères, animaux, maintenance.</p></div>
-        <div class="pole reveal"><span class="num">12</span><h3>Mobilité</h3><p>Voiture : assurance, révisions, consommation et coût carburant.</p></div>
-        <div class="pole reveal"><span class="num">13</span><h3>Social</h3><p>CRM personnel, relances, anniversaires et idées cadeaux, événements.</p></div>
-        <div class="pole reveal"><span class="num">14</span><h3>Admin</h3><p>Coffre-fort de documents chiffré local, échéances, générateur de courriers.</p></div>
-        <div class="pole reveal"><span class="num">15</span><h3>Voyage</h3><p>Itinéraires avec budget, checklist de valise générée automatiquement.</p></div>
-        <div class="pole reveal"><span class="num">16</span><h3>Santé &amp; Cycle</h3><p>Suivi médical, cycle, données HealthKit traitées sur l'appareil.</p></div>
+        <div class="pole reveal tilt"><span class="num">01</span><h3>Sommeil</h3><p>Cycles, power-nap, journal de rêves vocal, score de récupération HealthKit.</p></div>
+        <div class="pole reveal tilt"><span class="num">02</span><h3>Nutrition</h3><p>Jeûne intermittent, macros, frigo intelligent, recettes, hydratation.</p></div>
+        <div class="pole reveal tilt"><span class="num">03</span><h3>Fitness</h3><p>Muscu avec courbe de progression, HIIT/Tabata, mobilité guidée, streaks.</p></div>
+        <div class="pole reveal tilt"><span class="num">04</span><h3>Looksmaxx</h3><p>Skincare avec rappels, photos avant/après, posture, outfit selon la météo.</p></div>
+        <div class="pole reveal tilt"><span class="num">05</span><h3>Mental</h3><p>Cohérence cardiaque animée, méditation, humeur, détox écran, briefing matin.</p></div>
+        <div class="pole reveal tilt"><span class="num">06</span><h3>Productivité</h3><p>To-do, time-blocking automatique, habitudes, focus Pomodoro, notes.</p></div>
+        <div class="pole reveal tilt"><span class="num">07</span><h3>Finances</h3><p>Comptes avec alertes, budget enveloppes, abonnements, split façon Tricount.</p></div>
+        <div class="pole reveal tilt"><span class="num">08</span><h3>Investissement</h3><p>Portefeuille, net worth, projection FIRE, immo et cashflow, simulateur IR.</p></div>
+        <div class="pole reveal tilt"><span class="num">09</span><h3>Carrière</h3><p>Suivi de candidatures, CV builder avec export, skill gap, mock interview.</p></div>
+        <div class="pole reveal tilt"><span class="num">10</span><h3>Apprentissage</h3><p>Flashcards SM-2, micro-learning, résumés, plans de compétences.</p></div>
+        <div class="pole reveal tilt"><span class="num">11</span><h3>Maison</h3><p>Anti-gaspi, recettes de restes, tâches ménagères, animaux, maintenance.</p></div>
+        <div class="pole reveal tilt"><span class="num">12</span><h3>Mobilité</h3><p>Voiture : assurance, révisions, consommation et coût carburant.</p></div>
+        <div class="pole reveal tilt"><span class="num">13</span><h3>Social</h3><p>CRM personnel, relances, anniversaires et idées cadeaux, événements.</p></div>
+        <div class="pole reveal tilt"><span class="num">14</span><h3>Admin</h3><p>Coffre-fort de documents chiffré local, échéances, générateur de courriers.</p></div>
+        <div class="pole reveal tilt"><span class="num">15</span><h3>Voyage</h3><p>Itinéraires avec budget, checklist de valise générée automatiquement.</p></div>
+        <div class="pole reveal tilt"><span class="num">16</span><h3>Santé &amp; Cycle</h3><p>Suivi médical, cycle, données HealthKit traitées sur l'appareil.</p></div>
       </div>
     </div>
   </section>
 
   <section class="chapter" id="features">
+    <span class="ghost" data-sp="-.1">02</span>
     <div class="wrap">
       <p class="kicker reveal">Signature</p>
-      <h2 class="reveal">Des détails qu'aucune autre app n'assemble.</h2>
+      <h2 class="split">Des détails qu'aucune autre app <span class="accent">n'assemble.</span></h2>
       <div class="highlights">
-        <div class="hl reveal"><span class="tag">Sommeil</span><div><h3>Journal de rêves vocal</h3><p>Tu murmures ton rêve au réveil, LifeOS le transcrit avant qu'il s'efface.</p></div></div>
-        <div class="hl green reveal"><span class="tag">Productivité</span><div><h3>Time-blocking auto</h3><p>Ta to-do se transforme seule en blocs dans ta journée.</p></div></div>
-        <div class="hl reveal"><span class="tag">Investissement</span><div><h3>Projection FIRE</h3><p>Net worth en temps réel et date d'indépendance financière projetée.</p></div></div>
-        <div class="hl reveal"><span class="tag">Apprentissage</span><div><h3>Flashcards SM-2</h3><p>Le vrai algorithme de répétition espacée, intégré nativement.</p></div></div>
-        <div class="hl green reveal"><span class="tag">Admin</span><div><h3>Coffre-fort chiffré</h3><p>Documents sensibles chiffrés localement, générateur de courriers inclus.</p></div></div>
-        <div class="hl reveal"><span class="tag">Fitness</span><div><h3>Score de récupération</h3><p>Pas, HRV et sommeil croisés pour te dire quand pousser — ou pas.</p></div></div>
+        <div class="hl reveal tilt"><span class="tag">Sommeil</span><div><h3>Journal de rêves vocal</h3><p>Tu murmures ton rêve au réveil, LifeOS le transcrit avant qu'il s'efface.</p></div></div>
+        <div class="hl green reveal tilt"><span class="tag">Productivité</span><div><h3>Time-blocking auto</h3><p>Ta to-do se transforme seule en blocs dans ta journée.</p></div></div>
+        <div class="hl reveal tilt"><span class="tag">Investissement</span><div><h3>Projection FIRE</h3><p>Net worth en temps réel et date d'indépendance financière projetée.</p></div></div>
+        <div class="hl reveal tilt"><span class="tag">Apprentissage</span><div><h3>Flashcards SM-2</h3><p>Le vrai algorithme de répétition espacée, intégré nativement.</p></div></div>
+        <div class="hl green reveal tilt"><span class="tag">Admin</span><div><h3>Coffre-fort chiffré</h3><p>Documents sensibles chiffrés localement, générateur de courriers inclus.</p></div></div>
+        <div class="hl reveal tilt"><span class="tag">Fitness</span><div><h3>Score de récupération</h3><p>Pas, HRV et sommeil croisés pour te dire quand pousser — ou pas.</p></div></div>
       </div>
     </div>
   </section>
 
+  <div class="band rev"><div class="band-track" data-dir="1"></div></div>
+
   <section class="chapter" id="privacy">
+    <span class="ghost" data-sp="-.08">∞</span>
     <div class="wrap">
       <p class="kicker reveal">Confidentialité</p>
-      <h2 class="reveal">Ta vie reste<br>dans ta poche.</h2>
+      <h2 id="crypt" data-final="Ta vie reste dans ta poche.">Ta vie reste dans ta poche.</h2>
       <p class="sub reveal" style="margin-left:auto;margin-right:auto">Pas de compte. Pas de serveur. Pas de tracking. Tout vit en SwiftData sur ton iPhone — point final.</p>
       <div class="priv-grid">
         <div class="priv reveal"><b>100 % on-device</b><span>Les 41 entités de données vivent en local. Rien ne transite par un cloud.</span></div>
@@ -287,12 +383,13 @@
   </section>
 
   <section class="chapter" id="cta">
+    <span class="ghost" data-sp="-.1">GO</span>
     <div class="wrap">
       <p class="kicker reveal" style="justify-content:center">LifeOS</p>
-      <h2 class="reveal">Une app.<br>Zéro limite.</h2>
+      <h2 class="split">Une app. <span class="accent">Zéro limite.</span></h2>
       <div class="cta-row reveal">
-        <a class="btn btn-primary" href="https://github.com/blotjules3-gif/life-OS-" target="_blank" rel="noopener">Explorer sur GitHub</a>
-        <a class="btn btn-ghost" href="support.html">Support &amp; FAQ</a>
+        <a class="btn btn-primary magnet" href="https://github.com/blotjules3-gif/life-OS-" target="_blank" rel="noopener">Explorer sur GitHub</a>
+        <a class="btn btn-ghost magnet" href="support.html">Support &amp; FAQ</a>
       </div>
     </div>
   </section>
@@ -310,23 +407,57 @@ import * as THREE from 'three';
 import {RoomEnvironment} from './vendor/RoomEnvironment.js';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fine = matchMedia('(hover:hover) and (pointer:fine)').matches;
+const q = new URLSearchParams(location.search);
 
 /* ---------- loader ---------- */
 const loader = document.getElementById('loader');
 const pctEl = document.getElementById('loadpct');
-let fake = 0;
+const barEl = document.getElementById('loadbar');
+let fake = 0, loaded = false;
 const fakeTimer = setInterval(()=>{
   fake = Math.min(fake + Math.random()*14, 92);
   pctEl.textContent = Math.round(fake) + '%';
+  barEl.style.width = fake + '%';
 }, 90);
 function finishLoad(){
+  if(loaded) return; loaded = true;
   clearInterval(fakeTimer);
-  pctEl.textContent = '100%';
-  setTimeout(()=>loader.classList.add('done'), 250);
+  pctEl.textContent = '100%'; barEl.style.width = '100%';
+  setTimeout(()=>{
+    loader.classList.add('done');
+    document.querySelector('#hero .split')?.classList.add('in');
+  }, 300);
 }
-setTimeout(finishLoad, 3500); // filet de sécurité
+setTimeout(finishLoad, 3500);
 
-/* ---------- reveals ---------- */
+/* ---------- split words ---------- */
+document.querySelectorAll('.split').forEach(el=>{
+  const frag = document.createDocumentFragment();
+  let idx = 0;
+  el.childNodes.forEach(node=>{
+    const isAccent = node.nodeType === 1 && node.classList.contains('accent');
+    const text = node.textContent;
+    text.split(/\s+/).filter(Boolean).forEach(word=>{
+      const w = document.createElement('span'); w.className = 'w';
+      const wi = document.createElement('span'); wi.className = 'wi' + (isAccent ? ' accent' : '');
+      wi.textContent = word;
+      wi.style.transitionDelay = (idx++ * 60) + 'ms';
+      w.appendChild(wi); frag.appendChild(w);
+      frag.appendChild(document.createTextNode(' '));
+    });
+  });
+  el.textContent = ''; el.appendChild(frag);
+});
+const splitIO = new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); splitIO.unobserve(e.target);} });
+},{threshold:.35});
+document.querySelectorAll('.split').forEach(el=>{ if(el.closest('#hero')) return; splitIO.observe(el); });
+
+/* ---------- reveals (stagger par section) ---------- */
+document.querySelectorAll('.chapter').forEach(ch=>{
+  ch.querySelectorAll('.reveal').forEach((el,i)=>el.style.transitionDelay = Math.min(i*90, 540) + 'ms');
+});
 const io = new IntersectionObserver(es=>{
   es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
 },{threshold:.15});
@@ -347,12 +478,96 @@ const cio = new IntersectionObserver(es=>{
 },{threshold:.6});
 document.querySelectorAll('[data-count]').forEach(el=>cio.observe(el));
 
+/* ---------- texte crypté (privacy) ---------- */
+const crypt = document.getElementById('crypt');
+if(crypt && !q.has('once') && !reduced){
+  const FINAL = crypt.dataset.final, CHARS = '█▓▒░<>/\\|#*+=@01';
+  crypt.textContent = '';
+  const dio = new IntersectionObserver(es=>{
+    if(!es[0].isIntersecting) return;
+    dio.disconnect();
+    const t0 = performance.now(), D = 1500;
+    (function tick(now){
+      const k = Math.min((now-t0)/D, 1);
+      const solved = Math.floor(FINAL.length * k);
+      let s = FINAL.slice(0, solved);
+      for(let i=solved;i<FINAL.length;i++){
+        s += FINAL[i] === ' ' ? ' ' : CHARS[(Math.random()*CHARS.length)|0];
+      }
+      crypt.textContent = s;
+      if(k<1) requestAnimationFrame(tick);
+    })(t0);
+  },{threshold:.5});
+  dio.observe(crypt);
+}
+
+/* ---------- bandeaux marquee ---------- */
+const WORDS = ['Sommeil','Nutrition','Fitness','Mental','Finances','Carrière','Maison','Social','Voyage','Admin'];
+document.querySelectorAll('.band-track').forEach(track=>{
+  let html = '';
+  for(let r=0;r<4;r++) WORDS.forEach((w,i)=>{ html += (i%2 ? `<b>${w}</b>` : `<span>${w}</span>`) + '<i>∞</i>'; });
+  track.innerHTML = html + track.innerHTML;
+});
+
+/* ---------- curseur custom ---------- */
+const cur = document.getElementById('cur'), ring = document.getElementById('curring');
+let cx = innerWidth/2, cy = innerHeight/2, rx = cx, ry = cy;
+if(fine && !reduced){
+  document.body.classList.add('has-cursor');
+  addEventListener('pointermove', e=>{
+    cx = e.clientX; cy = e.clientY;
+    document.body.classList.add('cur-on');
+  }, {passive:true});
+  document.addEventListener('mouseleave', ()=>document.body.classList.remove('cur-on'));
+  document.querySelectorAll('a,.pole,.hl,button').forEach(el=>{
+    el.addEventListener('pointerenter', ()=>ring.classList.add('big'));
+    el.addEventListener('pointerleave', ()=>ring.classList.remove('big'));
+  });
+}
+
+/* ---------- tilt + halo cartes ---------- */
+if(fine && !reduced){
+  document.querySelectorAll('.tilt').forEach(card=>{
+    card.addEventListener('pointermove', e=>{
+      const r = card.getBoundingClientRect();
+      const px = (e.clientX - r.left)/r.width, py = (e.clientY - r.top)/r.height;
+      card.style.setProperty('--gx', (px*100)+'%');
+      card.style.setProperty('--gy', (py*100)+'%');
+      card.style.transform = `translateY(-5px) rotateX(${(0.5-py)*7}deg) rotateY(${(px-0.5)*7}deg)`;
+    });
+    card.addEventListener('pointerleave', ()=>{ card.style.transform = ''; });
+  });
+  /* boutons magnétiques */
+  document.querySelectorAll('.magnet').forEach(btn=>{
+    btn.addEventListener('pointermove', e=>{
+      const r = btn.getBoundingClientRect();
+      btn.style.transform = `translate(${(e.clientX-r.left-r.width/2)*.25}px, ${(e.clientY-r.top-r.height/2)*.35}px)`;
+    });
+    btn.addEventListener('pointerleave', ()=>{ btn.style.transform = ''; });
+  });
+}
+
 /* ---------- 3D ---------- */
-const q = new URLSearchParams(location.search);
 let renderer;
 try{
   renderer = new THREE.WebGLRenderer({canvas:document.getElementById('gl'), antialias:true, preserveDrawingBuffer:q.has('once')});
 }catch(e){ finishLoad(); }
+
+const progressBar = document.getElementById('progress');
+const dots = [...document.querySelectorAll('#dots a')];
+const heroWrap = document.getElementById('herowrap');
+const ghosts = [...document.querySelectorAll('[data-sp]')].map(el=>({el, sp:parseFloat(el.dataset.sp), top:0}));
+const bands = [...document.querySelectorAll('.band-track')].map(el=>({el, dir:+el.dataset.dir, x:0, w:0}));
+
+function measureDom(){
+  ghosts.forEach(g=>{
+    g.el.style.transform = '';
+    const r = g.el.getBoundingClientRect();
+    g.top = r.top + scrollY + r.height/2;
+  });
+  bands.forEach(b=>{ b.w = b.el.scrollWidth/2; });
+}
+measureDom();
 
 if(renderer){
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -370,14 +585,12 @@ if(renderer){
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
 
-  /* lumières */
   scene.add(new THREE.AmbientLight(0xffffff, .25));
   const key = new THREE.DirectionalLight(0xffffff, 3.2); key.position.set(3,5,6); scene.add(key);
   const back = new THREE.DirectionalLight(0xdfffd2, 1.6); back.position.set(-4,-2,-6); scene.add(back);
   const rim1 = new THREE.PointLight(0x3ce019, 160, 50); rim1.position.set(-7,3,-3); scene.add(rim1);
   const rim2 = new THREE.PointLight(0x3ce019, 90, 50); rim2.position.set(6,-4,3); scene.add(rim2);
 
-  /* l'infini : lemniscate 3D */
   class Lemniscate extends THREE.Curve{
     getPoint(t, target = new THREE.Vector3()){
       const a = 2.3, u = t * Math.PI * 2, d = 1 + Math.sin(u)*Math.sin(u);
@@ -388,9 +601,10 @@ if(renderer){
       );
     }
   }
+  const curve = new Lemniscate();
   const group = new THREE.Group();
   const tube = new THREE.Mesh(
-    new THREE.TubeGeometry(new Lemniscate(), 400, .5, 48, true),
+    new THREE.TubeGeometry(curve, 400, .5, 48, true),
     new THREE.MeshPhysicalMaterial({
       color:0x1c1c1f, roughness:.18, metalness:.25,
       clearcoat:1, clearcoatRoughness:.1, envMapIntensity:2.4,
@@ -398,30 +612,47 @@ if(renderer){
     })
   );
   group.add(tube);
+
+  /* double wireframe fantôme, contre-rotation */
+  const wire = new THREE.Mesh(
+    new THREE.TubeGeometry(curve, 140, .62, 10, true),
+    new THREE.MeshBasicMaterial({color:0x3ce019, wireframe:true, transparent:true, opacity:.07})
+  );
+  group.add(wire);
+
+  /* satellites en orbite */
+  const sats = new THREE.Group();
+  const satGeo = new THREE.SphereGeometry(.055, 12, 12);
+  const satMat = new THREE.MeshBasicMaterial({color:0x3ce019});
+  const SATN = 6;
+  for(let i=0;i<SATN;i++) sats.add(new THREE.Mesh(satGeo, satMat));
+  group.add(sats);
+
   scene.add(group);
 
-  /* particules */
-  const N = 900, pos = new Float32Array(N*3);
-  for(let i=0;i<N;i++){
-    pos[i*3]   = (Math.random()-.5)*36;
-    pos[i*3+1] = (Math.random()-.5)*22;
-    pos[i*3+2] = (Math.random()-.5)*24 - 4;
+  /* deux couches de particules (parallaxe de profondeur) */
+  function makePoints(n, spread, size, opacity, zoff){
+    const arr = new Float32Array(n*3);
+    for(let i=0;i<n;i++){
+      arr[i*3]   = (Math.random()-.5)*spread[0];
+      arr[i*3+1] = (Math.random()-.5)*spread[1];
+      arr[i*3+2] = (Math.random()-.5)*spread[2] + zoff;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(arr,3));
+    const p = new THREE.Points(g, new THREE.PointsMaterial({color:0x3ce019, size, transparent:true, opacity, depthWrite:false}));
+    scene.add(p); return p;
   }
-  const pgeo = new THREE.BufferGeometry();
-  pgeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
-  const points = new THREE.Points(pgeo, new THREE.PointsMaterial({
-    color:0x3ce019, size:.035, transparent:true, opacity:.45, depthWrite:false
-  }));
-  scene.add(points);
+  const ptsFar  = makePoints(700, [40,26,20], .03, .35, -8);
+  const ptsNear = makePoints(250, [30,18,10], .05, .5, -1);
 
-  /* keyframes par chapitre */
   const KF = [
-    {id:'hero',     cam:[0,-.4,7.2], pos:[0,.7,0],    rot:[.45,.2,0],   scale:1,    emi:0,   fov:42},
-    {id:'promesse', cam:[0,0,6.2],   pos:[2.6,.3,-1], rot:[.2,2.4,.15], scale:.8,   emi:0,   fov:42},
-    {id:'poles',    cam:[0,0,8],     pos:[-3,.9,-2.5],rot:[.9,4.6,.4],  scale:.6,   emi:0,   fov:46},
-    {id:'features', cam:[0,0,6.4],   pos:[2.7,-.3,-1],rot:[-.5,6.8,0],  scale:.75,  emi:0,   fov:42},
-    {id:'privacy',  cam:[0,0,6],     pos:[0,.25,-2.2],rot:[.35,9.4,1.57],scale:.62, emi:.22, fov:42},
-    {id:'cta',      cam:[0,.1,6.6],  pos:[0,.15,0],   rot:[.45,12.57,0],scale:.92,  emi:.04, fov:40},
+    {id:'hero',     cam:[0,-.4,7.2], pos:[0,.7,0],    rot:[.45,.2,0],   scale:1,    emi:0,   fov:42, bg:0x050505},
+    {id:'promesse', cam:[0,0,6.2],   pos:[2.6,.3,-1], rot:[.2,2.4,.15], scale:.8,   emi:0,   fov:42, bg:0x050607},
+    {id:'poles',    cam:[0,0,8],     pos:[-3,.9,-2.5],rot:[.9,4.6,.4],  scale:.6,   emi:0,   fov:46, bg:0x050505},
+    {id:'features', cam:[0,0,6.4],   pos:[2.7,-.3,-1],rot:[-.5,6.8,0],  scale:.75,  emi:0,   fov:42, bg:0x060506},
+    {id:'privacy',  cam:[0,0,6],     pos:[0,.25,-2.2],rot:[.35,9.4,1.57],scale:.62, emi:.22, fov:42, bg:0x03100a},
+    {id:'cta',      cam:[0,.1,6.6],  pos:[0,.15,0],   rot:[.45,12.57,0],scale:.92,  emi:.04, fov:40, bg:0x050505},
   ];
   let marks = [];
   function measure(){
@@ -436,8 +667,10 @@ if(renderer){
 
   const lerp = (a,b,k)=>a+(b-a)*k;
   const ease = k=>k<.5 ? 2*k*k : 1-Math.pow(-2*k+2,2)/2;
+  const bgA = new THREE.Color(), bgB = new THREE.Color();
 
-  let target = 0, smooth = 0, mx = 0, my = 0, smx = 0, smy = 0;
+  let target = 0, smooth = 0, mx = 0, my = 0, smx = 0, smy = 0, vel = 0, svel = 0, prevT = 0;
+  let curSeg = -1;
   function readScroll(){
     const H = document.documentElement.scrollHeight - innerHeight;
     target = H > 0 ? scrollY / H : 0;
@@ -451,7 +684,7 @@ if(renderer){
     camera.aspect = innerWidth/innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth, innerHeight);
-    measure(); readScroll();
+    measure(); measureDom(); readScroll();
   });
 
   function apply(p, t){
@@ -462,37 +695,84 @@ if(renderer){
     const A = KF[i], B = KF[i+1];
 
     camera.position.set(lerp(A.cam[0],B.cam[0],k), lerp(A.cam[1],B.cam[1],k), lerp(A.cam[2],B.cam[2],k));
-    camera.fov = lerp(A.fov,B.fov,k); camera.updateProjectionMatrix();
+    camera.fov = lerp(A.fov,B.fov,k) + Math.min(Math.abs(svel)*260, 5);
+    camera.updateProjectionMatrix();
 
     group.position.set(lerp(A.pos[0],B.pos[0],k), lerp(A.pos[1],B.pos[1],k), lerp(A.pos[2],B.pos[2],k));
     const s = lerp(A.scale,B.scale,k); group.scale.setScalar(s);
     group.rotation.set(
       lerp(A.rot[0],B.rot[0],k) + smy*.25,
-      lerp(A.rot[1],B.rot[1],k) + (reduced ? 0 : t*.07) + smx*.4,
+      lerp(A.rot[1],B.rot[1],k) + (reduced ? 0 : t*.07) + smx*.4 + svel*6,
       lerp(A.rot[2],B.rot[2],k)
     );
     tube.material.emissiveIntensity = lerp(A.emi,B.emi,k);
+    wire.rotation.y = -t*.12 - svel*4;
+    wire.material.opacity = .05 + Math.min(Math.abs(svel)*8, .14);
+
+    for(let j=0;j<SATN;j++){
+      const a = t*.35 + j*(Math.PI*2/SATN) + p*9;
+      sats.children[j].position.set(Math.cos(a)*3.1, Math.sin(a*1.3)*.9, Math.sin(a)*1.6);
+      sats.children[j].scale.setScalar(.7 + Math.sin(t*2+j)*.3);
+    }
+
+    bgA.setHex(A.bg); bgB.setHex(B.bg);
+    scene.background.lerpColors(bgA, bgB, k);
+    scene.fog.color.copy(scene.background);
 
     camera.lookAt(group.position.x*.35, group.position.y*.35, 0);
-    points.rotation.y = t*.012;
+    ptsFar.rotation.y = t*.01;  ptsFar.position.y = p*2.5;
+    ptsNear.rotation.y = -t*.016; ptsNear.position.y = p*5;
+
+    /* ------- DOM vivant ------- */
+    const scY = p * (document.documentElement.scrollHeight - innerHeight);
+    progressBar.style.width = (p*100).toFixed(2) + '%';
+    const ai = k > .55 ? Math.min(i+1, dots.length-1) : i;
+    if(ai !== curSeg){
+      curSeg = ai;
+      dots.forEach((d,di)=>d.classList.toggle('on', di === ai));
+    }
+    if(!reduced){
+      const hp = Math.min(scY/innerHeight, 1);
+      heroWrap.style.transform = `translateY(${hp*-70}px)`;
+      heroWrap.style.opacity = String(1 - hp*1.15);
+      ghosts.forEach(g=>{
+        const rel = (scY + innerHeight/2) - g.top;
+        if(Math.abs(rel) < innerHeight*1.6) g.el.style.transform = `translate3d(0,${(rel*g.sp).toFixed(1)}px,0)`;
+      });
+    }
   }
 
-  let started = false;
+  let started = false, lastMs = 0;
   renderer.setAnimationLoop((ms)=>{
-    const t = ms/1000;
+    const t = ms/1000, dt = Math.min((ms-lastMs)/1000 || .016, .05); lastMs = ms;
+    vel = target - prevT; prevT = target;
+    svel += (vel - svel)*.08;
     smooth += (target-smooth) * (reduced ? 1 : .065);
     smx += (mx-smx)*.05; smy += (my-smy)*.05;
     apply(smooth, t);
+
+    if(!reduced) bands.forEach(b=>{
+      b.x += b.dir * (55 + Math.min(Math.abs(svel)*26000, 340)) * dt;
+      const w = b.w || 1;
+      b.el.style.transform = `translateX(${-(((b.x % w) + w) % w)}px)`;
+    });
+
+    if(fine && !reduced){
+      rx += (cx-rx)*.16; ry += (cy-ry)*.16;
+      cur.style.transform = `translate(${cx}px,${cy}px)`;
+      ring.style.transform = `translate(${rx}px,${ry}px)`;
+    }
+
     renderer.render(scene, camera);
     if(!started){ started = true; finishLoad(); }
   });
 
-  /* position de départ (debug/screenshot : ?s=0..1, ?once=1 fige après une frame) */
+  /* position de départ (debug/screenshot : ?s=0..1, ?kf=N, ?vh=N, ?once=1) */
   if(q.has('s')){
     const H = document.documentElement.scrollHeight - innerHeight;
     scrollTo(0, parseFloat(q.get('s')) * H);
     readScroll(); smooth = target;
-    document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
+    document.querySelectorAll('.reveal,.split').forEach(el=>el.classList.add('in'));
   } else {
     readScroll();
   }
@@ -502,9 +782,9 @@ if(renderer){
       if(q.has('kf')) target = marks[Math.min(+q.get('kf'), marks.length-1)];
       if(q.has('vh')){
         document.querySelector('main').style.marginTop = `-${parseFloat(q.get('vh'))*100}vh`;
-        document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
+        document.querySelectorAll('.reveal,.split').forEach(el=>el.classList.add('in'));
       }
-      smooth = target; smx = mx; smy = my;
+      smooth = target; smx = mx; smy = my; svel = 0;
       apply(smooth, 1.5);
       renderer.render(scene, camera);
       const img = new Image();
