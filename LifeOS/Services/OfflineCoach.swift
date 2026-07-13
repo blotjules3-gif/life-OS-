@@ -83,12 +83,14 @@ enum OfflineCoach {
         var streak = 0
         var day = cal.startOfDay(for: .now)
         // Le jour courant ne casse pas la série s'il n'est pas encore fait.
-        if !habit.completions.contains(where: { cal.isDate($0.date, inSameDayAs: day) }) {
-            day = cal.date(byAdding: .day, value: -1, to: day)!
+        if !habit.completions.contains(where: { cal.isDate($0.date, inSameDayAs: day) }),
+           let prev = cal.date(byAdding: .day, value: -1, to: day) {
+            day = prev
         }
         while habit.completions.contains(where: { cal.isDate($0.date, inSameDayAs: day) }) {
             streak += 1
-            day = cal.date(byAdding: .day, value: -1, to: day)!
+            guard let prev = cal.date(byAdding: .day, value: -1, to: day) else { break }
+            day = prev
         }
         return streak
     }
