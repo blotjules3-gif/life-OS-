@@ -51,6 +51,19 @@ struct ModuleChatView: View {
     }
 
     var body: some View {
+        Group {
+            if !disclaimerAccepted {
+                CoachDisclaimerSheet(
+                    onAccept: { disclaimerAccepted = true },
+                    onDismiss: { dismiss() }
+                )
+            } else {
+                chatContent
+            }
+        }
+    }
+
+    private var chatContent: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 messagesScrollView
@@ -74,9 +87,28 @@ struct ModuleChatView: View {
             } message: {
                 Text(errorMessage ?? "")
             }
+            .alert(
+                "Signaler cette réponse ?",
+                isPresented: Binding(
+                    get: { messageToReport != nil },
+                    set: { if !$0 { messageToReport = nil } }
+                ),
+                presenting: messageToReport
+            ) { msg in
+                Button("Signaler", role: .destructive) { submitReport(msg) }
+                Button("Annuler", role: .cancel) { messageToReport = nil }
+            } message: { _ in
+                Text("Nous relisons chaque signalement pour bloquer les réponses inappropriées.")
+            }
+            .alert("Signalement envoyé", isPresented: $reportConfirmed) {
+                Button("OK") { reportConfirmed = false }
+            } message: {
+                Text("Merci, nous allons relire cette réponse.")
+            }
         }
         .onAppear {
             sendWelcomeMessage()
+            Task { await RemoteConfig.shared.refreshIfNeeded() }
         }
     }
 
