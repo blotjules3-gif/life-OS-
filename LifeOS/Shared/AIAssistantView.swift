@@ -902,6 +902,7 @@ struct AIAssistantView: View {
                 vm.inputText = prefill
                 inputFocused = true
             }
+            await RemoteConfig.shared.refreshIfNeeded()
         }
     }
 
