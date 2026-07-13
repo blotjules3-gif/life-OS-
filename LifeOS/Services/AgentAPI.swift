@@ -421,8 +421,6 @@ actor AgentAPI {
         try validateResponse(data: data, response: response)
     }
 
-    // MARK: - Signalement d'un message coach
-
     func reportMessage(
         conversationID: String?,
         messageContent: String,
@@ -443,12 +441,8 @@ actor AgentAPI {
         let _: [String: String] = try await post(path: "/api/v1/chat/report", body: body)
     }
 
-    // MARK: - Remote config (feature flags)
-
-    func fetchRemoteConfig() async throws -> CachedConfig {
-        return try await get(path: "/api/v1/config", queryItems: [
-            URLQueryItem(name: "device_id", value: deviceID)
-        ])
+    func fetchRemoteConfig() async throws -> RemoteConfig.Snapshot {
+        try await get(path: "/api/v1/config")
     }
 
     // MARK: - Helpers
