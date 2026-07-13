@@ -17,7 +17,7 @@ enum LocalCoach {
 
         // Salutations
         if matches(t, ["bonjour", "salut", "coucou", "hello", "hey", "yo ", "cava", "ca va", "comment vas"]) && t.count < 30 {
-            return "\(greet(name)) 👋 Je suis ton coach LifeOS, et je marche entièrement sur ton iPhone. "
+            return "\(greet(name)) Je suis ton coach LifeOS, et je marche entièrement sur ton iPhone. "
                 + statusLine(ctx) + "\n\nJe peux te créer une habitude, une tâche, une note, logger un verre d'eau, ou te faire un bilan. Dis-moi."
         }
 
