@@ -216,7 +216,7 @@ enum LocalCoach {
         if habits.isEmpty {
             return "Tu n'as pas encore d'habitude 🌱 Dis-moi laquelle créer (ex. « crée une habitude Méditer 10 min ») et je m'en occupe."
         }
-        var lines = ["🔥 **Tes habitudes**", ""]
+        var lines = ["**Tes habitudes**", ""]
         for h in habits {
             let streak = currentStreak(h)
             let doneToday = h.completions.contains { Calendar.current.isDateInToday($0.date) }
