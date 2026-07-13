@@ -81,12 +81,12 @@ final class AIAssistantViewModel: ObservableObject {
     @Published var messages: [DisplayMessage] = []
     @Published var inputText = ""
     @Published var isLoading = false
-    @Published var errorBanner: String? = nil
+    @Published var errorBanner: String?
     @Published var isServerOffline = false
-    @Published var pendingModuleSetup: AppCategory? = nil
-    @Published var actionToast: ActionToast? = nil
-    @Published var revealID: UUID? = nil
-    @Published var streamingText: String? = nil
+    @Published var pendingModuleSetup: AppCategory?
+    @Published var actionToast: ActionToast?
+    @Published var revealID: UUID?
+    @Published var streamingText: String?
     @Published var showAddFlow = false
     @Published var addFlowKind: AddAnythingSheet.Kind = .task
     @Published var addFlowPrefill = ""

@@ -9,7 +9,7 @@ struct LifeOSApp: App {
     @State private var appLock = AppLock.shared
     @Environment(\.scenePhase) private var scenePhase
 
-    @State private var container: ModelContainer? = nil
+    @State private var container: ModelContainer?
     @State private var migrationFailed = false
     @State private var storeWasReset = false
     @AppStorage("onboardingDone") private var onboardingDone = false

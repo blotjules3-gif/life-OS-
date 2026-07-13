@@ -24,7 +24,7 @@ struct DailyBriefingView: View {
     @Environment(\.modelContext) private var ctx
 
     @State private var waveActive = false
-    @State private var aiBriefing: String? = nil
+    @State private var aiBriefing: String?
     @State private var briefingFailed = false
     @State private var briefingLoading = false
     @State private var briefingGoals: [GoalOut] = []

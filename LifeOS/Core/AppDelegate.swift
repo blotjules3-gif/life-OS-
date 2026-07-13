@@ -36,7 +36,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         )
 
         // Catégorie CONFIRMATION — « Tu as bien fait X ? » avec 2 boutons.
-        let yes = UNNotificationAction(identifier: "CONFIRM_YES", title: "Oui ✓", options: [])
+        let yes = UNNotificationAction(identifier: "CONFIRM_YES", title: "Oui", options: [])
         let no  = UNNotificationAction(identifier: "CONFIRM_NO",  title: "Pas encore", options: [])
         let confirmCategory = UNNotificationCategory(
             identifier: "LIFEOS_CONFIRM",

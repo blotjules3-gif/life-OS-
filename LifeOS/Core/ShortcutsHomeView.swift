@@ -150,10 +150,10 @@ struct ShortcutsHomeView: View {
     @AppStorage("todayEnergyScore") private var todayEnergyScore = 0
     @AppStorage("todayEnergyLabel") private var todayEnergyLabel = ""
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
-    @State private var reengageMessage: String? = nil
-    @State private var reengageSuggestion: String? = nil
+    @State private var reengageMessage: String?
+    @State private var reengageSuggestion: String?
     @State private var showReengage = true
-    @State private var weeklyModuleSuggestion: AppCategory? = nil
+    @State private var weeklyModuleSuggestion: AppCategory?
 
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
@@ -192,7 +192,7 @@ struct ShortcutsHomeView: View {
     @State private var animatedHabitIDs: Set<PersistentIdentifier> = []
     @State private var moodDismissed = false
     @State private var showBilan = false
-    @State private var fullScreenTool: ShortcutTool? = nil
+    @State private var fullScreenTool: ShortcutTool?
     @AppStorage("tutorialDone") private var tutorialDone = false
     @State private var showTutorial = false
     @State private var editingShortcuts = false
@@ -1037,9 +1037,9 @@ struct WeeklyBilanView: View {
     @Query private var foods: [FoodEntry]
     @Query(sort: \MoodEntry.date, order: .reverse) private var moods: [MoodEntry]
 
-    @State private var aiBilan: String? = nil
+    @State private var aiBilan: String?
     @State private var bilanLoading = false
-    @State private var shareImage: UIImage? = nil
+    @State private var shareImage: UIImage?
     @AppStorage("lastWeeklyBilanText") private var cachedBilan = ""
     @AppStorage("lastWeeklyBilanDate") private var cachedBilanDate = 0.0
 

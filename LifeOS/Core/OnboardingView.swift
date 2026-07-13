@@ -74,7 +74,7 @@ struct OnboardingView: View {
     @State private var gender = ""
     @State private var hasCycle = false
     @State private var hormonalContext = ""
-    @State private var lifeProfile: LifeProfile? = nil
+    @State private var lifeProfile: LifeProfile?
     @State private var goals: Set<OnboardingGoal> = []
     @State private var interests: Set<AppCategory> = []
     @State private var wakeHour = 7

@@ -203,7 +203,7 @@ final class PhraseSpeaker {
 
 struct PhrasebookView: View {
     @AppStorage("phraseLang") private var langKey = "en"
-    @State private var spoken: String? = nil
+    @State private var spoken: String?
 
     private var lang: TravelLang { phraseLangs.first { $0.key == langKey } ?? phraseLangs[0] }
 

@@ -51,7 +51,7 @@ struct MainTabView: View {
     @State private var catPath: [AppCategory] = []
     @State private var showAIAssistant = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var aiPrefill: String? = nil
+    @State private var aiPrefill: String?
 
     @AppStorage("appTheme") private var appThemeRaw = "classic"
     private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }

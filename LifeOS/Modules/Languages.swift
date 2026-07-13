@@ -50,7 +50,7 @@ struct LanguagesView: View {
     @AppStorage("vocabStreak") private var streak = 0
 
     @State private var revealed = false
-    @State private var current: (String, String)? = nil
+    @State private var current: (String, String)?
 
     private var pack: LangPack { langPacks.first { $0.id == lang } ?? langPacks[0] }
 

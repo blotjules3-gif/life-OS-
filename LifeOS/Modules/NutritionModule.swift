@@ -109,9 +109,9 @@ struct FoodEditor: View {
     // Recherche OpenFoodFacts (des millions de produits, ex : Nutella)
     @State private var results: [FoodProduct] = []
     @State private var searching = false
-    @State private var picked: FoodProduct? = nil
+    @State private var picked: FoodProduct?
     @State private var grams = "100"
-    @State private var searchTask: Task<Void, Never>? = nil
+    @State private var searchTask: Task<Void, Never>?
 
     private var factor: Double { (Double(grams) ?? 0) / 100 }
 
@@ -492,7 +492,7 @@ struct SupplementsView: View {
     @State private var time = Date()
     @State private var withFood = true
     @State private var confirm = true
-    @State private var reco: SuppReco? = nil
+    @State private var reco: SuppReco?
 
     var body: some View {
         ZStack {

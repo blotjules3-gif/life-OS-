@@ -130,7 +130,7 @@ struct DataExportSheet: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
 
-    @State private var result: DataExporter.Result? = nil
+    @State private var result: DataExporter.Result?
     @State private var failed = false
 
     var body: some View {
