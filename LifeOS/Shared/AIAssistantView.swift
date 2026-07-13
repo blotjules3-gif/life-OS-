@@ -222,35 +222,10 @@ final class AIAssistantViewModel: ObservableObject {
         isLoading = true
 
         Task {
-            do {
-                let response = try await AgentAPI.shared.chat(
-                    message: prompt,
-                    module: nil,
-                    conversationID: conversationID.isEmpty ? nil : conversationID
-                )
-                conversationID = response.conversation_id
-                isServerOffline = false
-                removeThinking()
-                appendAssistantMessage(response.reply, actions: response.actions ?? [])
-                for action in (response.actions ?? []) {
-                    await execute(action: action)
-                }
-            } catch {
-                removeThinking()
-                if let apiErr = error as? AgentAPIError {
-                    switch apiErr {
-                    case .networkError(let underlying):
-                        let urlErr = underlying as? URLError
-                        if urlErr?.code == .notConnectedToInternet || urlErr?.code == .networkConnectionLost {
-                            isServerOffline = true
-                        }
-                    case .invalidResponse(404):
-                        conversationID = ""
-                    default:
-                        break
-                    }
-                }
-            }
+            let reply = await OnDeviceLLM.respond(to: prompt, ctx: modelContext)
+            isServerOffline = false
+            removeThinking()
+            appendAssistantMessage(reply.text, actions: [])
             isLoading = false
         }
     }
