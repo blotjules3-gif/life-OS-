@@ -115,7 +115,7 @@ enum LocalCoach {
         // Calories / repas
         if matches(t, ["calorie", "kcal", "manger", "mange", "repas", "nutrition"]) {
             let (kcal, goal) = calories(ctx)
-            return "🍽️ Aujourd'hui : \(kcal) / \(goal) kcal. "
+            return "Aujourd'hui : \(kcal) / \(goal) kcal. "
                 + (kcal == 0 ? "Rien de logué pour l'instant — scanne un produit ou envoie-moi une photo de ton assiette." : "Il te reste ~\(max(0, goal - kcal)) kcal pour la journée.")
         }
 
