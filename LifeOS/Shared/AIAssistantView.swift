@@ -821,6 +821,19 @@ struct AIAssistantView: View {
     }
 
     var body: some View {
+        Group {
+            if !disclaimerAccepted {
+                CoachDisclaimerSheet(
+                    onAccept: { disclaimerAccepted = true },
+                    onDismiss: { dismiss() }
+                )
+            } else {
+                chatContent
+            }
+        }
+    }
+
+    private var chatContent: some View {
         NavigationStack {
             messagesArea
                 .background(Theme.bg.ignoresSafeArea())
