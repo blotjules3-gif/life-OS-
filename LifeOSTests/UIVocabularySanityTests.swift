@@ -9,9 +9,7 @@ final class UIVocabularySanityTests: XCTestCase {
 
     /// Fichiers historiques contenant encore un « IA » / « LLM » dans une chaîne UI.
     /// Chemins relatifs à la racine du repo.
-    private let grandfathered: Set<String> = [
-        "LifeOS/Modules/PoleSetups.swift",
-    ]
+    private let grandfathered: Set<String> = []
 
     /// La regex ne matche que si le token est dans une chaîne littérale `"..."`.
     /// Les commentaires `//` n'ont pas de quotes autour du token → pas de faux positif.
