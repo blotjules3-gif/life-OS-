@@ -864,7 +864,7 @@ struct AIAssistantView: View {
             }
             .coachReportAlerts(
                 for: $messageToReport,
-                content: { $0.text },
+                messageText: { $0.text },
                 conversationID: {
                     let raw = UserDefaults.standard.string(forKey: "aiConversationID") ?? ""
                     return raw.isEmpty ? nil : raw
