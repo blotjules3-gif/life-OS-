@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import from pydantic import BaseModel, Field
+
+from pydantic import BaseModel, Field
 
 
 class GoalCreate(BaseModel):
