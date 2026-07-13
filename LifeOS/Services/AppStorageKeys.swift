@@ -17,7 +17,7 @@ enum AppStorageKeys {
     // MARK: - Identité & profil
     static let userName            = "userName"
     static let userGender          = "userGender"
-    static let userLifeProfile     = "userLifeProfile"
+    static let userLifeProfile     = "lifeProfile"
     static let userHasCycle        = "userHasCycle"
     static let appTheme            = "appTheme"
 
