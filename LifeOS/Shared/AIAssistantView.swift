@@ -984,10 +984,17 @@ struct AIAssistantView: View {
 
                     // Messages
                     ForEach(vm.messages) { msg in
-                        MessageRow(message: msg, accent: accent, reveal: msg.id == vm.revealID)
-                            .id(msg.id)
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 8)
+                        MessageRow(
+                            message: msg,
+                            accent: accent,
+                            reveal: msg.id == vm.revealID,
+                            onReport: msg.role == "assistant" && !msg.isThinking
+                                ? { messageToReport = msg }
+                                : nil
+                        )
+                        .id(msg.id)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 8)
                     }
 
                     // Réponse en cours de streaming (mise à jour token par token)
