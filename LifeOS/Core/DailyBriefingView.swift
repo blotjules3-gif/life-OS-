@@ -417,26 +417,30 @@ struct DailyBriefingView: View {
 
     private func submitCheckin() {
         checkinSubmitting = true
-        Task {
-            if let result = try? await AgentAPI.shared.logCheckin(
-                sleepQuality: sleepQuality > 0 ? sleepQuality : nil,
-                sleepHours: sleepHours > 0 ? Double(sleepHours) : nil,
-                mood: morningMood > 0 ? morningMood : nil,
-                fatigue: morningFatigue > 0 ? morningFatigue : nil,
-                waterML: waterToday > 0 ? waterToday : nil,
-                habitsDone: habitsDone,
-                habitsTotal: habits.count > 0 ? habits.count : nil
-            ) {
-                await MainActor.run {
-                    todayEnergyScore = result.energy_score ?? 0
-                    todayEnergyLabel = result.label ?? ""
-                }
-            }
-            await MainActor.run {
-                checkinSubmitting = false
-                withAnimation(.spring(duration: 0.4, bounce: 0.1)) { checkinDone = true }
-            }
+        // Écriture locale + calcul score on-device. Aucun POST réseau.
+        if sleepQuality > 0 || sleepHours > 0 {
+            UserDefaults.standard.set(sleepQuality, forKey: "lastSleepQuality")
+            UserDefaults.standard.set(Double(sleepHours), forKey: "lastSleepHours")
+            UserDefaults.standard.set(Date.now.timeIntervalSince1970, forKey: "lastSleepCheckDate")
         }
+        if morningMood > 0 { ctx.insert(MoodEntry(score: morningMood, note: "")) }
+        do { try ctx.save() } catch { print("[SwiftData] saveBriefingCheckin failed: \(error)") }
+
+        let manual = EnergyScore.Input(
+            sleepHours: sleepHours > 0 ? Double(sleepHours) : nil,
+            sleepQuality: sleepQuality > 0 ? sleepQuality : nil,
+            mood: morningMood > 0 ? morningMood : nil,
+            fatigue: morningFatigue > 0 ? morningFatigue : nil,
+            waterML: waterToday > 0 ? waterToday : nil,
+            habitsDone: habitsDone,
+            habitsTotal: habits.count > 0 ? habits.count : nil
+        )
+        let result = EnergyScore.compute(manual)
+        todayEnergyScore = result.score
+        todayEnergyLabel = result.label
+
+        checkinSubmitting = false
+        withAnimation(.spring(duration: 0.4, bounce: 0.1)) { checkinDone = true }
     }
 
     // MARK: - Bandeau voix
