@@ -214,7 +214,7 @@ enum LocalCoach {
     private static func habitsReport(_ ctx: ModelContext) -> String {
         let habits = (try? ctx.fetch(FetchDescriptor<Habit>())) ?? []
         if habits.isEmpty {
-            return "Tu n'as pas encore d'habitude 🌱 Dis-moi laquelle créer (ex. « crée une habitude Méditer 10 min ») et je m'en occupe."
+            return "Tu n'as pas encore d'habitude. Dis-moi laquelle créer (ex. « crée une habitude Méditer 10 min ») et je m'en occupe."
         }
         var lines = ["**Tes habitudes**", ""]
         for h in habits {
