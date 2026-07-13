@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LifeOS — Toute ta vie. Une seule app.</title>
-<meta name="description" content="LifeOS : la super-app iOS qui réunit sommeil, nutrition, fitness, finances, productivité et 11 autres pôles de ta vie. 100 % local, 100 % privé.">
+<meta name="description" content="LifeOS : la super-app iOS qui réunit 16 pôles de ta vie. 100 % local, 100 % privé. Expérience 3D.">
 <link rel="icon" type="image/png" href="icon.png">
 <meta property="og:title" content="LifeOS — Toute ta vie. Une seule app.">
 <meta property="og:description" content="16 pôles, 142 écrans, 0 donnée qui quitte ton iPhone.">
@@ -13,190 +13,187 @@
   :root{
     --green:#3ce019;
     --green-dark:#2bb90e;
-    --ink:#0a0a0a;
-    --ink-soft:#5c5c60;
-    --bg:#ffffff;
-    --bg-soft:#f5f5f7;
-    --radius:24px;
+    --bg:#050505;
+    --ink:#f4f4f2;
+    --ink-soft:#9a9a9e;
+    --line:rgba(255,255,255,.08);
+    --glass:rgba(255,255,255,.04);
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  html{scroll-behavior:smooth}
+  html{scroll-behavior:auto}
   body{
     font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    color:var(--ink);background:var(--bg);
-    -webkit-font-smoothing:antialiased;
-    line-height:1.5;overflow-x:hidden;
+    background:var(--bg);color:var(--ink);
+    -webkit-font-smoothing:antialiased;line-height:1.5;overflow-x:hidden;
   }
   a{color:inherit;text-decoration:none}
-  img{max-width:100%}
+  ::selection{background:var(--green);color:#000}
+
+  /* ---------- LOADER ---------- */
+  #loader{
+    position:fixed;inset:0;z-index:300;background:var(--bg);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+    transition:opacity .8s ease,visibility .8s;
+  }
+  #loader.done{opacity:0;visibility:hidden}
+  #loader .inf{
+    font-size:64px;font-weight:800;color:var(--green);line-height:1;
+    text-shadow:0 0 40px rgba(60,224,25,.6);
+    animation:pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.12);opacity:.7}}
+  #loader .pct{font-size:13px;letter-spacing:.3em;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+
+  /* ---------- CANVAS & GRAIN ---------- */
+  #gl{position:fixed;inset:0;z-index:0;display:block}
+  .grain{
+    position:fixed;inset:-100%;z-index:1;pointer-events:none;opacity:.06;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    animation:grain 8s steps(10) infinite;
+  }
+  @keyframes grain{
+    0%,100%{transform:translate(0,0)}10%{transform:translate(-5%,-8%)}30%{transform:translate(3%,-5%)}
+    50%{transform:translate(-8%,3%)}70%{transform:translate(6%,8%)}90%{transform:translate(-3%,5%)}
+  }
 
   /* ---------- NAV ---------- */
   nav{
     position:fixed;top:0;left:0;right:0;z-index:100;
-    backdrop-filter:saturate(180%) blur(20px);
-    -webkit-backdrop-filter:saturate(180%) blur(20px);
-    background:rgba(255,255,255,.72);
-    border-bottom:1px solid rgba(0,0,0,.06);
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    background:rgba(5,5,5,.5);border-bottom:1px solid var(--line);
   }
-  .nav-inner{
-    max-width:1080px;margin:0 auto;padding:0 22px;
-    height:52px;display:flex;align-items:center;justify-content:space-between;
-  }
-  .nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.02em}
+  .nav-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
+  .nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;letter-spacing:.02em}
   .nav-brand img{width:26px;height:26px;border-radius:7px}
-  .nav-links{display:flex;gap:26px;font-size:13.5px;color:var(--ink-soft)}
-  .nav-links a:hover{color:var(--ink)}
-  .nav-cta{
-    font-size:13px;font-weight:600;padding:7px 16px;border-radius:99px;
-    background:var(--ink);color:#fff;transition:.25s;
-  }
-  .nav-cta:hover{background:var(--green-dark)}
+  .nav-links{display:flex;gap:24px;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+  .nav-links a:hover{color:var(--green)}
   @media(max-width:640px){.nav-links{display:none}}
+  .nav-cta{font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:8px 18px;border-radius:99px;border:1px solid var(--line);transition:.3s}
+  .nav-cta:hover{border-color:var(--green);color:var(--green);box-shadow:0 0 24px rgba(60,224,25,.25)}
 
-  /* ---------- HERO ---------- */
-  header{
-    padding:140px 22px 90px;text-align:center;position:relative;
+  /* ---------- CONTENT ---------- */
+  main{position:relative;z-index:2}
+  .chapter{min-height:100vh;display:flex;align-items:center;padding:120px 24px}
+  .wrap{max-width:1150px;margin:0 auto;width:100%}
+
+  .kicker{
+    font-size:12px;font-weight:700;color:var(--green);
+    text-transform:uppercase;letter-spacing:.28em;margin-bottom:20px;display:flex;align-items:center;gap:12px;
   }
-  .hero-badge{
-    display:inline-flex;align-items:center;gap:8px;
-    font-size:13px;font-weight:600;color:var(--green-dark);
-    background:rgba(60,224,25,.1);border:1px solid rgba(60,224,25,.25);
-    padding:6px 14px;border-radius:99px;margin-bottom:28px;
-  }
-  .hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
-  h1{
-    font-size:clamp(44px,8vw,84px);line-height:1.03;letter-spacing:-.035em;font-weight:800;
-    max-width:900px;margin:0 auto 22px;
-  }
+  .kicker::before{content:"";width:34px;height:1px;background:var(--green)}
+  h1{font-size:clamp(52px,10vw,128px);line-height:.98;letter-spacing:-.04em;font-weight:800}
   h1 .accent{
-    background:linear-gradient(120deg,var(--green-dark),var(--green));
+    background:linear-gradient(110deg,var(--green) 20%,#baff9e 50%,var(--green-dark) 80%);
     -webkit-background-clip:text;background-clip:text;color:transparent;
   }
-  .hero-sub{
-    font-size:clamp(17px,2.4vw,22px);color:var(--ink-soft);max-width:620px;margin:0 auto 40px;font-weight:500;
-  }
-  .hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-  .btn{
-    display:inline-flex;align-items:center;gap:8px;
-    padding:14px 30px;border-radius:99px;font-size:16px;font-weight:600;transition:.25s;
-  }
-  .btn-primary{background:var(--ink);color:#fff}
-  .btn-primary:hover{background:var(--green-dark);transform:translateY(-2px)}
-  .btn-ghost{background:var(--bg-soft);color:var(--ink)}
-  .btn-ghost:hover{background:#ebebee;transform:translateY(-2px)}
-  .hero-icon{
-    width:min(340px,70vw);margin:70px auto 0;display:block;
-    border-radius:56px;
-    box-shadow:0 40px 90px -30px rgba(60,224,25,.55),0 25px 60px -20px rgba(0,0,0,.25);
-    transition:transform .5s cubic-bezier(.2,.8,.2,1);
-  }
-  .hero-icon:hover{transform:scale(1.03) rotate(-1deg)}
+  h2{font-size:clamp(36px,6vw,72px);letter-spacing:-.035em;line-height:1.02;font-weight:800;max-width:820px}
+  .sub{font-size:clamp(16px,2vw,20px);color:var(--ink-soft);max-width:560px;margin-top:24px;font-weight:400}
 
-  /* ---------- STATS ---------- */
-  .stats{
-    max-width:1080px;margin:30px auto 0;padding:0 22px;
-    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+  /* hero */
+  #hero{align-items:flex-end;padding-bottom:12vh;position:relative}
+  #hero .badge{
+    display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:600;letter-spacing:.08em;
+    color:var(--ink-soft);border:1px solid var(--line);background:rgba(5,5,5,.4);
+    padding:8px 16px;border-radius:99px;margin-bottom:30px;backdrop-filter:blur(8px);
   }
-  .stat{
-    background:var(--bg-soft);border-radius:var(--radius);padding:34px 20px;text-align:center;
+  #hero .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+  .scroll-hint{
+    position:absolute;bottom:34px;left:50%;transform:translateX(-50%);
+    font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--ink-soft);
+    display:flex;flex-direction:column;align-items:center;gap:10px;
   }
-  .stat b{display:block;font-size:clamp(30px,4.5vw,44px);letter-spacing:-.03em;font-weight:800}
-  .stat b em{font-style:normal;color:var(--green-dark)}
-  .stat span{font-size:14px;color:var(--ink-soft);font-weight:500}
+  .scroll-hint::after{
+    content:"";width:1px;height:44px;
+    background:linear-gradient(to bottom,var(--green),transparent);
+    animation:drop 1.8s ease-in-out infinite;
+  }
+  @keyframes drop{0%{transform:scaleY(0);transform-origin:top}45%{transform:scaleY(1);transform-origin:top}55%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+  /* stats */
+  .stats{margin-top:64px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}
+  .stat{background:rgba(5,5,5,.55);backdrop-filter:blur(8px);padding:38px 26px}
+  .stat b{display:block;font-size:clamp(38px,5.5vw,68px);letter-spacing:-.04em;font-weight:800;font-variant-numeric:tabular-nums}
+  .stat b em{font-style:normal;color:var(--green);text-shadow:0 0 30px rgba(60,224,25,.4)}
+  .stat span{font-size:13px;color:var(--ink-soft);letter-spacing:.05em;text-transform:uppercase}
   @media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
 
-  /* ---------- SECTIONS ---------- */
-  section{max-width:1080px;margin:0 auto;padding:110px 22px 0}
-  .kicker{
-    font-size:14px;font-weight:700;color:var(--green-dark);
-    text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px;
-  }
-  h2{font-size:clamp(32px,5vw,52px);letter-spacing:-.03em;line-height:1.08;font-weight:800;max-width:700px}
-  .section-sub{font-size:18px;color:var(--ink-soft);max-width:600px;margin-top:16px}
-
-  /* ---------- POLES GRID ---------- */
-  .poles{
-    margin-top:54px;display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;
-  }
+  /* poles */
+  .poles{margin-top:60px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
   .pole{
-    background:var(--bg-soft);border-radius:20px;padding:24px 22px;
-    transition:.3s cubic-bezier(.2,.8,.2,1);border:1px solid transparent;
+    background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:24px 22px;
+    backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    transition:transform .4s cubic-bezier(.2,.8,.2,1),border-color .4s,box-shadow .4s;
+    will-change:transform;
   }
   .pole:hover{
-    transform:translateY(-4px);background:#fff;
-    border-color:rgba(60,224,25,.35);
-    box-shadow:0 20px 40px -18px rgba(0,0,0,.15);
+    transform:translateY(-5px);border-color:rgba(60,224,25,.5);
+    box-shadow:0 24px 50px -20px rgba(60,224,25,.25);
   }
-  .pole .emoji{font-size:26px;display:block;margin-bottom:12px}
-  .pole h3{font-size:16.5px;font-weight:700;letter-spacing:-.01em;margin-bottom:5px}
-  .pole p{font-size:13.5px;color:var(--ink-soft)}
+  .pole .num{font-size:11px;color:var(--green);letter-spacing:.2em;display:block;margin-bottom:14px;font-variant-numeric:tabular-nums}
+  .pole h3{font-size:16px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
+  .pole p{font-size:13px;color:var(--ink-soft);line-height:1.55}
 
-  /* ---------- HIGHLIGHTS ---------- */
-  .highlights{margin-top:54px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  /* features */
+  .highlights{margin-top:60px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
   .hl{
-    border-radius:var(--radius);padding:36px 30px;min-height:230px;
-    display:flex;flex-direction:column;justify-content:flex-end;
-    background:var(--bg-soft);position:relative;overflow:hidden;
+    border:1px solid var(--line);border-radius:20px;padding:34px 28px;min-height:230px;
+    display:flex;flex-direction:column;justify-content:flex-end;position:relative;
+    background:var(--glass);backdrop-filter:blur(10px);transition:.4s;
   }
-  .hl.dark{background:var(--ink);color:#fff}
-  .hl.green{background:linear-gradient(150deg,var(--green),var(--green-dark));color:#062b00}
-  .hl .tag{
-    position:absolute;top:26px;left:30px;font-size:12px;font-weight:700;
-    text-transform:uppercase;letter-spacing:.1em;opacity:.55;
-  }
-  .hl h3{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
-  .hl p{font-size:14.5px;opacity:.75}
+  .hl:hover{border-color:rgba(60,224,25,.45)}
+  .hl.green{background:linear-gradient(150deg,rgba(60,224,25,.16),rgba(60,224,25,.05));border-color:rgba(60,224,25,.3)}
+  .hl .tag{position:absolute;top:26px;left:28px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:var(--green)}
+  .hl h3{font-size:21px;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+  .hl p{font-size:14px;color:var(--ink-soft)}
   @media(max-width:820px){.highlights{grid-template-columns:1fr}}
 
-  /* ---------- PRIVACY ---------- */
-  .privacy{
-    margin-top:110px;background:var(--ink);border-radius:32px;
-    padding:clamp(40px,7vw,80px);color:#fff;
-    max-width:1080px;margin-left:auto;margin-right:auto;
-  }
-  .privacy-wrap{max-width:1124px;margin:110px auto 0;padding:0 22px}
-  .privacy .kicker{color:var(--green)}
-  .privacy h2{color:#fff}
-  .privacy .section-sub{color:rgba(255,255,255,.6)}
-  .priv-grid{margin-top:44px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-  .priv{
-    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);
-    border-radius:18px;padding:24px;
-  }
-  .priv b{display:block;font-size:16px;margin-bottom:6px;color:var(--green)}
-  .priv span{font-size:14px;color:rgba(255,255,255,.65)}
+  /* privacy */
+  #privacy .wrap{text-align:center}
+  #privacy h2{margin:0 auto}
+  #privacy .kicker{justify-content:center}
+  #privacy .kicker::after{content:"";width:34px;height:1px;background:var(--green)}
+  .priv-grid{margin:60px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:980px;text-align:left}
+  .priv{background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:26px;backdrop-filter:blur(10px)}
+  .priv b{display:block;font-size:15px;margin-bottom:8px;color:var(--green)}
+  .priv span{font-size:13.5px;color:var(--ink-soft)}
   @media(max-width:820px){.priv-grid{grid-template-columns:1fr}}
 
-  /* ---------- TECH ---------- */
-  .tech-row{margin-top:44px;display:flex;flex-wrap:wrap;gap:10px}
-  .chip{
-    font-size:14px;font-weight:600;padding:10px 20px;border-radius:99px;
-    background:var(--bg-soft);border:1px solid rgba(0,0,0,.05);
+  /* cta */
+  #cta{text-align:center}
+  #cta .wrap{display:flex;flex-direction:column;align-items:center}
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;padding:16px 36px;border-radius:99px;
+    font-size:15px;font-weight:700;letter-spacing:.02em;transition:.3s;border:1px solid var(--line);
   }
+  .btn-primary{background:var(--green);color:#031a00;border-color:var(--green)}
+  .btn-primary:hover{box-shadow:0 0 60px rgba(60,224,25,.5);transform:translateY(-2px)}
+  .btn-ghost{color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--green);color:var(--green)}
+  .cta-row{display:flex;gap:14px;margin-top:44px;flex-wrap:wrap;justify-content:center}
 
-  /* ---------- CTA ---------- */
-  .final{
-    text-align:center;padding:130px 22px 110px;
-  }
-  .final .infinity{
-    font-size:70px;line-height:1;color:var(--green);margin-bottom:24px;display:block;
-    text-shadow:0 0 40px rgba(60,224,25,.5);font-weight:800;
-  }
-
-  /* ---------- FOOTER ---------- */
   footer{
-    border-top:1px solid rgba(0,0,0,.07);padding:34px 22px;text-align:center;
-    font-size:13px;color:var(--ink-soft);
+    position:relative;z-index:2;border-top:1px solid var(--line);
+    padding:36px 24px;text-align:center;font-size:12.5px;color:var(--ink-soft);
+    background:rgba(5,5,5,.7);backdrop-filter:blur(10px);
   }
-  footer a{color:var(--ink);font-weight:600}
+  footer a{color:var(--ink);font-weight:600;margin:0 10px}
+  footer a:hover{color:var(--green)}
+  footer p+p{margin-top:10px}
 
-  /* ---------- REVEAL ---------- */
-  .reveal{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
-  .reveal.in{opacity:1;transform:none}
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(44px);filter:blur(10px);transition:opacity 1s ease,transform 1s cubic-bezier(.2,.8,.2,1),filter 1s ease}
+  .reveal.in{opacity:1;transform:none;filter:none}
+  @media (prefers-reduced-motion: reduce){
+    .reveal{opacity:1;transform:none;filter:none;transition:none}
+    .grain,.scroll-hint::after,#loader .inf{animation:none}
+  }
 </style>
 </head>
 <body>
+
+<div id="loader"><div class="inf">∞</div><div class="pct" id="loadpct">0%</div></div>
+<canvas id="gl"></canvas>
+<div class="grain"></div>
 
 <nav>
   <div class="nav-inner">
@@ -205,114 +202,322 @@
       <a href="#poles">Pôles</a>
       <a href="#features">Fonctionnalités</a>
       <a href="#privacy">Confidentialité</a>
-      <a href="#tech">Technologie</a>
+      <a href="support.html">Support</a>
     </div>
     <a class="nav-cta" href="https://github.com/blotjules3-gif/life-OS-" target="_blank" rel="noopener">GitHub</a>
   </div>
 </nav>
 
-<header>
-  <div class="hero-badge"><span class="dot"></span>iOS 17+ · SwiftUI · 100 % local</div>
-  <h1>Toute ta vie.<br><span class="accent">Une seule app.</span></h1>
-  <p class="hero-sub">LifeOS remplace la vingtaine d'apps qui se partagent ta vie — sommeil, sport, argent, mental, carrière — par un seul système qui tourne entièrement sur ton iPhone.</p>
-  <div class="hero-ctas">
-    <a class="btn btn-primary" href="https://github.com/blotjules3-gif/life-OS-" target="_blank" rel="noopener">Voir le code</a>
-    <a class="btn btn-ghost" href="#poles">Découvrir les 16 pôles ↓</a>
-  </div>
-  <img class="hero-icon" src="icon.png" alt="Icône LifeOS — infini noir sur vert">
-</header>
+<main>
 
-<div class="stats reveal">
-  <div class="stat"><b><em>16</em></b><span>pôles de vie</span></div>
-  <div class="stat"><b>142</b><span>écrans</span></div>
-  <div class="stat"><b>41</b><span>entités SwiftData</span></div>
-  <div class="stat"><b><em>0</em></b><span>donnée envoyée au cloud</span></div>
-</div>
-
-<section id="poles">
-  <p class="kicker reveal">Les pôles</p>
-  <h2 class="reveal">Un système d'exploitation pour ta vie entière.</h2>
-  <p class="section-sub reveal">Chaque pôle est un hub complet avec ses propres outils. Tout communique, rien ne se disperse.</p>
-  <div class="poles">
-    <div class="pole reveal"><span class="emoji">😴</span><h3>Sommeil</h3><p>Cycles, power-nap, journal de rêves vocal, score de récupération HealthKit.</p></div>
-    <div class="pole reveal"><span class="emoji">🥗</span><h3>Nutrition</h3><p>Jeûne intermittent, macros, frigo intelligent, recettes, hydratation.</p></div>
-    <div class="pole reveal"><span class="emoji">💪</span><h3>Fitness</h3><p>Muscu avec courbe de progression, HIIT/Tabata, mobilité guidée, streaks.</p></div>
-    <div class="pole reveal"><span class="emoji">✨</span><h3>Looksmaxx</h3><p>Skincare avec rappels, photos avant/après, posture, outfit selon la météo.</p></div>
-    <div class="pole reveal"><span class="emoji">🧘</span><h3>Mental</h3><p>Cohérence cardiaque animée, méditation, humeur, détox écran, briefing matin.</p></div>
-    <div class="pole reveal"><span class="emoji">⚡️</span><h3>Productivité</h3><p>To-do, time-blocking automatique, habitudes, focus Pomodoro, notes.</p></div>
-    <div class="pole reveal"><span class="emoji">💶</span><h3>Finances</h3><p>Comptes avec alertes, budget enveloppes, abonnements, split façon Tricount.</p></div>
-    <div class="pole reveal"><span class="emoji">📈</span><h3>Investissement</h3><p>Portefeuille, net worth, projection FIRE, immo et cashflow, simulateur IR.</p></div>
-    <div class="pole reveal"><span class="emoji">💼</span><h3>Carrière</h3><p>Suivi de candidatures, CV builder avec export, skill gap, mock interview.</p></div>
-    <div class="pole reveal"><span class="emoji">🎓</span><h3>Apprentissage</h3><p>Flashcards SM-2, micro-learning, résumés, plans de compétences.</p></div>
-    <div class="pole reveal"><span class="emoji">🏠</span><h3>Maison</h3><p>Anti-gaspi, recettes de restes, tâches ménagères, animaux, maintenance.</p></div>
-    <div class="pole reveal"><span class="emoji">🚗</span><h3>Mobilité</h3><p>Voiture : assurance, révisions, consommation et coût carburant.</p></div>
-    <div class="pole reveal"><span class="emoji">🫶</span><h3>Social</h3><p>CRM personnel, relances, anniversaires et idées cadeaux, événements.</p></div>
-    <div class="pole reveal"><span class="emoji">🗂</span><h3>Admin</h3><p>Coffre-fort de documents chiffré local, échéances, générateur de courriers.</p></div>
-    <div class="pole reveal"><span class="emoji">✈️</span><h3>Voyage</h3><p>Itinéraires avec budget, checklist de valise générée automatiquement.</p></div>
-    <div class="pole reveal"><span class="emoji">🩺</span><h3>Santé &amp; Cycle</h3><p>Suivi médical, cycle, données HealthKit traitées sur l'appareil.</p></div>
-  </div>
-</section>
-
-<section id="features">
-  <p class="kicker reveal">Fonctionnalités signature</p>
-  <h2 class="reveal">Des détails qu'aucune autre app n'assemble.</h2>
-  <div class="highlights">
-    <div class="hl dark reveal"><span class="tag">Sommeil</span><div><h3>Journal de rêves vocal</h3><p>Tu murmures ton rêve au réveil, LifeOS le transcrit et l'archive avant qu'il s'efface.</p></div></div>
-    <div class="hl green reveal"><span class="tag">Productivité</span><div><h3>Time-blocking automatique</h3><p>Ta to-do se transforme seule en blocs dans ta journée, autour de tes habitudes.</p></div></div>
-    <div class="hl reveal"><span class="tag">Investissement</span><div><h3>Projection FIRE</h3><p>Net worth en temps réel et date d'indépendance financière projetée.</p></div></div>
-    <div class="hl reveal"><span class="tag">Apprentissage</span><div><h3>Flashcards SM-2</h3><p>Le vrai algorithme de répétition espacée d'Anki, intégré nativement.</p></div></div>
-    <div class="hl green reveal"><span class="tag">Admin</span><div><h3>Coffre-fort chiffré</h3><p>Tes documents sensibles chiffrés localement, plus un générateur de courriers.</p></div></div>
-    <div class="hl dark reveal"><span class="tag">Fitness</span><div><h3>Score de récupération</h3><p>Pas, HRV et sommeil croisés via HealthKit pour te dire quand pousser — ou pas.</p></div></div>
-  </div>
-</section>
-
-<div class="privacy-wrap" id="privacy">
-  <div class="privacy">
-    <p class="kicker reveal">Confidentialité</p>
-    <h2 class="reveal">Ta vie reste dans ta poche.</h2>
-    <p class="section-sub reveal">Pas de compte. Pas de serveur. Pas de tracking. LifeOS stocke tout en SwiftData sur ton iPhone — point final.</p>
-    <div class="priv-grid">
-      <div class="priv reveal"><b>100 % on-device</b><span>Les 41 entités de données vivent en local. Rien ne transite par un cloud.</span></div>
-      <div class="priv reveal"><b>Capteurs natifs</b><span>Pas, HRV, sommeil : lus via HealthKit directement sur l'appareil, jamais exportés.</span></div>
-      <div class="priv reveal"><b>Chiffrement local</b><span>Le coffre-fort de documents est chiffré sur ton téléphone, clé comprise.</span></div>
+  <section class="chapter" id="hero">
+    <div class="wrap">
+      <div class="badge reveal"><span class="dot"></span>iOS 17+ · SWIFTUI · 100 % LOCAL</div>
+      <h1 class="reveal">Toute ta vie.<br><span class="accent">Une seule app.</span></h1>
+      <p class="sub reveal">LifeOS remplace la vingtaine d'apps qui se partagent ta vie par un seul système, entièrement sur ton iPhone.</p>
     </div>
-  </div>
-</div>
+    <div class="scroll-hint">Scroll</div>
+  </section>
 
-<section id="tech">
-  <p class="kicker reveal">Sous le capot</p>
-  <h2 class="reveal">Du Swift natif, rien d'autre.</h2>
-  <p class="section-sub reveal">Pas de web-view, pas de framework hybride. Une architecture modulaire où chaque pôle est isolé dans son propre module.</p>
-  <div class="tech-row reveal">
-    <span class="chip">SwiftUI</span>
-    <span class="chip">SwiftData</span>
-    <span class="chip">HealthKit</span>
-    <span class="chip">VisionKit</span>
-    <span class="chip">Widgets</span>
-    <span class="chip">Metal</span>
-    <span class="chip">iOS 17+</span>
-    <span class="chip">Notifications locales</span>
-  </div>
-</section>
+  <section class="chapter" id="promesse">
+    <div class="wrap">
+      <p class="kicker reveal">Le système</p>
+      <h2 class="reveal">Un OS pour ta vie entière.</h2>
+      <p class="sub reveal">Sommeil, sport, argent, mental, carrière — chaque pôle est un hub complet, et tout communique.</p>
+      <div class="stats reveal">
+        <div class="stat"><b><em data-count="16">0</em></b><span>pôles de vie</span></div>
+        <div class="stat"><b data-count="142">0</b><span>écrans</span></div>
+        <div class="stat"><b data-count="41">0</b><span>entités de données</span></div>
+        <div class="stat"><b><em>0</em></b><span>donnée dans le cloud</span></div>
+      </div>
+    </div>
+  </section>
 
-<div class="final">
-  <span class="infinity reveal">∞</span>
-  <h2 class="reveal" style="max-width:100%;margin:0 auto 30px">Une app. Zéro limite.</h2>
-  <div class="hero-ctas reveal">
-    <a class="btn btn-primary" href="https://github.com/blotjules3-gif/life-OS-" target="_blank" rel="noopener">Explorer sur GitHub</a>
-  </div>
-</div>
+  <section class="chapter" id="poles">
+    <div class="wrap">
+      <p class="kicker reveal">Les pôles</p>
+      <h2 class="reveal">16 univers.<br>Zéro friction.</h2>
+      <div class="poles">
+        <div class="pole reveal"><span class="num">01</span><h3>Sommeil</h3><p>Cycles, power-nap, journal de rêves vocal, score de récupération HealthKit.</p></div>
+        <div class="pole reveal"><span class="num">02</span><h3>Nutrition</h3><p>Jeûne intermittent, macros, frigo intelligent, recettes, hydratation.</p></div>
+        <div class="pole reveal"><span class="num">03</span><h3>Fitness</h3><p>Muscu avec courbe de progression, HIIT/Tabata, mobilité guidée, streaks.</p></div>
+        <div class="pole reveal"><span class="num">04</span><h3>Looksmaxx</h3><p>Skincare avec rappels, photos avant/après, posture, outfit selon la météo.</p></div>
+        <div class="pole reveal"><span class="num">05</span><h3>Mental</h3><p>Cohérence cardiaque animée, méditation, humeur, détox écran, briefing matin.</p></div>
+        <div class="pole reveal"><span class="num">06</span><h3>Productivité</h3><p>To-do, time-blocking automatique, habitudes, focus Pomodoro, notes.</p></div>
+        <div class="pole reveal"><span class="num">07</span><h3>Finances</h3><p>Comptes avec alertes, budget enveloppes, abonnements, split façon Tricount.</p></div>
+        <div class="pole reveal"><span class="num">08</span><h3>Investissement</h3><p>Portefeuille, net worth, projection FIRE, immo et cashflow, simulateur IR.</p></div>
+        <div class="pole reveal"><span class="num">09</span><h3>Carrière</h3><p>Suivi de candidatures, CV builder avec export, skill gap, mock interview.</p></div>
+        <div class="pole reveal"><span class="num">10</span><h3>Apprentissage</h3><p>Flashcards SM-2, micro-learning, résumés, plans de compétences.</p></div>
+        <div class="pole reveal"><span class="num">11</span><h3>Maison</h3><p>Anti-gaspi, recettes de restes, tâches ménagères, animaux, maintenance.</p></div>
+        <div class="pole reveal"><span class="num">12</span><h3>Mobilité</h3><p>Voiture : assurance, révisions, consommation et coût carburant.</p></div>
+        <div class="pole reveal"><span class="num">13</span><h3>Social</h3><p>CRM personnel, relances, anniversaires et idées cadeaux, événements.</p></div>
+        <div class="pole reveal"><span class="num">14</span><h3>Admin</h3><p>Coffre-fort de documents chiffré local, échéances, générateur de courriers.</p></div>
+        <div class="pole reveal"><span class="num">15</span><h3>Voyage</h3><p>Itinéraires avec budget, checklist de valise générée automatiquement.</p></div>
+        <div class="pole reveal"><span class="num">16</span><h3>Santé &amp; Cycle</h3><p>Suivi médical, cycle, données HealthKit traitées sur l'appareil.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter" id="features">
+    <div class="wrap">
+      <p class="kicker reveal">Signature</p>
+      <h2 class="reveal">Des détails qu'aucune autre app n'assemble.</h2>
+      <div class="highlights">
+        <div class="hl reveal"><span class="tag">Sommeil</span><div><h3>Journal de rêves vocal</h3><p>Tu murmures ton rêve au réveil, LifeOS le transcrit avant qu'il s'efface.</p></div></div>
+        <div class="hl green reveal"><span class="tag">Productivité</span><div><h3>Time-blocking auto</h3><p>Ta to-do se transforme seule en blocs dans ta journée.</p></div></div>
+        <div class="hl reveal"><span class="tag">Investissement</span><div><h3>Projection FIRE</h3><p>Net worth en temps réel et date d'indépendance financière projetée.</p></div></div>
+        <div class="hl reveal"><span class="tag">Apprentissage</span><div><h3>Flashcards SM-2</h3><p>Le vrai algorithme de répétition espacée, intégré nativement.</p></div></div>
+        <div class="hl green reveal"><span class="tag">Admin</span><div><h3>Coffre-fort chiffré</h3><p>Documents sensibles chiffrés localement, générateur de courriers inclus.</p></div></div>
+        <div class="hl reveal"><span class="tag">Fitness</span><div><h3>Score de récupération</h3><p>Pas, HRV et sommeil croisés pour te dire quand pousser — ou pas.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter" id="privacy">
+    <div class="wrap">
+      <p class="kicker reveal">Confidentialité</p>
+      <h2 class="reveal">Ta vie reste<br>dans ta poche.</h2>
+      <p class="sub reveal" style="margin-left:auto;margin-right:auto">Pas de compte. Pas de serveur. Pas de tracking. Tout vit en SwiftData sur ton iPhone — point final.</p>
+      <div class="priv-grid">
+        <div class="priv reveal"><b>100 % on-device</b><span>Les 41 entités de données vivent en local. Rien ne transite par un cloud.</span></div>
+        <div class="priv reveal"><b>Capteurs natifs</b><span>Pas, HRV, sommeil : lus via HealthKit sur l'appareil, jamais exportés.</span></div>
+        <div class="priv reveal"><b>Chiffrement local</b><span>Le coffre-fort de documents est chiffré sur ton téléphone, clé comprise.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="chapter" id="cta">
+    <div class="wrap">
+      <p class="kicker reveal" style="justify-content:center">LifeOS</p>
+      <h2 class="reveal">Une app.<br>Zéro limite.</h2>
+      <div class="cta-row reveal">
+        <a class="btn btn-primary" href="https://github.com/blotjules3-gif/life-OS-" target="_blank" rel="noopener">Explorer sur GitHub</a>
+        <a class="btn btn-ghost" href="support.html">Support &amp; FAQ</a>
+      </div>
+    </div>
+  </section>
+
+</main>
 
 <footer>
-  <p style="margin-bottom:10px">© 2026 Jules Blot — LifeOS · <a href="https://github.com/blotjules3-gif/life-OS-" target="_blank" rel="noopener">GitHub</a></p>
-  <p><a href="privacy.html">Politique de confidentialité</a> &nbsp;·&nbsp; <a href="terms.html">Conditions d'utilisation</a> &nbsp;·&nbsp; <a href="support.html">Support</a></p>
+  <p>© 2026 Jules Blot — LifeOS · <a href="https://github.com/blotjules3-gif/life-OS-" target="_blank" rel="noopener">GitHub</a> · <a href="classic.html">Version classique</a></p>
+  <p><a href="privacy.html">Politique de confidentialité</a> · <a href="terms.html">Conditions d'utilisation</a> · <a href="support.html">Support</a></p>
 </footer>
 
-<script>
-  const io = new IntersectionObserver(entries=>{
-    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-  },{threshold:.12});
-  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {RoomEnvironment} from './vendor/RoomEnvironment.js';
+
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- loader ---------- */
+const loader = document.getElementById('loader');
+const pctEl = document.getElementById('loadpct');
+let fake = 0;
+const fakeTimer = setInterval(()=>{
+  fake = Math.min(fake + Math.random()*14, 92);
+  pctEl.textContent = Math.round(fake) + '%';
+}, 90);
+function finishLoad(){
+  clearInterval(fakeTimer);
+  pctEl.textContent = '100%';
+  setTimeout(()=>loader.classList.add('done'), 250);
+}
+setTimeout(finishLoad, 3500); // filet de sécurité
+
+/* ---------- reveals ---------- */
+const io = new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+},{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* ---------- compteurs ---------- */
+const cio = new IntersectionObserver(es=>{
+  es.forEach(e=>{
+    if(!e.isIntersecting) return;
+    cio.unobserve(e.target);
+    const t = +e.target.dataset.count, d = 1400, t0 = performance.now();
+    (function tick(now){
+      const k = Math.min((now-t0)/d, 1);
+      e.target.textContent = Math.round(t*(1-Math.pow(1-k,3)));
+      if(k<1) requestAnimationFrame(tick);
+    })(t0);
+  });
+},{threshold:.6});
+document.querySelectorAll('[data-count]').forEach(el=>cio.observe(el));
+
+/* ---------- 3D ---------- */
+const q = new URLSearchParams(location.search);
+let renderer;
+try{
+  renderer = new THREE.WebGLRenderer({canvas:document.getElementById('gl'), antialias:true, preserveDrawingBuffer:q.has('once')});
+}catch(e){ finishLoad(); }
+
+if(renderer){
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.35;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x050505);
+  scene.fog = new THREE.FogExp2(0x050505, 0.028);
+
+  const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, .1, 100);
+  camera.position.set(0,0,7);
+
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), .04).texture;
+
+  /* lumières */
+  scene.add(new THREE.AmbientLight(0xffffff, .25));
+  const key = new THREE.DirectionalLight(0xffffff, 3.2); key.position.set(3,5,6); scene.add(key);
+  const back = new THREE.DirectionalLight(0xdfffd2, 1.6); back.position.set(-4,-2,-6); scene.add(back);
+  const rim1 = new THREE.PointLight(0x3ce019, 160, 50); rim1.position.set(-7,3,-3); scene.add(rim1);
+  const rim2 = new THREE.PointLight(0x3ce019, 90, 50); rim2.position.set(6,-4,3); scene.add(rim2);
+
+  /* l'infini : lemniscate 3D */
+  class Lemniscate extends THREE.Curve{
+    getPoint(t, target = new THREE.Vector3()){
+      const a = 2.3, u = t * Math.PI * 2, d = 1 + Math.sin(u)*Math.sin(u);
+      return target.set(
+        a * Math.cos(u) / d,
+        a * Math.sin(u) * Math.cos(u) / d,
+        Math.sin(u*2) * .35
+      );
+    }
+  }
+  const group = new THREE.Group();
+  const tube = new THREE.Mesh(
+    new THREE.TubeGeometry(new Lemniscate(), 400, .5, 48, true),
+    new THREE.MeshPhysicalMaterial({
+      color:0x1c1c1f, roughness:.18, metalness:.25,
+      clearcoat:1, clearcoatRoughness:.1, envMapIntensity:2.4,
+      emissive:0x3ce019, emissiveIntensity:.05
+    })
+  );
+  group.add(tube);
+  scene.add(group);
+
+  /* particules */
+  const N = 900, pos = new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    pos[i*3]   = (Math.random()-.5)*36;
+    pos[i*3+1] = (Math.random()-.5)*22;
+    pos[i*3+2] = (Math.random()-.5)*24 - 4;
+  }
+  const pgeo = new THREE.BufferGeometry();
+  pgeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const points = new THREE.Points(pgeo, new THREE.PointsMaterial({
+    color:0x3ce019, size:.035, transparent:true, opacity:.45, depthWrite:false
+  }));
+  scene.add(points);
+
+  /* keyframes par chapitre */
+  const KF = [
+    {id:'hero',     cam:[0,-.4,7.2], pos:[0,.7,0],    rot:[.45,.2,0],   scale:1,    emi:0,   fov:42},
+    {id:'promesse', cam:[0,0,6.2],   pos:[2.6,.3,-1], rot:[.2,2.4,.15], scale:.8,   emi:0,   fov:42},
+    {id:'poles',    cam:[0,0,8],     pos:[-3,.9,-2.5],rot:[.9,4.6,.4],  scale:.6,   emi:0,   fov:46},
+    {id:'features', cam:[0,0,6.4],   pos:[2.7,-.3,-1],rot:[-.5,6.8,0],  scale:.75,  emi:0,   fov:42},
+    {id:'privacy',  cam:[0,0,6],     pos:[0,.25,-2.2],rot:[.35,9.4,1.57],scale:.62, emi:.22, fov:42},
+    {id:'cta',      cam:[0,.1,6.6],  pos:[0,.15,0],   rot:[.45,12.57,0],scale:.92,  emi:.04, fov:40},
+  ];
+  let marks = [];
+  function measure(){
+    const H = document.documentElement.scrollHeight - innerHeight;
+    marks = KF.map(k=>{
+      const s = document.getElementById(k.id);
+      return Math.min(Math.max(s.offsetTop / H, 0), 1);
+    });
+    marks[0] = 0; marks[marks.length-1] = 1;
+  }
+  measure();
+
+  const lerp = (a,b,k)=>a+(b-a)*k;
+  const ease = k=>k<.5 ? 2*k*k : 1-Math.pow(-2*k+2,2)/2;
+
+  let target = 0, smooth = 0, mx = 0, my = 0, smx = 0, smy = 0;
+  function readScroll(){
+    const H = document.documentElement.scrollHeight - innerHeight;
+    target = H > 0 ? scrollY / H : 0;
+  }
+  addEventListener('scroll', readScroll, {passive:true});
+  addEventListener('pointermove', e=>{
+    mx = (e.clientX/innerWidth - .5);
+    my = (e.clientY/innerHeight - .5);
+  }, {passive:true});
+  addEventListener('resize', ()=>{
+    camera.aspect = innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+    measure(); readScroll();
+  });
+
+  function apply(p, t){
+    let i = 0;
+    while(i < marks.length-2 && p >= marks[i+1]) i++;
+    const span = marks[i+1]-marks[i] || 1;
+    const k = ease(Math.min(Math.max((p-marks[i])/span, 0), 1));
+    const A = KF[i], B = KF[i+1];
+
+    camera.position.set(lerp(A.cam[0],B.cam[0],k), lerp(A.cam[1],B.cam[1],k), lerp(A.cam[2],B.cam[2],k));
+    camera.fov = lerp(A.fov,B.fov,k); camera.updateProjectionMatrix();
+
+    group.position.set(lerp(A.pos[0],B.pos[0],k), lerp(A.pos[1],B.pos[1],k), lerp(A.pos[2],B.pos[2],k));
+    const s = lerp(A.scale,B.scale,k); group.scale.setScalar(s);
+    group.rotation.set(
+      lerp(A.rot[0],B.rot[0],k) + smy*.25,
+      lerp(A.rot[1],B.rot[1],k) + (reduced ? 0 : t*.07) + smx*.4,
+      lerp(A.rot[2],B.rot[2],k)
+    );
+    tube.material.emissiveIntensity = lerp(A.emi,B.emi,k);
+
+    camera.lookAt(group.position.x*.35, group.position.y*.35, 0);
+    points.rotation.y = t*.012;
+  }
+
+  let started = false;
+  renderer.setAnimationLoop((ms)=>{
+    const t = ms/1000;
+    smooth += (target-smooth) * (reduced ? 1 : .065);
+    smx += (mx-smx)*.05; smy += (my-smy)*.05;
+    apply(smooth, t);
+    renderer.render(scene, camera);
+    if(!started){ started = true; finishLoad(); }
+  });
+
+  /* position de départ (debug/screenshot : ?s=0..1, ?once=1 fige après une frame) */
+  if(q.has('s')){
+    const H = document.documentElement.scrollHeight - innerHeight;
+    scrollTo(0, parseFloat(q.get('s')) * H);
+    readScroll(); smooth = target;
+    document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
+  } else {
+    readScroll();
+  }
+  if(q.has('once')){
+    renderer.setAnimationLoop(null);
+    requestAnimationFrame(()=>{
+      if(q.has('kf')) target = marks[Math.min(+q.get('kf'), marks.length-1)];
+      if(q.has('vh')){
+        document.querySelector('main').style.marginTop = `-${parseFloat(q.get('vh'))*100}vh`;
+        document.querySelectorAll('.reveal').forEach(el=>el.classList.add('in'));
+      }
+      smooth = target; smx = mx; smy = my;
+      apply(smooth, 1.5);
+      renderer.render(scene, camera);
+      const img = new Image();
+      img.src = renderer.domElement.toDataURL('image/png');
+      img.style.cssText = 'position:fixed;inset:0;z-index:0;width:100vw;height:100vh;object-fit:cover';
+      renderer.domElement.replaceWith(img);
+      finishLoad(); loader.style.display = 'none';
+      document.title = 'RENDERED';
+    });
+  }
+}else{
+  finishLoad();
+}
 </script>
 </body>
 </html>
