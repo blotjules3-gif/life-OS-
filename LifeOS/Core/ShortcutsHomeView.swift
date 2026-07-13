@@ -1340,14 +1340,10 @@ struct WeeklyBilanView: View {
         Humeur moy: \(avgMood > 0 ? String(format: "%.1f/5", avgMood) : "non renseignée")
         Instruction: Fais un bilan de semaine motivant en 2-3 phrases. Sois direct, précis, encourage sans être artificiel.
         """
-        do {
-            let response = try await AgentAPI.shared.chat(message: prompt, module: nil, conversationID: nil)
-            aiBilan = response.reply
-            cachedBilan = response.reply
-            cachedBilanDate = today
-        } catch {
-            // Silently fall back to cached or empty
-        }
+        let reply = await OnDeviceLLM.respond(to: prompt, ctx: ctx)
+        aiBilan = reply.text
+        cachedBilan = reply.text
+        cachedBilanDate = today
         bilanLoading = false
     }
 
