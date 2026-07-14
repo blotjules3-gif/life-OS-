@@ -67,7 +67,7 @@ private struct CoachReportAlerts<M: Identifiable>: ViewModifier {
         line.append(0x0A) // newline
         if let handle = try? FileHandle(forWritingTo: file) {
             defer { try? handle.close() }
-            try? handle.seekToEnd()
+            _ = try? handle.seekToEnd()
             try? handle.write(contentsOf: line)
         } else {
             try? line.write(to: file, options: .atomic)
