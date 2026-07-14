@@ -144,8 +144,29 @@ struct LifeOSApp: App {
             DailyBriefingView(modules: recommendedModules, speakOnAppear: false)
         }
         .onOpenURL { url in
-            guard url.scheme == "lifeos", url.host == "briefing" else { return }
-            showSleepCheckFromWidget = true
+            guard url.scheme == "lifeos" else { return }
+            switch url.host {
+            case "briefing":
+                showSleepCheckFromWidget = true
+            case "scan-food":
+                showFoodScan = true
+            default:
+                break
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenFoodScan)) { _ in
+            showFoodScan = true
+        }
+        .fullScreenCover(isPresented: $showFoodScan) {
+            NavigationStack {
+                PhotoCalorieView(autoOpenCamera: true)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Fermer") { showFoodScan = false }
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+            }
         }
         .sheet(isPresented: Binding(get: { alarm.showSleepCheck }, set: { if !$0 { alarm.phase = .idle } })) {
             SleepCheckSheet { alarm.sleepCheckDone() }
