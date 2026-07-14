@@ -4,6 +4,23 @@ import SwiftData
 
 /// Raccourcis Siri : "Ajoute de l'eau dans LifeOS", "Valide une habitude dans LifeOS".
 
+/// Ouvre l'app directement sur la caméra de scan de repas (module Nutrition,
+/// PhotoCalorieView). Utilisé par :
+/// - le bouton Control Center iOS 18+ (`FoodScanControl`)
+/// - le widget Home Screen `FoodScanWidget`
+/// - la phrase Siri « Scanne mon repas »
+struct OpenFoodScanIntent: AppIntent {
+    static let title: LocalizedStringResource = "Scanner un repas"
+    static let description = IntentDescription("Ouvre la caméra LifeOS pour analyser une assiette et enregistrer calories + protéines.")
+    static let openAppWhenRun: Bool = true
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        NotificationCenter.default.post(name: .lifeOSOpenFoodScan, object: nil)
+        return .result()
+    }
+}
+
 struct LogWaterIntent: AppIntent {
     static let title: LocalizedStringResource = "Ajouter de l'eau"
     static let description = IntentDescription("Ajoute une quantité d'eau à ton suivi d'hydratation.")
