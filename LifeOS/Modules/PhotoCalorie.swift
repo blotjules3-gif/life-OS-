@@ -83,6 +83,11 @@ enum FoodVision {
 // MARK: - Vue
 
 struct PhotoCalorieView: View {
+    /// Si vrai, la caméra s'ouvre immédiatement à l'apparition. Utilisé par les
+    /// raccourcis rapides (Control Center, widget Home, Siri) pour amener
+    /// l'utilisateur directement à la prise de photo.
+    var autoOpenCamera: Bool = false
+
     @Environment(\.modelContext) private var ctx
     @State private var image: UIImage?
     @State private var guess: FoodGuess?
@@ -120,6 +125,15 @@ struct PhotoCalorieView: View {
             guard let item else { return }
             Task {
                 if let data = try? await item.loadTransferable(type: Data.self), let img = UIImage(data: data) { handle(img) }
+            }
+        }
+        .onAppear {
+            if autoOpenCamera && cameraAvailable && image == nil {
+                // Léger délai pour laisser la vue apparaître avant d'empiler
+                // le fullScreenCover — sinon l'animation est saccadée.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    showCamera = true
+                }
             }
         }
     }
