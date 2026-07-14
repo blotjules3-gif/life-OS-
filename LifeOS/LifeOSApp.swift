@@ -23,6 +23,7 @@ struct LifeOSApp: App {
     @State private var showSleepCheckFromWidget = false
     @State private var showWeeklyBilan = false
     @State private var showIntake = false
+    @State private var showFoodScan = false
     @AppStorage("intakeShown") private var intakeShown = false
 
     private var recommendedModules: [AppCategory] {
