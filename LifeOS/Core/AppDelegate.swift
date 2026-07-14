@@ -145,4 +145,5 @@ extension Notification.Name {
     static let lifeOSOpenAIChat      = Notification.Name("lifeOSOpenAIChat")
     static let lifeOSOpenWeeklyBilan = Notification.Name("lifeOSOpenWeeklyBilan")
     static let lifeOSOpenModule      = Notification.Name("lifeOSOpenModule")
+    static let lifeOSOpenFoodScan    = Notification.Name("lifeOSOpenFoodScan")
 }
