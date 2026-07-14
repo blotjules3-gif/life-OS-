@@ -103,6 +103,16 @@ struct CompleteHabitIntent: AppIntent {
 struct LifeOSShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
+            intent: OpenFoodScanIntent(),
+            phrases: [
+                "Scanne mon repas avec \(.applicationName)",
+                "Prends en photo mon assiette dans \(.applicationName)",
+                "Analyse mon plat avec \(.applicationName)"
+            ],
+            shortTitle: "Scanner un repas",
+            systemImageName: "fork.knife"
+        )
+        AppShortcut(
             intent: LogWaterIntent(),
             phrases: [
                 "Ajoute de l'eau dans \(.applicationName)",
