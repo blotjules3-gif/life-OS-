@@ -186,7 +186,9 @@ import SwiftData
         self.name = name; self.date = date; self.nextDueDate = nextDueDate; self.lot = lot; self.notes = notes
     }
     var isDue: Bool {
-        guard let next = nextDueDate else { return false }
-        return next <= Calendar.current.date(byAdding: .day, value: 30, to: .now)!
+        guard let next = nextDueDate,
+              let horizon = Calendar.current.date(byAdding: .day, value: 30, to: .now)
+        else { return false }
+        return next <= horizon
     }
 }

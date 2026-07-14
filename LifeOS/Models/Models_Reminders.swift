@@ -35,7 +35,7 @@ import SwiftData
 /// Détecte que l'utilisateur est réveillé (1re ouverture de l'app dans la fenêtre du
 /// matin) et programme une notif 5 min plus tard. Une seule fois par jour.
 enum MorningReminder {
-    static let defaultText = "N'oublie pas : un grand verre d'eau et tes compléments du matin 💧💊"
+    static let defaultText = "N'oublie pas : un grand verre d'eau et tes compléments du matin"
 
     static var isOn: Bool {
         UserDefaults.standard.object(forKey: "morningReminderOn") == nil
@@ -64,7 +64,7 @@ enum MorningReminder {
 
         NotificationManager.shared.scheduleAfter(
             id: "lifeos.morningReminder",
-            title: "Bien réveillé ? ☀️",
+            title: "Bien réveillé ?",
             body: text,
             seconds: 5 * 60
         )

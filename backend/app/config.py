@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Optional
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -21,7 +20,7 @@ class Settings(BaseSettings):
     internal_api_key: str = Field(..., min_length=16)
     # Clé de transition pendant une rotation : les builds installés avec
     # l'ancienne clé continuent de fonctionner. À vider une fois les apps rebuildées.
-    internal_api_key_secondary: Optional[str] = None
+    internal_api_key_secondary: str | None = None
 
     # ── Database ──────────────────────────────────────────────────────────────
     database_url: str  # postgresql+asyncpg://...
@@ -50,14 +49,15 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
 
     # ── APNs ─────────────────────────────────────────────────────────────────
-    apns_key_id: Optional[str] = None
-    apns_team_id: Optional[str] = None
+    apns_key_id: str | None = None
+    apns_team_id: str | None = None
     apns_bundle_id: str = "com.yourcompany.lifeos"
-    apns_private_key_path: Optional[str] = None
+    apns_private_key_path: str | None = None
     apns_use_sandbox: bool = True
 
-    # ── CORS ──────────────────────────────────────────────────────────────────
-    allowed_origins: list[str] = ["*"]
+    # L'app iOS n'a pas d'origine web ; on ne s'ouvre à des domaines qu'à la demande.
+    # Override via env var ALLOWED_ORIGINS='https://lifeos.app,https://admin.lifeos.app'.
+    allowed_origins: list[str] = Field(default_factory=list)
 
     @field_validator("database_url")
     @classmethod

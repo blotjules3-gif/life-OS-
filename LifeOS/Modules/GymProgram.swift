@@ -110,8 +110,8 @@ struct GymProgramView: View {
             let extra = d.focus.trimmingCharacters(in: .whitespaces).isEmpty ? "" : "\n\(d.focus)"
             NotificationManager.shared.scheduleWeekly(
                 id: "gym.day.\(w)",
-                title: "💪 SALLE DE SPORT",
-                body: "Allez, lève-toi ! Aujourd'hui : \(d.title) 🔥" + extra,
+                title: "SALLE DE SPORT",
+                body: "Allez, lève-toi! Aujourd'hui : \(d.title)" + extra,
                 weekday: w, hour: hour, minute: minute)
 
             // Post-séance (~10 min après une séance d'~1 h) : protéines + créatine.
@@ -120,7 +120,7 @@ struct GymProgramView: View {
             if pwTotal >= 1440 { pwTotal -= 1440; pw = w % 7 + 1 }
             NotificationManager.shared.scheduleWeekly(
                 id: "gym.day.\(w).protein",
-                title: "Fin de séance 💪",
+                title: "Fin de séance",
                 body: "Dans la foulée : ~30 g de protéines + ta créatine pour bien récupérer.",
                 weekday: pw, hour: pwTotal / 60, minute: pwTotal % 60)
             if confirm {
@@ -129,7 +129,7 @@ struct GymProgramView: View {
                 if total >= 1440 { total -= 1440; cw = w % 7 + 1 }   // dépasse minuit → jour suivant
                 NotificationManager.shared.scheduleWeekly(
                     id: "gym.day.\(w).confirm",
-                    title: "Séance faite ? 💪",
+                    title: "Séance faite ?",
                     body: "Tu as bien été à la salle (\(d.title)) ?",
                     weekday: cw, hour: total / 60, minute: total % 60,
                     categoryId: "LIFEOS_CONFIRM",

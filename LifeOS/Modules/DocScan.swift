@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 import PhotosUI
-import Vision
+@preconcurrency import Vision
 import VisionKit
 import UIKit
 
@@ -166,7 +166,7 @@ struct DocScanView: View {
     private var toast: some View {
         VStack {
             Spacer()
-            Label("Rangé dans le coffre-fort ✓", systemImage: "checkmark.circle.fill")
+            Label("Rangé dans le coffre-fort", systemImage: "checkmark.circle.fill")
                 .font(.subheadline.weight(.semibold)).foregroundStyle(.white)
                 .padding(.horizontal, 18).padding(.vertical, 12)
                 .background(Color.green, in: Capsule())

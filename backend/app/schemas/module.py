@@ -34,37 +34,37 @@ class UpdateModuleConfigRequest(BaseModel):
 # ── Per-module config schemas (used for validation before storing) ────────────
 
 class SportConfig(BaseModel):
-    sessions_per_week: Optional[int] = Field(None, ge=1, le=14)
+    sessions_per_week: int | None = Field(None, ge=1, le=14)
     preferred_workout_types: Optional[list[str]] = None
-    session_duration_minutes: Optional[int] = Field(None, ge=10, le=240)
-    weight_goal_kg: Optional[float] = None
-    reminder_time: Optional[str] = Field(None, pattern=r"^\d{2}:\d{2}$")
+    session_duration_minutes: int | None = Field(None, ge=10, le=240)
+    weight_goal_kg: float | None = None
+    reminder_time: str | None = Field(None, pattern=r"^\d{2}:\d{2}$")
 
 
 class NutritionConfig(BaseModel):
-    daily_kcal_goal: Optional[int] = Field(None, ge=500, le=10000)
-    protein_goal_g: Optional[int] = Field(None, ge=10, le=500)
-    water_goal_ml: Optional[int] = Field(None, ge=500, le=8000)
-    meal_count_per_day: Optional[int] = Field(None, ge=1, le=10)
-    diet_type: Optional[str] = None  # 'standard', 'vegan', 'keto', etc.
+    daily_kcal_goal: int | None = Field(None, ge=500, le=10000)
+    protein_goal_g: int | None = Field(None, ge=10, le=500)
+    water_goal_ml: int | None = Field(None, ge=500, le=8000)
+    meal_count_per_day: int | None = Field(None, ge=1, le=10)
+    diet_type: str | None = None  # 'standard', 'vegan', 'keto', etc.
 
 
 class FinanceConfig(BaseModel):
-    monthly_income: Optional[float] = Field(None, ge=0)
-    fixed_expenses: Optional[float] = Field(None, ge=0)
-    savings_goal_pct: Optional[float] = Field(None, ge=0, le=100)
-    risk_profile: Optional[str] = Field(None, pattern=r"^(conservative|moderate|aggressive)$")
+    monthly_income: float | None = Field(None, ge=0)
+    fixed_expenses: float | None = Field(None, ge=0)
+    savings_goal_pct: float | None = Field(None, ge=0, le=100)
+    risk_profile: str | None = Field(None, pattern=r"^(conservative|moderate|aggressive)$")
 
 
 class MobilityConfig(BaseModel):
-    vehicle_fuel_capacity_l: Optional[float] = Field(None, ge=1, le=200)
-    fuel_consumption_per_100km: Optional[float] = Field(None, ge=1, le=50)
-    odometer_km: Optional[float] = Field(None, ge=0)
+    vehicle_fuel_capacity_l: float | None = Field(None, ge=1, le=200)
+    fuel_consumption_per_100km: float | None = Field(None, ge=1, le=50)
+    odometer_km: float | None = Field(None, ge=0)
 
 
 class ProductivityConfig(BaseModel):
-    daily_habit_target: Optional[int] = Field(None, ge=1, le=20)
-    focus_block_minutes: Optional[int] = Field(None, ge=15, le=240)
+    daily_habit_target: int | None = Field(None, ge=1, le=20)
+    focus_block_minutes: int | None = Field(None, ge=15, le=240)
     work_days: Optional[list[str]] = None  # ['mon', 'tue', ...]
 
 

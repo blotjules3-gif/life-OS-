@@ -16,7 +16,7 @@ struct GoalEditorSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var endDates: [String: Date] = [:]
-    @State private var expandedID: String? = nil
+    @State private var expandedID: String?
 
     struct GoalDef: Identifiable {
         let id: String

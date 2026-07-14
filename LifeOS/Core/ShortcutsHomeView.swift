@@ -150,10 +150,10 @@ struct ShortcutsHomeView: View {
     @AppStorage("todayEnergyScore") private var todayEnergyScore = 0
     @AppStorage("todayEnergyLabel") private var todayEnergyLabel = ""
     @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
-    @State private var reengageMessage: String? = nil
-    @State private var reengageSuggestion: String? = nil
+    @State private var reengageMessage: String?
+    @State private var reengageSuggestion: String?
     @State private var showReengage = true
-    @State private var weeklyModuleSuggestion: AppCategory? = nil
+    @State private var weeklyModuleSuggestion: AppCategory?
 
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
@@ -192,7 +192,7 @@ struct ShortcutsHomeView: View {
     @State private var animatedHabitIDs: Set<PersistentIdentifier> = []
     @State private var moodDismissed = false
     @State private var showBilan = false
-    @State private var fullScreenTool: ShortcutTool? = nil
+    @State private var fullScreenTool: ShortcutTool?
     @AppStorage("tutorialDone") private var tutorialDone = false
     @State private var showTutorial = false
     @State private var editingShortcuts = false
@@ -449,7 +449,7 @@ struct ShortcutsHomeView: View {
             } label: {
                 Text("Compris")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.onAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 11)
                     .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -567,7 +567,7 @@ struct ShortcutsHomeView: View {
         guard !newIDs.isEmpty else { return }
         for (i, id) in newIDs.sorted(by: { $0.hashValue < $1.hashValue }).enumerated() {
             withAnimation(.spring(duration: 0.45, bounce: 0.2).delay(Double(i) * 0.07)) {
-                animatedHabitIDs.insert(id)
+                _ = animatedHabitIDs.insert(id)
             }
         }
     }
@@ -1032,14 +1032,15 @@ struct ShortcutsHomeView: View {
 
 struct WeeklyBilanView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var ctx
     @Query(sort: \Habit.createdAt) private var habits: [Habit]
     @Query private var waters: [WaterEntry]
     @Query private var foods: [FoodEntry]
     @Query(sort: \MoodEntry.date, order: .reverse) private var moods: [MoodEntry]
 
-    @State private var aiBilan: String? = nil
+    @State private var aiBilan: String?
     @State private var bilanLoading = false
-    @State private var shareImage: UIImage? = nil
+    @State private var shareImage: UIImage?
     @AppStorage("lastWeeklyBilanText") private var cachedBilan = ""
     @AppStorage("lastWeeklyBilanDate") private var cachedBilanDate = 0.0
 
@@ -1340,14 +1341,10 @@ struct WeeklyBilanView: View {
         Humeur moy: \(avgMood > 0 ? String(format: "%.1f/5", avgMood) : "non renseignée")
         Instruction: Fais un bilan de semaine motivant en 2-3 phrases. Sois direct, précis, encourage sans être artificiel.
         """
-        do {
-            let response = try await AgentAPI.shared.chat(message: prompt, module: nil, conversationID: nil)
-            aiBilan = response.reply
-            cachedBilan = response.reply
-            cachedBilanDate = today
-        } catch {
-            // Silently fall back to cached or empty
-        }
+        let reply = await OnDeviceLLM.respond(to: prompt, ctx: ctx)
+        aiBilan = reply.text
+        cachedBilan = reply.text
+        cachedBilanDate = today
         bilanLoading = false
     }
 

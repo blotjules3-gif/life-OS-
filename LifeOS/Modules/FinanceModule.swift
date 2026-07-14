@@ -354,7 +354,7 @@ struct SplitView: View {
     }
     private var settlementHint: String {
         let sorted = balances.sorted { $0.value < $1.value }
-        guard let debtor = sorted.first, let creditor = sorted.last, debtor.value < -0.5 else { return "Tout est équilibré ✓" }
+        guard let debtor = sorted.first, let creditor = sorted.last, debtor.value < -0.5 else { return "Tout est équilibré" }
         return "\(debtor.key) doit \(Int(-debtor.value))€ à \(creditor.key)."
     }
 }
@@ -410,7 +410,7 @@ struct SavingsView: View {
                                 HStack { Text(g.name).font(.headline).foregroundStyle(Theme.textPrimary); Spacer(); Text("\(Int(g.current)) / \(Int(g.target)) €").bold().foregroundStyle(Theme.textPrimary) }
                                 ProgressView(value: g.progress).tint(Color.accentColor)
                                 HStack {
-                                    Text(g.monthsLeft > 0 ? "≈ \(g.monthsLeft) mois restants (\(Int(g.monthly))€/mois)" : "Objectif atteint 🎉").font(.caption).foregroundStyle(Theme.textSecondary)
+                                    Text(g.monthsLeft > 0 ? "≈ \(g.monthsLeft) mois restants (\(Int(g.monthly))€/mois)" : "Objectif atteint").font(.caption).foregroundStyle(Theme.textSecondary)
                                     Spacer()
                                     Button { g.current += g.monthly } label: {
                                         Text("+\(Int(g.monthly))€").font(.caption.bold())

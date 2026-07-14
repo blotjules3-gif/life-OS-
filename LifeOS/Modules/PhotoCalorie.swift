@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 import PhotosUI
-import Vision
+@preconcurrency import Vision
 import UIKit
 
 // MARK: - Calories par photo : caméra + classification on-device (Vision) + estimation
@@ -57,7 +57,7 @@ enum FoodVision {
             let handler = VNImageRequestHandler(cgImage: cg, options: [:])
             DispatchQueue.global(qos: .userInitiated).async {
                 try? handler.perform([request])
-                let obs = (request.results as? [VNClassificationObservation] ?? [])
+                let obs = (request.results ?? [])
                     .filter { $0.confidence > 0.05 }
                 // 1) premier label reconnu présent dans la base alimentaire
                 for o in obs.prefix(15) {
@@ -83,6 +83,11 @@ enum FoodVision {
 // MARK: - Vue
 
 struct PhotoCalorieView: View {
+    /// Si vrai, la caméra s'ouvre immédiatement à l'apparition. Utilisé par les
+    /// raccourcis rapides (Control Center, widget Home, Siri) pour amener
+    /// l'utilisateur directement à la prise de photo.
+    var autoOpenCamera: Bool = false
+
     @Environment(\.modelContext) private var ctx
     @State private var image: UIImage?
     @State private var guess: FoodGuess?
@@ -120,6 +125,15 @@ struct PhotoCalorieView: View {
             guard let item else { return }
             Task {
                 if let data = try? await item.loadTransferable(type: Data.self), let img = UIImage(data: data) { handle(img) }
+            }
+        }
+        .onAppear {
+            if autoOpenCamera && cameraAvailable && image == nil {
+                // Léger délai pour laisser la vue apparaître avant d'empiler
+                // le fullScreenCover — sinon l'animation est saccadée.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                    showCamera = true
+                }
             }
         }
     }
@@ -219,7 +233,7 @@ struct PhotoCalorieView: View {
 
     private var toast: some View {
         VStack { Spacer()
-            Label("Ajouté au journal ✓", systemImage: "checkmark.circle.fill")
+            Label("Ajouté au journal", systemImage: "checkmark.circle.fill")
                 .font(.subheadline.weight(.semibold)).foregroundStyle(.white)
                 .padding(.horizontal, 18).padding(.vertical, 12)
                 .background(Color.green, in: Capsule()).padding(.bottom, 30)

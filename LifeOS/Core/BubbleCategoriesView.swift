@@ -751,7 +751,7 @@ struct BubbleCategoriesView: View {
 
     private var addButton: some View {
         Button { showAdd = true } label: {
-            Image(systemName: "plus").font(.title2.weight(.bold)).foregroundStyle(.white)
+            Image(systemName: "plus").font(.title2.weight(.bold)).foregroundStyle(Theme.onAccent)
                 .frame(width: 54, height: 54)
                 .background(Color.accentColor, in: Circle())
                 .shadow(color: .black.opacity(0.2), radius: 8, y: 4)

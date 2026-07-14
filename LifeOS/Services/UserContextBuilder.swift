@@ -27,7 +27,7 @@ final class UserContextBuilder {
         // ── Profile ──────────────────────────────────────────────────────────
         let name = ud.string(forKey: "userName") ?? ""
         let gender = ud.string(forKey: "userGender") ?? ""
-        let lifeProfile = ud.string(forKey: "userLifeProfile") ?? ""
+        let lifeProfile = ud.string(forKey: "lifeProfile") ?? ""
         let activeModules = ud.string(forKey: "activeModules") ?? ""
         if !name.isEmpty       { lines.append("Prénom: \(name)") }
         if !gender.isEmpty     { lines.append("Genre: \(gender)") }

@@ -478,7 +478,7 @@ struct HIITView: View {
         if inWork {
             inWork = false; phase = "Récup"; engine.onFinish = nextPhase; engine.start(seconds: rest)
         } else {
-            if currentRound >= rounds { phase = "Terminé 🔥"; running = false; return }
+            if currentRound >= rounds { phase = "Terminé"; running = false; return }
             currentRound += 1; inWork = true; phase = "Effort"; engine.onFinish = nextPhase; engine.start(seconds: work)
         }
     }

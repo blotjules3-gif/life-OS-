@@ -96,7 +96,7 @@ struct ReviewSession: View {
             if index >= cards.count {
                 VStack(spacing: 16) {
                     Image(systemName: "checkmark.seal.fill").font(.system(size: 60)).foregroundStyle(.green)
-                    Text("Révision terminée 🎉").font(.title2.bold()).foregroundStyle(Theme.textPrimary)
+                    Text("Révision terminée").font(.title2.bold()).foregroundStyle(Theme.textPrimary)
                     PrimaryButton(title: "Fermer", tint: .learnTint) { dismiss() }.padding(.horizontal, 40)
                 }
             } else {

@@ -31,7 +31,7 @@ struct TodoView: View {
     @Query(sort: \TodoItem.due) private var todos: [TodoItem]
     @State private var showAdd = false
     @State private var filter = 0   // 0 actives, 1 toutes
-    @State private var calendarAlert: String? = nil
+    @State private var calendarAlert: String?
 
     private var visible: [TodoItem] {
         let base = filter == 0 ? todos.filter { !$0.done } : todos
@@ -45,7 +45,7 @@ struct TodoView: View {
                 Picker("", selection: $filter) { Text("À faire").tag(0); Text("Toutes").tag(1) }
                     .pickerStyle(.segmented).padding()
                 if visible.isEmpty {
-                    EmptyState(icon: "checklist", title: "Rien à faire 🎉", message: "Ajoute une tâche avec le +.")
+                    EmptyState(icon: "checklist", title: "Rien à faire", message: "Ajoute une tâche avec le +.")
                     Spacer()
                 } else {
                     List {
@@ -221,14 +221,14 @@ struct HabitTrackerView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \Habit.scheduledHour) private var allHabits: [Habit]
     @State private var showAdd = false
-    @State private var editingHabit: Habit? = nil
+    @State private var editingHabit: Habit?
     @AppStorage("habitModulesRaw") private var habitModulesRaw = ""
 
     private var pendingHabits: [Habit] { allHabits.filter { $0.isPending && !$0.isArchived } }
     private var activeHabits: [Habit] { allHabits.filter { !$0.isPending && !$0.isArchived } }
 
-    @State private var pendingDeleteHabit: Habit? = nil
-    @State private var undoWorkItem: DispatchWorkItem? = nil
+    @State private var pendingDeleteHabit: Habit?
+    @State private var undoWorkItem: DispatchWorkItem?
 
     private func softDelete(_ habit: Habit) {
         undoWorkItem?.cancel()

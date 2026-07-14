@@ -84,7 +84,7 @@ enum DailyScoreEngine {
         let didW = workouts.contains { here($0.date) }
         let af = max(min(1, Double(sc) / Double(max(1, stepGoal))), didW ? 1 : 0)
         out.append(.init(label: "Activité", icon: "figure.walk",
-                         value: didW ? "Séance ✓" : "\(sc)/\(stepGoal) pas", fraction: af, color: Color(hex: 0x4CD07A)))
+                         value: didW ? "Séance" : "\(sc)/\(stepGoal) pas", fraction: af, color: Color(hex: 0x4CD07A)))
 
         if !habits.isEmpty {
             let d = habits.filter { h in h.completions.contains { here($0.date) } }.count

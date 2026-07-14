@@ -278,7 +278,7 @@ struct GuidedWorkoutView: View {
                 Text(formatHMS(restRemaining))
                     .font(.system(size: 88, weight: .black, design: .rounded)).monospacedDigit().foregroundStyle(.white)
                 if lastWasPR {
-                    Label("Nouveau record 💪", systemImage: "trophy.fill")
+                    Label("Nouveau record", systemImage: "trophy.fill")
                         .font(.headline.bold()).foregroundStyle(Color.accentColor)
                 }
                 Text("Prochaine : \(nextSetLabel)").font(.subheadline).foregroundStyle(.white.opacity(0.7))
@@ -299,7 +299,7 @@ struct GuidedWorkoutView: View {
 
     private func restBtn(_ label: String, _ action: @escaping () -> Void) -> some View {
         Button { Haptics.tap(); action() } label: {
-            Text(label).font(.system(size: 15, weight: .bold)).foregroundStyle(.white)
+            Text(label).font(.system(size: 15, weight: .bold)).foregroundStyle(Theme.onAccent)
                 .padding(.horizontal, 20).padding(.vertical, 10)
                 .background(.white.opacity(0.14), in: Capsule())
         }

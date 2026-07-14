@@ -224,7 +224,7 @@ struct ProductDetailView: View {
                     try? ctx.save(); Haptics.medium()
                     withAnimation { added = true }
                 } label: {
-                    Label(added ? "Ajouté ✓" : "Ajouter au journal", systemImage: added ? "checkmark.circle.fill" : "plus.circle.fill")
+                    Label(added ? "Ajouté" : "Ajouter au journal", systemImage: added ? "checkmark.circle.fill" : "plus.circle.fill")
                         .font(.system(size: 15, weight: .black)).textCase(.uppercase).kerning(0.5)
                         .foregroundStyle(Theme.onAccent)
                         .frame(maxWidth: .infinity).padding(.vertical, 16)

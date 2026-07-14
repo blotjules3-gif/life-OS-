@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -10,36 +9,36 @@ from pydantic import BaseModel, Field
 class GoalCreate(BaseModel):
     module_type: str
     title: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = None
-    target_value: Optional[float] = None
-    unit: Optional[str] = None
-    frequency: Optional[str] = Field(None, pattern=r"^(daily|weekly|monthly|once)$")
+    description: str | None = None
+    target_value: float | None = None
+    unit: str | None = None
+    frequency: str | None = Field(None, pattern=r"^(daily|weekly|monthly|once)$")
     priority: int = Field(1, ge=1, le=5)
-    due_date: Optional[datetime] = None
+    due_date: datetime | None = None
 
 
 class GoalUpdate(BaseModel):
-    title: Optional[str] = Field(None, max_length=255)
-    description: Optional[str] = None
-    target_value: Optional[float] = None
-    current_value: Optional[float] = None
-    priority: Optional[int] = Field(None, ge=1, le=5)
-    is_active: Optional[bool] = None
-    due_date: Optional[datetime] = None
+    title: str | None = Field(None, max_length=255)
+    description: str | None = None
+    target_value: float | None = None
+    current_value: float | None = None
+    priority: int | None = Field(None, ge=1, le=5)
+    is_active: bool | None = None
+    due_date: datetime | None = None
 
 
 class GoalOut(BaseModel):
     id: uuid.UUID
     module_type: str
     title: str
-    description: Optional[str]
-    target_value: Optional[float]
+    description: str | None
+    target_value: float | None
     current_value: float
-    unit: Optional[str]
-    frequency: Optional[str]
+    unit: str | None
+    frequency: str | None
     priority: int
     is_active: bool
-    due_date: Optional[datetime]
+    due_date: datetime | None
     progress_pct: float
     created_at: datetime
     updated_at: datetime

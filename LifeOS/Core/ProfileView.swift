@@ -50,7 +50,7 @@ struct ProfileView: View {
     @State private var showExportSheet = false
     @State private var showCoachDebug = false
     @State private var appLockEnabled = AppLock.shared.isEnabled
-    @State private var energyScore: EnergyScoreOut? = nil
+    @State private var energyScore: EnergyScore.Result?
     @State private var facet = 0
     @Namespace private var facetNS
     @ObservedObject private var serverStatus = ServerStatusMonitor.shared
@@ -194,7 +194,7 @@ struct ProfileView: View {
                     healthConnected = true
                     steps = await HealthService.shared.cachedStepsToday()
                 }
-                energyScore = try? await AgentAPI.shared.fetchEnergyScore()
+                energyScore = EnergyScore.today(ctx)
             }
             .sheet(isPresented: $showGoalEditor) {
                 GoalEditorSheet(
@@ -385,7 +385,7 @@ struct ProfileView: View {
                 }
             }
 
-            if let score = energyScore?.energy_score {
+            if let score = energyScore?.score {
                 Rectangle()
                     .fill(Color.primary.opacity(0.06))
                     .frame(height: 1)

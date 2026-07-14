@@ -15,7 +15,13 @@ from app.core.ratelimit import get_chat_limiters
 from app.database import get_session
 from app.dependencies import get_orchestrator, verify_api_key
 from app.models.db import Conversation, Message, User
-from app.schemas.chat import ChatAction, ChatRequest, ChatResponse, ConversationOut
+from app.schemas.chat import (
+    ChatAction,
+    ChatRequest,
+    ChatResponse,
+    ConversationOut,
+    ReportRequest,
+)
 from app.services import module_config as config_svc
 from app.services.behavioral_insights import compute_insights
 from app.services.user import get_or_create_user
@@ -272,3 +278,18 @@ async def get_conversation(
     if not conv:
         raise HTTPException(status_code=404, detail="Conversation not found.")
     return ConversationOut.model_validate(conv)
+
+
+# Guideline App Store 1.2 — les signalements sont loggés (Railway).
+# Passer à une table dédiée quand le volume dépasse ~100 par jour.
+@router.post("/report", dependencies=[Depends(verify_api_key)])
+async def report_message(body: ReportRequest) -> dict[str, str]:
+    log.warning(
+        "coach_message_reported",
+        device_id=body.device_id,
+        conversation_id=str(body.conversation_id) if body.conversation_id else None,
+        reason=body.reason,
+        content_preview=body.message_content[:400],
+        content_length=len(body.message_content),
+    )
+    return {"status": "received"}

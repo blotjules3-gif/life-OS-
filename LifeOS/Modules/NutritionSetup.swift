@@ -135,7 +135,7 @@ struct NutritionSetupView: View {
                         if on { chosenSupps.remove(item.name) } else { chosenSupps.insert(item.name) }
                         Haptics.soft()
                     } label: {
-                        Text(on ? "Ajouté ✓" : "Ajouter")
+                        Text(on ? "Ajouté" : "Ajouter")
                             .font(.caption.weight(.bold))
                             .foregroundStyle(on ? .white : tint)
                             .padding(.horizontal, 12).padding(.vertical, 8)
@@ -232,7 +232,7 @@ struct NutritionSetupView: View {
                                   moment: r.moment, withFood: r.withFood, advice: advice, confirm: true))
             NotificationManager.shared.scheduleDaily(
                 id: "supp.\(name)",
-                title: "💊 \(name)\(dose != nil ? " · \(dose!)" : "")",
+                title: "\(name)\(dose != nil ? " · \(dose!)" : "")",
                 body: advice.isEmpty ? "\(r.momentLabel) · \(r.foodLabel)" : advice,
                 hour: r.hour, minute: r.minute)
         }

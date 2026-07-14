@@ -24,11 +24,9 @@ struct DailyBriefingView: View {
     @Environment(\.modelContext) private var ctx
 
     @State private var waveActive = false
-    @State private var aiBriefing: String? = nil
+    @State private var aiBriefing: String?
     @State private var briefingFailed = false
     @State private var briefingLoading = false
-    @State private var briefingGoals: [GoalOut] = []
-    @State private var briefingChallenges: [ChallengeOut] = []
     @State private var morningMood = 0
     @State private var morningFatigue = 0
     @State private var checkinSubmitting = false
@@ -197,7 +195,7 @@ struct DailyBriefingView: View {
                     Button { dismiss() } label: {
                         Text("Commencer la journée")
                             .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.onAccent)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -213,23 +211,16 @@ struct DailyBriefingView: View {
             briefingLoading = true
             briefingFailed = false
 
-            async let goalsTask = (try? await AgentAPI.shared.listGoals()) ?? []
-            async let challengesTask = (try? await AgentAPI.shared.fetchChallenges()) ?? []
-            async let insightsTask = (try? await AgentAPI.shared.fetchBehavioralInsights()) ?? []
-            let (g, c, ins) = await (goalsTask, challengesTask, insightsTask)
-            briefingGoals = g
-            briefingChallenges = c
-            behavioralInsights = ins
+            // Goals / challenges / insights vivaient côté Railway.
+            // Depuis Option C, on part de listes vides — les habitudes et l'état
+            // du jour (SwiftData) suffisent à alimenter le prompt du briefing.
+            behavioralInsights = []
 
-            let prompt = buildBriefingPrompt(goals: g, challenges: c)
-            if let resp = try? await AgentAPI.shared.chat(message: prompt, module: nil, conversationID: nil) {
-                aiBriefing = resp.reply
-                UserDefaults.standard.set(resp.reply, forKey: "lastAIBriefing")
-                lastBriefingDate = Date.now.timeIntervalSince1970
-            } else {
-                briefingFailed = true
-                aiBriefing = UserDefaults.standard.string(forKey: "lastAIBriefing")
-            }
+            let prompt = buildBriefingPrompt()
+            let reply = await OnDeviceLLM.respond(to: prompt, ctx: ctx)
+            aiBriefing = reply.text
+            UserDefaults.standard.set(reply.text, forKey: "lastAIBriefing")
+            lastBriefingDate = Date.now.timeIntervalSince1970
             briefingLoading = false
 
             if speakOnAppear {
@@ -421,26 +412,30 @@ struct DailyBriefingView: View {
 
     private func submitCheckin() {
         checkinSubmitting = true
-        Task {
-            if let result = try? await AgentAPI.shared.logCheckin(
-                sleepQuality: sleepQuality > 0 ? sleepQuality : nil,
-                sleepHours: sleepHours > 0 ? Double(sleepHours) : nil,
-                mood: morningMood > 0 ? morningMood : nil,
-                fatigue: morningFatigue > 0 ? morningFatigue : nil,
-                waterML: waterToday > 0 ? waterToday : nil,
-                habitsDone: habitsDone,
-                habitsTotal: habits.count > 0 ? habits.count : nil
-            ) {
-                await MainActor.run {
-                    todayEnergyScore = result.energy_score ?? 0
-                    todayEnergyLabel = result.label ?? ""
-                }
-            }
-            await MainActor.run {
-                checkinSubmitting = false
-                withAnimation(.spring(duration: 0.4, bounce: 0.1)) { checkinDone = true }
-            }
+        // Écriture locale + calcul score on-device. Aucun POST réseau.
+        if sleepQuality > 0 || sleepHours > 0 {
+            UserDefaults.standard.set(sleepQuality, forKey: "lastSleepQuality")
+            UserDefaults.standard.set(Double(sleepHours), forKey: "lastSleepHours")
+            UserDefaults.standard.set(Date.now.timeIntervalSince1970, forKey: "lastSleepCheckDate")
         }
+        if morningMood > 0 { ctx.insert(MoodEntry(score: morningMood, note: "")) }
+        do { try ctx.save() } catch { print("[SwiftData] saveBriefingCheckin failed: \(error)") }
+
+        let manual = EnergyScore.Input(
+            sleepHours: sleepHours > 0 ? Double(sleepHours) : nil,
+            sleepQuality: sleepQuality > 0 ? sleepQuality : nil,
+            mood: morningMood > 0 ? morningMood : nil,
+            fatigue: morningFatigue > 0 ? morningFatigue : nil,
+            waterML: waterToday > 0 ? waterToday : nil,
+            habitsDone: habitsDone,
+            habitsTotal: habits.count > 0 ? habits.count : nil
+        )
+        let result = EnergyScore.compute(manual)
+        todayEnergyScore = result.score
+        todayEnergyLabel = result.label
+
+        checkinSubmitting = false
+        withAnimation(.spring(duration: 0.4, bounce: 0.1)) { checkinDone = true }
     }
 
     // MARK: - Bandeau voix
@@ -548,14 +543,11 @@ struct DailyBriefingView: View {
                         briefingFailed = false
                         briefingLoading = true
                         Task {
-                            let prompt = buildBriefingPrompt(goals: briefingGoals, challenges: briefingChallenges)
-                            if let resp = try? await AgentAPI.shared.chat(message: prompt, module: nil, conversationID: nil) {
-                                aiBriefing = resp.reply
-                                UserDefaults.standard.set(resp.reply, forKey: "lastAIBriefing")
-                                lastBriefingDate = Date.now.timeIntervalSince1970
-                            } else {
-                                briefingFailed = true
-                            }
+                            let prompt = buildBriefingPrompt()
+                            let reply = await OnDeviceLLM.respond(to: prompt, ctx: ctx)
+                            aiBriefing = reply.text
+                            UserDefaults.standard.set(reply.text, forKey: "lastAIBriefing")
+                            lastBriefingDate = Date.now.timeIntervalSince1970
                             briefingLoading = false
                         }
                     }
@@ -584,7 +576,7 @@ struct DailyBriefingView: View {
         }
     }
 
-    private func buildBriefingPrompt(goals: [GoalOut], challenges: [ChallengeOut]) -> String {
+    private func buildBriefingPrompt() -> String {
         var lines = ["[BRIEFING_MATIN]"]
         lines.append("Heure du réveil : \(String(format: "%02d:%02d", wakeupHour, wakeupMinute))")
         if !userName.isEmpty { lines.append("Utilisateur : \(userName)") }
@@ -608,23 +600,6 @@ struct DailyBriefingView: View {
         if !yesterdayLines.isEmpty {
             lines.append("Données d'hier :")
             lines.append(contentsOf: yesterdayLines.map { "- \($0)" })
-        }
-
-        if !challenges.isEmpty {
-            lines.append("Habitudes actives :")
-            for ch in challenges.prefix(3) {
-                var info = "- \"\(ch.title)\" — streak \(ch.streak_days) jour\(ch.streak_days > 1 ? "s" : "")"
-                if let dur = ch.duration_days { info += ", J\(ch.days_elapsed)/\(dur)" }
-                if ch.checkedInToday { info += " (validé aujourd'hui)" }
-                lines.append(info)
-            }
-        }
-
-        if !goals.isEmpty {
-            lines.append("Objectifs en cours :")
-            for g in goals.prefix(3) {
-                lines.append("- \(g.title) (\(Int(g.progress_pct))%)")
-            }
         }
 
         return lines.joined(separator: "\n")

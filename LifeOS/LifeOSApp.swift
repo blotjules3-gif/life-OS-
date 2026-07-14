@@ -9,7 +9,7 @@ struct LifeOSApp: App {
     @State private var appLock = AppLock.shared
     @Environment(\.scenePhase) private var scenePhase
 
-    @State private var container: ModelContainer? = nil
+    @State private var container: ModelContainer?
     @State private var migrationFailed = false
     @State private var storeWasReset = false
     @AppStorage("onboardingDone") private var onboardingDone = false
@@ -23,6 +23,7 @@ struct LifeOSApp: App {
     @State private var showSleepCheckFromWidget = false
     @State private var showWeeklyBilan = false
     @State private var showIntake = false
+    @State private var showFoodScan = false
     @AppStorage("intakeShown") private var intakeShown = false
 
     private var recommendedModules: [AppCategory] {
@@ -143,8 +144,29 @@ struct LifeOSApp: App {
             DailyBriefingView(modules: recommendedModules, speakOnAppear: false)
         }
         .onOpenURL { url in
-            guard url.scheme == "lifeos", url.host == "briefing" else { return }
-            showSleepCheckFromWidget = true
+            guard url.scheme == "lifeos" else { return }
+            switch url.host {
+            case "briefing":
+                showSleepCheckFromWidget = true
+            case "scan-food":
+                showFoodScan = true
+            default:
+                break
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenFoodScan)) { _ in
+            showFoodScan = true
+        }
+        .fullScreenCover(isPresented: $showFoodScan) {
+            NavigationStack {
+                PhotoCalorieView(autoOpenCamera: true)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Fermer") { showFoodScan = false }
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+            }
         }
         .sheet(isPresented: Binding(get: { alarm.showSleepCheck }, set: { if !$0 { alarm.phase = .idle } })) {
             SleepCheckSheet { alarm.sleepCheckDone() }

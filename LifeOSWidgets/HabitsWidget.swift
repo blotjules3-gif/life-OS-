@@ -107,7 +107,8 @@ struct HabitsProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<HabitsEntry>) -> Void) {
         let entry = HabitsEntry(date: .now, data: WidgetHabitsData.load())
-        let midnight = Calendar.current.startOfDay(for: Calendar.current.date(byAdding: .day, value: 1, to: .now)!)
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: .now) ?? .now.addingTimeInterval(86_400)
+        let midnight = Calendar.current.startOfDay(for: tomorrow)
         completion(Timeline(entries: [entry], policy: .after(midnight)))
     }
 }

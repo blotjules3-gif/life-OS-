@@ -50,7 +50,7 @@ struct LanguagesView: View {
     @AppStorage("vocabStreak") private var streak = 0
 
     @State private var revealed = false
-    @State private var current: (String, String)? = nil
+    @State private var current: (String, String)?
 
     private var pack: LangPack { langPacks.first { $0.id == lang } ?? langPacks[0] }
 
@@ -102,7 +102,7 @@ struct LanguagesView: View {
             Divider().frame(height: 30)
             stat("\(dueCount)", "à revoir")
             Divider().frame(height: 30)
-            stat("🔥 \(streak)", "jours")
+            stat("\(streak)", "jours")
         }
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity)

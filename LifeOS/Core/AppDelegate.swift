@@ -36,7 +36,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         )
 
         // Catégorie CONFIRMATION — « Tu as bien fait X ? » avec 2 boutons.
-        let yes = UNNotificationAction(identifier: "CONFIRM_YES", title: "Oui ✓", options: [])
+        let yes = UNNotificationAction(identifier: "CONFIRM_YES", title: "Oui", options: [])
         let no  = UNNotificationAction(identifier: "CONFIRM_NO",  title: "Pas encore", options: [])
         let confirmCategory = UNNotificationCategory(
             identifier: "LIFEOS_CONFIRM",
@@ -116,7 +116,7 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                 NotificationManager.shared.scheduleAfter(
                     id: "\(key).snooze",
                     title: "Petit rappel",
-                    body: "\(label) — quand tu peux 😉",
+                    body: "\(label) — quand tu peux.",
                     seconds: 30 * 60
                 )
             }
@@ -145,4 +145,5 @@ extension Notification.Name {
     static let lifeOSOpenAIChat      = Notification.Name("lifeOSOpenAIChat")
     static let lifeOSOpenWeeklyBilan = Notification.Name("lifeOSOpenWeeklyBilan")
     static let lifeOSOpenModule      = Notification.Name("lifeOSOpenModule")
+    static let lifeOSOpenFoodScan    = Notification.Name("lifeOSOpenFoodScan")
 }

@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 import PhotosUI
-import Vision
+@preconcurrency import Vision
 import UIKit
 
 // MARK: - Persistent message model
@@ -81,12 +81,12 @@ final class AIAssistantViewModel: ObservableObject {
     @Published var messages: [DisplayMessage] = []
     @Published var inputText = ""
     @Published var isLoading = false
-    @Published var errorBanner: String? = nil
+    @Published var errorBanner: String?
     @Published var isServerOffline = false
-    @Published var pendingModuleSetup: AppCategory? = nil
-    @Published var actionToast: ActionToast? = nil
-    @Published var revealID: UUID? = nil
-    @Published var streamingText: String? = nil
+    @Published var pendingModuleSetup: AppCategory?
+    @Published var actionToast: ActionToast?
+    @Published var revealID: UUID?
+    @Published var streamingText: String?
     @Published var showAddFlow = false
     @Published var addFlowKind: AddAnythingSheet.Kind = .task
     @Published var addFlowPrefill = ""
@@ -208,12 +208,9 @@ final class AIAssistantViewModel: ObservableObject {
     }
 
     private func checkAbandonedChallenges() {
-        Task {
-            guard let challenges = try? await AgentAPI.shared.fetchChallenges() else { return }
-            guard let abandoned = challenges.first(where: { $0.isAbandoned }) else { return }
-            let prompt = "[HABITUDE_ABANDONNEE] Habitude : \"\(abandoned.title)\" — streak actuel : \(abandoned.streak_days) jour(s), dernier check-in : \(abandoned.days_since_checkin.map { "\($0) jour(s) ago" } ?? "jamais")"
-            await MainActor.run { triggerProactive(prompt: prompt) }
-        }
+        // Les challenges vivaient côté Railway ; feature retirée depuis Option C.
+        // Un tracker local pourra revenir en Phase 2B.5 quand on aura un modèle
+        // SwiftData `LifeChallenge` local.
     }
 
     private func triggerProactive(prompt: String) {
@@ -222,35 +219,10 @@ final class AIAssistantViewModel: ObservableObject {
         isLoading = true
 
         Task {
-            do {
-                let response = try await AgentAPI.shared.chat(
-                    message: prompt,
-                    module: nil,
-                    conversationID: conversationID.isEmpty ? nil : conversationID
-                )
-                conversationID = response.conversation_id
-                isServerOffline = false
-                removeThinking()
-                appendAssistantMessage(response.reply, actions: response.actions ?? [])
-                for action in (response.actions ?? []) {
-                    await execute(action: action)
-                }
-            } catch {
-                removeThinking()
-                if let apiErr = error as? AgentAPIError {
-                    switch apiErr {
-                    case .networkError(let underlying):
-                        let urlErr = underlying as? URLError
-                        if urlErr?.code == .notConnectedToInternet || urlErr?.code == .networkConnectionLost {
-                            isServerOffline = true
-                        }
-                    case .invalidResponse(404):
-                        conversationID = ""
-                    default:
-                        break
-                    }
-                }
-            }
+            let reply = await OnDeviceLLM.respond(to: prompt, ctx: modelContext)
+            isServerOffline = false
+            removeThinking()
+            appendAssistantMessage(reply.text, actions: [])
             isLoading = false
         }
     }
@@ -277,32 +249,15 @@ final class AIAssistantViewModel: ObservableObject {
         isLoading = true
 
         Task {
-            do {
-                let response = try await AgentAPI.shared.chatStream(
-                    message: content,
-                    module: module,
-                    conversationID: conversationID.isEmpty ? nil : conversationID
-                ) { [weak self] token in
-                    self?.handleStreamToken(token)
-                }
-                conversationID = response.conversation_id
-                isServerOffline = false
-                removeThinking()
-                let wasStreamed = streamingText != nil
-                streamingText = nil
-                // Pas de machine à écrire après un stream : le texte est déjà apparu token par token.
-                appendAssistantMessage(response.reply, actions: response.actions ?? [], animateReveal: !wasStreamed)
-
-                // Execute local iOS actions
-                for action in (response.actions ?? []) {
-                    await execute(action: action)
-                }
-            } catch {
-                // Serveur pas encore à jour (404 sur /chat/stream) ou flux interrompu :
-                // on retombe sur l'endpoint classique.
-                streamingText = nil
-                await fallbackSend(content: content, module: module)
-            }
+            let reply = await OnDeviceLLM.respond(
+                to: content,
+                ctx: modelContext,
+                moduleContext: module
+            )
+            isServerOffline = false
+            removeThinking()
+            streamingText = nil
+            appendAssistantMessage(reply.text, actions: [], animateReveal: true)
             isLoading = false
         }
     }
@@ -317,46 +272,12 @@ final class AIAssistantViewModel: ObservableObject {
     }
 
     private func fallbackSend(content: String, module: String?) async {
+        // Legacy fallback : depuis Option C, tout passe par OnDeviceLLM. Ce
+        // chemin reste comme filet en cas d'appel externe imprévu.
         if !messages.contains(where: { $0.isThinking }) { appendThinking() }
-        do {
-            let response = try await AgentAPI.shared.chat(
-                message: content,
-                module: module,
-                conversationID: conversationID.isEmpty ? nil : conversationID
-            )
-            conversationID = response.conversation_id
-            isServerOffline = false
-            removeThinking()
-            appendAssistantMessage(response.reply, actions: response.actions ?? [])
-            for action in (response.actions ?? []) {
-                await execute(action: action)
-            }
-        } catch {
-            removeThinking()
-            if let apiErr = error as? AgentAPIError {
-                switch apiErr {
-                case .networkError(let underlying):
-                    let urlErr = underlying as? URLError
-                    let offlineCodes: [URLError.Code] = [
-                        .notConnectedToInternet, .networkConnectionLost,
-                        .cannotConnectToHost, .cannotFindHost
-                    ]
-                    if urlErr?.code == .timedOut {
-                        errorBanner = "Ton coach met trop de temps à répondre. Réessaie."
-                    } else if let code = urlErr?.code, offlineCodes.contains(code) {
-                        isServerOffline = true
-                        // Le chat ne reste pas muet : réponse composée depuis les données locales.
-                        appendAssistantMessage(OfflineCoach.reply(to: content, ctx: modelContext), actions: [])
-                    } else {
-                        errorBanner = "Erreur réseau. Réessaie dans un instant."
-                    }
-                case .invalidResponse(404): conversationID = ""
-                default: errorBanner = apiErr.errorDescription
-                }
-            } else {
-                errorBanner = error.localizedDescription
-            }
-        }
+        let reply = await OnDeviceLLM.respond(to: content, ctx: modelContext, moduleContext: module)
+        removeThinking()
+        appendAssistantMessage(reply.text, actions: [])
     }
 
     private func triggerWelcome() {
@@ -420,33 +341,11 @@ final class AIAssistantViewModel: ObservableObject {
         aiKnownModulesRaw = recommendedModulesRaw
 
         Task {
-            do {
-                let response = try await AgentAPI.shared.chat(
-                    message: prompt,
-                    module: nil,
-                    conversationID: nil
-                )
-                // Succès — on marque le welcome comme vu seulement maintenant
-                firstLaunchDone = true
-                conversationID = response.conversation_id
-                isServerOffline = false
-                removeThinking()
-                appendAssistantMessage(response.reply, actions: response.actions ?? [])
-                for action in (response.actions ?? []) {
-                    await execute(action: action)
-                }
-            } catch {
-                removeThinking()
-                if let apiErr = error as? AgentAPIError, case .networkError = apiErr {
-                    isServerOffline = true
-                }
-                // firstLaunchDone reste false → réessai au prochain lancement
-                let name = userName.isEmpty ? "" : " \(userName)"
-                appendAssistantMessage(
-                    "Connexion impossible. Je te retrouve dès que le réseau est disponible. En attendant, dis-moi par où tu veux commencer.",
-                    actions: []
-                )
-            }
+            let reply = await OnDeviceLLM.respond(to: prompt, ctx: modelContext)
+            firstLaunchDone = true
+            isServerOffline = false
+            removeThinking()
+            appendAssistantMessage(reply.text, actions: [])
             isLoading = false
         }
     }
@@ -736,7 +635,7 @@ enum ImageIntel {
             let handler = VNImageRequestHandler(cgImage: cg, options: [:])
             DispatchQueue.global(qos: .userInitiated).async {
                 try? handler.perform([req])
-                let obs = (req.results as? [VNClassificationObservation] ?? []).filter { $0.confidence > 0.05 }
+                let obs = (req.results ?? []).filter { $0.confidence > 0.05 }
                 cont.resume(returning: obs.prefix(15).map { ($0.identifier, $0.confidence) })
             }
         }
@@ -751,7 +650,7 @@ enum ImageIntel {
             let handler = VNImageRequestHandler(cgImage: cg, options: [:])
             DispatchQueue.global(qos: .userInitiated).async {
                 try? handler.perform([req])
-                let strings = (req.results as? [VNRecognizedTextObservation] ?? [])
+                let strings = (req.results ?? [])
                     .compactMap { $0.topCandidates(1).first?.string }
                 cont.resume(returning: strings.joined(separator: "\n"))
             }
@@ -771,6 +670,7 @@ struct AIAssistantView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var vm = AIAssistantViewModel()
     @AppStorage("appTheme") private var appThemeRaw = "classic"
+    @AppStorage("coachDisclaimerAccepted") private var disclaimerAccepted = false
     private var accent: Color { (AppTheme(rawValue: appThemeRaw) ?? .classic).accent }
     @FocusState private var inputFocused: Bool
     @State private var showClearConfirm = false
@@ -780,6 +680,7 @@ struct AIAssistantView: View {
     @State private var textBeforeVoice: String = ""
     @State private var micPulse = false
     @State private var voiceDragOffset: CGFloat = 0
+    @State private var messageToReport: AIAssistantViewModel.DisplayMessage?
     private let cancelThreshold: CGFloat = 90
 
     // Quick suggestions change per time of day
@@ -818,6 +719,17 @@ struct AIAssistantView: View {
     }
 
     var body: some View {
+        if !disclaimerAccepted {
+            CoachDisclaimerSheet(
+                onAccept: { disclaimerAccepted = true },
+                onDismiss: { dismiss() }
+            )
+        } else {
+            chatContent
+        }
+    }
+
+    private var chatContent: some View {
         NavigationStack {
             messagesArea
                 .background(Theme.bg.ignoresSafeArea())
@@ -849,6 +761,14 @@ struct AIAssistantView: View {
             } message: {
                 Text(vm.errorBanner ?? "")
             }
+            .coachReportAlerts(
+                for: $messageToReport,
+                messageText: { $0.text },
+                conversationID: {
+                    let raw = UserDefaults.standard.string(forKey: "aiConversationID") ?? ""
+                    return raw.isEmpty ? nil : raw
+                }
+            )
             #if DEBUG
             .sheet(isPresented: $showServerConfig) {
                 ServerConfigView {
@@ -881,6 +801,7 @@ struct AIAssistantView: View {
                 vm.inputText = prefill
                 inputFocused = true
             }
+            await RemoteConfig.shared.refreshIfNeeded()
         }
     }
 
@@ -950,10 +871,17 @@ struct AIAssistantView: View {
 
                     // Messages
                     ForEach(vm.messages) { msg in
-                        MessageRow(message: msg, accent: accent, reveal: msg.id == vm.revealID)
-                            .id(msg.id)
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 8)
+                        MessageRow(
+                            message: msg,
+                            accent: accent,
+                            reveal: msg.id == vm.revealID,
+                            onReport: msg.role == "assistant" && !msg.isThinking
+                                ? { messageToReport = msg }
+                                : nil
+                        )
+                        .id(msg.id)
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 8)
                     }
 
                     // Réponse en cours de streaming (mise à jour token par token)
@@ -1106,14 +1034,15 @@ struct AIAssistantView: View {
                         .transition(.scale.combined(with: .opacity))
                         .accessibilityHidden(true)
                 } else {
+                    let loading = vm.isLoading
                     PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
                         Image(systemName: "photo.on.rectangle.angled")
                             .font(.system(size: 20, weight: .medium))
-                            .foregroundStyle(vm.isLoading ? Color.secondary : accent)
+                            .foregroundStyle(loading ? Color.secondary : accent)
                             .frame(width: 44, height: 44)
                             .contentShape(Rectangle())
                     }
-                    .disabled(vm.isLoading)
+                    .disabled(loading)
                     .accessibilityLabel("Ajouter une photo")
                     .onChange(of: photoItem) { _, item in
                         guard let item else { return }
@@ -1350,11 +1279,11 @@ struct AIAssistantView: View {
                 title: "Le coach dort",
                 subtitle: "Serveur en veille — réessaie dans 30 s"
             )
-        case .llmDown(let err):
+        case .llmDown:
             coachBannerContent(
                 icon: "exclamationmark.triangle.fill",
                 title: "Coach indisponible",
-                subtitle: err ?? "Le service IA ne répond pas"
+                subtitle: "Service momentanément en panne — réessaie plus tard"
             )
         }
     }
@@ -1463,6 +1392,7 @@ struct AIAssistantView: View {
         UserDefaults.standard.removeObject(forKey: "aiKnownModulesRaw")
         vm.loadHistory()
     }
+
 }
 
 // MARK: - MessageRow
@@ -1471,6 +1401,7 @@ private struct MessageRow: View {
     let message: AIAssistantViewModel.DisplayMessage
     let accent: Color
     var reveal: Bool = false
+    var onReport: (() -> Void)? = nil
 
     var isUser: Bool { message.role == "user" }
 
@@ -1489,7 +1420,7 @@ private struct MessageRow: View {
                     } else {
                         Text(isUser ? message.text : CoachTextCleaner.clean(message.text))
                             .font(.system(size: 15))
-                            .foregroundStyle(isUser ? .white : .primary)
+                            .foregroundStyle(isUser ? Theme.onAccent : .primary)
                             .textSelection(.enabled)
                     }
                 }
@@ -1505,6 +1436,13 @@ private struct MessageRow: View {
                     x: 0,
                     y: isUser ? 3 : 2
                 )
+                .contextMenu {
+                    if !isUser, !message.isThinking, let onReport {
+                        Button(role: .destructive, action: onReport) {
+                            Label("Signaler cette réponse", systemImage: "flag")
+                        }
+                    }
+                }
 
                 if !isUser { Spacer(minLength: 56) }
             }

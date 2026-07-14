@@ -17,7 +17,7 @@ struct AlarmActivityWidget: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: AlarmAttributes.self) { context in
             LockScreenAlarmView(state: context.state)
-                .widgetURL(URL(string: "lifeos://briefing")!)
+                .widgetURL(URL(string: "lifeos://briefing"))
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -148,10 +148,16 @@ struct RingingView: View {
         HStack(spacing: 16) {
             ZStack {
                 Circle().fill(accent.opacity(0.18)).frame(width: 52, height: 52)
-                Image(systemName: "alarm.fill")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(accent)
-                    .symbolEffect(.bounce, options: .repeating)
+                if #available(iOS 18.0, *) {
+                    Image(systemName: "alarm.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(accent)
+                        .symbolEffect(.bounce, options: .repeating)
+                } else {
+                    Image(systemName: "alarm.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(accent)
+                }
             }
             VStack(alignment: .leading, spacing: 3) {
                 Text("RÉVEIL")

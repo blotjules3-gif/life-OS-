@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -137,7 +137,7 @@ async def get_insights(
 @router.get("/history", dependencies=[Depends(verify_api_key)])
 async def get_history(
     device_id: str,
-    days: int = 7,
+    days: int = Query(default=7, ge=1, le=90),
     session: AsyncSession = Depends(get_session),
 ) -> dict:
     user = await get_or_create_user(session, device_id)

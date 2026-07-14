@@ -170,7 +170,7 @@ final class NotificationManager {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["lifeos.weekly_bilan"])
         let content = UNMutableNotificationContent()
         content.title = "Bilan de semaine"
-        content.body = "Tes habitudes, ton humeur, tes objectifs — tout est la."
+        content.body = "Tes habitudes, ton humeur, tes objectifs — tout est là."
         content.sound = .default
         content.interruptionLevel = .active
         var comps = DateComponents()

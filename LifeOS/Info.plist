@@ -34,7 +34,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MinimumOSVersion</key>
@@ -42,17 +42,17 @@
 	<key>NSAccentColorName</key>
 	<string>AccentColor</string>
 	<key>NSCameraUsageDescription</key>
-	<string>LifeOS utilise l'appareil photo pour scanner les codes-barres, les documents et tes photos avant/apres.</string>
+	<string>LifeOS utilise l'appareil photo pour scanner les codes-barres, les documents et tes photos avant/après.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>LifeOS utilise Face ID pour verrouiller l'acces a tes donnees personnelles.</string>
+	<string>LifeOS utilise Face ID pour verrouiller l'accès à tes données personnelles.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>LifeOS lit ton sommeil, ta frequence cardiaque et tes pas pour calculer ton score de recuperation.</string>
+	<string>LifeOS lit ton sommeil, ta fréquence cardiaque et tes pas pour calculer ton score de récupération.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>LifeOS peut enregistrer tes seances et donnees de sommeil dans Sante.</string>
+	<string>LifeOS peut enregistrer tes séances et données de sommeil dans Santé.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>LifeOS utilise ta position pour le suivi running GPS et le partage de localisation.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>LifeOS utilise le micro pour tes messages vocaux au coach et ton journal de reves vocal.</string>
+	<string>LifeOS utilise le micro pour tes messages vocaux au coach et ton journal de rêves vocal.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>LifeOS transcrit ta voix en texte pour envoyer tes messages au coach.</string>
 	<key>NSContactsUsageDescription</key>

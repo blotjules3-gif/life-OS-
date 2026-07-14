@@ -119,7 +119,7 @@ struct MeditationView: View {
                 if !started {
                     PrimaryButton(title: "Méditer", icon: "play.fill", tint: .mindTint) {
                         started = true
-                        engine.onFinish = { NotificationManager.shared.scheduleAfter(id: "medi", title: "Séance terminée 🧘", body: "Reviens en douceur.", seconds: 1); started = false }
+                        engine.onFinish = { NotificationManager.shared.scheduleAfter(id: "medi", title: "Séance terminée", body: "Reviens en douceur.", seconds: 1); started = false }
                         engine.start(seconds: minutes*60)
                     }
                 } else {
@@ -158,7 +158,7 @@ struct MoodJournalView: View {
                             }
                         }
                         TextField("Une note sur ta journée…", text: $note, axis: .vertical).textFieldStyle(.roundedBorder).lineLimit(2...4)
-                        TextField("Gratitude : 1 chose positive ✨", text: $gratitude, axis: .vertical).textFieldStyle(.roundedBorder).lineLimit(1...3)
+                        TextField("Gratitude : 1 chose positive", text: $gratitude, axis: .vertical).textFieldStyle(.roundedBorder).lineLimit(1...3)
                         PrimaryButton(title: "Enregistrer", icon: "checkmark", tint: .mindTint) {
                             ctx.insert(MoodEntry(score: score, note: note, gratitude: gratitude))
                             note = ""; gratitude = ""; score = 3

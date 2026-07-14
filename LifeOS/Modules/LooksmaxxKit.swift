@@ -1,5 +1,5 @@
 import SwiftUI
-import Vision
+@preconcurrency import Vision
 import PhotosUI
 import UIKit
 
@@ -204,7 +204,7 @@ enum FaceShapeAnalyzer {
             let handler = VNImageRequestHandler(cgImage: cg, orientation: orientation, options: [:])
             DispatchQueue.global(qos: .userInitiated).async {
                 try? handler.perform([req])
-                guard let face = (req.results as? [VNFaceObservation])?.first else {
+                guard let face = req.results?.first else {
                     cont.resume(returning: nil); return
                 }
                 cont.resume(returning: classify(face, imgW: CGFloat(cg.width), imgH: CGFloat(cg.height)))
@@ -339,8 +339,8 @@ struct FaceScanView: View {
                 }
                 Spacer()
             }
-            recBlock(title: "✂️ Coupes recommandées", items: r.shape.haircuts)
-            recBlock(title: "🧔 Barbe", items: [r.shape.beard])
+            recBlock(title: "Coupes recommandées", items: r.shape.haircuts)
+            recBlock(title: "Barbe", items: [r.shape.beard])
         }
         .padding(16)
         .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))

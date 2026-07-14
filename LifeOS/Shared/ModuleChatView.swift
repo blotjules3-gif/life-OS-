@@ -13,13 +13,6 @@ struct ModuleChatMessage: Identifiable {
 
 // MARK: - ModuleChatView
 
-/// Full-screen chat interface for personalizing any module through conversation with the AI.
-/// Usage: presented as a sheet from any module hub.
-///
-///     .sheet(isPresented: $showChat) {
-///         ModuleChatView(module: "sport", moduleTitle: "Sport")
-///     }
-///
 struct ModuleChatView: View {
     let module: String
     let moduleTitle: String
@@ -27,16 +20,18 @@ struct ModuleChatView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var ctx
     @AppStorage("appTheme") private var appThemeRaw = "classic"
+    @AppStorage("coachDisclaimerAccepted") private var disclaimerAccepted = false
     private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
 
     @State private var messages: [ModuleChatMessage] = []
     @State private var inputText = ""
-    @State private var conversationID: String? = nil
+    @State private var conversationID: String?
     @State private var isLoading = false
-    @State private var errorMessage: String? = nil
+    @State private var errorMessage: String?
     @State private var isServerOffline = false
     @State private var goalsBadge = false
     @State private var configBadge = false
+    @State private var messageToReport: ModuleChatMessage?
     @FocusState private var inputFocused: Bool
 
     private let suggestedMessages: [String]
@@ -48,6 +43,17 @@ struct ModuleChatView: View {
     }
 
     var body: some View {
+        if !disclaimerAccepted {
+            CoachDisclaimerSheet(
+                onAccept: { disclaimerAccepted = true },
+                onDismiss: { dismiss() }
+            )
+        } else {
+            chatContent
+        }
+    }
+
+    private var chatContent: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 messagesScrollView
@@ -71,10 +77,14 @@ struct ModuleChatView: View {
             } message: {
                 Text(errorMessage ?? "")
             }
+            .coachReportAlerts(
+                for: $messageToReport,
+                messageText: { $0.text },
+                conversationID: { conversationID }
+            )
         }
-        .onAppear {
-            sendWelcomeMessage()
-        }
+        .onAppear { sendWelcomeMessage() }
+        .task { await RemoteConfig.shared.refreshIfNeeded() }
     }
 
     // MARK: - Messages Scroll
@@ -87,8 +97,14 @@ struct ModuleChatView: View {
                         suggestionsView
                     }
                     ForEach(messages) { msg in
-                        MessageBubble(message: msg, accentColor: appTheme.accent)
-                            .id(msg.id)
+                        MessageBubble(
+                            message: msg,
+                            accentColor: appTheme.accent,
+                            onReport: msg.role == .assistant && !msg.isThinking
+                                ? { messageToReport = msg }
+                                : nil
+                        )
+                        .id(msg.id)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -218,39 +234,12 @@ struct ModuleChatView: View {
         isLoading = true
 
         Task {
-            do {
-                let response = try await AgentAPI.shared.chat(
-                    message: text,
-                    module: module,
-                    conversationID: conversationID
-                )
-                conversationID = response.conversation_id
-
-                // Replace thinking bubble
-                await MainActor.run {
-                    messages.removeAll { $0.isThinking }
-                    messages.append(ModuleChatMessage(role: .assistant, text: response.reply))
-                    isServerOffline = false
-
-                    if response.module_config_updated {
-                        configBadge = true
-                        Haptics.success()
-                    }
-                    if response.goals_updated {
-                        goalsBadge = true
-                    }
-                    isLoading = false
-                }
-            } catch {
-                await MainActor.run {
-                    messages.removeAll { $0.isThinking }
-                    if let apiErr = error as? AgentAPIError, case .networkError = apiErr {
-                        isServerOffline = true
-                    } else {
-                        errorMessage = (error as? AgentAPIError)?.errorDescription ?? error.localizedDescription
-                    }
-                    isLoading = false
-                }
+            let reply = await OnDeviceLLM.respond(to: text, ctx: ctx, moduleContext: module)
+            await MainActor.run {
+                messages.removeAll { $0.isThinking }
+                messages.append(ModuleChatMessage(role: .assistant, text: reply.text))
+                isServerOffline = false
+                isLoading = false
             }
         }
     }
@@ -311,6 +300,7 @@ struct ModuleChatView: View {
 private struct MessageBubble: View {
     let message: ModuleChatMessage
     let accentColor: Color
+    var onReport: (() -> Void)? = nil
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
@@ -337,6 +327,13 @@ private struct MessageBubble: View {
                         )
                     )
                     .frame(maxWidth: .infinity, alignment: message.role == .user ? .trailing : .leading)
+                    .contextMenu {
+                        if let onReport {
+                            Button(role: .destructive, action: onReport) {
+                                Label("Signaler cette réponse", systemImage: "flag")
+                            }
+                        }
+                    }
             }
 
             if message.role == .assistant { Spacer(minLength: 48) }

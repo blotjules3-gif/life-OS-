@@ -10,12 +10,12 @@ from pydantic import BaseModel, Field
 class ChatRequest(BaseModel):
     device_id: str = Field(..., min_length=1, max_length=255)
     message: str = Field(..., min_length=1, max_length=4000)
-    module: Optional[str] = None  # 'sport', 'nutrition', etc. — None = general
-    conversation_id: Optional[uuid.UUID] = None
-    apns_token: Optional[str] = None  # update token on each request
+    module: str | None = None  # 'sport', 'nutrition', etc. — None = general
+    conversation_id: uuid.UUID | None = None
+    apns_token: str | None = None  # update token on each request
     # Snapshot iOS + expertise coach injectée (méta + jusqu'à 3 blocs domaine).
     # Passe de 2000 à 20000 pour laisser passer les blocs d'expertise scientifiques.
-    user_context: Optional[str] = Field(None, max_length=20000)
+    user_context: str | None = Field(None, max_length=20000)
 
 
 class MessageOut(BaseModel):
@@ -52,9 +52,20 @@ class ChatResponse(BaseModel):
 
 class ConversationOut(BaseModel):
     id: uuid.UUID
-    module_type: Optional[str]
-    title: Optional[str]
+    module_type: str | None
+    title: str | None
     created_at: datetime
     messages: list[MessageOut] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
+
+
+class ReportRequest(BaseModel):
+    device_id: str
+    conversation_id: uuid.UUID | None = None
+    message_content: str = Field(..., max_length=8000)
+    reason: str = Field(default="user_flagged", max_length=64)
+
+
+class RemoteConfigResponse(BaseModel):
+    chat_enabled: bool
