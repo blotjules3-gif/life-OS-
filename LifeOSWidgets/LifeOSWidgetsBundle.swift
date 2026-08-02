@@ -11,6 +11,9 @@ struct LifeOSWidgetsBundle: WidgetBundle {
         if #available(iOS 16.1, *) {
             StreakActivityWidget()
         }
+        if #available(iOS 17.0, *) {
+            InteractiveHabitsWidget()
+        }
         if #available(iOS 18.0, *) {
             FoodScanControlWidget()
         }
