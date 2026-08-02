@@ -122,6 +122,8 @@ struct LifeOSApp: App {
             resetDailyValuesIfNeeded()
             MorningReminder.checkAndArm()
             Task { await HealthAutoSync.syncNow(container.mainContext) }
+            // Regénère les notifs cross-pôles à partir de l'état actuel.
+            SmartNotifications.refreshDaily(ctx: container.mainContext)
         }
         .onChange(of: onboardingDone) { _, done in
             if done { ContextualNotifications.shared.reschedule() }
