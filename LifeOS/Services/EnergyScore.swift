@@ -110,6 +110,27 @@ enum EnergyScore {
         ))
     }
 
+    // MARK: - App Group publish (pour EnergyScoreWidget)
+
+    /// Persiste le résultat courant dans App Group defaults pour lecture
+    /// par le widget. Appeler après chaque calcul depuis l'app :
+    ///   `EnergyScore.publishToAppGroup(EnergyScore.today(ctx))`
+    /// puis `WidgetCenter.shared.reloadTimelines(ofKind: "EnergyScoreWidget")`
+    /// pour forcer le refresh visuel.
+    static func publishToAppGroup(_ result: Result?) {
+        guard let grp = UserDefaults(suiteName: "group.lifeos.app") else { return }
+        if let r = result {
+            grp.set(r.score, forKey: "energyScore.value")
+            grp.set(r.label, forKey: "energyScore.label")
+            grp.set(r.colorHex, forKey: "energyScore.colorHex")
+            grp.set(Date().timeIntervalSince1970, forKey: "energyScore.updatedAt")
+        } else {
+            grp.removeObject(forKey: "energyScore.value")
+            grp.removeObject(forKey: "energyScore.label")
+            grp.removeObject(forKey: "energyScore.colorHex")
+        }
+    }
+
     // MARK: - Palettes
 
     private static func label(_ score: Int) -> String {
