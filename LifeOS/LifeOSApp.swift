@@ -124,6 +124,8 @@ struct LifeOSApp: App {
             Task { await HealthAutoSync.syncNow(container.mainContext) }
             // Regénère les notifs cross-pôles à partir de l'état actuel.
             SmartNotifications.refreshDaily(ctx: container.mainContext)
+            // Publie le score énergie du jour dans App Group pour le widget.
+            EnergyScore.publishToAppGroup(EnergyScore.today(container.mainContext))
         }
         .onChange(of: onboardingDone) { _, done in
             if done { ContextualNotifications.shared.reschedule() }
