@@ -7,6 +7,7 @@ struct LifeOSWidgetsBundle: WidgetBundle {
         AlarmActivityWidget()
         HabitsWidget()
         FoodScanWidget()
+        EnergyScoreWidget()
         if #available(iOS 18.0, *) {
             FoodScanControlWidget()
         }
