@@ -126,6 +126,8 @@ struct LifeOSApp: App {
             SmartNotifications.refreshDaily(ctx: container.mainContext)
             // Publie le score énergie du jour dans App Group pour le widget.
             EnergyScore.publishToAppGroup(EnergyScore.today(container.mainContext))
+            // Rejoue les toggles d'habitudes faits depuis le widget interactif.
+            WidgetToggleReconciler.drainAndApply(ctx: container.mainContext)
         }
         .onChange(of: onboardingDone) { _, done in
             if done { ContextualNotifications.shared.reschedule() }
