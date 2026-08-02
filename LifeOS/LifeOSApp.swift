@@ -203,7 +203,12 @@ struct LifeOSApp: App {
 
     private func buildContainer() async {
         let schema = LocalStore.schema
-        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        // Config CloudKit si l'user a opt-in ET si la capability Xcode iCloud
+        // + relations SwiftData Optional sont prêtes (cf. CloudKitReadiness).
+        // Si CloudKit foire au boot, on retombe automatiquement en local pur.
+        let config = LocalStore.cloudKitEnabled
+            ? ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: .automatic)
+            : ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         let result = await Task.detached(priority: .userInitiated) {
             Result { try ModelContainer(for: schema, configurations: [config]) }
