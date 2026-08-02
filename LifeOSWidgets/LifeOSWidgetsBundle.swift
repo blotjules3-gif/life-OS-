@@ -8,6 +8,9 @@ struct LifeOSWidgetsBundle: WidgetBundle {
         HabitsWidget()
         FoodScanWidget()
         EnergyScoreWidget()
+        if #available(iOS 16.1, *) {
+            StreakActivityWidget()
+        }
         if #available(iOS 18.0, *) {
             FoodScanControlWidget()
         }
