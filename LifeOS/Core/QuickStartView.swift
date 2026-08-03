@@ -109,3 +109,55 @@ struct QuickStartView: View {
         }
     }
 }
+
+// MARK: - Row extraite pour aider le type-checker Swift
+
+private struct QuickStartRow: View {
+    let goal: OnboardingGoal
+    let isSelected: Bool
+    let subtitle: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                iconBubble
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(goal.label)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 20))
+                    .foregroundStyle(isSelected ? goal.tint : Color.secondary.opacity(0.3))
+            }
+            .padding(16)
+            .background(rowBackground)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var iconBubble: some View {
+        ZStack {
+            Circle()
+                .fill(isSelected ? goal.tint : goal.tint.opacity(0.12))
+                .frame(width: 44, height: 44)
+            Image(systemName: goal.icon)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(isSelected ? Color.white : goal.tint)
+        }
+    }
+
+    private var rowBackground: some View {
+        RoundedRectangle(cornerRadius: 14)
+            .fill(Color(uiColor: .secondarySystemBackground))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(isSelected ? goal.tint : Color.clear, lineWidth: 2)
+            )
+    }
+}
