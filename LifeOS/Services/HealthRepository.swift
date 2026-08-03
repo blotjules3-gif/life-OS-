@@ -63,12 +63,40 @@ final class HealthRepository: ObservableObject {
     // MARK: - Habits
 
     func toggleHabit(_ habit: Habit) {
-        if let completion = habit.completions.first(where: { Calendar.current.isDateInToday($0.date) }) {
-            context.delete(completion)
+        let wasCompletedToday = habit.completions.contains { Calendar.current.isDateInToday($0.date) }
+        if wasCompletedToday {
+            if let completion = habit.completions.first(where: { Calendar.current.isDateInToday($0.date) }) {
+                context.delete(completion)
+            }
         } else {
             habit.completions.append(HabitCompletion(date: .now))
         }
         save("toggleHabit")
+
+        // Live Activity streak — se déclenche uniquement aux paliers 7/14/30/100.
+        if !wasCompletedToday, #available(iOS 16.1, *) {
+            let streak = currentStreak(habit)
+            StreakActivityManager.startIfMilestone(
+                habitName: habit.name,
+                iconName: habit.icon,
+                streakDays: streak,
+                doneToday: true
+            )
+        }
+    }
+
+    /// Streak courant d'une habitude (jours consécutifs jusqu'à aujourd'hui inclus).
+    private func currentStreak(_ habit: Habit) -> Int {
+        let cal = Calendar.current
+        let days = Set(habit.completions.map { cal.startOfDay(for: $0.date) })
+        var streak = 0
+        var day = cal.startOfDay(for: .now)
+        while days.contains(day) {
+            streak += 1
+            guard let prev = cal.date(byAdding: .day, value: -1, to: day) else { break }
+            day = prev
+        }
+        return streak
     }
 
     func habitsDoneToday(from habits: [Habit]) -> Int {
