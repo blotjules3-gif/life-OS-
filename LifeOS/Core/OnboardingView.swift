@@ -211,9 +211,10 @@ struct OnboardingView: View {
                 ZStack {
                     switch step {
                     case 0:
-                        OnboardingWelcome {
-                            advance(to: 1)
-                        }
+                        OnboardingWelcome(
+                            onNext: { advance(to: 1) },
+                            onQuickStart: { showQuickStart = true }
+                        )
                         .transition(stepTransition)
                     case 1:
                         OnboardingName(name: $name, gender: $gender) {
