@@ -47,6 +47,7 @@ enum QuickStart {
         // 5. Sauvegarde + flag terminé
         do { try ctx.save() } catch { print("[QuickStart] save failed: \(error)") }
         ud.set(true, forKey: "onboardingDone")
+        Analytics.log("quickstart.completed", ["goal": goal])
     }
 
     // MARK: - Mapping objectif → config
