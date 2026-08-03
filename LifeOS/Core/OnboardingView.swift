@@ -302,6 +302,15 @@ struct OnboardingView: View {
         } message: {
             Text("Tes habitudes sont prêtes. Active les notifications pour recevoir tes rappels au bon moment de la journée.")
         }
+        .fullScreenCover(isPresented: $showQuickStart) {
+            NavigationStack {
+                QuickStartView {
+                    // Le service a déjà set onboardingDone = true — juste refresh l'@AppStorage.
+                    onboardingDone = true
+                    showQuickStart = false
+                }
+            }
+        }
     }
 }
 
