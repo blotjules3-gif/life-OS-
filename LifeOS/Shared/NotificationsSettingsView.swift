@@ -50,6 +50,26 @@ struct NotificationsSettingsView: View {
                 Text("Chaque rappel se déclenche tous les jours à l'heure choisie. Tu peux activer une vérification « bien fait ? » ~1h30 après.")
             }
 
+            // ---- Notifications intelligentes cross-pôles ----
+            Section {
+                Toggle("Notifications intelligentes", isOn: $smartNotifsOn)
+                    .tint(.accentColor)
+            } header: {
+                Text("Coach intelligent")
+            } footer: {
+                Text("3 notifs / jour générées à partir de ton état réel (sommeil × cycle × sport × humeur). Exemple : « Nuit courte + sport prévu → allège ta séance et bois plus d'eau. »")
+            }
+
+            // ---- Sync iCloud ----
+            Section {
+                Toggle("Synchroniser via iCloud", isOn: $cloudKitOn)
+                    .tint(.accentColor)
+            } header: {
+                Text("Sauvegarde")
+            } footer: {
+                Text("Tes données restent chiffrées de bout en bout par Apple, jamais visibles par LifeOS. Retrouve-les sur iPhone + iPad avec le même Apple ID. Nécessite iCloud Drive activé.")
+            }
+
             // ---- Pause générale ----
             Section {
                 Toggle("Tout mettre en pause", isOn: $muted)
