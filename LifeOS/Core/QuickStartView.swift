@@ -133,7 +133,7 @@ private struct QuickStartRow: View {
                 Spacer()
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 20))
-                    .foregroundStyle(isSelected ? goal.tint : Color.secondary.opacity(0.3))
+                    .foregroundStyle(isSelected ? goal.color : Color.secondary.opacity(0.3))
             }
             .padding(16)
             .background(rowBackground)
@@ -144,11 +144,11 @@ private struct QuickStartRow: View {
     private var iconBubble: some View {
         ZStack {
             Circle()
-                .fill(isSelected ? goal.tint : goal.tint.opacity(0.12))
+                .fill(isSelected ? goal.color : goal.color.opacity(0.12))
                 .frame(width: 44, height: 44)
             Image(systemName: goal.icon)
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(isSelected ? Color.white : goal.tint)
+                .foregroundStyle(isSelected ? Color.white : goal.color)
         }
     }
 
@@ -157,7 +157,7 @@ private struct QuickStartRow: View {
             .fill(Color(uiColor: .secondarySystemBackground))
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
-                    .stroke(isSelected ? goal.tint : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? goal.color : Color.clear, lineWidth: 2)
             )
     }
 }
