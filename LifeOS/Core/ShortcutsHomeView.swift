@@ -599,6 +599,23 @@ struct ShortcutsHomeView: View {
         }
     }
 
+    private func triggerStreakActivity(for habit: Habit) {
+        guard #available(iOS 16.1, *) else { return }
+        let cal = Calendar.current
+        let days = Set(habit.completions.map { cal.startOfDay(for: $0.date) })
+        var streak = 0
+        var day = cal.startOfDay(for: .now)
+        while days.contains(day) {
+            streak += 1
+            guard let prev = cal.date(byAdding: .day, value: -1, to: day) else { break }
+            day = prev
+        }
+        StreakActivityManager.startIfMilestone(
+            habitName: habit.name, iconName: habit.icon,
+            streakDays: streak, doneToday: true
+        )
+    }
+
     private func toggleHabit(_ habit: Habit) {
         if let completion = habit.completions.first(where: { Calendar.current.isDateInToday($0.date) }) {
             ctx.delete(completion)
