@@ -10,6 +10,8 @@ struct NotificationsSettingsView: View {
     @AppStorage("morningReminderOn")   private var morningOn = true
     @AppStorage("morningReminderText") private var morningText = MorningReminder.defaultText
     @AppStorage("notifMasterMute")     private var muted = false
+    @AppStorage("smartNotifsEnabled")  private var smartNotifsOn = false
+    @AppStorage("cloudKitEnabled")     private var cloudKitOn = false
 
     @State private var showAdd = false
 
