@@ -58,42 +58,12 @@ struct QuickStartView: View {
     private var choices: some View {
         VStack(spacing: 12) {
             ForEach(OnboardingGoal.allCases) { goal in
-                Button {
-                    selected = goal
-                } label: {
-                    HStack(spacing: 16) {
-                        ZStack {
-                            Circle()
-                                .fill(selected == goal ? goal.tint : goal.tint.opacity(0.12))
-                                .frame(width: 44, height: 44)
-                            Image(systemName: goal.icon)
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(selected == goal ? .white : goal.tint)
-                        }
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(goal.label)
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(.primary)
-                            Text(shortDescription(for: goal))
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Image(systemName: selected == goal ? "checkmark.circle.fill" : "circle")
-                            .font(.system(size: 20))
-                            .foregroundStyle(selected == goal ? goal.tint : Color.secondary.opacity(0.3))
-                    }
-                    .padding(16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(Color(uiColor: .secondarySystemBackground))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14)
-                                    .stroke(selected == goal ? goal.tint : Color.clear, lineWidth: 2)
-                            )
-                    )
-                }
-                .buttonStyle(.plain)
+                QuickStartRow(
+                    goal: goal,
+                    isSelected: selected == goal,
+                    subtitle: shortDescription(for: goal),
+                    action: { selected = goal }
+                )
             }
         }
     }
