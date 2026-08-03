@@ -307,6 +307,7 @@ struct OnboardingView: View {
 
 struct OnboardingWelcome: View {
     let onNext: () -> Void
+    var onQuickStart: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -336,8 +337,24 @@ struct OnboardingWelcome: View {
 
             Spacer()
 
-            OnboardingButton(label: "Commencer", enabled: true, action: onNext)
-                .padding(.bottom, 52)
+            VStack(spacing: 10) {
+                if let onQuickStart {
+                    Button(action: onQuickStart) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "bolt.fill").font(.system(size: 13, weight: .bold))
+                            Text("Démarrage express — 30 sec")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(RoundedRectangle(cornerRadius: 14).fill(Color.accentColor))
+                        .foregroundStyle(.white)
+                    }
+                }
+                OnboardingButton(label: onQuickStart == nil ? "Commencer" : "Configuration détaillée",
+                                 enabled: true, action: onNext)
+            }
+            .padding(.bottom, 52)
         }
         .padding(.horizontal, Theme.padWide)
     }
