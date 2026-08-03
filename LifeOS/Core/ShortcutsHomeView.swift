@@ -617,14 +617,18 @@ struct ShortcutsHomeView: View {
     }
 
     private func toggleHabit(_ habit: Habit) {
-        if let completion = habit.completions.first(where: { Calendar.current.isDateInToday($0.date) }) {
-            ctx.delete(completion)
+        let wasDone = habit.completions.contains { Calendar.current.isDateInToday($0.date) }
+        if wasDone {
+            if let completion = habit.completions.first(where: { Calendar.current.isDateInToday($0.date) }) {
+                ctx.delete(completion)
+            }
         } else {
             let c = HabitCompletion(date: .now)
             habit.completions.append(c)
         }
         do { try ctx.save() } catch { print("[SwiftData] toggleHabit failed: \(error)") }
         Haptics.soft()
+        if !wasDone { triggerStreakActivity(for: habit) }
     }
 
     // MARK: Section 1b — Recap hebdo
