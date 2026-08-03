@@ -128,6 +128,8 @@ struct LifeOSApp: App {
             EnergyScore.publishToAppGroup(EnergyScore.today(container.mainContext))
             // Rejoue les toggles d'habitudes faits depuis le widget interactif.
             WidgetToggleReconciler.drainAndApply(ctx: container.mainContext)
+            // Analytics — événement launch.
+            Analytics.log("app.launch")
         }
         .onChange(of: onboardingDone) { _, done in
             if done { ContextualNotifications.shared.reschedule() }
