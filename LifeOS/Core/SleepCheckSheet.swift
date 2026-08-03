@@ -389,6 +389,9 @@ struct SleepCheckSheet: View {
         let result = EnergyScore.today(ctx)
         todayEnergyScore = result?.score ?? 0
         todayEnergyLabel = result?.label ?? ""
+        // Publie pour EnergyScoreWidget + reload timelines widget.
+        EnergyScore.publishToAppGroup(result)
+        WidgetCenter.shared.reloadTimelines(ofKind: "EnergyScoreWidget")
         submitting = false
         withAnimation(.spring(duration: 0.35)) { step = 3 }
     }
