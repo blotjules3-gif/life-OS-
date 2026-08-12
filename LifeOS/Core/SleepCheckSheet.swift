@@ -385,7 +385,7 @@ struct SleepCheckSheet: View {
             UserDefaults.standard.set(Date.now.timeIntervalSince1970, forKey: "lastSleepCheckDate")
         }
         if mood > 0 { ctx.insert(MoodEntry(score: mood, note: "")) }
-        do { try ctx.save() } catch { print("[SwiftData] saveCheckin failed: \(error)") }
+        do { try ctx.save() } catch { AppLog.data.error("saveCheckin failed: \(error.localizedDescription, privacy: .public)") }
 
         let result = EnergyScore.today(ctx)
         todayEnergyScore = result?.score ?? 0
