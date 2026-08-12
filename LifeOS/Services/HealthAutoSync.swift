@@ -51,6 +51,6 @@ enum HealthAutoSync {
             notes: "Apple Santé"
         )
         ctx.insert(record)
-        do { try ctx.save() } catch { print("[HealthAutoSync] save failed: \(error)") }
+        do { try ctx.save() } catch { AppLog.data.error("HealthAutoSync save failed: \(error.localizedDescription, privacy: .public)") }
     }
 }
