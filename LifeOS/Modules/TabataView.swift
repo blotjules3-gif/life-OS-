@@ -202,14 +202,14 @@ enum TabataPresets {
 
 struct TabataView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("tabPrepare") private var prepare = 10
-    @AppStorage("tabWork") private var work = 30
-    @AppStorage("tabRest") private var rest = 15
-    @AppStorage("tabRounds") private var rounds = 8
-    @AppStorage("tabCycles") private var cycles = 1
-    @AppStorage("tabRestCycle") private var restCycle = 60
-    @AppStorage("tabCooldown") private var cooldown = 0
-    @AppStorage("tabSets") private var sets = 4          // séries = passages sur les 6 exercices
+    @AppStorage(AppStorageKeys.tabPrepare) private var prepare = 10
+    @AppStorage(AppStorageKeys.tabWork) private var work = 30
+    @AppStorage(AppStorageKeys.tabRest) private var rest = 15
+    @AppStorage(AppStorageKeys.tabRounds) private var rounds = 8
+    @AppStorage(AppStorageKeys.tabCycles) private var cycles = 1
+    @AppStorage(AppStorageKeys.tabRestCycle) private var restCycle = 60
+    @AppStorage(AppStorageKeys.tabCooldown) private var cooldown = 0
+    @AppStorage(AppStorageKeys.tabSets) private var sets = 4          // séries = passages sur les 6 exercices
 
     @State private var engine = TabataEngine(cfg: TabataConfig(prepare: 10, work: 30, rest: 15, rounds: 8, cycles: 1, restCycle: 60, cooldown: 0))
     @State private var showSettings = false

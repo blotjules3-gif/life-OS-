@@ -4,7 +4,7 @@ import SwiftUI
 
 struct AlarmFullScreenView: View {
     @ObservedObject private var alarm = AlarmManager.shared
-    @AppStorage("snoozeMinutes") private var snoozeMinutes = 9
+    @AppStorage(AppStorageKeys.snoozeMinutes) private var snoozeMinutes = 9
     @State private var bellPulse = false
     @State private var ringsPulse = false
 

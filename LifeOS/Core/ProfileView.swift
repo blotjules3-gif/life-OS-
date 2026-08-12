@@ -10,28 +10,28 @@ private struct OrbitSatellite: Identifiable {
 }
 
 struct ProfileView: View {
-    @AppStorage("appTheme") private var appThemeRaw = "classic"
-    @AppStorage("userName") private var name = ""
-    @AppStorage("stepGoal") private var stepGoal = 10000
-    @AppStorage("waterGoal") private var waterGoal = 2500
-    @AppStorage("kcalGoal") private var kcalGoal = 2200
-    @AppStorage("proteinGoal") private var proteinGoal = 150
-    @AppStorage("fastTarget") private var fastTarget = 16
-    @AppStorage("budgetGoal") private var budgetGoal = 1500
-    @AppStorage("glassesGoal") private var glassesGoal = 8
-    @AppStorage("focusMinGoal") private var focusMinGoal = 90
-    @AppStorage("socialMaxMin") private var socialMaxMin = 60
-    @AppStorage("hiddenGoalIDsRaw") private var hiddenGoalIDsRaw = ""
-    @AppStorage("goalEndDatesRaw") private var goalEndDatesRaw = "{}"
-    @AppStorage("profileHiddenRaw") private var profileHiddenRaw = ""
-    @AppStorage("profilePinnedRaw") private var profilePinnedRaw = ""
-    @AppStorage("wakeupEnabled") private var wakeupEnabled = false
-    @AppStorage("wakeupHour") private var wakeupHour = 7
-    @AppStorage("wakeupMinute") private var wakeupMinute = 0
-    @AppStorage("sportHour") private var sportHour = 18
-    @AppStorage("bedHour") private var bedHour = 23
-    @AppStorage("bedMinute") private var bedMinute = 0
-    @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
+    @AppStorage(AppStorageKeys.userName) private var name = ""
+    @AppStorage(AppStorageKeys.stepGoal) private var stepGoal = 10000
+    @AppStorage(AppStorageKeys.waterGoal) private var waterGoal = 2500
+    @AppStorage(AppStorageKeys.kcalGoal) private var kcalGoal = 2200
+    @AppStorage(AppStorageKeys.proteinGoal) private var proteinGoal = 150
+    @AppStorage(AppStorageKeys.fastTarget) private var fastTarget = 16
+    @AppStorage(AppStorageKeys.budgetGoal) private var budgetGoal = 1500
+    @AppStorage(AppStorageKeys.glassesGoal) private var glassesGoal = 8
+    @AppStorage(AppStorageKeys.focusMinGoal) private var focusMinGoal = 90
+    @AppStorage(AppStorageKeys.socialMaxMin) private var socialMaxMin = 60
+    @AppStorage(AppStorageKeys.hiddenGoalIDsRaw) private var hiddenGoalIDsRaw = ""
+    @AppStorage(AppStorageKeys.goalEndDatesRaw) private var goalEndDatesRaw = "{}"
+    @AppStorage(AppStorageKeys.profileHiddenRaw) private var profileHiddenRaw = ""
+    @AppStorage(AppStorageKeys.profilePinnedRaw) private var profilePinnedRaw = ""
+    @AppStorage(AppStorageKeys.wakeupEnabled) private var wakeupEnabled = false
+    @AppStorage(AppStorageKeys.wakeupHour) private var wakeupHour = 7
+    @AppStorage(AppStorageKeys.wakeupMinute) private var wakeupMinute = 0
+    @AppStorage(AppStorageKeys.sportHour) private var sportHour = 18
+    @AppStorage(AppStorageKeys.bedHour) private var bedHour = 23
+    @AppStorage(AppStorageKeys.bedMinute) private var bedMinute = 0
+    @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
     @Query private var habits: [Habit]

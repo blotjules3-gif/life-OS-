@@ -53,7 +53,7 @@ struct GuidedWorkoutView: View {
     @Query private var gymDays: [GymDay]
     @Query(sort: \WorkoutSet.date, order: .reverse) private var history: [WorkoutSet]
 
-    @AppStorage("gwRestSecs") private var restDuration = 90
+    @AppStorage(AppStorageKeys.gwRestSecs) private var restDuration = 90
 
     @State private var plan: WorkoutPlan?
     @State private var exIndex = 0

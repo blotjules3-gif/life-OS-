@@ -45,7 +45,7 @@ struct TripsView: View {
             }
         }
         .navigationTitle("Mes voyages").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { TripEditor() }
     }
 }
@@ -180,7 +180,7 @@ struct TrackedFlight: Identifiable, Codable, Equatable {
 }
 
 struct FlightTrackerView: View {
-    @AppStorage("trackedFlights") private var raw = "[]"
+    @AppStorage(AppStorageKeys.trackedFlights) private var raw = "[]"
     @State private var flights: [TrackedFlight] = []
     @State private var editing: TrackedFlight?
     @State private var showAdd = false
@@ -208,7 +208,7 @@ struct FlightTrackerView: View {
             }
         }
         .navigationTitle("Suivi des vols").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .primaryAction) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .primaryAction) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { FlightEditor { add($0) } }
         .sheet(item: $editing) { f in FlightEditor(flight: f) { update($0) } onDelete: { remove(f) } }
         .onAppear(perform: reload)

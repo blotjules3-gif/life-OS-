@@ -29,9 +29,9 @@ private let currencies: [Currency] = [
 ]
 
 struct CurrencyConverterView: View {
-    @AppStorage("fxFrom")   private var from = "EUR"
-    @AppStorage("fxTo")     private var to   = "USD"
-    @AppStorage("fxAmount") private var amountRaw = "100"
+    @AppStorage(AppStorageKeys.fxFrom)   private var from = "EUR"
+    @AppStorage(AppStorageKeys.fxTo)     private var to   = "USD"
+    @AppStorage(AppStorageKeys.fxAmount) private var amountRaw = "100"
 
     private func cur(_ code: String) -> Currency { currencies.first { $0.code == code } ?? currencies[0] }
     private var amount: Double { Double(amountRaw.replacingOccurrences(of: ",", with: ".")) ?? 0 }
@@ -202,7 +202,7 @@ final class PhraseSpeaker {
 }
 
 struct PhrasebookView: View {
-    @AppStorage("phraseLang") private var langKey = "en"
+    @AppStorage(AppStorageKeys.phraseLang) private var langKey = "en"
     @State private var spoken: String?
 
     private var lang: TravelLang { phraseLangs.first { $0.key == langKey } ?? phraseLangs[0] }

@@ -140,16 +140,16 @@ enum HomeMetric: String, CaseIterable, Identifiable {
 }
 
 struct ShortcutsHomeView: View {
-    @AppStorage("homeShortcuts") private var enabledRaw = "tabata,calories,scan,todo"
-    @AppStorage("homeMetrics") private var metricsRaw = "steps,water,calories,fasting"
-    @AppStorage("userName") private var userName = ""
-    @AppStorage("stepGoal") private var stepGoal = 10000
-    @AppStorage("waterGoal") private var waterGoal = 2500
-    @AppStorage("kcalGoal") private var kcalGoal = 2200
-    @AppStorage("fastTarget") private var fastTarget = 16
-    @AppStorage("todayEnergyScore") private var todayEnergyScore = 0
-    @AppStorage("todayEnergyLabel") private var todayEnergyLabel = ""
-    @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
+    @AppStorage(AppStorageKeys.homeShortcuts) private var enabledRaw = "tabata,calories,scan,todo"
+    @AppStorage(AppStorageKeys.homeMetrics) private var metricsRaw = "steps,water,calories,fasting"
+    @AppStorage(AppStorageKeys.userName) private var userName = ""
+    @AppStorage(AppStorageKeys.stepGoal) private var stepGoal = 10000
+    @AppStorage(AppStorageKeys.waterGoal) private var waterGoal = 2500
+    @AppStorage(AppStorageKeys.kcalGoal) private var kcalGoal = 2200
+    @AppStorage(AppStorageKeys.fastTarget) private var fastTarget = 16
+    @AppStorage(AppStorageKeys.todayEnergyScore) private var todayEnergyScore = 0
+    @AppStorage(AppStorageKeys.todayEnergyLabel) private var todayEnergyLabel = ""
+    @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
     @State private var reengageMessage: String?
     @State private var reengageSuggestion: String?
     @State private var showReengage = true
@@ -193,7 +193,7 @@ struct ShortcutsHomeView: View {
     @State private var moodDismissed = false
     @State private var showBilan = false
     @State private var fullScreenTool: ShortcutTool?
-    @AppStorage("tutorialDone") private var tutorialDone = false
+    @AppStorage(AppStorageKeys.tutorialDone) private var tutorialDone = false
     @State private var showTutorial = false
     @State private var editingShortcuts = false
     @State private var homeAppeared = false
@@ -1062,8 +1062,8 @@ struct WeeklyBilanView: View {
     @State private var aiBilan: String?
     @State private var bilanLoading = false
     @State private var shareImage: UIImage?
-    @AppStorage("lastWeeklyBilanText") private var cachedBilan = ""
-    @AppStorage("lastWeeklyBilanDate") private var cachedBilanDate = 0.0
+    @AppStorage(AppStorageKeys.lastWeeklyBilanText) private var cachedBilan = ""
+    @AppStorage(AppStorageKeys.lastWeeklyBilanDate) private var cachedBilanDate = 0.0
 
     private var activeHabits: [Habit] { habits.filter { !$0.isPending } }
     private var cal: Calendar { Calendar.current }

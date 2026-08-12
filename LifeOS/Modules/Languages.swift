@@ -44,10 +44,10 @@ private struct VocabItem: Codable { var box: Int; var due: Double }
 private let leitnerDays: [Double] = [0, 1, 3, 7, 16, 35]   // intervalle par boîte
 
 struct LanguagesView: View {
-    @AppStorage("langCurrent") private var lang = "en"
-    @AppStorage("vocabState")  private var stateRaw = ""
-    @AppStorage("vocabStreakLast") private var streakLast = ""
-    @AppStorage("vocabStreak") private var streak = 0
+    @AppStorage(AppStorageKeys.langCurrent) private var lang = "en"
+    @AppStorage(AppStorageKeys.vocabState)  private var stateRaw = ""
+    @AppStorage(AppStorageKeys.vocabStreakLast) private var streakLast = ""
+    @AppStorage(AppStorageKeys.vocabStreak) private var streak = 0
 
     @State private var revealed = false
     @State private var current: (String, String)?

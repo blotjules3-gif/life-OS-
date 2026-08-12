@@ -7,10 +7,10 @@ struct CalAIView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \FoodEntry.date, order: .reverse) private var foods: [FoodEntry]
 
-    @AppStorage("kcalGoal") private var kcalGoal = 2200
-    @AppStorage("proteinGoal") private var proteinGoal = 150
-    @AppStorage("carbGoal") private var carbGoal = 250
-    @AppStorage("fatGoal") private var fatGoal = 70
+    @AppStorage(AppStorageKeys.kcalGoal) private var kcalGoal = 2200
+    @AppStorage(AppStorageKeys.proteinGoal) private var proteinGoal = 150
+    @AppStorage(AppStorageKeys.carbGoal) private var carbGoal = 250
+    @AppStorage(AppStorageKeys.fatGoal) private var fatGoal = 70
 
     @State private var selectedDay = Calendar.current.startOfDay(for: .now)
     @State private var showAdd = false

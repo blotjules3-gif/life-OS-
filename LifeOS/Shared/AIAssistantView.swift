@@ -97,18 +97,18 @@ final class AIAssistantViewModel: ObservableObject {
         let module: String?
     }
 
-    @AppStorage("aiConversationID") private var conversationID = ""
-    @AppStorage("aiConversationDay") private var conversationDay = ""
-    @AppStorage("aiFirstLaunchDone") private var firstLaunchDone = false
-    @AppStorage("userName") private var userName = ""
-    @AppStorage("userGender") private var userGender = ""
-    @AppStorage("onboardingGoalsRaw") private var onboardingGoalsRaw = ""
-    @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
-    @AppStorage("aiKnownModulesRaw") private var aiKnownModulesRaw = ""
-    @AppStorage("wakeupHour") private var wakeupHour = 7
-    @AppStorage("wakeupMinute") private var wakeupMinute = 0
-    @AppStorage("appTheme") private var appThemeRaw = "classic"
-    @AppStorage("habitModulesRaw") private var habitModulesRaw = ""
+    @AppStorage(AppStorageKeys.aiConversationID) private var conversationID = ""
+    @AppStorage(AppStorageKeys.aiConversationDay) private var conversationDay = ""
+    @AppStorage(AppStorageKeys.aiFirstLaunchDone) private var firstLaunchDone = false
+    @AppStorage(AppStorageKeys.userName) private var userName = ""
+    @AppStorage(AppStorageKeys.userGender) private var userGender = ""
+    @AppStorage(AppStorageKeys.onboardingGoalsRaw) private var onboardingGoalsRaw = ""
+    @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
+    @AppStorage(AppStorageKeys.aiKnownModulesRaw) private var aiKnownModulesRaw = ""
+    @AppStorage(AppStorageKeys.wakeupHour) private var wakeupHour = 7
+    @AppStorage(AppStorageKeys.wakeupMinute) private var wakeupMinute = 0
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
+    @AppStorage(AppStorageKeys.habitModulesRaw) private var habitModulesRaw = ""
 
     var modelContext: ModelContext?
 
@@ -669,8 +669,8 @@ struct AIAssistantView: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     @StateObject private var vm = AIAssistantViewModel()
-    @AppStorage("appTheme") private var appThemeRaw = "classic"
-    @AppStorage("coachDisclaimerAccepted") private var disclaimerAccepted = false
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
+    @AppStorage(AppStorageKeys.coachDisclaimerAccepted) private var disclaimerAccepted = false
     private var accent: Color { (AppTheme(rawValue: appThemeRaw) ?? .classic).accent }
     @FocusState private var inputFocused: Bool
     @State private var showClearConfirm = false

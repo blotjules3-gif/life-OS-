@@ -4,7 +4,7 @@
 //  Hub de catégorie DATA-DRIVEN : les outils d'un pôle sont décrits en données
 //  (CategoryTool) puis rendus dans le MÊME mode d'affichage que la grille de
 //  catégories (bulles libres / bulles rangées / icônes / liste), piloté par le
-//  même @AppStorage("catLayout"). Ouvrir une catégorie reprend donc le visuel actif.
+//  même @AppStorage(AppStorageKeys.catLayout). Ouvrir une catégorie reprend donc le visuel actif.
 //
 //  Aucun module n'est modifié : on référence simplement leurs vues détail.
 //
@@ -90,8 +90,8 @@ struct CategoryHubView: View {
     let category: AppCategory
 
     // Les sous-catégories sont verrouillées en bulles libres (voir `layout`).
-    @AppStorage("appTheme")   private var appThemeRaw = "classic"
-    @AppStorage("bubbleSize") private var bubbleSizeRaw = "medium"
+    @AppStorage(AppStorageKeys.appTheme)   private var appThemeRaw = "classic"
+    @AppStorage(AppStorageKeys.bubbleSize) private var bubbleSizeRaw = "medium"
     @State private var cover: CategoryTool?
     @State private var showSetup = false
 
@@ -109,7 +109,7 @@ struct CategoryHubView: View {
             .toolbar {
                 if CategorySetup.hasFlow(category) {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button { showSetup = true } label: { Image(systemName: "slider.horizontal.3") }
+                        Button { showSetup = true } label: { Image(systemName: "slider.horizontal.3") }.accessibilityLabel("Réglages du module")
                             .foregroundStyle(.secondary)
                     }
                 }

@@ -6,15 +6,15 @@ import UserNotifications
 /// ratios force/kg, calibrer les propositions de séance et donner du feedback pertinent.
 struct FitnessProfileSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("userWeightKg")   private var weightKg: Double = 0
-    @AppStorage("userHeightCm")   private var heightCm: Double = 0
-    @AppStorage("userStrengthLevel") private var levelRaw: String = "intermediaire"
-    @AppStorage("userBench1RM")   private var bench1RM: Double = 0
-    @AppStorage("userSquat1RM")   private var squat1RM: Double = 0
-    @AppStorage("userDeadlift1RM") private var deadlift1RM: Double = 0
-    @AppStorage("userTrainingYears") private var trainingYears: Int = 0
-    @AppStorage("userWeeklyFrequency") private var weeklyFrequency: Int = 3
-    @AppStorage("fitnessCoachIntroShown") private var coachIntroShown = false
+    @AppStorage(AppStorageKeys.userWeightKg)   private var weightKg: Double = 0
+    @AppStorage(AppStorageKeys.userHeightCm)   private var heightCm: Double = 0
+    @AppStorage(AppStorageKeys.userStrengthLevel) private var levelRaw: String = "intermediaire"
+    @AppStorage(AppStorageKeys.userBench1RM)   private var bench1RM: Double = 0
+    @AppStorage(AppStorageKeys.userSquat1RM)   private var squat1RM: Double = 0
+    @AppStorage(AppStorageKeys.userDeadlift1RM) private var deadlift1RM: Double = 0
+    @AppStorage(AppStorageKeys.userTrainingYears) private var trainingYears: Int = 0
+    @AppStorage(AppStorageKeys.userWeeklyFrequency) private var weeklyFrequency: Int = 3
+    @AppStorage(AppStorageKeys.fitnessCoachIntroShown) private var coachIntroShown = false
     @State private var showResetConfirm = false
     @State private var resetDone = false
 

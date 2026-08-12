@@ -58,7 +58,7 @@ struct DocVaultView: View {
             }
         }
         .navigationTitle("Coffre-fort").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { DocEditor() }
     }
 }
@@ -124,7 +124,7 @@ struct DeadlinesView: View {
             }
         }
         .navigationTitle("Échéances").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { DeadlineEditor() }
     }
     private func iconFor(_ k: String) -> String { switch k { case "Impôts": return "eurosign.circle.fill"; case "Assurance": return "shield.fill"; case "Abonnement": return "repeat.circle.fill"; default: return "calendar" } }

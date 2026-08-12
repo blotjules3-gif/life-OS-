@@ -6,8 +6,8 @@ struct SleepCheckSheet: View {
     let onContinue: () -> Void
 
     @Environment(\.modelContext) private var ctx
-    @AppStorage("todayEnergyScore") private var todayEnergyScore = 0
-    @AppStorage("todayEnergyLabel") private var todayEnergyLabel = ""
+    @AppStorage(AppStorageKeys.todayEnergyScore) private var todayEnergyScore = 0
+    @AppStorage(AppStorageKeys.todayEnergyLabel) private var todayEnergyLabel = ""
 
     @State private var step = 1
     @State private var quality = 0

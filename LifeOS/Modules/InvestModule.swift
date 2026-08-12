@@ -72,7 +72,7 @@ struct PortfolioView: View {
             }
         }
         .navigationTitle("Portefeuille").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { HoldingEditor() }
     }
 }
@@ -110,9 +110,9 @@ struct NetWorthView: View {
     @Query private var items: [NetWorthItem]
     @Query private var holdings: [Holding]
     @State private var showAdd = false
-    @AppStorage("fireMonthly") private var monthly = 500.0
-    @AppStorage("fireReturn") private var annualReturn = 7.0
-    @AppStorage("fireYears") private var years = 20.0
+    @AppStorage(AppStorageKeys.fireMonthly) private var monthly = 500.0
+    @AppStorage(AppStorageKeys.fireReturn) private var annualReturn = 7.0
+    @AppStorage(AppStorageKeys.fireYears) private var years = 20.0
 
     private var assets: Double { items.filter { $0.kind == "Actif" }.reduce(0) { $0 + $1.value } + holdings.reduce(0) { $0 + $1.value } }
     private var liabilities: Double { items.filter { $0.kind == "Passif" }.reduce(0) { $0 + $1.value } }
@@ -247,7 +247,7 @@ struct RealEstateView: View {
             }
         }
         .navigationTitle("Immobilier").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { PropertyEditor() }
     }
     private func metric(_ label: String, _ v: Double, _ c: Color) -> some View {

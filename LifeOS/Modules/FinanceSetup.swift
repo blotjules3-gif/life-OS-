@@ -8,7 +8,7 @@ struct FinanceSetupView: View {
     @Environment(\.modelContext) private var ctx
     @Query private var accounts: [Account]
     @Query private var subs: [Subscription]
-    @AppStorage("budgetGoal") private var budgetGoal = 1500
+    @AppStorage(AppStorageKeys.budgetGoal) private var budgetGoal = 1500
 
     @State private var budget = 1500
     @State private var balance = 1000

@@ -36,7 +36,7 @@ struct FastingView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \FastingSession.start, order: .reverse) private var sessions: [FastingSession]
     @State private var now = Date()
-    @AppStorage("fastTarget") private var target = 16
+    @AppStorage(AppStorageKeys.fastTarget) private var target = 16
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     private var active: FastingSession? { sessions.first(where: { $0.isActive }) }
@@ -287,7 +287,7 @@ struct FridgeView: View {
             }
         }
         .navigationTitle("Mon frigo").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { PantryEditor() }
     }
 }
@@ -431,8 +431,8 @@ enum Aisle {
 struct HydrationView: View {
     @Environment(\.modelContext) private var ctx
     @Query private var entries: [WaterEntry]
-    @AppStorage("waterGoal") private var goalML = 2500
-    @AppStorage("waterReminder") private var reminderOn = false
+    @AppStorage(AppStorageKeys.waterGoal) private var goalML = 2500
+    @AppStorage(AppStorageKeys.waterReminder) private var reminderOn = false
 
     private var todayML: Int { entries.filter { Calendar.current.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML } }
 
@@ -634,7 +634,7 @@ struct SupplementsView: View {
 // MARK: - Allergènes & régimes
 
 struct DietProfileView: View {
-    @AppStorage("dietFlags") private var flagsRaw = ""
+    @AppStorage(AppStorageKeys.dietFlags) private var flagsRaw = ""
     @State private var test = ""
 
     private let diets = ["Halal","Casher","Vegan","Végétarien","Sans gluten","Sans lactose","Sans porc","Sans fruits à coque"]

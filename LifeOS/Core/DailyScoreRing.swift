@@ -122,11 +122,11 @@ enum DailyScoreEngine {
 
 struct DailyScoreRing: View {
     @Environment(\.colorScheme) private var scheme
-    @AppStorage("kcalGoal") private var kcalGoal = 2200
-    @AppStorage("proteinGoal") private var proteinGoal = 0
-    @AppStorage("waterGoal") private var waterGoal = 2500
-    @AppStorage("stepGoal") private var stepGoal = 10000
-    @AppStorage("sleepGoalHours") private var sleepGoalHours = 8.0
+    @AppStorage(AppStorageKeys.kcalGoal) private var kcalGoal = 2200
+    @AppStorage(AppStorageKeys.proteinGoal) private var proteinGoal = 0
+    @AppStorage(AppStorageKeys.waterGoal) private var waterGoal = 2500
+    @AppStorage(AppStorageKeys.stepGoal) private var stepGoal = 10000
+    @AppStorage(AppStorageKeys.sleepGoalHours) private var sleepGoalHours = 8.0
 
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]

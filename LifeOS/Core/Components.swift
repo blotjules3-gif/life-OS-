@@ -32,7 +32,7 @@ struct SectionHeader: View {
 /// Pastille d'icône NIKE : carré NET monochrome haute intensité (encre + glyphe inverse).
 /// `tint` conservé pour compat mais l'app reste noir & blanc (accent volt réservé aux CTA).
 struct IconBadge: View {
-    @AppStorage("appTheme") private var themeRaw = "classic"
+    @AppStorage(AppStorageKeys.appTheme) private var themeRaw = "classic"
     let icon: String
     var tint: Color = Theme.accent
     var size: CGFloat = 44

@@ -6,7 +6,7 @@ import SwiftData
 struct SleepDashboardView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \SleepNight.date, order: .reverse) private var nights: [SleepNight]
-    @AppStorage("sleepGoalHours") private var sleepGoal = 8.0
+    @AppStorage(AppStorageKeys.sleepGoalHours) private var sleepGoal = 8.0
     @State private var showLog = false
 
     private let cal = Calendar.current

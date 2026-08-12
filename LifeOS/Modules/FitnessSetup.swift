@@ -8,12 +8,12 @@ struct FitnessSetupView: View {
     @Environment(\.modelContext) private var ctx
     @Query private var gymDays: [GymDay]
 
-    @AppStorage("gymReminderOn")    private var gymOn = true
-    @AppStorage("gymReminderHour")  private var gymHour = 7
-    @AppStorage("tabataWork")       private var tabataWork = 40
-    @AppStorage("tabataRest")       private var tabataRest = 20
-    @AppStorage("userGender")       private var userGender = ""     // déjà connu (onboarding)
-    @AppStorage("userGoalFit")      private var userGoalFit = ""    // réutilisé par d'autres catégories
+    @AppStorage(AppStorageKeys.gymReminderOn)    private var gymOn = true
+    @AppStorage(AppStorageKeys.gymReminderHour)  private var gymHour = 7
+    @AppStorage(AppStorageKeys.tabataWork)       private var tabataWork = 40
+    @AppStorage(AppStorageKeys.tabataRest)       private var tabataRest = 20
+    @AppStorage(AppStorageKeys.userGender)       private var userGender = ""     // déjà connu (onboarding)
+    @AppStorage(AppStorageKeys.userGoalFit)      private var userGoalFit = ""    // réutilisé par d'autres catégories
 
     @State private var goal = "Prise de muscle"
     @State private var level = "Intermédiaire"

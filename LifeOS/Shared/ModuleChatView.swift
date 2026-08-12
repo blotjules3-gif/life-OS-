@@ -19,8 +19,8 @@ struct ModuleChatView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var ctx
-    @AppStorage("appTheme") private var appThemeRaw = "classic"
-    @AppStorage("coachDisclaimerAccepted") private var disclaimerAccepted = false
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
+    @AppStorage(AppStorageKeys.coachDisclaimerAccepted) private var disclaimerAccepted = false
     private var appTheme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
 
     @State private var messages: [ModuleChatMessage] = []

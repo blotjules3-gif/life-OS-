@@ -3,7 +3,7 @@ import SwiftUI
 /// Accueil en nuage de bulles : chaque pôle est une bulle dont la taille = son importance.
 /// Tap = ouvrir le pôle · appui long = ajuster l'importance.
 struct BubbleHomeView: View {
-    @AppStorage("bubbleImportance") private var impRaw = ""
+    @AppStorage(AppStorageKeys.bubbleImportance) private var impRaw = ""
 
     var body: some View {
         NavigationStack {

@@ -411,7 +411,7 @@ extension View {
 // MARK: - Carte sobre (cellule groupée façon iOS)
 
 struct CardStyle: ViewModifier {
-    @AppStorage("appTheme") private var themeRaw = "classic"
+    @AppStorage(AppStorageKeys.appTheme) private var themeRaw = "classic"
     var padding: CGFloat = Theme.pad
     var radius: CGFloat = Theme.radius
     var elevated: Bool = false

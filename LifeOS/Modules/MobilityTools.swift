@@ -45,7 +45,7 @@ private struct MobTrip: Codable, Identifiable {
 }
 
 struct TripCO2View: View {
-    @AppStorage("mobTrips") private var raw = ""
+    @AppStorage(AppStorageKeys.mobTrips) private var raw = ""
     @State private var mode: TripMode = .car
     @State private var kmText = ""
 
@@ -205,10 +205,10 @@ final class OneShotLocator: NSObject, ObservableObject, CLLocationManagerDelegat
 }
 
 struct ParkingView: View {
-    @AppStorage("parkLat") private var lat = 0.0
-    @AppStorage("parkLon") private var lon = 0.0
-    @AppStorage("parkDate") private var savedAt = 0.0
-    @AppStorage("parkNote") private var note = ""
+    @AppStorage(AppStorageKeys.parkLat) private var lat = 0.0
+    @AppStorage(AppStorageKeys.parkLon) private var lon = 0.0
+    @AppStorage(AppStorageKeys.parkDate) private var savedAt = 0.0
+    @AppStorage(AppStorageKeys.parkNote) private var note = ""
     @StateObject private var locator = OneShotLocator()
     @State private var editingNote = false
     @State private var draftNote = ""

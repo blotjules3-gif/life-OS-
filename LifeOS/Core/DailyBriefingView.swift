@@ -6,17 +6,17 @@ struct DailyBriefingView: View {
     var speakOnAppear: Bool = false
 
     @ObservedObject private var alarm = AlarmManager.shared
-    @AppStorage("userName") private var userName = ""
-    @AppStorage("kcalGoal") private var kcalGoal = 2200
-    @AppStorage("waterGoal") private var waterGoal = 2500
-    @AppStorage("lastBriefingDate") private var lastBriefingDate: Double = 0
-    @AppStorage("lastBriefingContent") private var lastBriefingContent = ""
-    @AppStorage("lastSleepQuality") private var sleepQuality = 0
-    @AppStorage("lastSleepHours") private var sleepHours = 0
-    @AppStorage("wakeupHour") private var wakeupHour = 7
-    @AppStorage("wakeupMinute") private var wakeupMinute = 0
-    @AppStorage("todayEnergyScore") private var todayEnergyScore = 0
-    @AppStorage("todayEnergyLabel") private var todayEnergyLabel = ""
+    @AppStorage(AppStorageKeys.userName) private var userName = ""
+    @AppStorage(AppStorageKeys.kcalGoal) private var kcalGoal = 2200
+    @AppStorage(AppStorageKeys.waterGoal) private var waterGoal = 2500
+    @AppStorage(AppStorageKeys.lastBriefingDate) private var lastBriefingDate: Double = 0
+    @AppStorage(AppStorageKeys.lastBriefingContent) private var lastBriefingContent = ""
+    @AppStorage(AppStorageKeys.lastSleepQuality) private var sleepQuality = 0
+    @AppStorage(AppStorageKeys.lastSleepHours) private var sleepHours = 0
+    @AppStorage(AppStorageKeys.wakeupHour) private var wakeupHour = 7
+    @AppStorage(AppStorageKeys.wakeupMinute) private var wakeupMinute = 0
+    @AppStorage(AppStorageKeys.todayEnergyScore) private var todayEnergyScore = 0
+    @AppStorage(AppStorageKeys.todayEnergyLabel) private var todayEnergyLabel = ""
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
     @Query private var habits: [Habit]

@@ -213,8 +213,8 @@ struct MoodJournalView: View {
 // MARK: - Détox écran
 
 struct ScreenDetoxView: View {
-    @AppStorage("screenGoal") private var goalHours = 3
-    @AppStorage("screenToday") private var todayMinutes = 0
+    @AppStorage(AppStorageKeys.screenGoal) private var goalHours = 3
+    @AppStorage(AppStorageKeys.screenToday) private var todayMinutes = 0
     var body: some View {
         ZStack {
             Theme.background

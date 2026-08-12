@@ -9,11 +9,11 @@ struct NotificationSettingsSheet: View {
     @Binding var wakeupHour: Int
     @Binding var wakeupMinute: Int
 
-    @AppStorage("notifEnabled.morning")   private var enableMorning   = true
-    @AppStorage("notifEnabled.sport")     private var enableSport      = true
-    @AppStorage("notifEnabled.nutrition") private var enableNutrition  = true
-    @AppStorage("notifEnabled.habits")    private var enableHabits     = true
-    @AppStorage("notifEnabled.bedtime")   private var enableBedtime    = true
+    @AppStorage(AppStorageKeys.notifEnabledMorning)   private var enableMorning   = true
+    @AppStorage(AppStorageKeys.notifEnabledSport)     private var enableSport      = true
+    @AppStorage(AppStorageKeys.notifEnabledNutrition) private var enableNutrition  = true
+    @AppStorage(AppStorageKeys.notifEnabledHabits)    private var enableHabits     = true
+    @AppStorage(AppStorageKeys.notifEnabledBedtime)   private var enableBedtime    = true
 
     @Environment(\.dismiss) private var dismiss
     @State private var authorized = false

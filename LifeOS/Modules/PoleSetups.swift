@@ -6,9 +6,9 @@ import SwiftData
 // ---- Productivité ---------------------------------------------------------
 
 struct ProductivitySetupView: View {
-    @AppStorage("focusMinGoal") private var focusGoal = 90
-    @AppStorage("focusLen")     private var focusLen = 25
-    @AppStorage("socialMaxMin") private var socialMax = 60
+    @AppStorage(AppStorageKeys.focusMinGoal) private var focusGoal = 90
+    @AppStorage(AppStorageKeys.focusLen)     private var focusLen = 25
+    @AppStorage(AppStorageKeys.socialMaxMin) private var socialMax = 60
 
     @State private var goal = 90
     @State private var pomo = 25
@@ -42,8 +42,8 @@ struct ProductivitySetupView: View {
 // ---- Mental & focus -------------------------------------------------------
 
 struct MentalSetupView: View {
-    @AppStorage("meditationGoalMin") private var meditGoal = 10
-    @AppStorage("socialMaxMin")      private var socialMax = 60
+    @AppStorage(AppStorageKeys.meditationGoalMin) private var meditGoal = 10
+    @AppStorage(AppStorageKeys.socialMaxMin)      private var socialMax = 60
 
     @State private var medit = 10
     @State private var screen = 60
@@ -77,16 +77,16 @@ struct MentalSetupView: View {
 // ---- Looksmaxx ------------------------------------------------------------
 
 struct LooksSetupView: View {
-    @AppStorage("skinType")           private var skinType = ""
-    @AppStorage("skinConcernsRaw")    private var concernsRaw = ""
-    @AppStorage("skincareLevel")      private var skincareLevelStore = ""
-    @AppStorage("faceShape")          private var faceShapeStore = ""
-    @AppStorage("hairColor")          private var hairColorStore = ""
-    @AppStorage("hairGoalsRaw")       private var hairGoalsRaw = ""
-    @AppStorage("browGoalsRaw")       private var browGoalsRaw = ""
-    @AppStorage("smileGoalsRaw")      private var smileGoalsRaw = ""
-    @AppStorage("groomingRaw")        private var groomingRaw = ""
-    @AppStorage("skincareReminders")  private var reminders = false
+    @AppStorage(AppStorageKeys.skinType)           private var skinType = ""
+    @AppStorage(AppStorageKeys.skinConcernsRaw)    private var concernsRaw = ""
+    @AppStorage(AppStorageKeys.skincareLevel)      private var skincareLevelStore = ""
+    @AppStorage(AppStorageKeys.faceShape)          private var faceShapeStore = ""
+    @AppStorage(AppStorageKeys.hairColor)          private var hairColorStore = ""
+    @AppStorage(AppStorageKeys.hairGoalsRaw)       private var hairGoalsRaw = ""
+    @AppStorage(AppStorageKeys.browGoalsRaw)       private var browGoalsRaw = ""
+    @AppStorage(AppStorageKeys.smileGoalsRaw)      private var smileGoalsRaw = ""
+    @AppStorage(AppStorageKeys.groomingRaw)        private var groomingRaw = ""
+    @AppStorage(AppStorageKeys.skincareReminders)  private var reminders = false
 
     @State private var type = "Normale"
     @State private var concerns: Set<String> = []
@@ -248,8 +248,8 @@ struct LooksTipCard: View {
 // ---- Cycle menstruel ------------------------------------------------------
 
 struct CycleSetupView: View {
-    @AppStorage("cycleStartDate")  private var startTS: Double = 0
-    @AppStorage("cycleLengthDays") private var length = 28
+    @AppStorage(AppStorageKeys.cycleStartDate)  private var startTS: Double = 0
+    @AppStorage(AppStorageKeys.cycleLengthDays) private var length = 28
 
     @State private var start = Date()
     @State private var len = 28

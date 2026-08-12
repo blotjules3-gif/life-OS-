@@ -169,14 +169,14 @@ struct BubbleCategoriesView: View {
     var onSelect: (String) -> Void = { print("tapped \($0)") }
     var style: BubbleStyle = BubbleStyle()
 
-    @AppStorage("bubbleWeights") private var weightsRaw = ""   // compteur d'usage  "titre:count,…"
-    @AppStorage("hiddenCats")    private var hiddenRaw = ""    // bulles retirées (par titre)
-    @AppStorage("catLayout")     private var layoutRaw = "organic"
-    @AppStorage("appTheme")      private var appThemeRaw = "classic"
-    @AppStorage("catSizes")      private var catSizesRaw = ""    // "titre:s|m|l,…" — taille par catégorie
-    @AppStorage("catOffsets")    private var catOffsetsRaw = ""  // "titre:dx:dy,…" — (legacy, plus utilisé)
-    @AppStorage("catAnchors")    private var catAnchorsRaw = ""  // "titre:fx:fy,…" — position ancrée (fraction)
-    @AppStorage("catColors")     private var catColorsRaw = ""   // "titre:RRGGBB,…" — couleur perso par catégorie
+    @AppStorage(AppStorageKeys.bubbleWeights) private var weightsRaw = ""   // compteur d'usage  "titre:count,…"
+    @AppStorage(AppStorageKeys.hiddenCats)    private var hiddenRaw = ""    // bulles retirées (par titre)
+    @AppStorage(AppStorageKeys.catLayout)     private var layoutRaw = "organic"
+    @AppStorage(AppStorageKeys.appTheme)      private var appThemeRaw = "classic"
+    @AppStorage(AppStorageKeys.catSizes)      private var catSizesRaw = ""    // "titre:s|m|l,…" — taille par catégorie
+    @AppStorage(AppStorageKeys.catOffsets)    private var catOffsetsRaw = ""  // "titre:dx:dy,…" — (legacy, plus utilisé)
+    @AppStorage(AppStorageKeys.catAnchors)    private var catAnchorsRaw = ""  // "titre:fx:fy,…" — position ancrée (fraction)
+    @AppStorage(AppStorageKeys.catColors)     private var catColorsRaw = ""   // "titre:RRGGBB,…" — couleur perso par catégorie
     @State private var editing = false
     @State private var showAdd = false
     @State private var showCatIntake = false

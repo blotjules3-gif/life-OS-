@@ -229,7 +229,7 @@ struct FloatingTabBar: View {
     @State private var showServerConfig = false
     @Namespace private var ns
     @Environment(\.colorScheme) private var scheme
-    @AppStorage("appTheme") private var themeRaw = "classic"
+    @AppStorage(AppStorageKeys.appTheme) private var themeRaw = "classic"
 
     private static let barBg   = Color(uiColor: .secondarySystemBackground)
     private static let selBg   = Color(uiColor: .systemGray5)
@@ -352,10 +352,10 @@ struct HomeDashboardContent: View {
     @Query private var habits: [Habit]
     @Query private var moods: [MoodEntry]
 
-    @AppStorage("stepGoal") private var stepGoal = 10000
-    @AppStorage("waterGoal") private var waterGoal = 2500
-    @AppStorage("kcalGoal") private var kcalGoal = 2200
-    @AppStorage("fastTarget") private var fastTarget = 16
+    @AppStorage(AppStorageKeys.stepGoal) private var stepGoal = 10000
+    @AppStorage(AppStorageKeys.waterGoal) private var waterGoal = 2500
+    @AppStorage(AppStorageKeys.kcalGoal) private var kcalGoal = 2200
+    @AppStorage(AppStorageKeys.fastTarget) private var fastTarget = 16
 
     @State private var steps = 0
     @State private var weekWorkouts = 0

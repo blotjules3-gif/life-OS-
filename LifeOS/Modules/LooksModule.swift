@@ -25,13 +25,13 @@ struct LooksHubView: View {
 // MARK: - Skincare
 
 struct SkincareView: View {
-    @AppStorage("skincareAM") private var amRaw = "Nettoyant|Sérum vitamine C|Crème hydratante|SPF 50"
-    @AppStorage("skincarePM") private var pmRaw = "Démaquillant|Nettoyant|Rétinol|Crème de nuit"
-    @AppStorage("skincareReminders") private var reminders = false
-    @AppStorage("skincareDoneAM") private var doneAMDate = ""
-    @AppStorage("skincareDonePM") private var donePMDate = ""
-    @AppStorage("skinType") private var skinType = ""
-    @AppStorage("skinConcernsRaw") private var skinConcernsRaw = ""
+    @AppStorage(AppStorageKeys.skincareAM) private var amRaw = "Nettoyant|Sérum vitamine C|Crème hydratante|SPF 50"
+    @AppStorage(AppStorageKeys.skincarePM) private var pmRaw = "Démaquillant|Nettoyant|Rétinol|Crème de nuit"
+    @AppStorage(AppStorageKeys.skincareReminders) private var reminders = false
+    @AppStorage(AppStorageKeys.skincareDoneAM) private var doneAMDate = ""
+    @AppStorage(AppStorageKeys.skincareDonePM) private var donePMDate = ""
+    @AppStorage(AppStorageKeys.skinType) private var skinType = ""
+    @AppStorage(AppStorageKeys.skinConcernsRaw) private var skinConcernsRaw = ""
 
     @State private var showProfile = false
     private var today: String { ISO8601DateFormatter().string(from: Calendar.current.startOfDay(for: .now)) }
@@ -191,10 +191,10 @@ enum SkinRoutineEngine {
 // MARK: - Setup profil peau
 
 struct SkinProfileSetupView: View {
-    @AppStorage("skinType") private var skinType = ""
-    @AppStorage("skinConcernsRaw") private var skinConcernsRaw = ""
-    @AppStorage("skinTreatment") private var skinTreatment = ""
-    @AppStorage("userGender") private var gender = ""
+    @AppStorage(AppStorageKeys.skinType) private var skinType = ""
+    @AppStorage(AppStorageKeys.skinConcernsRaw) private var skinConcernsRaw = ""
+    @AppStorage(AppStorageKeys.skinTreatment) private var skinTreatment = ""
+    @AppStorage(AppStorageKeys.userGender) private var gender = ""
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedType = ""
@@ -373,7 +373,7 @@ struct ProgressPhotoGalleryView: View {
 // MARK: - Mewing & posture
 
 struct MewingPostureView: View {
-    @AppStorage("postureReminder") private var posture = false
+    @AppStorage(AppStorageKeys.postureReminder) private var posture = false
     @State private var engine = CountdownEngine()
     @State private var started = false
 
@@ -465,7 +465,7 @@ struct WardrobeView: View {
             }
         }
         .navigationTitle("Garde-robe").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { WardrobeEditor() }
     }
 }

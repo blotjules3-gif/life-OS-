@@ -10,14 +10,14 @@ extension ShapeStyle where Self == Color { static var fitTint: Color { AppCatego
 struct FitnessHubView: View {
     @State private var showTabata = false
     @State private var showFitnessProfile = false
-    @AppStorage("fitnessCoachIntroShown") private var coachIntroShown = false
-    @AppStorage("userWeightKg") private var userWeightKg: Double = 0
-    @AppStorage("userHeightCm") private var userHeightCm: Double = 0
-    @AppStorage("userStrengthLevel") private var userStrengthLevel: String = ""
-    @AppStorage("userBench1RM") private var userBench1RM: Double = 0
-    @AppStorage("userSquat1RM") private var userSquat1RM: Double = 0
-    @AppStorage("userDeadlift1RM") private var userDeadlift1RM: Double = 0
-    @AppStorage("userWeeklyFrequency") private var userWeeklyFrequency: Int = 3
+    @AppStorage(AppStorageKeys.fitnessCoachIntroShown) private var coachIntroShown = false
+    @AppStorage(AppStorageKeys.userWeightKg) private var userWeightKg: Double = 0
+    @AppStorage(AppStorageKeys.userHeightCm) private var userHeightCm: Double = 0
+    @AppStorage(AppStorageKeys.userStrengthLevel) private var userStrengthLevel: String = ""
+    @AppStorage(AppStorageKeys.userBench1RM) private var userBench1RM: Double = 0
+    @AppStorage(AppStorageKeys.userSquat1RM) private var userSquat1RM: Double = 0
+    @AppStorage(AppStorageKeys.userDeadlift1RM) private var userDeadlift1RM: Double = 0
+    @AppStorage(AppStorageKeys.userWeeklyFrequency) private var userWeeklyFrequency: Int = 3
 
     private var profileFields: [Bool] {
         [
@@ -259,7 +259,7 @@ struct FitnessHubView: View {
 struct StepsView: View {
     @State private var today = 0
     @State private var loading = true
-    @AppStorage("stepGoal") private var goal = 10000
+    @AppStorage(AppStorageKeys.stepGoal) private var goal = 10000
 
     var body: some View {
         ZStack {
@@ -361,7 +361,7 @@ struct StrengthView: View {
             }
         }
         .navigationTitle("Muscu & progression").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { WorkoutEditor(knownExercises: exercises) }
     }
     private func suggestIncrement(_ s: WorkoutSet) -> Double { s.weightKg < 40 ? 2.5 : 5 }

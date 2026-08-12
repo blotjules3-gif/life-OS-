@@ -110,7 +110,7 @@ struct ContactEditor: View {
 
 struct BirthdaysView: View {
     @Query private var contacts: [Contact]
-    @AppStorage("birthdayRemindersOn") private var remindersOn = false
+    @AppStorage(AppStorageKeys.birthdayRemindersOn) private var remindersOn = false
     private var withBirthday: [Contact] {
         contacts.filter { $0.birthday != nil }.sorted { daysUntil($0.birthday!) < daysUntil($1.birthday!) }
     }
@@ -227,7 +227,7 @@ struct EventsView: View {
             }
         }
         .navigationTitle("Sorties & events").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { EventEditor() }
     }
 }

@@ -159,9 +159,9 @@ struct PowerNapView: View {
 // MARK: - Coucher progressif
 
 struct WindDownView: View {
-    @AppStorage("windDownHour") private var hour = 22
-    @AppStorage("windDownMinute") private var minute = 30
-    @AppStorage("windDownEnabled") private var enabled = false
+    @AppStorage(AppStorageKeys.windDownHour) private var hour = 22
+    @AppStorage(AppStorageKeys.windDownMinute) private var minute = 30
+    @AppStorage(AppStorageKeys.windDownEnabled) private var enabled = false
     @State private var time = Date()
 
     var body: some View {
@@ -235,7 +235,7 @@ struct DreamJournalView: View {
         }
         .navigationTitle("Journal de rêves").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) {
-            Button { showAdd = true } label: { Image(systemName: "plus") }
+            Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter")
         } }
         .sheet(isPresented: $showAdd) { DreamEditor() }
     }

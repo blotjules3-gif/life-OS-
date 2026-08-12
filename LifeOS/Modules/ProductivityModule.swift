@@ -94,7 +94,7 @@ struct TodoView: View {
             }
         }
         .navigationTitle("To-do").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { TodoEditor() }
     }
     private func priorityColor(_ p: Int) -> Color { p >= 2 ? .red : p == 1 ? .orange : Theme.textSecondary }
@@ -157,8 +157,8 @@ struct TodoEditor: View {
 
 struct TimeBlockView: View {
     @Query private var todos: [TodoItem]
-    @AppStorage("dayStart") private var dayStart = 9
-    @AppStorage("dayEnd") private var dayEnd = 18
+    @AppStorage(AppStorageKeys.dayStart) private var dayStart = 9
+    @AppStorage(AppStorageKeys.dayEnd) private var dayEnd = 18
     @State private var blocks: [(Date, Date, TodoItem)] = []
 
     var body: some View {
@@ -222,7 +222,7 @@ struct HabitTrackerView: View {
     @Query(sort: \Habit.scheduledHour) private var allHabits: [Habit]
     @State private var showAdd = false
     @State private var editingHabit: Habit?
-    @AppStorage("habitModulesRaw") private var habitModulesRaw = ""
+    @AppStorage(AppStorageKeys.habitModulesRaw) private var habitModulesRaw = ""
 
     private var pendingHabits: [Habit] { allHabits.filter { $0.isPending && !$0.isArchived } }
     private var activeHabits: [Habit] { allHabits.filter { !$0.isPending && !$0.isArchived } }
@@ -292,7 +292,7 @@ struct HabitTrackerView: View {
             .refreshable { syncHabitsToWidget() }
         }
         .navigationTitle("Habit tracker").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { HabitEditor() }
         .sheet(item: $editingHabit) { h in HabitEditor(editingHabit: h) }
         .overlay(alignment: .bottom) {
@@ -613,8 +613,8 @@ struct FocusTimerView: View {
     @State private var isFocus = true
     @State private var sessions = 0
     @State private var running = false
-    @AppStorage("focusLen") private var focusLen = 25
-    @AppStorage("breakLen") private var breakLen = 5
+    @AppStorage(AppStorageKeys.focusLen) private var focusLen = 25
+    @AppStorage(AppStorageKeys.breakLen) private var breakLen = 5
 
     var body: some View {
         ZStack {
@@ -691,7 +691,7 @@ struct NotesView: View {
         }
         .searchable(text: $search, prompt: "Rechercher dans tes notes")
         .navigationTitle("Notes").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) {
             NavigationStack { NoteEditor(note: nil) }
         }

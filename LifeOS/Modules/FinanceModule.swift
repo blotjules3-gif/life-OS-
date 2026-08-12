@@ -57,7 +57,7 @@ struct AccountsView: View {
 
                     HStack {
                         SectionHeader(title: "Comptes")
-                        Button { showAddAccount = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.finTint) }
+                        Button { showAddAccount = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.finTint) }.accessibilityLabel("Ajouter un compte")
                     }
                     ForEach(accounts) { a in
                         HStack {
@@ -71,7 +71,7 @@ struct AccountsView: View {
 
                     HStack {
                         SectionHeader(title: "Dernières opérations")
-                        Button { showAddTxn = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.finTint) }
+                        Button { showAddTxn = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.finTint) }.accessibilityLabel("Ajouter une transaction")
                     }
                     if txns.isEmpty { Text("Aucune opération.").font(.footnote).foregroundStyle(Theme.textSecondary) }
                     ForEach(txns.prefix(15)) { t in
@@ -197,7 +197,7 @@ struct BudgetView: View {
             }
         }
         .navigationTitle("Budget enveloppes").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { EnvelopeEditor() }
     }
 }
@@ -264,7 +264,7 @@ struct SubscriptionsView: View {
             }
         }
         .navigationTitle("Abonnements").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { SubscriptionEditor() }
     }
     private func forgotten(_ s: Subscription) -> Bool { s.active && s.nextDate < Calendar.current.date(byAdding: .month, value: -2, to: .now)! }
@@ -298,7 +298,7 @@ struct SplitView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \SplitExpense.date, order: .reverse) private var expenses: [SplitExpense]
     @State private var showAdd = false
-    @AppStorage("splitMembers") private var membersRaw = "Moi,Alex,Sam"
+    @AppStorage(AppStorageKeys.splitMembers) private var membersRaw = "Moi,Alex,Sam"
 
     private var members: [String] { membersRaw.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } }
 
@@ -336,7 +336,7 @@ struct SplitView: View {
                         Text(settlementHint).font(.caption).foregroundStyle(Theme.textSecondary).padding(.top, 4)
                     }.card()
 
-                    HStack { SectionHeader(title: "Dépenses"); Button { showAdd = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.finTint) } }
+                    HStack { SectionHeader(title: "Dépenses"); Button { showAdd = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.finTint) }.accessibilityLabel("Ajouter") }
                     if expenses.isEmpty { Text("Aucune dépense partagée.").font(.footnote).foregroundStyle(Theme.textSecondary) }
                     ForEach(expenses) { e in
                         HStack {
@@ -427,7 +427,7 @@ struct SavingsView: View {
             }
         }
         .navigationTitle("Épargne").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { SavingsEditor() }
     }
 }

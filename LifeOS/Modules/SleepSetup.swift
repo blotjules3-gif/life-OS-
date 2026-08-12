@@ -4,10 +4,10 @@ import SwiftUI
 // Pré-remplit : heure de réveil, durée cible, réveil activé, heure de coucher conseillée.
 
 struct SleepSetupView: View {
-    @AppStorage("wakeupHour")      private var wakeupHour = 7
-    @AppStorage("wakeupMinute")    private var wakeupMinute = 0
-    @AppStorage("wakeupEnabled")   private var wakeupEnabled = false
-    @AppStorage("sleepTargetHours") private var sleepTarget = 8
+    @AppStorage(AppStorageKeys.wakeupHour)      private var wakeupHour = 7
+    @AppStorage(AppStorageKeys.wakeupMinute)    private var wakeupMinute = 0
+    @AppStorage(AppStorageKeys.wakeupEnabled)   private var wakeupEnabled = false
+    @AppStorage(AppStorageKeys.sleepTargetHours) private var sleepTarget = 8
 
     @State private var wake = 7
     @State private var duration = 8

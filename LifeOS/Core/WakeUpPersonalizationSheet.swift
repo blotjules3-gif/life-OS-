@@ -7,10 +7,10 @@ struct WakeUpPersonalizationSheet: View {
     @Binding var modulesRaw: String
     let onSchedule: () -> Void
 
-    @AppStorage("userName") private var userName = ""
-    @AppStorage("wakeupRepeatDays") private var repeatDaysRaw = "1,2,3,4,5,6,7"
-    @AppStorage("wakeupMessage") private var customMessage = ""
-    @AppStorage("snoozeMinutes") private var snoozeMinutes = 9
+    @AppStorage(AppStorageKeys.userName) private var userName = ""
+    @AppStorage(AppStorageKeys.wakeupRepeatDays) private var repeatDaysRaw = "1,2,3,4,5,6,7"
+    @AppStorage(AppStorageKeys.wakeupMessage) private var customMessage = ""
+    @AppStorage(AppStorageKeys.snoozeMinutes) private var snoozeMinutes = 9
     @Environment(\.dismiss) private var dismiss
 
     @State private var alarmTime: Date = .now

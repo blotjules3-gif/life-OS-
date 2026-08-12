@@ -50,21 +50,21 @@ enum OnboardingGoal: String, CaseIterable, Identifiable {
 // MARK: - Conteneur onboarding
 
 struct OnboardingView: View {
-    @AppStorage("userName") private var savedName = ""
-    @AppStorage("userGender") private var savedGender = ""
-    @AppStorage("onboardingDone") private var onboardingDone = false
+    @AppStorage(AppStorageKeys.userName) private var savedName = ""
+    @AppStorage(AppStorageKeys.userGender) private var savedGender = ""
+    @AppStorage(AppStorageKeys.onboardingDone) private var onboardingDone = false
 
-    @AppStorage("homeShortcuts") private var homeShortcuts = "tabata,calories,scan,todo,fasting,water,habits,mood"
-    @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
-    @AppStorage("onboardingGoalsRaw") private var onboardingGoalsRaw = ""
-    @AppStorage("wakeupHour") private var savedWakeupHour = 7
-    @AppStorage("wakeupMinute") private var savedWakeupMinute = 0
-    @AppStorage("wakeupEnabled") private var savedWakeupEnabled = false
-    @AppStorage("habitModulesRaw") private var habitModulesRaw = ""
+    @AppStorage(AppStorageKeys.homeShortcuts) private var homeShortcuts = "tabata,calories,scan,todo,fasting,water,habits,mood"
+    @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
+    @AppStorage(AppStorageKeys.onboardingGoalsRaw) private var onboardingGoalsRaw = ""
+    @AppStorage(AppStorageKeys.wakeupHour) private var savedWakeupHour = 7
+    @AppStorage(AppStorageKeys.wakeupMinute) private var savedWakeupMinute = 0
+    @AppStorage(AppStorageKeys.wakeupEnabled) private var savedWakeupEnabled = false
+    @AppStorage(AppStorageKeys.habitModulesRaw) private var habitModulesRaw = ""
 
-    @AppStorage("lifeProfile") private var savedLifeProfile = ""
-    @AppStorage("userHasCycle") private var savedHasCycle = false
-    @AppStorage("userHormonalContext") private var savedHormonalContext = ""
+    @AppStorage(AppStorageKeys.lifeProfile) private var savedLifeProfile = ""
+    @AppStorage(AppStorageKeys.userHasCycle) private var savedHasCycle = false
+    @AppStorage(AppStorageKeys.userHormonalContext) private var savedHormonalContext = ""
     @Environment(\.modelContext) private var ctx
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 

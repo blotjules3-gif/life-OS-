@@ -2,10 +2,10 @@ import SwiftUI
 import SwiftData
 
 struct EveningSummaryView: View {
-    @AppStorage("stepGoal")  private var stepGoal  = 10000
-    @AppStorage("waterGoal") private var waterGoal = 2500
-    @AppStorage("kcalGoal")  private var kcalGoal  = 2200
-    @AppStorage("userName")  private var userName   = ""
+    @AppStorage(AppStorageKeys.stepGoal)  private var stepGoal  = 10000
+    @AppStorage(AppStorageKeys.waterGoal) private var waterGoal = 2500
+    @AppStorage(AppStorageKeys.kcalGoal)  private var kcalGoal  = 2200
+    @AppStorage(AppStorageKeys.userName)  private var userName   = ""
 
     @Query private var foods:  [FoodEntry]
     @Query private var waters: [WaterEntry]

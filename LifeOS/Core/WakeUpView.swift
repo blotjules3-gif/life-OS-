@@ -1,13 +1,13 @@
 import SwiftUI
 
 struct WakeUpView: View {
-    @AppStorage("userName") private var userName = ""
-    @AppStorage("wakeupEnabled") private var wakeupEnabled = false
-    @AppStorage("wakeupHour") private var wakeupHour = 7
-    @AppStorage("wakeupMinute") private var wakeupMinute = 0
-    @AppStorage("wakeupRepeatDays") private var repeatDaysRaw = "1,2,3,4,5,6,7"
-    @AppStorage("snoozeMinutes") private var snoozeMinutes = 9
-    @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
+    @AppStorage(AppStorageKeys.userName) private var userName = ""
+    @AppStorage(AppStorageKeys.wakeupEnabled) private var wakeupEnabled = false
+    @AppStorage(AppStorageKeys.wakeupHour) private var wakeupHour = 7
+    @AppStorage(AppStorageKeys.wakeupMinute) private var wakeupMinute = 0
+    @AppStorage(AppStorageKeys.wakeupRepeatDays) private var repeatDaysRaw = "1,2,3,4,5,6,7"
+    @AppStorage(AppStorageKeys.snoozeMinutes) private var snoozeMinutes = 9
+    @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var alarmTime: Date = .now

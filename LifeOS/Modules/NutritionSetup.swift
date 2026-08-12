@@ -6,16 +6,16 @@ import SwiftData
 
 struct NutritionSetupView: View {
     @Environment(\.modelContext) private var ctx
-    @AppStorage("kcalGoal")  private var kcalGoal = 2200
-    @AppStorage("waterGoal") private var waterGoal = 2500
-    @AppStorage("proteinGoal") private var proteinGoal = 150
+    @AppStorage(AppStorageKeys.kcalGoal)  private var kcalGoal = 2200
+    @AppStorage(AppStorageKeys.waterGoal) private var waterGoal = 2500
+    @AppStorage(AppStorageKeys.proteinGoal) private var proteinGoal = 150
     // Profil central — déjà connu / réutilisé par les autres catégories (jamais redemandé).
-    @AppStorage("userGender")   private var userGender = ""
-    @AppStorage("userAge")      private var age = 25
-    @AppStorage("userWeight")   private var weight = 75
-    @AppStorage("userHeight")   private var height = 178
-    @AppStorage("userActivity") private var activity = "Modéré (3-4×/sem)"
-    @AppStorage("userGoalFit")  private var sharedGoal = ""
+    @AppStorage(AppStorageKeys.userGender)   private var userGender = ""
+    @AppStorage(AppStorageKeys.userAge)      private var age = 25
+    @AppStorage(AppStorageKeys.userWeight)   private var weight = 75
+    @AppStorage(AppStorageKeys.userHeight)   private var height = 178
+    @AppStorage(AppStorageKeys.userActivity) private var activity = "Modéré (3-4×/sem)"
+    @AppStorage(AppStorageKeys.userGoalFit)  private var sharedGoal = ""
 
     @State private var goal = "Maintenir"
     @State private var shopping: Set<String> = []

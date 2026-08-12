@@ -7,11 +7,11 @@ struct NotificationsSettingsView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \CustomReminder.hour) private var reminders: [CustomReminder]
 
-    @AppStorage("morningReminderOn")   private var morningOn = true
-    @AppStorage("morningReminderText") private var morningText = MorningReminder.defaultText
-    @AppStorage("notifMasterMute")     private var muted = false
-    @AppStorage("smartNotifsEnabled")  private var smartNotifsOn = false
-    @AppStorage("cloudKitEnabled")     private var cloudKitOn = false
+    @AppStorage(AppStorageKeys.morningReminderOn)   private var morningOn = true
+    @AppStorage(AppStorageKeys.morningReminderText) private var morningText = MorningReminder.defaultText
+    @AppStorage(AppStorageKeys.notifMasterMute)     private var muted = false
+    @AppStorage(AppStorageKeys.smartNotifsEnabled)  private var smartNotifsOn = false
+    @AppStorage(AppStorageKeys.cloudKitEnabled)     private var cloudKitOn = false
 
     @State private var showAdd = false
 

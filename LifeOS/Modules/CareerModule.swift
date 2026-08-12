@@ -66,7 +66,7 @@ struct ApplicationsView: View {
             }
         }
         .navigationTitle("Candidatures").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { NavigationStack { ApplicationEditor(app: nil) } }
     }
 }
@@ -99,13 +99,13 @@ struct ApplicationEditor: View {
 // MARK: - CV Builder
 
 struct CVBuilderView: View {
-    @AppStorage("cvName") private var name = ""
-    @AppStorage("cvTitle") private var title = ""
-    @AppStorage("cvContact") private var contact = ""
-    @AppStorage("cvSummary") private var summary = ""
-    @AppStorage("cvExperience") private var experience = ""
-    @AppStorage("cvEducation") private var education = ""
-    @AppStorage("cvSkills") private var skills = ""
+    @AppStorage(AppStorageKeys.cvName) private var name = ""
+    @AppStorage(AppStorageKeys.cvTitle) private var title = ""
+    @AppStorage(AppStorageKeys.cvContact) private var contact = ""
+    @AppStorage(AppStorageKeys.cvSummary) private var summary = ""
+    @AppStorage(AppStorageKeys.cvExperience) private var experience = ""
+    @AppStorage(AppStorageKeys.cvEducation) private var education = ""
+    @AppStorage(AppStorageKeys.cvSkills) private var skills = ""
 
     private var generated: String {
         """
@@ -203,7 +203,7 @@ struct SkillGapView: View {
             }
         }
         .navigationTitle("Compétences manquantes").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { SkillGapEditor(existingRoles: roles) }
     }
 }
@@ -386,7 +386,7 @@ struct JobMatchView: View {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
                 TextField("Poste, techno, ville…", text: $query)
                     .textInputAutocapitalization(.never).autocorrectionDisabled()
-                if !query.isEmpty { Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }.buttonStyle(.plain) }
+                if !query.isEmpty { Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }.buttonStyle(.plain).accessibilityLabel("Effacer la recherche") }
             }
             .padding(10).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             Toggle("Télétravail uniquement", isOn: $remoteOnly).font(.subheadline).tint(.careerTint)

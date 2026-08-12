@@ -113,7 +113,7 @@ struct ChoresView: View {
             }
         }
         .navigationTitle("Tâches ménagères").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { ChoreEditor() }
     }
     private func dueLabel(_ d: Date) -> String { let days = Calendar.current.dateComponents([.day], from: .now, to: d).day ?? 0; return days < 0 ? "En retard" : days == 0 ? "Aujourd'hui" : "Dans \(days)j" }
@@ -159,7 +159,7 @@ struct PetsView: View {
             }
         }
         .navigationTitle("Mes animaux").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { PetEditor() }
     }
 }
@@ -267,7 +267,7 @@ struct MaintenanceView: View {
             }
         }
         .navigationTitle("Maintenance").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { MaintenanceEditor() }
     }
 }

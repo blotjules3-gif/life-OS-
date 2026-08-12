@@ -56,7 +56,7 @@ struct FlashcardsView: View {
             }
         }
         .navigationTitle("Flashcards").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { FlashcardEditor(decks: decks) }
         .fullScreenCover(isPresented: $reviewing) { ReviewSession(cards: cards.filter { $0.due <= Date() }) }
     }
@@ -210,7 +210,7 @@ struct BookSummariesView: View {
             }
         }
         .navigationTitle("Résumés de livres").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { BookEditor() }
     }
 }
@@ -239,9 +239,9 @@ struct BookEditor: View {
 // MARK: - Plan de montée en compétence
 
 struct SkillPlanView: View {
-    @AppStorage("skillPlanName") private var skill = ""
-    @AppStorage("skillPlanSteps") private var stepsRaw = ""
-    @AppStorage("skillPlanDone") private var doneRaw = ""
+    @AppStorage(AppStorageKeys.skillPlanName) private var skill = ""
+    @AppStorage(AppStorageKeys.skillPlanSteps) private var stepsRaw = ""
+    @AppStorage(AppStorageKeys.skillPlanDone) private var doneRaw = ""
     @State private var newStep = ""
 
     private var steps: [String] { stepsRaw.split(separator: "\n").map(String.init) }

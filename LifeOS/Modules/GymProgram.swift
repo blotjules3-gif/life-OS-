@@ -13,10 +13,10 @@ struct GymProgramView: View {
     @Environment(\.modelContext) private var ctx
     @Query private var days: [GymDay]
 
-    @AppStorage("gymReminderOn")     private var on = true
-    @AppStorage("gymReminderHour")   private var hour = 7
-    @AppStorage("gymReminderMinute") private var minute = 0
-    @AppStorage("gymConfirm")        private var confirm = true
+    @AppStorage(AppStorageKeys.gymReminderOn)     private var on = true
+    @AppStorage(AppStorageKeys.gymReminderHour)   private var hour = 7
+    @AppStorage(AppStorageKeys.gymReminderMinute) private var minute = 0
+    @AppStorage(AppStorageKeys.gymConfirm)        private var confirm = true
 
     @State private var editing: GymDay?
 
@@ -188,7 +188,7 @@ struct GymDayEditor: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     if !day.isRest {
-                        Button { showAI = true } label: { Image(systemName: "sparkles") }.tint(.fitTint)
+                        Button { showAI = true } label: { Image(systemName: "sparkles") }.tint(.fitTint).accessibilityLabel("Assistant coach")
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {

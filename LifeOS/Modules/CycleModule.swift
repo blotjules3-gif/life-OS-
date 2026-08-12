@@ -52,8 +52,8 @@ struct CycleTrackerView: View {
     @State private var showDatePicker = false
     @State private var pickedDate = Date()
 
-    @AppStorage("cycleStartDate") private var cycleStartDateTS: Double = 0
-    @AppStorage("cycleLengthDays") private var cycleLengthDays = 28
+    @AppStorage(AppStorageKeys.cycleStartDate) private var cycleStartDateTS: Double = 0
+    @AppStorage(AppStorageKeys.cycleLengthDays) private var cycleLengthDays = 28
 
     private let flows = ["Aucun", "Léger", "Moyen", "Abondant"]
     private let flowColors: [Color] = [.secondary, Color(hex: UInt(0xF9C0D8)), Color(hex: UInt(0xE85D9A)), Color(hex: UInt(0xB5136A))]
