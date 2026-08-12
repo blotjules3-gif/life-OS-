@@ -106,7 +106,7 @@ struct FinanceSetupView: View {
         for s in subs where subOptions.contains(where: { $0.0 == s.name }) && !chosenSubs.contains(s.name) {
             ctx.delete(s)
         }
-        try? ctx.save()
+        do { try ctx.save() } catch { AppLog.data.error("FinanceSetup save failed: \(error.localizedDescription, privacy: .public)") }
         CategorySetup.markDone(.finance)
         Haptics.success()
     }
