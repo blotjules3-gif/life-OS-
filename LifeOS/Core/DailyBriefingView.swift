@@ -419,7 +419,7 @@ struct DailyBriefingView: View {
             UserDefaults.standard.set(Date.now.timeIntervalSince1970, forKey: "lastSleepCheckDate")
         }
         if morningMood > 0 { ctx.insert(MoodEntry(score: morningMood, note: "")) }
-        do { try ctx.save() } catch { print("[SwiftData] saveBriefingCheckin failed: \(error)") }
+        do { try ctx.save() } catch { AppLog.data.error("saveBriefingCheckin failed: \(error.localizedDescription, privacy: .public)") }
 
         let manual = EnergyScore.Input(
             sleepHours: sleepHours > 0 ? Double(sleepHours) : nil,
