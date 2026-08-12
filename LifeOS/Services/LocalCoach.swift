@@ -71,7 +71,8 @@ enum LocalCoach {
         // Logger de l'eau
         if matches(t, ["verre d'eau", "verre deau", "un verre", "j'ai bu", "jai bu", "bu de l'eau", "ajoute de l'eau", "hydrate"]) && !matches(t, ["combien", "reste", "objectif"]) {
             let glass = 250
-            ctx.insert(WaterEntry(amountML: glass)); try? ctx.save()
+            ctx.insert(WaterEntry(amountML: glass))
+            do { try ctx.save() } catch { AppLog.data.error("LocalCoach water save failed: \(error.localizedDescription, privacy: .public)") }
             let (ml, goal, _) = water(ctx)
             return "+1 verre (\(glass) ml) enregistré. Tu es à \(ml) / \(goal) ml aujourd'hui. \(ml >= goal ? "Objectif atteint, bravo." : "Continue comme ça !")"
         }
