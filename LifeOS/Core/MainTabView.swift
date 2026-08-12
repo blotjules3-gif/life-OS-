@@ -99,6 +99,9 @@ struct MainTabView: View {
         ZStack {
             HabitWidgetSyncer()
             FitnessWidgetSyncer()
+            MoodWidgetSyncer()
+            SleepWidgetSyncer()
+            NutritionTodaySyncer()
             ThemedBubbleBackground(theme: theme)
                 .ignoresSafeArea()
             tabPane(ShortcutsHomeView(), .home)
