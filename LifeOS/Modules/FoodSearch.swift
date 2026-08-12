@@ -221,7 +221,8 @@ struct ProductDetailView: View {
                     ctx.insert(FoodEntry(name: product.name, calories: Int(Double(product.kcal) * factor),
                                          protein: product.protein * factor, carbs: product.carbs * factor,
                                          fat: product.fat * factor, meal: meal))
-                    try? ctx.save(); Haptics.medium()
+                    do { try ctx.save() } catch { AppLog.data.error("FoodSearch add save failed: \(error.localizedDescription, privacy: .public)") }
+                    Haptics.medium()
                     withAnimation { added = true }
                 } label: {
                     Label(added ? "Ajouté" : "Ajouter au journal", systemImage: added ? "checkmark.circle.fill" : "plus.circle.fill")
