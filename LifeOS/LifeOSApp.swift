@@ -24,7 +24,7 @@ struct LifeOSApp: App {
     @State private var showWeeklyBilan = false
     @State private var showIntake = false
     @State private var showFoodScan = false
-    @AppStorage("intakeShown") private var intakeShown = false
+    @AppStorage(AppStorageKeys.intakeShown) private var intakeShown = false
 
     private var recommendedModules: [AppCategory] {
         recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
