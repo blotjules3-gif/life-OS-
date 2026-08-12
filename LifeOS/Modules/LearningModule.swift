@@ -102,7 +102,7 @@ struct ReviewSession: View {
             } else {
                 let card = cards[index]
                 VStack(spacing: 24) {
-                    HStack { Text("\(index+1)/\(cards.count)").foregroundStyle(Theme.textSecondary); Spacer(); Button { dismiss() } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.textSecondary) } }
+                    HStack { Text("\(index+1)/\(cards.count)").foregroundStyle(Theme.textSecondary); Spacer(); Button { dismiss() } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.textSecondary) }.accessibilityLabel("Fermer") }
                     Spacer()
                     VStack(spacing: 16) {
                         Text(flipped ? "RÉPONSE" : "QUESTION").font(.caption.bold()).foregroundStyle(.learnTint)
