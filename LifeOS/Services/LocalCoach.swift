@@ -61,7 +61,8 @@ enum LocalCoach {
             let subject = subject(from: raw, after: ["rappelle moi de", "rappelle-moi de", "rappelle moi", "note moi de", "une tache", "une tâche", "un todo", "tache", "tâche", "todo", "il faut que je", "faut que je", "penser a", "pense a", "de "])
             if let clean = meaningful(subject) {
                 let todo = TodoItem(title: clean, priority: matches(t, ["urgent", "vite", "important"]) ? 2 : 0)
-                ctx.insert(todo); try? ctx.save()
+                ctx.insert(todo)
+                do { try ctx.save() } catch { AppLog.data.error("LocalCoach create todo failed: \(error.localizedDescription, privacy: .public)") }
                 return "C'est noté : **\(clean)** est ajouté à ta liste de tâches (module To-do)."
             }
             return "Dis-moi quoi ajouter à ta liste et je le note tout de suite (ex. « rappelle-moi d'appeler le dentiste »)."
