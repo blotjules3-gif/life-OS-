@@ -626,7 +626,7 @@ struct ShortcutsHomeView: View {
             let c = HabitCompletion(date: .now)
             habit.completions.append(c)
         }
-        do { try ctx.save() } catch { print("[SwiftData] toggleHabit failed: \(error)") }
+        do { try ctx.save() } catch { AppLog.data.error("toggleHabit failed: \(error.localizedDescription, privacy: .public)") }
         Haptics.soft()
         if !wasDone { triggerStreakActivity(for: habit) }
     }
