@@ -328,7 +328,7 @@ struct MobilitySetupView: View {
             let v = vehicles.first ?? { let nv = Vehicle(); ctx.insert(nv); return nv }()
             v.name = name
             v.insuranceRenewal = setInsurance ? insurance : nil
-            try? ctx.save()
+            do { try ctx.save() } catch { AppLog.data.error("MobilitySetup save failed: \(error.localizedDescription, privacy: .public)") }
         }
         CategorySetup.markDone(.mobility); Haptics.success()
     }
