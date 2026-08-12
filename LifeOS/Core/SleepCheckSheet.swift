@@ -372,7 +372,7 @@ struct SleepCheckSheet: View {
             mood: quality
         )
         ctx.insert(dream)
-        do { try ctx.save() } catch { print("[SwiftData] saveDream failed: \(error)") }
+        do { try ctx.save() } catch { AppLog.data.error("saveDream failed: \(error.localizedDescription, privacy: .public)") }
     }
 
     private func submitAndReveal() {
