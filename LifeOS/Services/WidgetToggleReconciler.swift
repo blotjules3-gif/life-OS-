@@ -45,6 +45,6 @@ enum WidgetToggleReconciler {
             }
         }
 
-        do { try ctx.save() } catch { print("[WidgetToggleReconciler] save failed: \(error)") }
+        do { try ctx.save() } catch { AppLog.data.error("WidgetToggleReconciler save failed: \(error.localizedDescription, privacy: .public)") }
     }
 }
