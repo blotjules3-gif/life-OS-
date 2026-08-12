@@ -90,7 +90,40 @@ final class UserContextBuilder {
                 : "Sommeil nuit dernière: \(sleepH)h")
         }
         let energyScore = ud.integer(forKey: "todayEnergyScore")
-        if energyScore > 0 { lines.append("Score énergie: \(energyScore)/100") }
+        let energyLabel = ud.string(forKey: "todayEnergyLabel") ?? ""
+        if energyScore > 0 {
+            lines.append(energyLabel.isEmpty
+                ? "Score énergie: \(energyScore)/100"
+                : "Score énergie: \(energyScore)/100 (\(energyLabel))")
+        }
+
+        // ── Fenêtre de coucher cible (contexte pour reco couchée/réveil) ────
+        let bedH = ud.integer(forKey: "bedHour")
+        let bedM = ud.integer(forKey: "bedMinute")
+        let wakeH = ud.integer(forKey: "wakeupHour")
+        let wakeM = ud.integer(forKey: "wakeupMinute")
+        if bedH > 0 || wakeH > 0 {
+            var parts: [String] = []
+            if bedH > 0 { parts.append(String(format: "coucher %02d:%02d", bedH, bedM)) }
+            if wakeH > 0 { parts.append(String(format: "réveil %02d:%02d", wakeH, wakeM)) }
+            lines.append("Fenêtre sommeil cible: \(parts.joined(separator: " → "))")
+        }
+
+        // ── Humeur récente (3 derniers jours, si publiée en App Group) ──────
+        if let moodData = grp.data(forKey: "mood_recent_7d"),
+           let moods = try? JSONSerialization.jsonObject(with: moodData) as? [Int],
+           !moods.isEmpty {
+            let recent = moods.prefix(3).map(String.init).joined(separator: ", ")
+            let avg = Double(moods.reduce(0, +)) / Double(moods.count)
+            lines.append("Humeur récente: \(recent) (moy \(String(format: "%.1f", avg))/5)")
+        }
+
+        // ── Objectifs actifs (simplification via goalEndDatesRaw) ───────────
+        let goalRaw = ud.string(forKey: "goalEndDatesRaw") ?? ""
+        if !goalRaw.isEmpty {
+            let activeGoalsCount = goalRaw.split(separator: ",").count
+            if activeGoalsCount > 0 { lines.append("Objectifs actifs: \(activeGoalsCount)") }
+        }
 
         // ── Engagement (streak d'ouverture de l'app) ─────────────────────────
         let appStreak = EngagementTracker.shared.consecutiveDays
