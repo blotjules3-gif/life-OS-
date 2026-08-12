@@ -45,7 +45,7 @@ enum QuickStart {
         ud.set(true, forKey: "smartNotifsEnabled")  // Le coach cross-pôles = démo qui vend le produit
 
         // 5. Sauvegarde + flag terminé
-        do { try ctx.save() } catch { print("[QuickStart] save failed: \(error)") }
+        do { try ctx.save() } catch { AppLog.data.error("QuickStart save failed: \(error.localizedDescription, privacy: .public)") }
         ud.set(true, forKey: "onboardingDone")
         Analytics.log("quickstart.completed", ["goal": goal])
     }
