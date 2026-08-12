@@ -236,7 +236,7 @@ struct NutritionSetupView: View {
                 body: advice.isEmpty ? "\(r.momentLabel) · \(r.foodLabel)" : advice,
                 hour: r.hour, minute: r.minute)
         }
-        try? ctx.save()
+        do { try ctx.save() } catch { AppLog.data.error("NutritionSetup save failed: \(error.localizedDescription, privacy: .public)") }
         CategorySetup.markDone(.nutrition)
         Haptics.success()
     }
