@@ -386,7 +386,7 @@ struct PendingHabitRow: View {
 
             Button {
                 ctx.delete(habit)
-                do { try ctx.save() } catch { print("[SwiftData] deleteHabit failed: \(error)") }
+                do { try ctx.save() } catch { AppLog.data.error("deleteHabit failed: \(error.localizedDescription, privacy: .public)") }
             } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 11, weight: .bold))
