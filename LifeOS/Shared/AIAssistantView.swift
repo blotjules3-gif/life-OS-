@@ -359,7 +359,7 @@ final class AIAssistantViewModel: ObservableObject {
             if let title = action.title {
                 let todo = TodoItem(title: title, priority: action.priority ?? 1)
                 ctx.insert(todo)
-                do { try ctx.save() } catch { print("[SwiftData] createTodo failed: \(error)") }
+                do { try ctx.save() } catch { AppLog.data.error("createTodo failed: \(error.localizedDescription, privacy: .public)") }
                 showToast("Tâche ajoutée : \(title)", module: "productivity")
             }
         case .scheduleReminder:
