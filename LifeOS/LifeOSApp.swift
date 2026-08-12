@@ -12,9 +12,9 @@ struct LifeOSApp: App {
     @State private var container: ModelContainer?
     @State private var migrationFailed = false
     @State private var storeWasReset = false
-    @AppStorage("onboardingDone") private var onboardingDone = false
-    @AppStorage("recommendedModules") private var recommendedModulesRaw = ""
-    @AppStorage("appTheme") private var appThemeRaw = "classic"
+    @AppStorage(AppStorageKeys.onboardingDone) private var onboardingDone = false
+    @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
     private var appTheme: AppTheme {
         let t = AppTheme(rawValue: appThemeRaw) ?? .classic
         return t.isSelectable ? t : .classic   // thème archivé → Bright
