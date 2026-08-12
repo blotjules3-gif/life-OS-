@@ -101,6 +101,7 @@ enum AppCategory: String, CaseIterable, Identifiable {
         // Hub data-driven : rend les outils dans le mode d'affichage actif
         // (bulles / icônes / liste), comme la grille de catégories. Voir CategoryHub.swift.
         CategoryHubView(category: self)
+            .onAppear { ModuleUsageTracker.shared.track(self) }
     }
 }
 
