@@ -74,7 +74,7 @@ struct CRMView: View {
                 else { Text("Jamais marqué").font(.caption).foregroundStyle(.orange) }
             }
             Spacer()
-            Button { c.lastSeen = Date(); Haptics.tap() } label: { Image(systemName: "checkmark.message.fill").foregroundStyle(.socialTint) }
+            Button { c.lastSeen = Date(); Haptics.tap() } label: { Image(systemName: "checkmark.message.fill").foregroundStyle(.socialTint) }.accessibilityLabel("Marquer contacté")
         }
         .card(padding: 12)
         .contextMenu { Button(role: .destructive) { ctx.delete(c) } label: { Label("Supprimer", systemImage: "trash") } }
