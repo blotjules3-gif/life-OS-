@@ -1386,7 +1386,7 @@ struct AIAssistantView: View {
         let descriptor = FetchDescriptor<AIMessage>()
         let all = (try? ctx.fetch(descriptor)) ?? []
         all.forEach { ctx.delete($0) }
-        do { try ctx.save() } catch { print("[SwiftData] clearHistory failed: \(error)") }
+        do { try ctx.save() } catch { AppLog.data.error("clearHistory failed: \(error.localizedDescription, privacy: .public)") }
         vm.messages = []
         UserDefaults.standard.removeObject(forKey: "aiConversationID")
         UserDefaults.standard.removeObject(forKey: "aiKnownModulesRaw")
