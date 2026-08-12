@@ -249,7 +249,8 @@ struct PhotoCalorieView: View {
     }
     private func save(_ g: FoodGuess) {
         let e = FoodEntry(name: g.name, calories: guess?.kcal ?? g.kcal, protein: g.protein, carbs: g.carbs, fat: g.fat, meal: meal)
-        ctx.insert(e); try? ctx.save()
+        ctx.insert(e)
+        do { try ctx.save() } catch { AppLog.data.error("PhotoCalorie save failed: \(error.localizedDescription, privacy: .public)") }
         Haptics.success()
         withAnimation { savedToast = true }
         image = nil; guess = nil; pickerItem = nil
