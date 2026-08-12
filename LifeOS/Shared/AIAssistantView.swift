@@ -382,7 +382,7 @@ final class AIAssistantViewModel: ObservableObject {
                 let d = HabitDefaults.iconAndColor(for: action.module ?? "")
                 let habit = Habit(name: title, icon: d.icon, colorHex: d.colorHex, isPending: true, moduleTag: action.module ?? "")
                 ctx.insert(habit)
-                do { try ctx.save() } catch { print("[SwiftData] createHabit failed: \(error)") }
+                do { try ctx.save() } catch { AppLog.data.error("createHabit failed: \(error.localizedDescription, privacy: .public)") }
                 showToast("Habitude ajoutée : \(title)", module: action.module)
             }
         case .addModule:
