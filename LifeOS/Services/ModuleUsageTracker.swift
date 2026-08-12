@@ -22,8 +22,10 @@ import Foundation
 ///
 /// Ne collecte AUCUNE donnée personnelle — juste compteurs locaux dans
 /// UserDefaults standard. Aucun envoi réseau.
-@MainActor
-final class ModuleUsageTracker {
+///
+/// Thread-safety : UserDefaults est thread-safe, donc le tracker peut être
+/// appelé depuis n'importe quel contexte (onAppear, background task, etc.).
+final class ModuleUsageTracker: @unchecked Sendable {
     static let shared = ModuleUsageTracker()
     private init() {}
 
