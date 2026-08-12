@@ -114,6 +114,6 @@ final class HealthRepository: ObservableObject {
     // MARK: - Privé
 
     private func save(_ operation: String) {
-        do { try context.save() } catch { print("[HealthRepository] \(operation) save failed: \(error)") }
+        do { try context.save() } catch { AppLog.data.error("HealthRepository \(operation, privacy: .public) save failed: \(error.localizedDescription, privacy: .public)") }
     }
 }
