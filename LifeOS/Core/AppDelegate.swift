@@ -135,9 +135,7 @@ extension AppDelegate {
 
     func application(_ application: UIApplication,
                      didFailToRegisterForRemoteNotificationsWithError error: Error) {
-        #if DEBUG
-        print("[APNs] Registration failed: \(error.localizedDescription)")
-        #endif
+        AppLog.notif.error("APNs registration failed: \(error.localizedDescription, privacy: .public)")
     }
 }
 
