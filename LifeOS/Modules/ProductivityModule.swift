@@ -237,7 +237,7 @@ struct HabitTrackerView: View {
         let work = DispatchWorkItem {
             if let h = pendingDeleteHabit, h.isArchived {
                 ctx.delete(h)
-                try? ctx.save()
+                do { try ctx.save() } catch { AppLog.data.error("delayed delete habit save failed: \(error.localizedDescription, privacy: .public)") }
             }
             pendingDeleteHabit = nil
         }
