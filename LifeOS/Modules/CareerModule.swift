@@ -445,7 +445,7 @@ struct JobMatchView: View {
 
     private func track(_ job: JobPosting) {
         ctx.insert(JobApplication(company: job.company_name, role: job.title, status: "Repéré", url: job.url))
-        try? ctx.save()
+        do { try ctx.save() } catch { AppLog.data.error("track JobApplication save failed: \(error.localizedDescription, privacy: .public)") }
         Haptics.soft()
     }
 
