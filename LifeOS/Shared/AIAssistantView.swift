@@ -579,7 +579,7 @@ final class AIAssistantViewModel: ObservableObject {
                 ctx.insert(FoodEntry(name: guess.name, calories: guess.kcal,
                                      protein: guess.protein, carbs: guess.carbs, fat: guess.fat,
                                      meal: currentMeal()))
-                try? ctx.save()
+                do { try ctx.save() } catch { AppLog.data.error("food entry save failed: \(error.localizedDescription, privacy: .public)") }
             }
             removeThinking()
             appendAssistantMessage(result.reply, actions: result.actions)
