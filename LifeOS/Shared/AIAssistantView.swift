@@ -486,7 +486,7 @@ final class AIAssistantViewModel: ObservableObject {
         let actionsData = try? JSONEncoder().encode(actions)
         let msg = AIMessage(role: "assistant", text: text, actions: actionsData)
         modelContext?.insert(msg)
-        do { try modelContext?.save() } catch { print("[SwiftData] appendAssistantMessage failed: \(error)") }
+        do { try modelContext?.save() } catch { AppLog.data.error("appendAssistantMessage failed: \(error.localizedDescription, privacy: .public)") }
         withAnimation(.spring(response: 0.42, dampingFraction: 0.75)) {
             messages.append(DisplayMessage(from: msg))
         }
