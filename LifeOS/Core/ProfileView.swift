@@ -515,7 +515,7 @@ struct ProfileView: View {
             let completion = HabitCompletion(date: .now)
             habit.completions.append(completion)
         }
-        try? ctx.save()
+        do { try ctx.save() } catch { AppLog.data.error("ProfileView toggleHabit save failed: \(error.localizedDescription, privacy: .public)") }
     }
 
     private func habitStreak(_ habit: Habit) -> Int {
