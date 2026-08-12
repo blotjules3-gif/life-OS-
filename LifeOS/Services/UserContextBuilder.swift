@@ -173,6 +173,29 @@ final class UserContextBuilder {
             lines.append("PR récent: \(fitTopLift)")
         }
 
+        // ── Analyse cross-modules (le vrai différenciateur LifeOS) ──────────
+        // Croise les signaux des 15 modules pour produire des insights que
+        // le coach peut restituer avec des recommandations concrètes.
+        let insights = Self.crossModuleInsights(
+            sleepH: sleepH,
+            sleepQ: sleepQ,
+            energyScore: energyScore,
+            kcalToday: kcalToday,
+            kcalGoal: kcalGoal,
+            proteinToday: proteinToday,
+            proteinGoal: proteinGoal,
+            waterToday: waterToday,
+            waterGoal: waterGoal,
+            fitSummary: fitSummary,
+            avgStreak: avgStreak,
+            hasCycle: hasCycle
+        )
+        if !insights.isEmpty {
+            lines.append("")
+            lines.append("Analyse cross-modules:")
+            for i in insights { lines.append("- \(i)") }
+        }
+
         var context = lines.joined(separator: "\n")
         // Priorité 1 : si l'utilisateur a envoyé un message, topic-detection ciblée.
         // Priorité 2 : fallback sur les modules actifs.
