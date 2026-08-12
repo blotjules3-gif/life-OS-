@@ -53,7 +53,7 @@ struct MainTabView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var aiPrefill: String?
 
-    @AppStorage("appTheme") private var appThemeRaw = "classic"
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
     private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
 
     var body: some View {
