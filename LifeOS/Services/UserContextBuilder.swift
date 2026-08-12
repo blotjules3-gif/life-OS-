@@ -97,6 +97,12 @@ final class UserContextBuilder {
                 : "Score énergie: \(energyScore)/100 (\(energyLabel))")
         }
 
+        // ── Moyenne sommeil 7j (publiée par SleepWidgetSyncer) ──────────────
+        let sleepAvg7d = grp.double(forKey: "sleep_avg_hours_7d")
+        if sleepAvg7d > 0 {
+            lines.append("Sommeil moyen 7j: \(String(format: "%.1f", sleepAvg7d))h/nuit")
+        }
+
         // ── Fenêtre de coucher cible (contexte pour reco couchée/réveil) ────
         let bedH = ud.integer(forKey: "bedHour")
         let bedM = ud.integer(forKey: "bedMinute")
