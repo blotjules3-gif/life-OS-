@@ -476,7 +476,7 @@ final class AIAssistantViewModel: ObservableObject {
     private func appendUserMessage(_ text: String) {
         let msg = AIMessage(role: "user", text: text)
         modelContext?.insert(msg)
-        do { try modelContext?.save() } catch { print("[SwiftData] appendUserMessage failed: \(error)") }
+        do { try modelContext?.save() } catch { AppLog.data.error("appendUserMessage failed: \(error.localizedDescription, privacy: .public)") }
         withAnimation(.spring(response: 0.42, dampingFraction: 0.75)) {
             messages.append(DisplayMessage(from: msg))
         }
