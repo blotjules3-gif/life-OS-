@@ -231,4 +231,56 @@ final class UserContextBuilder {
         }
         return context
     }
+
+    /// Insights cross-modules : croise les signaux santé/nutrition/fitness pour
+    /// produire des observations exploitables par le coach. Chaque insight est
+    /// une phrase courte, factuelle, prête à être restituée dans une réponse.
+    ///
+    /// Règles :
+    /// - Chaque insight = une combinaison d'au moins 2 signaux
+    /// - Neutre et descriptif (le coach fait la reco lui-même)
+    /// - Max ~5 insights pour ne pas noyer le prompt
+    private static func crossModuleInsights(
+        sleepH: Int, sleepQ: Int, energyScore: Int,
+        kcalToday: Int, kcalGoal: Int,
+        proteinToday: Int, proteinGoal: Int,
+        waterToday: Int, waterGoal: Int,
+        fitSummary: String, avgStreak: Int, hasCycle: Bool
+    ) -> [String] {
+        var out: [String] = []
+
+        // Sommeil insuffisant + entraînement récent = récup compromise
+        if sleepH > 0, sleepH < 6, fitSummary.contains("séries") {
+            out.append("Nuit courte (\(sleepH)h) avec entraînement récent — récup limitée.")
+        }
+        // Bon sommeil + faible énergie = ailleurs (nutrition ? hydratation ?)
+        if sleepH >= 7, sleepQ >= 4, energyScore > 0, energyScore < 60 {
+            out.append("Sommeil bon mais énergie basse — regarder nutrition/hydratation.")
+        }
+        // Déficit calorique important + entraînement = risque récup
+        if kcalGoal > 0, kcalToday > 0, kcalToday < kcalGoal - 500, fitSummary.contains("séries") {
+            let deficit = kcalGoal - kcalToday
+            out.append("Déficit \(deficit) kcal aujourd'hui avec séance récente — risque récup.")
+        }
+        // Protéines très basses + muscu = objectif hypertrophie compromis
+        if proteinGoal > 0, proteinToday > 0, proteinToday < proteinGoal / 2, fitSummary.contains("séries") {
+            out.append("Protéines à \(proteinToday)/\(proteinGoal)g avec entraînement — synthèse compromise.")
+        }
+        // Hydratation faible + fatigue
+        if waterGoal > 0, waterToday > 0, waterToday < waterGoal / 2, energyScore > 0, energyScore < 60 {
+            out.append("Hydratation à \(waterToday)/\(waterGoal)ml avec énergie basse — corrélation probable.")
+        }
+        // Streak fort = capital motivation
+        if avgStreak >= 14 {
+            out.append("Streak habitudes \(avgStreak)j — momentum solide, ne pas casser.")
+        }
+        // Cycle × énergie
+        if hasCycle {
+            let phase = CycleContext.shared.currentPhase
+            if phase == .luteal, energyScore > 0, energyScore < 50 {
+                out.append("Phase lutéale + énergie basse — normale, éviter les charges max.")
+            }
+        }
+        return Array(out.prefix(5))
+    }
 }
