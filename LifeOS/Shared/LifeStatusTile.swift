@@ -117,15 +117,6 @@ struct LifeStatusTile: View {
             RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                 .strokeBorder(Theme.hairline, lineWidth: 0.5)
         )
-        .scaleEffect(pressed ? 0.97 : 1)
-        .animation(reduceMotion ? nil : Theme.animMicro, value: pressed)
-        .simultaneousGesture(
-            onTap == nil
-                ? nil
-                : DragGesture(minimumDistance: 0)
-                    .onChanged { _ in pressed = true }
-                    .onEnded { _ in pressed = false }
-        )
     }
 
     private var iconColor: Color {
