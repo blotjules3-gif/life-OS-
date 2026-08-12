@@ -146,6 +146,18 @@ struct LifeStatusTile: View {
     }
 }
 
+/// Style natif SwiftUI qui applique un scale au press via `configuration.isPressed`,
+/// sans DragGesture custom — évite les conflits de gesture arbitration avec le
+/// parent (List, ScrollView, autre Button).
+private struct TilePressStyle: ButtonStyle {
+    let reduceMotion: Bool
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(reduceMotion ? nil : Theme.animMicro, value: configuration.isPressed)
+    }
+}
+
 /// Barre de progression fine dédiée aux tuiles Home. Anime linéairement,
 /// respecte prefers-reduced-motion.
 private struct LifeStatusBar: View {
