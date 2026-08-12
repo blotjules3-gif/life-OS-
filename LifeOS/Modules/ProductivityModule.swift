@@ -490,7 +490,7 @@ struct HabitRow: View {
             scheduledMinute: habit.scheduledMinute
         )
         ctx.insert(copy)
-        try? ctx.save()
+        do { try ctx.save() } catch { AppLog.data.error("duplicate habit save failed: \(error.localizedDescription, privacy: .public)") }
         Haptics.tap()
     }
 
