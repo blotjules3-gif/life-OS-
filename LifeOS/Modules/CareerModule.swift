@@ -274,7 +274,7 @@ struct MockInterviewView: View {
                 Button(showAnswer ? "Masquer le conseil" : "Voir le conseil") { withAnimation { showAnswer.toggle() } }
                     .buttonStyle(.bordered).tint(.careerTint)
                 HStack {
-                    Button { index = max(0, index-1); showAnswer = false } label: { Image(systemName: "chevron.left").padding() }.disabled(index == 0)
+                    Button { index = max(0, index-1); showAnswer = false } label: { Image(systemName: "chevron.left").padding() }.disabled(index == 0).accessibilityLabel("Question précédente")
                     Spacer()
                     PrimaryButton(title: "Question suivante", icon: "chevron.right", tint: .careerTint) { index = (index+1) % questions.count; showAnswer = false }
                 }
