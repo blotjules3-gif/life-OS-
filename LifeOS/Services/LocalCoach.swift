@@ -49,7 +49,8 @@ enum LocalCoach {
             let subject = subject(from: raw, after: ["habitude quotidienne", "habitude", "habit"])
             if let clean = meaningful(subject) {
                 let h = Habit(name: clean, icon: iconFor(clean), colorHex: 0x4CF810)
-                ctx.insert(h); try? ctx.save()
+                ctx.insert(h)
+                do { try ctx.save() } catch { AppLog.data.error("LocalCoach create habit failed: \(error.localizedDescription, privacy: .public)") }
                 return "Nouvelle habitude créée : **\(clean)**. Elle est dans ton suivi d'habitudes — coche-la chaque jour pour bâtir ta série."
             }
             return "Bonne idée. Quelle habitude veux-tu créer ? Donne-moi juste son nom (ex. « Méditer 10 min », « Boire 2 L d'eau », « Lire 20 pages »)."
