@@ -11,7 +11,7 @@ enum ImageStore {
         do {
             try data.write(to: dir.appendingPathComponent(name))
         } catch {
-            print("[ImageStore] save failed: \(error)")
+            AppLog.data.error("ImageStore save failed: \(error.localizedDescription, privacy: .public)")
         }
         return name
     }
