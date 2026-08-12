@@ -415,7 +415,7 @@ final class AIAssistantViewModel: ObservableObject {
                     "budgetGoal"
                 ]
                 guard allowedConfigKeys.contains(key) else {
-                    print("[updateConfig] clé refusée : \(key)")
+                    AppLog.coach.warning("updateConfig: clé refusée (hors allowlist) — \(key, privacy: .public)")
                     return
                 }
                 if let intVal = Int(rawValue) {
