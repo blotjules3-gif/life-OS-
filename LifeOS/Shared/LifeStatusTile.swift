@@ -151,7 +151,7 @@ struct LifeStatusTile: View {
 /// parent (List, ScrollView, autre Button).
 private struct TilePressStyle: ButtonStyle {
     let reduceMotion: Bool
-    func makeBody(configuration: Configuration) -> some View {
+    func makeBody(configuration: ButtonStyleConfiguration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(reduceMotion ? nil : Theme.animMicro, value: configuration.isPressed)
