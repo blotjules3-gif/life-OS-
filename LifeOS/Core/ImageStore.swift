@@ -34,7 +34,7 @@ enum ImageStore {
         do {
             try FileManager.default.removeItem(at: dir.appendingPathComponent(filename))
         } catch {
-            print("[ImageStore] delete failed: \(error)")
+            AppLog.data.error("ImageStore delete failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 }
