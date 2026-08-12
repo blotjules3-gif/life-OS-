@@ -162,7 +162,7 @@ struct FitnessSetupView: View {
         tabataWork = level == "Débutant" ? 30 : (level == "Avancé" ? 45 : 40)
         tabataRest = level == "Avancé" ? 15 : 20
         gymOn = true
-        try? ctx.save()
+        do { try ctx.save() } catch { AppLog.data.error("FitnessSetup save failed: \(error.localizedDescription, privacy: .public)") }
         CategorySetup.markDone(.fitness)
         Haptics.success()
     }
