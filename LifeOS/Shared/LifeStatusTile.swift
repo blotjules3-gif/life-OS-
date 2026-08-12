@@ -44,7 +44,6 @@ struct LifeStatusTile: View {
     enum TileStatus { case normal, warning, critical }
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var pressed = false
 
     var body: some View {
         Button {
@@ -52,7 +51,7 @@ struct LifeStatusTile: View {
         } label: {
             content
         }
-        .buttonStyle(.plain)
+        .buttonStyle(TilePressStyle(reduceMotion: reduceMotion))
         .disabled(onTap == nil)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(a11yLabel)
