@@ -205,6 +205,47 @@ Enrichir : selon l'heure du jour + le contexte cross-module, proposer 3 sujets d
 - Midi : "Ton apport protéines" / "Ta prochaine pause" / "Focus après-midi"
 - Soir : "Bilan de ta journée" / "Prépare ta nuit" / "Ton humeur"
 
+### 2.7 Extraction 321 `Text("...")` FR hardcodés (2h)
+
+Chercher tous les `Text("<phrase française>")` dans `LifeOS/**/*.swift` et les
+remplacer par `Text(String(localized: "clé.stable"))`. Ajouter chaque nouvelle
+clé dans `LifeOS/Localizable.xcstrings` avec la valeur FR source.
+
+Convention de nommage : `<module>.<contexte>.<action>` (ex. `chat.input.placeholder`,
+`fitness.hub.title`). Skip les strings d'un seul caractère et les emoji.
+
+Vérifier après : `grep -rE 'Text\("[A-Z][a-zà-ÿ]{4,}' LifeOS --include="*.swift" | wc -l`
+doit tendre vers 0.
+
+### 2.8 Traduction 1068 clés EN (3h)
+
+`Localizable.xcstrings` a 1134 clés dont 66 seulement traduites en EN.
+
+Étapes :
+1. Extraire les clés non traduites via script Python.
+2. Envoyer par batch de 50 à une API de traduction (préférer un LLM pour respecter
+   le ton coach de tutoiement).
+3. Injecter les traductions dans le xcstrings via script.
+4. Marquer `state: "translated"`.
+5. Review humaine sur 50 termes techniques.
+
+### 2.9 Sélecteur de langue dans les réglages (1h)
+
+Dans `ProfileView.swift` section Réglages, ajouter une entrée "Langue" qui présente
+un sheet `LanguagePickerSheet.swift` :
+- Toggle "Automatique (langue système)" — ON par défaut
+- Si OFF : picker Français / English
+- Persistance via `AppStorageKeys.appLanguage`
+- Application immédiate via `UserDefaults.standard.set([code], forKey: "AppleLanguages")`
+  + alerte "Redémarre l'app pour appliquer"
+
+### 2.10 Vérifier la détection auto (30 min)
+
+Vérifier que :
+- Sur iPhone FR : app 100% FR
+- Sur iPhone EN : app 100% EN (après 2.7 + 2.8)
+- Sur autre langue : fallback FR
+
 ---
 
 ## PHASE 3 — UX visible refonte (3 semaines)
