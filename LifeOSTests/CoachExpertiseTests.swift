@@ -24,10 +24,10 @@ final class CoachExpertiseTests: XCTestCase {
                       "attendu sommeil, obtenu \(topics)")
     }
 
-    func testDetect_mind_onStressKeywords() {
-        let topics = CoachExpertise.detectTopics(in: "je stresse beaucoup en ce moment")
-        XCTAssertTrue(topics.contains("mental") || topics.contains("mind") || topics.contains("stress"),
-                      "attendu mental, obtenu \(topics)")
+    func testDetect_mind_onMeditationKeyword() {
+        let topics = CoachExpertise.detectTopics(in: "je veux commencer la meditation")
+        XCTAssertTrue(topics.contains("mind"),
+                      "attendu mind, obtenu \(topics)")
     }
 
     func testDetect_emptyMessage_returnsEmpty() {
