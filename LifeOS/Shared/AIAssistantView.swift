@@ -477,6 +477,12 @@ final class AIAssistantViewModel: ObservableObject {
         let msg = AIMessage(role: "user", text: text)
         modelContext?.insert(msg)
         do { try modelContext?.save() } catch { AppLog.data.error("appendUserMessage failed: \(error.localizedDescription, privacy: .public)") }
+        // Extraction mémoire long terme — analyse le message pour capturer
+        // objectifs, préférences, habitudes, faits. Alimente le contexte coach.
+        if let ctx = modelContext {
+            let n = MemoryExtractor.extract(from: text, context: ctx)
+            if n > 0 { AppLog.coach.debug("MemoryExtractor: \(n) new memories") }
+        }
         withAnimation(.spring(response: 0.42, dampingFraction: 0.75)) {
             messages.append(DisplayMessage(from: msg))
         }
