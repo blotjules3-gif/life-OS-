@@ -118,7 +118,11 @@ Puis Xcode → Organizer → Distribute → App Store Connect.
 
 ---
 
-## PHASE 2 — Chat coach v2 (2 semaines)
+## PHASE 2 — Chat coach v2 + i18n (2-3 semaines)
+
+Note : cette phase combine deux gros chantiers. L'i18n a été ajoutée ici parce
+qu'elle bloque l'usage de l'app par les utilisateurs iPhone anglais (mélange
+FR/EN chaotique aujourd'hui).
 
 ### 2.1 Mémoire long terme (4h) — LE VRAI MOAT
 
