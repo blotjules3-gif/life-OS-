@@ -103,6 +103,25 @@ final class UserContextBuilder {
             lines.append("Sommeil moyen 7j: \(String(format: "%.1f", sleepAvg7d))h/nuit")
         }
 
+        // ── Mémoire long terme du coach (publiée par MemoryWidgetSyncer) ────
+        // Ce que l'utilisateur t'a dit dans le passé. Priorité aux mémoires
+        // pinnées, puis les plus récentes. Injectées dans chaque prompt pour
+        // que le coach reste cohérent avec ce qu'il "sait" de l'utilisateur.
+        if let memData = grp.data(forKey: "memory_top_10"),
+           let mems = try? JSONSerialization.jsonObject(with: memData) as? [[String: Any]],
+           !mems.isEmpty {
+            lines.append("")
+            lines.append("Mémoire du coach (ce que l'utilisateur t'a dit) :")
+            for m in mems {
+                let content = m["content"] as? String ?? ""
+                let category = m["category"] as? String ?? ""
+                let pinned = (m["isPinned"] as? Bool ?? false) ? " ★" : ""
+                if !content.isEmpty {
+                    lines.append("- [\(category)]\(pinned) \(content)")
+                }
+            }
+        }
+
         // ── Fenêtre de coucher cible (contexte pour reco couchée/réveil) ────
         let bedH = ud.integer(forKey: "bedHour")
         let bedM = ud.integer(forKey: "bedMinute")
