@@ -38,28 +38,27 @@ final class CoachExpertiseTests: XCTestCase {
     // MARK: blocks — output doit être non-vide pour un topic valide
 
     func testBlocks_forFitnessTopic_returnsContent() {
-        let block = CoachExpertise.blocks(forTopics: ["sport"])
+        let block = CoachExpertise.blocks(forTopics: ["fitness"])
         XCTAssertFalse(block.isEmpty, "un topic connu doit produire du contenu")
     }
 
-    func testBlocks_forNoTopic_returnsEmpty() {
+    func testBlocks_forNoTopic_returnsMetaRuleOnly() {
         let block = CoachExpertise.blocks(forTopics: [])
-        XCTAssertTrue(block.isEmpty, "aucun topic → aucun bloc")
+        // Aucun topic → retour de la méta-règle seule (pas vide, mais court)
+        XCTAssertFalse(block.isEmpty, "un fallback méta-règle doit exister")
     }
 
     // MARK: combinedBlocks — l'aggrégation ne doit pas exploser sur input vide
 
     func testCombinedBlocks_emptyActiveModules_doesNotCrash() {
         let block = CoachExpertise.combinedBlocks(activeModules: "", includeCycle: false)
-        XCTAssertNotNil(block)
+        XCTAssertFalse(block.isEmpty, "fallback avec workout+nutrition doit exister")
     }
 
-    func testCombinedBlocks_withCycle_includesCycleContent() {
-        let block = CoachExpertise.combinedBlocks(activeModules: "sport", includeCycle: true)
-        // On ne teste pas le contenu exact du bloc cycle (fragile) — juste
-        // qu'il y a plus de contenu qu'un bloc "sport" seul.
-        let sportOnly = CoachExpertise.combinedBlocks(activeModules: "sport", includeCycle: false)
-        XCTAssertGreaterThanOrEqual(block.count, sportOnly.count,
-                                    "avec cycle doit être ≥ sans cycle")
+    func testCombinedBlocks_withCycle_addsCycleBlock() {
+        let withCycle = CoachExpertise.combinedBlocks(activeModules: "sleep", includeCycle: true)
+        let without = CoachExpertise.combinedBlocks(activeModules: "sleep", includeCycle: false)
+        XCTAssertGreaterThan(withCycle.count, without.count,
+                             "activer le cycle doit ajouter du contenu")
     }
 }
