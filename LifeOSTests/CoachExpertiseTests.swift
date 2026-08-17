@@ -1,6 +1,7 @@
 import XCTest
 @testable import LifeOS
 
+@MainActor
 final class CoachExpertiseTests: XCTestCase {
 
     // MARK: detectTopics — chaque topic doit être détecté sur des mots-clés types
