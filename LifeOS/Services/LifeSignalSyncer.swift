@@ -16,6 +16,43 @@ import SwiftData
 
 private let appGroup = "group.lifeos.app"
 
+// MARK: - Mémoire long terme
+
+/// Publie les 10 top mémoires (pinnées + récentes) sous `memory_top_10`
+/// (JSON array de dicts {content, category, isPinned}). Lu par UserContextBuilder
+/// pour injecter la "connaissance" du coach dans chaque prompt.
+struct MemoryWidgetSyncer: View {
+    @Query(sort: \MemoryEntry.created, order: .reverse) private var memories: [MemoryEntry]
+
+    var body: some View {
+        Color.clear.frame(width: 0, height: 0)
+            .onAppear { sync() }
+            .task {
+                try? await Task.sleep(for: .milliseconds(300))
+                sync()
+            }
+            .onChange(of: memories.count) { _, _ in sync() }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in sync() }
+    }
+
+    private func sync() {
+        guard let defaults = UserDefaults(suiteName: appGroup) else { return }
+        let pinned = memories.filter { $0.isPinned }
+        let unpinned = memories.filter { !$0.isPinned }
+        let combined = (pinned + unpinned).prefix(10)
+        if combined.isEmpty {
+            defaults.removeObject(forKey: "memory_top_10")
+            return
+        }
+        let payload: [[String: Any]] = combined.map { m in
+            ["content": m.content, "category": m.category, "isPinned": m.isPinned]
+        }
+        if let data = try? JSONSerialization.data(withJSONObject: payload) {
+            defaults.set(data, forKey: "memory_top_10")
+        }
+    }
+}
+
 // MARK: - Humeur
 
 /// Publie les 7 derniers scores d'humeur (les plus récents en tête) sous
