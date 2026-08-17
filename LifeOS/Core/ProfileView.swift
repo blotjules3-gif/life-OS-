@@ -232,6 +232,12 @@ struct ProfileView: View {
             .sheet(isPresented: $showExportSheet) {
                 DataExportSheet()
             }
+            .sheet(isPresented: $showDataDeletion) {
+                DataDeletionSheet()
+            }
+            .sheet(isPresented: $showFAQ) {
+                NavigationStack { FAQView() }
+            }
             #if DEBUG
             .sheet(isPresented: $showCoachDebug) {
                 CoachExpertisePreviewSheet()
