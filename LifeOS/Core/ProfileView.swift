@@ -788,6 +788,20 @@ struct ProfileView: View {
                 } action: {
                     showExportSheet = true
                 }
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
+                settingsRow(icon: "lock.shield.fill", iconColor: Color(hex: 0x6C7BF1),
+                            label: "Mes données et confidentialité") {
+                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
+                } action: {
+                    showDataDeletion = true
+                }
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
+                settingsRow(icon: "questionmark.circle.fill", iconColor: Color(hex: 0x9B6CF1),
+                            label: "Aide et support") {
+                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
+                } action: {
+                    showFAQ = true
+                }
             }
             .surface()
 
