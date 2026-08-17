@@ -102,6 +102,7 @@ struct MainTabView: View {
             MoodWidgetSyncer()
             SleepWidgetSyncer()
             NutritionTodaySyncer()
+            MemoryWidgetSyncer()
             ThemedBubbleBackground(theme: theme)
                 .ignoresSafeArea()
             tabPane(ShortcutsHomeView(), .home)
