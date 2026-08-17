@@ -59,6 +59,10 @@
 	<string>LifeOS importe tes contacts pour alimenter ton CRM personnel et ne rater aucun anniversaire.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>LifeOS importe tes photos pour la garde-robe et le suivi looksmaxx.</string>
+	<key>NSPrivacyPolicyURL</key>
+	<string>https://blotjules.github.io/lifeos/privacy.html</string>
+	<key>NSTermsOfServiceURL</key>
+	<string>https://blotjules.github.io/lifeos/terms.html</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
