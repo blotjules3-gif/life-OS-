@@ -326,14 +326,11 @@ Fichier : `backend/app/modules/*/tools.py` + `backend/app/core/prompts.py`.
 ### 4.4 Rate limit user-based backend (2h)
 Actuellement `device_id`. Un user avec 2 devices contourne. Migrer sur `user_id` dans `backend/app/dependencies.py` + middleware.
 
-### 4.5 Extraction 321 Text() FR hardcodés (4h)
-Script : trouver tous les `Text("...")` avec texte français, remplacer par `Text(String(localized: "clé.stable"))`.
-Ajouter les 321 nouvelles clés dans `LifeOS/Localizable.xcstrings`.
+### 4.5 (déplacé en Phase 2.7)
+Extraction 321 Text() FR — cf. Phase 2.7.
 
-### 4.6 Traduction 1068 clés EN (6h — automatisable avec LLM)
-`Localizable.xcstrings` a 1134 clés dont 66 seulement traduites en EN. Utiliser un script Python + API traduction (Deepl, GPT-4) pour générer les 1068 traductions.
-
-Attention : review humaine des termes techniques et du ton.
+### 4.6 (déplacé en Phase 2.8)
+Traduction 1068 clés EN — cf. Phase 2.8.
 
 ---
 
