@@ -239,6 +239,9 @@ struct ProfileView: View {
             .sheet(isPresented: $showFAQ) {
                 NavigationStack { FAQView() }
             }
+            .sheet(isPresented: $showMemoryHub) {
+                NavigationStack { MemoryHubView() }
+            }
             #if DEBUG
             .sheet(isPresented: $showCoachDebug) {
                 CoachExpertisePreviewSheet()
