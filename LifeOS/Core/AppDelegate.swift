@@ -8,6 +8,10 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        // Observabilité — no-op tant que le SDK Sentry n'est pas ajouté au projet.
+        // Voir docs/observability/SENTRY_SETUP.md pour l'activation.
+        SentryConfig.start()
+
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
 
         // Enregistrement APNs — nécessaire pour les push distantes depuis le backend.
