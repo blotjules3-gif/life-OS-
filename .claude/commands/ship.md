@@ -455,7 +455,7 @@ Répondre uniquement : "Arrêté." puis lister ce qui n'a pas été fait dans la
 |---|---|---|
 | Phase 0 | 30 min | Brancher ce qui existe |
 | Phase 1 | 1 weekend | App Store submissable |
-| Phase 2 | 2 semaines | Chat coach v2 (mémoire, chips, welcome contextualisé) |
+| Phase 2 | 2-3 semaines | Chat coach v2 (mémoire, chips, welcome) + i18n complète (FR/EN + sélecteur) |
 | Phase 3 | 3 semaines | Refonte UX visible (Home, onboarding, découpe chat) |
 | Phase 4 | 2 semaines | Qualité invisible (tests, Sentry, i18n) |
 | Phase 5 | continu | Polish + growth après App Store |
