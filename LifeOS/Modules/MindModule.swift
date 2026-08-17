@@ -152,7 +152,7 @@ struct MoodJournalView: View {
                         HStack(spacing: 10) {
                             ForEach(1...5, id: \.self) { i in
                                 Button { score = i; Haptics.tap() } label: {
-                                    Text(faces[i-1]).font(.system(size: 34)).opacity(score == i ? 1 : 0.4)
+                                    Text(faces[i-1]).font(.largeTitle).opacity(score == i ? 1 : 0.4)
                                         .scaleEffect(score == i ? 1.2 : 1)
                                 }
                             }

@@ -245,7 +245,7 @@ struct ShortcutsHomeView: View {
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.primary)
                 Text("Voilà ce qui t'attend aujourd'hui.")
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
 
                 HStack(spacing: 8) {
@@ -577,7 +577,7 @@ struct ShortcutsHomeView: View {
         return Button { toggleHabit(habit) } label: {
             HStack(spacing: 14) {
                 Image(systemName: done ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 22))
+                    .font(.title2)
                     .foregroundStyle(done ? Color.accentColor : Color.secondary.opacity(0.4))
                     .contentTransition(.symbolEffect(.replace))
                 Text(habit.name)
@@ -845,7 +845,7 @@ struct ShortcutsHomeView: View {
             .padding(.horizontal, 4)
             if let m = todayMood, !editingMood {
                 HStack(spacing: 12) {
-                    Text(moodEmoji(m.score)).font(.system(size: 28))
+                    Text(moodEmoji(m.score)).font(.title)
                     Text("Noté — revote dans 24h")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -1554,7 +1554,7 @@ private struct ShortcutPickerSheet: View {
                                 Text(tool.label).foregroundStyle(.primary)
                                 Spacer()
                                 Image(systemName: on ? "checkmark.circle.fill" : "circle")
-                                    .font(.system(size: 20))
+                                    .font(.title3)
                                     .foregroundStyle(on ? AnyShapeStyle(tool.tint) : AnyShapeStyle(Color.secondary.opacity(0.4)))
                             }
                         }
@@ -1603,7 +1603,7 @@ private struct HomeMetricPickerSheet: View {
                                 Text(m.label).foregroundStyle(.primary)
                                 Spacer()
                                 Image(systemName: on ? "checkmark.circle.fill" : "circle")
-                                    .font(.system(size: 20))
+                                    .font(.title3)
                                     .foregroundStyle(on ? AnyShapeStyle(m.color) : AnyShapeStyle(Color.secondary.opacity(0.4)))
                             }
                         }

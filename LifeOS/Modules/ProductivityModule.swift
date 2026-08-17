@@ -456,7 +456,7 @@ struct HabitRow: View {
 
             if streak > 0 {
                 HStack(spacing: 3) {
-                    Image(systemName: "flame.fill").font(.system(size: 11)).foregroundStyle(.orange)
+                    Image(systemName: "flame.fill").font(.caption2).foregroundStyle(.orange)
                     Text("\(streak)").font(.system(size: 12, weight: .bold)).foregroundStyle(.orange)
                 }
             }

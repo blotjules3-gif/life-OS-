@@ -90,7 +90,7 @@ struct TodayAgendaSection: View {
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
                 Text(item.detail)
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundStyle(Theme.textSecondary)
                     .lineLimit(1)
             }

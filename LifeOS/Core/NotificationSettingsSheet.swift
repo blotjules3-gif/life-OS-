@@ -52,7 +52,7 @@ struct NotificationSettingsSheet: View {
                             Text(authorized ? "Notifications autorisées" : "Notifications désactivées")
                                 .font(.system(size: 15, weight: .medium))
                             Text(authorized ? "Les rappels peuvent s'afficher." : "Appuie pour autoriser.")
-                                .font(.system(size: 12)).foregroundStyle(.secondary)
+                                .font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
                         if !authorized {
@@ -88,7 +88,7 @@ struct NotificationSettingsSheet: View {
                             ), displayedComponents: .hourAndMinute)
                             .labelsHidden()
                             .tint(Color(hex: 0xE0A23C))
-                            Text("Réveil").font(.system(size: 11)).foregroundStyle(.secondary)
+                            Text("Réveil").font(.caption2).foregroundStyle(.secondary)
                         }
                     }
 
@@ -145,7 +145,7 @@ struct NotificationSettingsSheet: View {
                             ), displayedComponents: .hourAndMinute)
                             .labelsHidden()
                             .tint(Color(hex: 0x6C7BF1))
-                            Text("Heure coucher").font(.system(size: 11)).foregroundStyle(.secondary)
+                            Text("Heure coucher").font(.caption2).foregroundStyle(.secondary)
                         }
                     }
 
@@ -198,7 +198,7 @@ struct NotificationSettingsSheet: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(.system(size: 15, weight: .medium))
                         .foregroundStyle(enabled.wrappedValue ? .primary : .secondary)
-                    Text(subtitle).font(.system(size: 12)).foregroundStyle(.secondary)
+                    Text(subtitle).font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
                 Toggle("", isOn: enabled)

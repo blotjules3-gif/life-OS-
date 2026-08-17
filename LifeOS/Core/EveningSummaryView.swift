@@ -177,7 +177,7 @@ struct EveningSummaryView: View {
                 .font(.system(size: 22, weight: .bold, design: .rounded))
                 .foregroundStyle(.primary)
             Text(label)
-                .font(.system(size: 12))
+                .font(.caption)
                 .foregroundStyle(.secondary)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
@@ -218,7 +218,7 @@ struct EveningSummaryView: View {
                 .font(.system(size: 22, weight: .bold, design: .rounded))
                 .foregroundStyle(.primary)
             Text("Habitudes")
-                .font(.system(size: 12))
+                .font(.caption)
                 .foregroundStyle(.secondary)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {

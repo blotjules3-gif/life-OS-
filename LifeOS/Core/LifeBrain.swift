@@ -290,7 +290,7 @@ struct LifeBrainCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(ins.title).font(.system(size: 15, weight: .bold)).foregroundStyle(Theme.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(ins.detail).font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
+                Text(ins.detail).font(.caption).foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 4)

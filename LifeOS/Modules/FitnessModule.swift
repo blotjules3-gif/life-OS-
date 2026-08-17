@@ -184,7 +184,7 @@ struct FitnessHubView: View {
             Text(filledCount == 0
                  ? "Pour que le coach calibre tes séances, choisis ton mode."
                  : "Encore \(totalFields - filledCount) infos pour un plan sur mesure.")
-                .font(.system(size: 13))
+                .font(.footnote)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 8) {

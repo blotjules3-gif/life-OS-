@@ -90,7 +90,7 @@ struct SleepCheckSheet: View {
                         } label: {
                             VStack(spacing: 6) {
                                 Image(systemName: q.icon)
-                                    .font(.system(size: 20))
+                                    .font(.title3)
                                     .foregroundStyle(sel ? q.color : Color.secondary.opacity(0.4))
                                     .scaleEffect(sel ? 1.15 : 1)
                                 Text(q.label)
@@ -299,14 +299,14 @@ struct SleepCheckSheet: View {
                             .foregroundStyle(sc)
                             .contentTransition(.numericText())
                             .animation(.spring(duration: 1.2, bounce: 0.0), value: displayScore)
-                        Text("/ 100").font(.system(size: 15)).foregroundStyle(.secondary)
+                        Text("/ 100").font(.subheadline).foregroundStyle(.secondary)
                     }
                 }
                 VStack(spacing: 8) {
                     Text(todayEnergyLabel.isEmpty ? "—" : todayEnergyLabel)
                         .font(.system(size: 26, weight: .bold))
                     Text(scoreMessage)
-                        .font(.system(size: 15)).foregroundStyle(.secondary)
+                        .font(.subheadline).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center).padding(.horizontal, 32)
                         .fixedSize(horizontal: false, vertical: true)
                 }

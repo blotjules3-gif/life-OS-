@@ -342,7 +342,7 @@ struct BubbleCategoriesView: View {
                 }
                 .frame(height: 8)
                 Text("Touche pour remplir les pôles qui te manquent")
-                    .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    .font(.caption2).foregroundStyle(Theme.textSecondary)
             }
             .card(padding: 14, elevated: true)
         }

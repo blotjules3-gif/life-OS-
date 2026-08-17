@@ -193,7 +193,7 @@ struct CalAIView: View {
                 Button { showScan = true } label: {
                     HStack(spacing: 14) {
                         Image(systemName: "fork.knife.circle.fill")
-                            .font(.system(size: 34))
+                            .font(.largeTitle)
                             .foregroundStyle(.secondary)
                         Text("Scanne un produit ou touche Rechercher pour ajouter ton premier repas").font(.subheadline).foregroundStyle(.secondary)
                         Spacer()

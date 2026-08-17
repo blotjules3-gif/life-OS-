@@ -206,7 +206,7 @@ struct ProductDetailView: View {
                     Text("Pour \(Int(grams)) g").font(.headline)
                     HStack { Text("\(Int(grams)) g"); Slider(value: $grams, in: 10...500, step: 5) }
                     HStack(spacing: 10) {
-                        macro("Calories", "\(Int(Double(product.kcal) * factor))", "kcal", Color(hex: 0x4CC38A))
+                        macro("Calories", "\(Int(Double(product.kcal) * factor))", "kcal", Theme.nutrition)
                         macro("Protéines", "\(Int(product.protein * factor))", "g", Color(hex: 0xF1746C))
                     }
                     HStack(spacing: 10) {

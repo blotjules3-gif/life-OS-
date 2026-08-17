@@ -285,7 +285,7 @@ struct DailyScoreRing: View {
                         Text("\(sc)").font(.system(size: 13, weight: .black)).monospacedDigit()
                             .foregroundStyle(isSel ? Theme.onAccent : Theme.textPrimary)
                     } else {
-                        Image(systemName: "circle.dashed").font(.system(size: 12)).foregroundStyle(Theme.textSecondary.opacity(0.5))
+                        Image(systemName: "circle.dashed").font(.caption).foregroundStyle(Theme.textSecondary.opacity(0.5))
                     }
                 }
                 .frame(width: 42, height: 42)

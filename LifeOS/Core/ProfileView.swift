@@ -352,7 +352,7 @@ struct ProfileView: View {
         VStack(alignment: .leading, spacing: 14) {
             if habits.isEmpty {
                 Text("Crée des habitudes pour suivre ta progression semaine par semaine.")
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 8)
@@ -545,7 +545,7 @@ struct ProfileView: View {
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.primary)
                 Text("Ajoute-en une depuis Productivité.")
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
@@ -669,7 +669,7 @@ struct ProfileView: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.primary)
                         Text("Briefing vocal + priorités")
-                            .font(.system(size: 12))
+                            .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -813,9 +813,9 @@ struct ProfileView: View {
 
             HStack {
                 Text("LifeOS \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0") · Données stockées localement")
-                    .font(.system(size: 12)).foregroundStyle(.tertiary)
+                    .font(.caption).foregroundStyle(.tertiary)
                 Spacer()
-                Text("\(AppCategory.allCases.count) modules").font(.system(size: 12)).foregroundStyle(.tertiary)
+                Text("\(AppCategory.allCases.count) modules").font(.caption).foregroundStyle(.tertiary)
             }
             .padding(.horizontal, 4)
         }
@@ -864,7 +864,7 @@ struct ProfileView: View {
                     }
                 }
                 Text("Thème actif dans toute l'app — modifiable à tout moment.")
-                    .font(.system(size: 12)).foregroundStyle(.secondary)
+                    .font(.caption).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(16)

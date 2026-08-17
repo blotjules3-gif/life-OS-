@@ -162,7 +162,7 @@ struct ModuleChatView: View {
     private var inputBar: some View {
         HStack(spacing: 10) {
             TextField("Dis-moi ce que tu veux…", text: $inputText, axis: .vertical)
-                .font(.system(size: 15))
+                .font(.subheadline)
                 .lineLimit(1...5)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
@@ -313,7 +313,7 @@ private struct MessageBubble: View {
                     .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             } else {
                 Text(message.text)
-                    .font(.system(size: 15))
+                    .font(.subheadline)
                     .foregroundStyle(message.role == .user ? .white : .primary)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)

@@ -95,7 +95,7 @@ struct CoachExpertisePreviewSheet: View {
                 .textCase(.uppercase)
             TextField("Ex. je dors mal après le sport", text: $simulatedMessage, axis: .vertical)
                 .lineLimit(2...5)
-                .font(.system(size: 15))
+                .font(.subheadline)
                 .padding(12)
                 .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .focused($messageFocused)
@@ -129,7 +129,7 @@ struct CoachExpertisePreviewSheet: View {
                 Text(simulatedMessage.isEmpty
                      ? "Vide → fallback module-based (activeModules)"
                      : "Aucun topic détecté → fallback module-based")
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
             } else {
                 FlexibleChips(items: detectedTopics) { topic in
@@ -146,7 +146,7 @@ struct CoachExpertisePreviewSheet: View {
                     .background(color(for: topic).opacity(0.12), in: Capsule())
                 }
                 Text("Max 3 blocs (+ méta) — les 3 premiers dans l'ordre canonique sont injectés.")
-                    .font(.system(size: 11))
+                    .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
         }

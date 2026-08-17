@@ -49,7 +49,7 @@ struct SkincareView: View {
                         Button { showProfile = true } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: "person.crop.square.fill")
-                                    .font(.system(size: 20)).foregroundStyle(.looksTint)
+                                    .font(.title3).foregroundStyle(.looksTint)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Configure ton profil peau")
                                         .font(.subheadline.weight(.semibold))

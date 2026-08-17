@@ -256,7 +256,7 @@ struct FloatingTabBar: View {
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(Color.accentColor)
                         Text("Pose une question…")
-                            .font(.system(size: 13))
+                            .font(.footnote)
                             .foregroundStyle(Color(uiColor: .placeholderText))
                             .lineLimit(1)
                         Spacer()

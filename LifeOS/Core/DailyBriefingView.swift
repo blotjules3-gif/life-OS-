@@ -130,7 +130,7 @@ struct DailyBriefingView: View {
                                         .background(task.color, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(task.title).font(.system(size: 14, weight: .semibold))
-                                        Text(task.subtitle).font(.system(size: 12)).foregroundStyle(.secondary)
+                                        Text(task.subtitle).font(.caption).foregroundStyle(.secondary)
                                     }
                                     Spacer()
                                     if task.done {
@@ -565,7 +565,7 @@ struct DailyBriefingView: View {
                     .frame(width: 32, height: 32)
                     .background(Color(hex: 0xFF9F0A).opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 Text(text)
-                    .font(.system(size: 15))
+                    .font(.subheadline)
                     .foregroundStyle(.primary)
                     .lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
@@ -610,9 +610,9 @@ struct DailyBriefingView: View {
             ZStack {
                 ProgressRing(progress: goal > 0 ? min(1, value / goal) : 0, lineWidth: 7, tint: color)
                     .frame(width: 64, height: 64)
-                Image(systemName: icon).font(.system(size: 12)).foregroundStyle(color)
+                Image(systemName: icon).font(.caption).foregroundStyle(color)
             }
-            Text(label).font(.system(size: 11)).foregroundStyle(.secondary)
+            Text(label).font(.caption2).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)

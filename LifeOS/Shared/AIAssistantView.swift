@@ -947,7 +947,7 @@ struct AIAssistantView: View {
                 Text("Assistant LifeOS")
                     .font(.system(size: 16, weight: .semibold))
                 Text("Personnalise tes modules, crée des objectifs, suis tes habitudes")
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
@@ -1058,7 +1058,7 @@ struct AIAssistantView: View {
                 }
 
                 TextField(recordingPlaceholder, text: $vm.inputText, axis: .vertical)
-                    .font(.system(size: 15))
+                    .font(.subheadline)
                     .lineLimit(1...5)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
@@ -1300,7 +1300,7 @@ struct AIAssistantView: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(.primary)
                 Text(subtitle)
-                    .font(.system(size: 11))
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
@@ -1415,11 +1415,11 @@ private struct MessageRow: View {
                         ThinkingIndicator()
                     } else if reveal, !isUser {
                         TypewriterText(text: CoachTextCleaner.clean(message.text))
-                            .font(.system(size: 15))
+                            .font(.subheadline)
                             .foregroundStyle(.primary)
                     } else {
                         Text(isUser ? message.text : CoachTextCleaner.clean(message.text))
-                            .font(.system(size: 15))
+                            .font(.subheadline)
                             .foregroundStyle(isUser ? Theme.onAccent : .primary)
                             .textSelection(.enabled)
                     }
@@ -1534,7 +1534,7 @@ struct ServerConfigView: View {
                     Text("Connexion backend LifeOS")
                 } footer: {
                     Text("Lance le serveur sur ton Mac puis entre son adresse IP locale (même réseau Wi-Fi). Exemple : http://192.168.1.7:8000")
-                        .font(.system(size: 12))
+                        .font(.caption)
                 }
 
                 Section {

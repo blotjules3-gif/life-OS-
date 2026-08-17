@@ -132,7 +132,7 @@ private struct QuickStartRow: View {
                 }
                 Spacer()
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 20))
+                    .font(.title3)
                     .foregroundStyle(isSelected ? goal.color : Color.secondary.opacity(0.3))
             }
             .padding(16)

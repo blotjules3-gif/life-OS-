@@ -371,7 +371,7 @@ struct VitalsView: View {
                 Spacer()
                 Text(String(format: "Max %.1f", maxV))
             }
-            .font(.system(size: 11))
+            .font(.caption2)
             .monospacedDigit()
             .foregroundStyle(.tertiary)
         }

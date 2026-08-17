@@ -62,7 +62,7 @@ struct ProfileCustomizerSheet: View {
                             Text("Mon profil")
                                 .font(.system(size: 22, weight: .bold))
                             Text("\(visibleCount) section\(visibleCount > 1 ? "s" : "") affichée\(visibleCount > 1 ? "s" : "")")
-                                .font(.system(size: 13))
+                                .font(.footnote)
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
@@ -104,7 +104,7 @@ struct ProfileCustomizerSheet: View {
                                             .font(.system(size: 14, weight: .semibold))
                                             .foregroundStyle(isVisible ? .primary : .secondary)
                                         Text(s.sub)
-                                            .font(.system(size: 11))
+                                            .font(.caption2)
                                             .foregroundStyle(.secondary)
                                             .lineLimit(1)
                                     }

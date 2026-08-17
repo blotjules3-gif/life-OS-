@@ -74,7 +74,7 @@ struct SleepDashboardView: View {
                 HStack(spacing: 3) {
                     ForEach(1...5, id: \.self) { s in
                         Image(systemName: s <= n.quality ? "moon.fill" : "moon")
-                            .font(.system(size: 13)).foregroundStyle(s <= n.quality ? tint : Theme.textSecondary.opacity(0.4))
+                            .font(.footnote).foregroundStyle(s <= n.quality ? tint : Theme.textSecondary.opacity(0.4))
                     }
                 }
             }

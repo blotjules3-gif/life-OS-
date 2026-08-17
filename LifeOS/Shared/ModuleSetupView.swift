@@ -440,7 +440,7 @@ struct ModuleSetupView: View {
                 Text("Tout est prêt")
                     .font(.system(size: 24, weight: .bold))
                 Text("Tes notifications \(module.title.lowercased()) sont configurées.")
-                    .font(.system(size: 16))
+                    .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)

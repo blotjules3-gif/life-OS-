@@ -128,10 +128,10 @@ struct CycleTrackerView: View {
                                 } label: {
                                     Text("Choisir une date")
                                         .font(.system(size: 14, weight: .semibold))
-                                        .foregroundStyle(Color(hex: 0xE85D9A))
+                                        .foregroundStyle(Theme.cycle)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 12)
-                                        .background(Color(hex: 0xE85D9A).opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                        .background(Theme.cycle.opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -297,7 +297,7 @@ struct CycleTrackerView: View {
                     VStack(spacing: 24) {
                         DatePicker("Date des dernières règles", selection: $pickedDate, in: ...Date(), displayedComponents: .date)
                             .datePickerStyle(.graphical)
-                            .tint(Color(hex: 0xE85D9A))
+                            .tint(Theme.cycle)
                             .padding(.horizontal)
                         Stepper("Durée du cycle : \(cycleLengthDays) jours", value: $cycleLengthDays, in: 21...45)
                             .padding(.horizontal)
@@ -449,8 +449,8 @@ struct CycleHistoryView: View {
                         ForEach(entries.prefix(30)) { e in
                             HStack(spacing: 12) {
                                 Image(systemName: "drop.fill")
-                                    .foregroundStyle(Color(hex: 0xE85D9A).opacity(0.5 + Double(e.flow) * 0.15))
-                                    .font(.system(size: 13))
+                                    .foregroundStyle(Theme.cycle.opacity(0.5 + Double(e.flow) * 0.15))
+                                    .font(.footnote)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(e.date, style: .date).font(.subheadline)
                                     if !e.symptoms.isEmpty {

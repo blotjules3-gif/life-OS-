@@ -34,7 +34,7 @@ struct FitnessProfileSheet: View {
                     Text("Anthropométrie")
                 } footer: {
                     Text("Nécessaire pour calculer les ratios force/kg et adapter le volume.")
-                        .font(.system(size: 11))
+                        .font(.caption2)
                 }
 
                 Section {
@@ -47,7 +47,7 @@ struct FitnessProfileSheet: View {
 
                     if let hint = levels.first(where: { $0.key == levelRaw })?.hint {
                         Text(hint)
-                            .font(.system(size: 12))
+                            .font(.caption)
                             .foregroundStyle(.secondary)
                     }
 
@@ -71,7 +71,7 @@ struct FitnessProfileSheet: View {
                     Text("Records (1RM estimés)")
                 } footer: {
                     Text("Le coach compare tes records au ratio poids de corps pour calibrer ses conseils. Laisse à 0 si tu n'as pas testé.")
-                        .font(.system(size: 11))
+                        .font(.caption2)
                 }
 
                 if weightKg > 0, (bench1RM > 0 || squat1RM > 0 || deadlift1RM > 0) {
@@ -104,7 +104,7 @@ struct FitnessProfileSheet: View {
                     .foregroundStyle(Color(hex: 0x9B6CF1))
                 } footer: {
                     Text("Le coach relancera ses questions à ta prochaine ouverture du hub Muscu. Utile pour recalibrer un nouveau programme.")
-                        .font(.system(size: 11))
+                        .font(.caption2)
                 }
             }
             .confirmationDialog(
@@ -145,7 +145,7 @@ struct FitnessProfileSheet: View {
                 .multilineTextAlignment(.trailing)
                 .frame(width: 70)
             Text(unit)
-                .font(.system(size: 13))
+                .font(.footnote)
                 .foregroundStyle(.secondary)
                 .frame(width: 26, alignment: .leading)
             Stepper("", value: value, in: range, step: step)

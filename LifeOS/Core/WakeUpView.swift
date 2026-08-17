@@ -174,7 +174,7 @@ struct WakeUpView: View {
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(.primary)
                     Text(wakeupEnabled ? "Notification + écran de réveil" : "Aucune sonnerie programmée")
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -255,7 +255,7 @@ struct WakeUpView: View {
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.primary)
                     Text("Pour 8 h de sommeil complet")
-                        .font(.system(size: 12))
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -341,7 +341,7 @@ struct WakeUpView: View {
 
             if recommendedModules.isEmpty {
                 Text("Choisis tes pôles prioritaires dans Profil pour construire ton briefing du matin.")
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
@@ -361,7 +361,7 @@ struct WakeUpView: View {
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundStyle(.primary)
                                     Text(cat.subtitle)
-                                        .font(.system(size: 12))
+                                        .font(.caption)
                                         .foregroundStyle(.secondary)
                                         .lineLimit(1)
                                 }

@@ -59,7 +59,7 @@ struct GoalEditorSheet: View {
                         .font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary).textCase(nil)
                 } footer: {
                     Text("Glissez vers la gauche pour retirer un objectif.")
-                        .font(.system(size: 12)).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(.secondary)
                 }
 
                 if !inactive.isEmpty {
@@ -222,11 +222,11 @@ struct GoalEditorSheet: View {
                     .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 VStack(alignment: .leading, spacing: 1) {
                     Text(goal.title).font(.system(size: 14)).foregroundStyle(.primary)
-                    Text(goal.section).font(.system(size: 12)).foregroundStyle(.secondary)
+                    Text(goal.section).font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
                 Image(systemName: "plus.circle.fill")
-                    .font(.system(size: 22)).foregroundStyle(color)
+                    .font(.title2).foregroundStyle(color)
             }
         }
         .buttonStyle(LifeOSPressStyle())
