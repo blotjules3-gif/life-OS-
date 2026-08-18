@@ -53,7 +53,30 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             intentIdentifiers: [],
             options: []
         )
-        UNUserNotificationCenter.current().setNotificationCategories([alarmCategory, confirmCategory])
+
+        // Catégorie HABIT — rappel d'habitude avec 3 actions inline :
+        // marquer faite, snooze 30 min, ouvrir l'app.
+        let habitDone = UNNotificationAction(identifier: "HABIT_DONE", title: "Marquer fait", options: [])
+        let habitSnooze = UNNotificationAction(identifier: "HABIT_SNOOZE", title: "Dans 30 min", options: [])
+        let habitCategory = UNNotificationCategory(
+            identifier: "LIFEOS_HABIT",
+            actions: [habitDone, habitSnooze],
+            intentIdentifiers: [],
+            options: []
+        )
+
+        // Catégorie COACH — message proactif du coach avec 1 bouton "Ouvrir".
+        let coachOpen = UNNotificationAction(identifier: "COACH_OPEN", title: "Répondre", options: [.foreground])
+        let coachCategory = UNNotificationCategory(
+            identifier: "LIFEOS_COACH",
+            actions: [coachOpen],
+            intentIdentifiers: [],
+            options: []
+        )
+
+        UNUserNotificationCenter.current().setNotificationCategories([
+            alarmCategory, confirmCategory, habitCategory, coachCategory
+        ])
 
         return true
     }
