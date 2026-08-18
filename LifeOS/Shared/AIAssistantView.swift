@@ -322,6 +322,10 @@ final class AIAssistantViewModel: ObservableObject {
             return "\(label):\(detail)"
         }.joined(separator: " | ")
 
+        // Contexte cross-modules complet (sommeil, muscu 7j, kcal, humeur, insights).
+        // C'est ce qui rend le welcome "wow" — le coach connaît l'état réel de la vie.
+        let liveContext = UserContextBuilder.shared.build()
+
         let prompt = """
         [PREMIER_LANCEMENT]
         Prénom: \(userName.isEmpty ? "non renseigné" : userName)
@@ -331,7 +335,11 @@ final class AIAssistantViewModel: ObservableObject {
         Heure de réveil: \(wake)
         Modules pour habitudes: \(habitModules.isEmpty ? "aucun" : habitModules)
         Config modules: \(moduleConfigs.isEmpty ? "aucune" : moduleConfigs)
-        Instruction: Pour chaque module avec habitudes, pose des questions précises (durée séance, nombre d'exercices, etc.) pour créer des habitudes personnalisées. Demande l'accord avant de créer chaque habitude (action create_habit).
+
+        Contexte de vie actuel :
+        \(liveContext)
+
+        Instruction: Salue \(userName.isEmpty ? "l'utilisateur" : userName) en 2-3 phrases MAX, chaleureuses. Si le contexte de vie contient des données récentes (sommeil, séance, kcal, humeur, insights cross-modules), MENTIONNE-LES concrètement pour prouver que tu connais son quotidien. Ensuite propose UNE action précise adaptée. Puis pose UNE question ouverte. Pour chaque module avec habitudes, prépare-toi à poser des questions précises (durée séance, nombre d'exercices) pour créer des habitudes personnalisées via l'action create_habit — mais pas dans ce premier message.
         """
 
         appendThinking()
