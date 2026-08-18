@@ -11,6 +11,7 @@ import Foundation
 ///
 /// **Convention de nommage** : `<domaine>.<action>[.<précision>]`
 ///   ex : `chat.message.sent`, `module.opened`, `habit.completed`
+@MainActor
 enum AnalyticsEvents {
 
     // MARK: - Chat coach
