@@ -32,6 +32,15 @@ enum MemoryExtractor {
         (#"(?i)(?:je\s+peux\s+pas|je\s+suis\s+allergique|je\s+ne\s+supporte\s+pas)\s+(.{5,80})"#, "contrainte")
     ]
 
+    /// Mots-clés qui invalident une capture (jurons, expressions vides, vagues).
+    /// Filtre grossier pour éviter de polluer la mémoire coach avec du bruit.
+    private static let blacklist: [String] = [
+        "chier", "chiant", "merde", "putain",
+        "bien ce truc", "bien ça", "bien ce",
+        "je sais pas", "je ne sais pas",
+        "peut-être", "peut etre"
+    ]
+
     /// Analyse un message et insère les mémoires détectées dans le contexte.
     /// Retourne le nombre de mémoires créées ou mises à jour.
     @MainActor
@@ -41,6 +50,11 @@ enum MemoryExtractor {
         guard cleaned.count >= 10 else { return 0 }
 
         var created = 0
+        // Pour éviter les doublons intra-message (ex. "je bosse chez X" qui
+        // match habitude + fait), on garde trace des prefixes déjà insérés
+        // dans cette passe.
+        var seenPrefixes: Set<String> = []
+
         for (patternStr, category) in patterns {
             guard let regex = try? NSRegularExpression(pattern: patternStr, options: []) else { continue }
             let range = NSRange(cleaned.startIndex..., in: cleaned)
@@ -52,6 +66,15 @@ enum MemoryExtractor {
                 let raw = String(cleaned[swiftRange])
                 let content = normalize(raw)
                 guard content.count >= 8, content.count <= 120 else { continue }
+
+                // Filtre bruit (jurons, expressions vagues)
+                let lower = content.lowercased()
+                if blacklist.contains(where: { lower.contains($0) }) { continue }
+
+                // Anti-duplicate intra-message
+                let prefix = String(lower.prefix(20))
+                if seenPrefixes.contains(prefix) { continue }
+                seenPrefixes.insert(prefix)
 
                 if !upsert(content: content, category: category, context: context) { continue }
                 created += 1
