@@ -117,7 +117,7 @@ struct CoachPreferences {
             tone: tone,
             length: length,
             expertiseLevel: expertise,
-            avoidTopics: avoid.trimmingCharacters(in: .whitespaces)
+            avoidTopics: avoid.trimmingCharacters(in: CharacterSet.whitespaces)
         )
     }
 }
