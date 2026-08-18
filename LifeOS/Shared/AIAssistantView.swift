@@ -868,6 +868,13 @@ struct AIAssistantView: View {
                 AddAnythingSheet(initialKind: vm.addFlowKind, prefillName: vm.addFlowPrefill)
                     .presentationDetents([.large])
             }
+            .sheet(isPresented: $showCoachPrefs) {
+                CoachPreferencesView()
+                    .presentationDetents([.medium, .large])
+            }
+            .sheet(isPresented: $showHistory) {
+                CoachHistoryView()
+            }
             .overlay(alignment: .top) {
                 if let toast = vm.actionToast {
                     actionToastView(toast)
