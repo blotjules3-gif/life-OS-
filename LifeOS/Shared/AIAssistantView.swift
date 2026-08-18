@@ -495,6 +495,7 @@ final class AIAssistantViewModel: ObservableObject {
             let n = MemoryExtractor.extract(from: text, context: ctx)
             if n > 0 { AppLog.coach.debug("MemoryExtractor: \(n) new memories") }
         }
+        AnalyticsEvents.chatMessageSent()
         withAnimation(.spring(response: 0.42, dampingFraction: 0.75)) {
             messages.append(DisplayMessage(from: msg))
         }
