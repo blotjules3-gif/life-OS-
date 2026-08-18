@@ -37,11 +37,25 @@ enum OnDeviceLLM {
     ///   - ctx: `ModelContext` SwiftData pour laisser le fallback lire les données locales.
     ///   - moduleContext: nom optionnel du module actif (nutrition, fitness…) —
     ///     injecté dans les instructions système pour cibler la réponse.
+    ///   - injectContext: quand true (défaut) on assemble contexte user + expertise + mémoire
+    ///     dans le prompt système. Passer false pour un tour "premier lancement" où le prompt
+    ///     est déjà auto-suffisant.
     static func respond(
         to message: String,
         ctx: ModelContext?,
-        moduleContext: String? = nil
+        moduleContext: String? = nil,
+        injectContext: Bool = true
     ) async -> Reply {
+        // Étape 0 — court-circuit détresse (jamais le LLM sur ces sujets).
+        // Ce filet doit passer AVANT toute logique action locale pour ne pas être
+        // détourné vers un LocalCoach qui écrirait une habitude "arrêter de vivre".
+        if CoachSafetyScanner.detectsDistress(in: message) {
+            return Reply(
+                text: CoachSafetyScanner.distressReply,
+                source: .localRules
+            )
+        }
+
         // Étape 1 — si le message ressemble à une action locale (créer une
         // habitude, logger un verre d'eau, ajouter une tâche), on laisse
         // LocalCoach l'exécuter directement. Sinon un LLM répondrait « ok je
@@ -61,7 +75,8 @@ enum OnDeviceLLM {
             case .available:
                 if let text = await respondViaAppleIntelligence(
                     message: message,
-                    moduleContext: moduleContext
+                    moduleContext: moduleContext,
+                    injectContext: injectContext
                 ) {
                     return Reply(text: text, source: .onDeviceLLM)
                 }
@@ -116,9 +131,14 @@ enum OnDeviceLLM {
     @available(iOS 26.0, *)
     private static func respondViaAppleIntelligence(
         message: String,
-        moduleContext: String?
+        moduleContext: String?,
+        injectContext: Bool
     ) async -> String? {
-        let system = buildSystemPrompt(moduleContext: moduleContext)
+        let system = buildSystemPrompt(
+            message: message,
+            moduleContext: moduleContext,
+            injectContext: injectContext
+        )
         let session = LanguageModelSession(instructions: system)
         // Retry léger : 2 tentatives avec 1s de délai entre les deux.
         // Un échec ponctuel (modèle qui charge, guardrail transitoire) peut
@@ -138,20 +158,63 @@ enum OnDeviceLLM {
     // MARK: - System prompt
 
     /// Construit le prompt système envoyé au LLM on-device.
-    /// Reste court : le contexte utilisateur riche est déjà accessible localement
-    /// via `UserContextBuilder`, et on l'injecte séparément si besoin d'un
-    /// tour ciblé.
-    private static func buildSystemPrompt(moduleContext: String?) -> String {
-        var parts: [String] = [
-            "Tu es le coach LifeOS, un coach de vie holistique.",
-            "Tu réponds en français, tutoiement, ton direct.",
-            "Jamais d'emojis, jamais de markdown (pas de gras, pas de listes à puces).",
-            "Phrases courtes, 2 à 4 lignes pour une question simple.",
-            "Si tu n'as pas d'information solide, dis-le au lieu d'inventer."
-        ]
+    /// Contient : identité coach, préférences user, snapshot utilisateur riche
+    /// (UserContextBuilder), blocs d'expertise détectés pour le message courant,
+    /// mémoire long terme (via UserContextBuilder), feedback loop.
+    private static func buildSystemPrompt(
+        message: String,
+        moduleContext: String?,
+        injectContext: Bool
+    ) -> String {
+        var parts: [String] = []
+
+        // ── Identité + ton ──────────────────────────────────────────────────
+        parts.append("Tu es le coach LifeOS, un coach de vie holistique.")
+        parts.append("Tu réponds en français, tutoiement.")
+
+        // Préférences user (ton, longueur, sujets à éviter, niveau expertise)
+        let prefs = CoachPreferences.current()
+        parts.append(prefs.toneInstruction)
+        parts.append(prefs.lengthInstruction)
+        if !prefs.avoidTopics.isEmpty {
+            parts.append("Sujets à éviter absolument : \(prefs.avoidTopics).")
+        }
+        parts.append(prefs.expertiseInstruction)
+
+        // Règles de forme
+        parts.append("Jamais d'emojis, jamais de markdown (pas de gras, pas de listes à puces).")
+        parts.append("Si tu n'as pas d'information solide, dis-le au lieu d'inventer.")
+
         if let module = moduleContext, !module.isEmpty {
             parts.append("La conversation porte sur le module: \(module).")
         }
+
+        // ── Boucle feedback : préférences apprises depuis les 👍/👎 ─────────
+        let feedback = CoachFeedbackStore.summary()
+        if !feedback.isEmpty {
+            parts.append("")
+            parts.append("Retours de l'utilisateur sur tes réponses passées :")
+            parts.append(feedback)
+        }
+
+        // ── Contexte user riche (snapshot + expertise + mémoire) ────────────
+        if injectContext {
+            let ctxText = UserContextBuilder.shared.build(message: message)
+            if !ctxText.isEmpty {
+                // On tronque à 6000 chars — la fenêtre du SLM Apple est bornée
+                // et le message + réponse doivent tenir sinon la génération est
+                // interrompue silencieusement.
+                let truncated = ctxText.count > 6000
+                    ? String(ctxText.prefix(6000)) + "\n[…]"
+                    : ctxText
+                parts.append("")
+                parts.append("--- CONTEXTE UTILISATEUR (à utiliser sans le citer littéralement) ---")
+                parts.append(truncated)
+                parts.append("--- FIN CONTEXTE ---")
+                parts.append("Ne repose PAS de question dont la réponse est déjà dans le contexte ci-dessus.")
+            }
+        }
+
         return parts.joined(separator: "\n")
     }
 }
