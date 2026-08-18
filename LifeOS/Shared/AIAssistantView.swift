@@ -322,9 +322,13 @@ final class AIAssistantViewModel: ObservableObject {
             return "\(label):\(detail)"
         }.joined(separator: " | ")
 
-        // Contexte cross-modules complet (sommeil, muscu 7j, kcal, humeur, insights).
-        // C'est ce qui rend le welcome "wow" — le coach connaît l'état réel de la vie.
-        let liveContext = UserContextBuilder.shared.build()
+        // Contexte cross-modules (sommeil, muscu 7j, kcal, humeur, insights).
+        // Tronqué à 3000 chars pour le welcome — pas besoin des blocs d'expertise
+        // complets, juste les données de vie récentes.
+        let fullContext = UserContextBuilder.shared.build()
+        let liveContext = fullContext.count > 3000
+            ? String(fullContext.prefix(3000)) + "\n[…]"
+            : fullContext
 
         let prompt = """
         [PREMIER_LANCEMENT]
