@@ -103,7 +103,7 @@ enum AppCategory: String, CaseIterable, Identifiable {
         CategoryHubView(category: self)
             .onAppear {
                 ModuleUsageTracker.shared.track(self)
-                AnalyticsEvents.moduleOpened(self.rawValue)
+                Task { @MainActor in AnalyticsEvents.moduleOpened(self.rawValue) }
             }
     }
 }
