@@ -629,8 +629,10 @@ Répondre uniquement : "Arrêté." puis lister ce qui n'a pas été fait dans la
 | Phase 3 | 3 semaines | Refonte UX visible (Home, onboarding, découpe chat) |
 | Phase 4 | 2 semaines | Qualité invisible (tests, Sentry, i18n) |
 | Phase 5 | continu | Polish + growth après App Store |
+| Phase 6 | 3-4 semaines | Chat IA next-level (trackers custom, web search, modes, guardrails) |
 | **TOTAL avant App Store** | **~7 semaines** | Soumission possible |
 | **TOTAL avec Phase 5** | **~12 semaines** | App parfaite |
+| **TOTAL avec Phase 6** | **~16 semaines** | Chat IA différenciant |
 
 ---
 
