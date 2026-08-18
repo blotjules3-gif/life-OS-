@@ -120,14 +120,17 @@ enum OnDeviceLLM {
     ) async -> String? {
         let system = buildSystemPrompt(moduleContext: moduleContext)
         let session = LanguageModelSession(instructions: system)
-        do {
+        // Retry léger : 2 tentatives avec 1s de délai entre les deux.
+        // Un échec ponctuel (modèle qui charge, guardrail transitoire) peut
+        // se rejouer avec succès. Si les deux échouent, on retombe sur le
+        // fallback règles au lieu de laisser l'utilisateur muet.
+        return await RetryHelper.withBackoffOrNil(
+            attempts: 2,
+            delays: [1],
+            operation: "AppleIntelligence.respond"
+        ) {
             let response = try await session.respond(to: message)
             return response.content
-        } catch {
-            // Modèle indisponible temporairement, contenu bloqué par les
-            // guardrails, ou autre : on retourne nil pour retomber sur
-            // le fallback règles au lieu de laisser l'utilisateur muet.
-            return nil
         }
     }
     #endif
