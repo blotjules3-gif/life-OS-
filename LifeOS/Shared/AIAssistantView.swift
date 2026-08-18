@@ -898,6 +898,19 @@ struct AIAssistantView: View {
                             .padding(.bottom, 8)
                     }
 
+                    // Chips de réponse rapide sous le dernier message assistant
+                    // (uniquement si pas en train de charger ni de streamer, et si
+                    // le dernier message est bien du coach + génère des suggestions).
+                    if !vm.isLoading, vm.streamingText == nil,
+                       let last = vm.messages.last, last.role == "assistant", !last.isThinking,
+                       let chips = ChatSuggestionBuilder.suggestions(for: last.text) {
+                        ChatQuickReplies(suggestions: chips, accent: accent) { text in
+                            vm.send(text: text)
+                        }
+                        .padding(.bottom, 8)
+                        .transition(.opacity)
+                    }
+
                     // Quick suggestions — cachées après l'envoi d'un message,
                     // réapparaissent après 1 h sans nouveau message. TimelineView
                     // force une réévaluation toutes les 60 s.
