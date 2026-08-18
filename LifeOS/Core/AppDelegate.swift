@@ -8,6 +8,11 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        // Override langue AVANT toute UI — l'user peut avoir forcé FR ou EN
+        // depuis les réglages. Sans ce call précoce, iOS resterait sur la langue
+        // système jusqu'au prochain relaunch.
+        LanguageForcer.applyPersistedChoice()
+
         // Observabilité — no-op tant que le SDK Sentry n'est pas ajouté au projet.
         // Voir docs/observability/SENTRY_SETUP.md pour l'activation.
         SentryConfig.start()
