@@ -797,6 +797,19 @@ struct ProfileView: View {
                     showExportSheet = true
                 }
                 Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
+                settingsRow(icon: "globe", iconColor: Color(hex: 0x3CB2E0),
+                            label: "Langue de l'app") {
+                    HStack(spacing: 6) {
+                        Text(LanguageForcer.current.label)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
+                    }
+                } action: {
+                    showLanguagePicker = true
+                }
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
                 settingsRow(icon: "brain.head.profile", iconColor: Color(hex: 0x9B6CF1),
                             label: "Mémoire du coach") {
                     Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
