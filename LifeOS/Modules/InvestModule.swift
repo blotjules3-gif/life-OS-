@@ -149,7 +149,7 @@ struct NetWorthView: View {
                         Text("Revenu passif à 4% : \(final*0.04/12, format: .currency(code: "EUR"))/mois").font(.caption).foregroundStyle(Theme.textSecondary)
                     }.card()
 
-                    HStack { SectionHeader(title: "Actifs & passifs"); Button { showAdd = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.investTint) } }
+                    HStack { SectionHeader(title: "Actifs & passifs"); Button { showAdd = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.investTint) }.accessibilityLabel("Ajouter") }
                     ForEach(items) { it in
                         HStack {
                             Image(systemName: it.kind == "Actif" ? "plus.circle" : "minus.circle").foregroundStyle(it.kind == "Actif" ? .green : .red)

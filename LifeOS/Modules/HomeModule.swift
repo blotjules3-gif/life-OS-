@@ -104,7 +104,7 @@ struct ChoresView: View {
                                     }
                                 }
                                 Spacer()
-                                Button { c.lastDone = Date(); Haptics.tap() } label: { Image(systemName: "checkmark.circle.fill").font(.title2).foregroundStyle(.green) }
+                                Button { c.lastDone = Date(); Haptics.tap() } label: { Image(systemName: "checkmark.circle.fill").font(.title2).foregroundStyle(.green) }.accessibilityLabel("Marquer fait")
                             }.card(padding: 12)
                                 .contextMenu { Button(role: .destructive) { ctx.delete(c) } label: { Label("Supprimer", systemImage: "trash") } }
                         }
@@ -174,7 +174,7 @@ struct PetCard: View {
                 Image(systemName: pet.species == "Chat" ? "cat.fill" : pet.species == "Chien" ? "dog.fill" : "pawprint.fill").font(.title2).foregroundStyle(.homeTint)
                 Text(pet.name).font(.headline).foregroundStyle(Theme.textPrimary)
                 Spacer()
-                Button { showAddEvent = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.homeTint) }
+                Button { showAddEvent = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.homeTint) }.accessibilityLabel("Ajouter un événement")
                 Button(role: .destructive) { ctx.delete(pet) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(.red.opacity(0.6))
             }
             if pet.events.isEmpty { Text("Aucun événement.").font(.caption).foregroundStyle(Theme.textSecondary) }
@@ -258,7 +258,7 @@ struct MaintenanceView: View {
                                     else { Text("Jamais faite").font(.caption).foregroundStyle(.orange) }
                                 }
                                 Spacer()
-                                Button { m.lastDone = Date(); Haptics.tap() } label: { Image(systemName: "checkmark.circle.fill").font(.title2).foregroundStyle(.green) }
+                                Button { m.lastDone = Date(); Haptics.tap() } label: { Image(systemName: "checkmark.circle.fill").font(.title2).foregroundStyle(.green) }.accessibilityLabel("Marquer fait")
                             }.card(padding: 12)
                                 .contextMenu { Button(role: .destructive) { ctx.delete(m) } label: { Label("Supprimer", systemImage: "trash") } }
                         }

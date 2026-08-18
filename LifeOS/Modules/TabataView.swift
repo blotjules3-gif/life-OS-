@@ -423,8 +423,8 @@ struct TabataView: View {
             }
             Spacer()
             HStack(spacing: 16) {
-                Button { engine.reset() } label: { Image(systemName: "arrow.counterclockwise").font(.title3.bold()) }
-                Button { showSettings = true } label: { Image(systemName: "slider.horizontal.3").font(.title3.bold()) }
+                Button { engine.reset() } label: { Image(systemName: "arrow.counterclockwise").font(.title3.bold()) }.accessibilityLabel("Réinitialiser")
+                Button { showSettings = true } label: { Image(systemName: "slider.horizontal.3").font(.title3.bold()) }.accessibilityLabel("Réglages")
             }
             .foregroundStyle(engine.phase.onColor)
         }

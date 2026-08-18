@@ -33,7 +33,7 @@ struct SleepDashboardView: View {
         .background(Theme.bg)
         .navigationTitle("Sommeil").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) {
-            Button { showLog = true } label: { Image(systemName: "plus.circle.fill").font(.title2) }
+            Button { showLog = true } label: { Image(systemName: "plus.circle.fill").font(.title2) }.accessibilityLabel("Ajouter")
         } }
         .sheet(isPresented: $showLog) { SleepLogSheet() }
     }

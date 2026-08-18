@@ -44,7 +44,7 @@ struct CalAIView: View {
         .background(Theme.bg)
         .navigationTitle("").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) {
-            Button { showAdd = true } label: { Image(systemName: "plus.circle.fill").font(.title2) }
+            Button { showAdd = true } label: { Image(systemName: "plus.circle.fill").font(.title2) }.accessibilityLabel("Ajouter")
         } }
         .sheet(isPresented: $showAdd) { FoodEditor() }
         .sheet(isPresented: $showScan) { BarcodeAddSheet(defaultMeal: currentMeal) }

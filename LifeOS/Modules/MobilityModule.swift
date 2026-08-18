@@ -63,7 +63,7 @@ struct VehicleCard: View {
                 Image(systemName: "car.fill").font(.title2).foregroundStyle(.mobTint)
                 Text(vehicle.name).font(.headline).foregroundStyle(Theme.textPrimary)
                 Spacer()
-                Button { showFuel = true } label: { Image(systemName: "fuelpump.fill").foregroundStyle(.mobTint) }
+                Button { showFuel = true } label: { Image(systemName: "fuelpump.fill").foregroundStyle(.mobTint) }.accessibilityLabel("Ajouter un plein")
                 Button(role: .destructive) { ctx.delete(vehicle) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(.red.opacity(0.6))
             }
             HStack(spacing: 10) {
