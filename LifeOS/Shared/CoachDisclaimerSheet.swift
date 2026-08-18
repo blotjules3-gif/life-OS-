@@ -15,19 +15,19 @@ struct CoachDisclaimerSheet: View {
                     header
                     section(
                         title: "Ton coach n'est pas un professionnel",
-                        body: "Ses réponses sont générées automatiquement. Pour toute question médicale, sportive ou financière importante, consulte un professionnel qualifié."
+                        body: "Ses réponses sont générées par l'intelligence de ton iPhone. Il ne remplace pas un médecin, un diététicien, un conseiller financier, ni un psy."
                     )
                     section(
-                        title: "Ce que tu partages",
-                        body: "Tes messages sont envoyés à nos serveurs et à notre partenaire Mistral pour générer une réponse. Ils ne servent pas à entraîner de futur coach."
+                        title: "100 % sur ton iPhone",
+                        body: "Tes messages, tes préférences et ta mémoire ne quittent jamais l'appareil. Aucun envoi à un serveur, aucune donnée utilisée pour entraîner un modèle."
                     )
                     section(
                         title: "Ce que tu peux faire",
-                        body: "Long-press sur une réponse te permet de la signaler. Nous relisons tous les signalements et bloquons les contenus inappropriés."
+                        body: "Long-press sur une réponse te permet de la signaler, l'aimer, ou dire qu'elle ne t'a pas plu. Le coach s'adapte à tes retours au fil du temps."
                     )
                     section(
                         title: "En cas d'urgence",
-                        body: "Le coach ne remplace jamais les services d'urgence. Compose le 15 (Samu), le 18 (pompiers) ou le 3114 (prévention suicide) si tu en as besoin."
+                        body: "Compose immédiatement le 15 (Samu), le 18 (pompiers) ou le 3114 (prévention suicide, gratuit, 24/7) si tu en as besoin. Le coach ne peut pas t'aider dans ces situations."
                     )
                 }
                 .padding(.horizontal, 22)
