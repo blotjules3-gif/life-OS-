@@ -10,9 +10,11 @@ final class DataEraserTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        // Utilise le vrai schéma pour tester l'erase de toutes les entités.
+        // Schéma minimal pour tester l'erase (le vrai schéma LocalStore avec
+        // ses relations non-Optional crash en config in-memory).
+        let schema = Schema([MoodEntry.self, Habit.self, HabitCompletion.self, TodoItem.self])
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        container = try ModelContainer(for: LocalStore.schema, configurations: [config])
+        container = try ModelContainer(for: schema, configurations: [config])
         context = container.mainContext
     }
 
