@@ -243,6 +243,9 @@ struct ProfileView: View {
             .sheet(isPresented: $showMemoryHub) {
                 NavigationStack { MemoryHubView() }
             }
+            .sheet(isPresented: $showLanguagePicker) {
+                LanguagePickerSheet()
+            }
             #if DEBUG
             .sheet(isPresented: $showCoachDebug) {
                 CoachExpertisePreviewSheet()
