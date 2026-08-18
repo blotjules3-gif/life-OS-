@@ -927,7 +927,7 @@ struct AIAssistantView: View {
 
                     // Messages
                     ForEach(vm.messages) { msg in
-                        MessageRow(
+                        AIAssistantMessageRow(
                             message: msg,
                             accent: accent,
                             reveal: msg.id == vm.revealID,
