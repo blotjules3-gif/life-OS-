@@ -334,6 +334,179 @@ Traduction 1068 clés EN — cf. Phase 2.8.
 
 ---
 
+## PHASE 6 — Chat IA next-level (3-4 semaines)
+
+Objectif : passer du "chat coach v2" au "meilleur chat IA que ton user ait vu".
+Simple pour l'usage courant, puissant quand il faut, respectueux des limites.
+
+Prérequis : Phase 2 (chat coach v2) validée en runtime.
+
+### 6.1 Trackers personnalisés dynamiques (6h) — LE PLUS DEMANDÉ
+
+Nouveau modèle SwiftData `CustomTracker` avec champs dynamiques :
+- `name` (ex : "Peptides BPC-157")
+- `unit` (ex : "mg", "prises", "gouttes")
+- `targetDaily`, `targetWeekly` (Double optionnels)
+- `category` (santé, sport, alimentation, autre)
+- `iconName`, `colorHex`
+- `notes`
+- `createdAt`, `isArchived`
+
++ `CustomTrackerEntry` : `date`, `value: Double`, `note: String`.
+
+Nouvelle action AI : `create_tracker` avec extraction des champs depuis le
+message user. Ex : "Traque ma prise de peptides BPC-157, 250 mcg matin et soir"
+→ crée le tracker + 2 rappels + entrée initiale.
+
+Écran `TrackerListView` + `TrackerDetailView` accessibles depuis Profil.
+Le hub Custom apparaît dans Categories en dessous des 15 modules.
+
+### 6.2 Recherche web (4h) — SE RENSEIGNER
+
+Créer `LifeOS/Services/WebResearcher.swift` qui appelle un endpoint backend
+`/research?query=...` (à ajouter dans `backend/app/api/v1/`). Le backend
+utilise Brave Search API ou Serper (~$0.005/req).
+
+Détection intent : "renseigne-toi sur X", "qu'est-ce que X", "explique-moi X".
+Résultat inséré dans le contexte avant la réponse coach :
+- 3 sources (titre + URL + extrait)
+- Le coach synthétise en 3-4 lignes + cite les sources en fin
+
+Affichage : chips "sources" cliquables sous la réponse coach.
+
+### 6.3 Limites et guardrails définis par l'user (3h)
+
+Nouvel écran `CoachPreferencesView` dans Profil :
+- **Sujets à éviter** (chips à ajouter/retirer)
+- **Ton préféré** : strict / bienveillant / expert / motivant
+- **Longueur réponses** : courte / moyenne / détaillée
+- **Emojis** : oui / non
+- **Tutoiement** : oui / vouvoiement
+
+Persisté via `AppStorageKeys.coachTone`, `coachLength`, `coachTopicsToAvoid`, etc.
+
+Injection systématique dans le prompt système via `UserContextBuilder` :
+```
+Préférences user :
+- Ton : bienveillant
+- Longueur : courte (2-3 phrases max)
+- Éviter : viande, vouvoiement
+```
+
+### 6.4 Multi-modes ponctuels (2h)
+
+Sélecteur de mode inline dans l'input du chat (icône 🎚️ à côté du micro) :
+- **Coach** (défaut, tout venant)
+- **Expert** (technique, chiffres, sources)
+- **Motivation** (bref, punchy, urgent)
+- **Analyse** (bilan structuré, sections)
+
+Persisté par conversation seulement. Modifie temporairement le prompt système.
+
+### 6.5 Guardrails médicaux + finance + légal (2h)
+
+Détection heuristique côté iOS de topics sensibles :
+- Doses médicamenteuses (`X mg`, `X UI`, `mcg`)
+- Décisions financières (`vendre`, `acheter`, `investir X€`)
+- Questions légales (`suis-je en droit`, `mon employeur`)
+
+Ajout systématique dans la réponse coach d'un badge "Ce n'est pas un conseil
+médical / financier / légal — consulte un pro."
+
+### 6.6 TTS pour lire les réponses (2h)
+
+`AVSpeechSynthesizer` intégré dans `MessageRow`. Bouton "haut-parleur" sur
+chaque message coach → lecture voix française (voice quality `.enhanced`
+si dispo).
+
+Toggle global "lecture auto" dans `CoachPreferencesView` : lit toutes les
+réponses coach automatiquement (utile en mains libres pendant le sport).
+
+### 6.7 Feedback loop 👍/👎 (2h)
+
+Sur chaque message coach, 2 boutons discrets sous le message :
+- 👍 "Utile"
+- 👎 "Pas utile"
+
+Stockage local via nouveau modèle `AIMessageFeedback`. Envoi au backend
+optionnel (opt-in). Injection dans le contexte système : "L'user a marqué
+comme peu utile 3 de tes dernières réponses — adapte ton approche."
+
+### 6.8 Historique long + résumé (3h)
+
+Actuellement le chat reset toutes les 24h.
+
+Nouveau : garder les 100 derniers messages accessibles via scroll. Au-delà,
+résumer les 100 précédents en 500 chars via Apple Intelligence + stocker
+le résumé dans un modèle `AIConversationSummary`.
+
+Injection du résumé de la semaine dans le contexte système :
+```
+Résumé de la semaine (7j) : L'user a évoqué X, s'inquiète de Y, a testé Z.
+```
+
+### 6.9 Reset conversation + historique navigable (2h)
+
+Bouton "Nouvelle conversation" dans le menu ⋯ du chat.
+Écran `ConversationHistoryView` accessible depuis Profil :
+- Liste des conversations passées (groupées par jour)
+- Tap → replay dans un mode read-only
+- Long-press → supprimer
+
+### 6.10 Suggestions proactives via notifications (3h)
+
+Créer `LifeOS/Services/ProactiveCoach.swift` qui se déclenche via
+`BGAppRefreshTask` :
+- Analyse les données récentes (streak cassé, sommeil détérioré, séance manquée)
+- Génère 1 message coach par jour max (via Apple Intelligence local)
+- Envoie une notification "Ton coach te dit : ..." avec deeplink vers le chat
+
+Toggle "Coach proactif" dans `CoachPreferencesView` (opt-in obligatoire).
+
+### 6.11 Attachements élargis (3h)
+
+Ajouter dans l'input :
+- **Document scan** (VisionKit) — pour analyser bilans sanguins, ordonnances
+- **Fichier** (`.pdf`, `.txt`) — via `.fileImporter`
+- **Audio note** (30s max) — pour transcription via Speech + envoi
+
+Chaque attachement passe par un pré-traitement (OCR pour PDF, transcription
+pour audio) avant d'être injecté comme texte dans le prompt.
+
+### 6.12 Détection intent sémantique (via Apple Intelligence local) (3h)
+
+Remplacer `detectAddIntent` (heuristique keyword) par une vraie détection
+sémantique locale :
+- Prompt court à Apple Intelligence : "Extrais l'intent : `{message}`.
+  Réponds JSON : `{intent, entity, module}`."
+- Intents supportés : `add_task`, `add_habit`, `add_tracker`, `log_entry`,
+  `search`, `advice`, `report`, `chat`.
+- Si intent clair → shortcut action, si `chat` → conversation classique.
+
+Le user ressent que le coach "comprend" plutôt qu'il "matche des mots".
+
+---
+
+## Estimation Phase 6
+
+**Total ~35h de dev** (3-4 semaines de sessions dédiées).
+
+Ordre recommandé pour ROI immédiat :
+1. **6.3** (limites/ton) — 3h — impact immédiat sur tous les messages
+2. **6.1** (trackers custom) — 6h — feature très demandée
+3. **6.5** (guardrails) — 2h — safety avant qu'on shippe
+4. **6.4** (modes) — 2h — polish rapide
+5. **6.9** (reset + historique) — 2h — UX de base
+6. **6.6** (TTS) — 2h — accessibilité + mains libres
+7. **6.7** (feedback) — 2h — boucle d'apprentissage
+8. **6.2** (web search) — 4h — nécessite backend endpoint + clé API externe
+9. **6.11** (attachements) — 3h — VisionKit + fileImporter
+10. **6.8** (historique long) — 3h — complexité SwiftData
+11. **6.10** (proactif) — 3h — BGAppRefreshTask + notifs
+12. **6.12** (intent sémantique) — 3h — dépend Apple Intelligence disponibilité
+
+---
+
 ## PHASE 5 — Polish + growth (continu, après App Store)
 
 ### 5.1 Découpe des God files restants (12h)
