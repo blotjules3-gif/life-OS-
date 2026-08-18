@@ -166,10 +166,10 @@ struct TodayEnergyIntent: AppIntent {
         let score = UserDefaults.standard.integer(forKey: "todayEnergyScore")
         let label = UserDefaults.standard.string(forKey: "todayEnergyLabel") ?? ""
         if score > 0 {
-            let dialog = label.isEmpty
+            let text = label.isEmpty
                 ? "Ton énergie du jour est de \(score) sur 100."
                 : "Ton énergie du jour est de \(score) sur 100 : \(label)."
-            return .result(dialog: LocalizedStringResource(stringLiteral: dialog))
+            return .result(dialog: IntentDialog(stringLiteral: text))
         } else {
             return .result(dialog: "Tu n'as pas encore fait ton bilan matinal aujourd'hui.")
         }
