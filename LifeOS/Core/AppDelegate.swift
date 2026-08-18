@@ -161,11 +161,12 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             let action = response.actionIdentifier
             if action == "HABIT_DONE" {
                 // Enqueue via WidgetToggleReconciler — rejoué au prochain foreground
-                // pour être sûr que SwiftData est disponible.
+                // pour être sûr que SwiftData est disponible. Format compatible
+                // avec la file existante widget_pending_toggles.
                 if let defaults = UserDefaults(suiteName: "group.lifeos.app") {
-                    var queue = defaults.stringArray(forKey: "widget_toggle_queue") ?? []
-                    queue.append(habitName)
-                    defaults.set(queue, forKey: "widget_toggle_queue")
+                    var queue = defaults.array(forKey: "widget_pending_toggles") as? [[String: Any]] ?? []
+                    queue.append(["habitName": habitName, "timestamp": Date().timeIntervalSince1970])
+                    defaults.set(queue, forKey: "widget_pending_toggles")
                 }
             } else if action == "HABIT_SNOOZE" {
                 NotificationManager.shared.scheduleAfter(
