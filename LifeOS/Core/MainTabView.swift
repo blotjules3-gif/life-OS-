@@ -105,7 +105,7 @@ struct MainTabView: View {
             MemoryWidgetSyncer()
             ThemedBubbleBackground(theme: theme)
                 .ignoresSafeArea()
-            tabPane(ShortcutsHomeView(), .home)
+            tabPane(HomeView(), .home)
             tabPane(WakeUpView(), .wakeup)
             tabPane(
                 NavigationStack(path: $catPath) {
