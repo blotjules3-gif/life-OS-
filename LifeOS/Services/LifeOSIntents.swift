@@ -100,8 +100,164 @@ struct CompleteHabitIntent: AppIntent {
     }
 }
 
+// MARK: - Log mood (humeur)
+
+struct LogMoodIntent: AppIntent {
+    static let title: LocalizedStringResource = "Enregistrer mon humeur"
+    static let description = IntentDescription("Enregistre ton humeur du moment (1 = triste, 5 = super).")
+
+    @Parameter(title: "Note (1 à 5)", default: 3)
+    var score: Int
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let clamped = max(1, min(5, score))
+        let ctx = try LocalStore.container().mainContext
+        ctx.insert(MoodEntry(date: .now, score: clamped, note: "", gratitude: ""))
+        try ctx.save()
+        return .result(dialog: "Humeur \(clamped)/5 notée. Merci de partager.")
+    }
+}
+
+// MARK: - Add todo
+
+struct AddTodoIntent: AppIntent {
+    static let title: LocalizedStringResource = "Ajouter une tâche"
+    static let description = IntentDescription("Crée une tâche dans ton to-do LifeOS.")
+
+    @Parameter(title: "Tâche")
+    var title: String
+
+    @Parameter(title: "Urgente", default: false)
+    var urgent: Bool
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let ctx = try LocalStore.container().mainContext
+        let priority = urgent ? 2 : 0
+        ctx.insert(TodoItem(title: title, priority: priority))
+        try ctx.save()
+        return .result(dialog: "C'est noté : \(title).")
+    }
+}
+
+// MARK: - Open coach
+
+struct OpenCoachIntent: AppIntent {
+    static let title: LocalizedStringResource = "Parler à mon coach"
+    static let description = IntentDescription("Ouvre le chat avec ton coach personnel LifeOS.")
+    static let openAppWhenRun: Bool = true
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        NotificationCenter.default.post(name: .lifeOSOpenAIChat, object: nil)
+        return .result()
+    }
+}
+
+// MARK: - Today energy
+
+struct TodayEnergyIntent: AppIntent {
+    static let title: LocalizedStringResource = "Mon énergie du jour"
+    static let description = IntentDescription("Donne ton score d'énergie actuel calculé depuis Santé + ton bilan.")
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let score = UserDefaults.standard.integer(forKey: "todayEnergyScore")
+        let label = UserDefaults.standard.string(forKey: "todayEnergyLabel") ?? ""
+        if score > 0 {
+            let dialog = label.isEmpty
+                ? "Ton énergie du jour est de \(score) sur 100."
+                : "Ton énergie du jour est de \(score) sur 100 : \(label)."
+            return .result(dialog: LocalizedStringResource(stringLiteral: dialog))
+        } else {
+            return .result(dialog: "Tu n'as pas encore fait ton bilan matinal aujourd'hui.")
+        }
+    }
+}
+
+// MARK: - Open module
+
+enum ModuleChoice: String, AppEnum {
+    case fitness, nutrition, sleep, mind, productivity, finance, invest, career, learning, home, mobility, social, admin, travel, looks
+
+    static let typeDisplayRepresentation: TypeDisplayRepresentation = "Module"
+    static let caseDisplayRepresentations: [ModuleChoice: DisplayRepresentation] = [
+        .fitness: "Sport",
+        .nutrition: "Nutrition",
+        .sleep: "Sommeil",
+        .mind: "Mental",
+        .productivity: "Productivité",
+        .finance: "Finances",
+        .invest: "Investissement",
+        .career: "Carrière",
+        .learning: "Apprentissage",
+        .home: "Maison",
+        .mobility: "Mobilité",
+        .social: "Social",
+        .admin: "Admin",
+        .travel: "Voyage",
+        .looks: "Looks"
+    ]
+}
+
+struct OpenModuleIntent: AppIntent {
+    static let title: LocalizedStringResource = "Ouvrir un module"
+    static let description = IntentDescription("Ouvre directement l'un des 15 modules LifeOS.")
+    static let openAppWhenRun: Bool = true
+
+    @Parameter(title: "Module")
+    var module: ModuleChoice
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        NotificationCenter.default.post(
+            name: .lifeOSOpenModule,
+            object: nil,
+            userInfo: ["module": module.rawValue]
+        )
+        return .result()
+    }
+}
+
+// MARK: - Log workout set
+
+struct LogWorkoutSetIntent: AppIntent {
+    static let title: LocalizedStringResource = "Enregistrer une série muscu"
+    static let description = IntentDescription("Ajoute une série d'exercice à ton journal fitness.")
+
+    @Parameter(title: "Exercice")
+    var exercise: String
+
+    @Parameter(title: "Poids (kg)", default: 0)
+    var weight: Double
+
+    @Parameter(title: "Répétitions", default: 10)
+    var reps: Int
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let ctx = try LocalStore.container().mainContext
+        ctx.insert(WorkoutSet(date: .now, exercise: exercise, weightKg: weight, reps: reps, rpe: 8))
+        try ctx.save()
+        let vol = Int(weight * Double(reps))
+        return .result(dialog: "Série \(exercise) enregistrée : \(reps) reps à \(Int(weight)) kg (volume \(vol)).")
+    }
+}
+
+// MARK: - AppShortcutsProvider (10 max, on en a 9)
+
 struct LifeOSShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
+        AppShortcut(
+            intent: OpenCoachIntent(),
+            phrases: [
+                "Parle à mon coach dans \(.applicationName)",
+                "Ouvre le chat de \(.applicationName)"
+            ],
+            shortTitle: "Parler au coach",
+            systemImageName: "sparkles"
+        )
         AppShortcut(
             intent: OpenFoodScanIntent(),
             phrases: [
@@ -122,6 +278,24 @@ struct LifeOSShortcuts: AppShortcutsProvider {
             systemImageName: "drop.fill"
         )
         AppShortcut(
+            intent: LogMoodIntent(),
+            phrases: [
+                "Enregistre mon humeur dans \(.applicationName)",
+                "Note mon humeur avec \(.applicationName)"
+            ],
+            shortTitle: "Enregistrer mon humeur",
+            systemImageName: "face.smiling"
+        )
+        AppShortcut(
+            intent: TodayEnergyIntent(),
+            phrases: [
+                "Quel est mon énergie sur \(.applicationName)",
+                "Mon score du jour dans \(.applicationName)"
+            ],
+            shortTitle: "Mon énergie du jour",
+            systemImageName: "bolt.fill"
+        )
+        AppShortcut(
             intent: CompleteHabitIntent(),
             phrases: [
                 "Valide une habitude dans \(.applicationName)",
@@ -129,6 +303,33 @@ struct LifeOSShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "Valider une habitude",
             systemImageName: "checkmark.circle.fill"
+        )
+        AppShortcut(
+            intent: AddTodoIntent(),
+            phrases: [
+                "Ajoute une tâche dans \(.applicationName)",
+                "Note une tâche avec \(.applicationName)"
+            ],
+            shortTitle: "Ajouter une tâche",
+            systemImageName: "checklist"
+        )
+        AppShortcut(
+            intent: LogWorkoutSetIntent(),
+            phrases: [
+                "Enregistre une série dans \(.applicationName)",
+                "Log ma série muscu avec \(.applicationName)"
+            ],
+            shortTitle: "Enregistrer une série muscu",
+            systemImageName: "figure.strengthtraining.traditional"
+        )
+        AppShortcut(
+            intent: OpenModuleIntent(),
+            phrases: [
+                "Ouvre un module dans \(.applicationName)",
+                "Va sur un module de \(.applicationName)"
+            ],
+            shortTitle: "Ouvrir un module",
+            systemImageName: "square.grid.2x2"
         )
     }
 }
