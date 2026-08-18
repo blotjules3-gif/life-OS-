@@ -1,6 +1,6 @@
 ---
 description: ship — Plan de bataille complet pour amener LifeOS à l'App Store (5 phases, exécution autonome)
-argument-hint: [phase0|phase1|phase2|phase3|phase4|phase5|all]
+argument-hint: [phase0|phase1|phase2|phase3|phase4|phase5|phase6|all]
 ---
 
 # ship — Prépare LifeOS à shipper
