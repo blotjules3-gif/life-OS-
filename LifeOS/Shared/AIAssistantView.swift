@@ -219,7 +219,9 @@ final class AIAssistantViewModel: ObservableObject {
         isLoading = true
 
         Task {
-            let reply = await OnDeviceLLM.respond(to: prompt, ctx: modelContext)
+            // Prompts proactifs ([NOUVEAU_MODULE] etc.) contiennent leur propre
+            // contexte suffisant → pas d'injection double.
+            let reply = await OnDeviceLLM.respond(to: prompt, ctx: modelContext, injectContext: false)
             isServerOffline = false
             removeThinking()
             appendAssistantMessage(reply.text, actions: [])
