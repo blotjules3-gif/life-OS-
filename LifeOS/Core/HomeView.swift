@@ -215,8 +215,8 @@ struct HomeView: View {
                 value: "\(kcalToday)",
                 unit: "kcal",
                 label: "Nutrition",
-                subtitle: "obj. \(kcalGoal) kcal",
                 progress: kcalGoal > 0 ? min(1, Double(kcalToday) / Double(kcalGoal)) : nil,
+                subtitle: "obj. \(kcalGoal) kcal",
                 tint: Theme.nutrition,
                 onTap: { NotificationCenter.default.post(name: .lifeOSOpenModule, object: nil, userInfo: ["module": "nutrition"]) }
             )
@@ -226,8 +226,8 @@ struct HomeView: View {
                 value: "\(waterToday)",
                 unit: "ml",
                 label: "Hydratation",
-                subtitle: "obj. \(waterGoal) ml",
                 progress: waterGoal > 0 ? min(1, Double(waterToday) / Double(waterGoal)) : nil,
+                subtitle: "obj. \(waterGoal) ml",
                 status: waterToday < waterGoal / 3 ? .warning : .normal,
                 tint: Theme.hydration,
                 onTap: { NotificationCenter.default.post(name: .lifeOSOpenModule, object: nil, userInfo: ["module": "nutrition"]) }
@@ -238,8 +238,8 @@ struct HomeView: View {
                 value: "\(habitsDoneToday)",
                 unit: "/ \(habits.count)",
                 label: "Habitudes",
-                subtitle: habitsDoneToday == habits.count && !habits.isEmpty ? "Toutes faites" : "à cocher",
                 progress: habits.isEmpty ? 0 : Double(habitsDoneToday) / Double(habits.count),
+                subtitle: habitsDoneToday == habits.count && !habits.isEmpty ? "Toutes faites" : "à cocher",
                 tint: Theme.productivity,
                 onTap: { NotificationCenter.default.post(name: .lifeOSOpenModule, object: nil, userInfo: ["module": "productivity"]) }
             )
@@ -248,8 +248,8 @@ struct HomeView: View {
                 icon: "figure.walk",
                 value: "\(steps)",
                 label: "Pas",
-                subtitle: "obj. \(stepGoal)",
                 progress: stepGoal > 0 ? min(1, Double(steps) / Double(stepGoal)) : nil,
+                subtitle: "obj. \(stepGoal)",
                 tint: Theme.fitness,
                 onTap: { NotificationCenter.default.post(name: .lifeOSOpenModule, object: nil, userInfo: ["module": "fitness"]) }
             )
