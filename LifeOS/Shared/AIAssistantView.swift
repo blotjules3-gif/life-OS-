@@ -697,39 +697,77 @@ struct AIAssistantView: View {
     @State private var messageToReport: AIAssistantViewModel.DisplayMessage?
     private let cancelThreshold: CGFloat = 90
 
-    // Quick suggestions change per time of day
+    // Quick suggestions change per time of day + selon le contexte réel
+    // (données récentes : sommeil, streak habitudes, séance manquée). Les 1-2
+    // suggestions "réactives" sont insérées en tête pour maximiser la
+    // pertinence perçue au moment où l'user ouvre le chat.
     private var quickSuggestions: [(label: String, message: String, module: String?)] {
         let hour = Calendar.current.component(.hour, from: .now)
+        var base: [(label: String, message: String, module: String?)]
         switch hour {
         case 5..<10:
-            return [
+            base = [
                 ("Plan du matin", "C'est quoi ma priorité ce matin ?", nil),
                 ("Calories", "Mon objectif calories pour aujourd'hui", "nutrition"),
                 ("Sport", "Créer une séance pour aujourd'hui", "fitness"),
                 ("Humeur", "Je ne suis pas en forme ce matin", "mind"),
             ]
         case 10..<14:
-            return [
+            base = [
                 ("Check objectifs", "Où j'en suis sur mes objectifs ?", nil),
                 ("Budget", "Analyser mes dépenses ce mois", "finance"),
                 ("Focus", "J'arrive pas à me concentrer", "productivity"),
                 ("Repas", "Que manger ce midi ?", "nutrition"),
             ]
         case 14..<19:
-            return [
+            base = [
                 ("Bilan du jour", "Comment je m'en sors aujourd'hui ?", nil),
                 ("Séance", "Logger ma séance de sport", "fitness"),
                 ("Rappel soir", "Mets-moi un rappel ce soir", nil),
                 ("Stress", "Je suis stressé cet après-midi", "mind"),
             ]
         default:
-            return [
+            base = [
                 ("Bilan semaine", "Bilan rapide de ma semaine", nil),
                 ("Sommeil", "Conseils pour mieux dormir ce soir", "sleep"),
                 ("Demain", "Ma priorité pour demain", nil),
                 ("Habitude", "Créer une nouvelle habitude", "productivity"),
             ]
         }
+        // Insertions réactives en tête, basées sur les données réelles.
+        let reactive = reactiveSuggestions()
+        return reactive + base
+    }
+
+    /// Génère 0 à 2 suggestions basées sur l'état actuel (sommeil, streak, séance,
+    /// score énergie). Limité pour ne pas noyer la liste.
+    private func reactiveSuggestions() -> [(label: String, message: String, module: String?)] {
+        var out: [(label: String, message: String, module: String?)] = []
+        let ud = UserDefaults.standard
+        let grp = UserDefaults(suiteName: "group.lifeos.app")
+
+        let sleepH = ud.integer(forKey: "lastSleepHours")
+        let energyScore = ud.integer(forKey: "todayEnergyScore")
+        let avgStreak = grp?.integer(forKey: "habits_avg_streak") ?? 0
+        let fitSummary = grp?.string(forKey: "fitness_summary_7d") ?? ""
+
+        // Nuit courte → propose bilan récup
+        if sleepH > 0, sleepH < 6 {
+            out.append(("Récup", "J'ai mal dormi, comment optimiser ma journée ?", "sleep"))
+        }
+        // Streak fort à préserver
+        if avgStreak >= 7 {
+            out.append(("Streak \(avgStreak)j", "Comment garder mon streak ?", "productivity"))
+        }
+        // Semaine sans séance
+        if !fitSummary.contains("séries") || fitSummary.contains("0 jour") {
+            out.append(("Reprise sport", "Je n'ai pas fait de sport cette semaine, aide-moi", "fitness"))
+        }
+        // Énergie basse
+        if energyScore > 0, energyScore < 50 {
+            out.append(("Énergie basse", "Mon énergie est faible aujourd'hui, pourquoi ?", "mind"))
+        }
+        return Array(out.prefix(2))
     }
 
     var body: some View {
