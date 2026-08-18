@@ -639,8 +639,9 @@ Répondre uniquement : "Arrêté." puis lister ce qui n'a pas été fait dans la
 ## Argument par défaut
 
 - `/ship` seul → **phase0** uniquement (brancher ce qui existe — 30 min, débloque tout)
-- `/ship phase1` (ou phase2, phase3, phase4, phase5) → uniquement cette phase
-- `/ship all` → enchaîne les 5 phases dans l'ordre sans s'arrêter sauf blocker
+- `/ship phase1` (ou phase2, phase3, phase4, phase5, phase6) → uniquement cette phase
+- `/ship all` → enchaîne les 6 phases dans l'ordre sans s'arrêter sauf blocker
+- `/ship phase6` → chat IA next-level (trackers custom, recherche web, modes, guardrails, TTS, feedback, historique long, proactif, attachements élargis, intent sémantique)
 
 Pour `all` : prévenir en début que ça représente ~12 semaines de travail. Confirmer une fois puis attaquer sans re-demander.
 
