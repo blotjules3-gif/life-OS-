@@ -371,7 +371,12 @@ final class AIAssistantViewModel: ObservableObject {
     }
 
     // MARK: - iOS local action execution
-
+    //
+    // Exécute les actions retournées par le coach (create_habit, add_module, etc).
+    // Actuellement inactif : OnDeviceLLM (Apple Intelligence) renvoie du texte pur,
+    // pas d'actions structurées. Prêt à être réactivé quand on branchera le
+    // FunctionCalling on-device (iOS 26 LanguageModelSession.tools) — voir Phase 2
+    // du plan d'action chat IA.
     private func execute(action: AIAction) async {
         guard let ctx = modelContext else { return }
         switch action.type {
