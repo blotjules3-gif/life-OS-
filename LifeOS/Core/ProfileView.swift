@@ -52,6 +52,7 @@ struct ProfileView: View {
     @State private var showDataDeletion = false
     @State private var showFAQ = false
     @State private var showMemoryHub = false
+    @State private var showLanguagePicker = false
     @State private var appLockEnabled = AppLock.shared.isEnabled
     @State private var energyScore: EnergyScore.Result?
     @State private var facet = 0
