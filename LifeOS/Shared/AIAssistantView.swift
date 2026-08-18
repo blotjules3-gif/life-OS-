@@ -1444,10 +1444,17 @@ private struct MessageRow: View {
                         TypewriterText(text: CoachTextCleaner.clean(message.text))
                             .font(.subheadline)
                             .foregroundStyle(.primary)
-                    } else {
-                        Text(isUser ? message.text : CoachTextCleaner.clean(message.text))
+                    } else if !isUser {
+                        // Rendu markdown pour les messages coach : bold, italic, listes, liens.
+                        // Fallback silencieux vers plain text si parse échoue.
+                        markdownText(CoachTextCleaner.clean(message.text))
                             .font(.subheadline)
-                            .foregroundStyle(isUser ? Theme.onAccent : .primary)
+                            .foregroundStyle(.primary)
+                            .textSelection(.enabled)
+                    } else {
+                        Text(message.text)
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.onAccent)
                             .textSelection(.enabled)
                     }
                 }
