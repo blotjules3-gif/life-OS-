@@ -192,6 +192,13 @@ enum AppStorageKeys {
     static let lastWeeklyBilanDate = "lastWeeklyBilanDate"
     static let lastWeeklyBilanText = "lastWeeklyBilanText"
 
+    // MARK: - Coach — préférences personnalisées
+    static let coachTone = "coachTone"
+    static let coachLength = "coachLength"
+    static let coachExpertiseLevel = "coachExpertiseLevel"
+    static let coachAvoidTopics = "coachAvoidTopics"
+    static let coachTTSEnabled = "coachTTSEnabled"
+
     // MARK: - Notifications
     static let notifMasterMute = "notifMasterMute"
     static let notifEnabledBedtime = "notifEnabled.bedtime"
