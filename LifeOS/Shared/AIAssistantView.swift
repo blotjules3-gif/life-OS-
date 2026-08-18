@@ -810,13 +810,29 @@ struct AIAssistantView: View {
                     Button("Fermer") { dismiss() }
                         .foregroundStyle(.secondary)
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button {
-                        showClearConfirm = true
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button {
+                            showCoachPrefs = true
+                        } label: {
+                            Label("Personnaliser le coach", systemImage: "slider.horizontal.3")
+                        }
+                        Button {
+                            showHistory = true
+                        } label: {
+                            Label("Historique", systemImage: "clock.arrow.circlepath")
+                        }
+                        Divider()
+                        Button(role: .destructive) {
+                            showClearConfirm = true
+                        } label: {
+                            Label("Effacer la conversation", systemImage: "trash")
+                        }
                     } label: {
-                        Image(systemName: "trash")
+                        Image(systemName: "ellipsis.circle")
                             .foregroundStyle(.secondary)
                     }
+                    .accessibilityLabel("Menu")
                 }
             }
             .confirmationDialog("Effacer la conversation ?", isPresented: $showClearConfirm, titleVisibility: .visible) {
