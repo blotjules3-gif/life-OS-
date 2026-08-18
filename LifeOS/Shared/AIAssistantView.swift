@@ -1509,6 +1509,22 @@ private struct MessageRow: View {
         }
     }
 
+    /// Rend un texte comme markdown (bold `**x**`, italic `*x*`, listes `- x`, liens).
+    /// Fallback silencieux sur plain text si le parse échoue.
+    @ViewBuilder
+    private func markdownText(_ raw: String) -> some View {
+        if let attributed = try? AttributedString(
+            markdown: raw,
+            options: AttributedString.MarkdownParsingOptions(
+                interpretedSyntax: .inlineOnlyPreservingWhitespace
+            )
+        ) {
+            Text(attributed)
+        } else {
+            Text(raw)
+        }
+    }
+
     private func iconFor(_ type: AIAction.ActionType) -> String {
         switch type {
         case .createTodo: return "checkmark.circle"
