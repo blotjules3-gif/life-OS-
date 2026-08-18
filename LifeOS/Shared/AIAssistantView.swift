@@ -702,6 +702,8 @@ struct AIAssistantView: View {
     @FocusState private var inputFocused: Bool
     @State private var showClearConfirm = false
     @State private var showServerConfig = false
+    @State private var showCoachPrefs = false
+    @State private var showHistory = false
     @State private var photoItem: PhotosPickerItem?
     @State private var speech = SpeechRecognizer()
     @State private var textBeforeVoice: String = ""
