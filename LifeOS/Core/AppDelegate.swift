@@ -153,6 +153,37 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                 )
             }
         }
+
+        // Réponse à une notif HABIT (marquer fait / snooze).
+        if content.categoryIdentifier == "LIFEOS_HABIT" {
+            let info = content.userInfo
+            let habitName = info["habitName"] as? String ?? ""
+            let action = response.actionIdentifier
+            if action == "HABIT_DONE" {
+                // Enqueue via WidgetToggleReconciler — rejoué au prochain foreground
+                // pour être sûr que SwiftData est disponible.
+                if let defaults = UserDefaults(suiteName: "group.lifeos.app") {
+                    var queue = defaults.stringArray(forKey: "widget_toggle_queue") ?? []
+                    queue.append(habitName)
+                    defaults.set(queue, forKey: "widget_toggle_queue")
+                }
+            } else if action == "HABIT_SNOOZE" {
+                NotificationManager.shared.scheduleAfter(
+                    id: "\(id).snooze",
+                    title: "Rappel habitude",
+                    body: "\(habitName) — tu peux le faire.",
+                    seconds: 30 * 60
+                )
+            }
+        }
+
+        // Réponse à une notif COACH (proactif) — foreground automatique via action.
+        if content.categoryIdentifier == "LIFEOS_COACH",
+           response.actionIdentifier == "COACH_OPEN" || response.actionIdentifier == UNNotificationDefaultActionIdentifier {
+            await MainActor.run {
+                NotificationCenter.default.post(name: .lifeOSOpenAIChat, object: nil)
+            }
+        }
     }
 }
 
