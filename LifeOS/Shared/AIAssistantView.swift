@@ -967,6 +967,12 @@ struct AIAssistantView: View {
                             reveal: msg.id == vm.revealID,
                             onReport: msg.role == "assistant" && !msg.isThinking
                                 ? { messageToReport = msg }
+                                : nil,
+                            onLike: msg.role == "assistant" && !msg.isThinking
+                                ? { vm.recordLike(for: msg) }
+                                : nil,
+                            onDislike: msg.role == "assistant" && !msg.isThinking
+                                ? { vm.recordDislike(for: msg) }
                                 : nil
                         )
                         .id(msg.id)
