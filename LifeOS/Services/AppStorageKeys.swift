@@ -36,6 +36,9 @@ enum AppStorageKeys {
     static let userWeeklyFrequency = "userWeeklyFrequency"
     static let userTrainingYears = "userTrainingYears"
 
+    // MARK: - Langue de l'app (override système)
+    static let appLanguage = "appLanguage"
+
     // MARK: - Thème & UI
     static let appTheme = "appTheme"
     static let homeShortcuts = "homeShortcuts"
