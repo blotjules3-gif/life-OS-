@@ -271,13 +271,21 @@ final class AIAssistantViewModel: ObservableObject {
         }
     }
 
-    private func fallbackSend(content: String, module: String?) async {
-        // Legacy fallback : depuis Option C, tout passe par OnDeviceLLM. Ce
-        // chemin reste comme filet en cas d'appel externe imprévu.
-        if !messages.contains(where: { $0.isThinking }) { appendThinking() }
-        let reply = await OnDeviceLLM.respond(to: content, ctx: modelContext, moduleContext: module)
-        removeThinking()
-        appendAssistantMessage(reply.text, actions: [])
+    // MARK: - Feedback loop
+
+    /// L'utilisateur a aimé cette réponse — on le loggue pour la boucle
+    /// d'apprentissage (CoachFeedbackStore) qui l'injecte dans les prompts
+    /// suivants. Bruit d'entrée limité aux 30 derniers votes.
+    func recordLike(for message: DisplayMessage) {
+        CoachFeedbackStore.record(.like, response: message.text)
+        showToast("Merci — je vais reproduire ce style", module: nil)
+    }
+
+    /// L'utilisateur n'a pas aimé — le prochain prompt inclura ce snippet
+    /// dans la section "à éviter".
+    func recordDislike(for message: DisplayMessage) {
+        CoachFeedbackStore.record(.dislike, response: message.text)
+        showToast("Compris — j'ajuste au prochain message", module: nil)
     }
 
     private func triggerWelcome() {
