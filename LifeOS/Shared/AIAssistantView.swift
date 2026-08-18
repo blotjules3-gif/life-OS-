@@ -361,7 +361,9 @@ final class AIAssistantViewModel: ObservableObject {
         aiKnownModulesRaw = recommendedModulesRaw
 
         Task {
-            let reply = await OnDeviceLLM.respond(to: prompt, ctx: modelContext)
+            // Le prompt welcome contient déjà tout le contexte (goals, modules,
+            // livecontext). Pas la peine d'en injecter à nouveau via OnDeviceLLM.
+            let reply = await OnDeviceLLM.respond(to: prompt, ctx: modelContext, injectContext: false)
             firstLaunchDone = true
             isServerOffline = false
             removeThinking()
