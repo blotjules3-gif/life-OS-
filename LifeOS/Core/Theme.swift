@@ -40,8 +40,8 @@ enum Theme {
     static let sleep        = Color(hex: 0x6C7BF1)   // sommeil, repos
     static let mind         = Color(hex: 0x9B6CF1)   // méditation, mental
     static let energy       = Color(hex: 0xE0A23C)   // énergie, amber
-    static let finance      = Color(hex: 0x4CC38A)   // finance (vert = croissance)
-    static let invest       = Color(hex: 0x46C9A8)   // investissement
+    static let finance      = Color(hex: 0x46C9A8)   // finance (teal-vert, distinct de nutrition)
+    static let invest       = Color(hex: 0x2FB89A)   // investissement (teal foncé)
     static let career       = Color(hex: 0xE07B3C)   // carrière, orange
     static let looks        = Color(hex: 0xE0A23C)   // beauté, skincare (amber)
     static let productivity = Color(hex: 0x3CB2E0)   // productivité, tâches
