@@ -130,6 +130,88 @@ enum OnDeviceLLM {
         return false
     }
 
+    /// Statut détaillé — exposé à l'UI pour afficher une bannière si indispo.
+    enum Status: Equatable {
+        case available                 // Apple Intelligence actif, chat = LLM
+        case iosTooOld                 // iOS < 26 → aucune chance
+        case deviceNotEligible         // iOS 26 mais iPhone < 15 Pro
+        case notEnabledInSettings      // User doit l'activer dans Réglages
+        case modelDownloading          // Modèle en cours de téléchargement
+        case unknownUnavailable        // Autre cas Apple ne nous dit pas
+        case fallbackLocalCoach        // Fallback règles Swift (pas de LLM)
+
+        var userFacingTitle: String {
+            switch self {
+            case .available:
+                return "Apple Intelligence actif"
+            case .iosTooOld:
+                return "iOS trop ancien"
+            case .deviceNotEligible:
+                return "iPhone non compatible"
+            case .notEnabledInSettings:
+                return "Apple Intelligence désactivé"
+            case .modelDownloading:
+                return "Modèle en téléchargement"
+            case .unknownUnavailable:
+                return "Apple Intelligence indisponible"
+            case .fallbackLocalCoach:
+                return "Coach en mode dégradé"
+            }
+        }
+
+        var userFacingMessage: String {
+            switch self {
+            case .available:
+                return "Ton coach utilise le LLM local d'Apple. Rien ne sort de ton iPhone."
+            case .iosTooOld:
+                return "Ton chat coach fonctionne en mode règles. Mets à jour iOS pour activer le vrai LLM local."
+            case .deviceNotEligible:
+                return "Ton iPhone n'a pas le neural engine requis. Le chat fonctionne en mode règles limité."
+            case .notEnabledInSettings:
+                return "Active Apple Intelligence dans Réglages pour un chat coach beaucoup plus intelligent."
+            case .modelDownloading:
+                return "Le modèle Apple Intelligence est en cours de téléchargement — patiente quelques minutes."
+            case .unknownUnavailable:
+                return "Apple Intelligence n'est pas disponible pour l'instant. Le chat continue en mode règles."
+            case .fallbackLocalCoach:
+                return "Chat en mode règles Swift (fallback). Vérifie qu'Apple Intelligence est actif dans Réglages."
+            }
+        }
+
+        /// Vrai si le user peut FAIRE quelque chose (bouton "Activer" pertinent).
+        var isActionable: Bool {
+            self == .notEnabledInSettings
+        }
+    }
+
+    /// Retourne le statut actuel — appelable depuis l'UI (synchrone, léger).
+    static var status: Status {
+        #if canImport(FoundationModels)
+        if #available(iOS 26.0, *) {
+            let model = SystemLanguageModel.default
+            switch model.availability {
+            case .available:
+                return .available
+            case .unavailable(let reason):
+                switch reason {
+                case .deviceNotEligible:
+                    return .deviceNotEligible
+                case .appleIntelligenceNotEnabled:
+                    return .notEnabledInSettings
+                case .modelNotReady:
+                    return .modelDownloading
+                @unknown default:
+                    return .unknownUnavailable
+                }
+            }
+        } else {
+            return .iosTooOld
+        }
+        #else
+        return .iosTooOld
+        #endif
+    }
+
     // MARK: - Apple Intelligence
 
     #if canImport(FoundationModels)
