@@ -60,6 +60,11 @@ enum Theme {
     static let danger     = Color(hex: 0xF1746C)   // risque élevé, danger
     static let tealDark   = Color(hex: 0x008F6C)   // potentiel fort (scores crypto)
 
+    // Palette système fréquemment utilisée hors tokens sémantiques
+    static let systemOrange = Color(hex: 0xFF9F0A) // orange iOS system (badges alerte)
+    static let systemPink   = Color(hex: 0xF16CB0) // rose bulle (social)
+    static let systemRed    = Color(hex: 0xE84C4C) // rouge médical
+
     // MARK: - Grille d'espacement 8pt
     static let space2: CGFloat  = 2
     static let space4: CGFloat  = 4
