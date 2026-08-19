@@ -205,6 +205,23 @@ enum OnDeviceLLM {
             parts.append(feedback)
         }
 
+        // ── Actions déjà exécutées suite au message user (priorité MAX) ─────
+        // Le pipeline (extraction + intent executor) vient de faire ces choses.
+        // Le coach DOIT les mentionner explicitement en début de réponse
+        // (sinon l'utilisateur croit qu'il n'a rien pris en compte).
+        if !recentUpdates.isEmpty {
+            parts.append("")
+            parts.append("--- IMPORTANT — ACTIONS DÉJÀ EFFECTUÉES ---")
+            parts.append("Suite au message de l'utilisateur, tu as DÉJÀ effectué ces actions automatiquement :")
+            for update in recentUpdates {
+                parts.append("- \(update)")
+            }
+            parts.append("Commence OBLIGATOIREMENT ta réponse par une confirmation naturelle de ces actions.")
+            parts.append("Exemple : \"C'est noté — j'ai bien ajouté X à tes habitudes, mis à jour ton poids à Y, ...\"")
+            parts.append("Puis réponds au reste du message si nécessaire (question, conseil).")
+            parts.append("--- FIN ACTIONS ---")
+        }
+
         // ── Contexte user riche (snapshot + expertise + mémoire) ────────────
         if injectContext {
             let ctxText = UserContextBuilder.shared.build(message: message)
