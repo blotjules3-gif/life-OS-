@@ -95,12 +95,47 @@ enum IntelligentExtractor {
         return changes
     }
 
+    // MARK: - Pré-processeur
+
+    /// Si le message mentionne un changement présent ("maintenant", "actuellement",
+    /// "désormais"), on garde uniquement la partie après le pivot pour extraire
+    /// la valeur ACTUELLE et pas la précédente.
+    private static func preprocessPresentTense(_ message: String) -> String {
+        let pivots = ["maintenant", "actuellement", "désormais", "à ce jour", "aujourd'hui"]
+        let lower = message.lowercased()
+        for pivot in pivots {
+            if let range = lower.range(of: pivot) {
+                let after = String(message[range.upperBound...])
+                if after.count >= 5 { return after }
+            }
+        }
+        return message
+    }
+
+    /// Convertit les chiffres écrits en lettres FR vers leur forme numérique
+    /// pour les cas simples (0-10) — le regex ne matche pas "trois fois par semaine".
+    private static func normalizeWordNumbers(_ message: String) -> String {
+        let mapping: [(String, String)] = [
+            ("zéro", "0"), ("zero", "0"),
+            ("une fois", "1 fois"), ("un fois", "1 fois"),
+            ("deux ", "2 "), ("trois ", "3 "), ("quatre ", "4 "),
+            ("cinq ", "5 "), ("six ", "6 "), ("sept ", "7 "),
+            ("huit ", "8 "), ("neuf ", "9 "), ("dix ", "10 "),
+        ]
+        var result = message
+        for (word, digit) in mapping {
+            result = result.replacingOccurrences(of: word, with: digit, options: .caseInsensitive)
+        }
+        return result
+    }
+
     // MARK: - Regex pass
 
     /// Patterns regex FR ancrés sur les hints des specs les plus communes.
     /// Ordre = priorité. Chaque pattern retourne (fieldID, decoded value, snippet).
     private static func regexPass(_ message: String) -> [Extraction] {
-        let m = message.lowercased()
+        let normalized = normalizeWordNumbers(message)
+        let m = normalized.lowercased()
         var out: [Extraction] = []
 
         // Poids : "je fais 74 kg", "je pèse 68,5 kg", "74kg"
