@@ -52,7 +52,7 @@ struct AlarmFullScreenView: View {
                     .padding(.top, 6)
 
                 Text("Briefing automatique dans \(alarm.secondsLeft)s")
-                    .font(.system(size: 13, weight: .medium).monospacedDigit())
+                    .font(.system(size: briefingSize, weight: .medium).monospacedDigit())
                     .foregroundStyle(.white.opacity(0.35))
                     .padding(.top, 18)
 
