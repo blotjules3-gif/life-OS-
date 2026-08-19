@@ -12,8 +12,10 @@ import SwiftData
 @Model
 final class ProfileField {
     /// Identifiant unique du spec (ex: "body.currentWeightKg"). Utilisé aussi comme
-    /// clé de recherche dans ProfileFieldSpec.
-    @Attribute(.unique) var fieldID: String
+    /// clé de recherche dans ProfileFieldSpec. Unicité enforced au niveau du
+    /// ProfileStore (pas via @Attribute(.unique) qui pose problème avec le
+    /// #Predicate en SwiftData in-memory).
+    var fieldID: String
 
     /// Catégorie du champ (`AppCategory.rawValue`). Dénormalisé pour requêtes rapides.
     var category: String
