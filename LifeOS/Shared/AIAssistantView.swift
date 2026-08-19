@@ -1061,7 +1061,8 @@ struct AIAssistantView: View {
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(accent)
             }
-            .accessibilityHidden(true)
+            .accessibilityHidden(true)  // Décoratif — VoiceOver saute direct au titre
+            .accessibilitySortPriority(-1)
             VStack(spacing: 3) {
                 Text("Assistant LifeOS")
                     .font(.system(size: 16, weight: .semibold))
