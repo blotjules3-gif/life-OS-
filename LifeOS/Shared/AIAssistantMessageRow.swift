@@ -138,9 +138,9 @@ struct AIAssistantMessageRow: View {
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: isPlayingThisMessage ? "stop.circle.fill" : "speaker.wave.2.fill")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: badgeIconSize, weight: .semibold))
                 Text(isPlayingThisMessage ? "Arrêter" : "Écouter")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: badgeTextSize, weight: .medium))
             }
             .foregroundStyle(isPlayingThisMessage ? accent : .secondary)
             .padding(.horizontal, 10)
@@ -161,10 +161,11 @@ struct AIAssistantMessageRow: View {
     private func safetyBadgeView(_ badge: CoachSafetyScanner.RiskBadge) -> some View {
         HStack(spacing: 6) {
             Image(systemName: badge.icon)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: badgeIconSize, weight: .semibold))
             Text(badge.label)
-                .font(.system(size: 11, weight: .medium))
-                .lineLimit(2)
+                .font(.system(size: badgeTextSize, weight: .medium))
+                .lineLimit(3)
+                .minimumScaleFactor(0.85)
         }
         .foregroundStyle(Color(hex: 0xE0A23C))
         .padding(.horizontal, 10)
