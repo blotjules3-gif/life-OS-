@@ -1,6 +1,39 @@
 import Foundation
 import os
 
+// MARK: - LifeOSTry — wrapper try? avec logging + capture Sentry
+//
+// Remplace le pattern `try? xxx` (163 sites qui avalent silencieusement les erreurs)
+// par un try monitoré : log AppLog + capture Sentry en Release. En Debug on garde
+// un simple print via AppLog.
+//
+// Exemple :
+//   try? ctx.save()  →  LifeOSTry(ctx.save(), context: "save habit")
+//
+// Retour identique à `try?` : le résultat si succès, nil si échec.
+//
+// Non-generique par défaut pour laisser Swift inférer. Ne PAS utiliser pour
+// des erreurs attendues (fichier absent, cache miss) — juste pour celles qu'on
+// veut voir remonter en prod.
+
+@discardableResult
+func LifeOSTry<T>(
+    _ expression: @autoclosure () throws -> T,
+    context: String,
+    category: Logger = AppLog.general,
+    file: String = #fileID,
+    line: UInt = #line
+) -> T? {
+    do {
+        return try expression()
+    } catch {
+        let where_ = "\(file):\(line)"
+        category.error("\(context, privacy: .public) failed at \(where_, privacy: .public): \(error.localizedDescription, privacy: .public)")
+        SentryConfig.capture(error, context: "\(context) @ \(where_)")
+        return nil
+    }
+}
+
 /// Logger structuré unique pour LifeOS.
 ///
 /// Remplace tous les `print(...)` du code et enveloppe les `catch { print(...) }`
