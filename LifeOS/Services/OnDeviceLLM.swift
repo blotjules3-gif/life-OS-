@@ -176,38 +176,31 @@ enum OnDeviceLLM {
     ) -> String {
         var parts: [String] = []
 
-        // ── Identité + ton ──────────────────────────────────────────────────
-        parts.append("Tu es le coach LifeOS, un coach de vie holistique.")
-        parts.append("Tu réponds en français, tutoiement.")
-
-        // Préférences user (ton, longueur, sujets à éviter, niveau expertise)
-        let prefs = CoachPreferences.current()
-        parts.append(prefs.toneInstruction)
-        parts.append(prefs.lengthInstruction)
-        if !prefs.avoidTopics.isEmpty {
-            parts.append("Sujets à éviter absolument : \(prefs.avoidTopics).")
+        // ── CORPUS D'ENTRAÎNEMENT (comportement, style, few-shots) ──────────
+        // Injecté à CHAQUE tour car Apple Intelligence est stateless.
+        // Version compact si le message est très long (budget tokens).
+        if message.count > 200 {
+            parts.append(CoachTraining.compact)
+        } else {
+            parts.append(CoachTraining.full)
         }
-        parts.append(prefs.expertiseInstruction)
 
-        // Règles de forme
-        parts.append("Jamais d'emojis, jamais de markdown (pas de gras, pas de listes à puces).")
-        parts.append("Si tu n'as pas d'information solide, dis-le au lieu d'inventer.")
-
-        // ── COMPRÉHENSION D'INTENT — règles absolues ────────────────────────
-        // L'utilisateur parle en langage naturel. Sa demande peut être formulée
-        // de mille façons ("crée", "ajoute", "tu peux mettre", "je veux tracker").
-        // Le coach DOIT toujours reconnaître l'intent et le confirmer.
+        // ── Préférences user personnalisées (par-dessus le corpus général) ──
+        let prefs = CoachPreferences.current()
         parts.append("")
-        parts.append("--- COMPRÉHENSION DES DEMANDES ---")
-        parts.append("Quand l'utilisateur demande une ACTION (créer/ajouter/tracker une habitude, tâche, rappel) :")
-        parts.append("- Reconnais l'intent même si tu ne peux pas l'exécuter techniquement dans ce tour.")
-        parts.append("- Confirme explicitement ce qu'il veut : \"OK, tu veux tracker X quotidiennement, c'est noté.\"")
-        parts.append("- N'IGNORE JAMAIS une demande d'action pour partir sur un conseil non demandé.")
-        parts.append("- Si l'action a été automatiquement exécutée (voir bloc ACTIONS ci-dessous), confirme-la.")
-        parts.append("- Si l'action n'a pas pu être exécutée automatiquement, dis-le franchement et propose au user de le faire manuellement.")
-        parts.append("Quand l'utilisateur donne une INFO factuelle (poids, taille, kcal…) :")
-        parts.append("- Confirme brièvement : \"C'est noté, X kg.\"")
-        parts.append("- Ne fais PAS un plan complet non demandé.")
+        parts.append("PRÉFÉRENCES DE L'UTILISATEUR (surcharge le style par défaut) :")
+        parts.append("- " + prefs.toneInstruction)
+        parts.append("- " + prefs.lengthInstruction)
+        parts.append("- " + prefs.expertiseInstruction)
+        if !prefs.avoidTopics.isEmpty {
+            parts.append("- Sujets à éviter absolument : \(prefs.avoidTopics).")
+        }
+
+        // ── Module contextuel du chat courant ───────────────────────────────
+        if let module = moduleContext, !module.isEmpty {
+            parts.append("")
+            parts.append("Le message porte principalement sur le module : \(module).")
+        }
 
         if let module = moduleContext, !module.isEmpty {
             parts.append("La conversation porte sur le module: \(module).")
