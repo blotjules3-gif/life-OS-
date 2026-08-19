@@ -8,6 +8,15 @@ struct AlarmFullScreenView: View {
     @State private var bellPulse = false
     @State private var ringsPulse = false
 
+    // Dynamic Type — l'heure et les CTA suivent la taille système. On clamp
+    // pour éviter que la cloche + heure + boutons débordent en accessibilité XXL.
+    @ScaledMetric(relativeTo: .largeTitle) private var clockSize: CGFloat = 96
+    @ScaledMetric(relativeTo: .title2) private var bellSize: CGFloat = 52
+    @ScaledMetric(relativeTo: .title3) private var stopSize: CGFloat = 20
+    @ScaledMetric(relativeTo: .callout) private var snoozeSize: CGFloat = 16
+    @ScaledMetric(relativeTo: .subheadline) private var dateSize: CGFloat = 18
+    @ScaledMetric(relativeTo: .footnote) private var briefingSize: CGFloat = 13
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
