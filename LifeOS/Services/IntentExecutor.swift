@@ -119,6 +119,22 @@ enum IntentExecutor {
         return out
     }
 
+    /// Vrai si le message contient des verbes/keywords qui laissent penser
+    /// qu'il y a des intents à exécuter — même si la regex n'a rien trouvé.
+    private static func shouldRunLLMPass(_ message: String) -> Bool {
+        let m = message.folding(options: .diacriticInsensitive, locale: .current).lowercased()
+        // Cheap check : verbe d'action ou message long
+        let actionVerbs = [
+            "ajoute", "rajoute", "cree", "creer", "crée", "faire", "note",
+            "rappelle", "rappel", "traque", "tracke", "programme", "planifie",
+            "mets", "met", "j'aimerais", "je veux", "il faut", "il me faut",
+            "n'oublie", "prends", "prend", "quotidien", "chaque jour",
+            "tous les jours", "habitude"
+        ]
+        if actionVerbs.contains(where: { m.contains($0) }) { return true }
+        return message.count > 60
+    }
+
     private static func cleanTitle(_ raw: String?) -> String? {
         guard var s = raw?.trimmingCharacters(in: .whitespacesAndNewlines), s.count >= 3 else { return nil }
         // Nettoyer les fins parasites courantes
