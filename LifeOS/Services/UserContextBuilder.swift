@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 // Builds a plain-text snapshot of the user's current state, injected into
 // every AI message so the model always knows what the user did today.
