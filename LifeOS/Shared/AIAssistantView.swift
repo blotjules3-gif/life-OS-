@@ -250,6 +250,18 @@ final class AIAssistantViewModel: ObservableObject {
         isLoading = true
 
         Task {
+            // Extraction automatique du profil AVANT la réponse coach :
+            // ainsi le contexte injecté au LLM est déjà à jour et les toasts
+            // apparaissent en temps réel sous la bulle utilisateur.
+            let updatedFields = await IntelligentExtractor.extractAndPersist(
+                from: content, source: .chat
+            )
+            for fieldID in updatedFields {
+                if let spec = ProfileFieldCatalog.all[fieldID] {
+                    showToast("Profil : \(spec.displayName) mis à jour", module: spec.category)
+                }
+            }
+
             let reply = await OnDeviceLLM.respond(
                 to: content,
                 ctx: modelContext,
