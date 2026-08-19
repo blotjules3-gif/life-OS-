@@ -204,8 +204,9 @@ enum IntelligentExtractor {
             out.append(.init(fieldID: "body.ageYears", value: v, confidence: 0.9, sourceSnippet: "\(v) ans"))
         }
 
-        // Fréquence entraînement : "4 fois par semaine", "je vais 3x/semaine à la salle"
-        if let match = firstMatch(pattern: #"\b(\d)\s*(?:fois|x)\s*(?:par|/)\s*semaine\b"#, in: m),
+        // Fréquence entraînement : "4 fois par semaine", "3x/semaine",
+        //                          "4 séances cette semaine", "j'ai fait 5 séances par semaine"
+        if let match = firstMatch(pattern: #"\b(\d)\s*(?:fois|x|séances?|seances?|entrainements?|entraînements?)\s*(?:par|/|cette|dans\s+la)\s*semaine\b"#, in: m),
            let raw = groupValue(match, group: 1, in: m),
            let v = Int(raw), (0...14).contains(v) {
             out.append(.init(fieldID: "fitness.gymFrequency", value: v, confidence: 0.9, sourceSnippet: "\(v)x/sem"))
