@@ -40,7 +40,9 @@ struct AlarmFullScreenView: View {
                 .frame(height: 320)
 
                 Text(Date.now, format: .dateTime.hour().minute())
-                    .font(.system(size: 96, weight: .thin, design: .default).monospacedDigit())
+                    .font(.system(size: clockSize, weight: .thin, design: .default).monospacedDigit())
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
                     .foregroundStyle(.white)
                     .padding(.top, 20)
 
