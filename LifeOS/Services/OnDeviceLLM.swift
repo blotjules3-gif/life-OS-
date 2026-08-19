@@ -80,7 +80,8 @@ enum OnDeviceLLM {
                 if let text = await respondViaAppleIntelligence(
                     message: message,
                     moduleContext: moduleContext,
-                    injectContext: injectContext
+                    injectContext: injectContext,
+                    recentUpdates: recentUpdates
                 ) {
                     return Reply(text: text, source: .onDeviceLLM)
                 }
