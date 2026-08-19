@@ -15,7 +15,7 @@ import SwiftData
 enum ProfileMigration {
 
     /// Incrémenter à chaque changement de mapping.
-    static let version = 1
+    static let version = 2
 
     private static let versionKey = "profile_migration_version"
 
