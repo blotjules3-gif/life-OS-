@@ -95,14 +95,14 @@ final class ProfileStoreTests: XCTestCase {
     // MARK: - Contradiction / source protection
 
     func testUpsert_blocksLLM_overManual() {
-        _ = ProfileStore.shared.upsert("body.currentWeightKg", value: 70, source: .manual, confidence: 1.0)
-        let result = ProfileStore.shared.upsert("body.currentWeightKg", value: 75, source: .chat, confidence: 0.95)
+        _ = ProfileStore.shared.upsert("body.currentWeightKg", value: 70.0, source: .manual, confidence: 1.0)
+        let result = ProfileStore.shared.upsert("body.currentWeightKg", value: 75.0, source: .chat, confidence: 0.95)
         guard case .blocked(let contradiction) = result else {
             return XCTFail("Expected .blocked, got \(result)")
         }
-        XCTAssertEqual(contradiction.newValueString, "75")
+        XCTAssertEqual(contradiction.newValueString, "75.0")
         // La valeur d'origine ne doit PAS avoir changé
-        XCTAssertEqual(ProfileStore.shared.field("body.currentWeightKg")?.valueString, "70")
+        XCTAssertEqual(ProfileStore.shared.field("body.currentWeightKg")?.valueString, "70.0")
     }
 
     func testUpsert_allowsOverwriteManual_whenExplicit() {
