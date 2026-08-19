@@ -41,7 +41,9 @@ enum LocalStore {
         // Santé médicale
         Medication.self, MedicalAppointment.self, VitalRecord.self, Vaccination.self,
         // Rappels perso (centre de notifications) + programme de sport
-        CustomReminder.self, GymDay.self
+        CustomReminder.self, GymDay.self,
+        // Intelligent Profile Engine — Bloc A
+        ProfileField.self, ProfileFieldRevision.self
     ])
 
     @MainActor private static var current: ModelContainer?
