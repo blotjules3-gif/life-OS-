@@ -338,5 +338,126 @@ enum ProfileFieldCatalog {
               displayName: "Longueur moyenne du cycle", valueType: .int, importance: .high,
               dependsOn: ["body.hasCycle"],
               unit: "j", range: 20...45),
+        .init(id: "cycle.contraceptionMethod", category: "cycle",
+              displayName: "Méthode de contraception", valueType: .enum, importance: .medium,
+              dependsOn: ["body.hasCycle"],
+              extractionHints: ["pilule", "stérilet", "diu", "implant", "préservatif"]),
+
+        // MARK: Admin — 0 → 4
+        .init(id: "admin.taxDeclarationMonth", category: "admin",
+              displayName: "Mois de déclaration d'impôts", valueType: .int, importance: .medium,
+              extractionHints: ["impots", "déclaration", "avril", "mai"],
+              unit: "mois", range: 1...12),
+        .init(id: "admin.passportExpiryYear", category: "admin",
+              displayName: "Année d'expiration passeport", valueType: .int, importance: .medium,
+              extractionHints: ["passeport", "expire"],
+              unit: "année", range: 2020...2050),
+        .init(id: "admin.mainDocumentsBackedUp", category: "admin",
+              displayName: "Documents importants numérisés", valueType: .bool, importance: .medium,
+              extractionHints: ["numérisé", "scan", "coffre-fort"]),
+        .init(id: "admin.deadlinesRemindersEnabled", category: "admin",
+              displayName: "Rappels échéances actifs", valueType: .bool, importance: .low),
+
+        // MARK: Home — 1 → 3
+        .init(id: "home.hasPet", category: "home",
+              displayName: "A un animal de compagnie", valueType: .bool, importance: .medium,
+              extractionHints: ["chien", "chat", "animal", "poisson", "lapin", "hamster"]),
+        .init(id: "home.mainMaintenanceMonth", category: "home",
+              displayName: "Mois d'entretien annuel principal", valueType: .int, importance: .low,
+              extractionHints: ["chaudière", "révision", "vmc"],
+              unit: "mois", range: 1...12),
+
+        // MARK: Social — 1 → 3
+        .init(id: "social.closeContactsCount", category: "social",
+              displayName: "Nombre de proches réguliers", valueType: .int, importance: .low,
+              unit: "personnes", range: 0...50),
+        .init(id: "social.checkinFrequencyDays", category: "social",
+              displayName: "Fréquence contact proches (jours)", valueType: .int, importance: .low,
+              unit: "j", range: 1...180),
+
+        // MARK: Travel — 1 → 3
+        .init(id: "travel.travelsPerYear", category: "travel",
+              displayName: "Voyages par an", valueType: .int, importance: .medium,
+              extractionHints: ["voyage par an", "fois par an"],
+              unit: "/an", range: 0...52),
+        .init(id: "travel.mainDestination", category: "travel",
+              displayName: "Destination récurrente", valueType: .string, importance: .low,
+              extractionHints: ["je vais souvent", "destination"]),
+
+        // MARK: Mobility — 1 → 3
+        .init(id: "mobility.dailyCommuteMinutes", category: "mobility",
+              displayName: "Trajet quotidien (minutes)", valueType: .int, importance: .medium,
+              extractionHints: ["trajet", "commute", "min de route", "aller au boulot"],
+              unit: "min", range: 0...300),
+        .init(id: "mobility.fuelBudgetMonthly", category: "mobility",
+              displayName: "Budget carburant mensuel", valueType: .double, importance: .low,
+              extractionHints: ["essence par mois", "budget carburant"],
+              unit: "€", range: 0...2000),
+
+        // MARK: Finance — 3 → 6
+        .init(id: "finance.savingsRate", category: "finance",
+              subGoals: [.moneyGrowth, .budgetControl],
+              displayName: "Taux d'épargne mensuel", valueType: .double, importance: .high,
+              extractionHints: ["j'épargne", "épargne par mois", "je mets de côté"],
+              unit: "%", range: 0...100),
+        .init(id: "finance.mainExpenseCategory", category: "finance",
+              subGoals: [.budgetControl],
+              displayName: "Poste de dépense principal", valueType: .enum, importance: .medium,
+              extractionHints: ["restaurant", "loyer", "loisirs", "shopping", "courses"]),
+        .init(id: "finance.subscriptionsCount", category: "finance",
+              subGoals: [.budgetControl],
+              displayName: "Nombre d'abonnements actifs", valueType: .int, importance: .low,
+              extractionHints: ["abonnement", "subscription"],
+              range: 0...100),
+
+        // MARK: Mind — 2 → 5
+        .init(id: "mind.moodBaseline", category: "mind",
+              displayName: "Humeur habituelle (/5)", valueType: .int, importance: .high,
+              range: 1...5),
+        .init(id: "mind.journalingFrequencyPerWeek", category: "mind",
+              subGoals: [.stressReduction, .focus],
+              displayName: "Journaling par semaine", valueType: .int, importance: .medium,
+              extractionHints: ["journal", "écris chaque"],
+              unit: "/sem", range: 0...14),
+        .init(id: "mind.mainStressor", category: "mind",
+              subGoals: [.stressReduction],
+              displayName: "Source principale de stress", valueType: .string, importance: .high,
+              extractionHints: ["stress à cause de", "me stress"]),
+
+        // MARK: Career — 2 → 4
+        .init(id: "career.yearsExperience", category: "career",
+              displayName: "Années d'expérience", valueType: .int, importance: .medium,
+              extractionHints: ["ans d'expérience", "ans dans"],
+              unit: "ans", range: 0...80),
+        .init(id: "career.mainSkillToDevelop", category: "career",
+              subGoals: [.careerChange],
+              displayName: "Compétence à développer", valueType: .string, importance: .medium,
+              extractionHints: ["je veux apprendre", "développer", "améliorer"]),
+
+        // MARK: Learning — 2 → 4
+        .init(id: "learning.currentBook", category: "learning",
+              displayName: "Livre en cours", valueType: .string, importance: .low,
+              extractionHints: ["je lis", "en train de lire"]),
+        .init(id: "learning.mainLanguageLearning", category: "learning",
+              displayName: "Langue apprise principale", valueType: .string, importance: .medium,
+              extractionHints: ["j'apprends l'", "j'étudie l'"]),
+
+        // MARK: Medical — 2 → 4
+        .init(id: "medical.lastCheckupYear", category: "medical",
+              displayName: "Dernier bilan médical (année)", valueType: .int, importance: .high,
+              extractionHints: ["dernier bilan", "check-up", "visite médicale"],
+              range: 2015...2030),
+        .init(id: "medical.emergencyContact", category: "medical",
+              displayName: "Contact d'urgence", valueType: .string, importance: .medium,
+              extractionHints: ["urgence", "prévenir"]),
+
+        // MARK: Fitness supplémentaires
+        .init(id: "fitness.stepGoal", category: "fitness",
+              displayName: "Objectif pas quotidien", valueType: .int, importance: .medium,
+              extractionHints: ["pas par jour", "objectif pas"],
+              unit: "/jour", range: 1000...50000),
+        .init(id: "fitness.mainSport", category: "fitness",
+              displayName: "Sport principal", valueType: .string, importance: .high,
+              extractionHints: ["je fais", "je pratique", "mon sport"]),
     ]
 }
