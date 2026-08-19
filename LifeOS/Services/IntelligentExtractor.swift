@@ -36,10 +36,13 @@ enum IntelligentExtractor {
     /// Analyse un message user et retourne les extractions.
     /// Idempotent : n'écrit RIEN dans le store — l'appelant décide.
     static func extract(from message: String) async -> [Extraction] {
+        let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 3 else { return [] }
+
         // Pré-processeur : "je pesais 70, maintenant je fais 74 kg" → on ne garde
         // que la partie après "maintenant / actuellement / désormais". Sans ça, la
         // première valeur numérique matche et écrase la nouvelle.
-        let preprocessed = preprocessPresentTense(message)
+        let preprocessed = preprocessPresentTense(trimmed)
 
         var results: [Extraction] = []
 
