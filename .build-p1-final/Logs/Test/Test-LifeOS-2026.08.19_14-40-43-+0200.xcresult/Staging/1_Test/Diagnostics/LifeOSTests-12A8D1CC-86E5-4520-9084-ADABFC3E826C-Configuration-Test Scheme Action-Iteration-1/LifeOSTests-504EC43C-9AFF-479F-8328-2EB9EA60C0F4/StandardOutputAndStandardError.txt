@@ -1,0 +1,4 @@
+
+
+*** If you believe this error represents a bug, please attach the result bundle at /Users/blotjules/LifeOS-associe/.build-p1-final/Logs/Test/Test-LifeOS-2026.08.19_14-40-43-+0200.xcresult
+

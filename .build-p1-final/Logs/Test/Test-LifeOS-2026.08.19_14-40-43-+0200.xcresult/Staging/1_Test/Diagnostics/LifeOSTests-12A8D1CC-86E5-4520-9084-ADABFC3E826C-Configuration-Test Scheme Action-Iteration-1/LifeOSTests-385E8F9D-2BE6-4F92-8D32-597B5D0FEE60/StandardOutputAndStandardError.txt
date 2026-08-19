@@ -1,0 +1,1041 @@
+2026-08-19 14:41:34.339179+0200 LifeOS[19906:269182] [error] CoreData: error: Failed to stat path '/Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library/Application Support/default.store', errno 2 / No such file or directory.
+CoreData: error: Failed to stat path '/Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library/Application Support/default.store', errno 2 / No such file or directory.
+2026-08-19 14:41:34.339308+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.339456+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create denied
+CoreData: error:   Sandbox access to file-write-create denied
+2026-08-19 14:41:34.339598+0200 LifeOS[19906:269182] [error] CoreData: error: Failed to statfs file; errno 2 / No such file or directory.
+CoreData: error: Failed to statfs file; errno 2 / No such file or directory.
+2026-08-19 14:41:34.339790+0200 LifeOS[19906:269182] [error] CoreData: error: Information for file system
+CoreData: error: Information for file system
+2026-08-19 14:41:34.339915+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.340053+0200 LifeOS[19906:269182] [error] CoreData: error:   File system type: 		0
+CoreData: error:   File system type: 		0
+2026-08-19 14:41:34.340195+0200 LifeOS[19906:269182] [error] CoreData: error:   File system flags: 		0
+CoreData: error:   File system flags: 		0
+2026-08-19 14:41:34.340317+0200 LifeOS[19906:269182] [error] CoreData: error:   Total data blocks: 		0
+CoreData: error:   Total data blocks: 		0
+2026-08-19 14:41:34.342692+0200 LifeOS[19906:269182] [error] CoreData: error:   Free data blocks: 		0
+CoreData: error:   Free data blocks: 		0
+2026-08-19 14:41:34.342814+0200 LifeOS[19906:269182] [error] CoreData: error:   Free blocks for nonsuperuser:	0
+CoreData: error:   Free blocks for nonsuperuser:	0
+2026-08-19 14:41:34.342905+0200 LifeOS[19906:269182] [error] CoreData: error:   Total i-nodes: 			0
+CoreData: error:   Total i-nodes: 			0
+2026-08-19 14:41:34.342974+0200 LifeOS[19906:269182] [error] CoreData: error:   File system ID: 		0, 0
+CoreData: error:   File system ID: 		0, 0
+2026-08-19 14:41:34.343044+0200 LifeOS[19906:269182] [error] CoreData: error:   Free i-nodes: 			0
+CoreData: error:   Free i-nodes: 			0
+2026-08-19 14:41:34.343110+0200 LifeOS[19906:269182] [error] CoreData: error:   Owner UID: 			0
+CoreData: error:   Owner UID: 			0
+2026-08-19 14:41:34.343203+0200 LifeOS[19906:269182] [error] CoreData: error:   Filesystem type name:
+CoreData: error:   Filesystem type name: 		
+2026-08-19 14:41:34.343363+0200 LifeOS[19906:269182] [error] CoreData: error:   Mount on name:
+CoreData: error:   Mount on name: 			
+2026-08-19 14:41:34.343441+0200 LifeOS[19906:269182] [error] CoreData: error:   Mount from name:
+CoreData: error:   Mount from name: 		
+2026-08-19 14:41:34.343588+0200 LifeOS[19906:269182] [error] CoreData: error: Failed to stat path '/Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library/Application Support', errno 2 / No such file or directory.
+CoreData: error: Failed to stat path '/Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library/Application Support', errno 2 / No such file or directory.
+2026-08-19 14:41:34.343660+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.343753+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create denied
+CoreData: error:   Sandbox access to file-write-create denied
+2026-08-19 14:41:34.343931+0200 LifeOS[19906:269182] [error] CoreData: error: Failed to statfs file; errno 2 / No such file or directory.
+CoreData: error: Failed to statfs file; errno 2 / No such file or directory.
+2026-08-19 14:41:34.344008+0200 LifeOS[19906:269182] [error] CoreData: error: Information for file system
+CoreData: error: Information for file system
+2026-08-19 14:41:34.344153+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.344258+0200 LifeOS[19906:269182] [error] CoreData: error:   File system type: 		0
+CoreData: error:   File system type: 		0
+2026-08-19 14:41:34.345348+0200 LifeOS[19906:269182] [error] CoreData: error:   File system flags: 		0
+CoreData: error:   File system flags: 		0
+2026-08-19 14:41:34.345440+0200 LifeOS[19906:269182] [error] CoreData: error:   Total data blocks: 		0
+CoreData: error:   Total data blocks: 		0
+2026-08-19 14:41:34.345499+0200 LifeOS[19906:269182] [error] CoreData: error:   Free data blocks: 		0
+CoreData: error:   Free data blocks: 		0
+2026-08-19 14:41:34.345594+0200 LifeOS[19906:269182] [error] CoreData: error:   Free blocks for nonsuperuser:	0
+CoreData: error:   Free blocks for nonsuperuser:	0
+2026-08-19 14:41:34.345678+0200 LifeOS[19906:269182] [error] CoreData: error:   Total i-nodes: 			0
+CoreData: error:   Total i-nodes: 			0
+2026-08-19 14:41:34.345748+0200 LifeOS[19906:269182] [error] CoreData: error:   File system ID: 		0, 0
+CoreData: error:   File system ID: 		0, 0
+2026-08-19 14:41:34.345838+0200 LifeOS[19906:269182] [error] CoreData: error:   Free i-nodes: 			0
+CoreData: error:   Free i-nodes: 			0
+2026-08-19 14:41:34.345951+0200 LifeOS[19906:269182] [error] CoreData: error:   Owner UID: 			0
+CoreData: error:   Owner UID: 			0
+2026-08-19 14:41:34.346048+0200 LifeOS[19906:269182] [error] CoreData: error:   Filesystem type name:
+CoreData: error:   Filesystem type name: 		
+2026-08-19 14:41:34.346170+0200 LifeOS[19906:269182] [error] CoreData: error:   Mount on name:
+CoreData: error:   Mount on name: 			
+2026-08-19 14:41:34.346293+0200 LifeOS[19906:269182] [error] CoreData: error:   Mount from name:
+CoreData: error:   Mount from name: 		
+2026-08-19 14:41:34.346429+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.346495+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library
+2026-08-19 14:41:34.346681+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.346910+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.347588+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.347215+0200 LifeOS[19906:269183] [General] Failed to send CA Event for app launch measurements for ca_event_type: 0 event_name: com.apple.app_launch_measurement.FirstFramePresentationMetric
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.348056+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		128 bytes
+CoreData: error:   File Size: 		128 bytes
+2026-08-19 14:41:34.348283+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		16246927
+CoreData: error:   File inode: 		16246927
+2026-08-19 14:41:34.348598+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.348734+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.356567+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.357072+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.357226+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.358052+0200 LifeOS[19906:269182] [error] CoreData: error:   file is not a symbolic link
+CoreData: error:   file is not a symbolic link
+2026-08-19 14:41:34.358678+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create allowed
+CoreData: error:   Sandbox access to file-write-create allowed
+2026-08-19 14:41:34.358911+0200 LifeOS[19906:269182] [error] CoreData: error: Information for file system
+CoreData: error: Information for file system
+2026-08-19 14:41:34.358988+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.359088+0200 LifeOS[19906:269182] [error] CoreData: error:   File system type: 		0x1a
+CoreData: error:   File system type: 		0x1a
+2026-08-19 14:41:34.359427+0200 LifeOS[19906:269182] [error] CoreData: error:   File system flags: 		0x4909080
+CoreData: error:   File system flags: 		0x4909080
+2026-08-19 14:41:34.359720+0200 LifeOS[19906:269182] [error] CoreData: error:   MNT_JOURNALED
+CoreData: error:   MNT_JOURNALED
+2026-08-19 14:41:34.360027+0200 LifeOS[19906:269182] [error] CoreData: error:   Total data blocks: 		120686613
+CoreData: error:   Total data blocks: 		120686613
+2026-08-19 14:41:34.360500+0200 LifeOS[19906:269182] [error] CoreData: error:   Free data blocks: 		46047354
+CoreData: error:   Free data blocks: 		46047354
+2026-08-19 14:41:34.361772+0200 LifeOS[19906:269182] [error] CoreData: error:   Free blocks for nonsuperuser:	46047354
+CoreData: error:   Free blocks for nonsuperuser:	46047354
+2026-08-19 14:41:34.361999+0200 LifeOS[19906:269182] [error] CoreData: error:   Total i-nodes: 			1843717713
+CoreData: error:   Total i-nodes: 			1843717713
+2026-08-19 14:41:34.362097+0200 LifeOS[19906:269182] [error] CoreData: error:   File system ID: 		0x100000d, 0x1a
+CoreData: error:   File system ID: 		0x100000d, 0x1a
+2026-08-19 14:41:34.362207+0200 LifeOS[19906:269182] [error] CoreData: error:   Free i-nodes: 			1841894160
+CoreData: error:   Free i-nodes: 			1841894160
+2026-08-19 14:41:34.362783+0200 LifeOS[19906:269182] [error] CoreData: error:   Owner UID: 			0
+CoreData: error:   Owner UID: 			0
+2026-08-19 14:41:34.362946+0200 LifeOS[19906:269182] [error] CoreData: error:   Filesystem type name: 		apfs
+CoreData: error:   Filesystem type name: 		apfs
+2026-08-19 14:41:34.363015+0200 LifeOS[19906:269182] [error] CoreData: error:   Mount on name: 			/System/Volumes/Data
+CoreData: error:   Mount on name: 			/System/Volumes/Data
+2026-08-19 14:41:34.363554+0200 LifeOS[19906:269182] [error] CoreData: error:   Mount from name: 		/dev/disk3s1
+CoreData: error:   Mount from name: 		/dev/disk3s1
+2026-08-19 14:41:34.364515+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.364939+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964
+2026-08-19 14:41:34.365008+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.365100+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.365172+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.365297+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		128 bytes
+CoreData: error:   File Size: 		128 bytes
+2026-08-19 14:41:34.365398+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		16246925
+CoreData: error:   File inode: 		16246925
+2026-08-19 14:41:34.365519+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.365642+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.365747+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.365853+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.365992+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.366206+0200 LifeOS[19906:269182] [error] CoreData: error:   file is not a symbolic link
+CoreData: error:   file is not a symbolic link
+2026-08-19 14:41:34.367809+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create allowed
+CoreData: error:   Sandbox access to file-write-create allowed
+2026-08-19 14:41:34.368084+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.368577+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup
+2026-08-19 14:41:34.370086+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.370944+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.371248+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.372113+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		2304 bytes
+CoreData: error:   File Size: 		2304 bytes
+2026-08-19 14:41:34.373851+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		16234813
+CoreData: error:   File inode: 		16234813
+2026-08-19 14:41:34.374058+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.374403+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.374983+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.375046+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.375127+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.375198+0200 LifeOS[19906:269182] [error] CoreData: error:   file is not a symbolic link
+CoreData: error:   file is not a symbolic link
+2026-08-19 14:41:34.375423+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create allowed
+2026-08-19 14:41:34.376131+0200 LifeOS[19906:268934] [notifications] APNs registration failed: aucune autorisation « aps-environment » valide détectée pour l’application
+CoreData: error:   Sandbox access to file-write-create allowed
+2026-08-19 14:41:34.377539+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.378700+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared
+2026-08-19 14:41:34.378963+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.379047+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.379669+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.379981+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		128 bytes
+CoreData: error:   File Size: 		128 bytes
+2026-08-19 14:41:34.380070+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		16234380
+CoreData: error:   File inode: 		16234380
+2026-08-19 14:41:34.380229+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.380353+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.380524+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.382218+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.382306+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.382823+0200 LifeOS[19906:269182] [error] CoreData: error:   file is not a symbolic link
+CoreData: error:   file is not a symbolic link
+2026-08-19 14:41:34.383041+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create allowed
+CoreData: error:   Sandbox access to file-write-create allowed
+2026-08-19 14:41:34.383391+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.384006+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers
+2026-08-19 14:41:34.384992+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.385752+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.385823+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.386264+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		224 bytes
+CoreData: error:   File Size: 		224 bytes
+2026-08-19 14:41:34.386529+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		16234349
+CoreData: error:   File inode: 		16234349
+2026-08-19 14:41:34.389707+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.390813+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.394475+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.398912+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.402769+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.403065+0200 LifeOS[19906:269182] [error] CoreData: error:   file is not a symbolic link
+CoreData: error:   file is not a symbolic link
+2026-08-19 14:41:34.411318+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create allowed
+CoreData: error:   Sandbox access to file-write-create allowed
+2026-08-19 14:41:34.413512+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.418101+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data
+2026-08-19 14:41:34.418336+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.420242+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.420644+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.422524+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		416 bytes
+CoreData: error:   File Size: 		416 bytes
+2026-08-19 14:41:34.423542+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		16234144
+CoreData: error:   File inode: 		16234144
+2026-08-19 14:41:34.424716+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.424934+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.425214+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.425523+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.425797+0200 LifeOS[19906:269182] [error] CoreData: error:   775
+CoreData: error:   775
+2026-08-19 14:41:34.426335+0200 LifeOS[19906:269182] [error] CoreData: error:   file is not a symbolic link
+CoreData: error:   file is not a symbolic link
+2026-08-19 14:41:34.426911+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create allowed
+CoreData: error:   Sandbox access to file-write-create allowed
+2026-08-19 14:41:34.427259+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.427798+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567
+2026-08-19 14:41:34.428251+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.428393+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.428640+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.428983+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		160 bytes
+CoreData: error:   File Size: 		160 bytes
+2026-08-19 14:41:34.429597+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		16234143
+CoreData: error:   File inode: 		16234143
+2026-08-19 14:41:34.429936+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.430175+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.430426+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.430808+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.431184+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.431612+0200 LifeOS[19906:269182] [error] CoreData: error:   file is not a symbolic link
+CoreData: error:   file is not a symbolic link
+2026-08-19 14:41:34.432351+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create allowed
+CoreData: error:   Sandbox access to file-write-create allowed
+2026-08-19 14:41:34.432621+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.433205+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices
+2026-08-19 14:41:34.433446+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.434206+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.435214+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.437125+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		640 bytes
+2026-08-19 14:41:34.437429+0200 LifeOS[19906:269184] [General] Failed to send CA Event for app launch measurements for ca_event_type: 1 event_name: com.apple.app_launch_measurement.ExtendedLaunchMetrics
+CoreData: error:   File Size: 		640 bytes
+2026-08-19 14:41:34.437763+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		656213
+CoreData: error:   File inode: 		656213
+2026-08-19 14:41:34.437977+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.438741+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.439003+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.439246+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.439589+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.439783+0200 LifeOS[19906:269182] [error] CoreData: error:   file is not a symbolic link
+CoreData: error:   file is not a symbolic link
+2026-08-19 14:41:34.440101+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create allowed
+CoreData: error:   Sandbox access to file-write-create allowed
+2026-08-19 14:41:34.440334+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.440519+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer
+CoreData: error: Information for /Users/blotjules/Library/Developer
+2026-08-19 14:41:34.440722+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.440910+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.441157+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.441408+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		224 bytes
+CoreData: error:   File Size: 		224 bytes
+2026-08-19 14:41:34.441644+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		651690
+CoreData: error:   File inode: 		651690
+2026-08-19 14:41:34.441853+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.441956+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.442128+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.442381+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.442588+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.442704+0200 LifeOS[19906:269182] [error] CoreData: error:   file is not a symbolic link
+CoreData: error:   file is not a symbolic link
+2026-08-19 14:41:34.442977+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create allowed
+CoreData: error:   Sandbox access to file-write-create allowed
+2026-08-19 14:41:34.443352+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.443580+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library
+CoreData: error: Information for /Users/blotjules/Library
+2026-08-19 14:41:34.443810+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.444028+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.444503+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.444747+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		2976 bytes
+CoreData: error:   File Size: 		2976 bytes
+2026-08-19 14:41:34.444994+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		38386
+CoreData: error:   File inode: 		38386
+2026-08-19 14:41:34.445343+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.445487+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.445638+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.445710+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.445814+0200 LifeOS[19906:269182] [error] CoreData: error:   700
+CoreData: error:   700
+2026-08-19 14:41:34.445955+0200 LifeOS[19906:269182] [error] CoreData: error:   file is not a symbolic link
+CoreData: error:   file is not a symbolic link
+2026-08-19 14:41:34.446121+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create allowed
+CoreData: error:   Sandbox access to file-write-create allowed
+2026-08-19 14:41:34.446322+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.446704+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules
+CoreData: error: Information for /Users/blotjules
+2026-08-19 14:41:34.446987+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.447165+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.447270+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.447454+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		1504 bytes
+CoreData: error:   File Size: 		1504 bytes
+2026-08-19 14:41:34.448052+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		38379
+CoreData: error:   File inode: 		38379
+2026-08-19 14:41:34.448384+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.448532+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.448775+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.448886+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.448975+0200 LifeOS[19906:269182] [error] CoreData: error:   750
+CoreData: error:   750
+2026-08-19 14:41:34.449054+0200 LifeOS[19906:269182] [error] CoreData: error:   file is not a symbolic link
+CoreData: error:   file is not a symbolic link
+2026-08-19 14:41:34.449198+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create allowed
+CoreData: error:   Sandbox access to file-write-create allowed
+2026-08-19 14:41:34.449296+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.449624+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users
+CoreData: error: Information for /Users
+2026-08-19 14:41:34.449846+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.450134+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.450427+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.450617+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		160 bytes
+CoreData: error:   File Size: 		160 bytes
+2026-08-19 14:41:34.450699+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		20989
+CoreData: error:   File inode: 		20989
+2026-08-19 14:41:34.450936+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		0
+CoreData: error:   File user ID: 		0
+2026-08-19 14:41:34.451035+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		80
+CoreData: error:   File group ID: 		80
+2026-08-19 14:41:34.451309+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.451390+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.451472+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.451681+0200 LifeOS[19906:269182] [error] CoreData: error:   file is not a symbolic link
+CoreData: error:   file is not a symbolic link
+2026-08-19 14:41:34.452505+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create denied
+CoreData: error:   Sandbox access to file-write-create denied
+2026-08-19 14:41:34.452714+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.452960+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /
+CoreData: error: Information for /
+2026-08-19 14:41:34.453201+0200 LifeOS[19906:269182] [error] CoreData: error: ---------------------------
+CoreData: error: ---------------------------
+2026-08-19 14:41:34.453319+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.453431+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.453726+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		704 bytes
+CoreData: error:   File Size: 		704 bytes
+2026-08-19 14:41:34.455586+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		2
+CoreData: error:   File inode: 		2
+2026-08-19 14:41:34.455894+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		0
+CoreData: error:   File user ID: 		0
+2026-08-19 14:41:34.456186+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		0
+CoreData: error:   File group ID: 		0
+2026-08-19 14:41:34.456348+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.456541+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.456706+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.456896+0200 LifeOS[19906:269182] [error] CoreData: error:   file is not a symbolic link
+CoreData: error:   file is not a symbolic link
+2026-08-19 14:41:34.457112+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create denied
+CoreData: error:   Sandbox access to file-write-create denied
+2026-08-19 14:41:34.457362+0200 LifeOS[19906:269182] [error] CoreData: error: Logging status information for directory path: /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library/Application Support
+CoreData: error: Logging status information for directory path: /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library/Application Support
+2026-08-19 14:41:34.457637+0200 LifeOS[19906:269182] [error] CoreData: error: Executing as effective user 501
+CoreData: error: Executing as effective user 501
+2026-08-19 14:41:34.457833+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /
+CoreData: error: Information for /
+2026-08-19 14:41:34.458405+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.458502+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.458586+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		704 bytes
+CoreData: error:   File Size: 		704 bytes
+2026-08-19 14:41:34.458754+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		2
+CoreData: error:   File inode: 		2
+2026-08-19 14:41:34.458946+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		0
+CoreData: error:   File user ID: 		0
+2026-08-19 14:41:34.459165+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		0
+CoreData: error:   File group ID: 		0
+2026-08-19 14:41:34.459271+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.459387+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.459471+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.460193+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not a symbolic link
+CoreData: error:   component is not a symbolic link
+2026-08-19 14:41:34.468344+0200 LifeOS[19906:269182] [error] CoreData: error:   component is readable
+CoreData: error:   component is readable
+2026-08-19 14:41:34.470620+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not writeable with errno 30
+CoreData: error:   component is not writeable with errno 30
+2026-08-19 14:41:34.470752+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users
+CoreData: error: Information for /Users
+2026-08-19 14:41:34.470830+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.470925+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.471014+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		160 bytes
+CoreData: error:   File Size: 		160 bytes
+2026-08-19 14:41:34.471092+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		20989
+CoreData: error:   File inode: 		20989
+2026-08-19 14:41:34.471173+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		0
+CoreData: error:   File user ID: 		0
+2026-08-19 14:41:34.471269+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		80
+CoreData: error:   File group ID: 		80
+2026-08-19 14:41:34.471404+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.471533+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.471644+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.471817+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not a symbolic link
+CoreData: error:   component is not a symbolic link
+2026-08-19 14:41:34.471947+0200 LifeOS[19906:269182] [error] CoreData: error:   component is readable
+CoreData: error:   component is readable
+2026-08-19 14:41:34.472060+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not writeable with errno 13
+CoreData: error:   component is not writeable with errno 13
+2026-08-19 14:41:34.472160+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules
+CoreData: error: Information for /Users/blotjules
+2026-08-19 14:41:34.472240+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.472322+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.472399+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		1504 bytes
+CoreData: error:   File Size: 		1504 bytes
+2026-08-19 14:41:34.472480+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		38379
+CoreData: error:   File inode: 		38379
+2026-08-19 14:41:34.472569+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.472649+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.472721+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.472787+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.472865+0200 LifeOS[19906:269182] [error] CoreData: error:   750
+CoreData: error:   750
+2026-08-19 14:41:34.473085+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not a symbolic link
+CoreData: error:   component is not a symbolic link
+2026-08-19 14:41:34.473343+0200 LifeOS[19906:269182] [error] CoreData: error:   component is readable
+CoreData: error:   component is readable
+2026-08-19 14:41:34.473569+0200 LifeOS[19906:269182] [error] CoreData: error:   component is writeable
+CoreData: error:   component is writeable
+2026-08-19 14:41:34.473787+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library
+CoreData: error: Information for /Users/blotjules/Library
+2026-08-19 14:41:34.473969+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.474136+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.474274+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		2976 bytes
+CoreData: error:   File Size: 		2976 bytes
+2026-08-19 14:41:34.474361+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		38386
+CoreData: error:   File inode: 		38386
+2026-08-19 14:41:34.474435+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.474508+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.474579+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.474698+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.474773+0200 LifeOS[19906:269182] [error] CoreData: error:   700
+CoreData: error:   700
+2026-08-19 14:41:34.474856+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not a symbolic link
+CoreData: error:   component is not a symbolic link
+2026-08-19 14:41:34.475019+0200 LifeOS[19906:269182] [error] CoreData: error:   component is readable
+CoreData: error:   component is readable
+2026-08-19 14:41:34.475182+0200 LifeOS[19906:269182] [error] CoreData: error:   component is writeable
+CoreData: error:   component is writeable
+2026-08-19 14:41:34.475282+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer
+CoreData: error: Information for /Users/blotjules/Library/Developer
+2026-08-19 14:41:34.475376+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.475482+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.475566+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		224 bytes
+CoreData: error:   File Size: 		224 bytes
+2026-08-19 14:41:34.475648+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		651690
+CoreData: error:   File inode: 		651690
+2026-08-19 14:41:34.475730+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.475819+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.475899+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.475974+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.476055+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.476134+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not a symbolic link
+CoreData: error:   component is not a symbolic link
+2026-08-19 14:41:34.476243+0200 LifeOS[19906:269182] [error] CoreData: error:   component is readable
+CoreData: error:   component is readable
+2026-08-19 14:41:34.476341+0200 LifeOS[19906:269182] [error] CoreData: error:   component is writeable
+CoreData: error:   component is writeable
+2026-08-19 14:41:34.476490+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices
+2026-08-19 14:41:34.476622+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.476767+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.476913+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		640 bytes
+CoreData: error:   File Size: 		640 bytes
+2026-08-19 14:41:34.477066+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		656213
+CoreData: error:   File inode: 		656213
+2026-08-19 14:41:34.477164+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.477243+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.477331+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.477413+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.477550+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.477631+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not a symbolic link
+CoreData: error:   component is not a symbolic link
+2026-08-19 14:41:34.477758+0200 LifeOS[19906:269182] [error] CoreData: error:   component is readable
+CoreData: error:   component is readable
+2026-08-19 14:41:34.477875+0200 LifeOS[19906:269182] [error] CoreData: error:   component is writeable
+CoreData: error:   component is writeable
+2026-08-19 14:41:34.477973+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567
+2026-08-19 14:41:34.478061+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.478141+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.478222+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		160 bytes
+CoreData: error:   File Size: 		160 bytes
+2026-08-19 14:41:34.478301+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		16234143
+CoreData: error:   File inode: 		16234143
+2026-08-19 14:41:34.478391+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.478453+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.478512+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.478574+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.478647+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.478731+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not a symbolic link
+CoreData: error:   component is not a symbolic link
+2026-08-19 14:41:34.478872+0200 LifeOS[19906:269182] [error] CoreData: error:   component is readable
+CoreData: error:   component is readable
+2026-08-19 14:41:34.478991+0200 LifeOS[19906:269182] [error] CoreData: error:   component is writeable
+CoreData: error:   component is writeable
+2026-08-19 14:41:34.479155+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data
+2026-08-19 14:41:34.479248+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.479325+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.479410+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		416 bytes
+CoreData: error:   File Size: 		416 bytes
+2026-08-19 14:41:34.479494+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		16234144
+CoreData: error:   File inode: 		16234144
+2026-08-19 14:41:34.479591+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.479726+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.479901+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.479972+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.480115+0200 LifeOS[19906:269182] [error] CoreData: error:   775
+CoreData: error:   775
+2026-08-19 14:41:34.480274+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not a symbolic link
+CoreData: error:   component is not a symbolic link
+2026-08-19 14:41:34.480418+0200 LifeOS[19906:269182] [error] CoreData: error:   component is readable
+CoreData: error:   component is readable
+2026-08-19 14:41:34.480520+0200 LifeOS[19906:269182] [error] CoreData: error:   component is writeable
+CoreData: error:   component is writeable
+2026-08-19 14:41:34.480640+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers
+2026-08-19 14:41:34.480720+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.480834+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.480907+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		224 bytes
+CoreData: error:   File Size: 		224 bytes
+2026-08-19 14:41:34.481034+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		16234349
+CoreData: error:   File inode: 		16234349
+2026-08-19 14:41:34.481244+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.481330+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.481416+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.481517+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.481657+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.481802+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not a symbolic link
+CoreData: error:   component is not a symbolic link
+2026-08-19 14:41:34.481943+0200 LifeOS[19906:269182] [error] CoreData: error:   component is readable
+CoreData: error:   component is readable
+2026-08-19 14:41:34.482205+0200 LifeOS[19906:269182] [error] CoreData: error:   component is writeable
+CoreData: error:   component is writeable
+2026-08-19 14:41:34.482315+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared
+2026-08-19 14:41:34.482411+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.482486+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.482567+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		128 bytes
+CoreData: error:   File Size: 		128 bytes
+2026-08-19 14:41:34.482643+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		16234380
+CoreData: error:   File inode: 		16234380
+2026-08-19 14:41:34.482712+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.482794+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.482869+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.482953+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.483351+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.483583+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not a symbolic link
+CoreData: error:   component is not a symbolic link
+2026-08-19 14:41:34.483708+0200 LifeOS[19906:269182] [error] CoreData: error:   component is readable
+CoreData: error:   component is readable
+2026-08-19 14:41:34.483874+0200 LifeOS[19906:269182] [error] CoreData: error:   component is writeable
+CoreData: error:   component is writeable
+2026-08-19 14:41:34.483977+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup
+2026-08-19 14:41:34.484101+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.484194+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.484279+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		2304 bytes
+CoreData: error:   File Size: 		2304 bytes
+2026-08-19 14:41:34.484361+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		16234813
+CoreData: error:   File inode: 		16234813
+2026-08-19 14:41:34.484426+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.484508+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.484572+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.484668+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.484791+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.484954+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not a symbolic link
+CoreData: error:   component is not a symbolic link
+2026-08-19 14:41:34.485063+0200 LifeOS[19906:269182] [error] CoreData: error:   component is readable
+CoreData: error:   component is readable
+2026-08-19 14:41:34.485154+0200 LifeOS[19906:269182] [error] CoreData: error:   component is writeable
+CoreData: error:   component is writeable
+2026-08-19 14:41:34.485249+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964
+2026-08-19 14:41:34.485325+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.485428+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.485505+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		128 bytes
+CoreData: error:   File Size: 		128 bytes
+2026-08-19 14:41:34.485577+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		16246925
+CoreData: error:   File inode: 		16246925
+2026-08-19 14:41:34.485643+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.485723+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.485780+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.485883+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.486054+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.486191+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not a symbolic link
+CoreData: error:   component is not a symbolic link
+2026-08-19 14:41:34.486298+0200 LifeOS[19906:269182] [error] CoreData: error:   component is readable
+CoreData: error:   component is readable
+2026-08-19 14:41:34.486454+0200 LifeOS[19906:269182] [error] CoreData: error:   component is writeable
+CoreData: error:   component is writeable
+2026-08-19 14:41:34.486618+0200 LifeOS[19906:269182] [error] CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library
+CoreData: error: Information for /Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library
+2026-08-19 14:41:34.486754+0200 LifeOS[19906:269182] [error] CoreData: error:   File Device ID: 	0
+CoreData: error:   File Device ID: 	0
+2026-08-19 14:41:34.486889+0200 LifeOS[19906:269182] [error] CoreData: error:   Device ID: 		16777229
+CoreData: error:   Device ID: 		16777229
+2026-08-19 14:41:34.487073+0200 LifeOS[19906:269182] [error] CoreData: error:   File Size: 		128 bytes
+CoreData: error:   File Size: 		128 bytes
+2026-08-19 14:41:34.487186+0200 LifeOS[19906:269182] [error] CoreData: error:   File inode: 		16246927
+CoreData: error:   File inode: 		16246927
+2026-08-19 14:41:34.487308+0200 LifeOS[19906:269182] [error] CoreData: error:   File user ID: 		501
+CoreData: error:   File user ID: 		501
+2026-08-19 14:41:34.487422+0200 LifeOS[19906:269182] [error] CoreData: error:   File group ID: 		20
+CoreData: error:   File group ID: 		20
+2026-08-19 14:41:34.487571+0200 LifeOS[19906:269182] [error] CoreData: error:   File Permissions:
+CoreData: error:   File Permissions: 	
+2026-08-19 14:41:34.487651+0200 LifeOS[19906:269182] [error] CoreData: error: d
+CoreData: error: d
+2026-08-19 14:41:34.487809+0200 LifeOS[19906:269182] [error] CoreData: error:   755
+CoreData: error:   755
+2026-08-19 14:41:34.487976+0200 LifeOS[19906:269182] [error] CoreData: error:   component is not a symbolic link
+CoreData: error:   component is not a symbolic link
+2026-08-19 14:41:34.488130+0200 LifeOS[19906:269182] [error] CoreData: error:   component is readable
+CoreData: error:   component is readable
+2026-08-19 14:41:34.488261+0200 LifeOS[19906:269182] [error] CoreData: error:   component is writeable
+CoreData: error:   component is writeable
+2026-08-19 14:41:34.488391+0200 LifeOS[19906:269182] [error] CoreData: error: Failed to stat path '/Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library/Application Support', errno 2 / No such file or directory.
+CoreData: error: Failed to stat path '/Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library/Application Support', errno 2 / No such file or directory.
+2026-08-19 14:41:34.489178+0200 LifeOS[19906:269182] [error] CoreData: error:   Sandbox access to file-write-create denied
+CoreData: error:   Sandbox access to file-write-create denied
+2026-08-19 14:41:34.491115+0200 LifeOS[19906:269182] [error] CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (512)
+CoreData: error: addPersistentStoreWithType:configuration:URL:options:error: returned error NSCocoaErrorDomain (512)
+2026-08-19 14:41:34.491439+0200 LifeOS[19906:269182] [error] CoreData: error: userInfo:
+CoreData: error: userInfo:
+2026-08-19 14:41:34.491527+0200 LifeOS[19906:269182] [error] CoreData: error: 	reason : Failed to create file; code = 2
+CoreData: error: 	reason : Failed to create file; code = 2
+2026-08-19 14:41:34.491609+0200 LifeOS[19906:269182] [error] CoreData: error: storeType: SQLite
+CoreData: error: storeType: SQLite
+2026-08-19 14:41:34.491735+0200 LifeOS[19906:269182] [error] CoreData: error: configuration: default
+CoreData: error: configuration: default
+2026-08-19 14:41:34.491882+0200 LifeOS[19906:269182] [error] CoreData: error: URL: file:///Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library/Application%20Support/default.store
+CoreData: error: URL: file:///Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library/Application%20Support/default.store
+CoreData: annotation: options:
+CoreData: annotation: 	NSMigratePersistentStoresAutomaticallyOption : 1
+CoreData: annotation: 	NSInferMappingModelAutomaticallyOption : 1
+CoreData: annotation: 	NSPersistentStoreRemoteChangeNotificationOptionKey : 1
+CoreData: annotation: 	NSPersistentHistoryTrackingKey : 1
+2026-08-19 14:41:34.493762+0200 LifeOS[19906:269182] [error] CoreData: error: <NSPersistentStoreCoordinator: 0x104329100>: Attempting recovery from error encountered during addPersistentStore: 0x1042c4210 Error Domain=NSCocoaErrorDomain Code=512 "Le fichier n’as pas pu être enregistré." UserInfo={reason=Failed to create file; code = 2}
+CoreData: error: <NSPersistentStoreCoordinator: 0x104329100>: Attempting recovery from error encountered during addPersistentStore: 0x1042c4210 Error Domain=NSCocoaErrorDomain Code=512 "Le fichier n’as pas pu être enregistré." UserInfo={reason=Failed to create file; code = 2}
+2026-08-19 14:41:34.494182+0200 LifeOS[19906:269182] [error] CoreData: error: During recovery, parent directory path reported as missing
+CoreData: error: During recovery, parent directory path reported as missing
+2026-08-19 14:41:34.518229+0200 LifeOS[19906:269182] [error] CoreData: error: Recovery attempt while adding <NSPersistentStoreDescription: 0x1042c4210> (type: SQLite, url: file:///Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library/Application%20Support/default.store) was successful!
+CoreData: error: Recovery attempt while adding <NSPersistentStoreDescription: 0x1042c4210> (type: SQLite, url: file:///Users/blotjules/Library/Developer/XCTestDevices/20EA8DAE-6CFB-4F73-84DB-34BA01C3D567/data/Containers/Shared/AppGroup/EE24B4D6-2A9A-43EC-8C74-31ECCD611964/Library/Application%20Support/default.store) was successful!
+Test Suite 'CoachExpertiseTests' started at 2026-08-19 14:41:35.333.
+Test Case '-[LifeOSTests.CoachExpertiseTests testBlocks_forFitnessTopic_returnsContent]' started.
+Test Case '-[LifeOSTests.CoachExpertiseTests testBlocks_forFitnessTopic_returnsContent]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.CoachExpertiseTests testBlocks_forNoTopic_returnsMetaRuleOnly]' started.
+Test Case '-[LifeOSTests.CoachExpertiseTests testBlocks_forNoTopic_returnsMetaRuleOnly]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.CoachExpertiseTests testCombinedBlocks_emptyActiveModules_doesNotCrash]' started.
+Test Case '-[LifeOSTests.CoachExpertiseTests testCombinedBlocks_emptyActiveModules_doesNotCrash]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.CoachExpertiseTests testCombinedBlocks_withCycle_addsCycleBlock]' started.
+Test Case '-[LifeOSTests.CoachExpertiseTests testCombinedBlocks_withCycle_addsCycleBlock]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.CoachExpertiseTests testDetect_emptyMessage_returnsEmpty]' started.
+Test Case '-[LifeOSTests.CoachExpertiseTests testDetect_emptyMessage_returnsEmpty]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.CoachExpertiseTests testDetect_fitness_onWorkoutKeywords]' started.
+Test Case '-[LifeOSTests.CoachExpertiseTests testDetect_fitness_onWorkoutKeywords]' passed (0.007 seconds).
+Test Case '-[LifeOSTests.CoachExpertiseTests testDetect_mind_onMeditationKeyword]' started.
+Test Case '-[LifeOSTests.CoachExpertiseTests testDetect_mind_onMeditationKeyword]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.CoachExpertiseTests testDetect_nutrition_onFoodKeywords]' started.
+Test Case '-[LifeOSTests.CoachExpertiseTests testDetect_nutrition_onFoodKeywords]' passed (0.003 seconds).
+Test Case '-[LifeOSTests.CoachExpertiseTests testDetect_sleep_onSleepKeywords]' started.
+Test Case '-[LifeOSTests.CoachExpertiseTests testDetect_sleep_onSleepKeywords]' passed (0.002 seconds).
+Test Suite 'CoachExpertiseTests' passed at 2026-08-19 14:41:35.359.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.021 (0.026) seconds
+Test Suite 'AppStorageKeysTests' started at 2026-08-19 14:41:35.372.
+Test Case '-[LifeOSTests.AppStorageKeysTests testCriticalKeys_matchExpectedStringValues]' started.
+Test Case '-[LifeOSTests.AppStorageKeysTests testCriticalKeys_matchExpectedStringValues]' passed (0.033 seconds).
+Test Case '-[LifeOSTests.AppStorageKeysTests testNotificationKeys_preservedWithDots]' started.
+Test Case '-[LifeOSTests.AppStorageKeysTests testNotificationKeys_preservedWithDots]' passed (0.001 seconds).
+Test Suite 'AppStorageKeysTests' passed at 2026-08-19 14:41:35.407.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.034 (0.035) seconds
+Test Suite 'ImageStoreTests' started at 2026-08-19 14:41:35.413.
+Test Case '-[LifeOSTests.ImageStoreTests testDeleteNilIsNoOp]' started.
+Test Case '-[LifeOSTests.ImageStoreTests testDeleteNilIsNoOp]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.ImageStoreTests testDeleteNonExistentFileIsNoOp]' started.
+2026-08-19 14:41:35.416172+0200 LifeOS[19906:268934] [data] ImageStore delete failed: Impossible de supprimer « fichier_fantome_D7FA84F4-5CEC-45CF-8A7E-F69F08E6198D.jpg ».
+Test Case '-[LifeOSTests.ImageStoreTests testDeleteNonExistentFileIsNoOp]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.ImageStoreTests testDeleteRemovesFile]' started.
+Test Case '-[LifeOSTests.ImageStoreTests testDeleteRemovesFile]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.ImageStoreTests testLoadReturnNilForNilFilename]' started.
+Test Case '-[LifeOSTests.ImageStoreTests testLoadReturnNilForNilFilename]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.ImageStoreTests testLoadReturnNilForUnknownFilename]' started.
+Test Case '-[LifeOSTests.ImageStoreTests testLoadReturnNilForUnknownFilename]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.ImageStoreTests testSaveCreatesFileOnDisk]' started.
+Test Case '-[LifeOSTests.ImageStoreTests testSaveCreatesFileOnDisk]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.ImageStoreTests testSaveFilenameContainsPrefix]' started.
+Test Case '-[LifeOSTests.ImageStoreTests testSaveFilenameContainsPrefix]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.ImageStoreTests testSaveLoadRoundtrip]' started.
+Test Case '-[LifeOSTests.ImageStoreTests testSaveLoadRoundtrip]' passed (0.050 seconds).
+Test Case '-[LifeOSTests.ImageStoreTests testSaveReturnsNonEmptyFilename]' started.
+Test Case '-[LifeOSTests.ImageStoreTests testSaveReturnsNonEmptyFilename]' passed (0.009 seconds).
+Test Suite 'ImageStoreTests' passed at 2026-08-19 14:41:38.321.
+	 Executed 9 tests, with 0 failures (0 unexpected) in 0.072 (2.908) seconds
+Test Suite 'ModuleUsageTrackerTests' started at 2026-08-19 14:41:38.343.
+Test Case '-[LifeOSTests.ModuleUsageTrackerTests testCoreModules_returnsEmptyByDefault]' started.
+Test Case '-[LifeOSTests.ModuleUsageTrackerTests testCoreModules_returnsEmptyByDefault]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.ModuleUsageTrackerTests testReport_sortedByCountDescending]' started.
+Test Case '-[LifeOSTests.ModuleUsageTrackerTests testReport_sortedByCountDescending]' passed (0.014 seconds).
+Test Case '-[LifeOSTests.ModuleUsageTrackerTests testReset_clearsAllData]' started.
+Test Case '-[LifeOSTests.ModuleUsageTrackerTests testReset_clearsAllData]' passed (0.017 seconds).
+Test Case '-[LifeOSTests.ModuleUsageTrackerTests testTextReport_containsAllModules]' started.
+Test Case '-[LifeOSTests.ModuleUsageTrackerTests testTextReport_containsAllModules]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.ModuleUsageTrackerTests testTrack_antiDuplicateWithin60s]' started.
+Test Case '-[LifeOSTests.ModuleUsageTrackerTests testTrack_antiDuplicateWithin60s]' passed (0.832 seconds).
+Test Case '-[LifeOSTests.ModuleUsageTrackerTests testTrack_incrementsCount]' started.
+Test Case '-[LifeOSTests.ModuleUsageTrackerTests testTrack_incrementsCount]' passed (0.008 seconds).
+Test Case '-[LifeOSTests.ModuleUsageTrackerTests testUnusedModules_returnsAllWhenNothingTracked]' started.
+Test Case '-[LifeOSTests.ModuleUsageTrackerTests testUnusedModules_returnsAllWhenNothingTracked]' passed (0.001 seconds).
+Test Suite 'ModuleUsageTrackerTests' passed at 2026-08-19 14:41:39.226.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.878 (0.883) seconds
+Test Suite 'DataEraserTests' started at 2026-08-19 14:41:39.273.
+Test Case '-[LifeOSTests.DataEraserTests testExportBackup_countsEntities]' started.
+Test Case '-[LifeOSTests.DataEraserTests testExportBackup_countsEntities]' passed (0.082 seconds).
+Test Case '-[LifeOSTests.DataEraserTests testExportBackup_returnsValidJSON]' started.
+Test Case '-[LifeOSTests.DataEraserTests testExportBackup_returnsValidJSON]' passed (0.026 seconds).
+Test Suite 'DataEraserTests' passed at 2026-08-19 14:41:39.381.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.107 (0.109) seconds
+Test Suite 'MemoryExtractorTests' started at 2026-08-19 14:41:39.413.
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_blacklistedJurons_ignored]' started.
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_blacklistedJurons_ignored]' passed (0.013 seconds).
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_blacklistedVague_ignored]' started.
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_blacklistedVague_ignored]' passed (0.020 seconds).
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_contrainte_capturesAllergy]' started.
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_contrainte_capturesAllergy]' passed (0.039 seconds).
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_emptyMessage_returnsZero]' started.
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_emptyMessage_returnsZero]' passed (0.018 seconds).
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_fait_capturesPersonalInfo]' started.
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_fait_capturesPersonalInfo]' passed (0.038 seconds).
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_habitude_capturesRoutine]' started.
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_habitude_capturesRoutine]' passed (0.034 seconds).
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_multiPatternSameMessage_dedupes]' started.
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_multiPatternSameMessage_dedupes]' passed (0.027 seconds).
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_objectif_capturesGoal]' started.
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_objectif_capturesGoal]' passed (0.012 seconds).
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_sameGoalTwice_updatesInsteadOfDuplicating]' started.
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_sameGoalTwice_updatesInsteadOfDuplicating]' passed (0.015 seconds).
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_veryShortMessage_returnsZero]' started.
+Test Case '-[LifeOSTests.MemoryExtractorTests testExtract_veryShortMessage_returnsZero]' passed (0.012 seconds).
+Test Case '-[LifeOSTests.MemoryExtractorTests testTopMemories_limitRespected]' started.
+Test Case '-[LifeOSTests.MemoryExtractorTests testTopMemories_limitRespected]' passed (0.019 seconds).
+Test Case '-[LifeOSTests.MemoryExtractorTests testTopMemories_prefersPinned]' started.
+Test Case '-[LifeOSTests.MemoryExtractorTests testTopMemories_prefersPinned]' passed (0.021 seconds).
+Test Suite 'MemoryExtractorTests' passed at 2026-08-19 14:41:40.801.
+	 Executed 12 tests, with 0 failures (0 unexpected) in 0.268 (1.388) seconds
+Test Suite 'UIVocabularySanityTests' started at 2026-08-19 14:41:40.811.
+Test Case '-[LifeOSTests.UIVocabularySanityTests testForbiddenTokensAbsentFromUIStrings]' started.
+Test Case '-[LifeOSTests.UIVocabularySanityTests testForbiddenTokensAbsentFromUIStrings]' passed (0.214 seconds).
+Test Suite 'UIVocabularySanityTests' passed at 2026-08-19 14:41:41.026.
+	 Executed 1 test, with 0 failures (0 unexpected) in 0.214 (0.215) seconds
+Test Suite 'UserContextBuilderTests' started at 2026-08-19 14:41:41.086.
+Test Case '-[LifeOSTests.UserContextBuilderTests testEmptyLifeProfileDoesNotEmitBlock]' started.
+Test Case '-[LifeOSTests.UserContextBuilderTests testEmptyLifeProfileDoesNotEmitBlock]' passed (0.010 seconds).
+Test Case '-[LifeOSTests.UserContextBuilderTests testLifeProfileAppearsInBuiltContext]' started.
+Test Case '-[LifeOSTests.UserContextBuilderTests testLifeProfileAppearsInBuiltContext]' passed (0.004 seconds).
+Test Suite 'UserContextBuilderTests' passed at 2026-08-19 14:41:41.101.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.014 (0.015) seconds
+Test Suite 'AlarmManagerTests' started at 2026-08-19 14:41:41.343.
+Test Case '-[LifeOSTests.AlarmManagerTests testInitialStateNotRinging]' started.
+Test Case '-[LifeOSTests.AlarmManagerTests testInitialStateNotRinging]' passed (0.003 seconds).
+Test Case '-[LifeOSTests.AlarmManagerTests testSnoozeStopsRinging]' started.
+2026-08-19 14:41:42.012913+0200 LifeOS[19906:268934] [plugin] AddInstanceForFactory: No factory registered for id <CFUUID 0x114e6da80> F8BB1C28-BAE8-11D6-9C31-00039315CD46
+Test Case '-[LifeOSTests.AlarmManagerTests testSnoozeStopsRinging]' passed (0.944 seconds).
+Test Case '-[LifeOSTests.AlarmManagerTests testStopAndShowBriefingHidesAlarmScreen]' started.
+2026-08-19 14:41:42.301867+0200 LifeOS[19906:269183] [api] Updating content for activity 5E70EA86-89CB-450E-9D5D-D7C4FD94A4E4
+Test Case '-[LifeOSTests.AlarmManagerTests testStopAndShowBriefingHidesAlarmScreen]' passed (0.031 seconds).
+Test Case '-[LifeOSTests.AlarmManagerTests testStopRingingResetsState]' started.
+Test Case '-[LifeOSTests.AlarmManagerTests testStopRingingResetsState]' passed (0.016 seconds).
+Test Case '-[LifeOSTests.AlarmManagerTests testTriggerAlarmIsIdempotent]' started.
+Test Case '-[LifeOSTests.AlarmManagerTests testTriggerAlarmIsIdempotent]' passed (0.012 seconds).
+2026-08-19 14:41:42.367766+0200 LifeOS[19906:269183] [api] Updating content for activity C7D00326-D281-4B61-A7D5-1A48EBB6DB24
+Test Suite 'AlarmManagerTests' passed at 2026-08-19 14:41:43.260.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 1.006 (1.916) seconds
+2026-08-19 14:41:43.259882+0200 LifeOS[19906:269183] [api] Updating content for activity C7D00326-D281-4B61-A7D5-1A48EBB6DB24
+2026-08-19 14:41:43.283050+0200 LifeOS[19906:269243] [api] Updating content for activity C7D00326-D281-4B61-A7D5-1A48EBB6DB24
+◇ Test run started.
+↳ Testing Library Version: 1902
+↳ Target Platform: arm64-apple-ios13.0-simulator
+◇ Suite LifeOSTests started.
+◇ Test example() started.
+✔ Test example() passed after 0.001 seconds.
+✔ Suite LifeOSTests passed after 0.003 seconds.
+✔ Test run with 1 test in 1 suite passed after 0.004 seconds.
+Test Suite 'RetryHelperTests' started at 2026-08-19 14:41:43.370.
+Test Case '-[LifeOSTests.RetryHelperTests testWithBackoff_allAttemptsFail_throws]' started.
+2026-08-19 14:41:43.399884+0200 LifeOS[19906:269183] [network] op attempt 1/3 failed: fail
+2026-08-19 14:41:43.400094+0200 LifeOS[19906:269183] [network] op attempt 2/3 failed: fail
+2026-08-19 14:41:43.400175+0200 LifeOS[19906:269183] [network] op attempt 3/3 failed: fail
+Test Case '-[LifeOSTests.RetryHelperTests testWithBackoff_allAttemptsFail_throws]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.RetryHelperTests testWithBackoff_succeedsFirstTry]' started.
+Test Case '-[LifeOSTests.RetryHelperTests testWithBackoff_succeedsFirstTry]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.RetryHelperTests testWithBackoff_succeedsOnRetry]' started.
+2026-08-19 14:41:43.411317+0200 LifeOS[19906:269180] [network] op attempt 1/3 failed: L’opération n’a pas pu s’achever. (test erreur 1.)
+Test Case '-[LifeOSTests.RetryHelperTests testWithBackoff_succeedsOnRetry]' passed (0.632 seconds).
+Test Case '-[LifeOSTests.RetryHelperTests testWithBackoffOrNil_returnsNilOnFail]' started.
+2026-08-19 14:41:44.035887+0200 LifeOS[19906:269180] [network] op attempt 1/2 failed: L’opération n’a pas pu s’achever. (test erreur 1.)
+2026-08-19 14:41:44.036113+0200 LifeOS[19906:269180] [network] op attempt 2/2 failed: L’opération n’a pas pu s’achever. (test erreur 1.)
+Test Case '-[LifeOSTests.RetryHelperTests testWithBackoffOrNil_returnsNilOnFail]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.RetryHelperTests testWithBackoffOrNil_returnsValueOnSuccess]' started.
+Test Case '-[LifeOSTests.RetryHelperTests testWithBackoffOrNil_returnsValueOnSuccess]' passed (0.001 seconds).
+Test Suite 'RetryHelperTests' passed at 2026-08-19 14:41:44.038.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.638 (0.668) seconds
+Test Suite 'LanguageForcerTests' started at 2026-08-19 14:41:44.317.
+Test Case '-[LifeOSTests.LanguageForcerTests testApply_forAuto_clearsAppleLanguages]' started.
+Test Case '-[LifeOSTests.LanguageForcerTests testApply_forAuto_clearsAppleLanguages]' passed (0.007 seconds).
+Test Case '-[LifeOSTests.LanguageForcerTests testApply_forFrench_overridesAppleLanguages]' started.
+Test Case '-[LifeOSTests.LanguageForcerTests testApply_forFrench_overridesAppleLanguages]' passed (0.006 seconds).
+Test Case '-[LifeOSTests.LanguageForcerTests testCurrent_defaultsToAuto]' started.
+Test Case '-[LifeOSTests.LanguageForcerTests testCurrent_defaultsToAuto]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.LanguageForcerTests testCurrent_reflectsPersistedChoice]' started.
+Test Case '-[LifeOSTests.LanguageForcerTests testCurrent_reflectsPersistedChoice]' passed (0.006 seconds).
+Test Case '-[LifeOSTests.LanguageForcerTests testOptions_haveExpectedRawValues]' started.
+Test Case '-[LifeOSTests.LanguageForcerTests testOptions_haveExpectedRawValues]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.LanguageForcerTests testOptions_labelsAreNonEmpty]' started.
+Test Case '-[LifeOSTests.LanguageForcerTests testOptions_labelsAreNonEmpty]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.LanguageForcerTests testSet_persistsChoiceToUserDefaults]' started.
+Test Case '-[LifeOSTests.LanguageForcerTests testSet_persistsChoiceToUserDefaults]' passed (0.005 seconds).
+Test Suite 'LanguageForcerTests' passed at 2026-08-19 14:41:44.539.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.027 (0.222) seconds
+Test Suite 'ThemeContrastTests' started at 2026-08-19 14:41:44.609.
+Test Case '-[LifeOSTests.ThemeContrastTests test_document_themes_below_normalText_threshold]' started.
+[ThemeContrast] Ces thèmes NE passent PAS WCAG AA texte normal (4.5:1) — à réserver aux textes bold/large :
+  - Rose (rose / blanc) → 3.25:1
+Test Case '-[LifeOSTests.ThemeContrastTests test_document_themes_below_normalText_threshold]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.ThemeContrastTests test_onAccent_meets_WCAG_AA_largeText_forEveryTheme]' started.
+Test Case '-[LifeOSTests.ThemeContrastTests test_onAccent_meets_WCAG_AA_largeText_forEveryTheme]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.ThemeContrastTests test_selectableThemes_matchesFixtures]' started.
+Test Case '-[LifeOSTests.ThemeContrastTests test_selectableThemes_matchesFixtures]' passed (0.001 seconds).
+Test Suite 'ThemeContrastTests' passed at 2026-08-19 14:41:44.613.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.002 (0.003) seconds
+Test Suite 'CalendarSafetyTests' started at 2026-08-19 14:41:44.738.
+Test Case '-[LifeOSTests.CalendarSafetyTests testFourteenDaysAgoNeverNil]' started.
+Test Case '-[LifeOSTests.CalendarSafetyTests testFourteenDaysAgoNeverNil]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.CalendarSafetyTests testGoalPresetDatesNeverNil]' started.
+Test Case '-[LifeOSTests.CalendarSafetyTests testGoalPresetDatesNeverNil]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.CalendarSafetyTests testMoodHistoryPast6DaysNeverNil]' started.
+Test Case '-[LifeOSTests.CalendarSafetyTests testMoodHistoryPast6DaysNeverNil]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.CalendarSafetyTests testPastCutoffFallbackIsBeforeNow]' started.
+Test Case '-[LifeOSTests.CalendarSafetyTests testPastCutoffFallbackIsBeforeNow]' passed (0.000 seconds).
+Test Case '-[LifeOSTests.CalendarSafetyTests testTomorrowFallbackIsAfterToday]' started.
+Test Case '-[LifeOSTests.CalendarSafetyTests testTomorrowFallbackIsAfterToday]' passed (0.000 seconds).
+Test Case '-[LifeOSTests.CalendarSafetyTests testTomorrowStartNeverNil]' started.
+Test Case '-[LifeOSTests.CalendarSafetyTests testTomorrowStartNeverNil]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.CalendarSafetyTests testWeekDataDatesNeverNil]' started.
+Test Case '-[LifeOSTests.CalendarSafetyTests testWeekDataDatesNeverNil]' passed (0.001 seconds).
+Test Suite 'CalendarSafetyTests' passed at 2026-08-19 14:41:44.980.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.006 (0.242) seconds

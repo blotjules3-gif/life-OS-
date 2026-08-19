@@ -1,0 +1,53 @@
+14:40:51.062 xcodebuild[19574:264941] Got a sim device notification for Clone 1 of iPhone 17 Pro: {
+    notification = "availableDevices_changed";
+}
+14:40:51.063 xcodebuild[19574:264941] Got a sim device notification for Clone 1 of iPhone 17 Pro: {
+    device = "Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567, iOS 26.5, Booting)";
+    "last_booted_at" = "2026-08-19 12:40:51 +0000";
+    "new_state" = 2;
+    notification = "device_state";
+    "prev_state" = 1;
+}
+14:40:51.063 xcodebuild[19574:264941] Sim Clone 1 of iPhone 17 Pro state changed to 2
+14:40:51.063 xcodebuild[19574:264941] Got a sim device notification for Clone 1 of iPhone 17 Pro: {
+    "SimDeviceNotification_NewBootStatus" = "SimDeviceBootInfo { status = 0 (Booting), elapsed = 0.000000, isTerminal = 0, info = (null) }";
+    device = "Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567, iOS 26.5, Booting)";
+    notification = "SimDeviceNotificationType_BootStatus";
+}
+14:40:51.336 xcodebuild[19574:264946] Got a sim device notification for Clone 1 of iPhone 17 Pro: {
+    notification = "availableDevices_changed";
+}
+14:40:51.336 xcodebuild[19574:264946] Got a sim device notification for Clone 1 of iPhone 17 Pro: {
+    device = "Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567, iOS 26.5, Booted)";
+    "new_state" = 3;
+    notification = "device_state";
+    "prev_state" = 2;
+}
+14:40:51.336 xcodebuild[19574:264946] Sim Clone 1 of iPhone 17 Pro state changed to 3
+14:40:51.336 xcodebuild[19574:264946] Sim Clone 1 of iPhone 17 Pro: Unregistering for sim device notification with token 3
+14:40:51.336 xcodebuild[19574:264946] Calling -[SimDevice getenv:error:] for TESTMANAGERD_SIM_SOCK
+14:40:51.338 xcodebuild[19574:264946] Sim Clone 1 of iPhone 17 Pro is booted but getenv returned nil for test connection socket path; getenv error: Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory".
+ Will retry in 1s (1 attempts so far).
+14:40:52.404 xcodebuild[19574:264954] Calling -[SimDevice getenv:error:] for TESTMANAGERD_SIM_SOCK
+14:40:52.405 xcodebuild[19574:264954] Sim Clone 1 of iPhone 17 Pro has testmanagerd socket at /private/var/tmp/com.apple.launchd.C80WB2aBhd/com.apple.testmanagerd.unix-domain.socket
+14:40:52.405 xcodebuild[19574:264954] Validating test connection socket path (/private/var/tmp/com.apple.launchd.C80WB2aBhd/com.apple.testmanagerd.unix-domain.socket)
+14:40:52.405 xcodebuild[19574:264954] Constructing transport for test connection socket
+14:40:52.405 xcodebuild[19574:264954] Connected socket 37 to testmanagerd for Sim Clone 1 of iPhone 17 Pro
+14:40:52.406 xcodebuild[19574:264954] Initiating control session with IDE capabilities: <XCTCapabilities: 0x733c382e0>: {
+}
+14:40:53.464 xcodebuild[19574:264954] Got reply to control session initiation request (result:error): <XCTCapabilities: 0x733c38300>: {
+    "authorize test session capability" = 1;
+    "automation mode" = 1;
+    "daemon container sandbox extension" = 1;
+    "initiate daemon control session capability" = 4;
+    "initiate test runner session capability" = 2;
+    "record UI interaction capability" = 2;
+    "recording events as source code" = 1;
+    "report crashes capability" = 1;
+    "request log archive capability" = 1;
+    "supports delayed attachment transfers" = 1;
+}: (null)
+14:40:53.464 xcodebuild[19574:264954] Requesting crash report collection for process names: LifeOSTests, xctest, debugserver, DTServiceHub, FrontBoard, LifeOS, assertiond, SpringBoard, testmanagerd, backboardd, runningboardd
+14:40:54.373 xcodebuild[19574:264924] Got reply to crash report collection request (error: (null))
+14:41:34.786 xcodebuild[19574:264941] Requesting authorization for pid 19906
+14:41:34.791 xcodebuild[19574:268379] Got reply to authorization request for pid 19906 (result:error): 1: (null)

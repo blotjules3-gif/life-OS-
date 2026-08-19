@@ -1,0 +1,34 @@
+14:41:39.204 xcodebuild[19574:264941] Got a sim device notification for Clone 2 of iPhone 17 Pro: {
+    notification = "availableDevices_changed";
+}
+14:41:39.204 xcodebuild[19574:264941] Got a sim device notification for Clone 2 of iPhone 17 Pro: {
+    device = "Clone 2 of iPhone 17 Pro (69E8D480-462D-44B6-82E4-33D7D12409AB, iOS 26.5, Booting)";
+    "last_booted_at" = "2026-08-19 12:41:39 +0000";
+    "new_state" = 2;
+    notification = "device_state";
+    "prev_state" = 1;
+}
+14:41:39.204 xcodebuild[19574:264941] Sim Clone 2 of iPhone 17 Pro state changed to 2
+14:41:39.243 xcodebuild[19574:268945] Got a sim device notification for Clone 2 of iPhone 17 Pro: {
+    "SimDeviceNotification_NewBootStatus" = "SimDeviceBootInfo { status = 0 (Booting), elapsed = 0.000000, isTerminal = 0, info = (null) }";
+    device = "Clone 2 of iPhone 17 Pro (69E8D480-462D-44B6-82E4-33D7D12409AB, iOS 26.5, Booting)";
+    notification = "SimDeviceNotificationType_BootStatus";
+}
+14:41:39.911 xcodebuild[19574:269276] Got a sim device notification for Clone 2 of iPhone 17 Pro: {
+    notification = "availableDevices_changed";
+}
+14:41:39.911 xcodebuild[19574:269276] Got a sim device notification for Clone 2 of iPhone 17 Pro: {
+    device = "Clone 2 of iPhone 17 Pro (69E8D480-462D-44B6-82E4-33D7D12409AB, iOS 26.5, Booted)";
+    "new_state" = 3;
+    notification = "device_state";
+    "prev_state" = 2;
+}
+14:41:39.911 xcodebuild[19574:269276] Sim Clone 2 of iPhone 17 Pro state changed to 3
+14:41:39.913 xcodebuild[19574:269276] Sim Clone 2 of iPhone 17 Pro: Unregistering for sim device notification with token 3
+14:41:39.916 xcodebuild[19574:269276] Calling -[SimDevice getenv:error:] for TESTMANAGERD_SIM_SOCK
+14:41:40.906 xcodebuild[19574:269276] Sim Clone 2 of iPhone 17 Pro has testmanagerd socket at /private/var/tmp/com.apple.launchd.u77BSCfwiF/com.apple.testmanagerd.unix-domain.socket
+14:41:40.906 xcodebuild[19574:269276] Validating test connection socket path (/private/var/tmp/com.apple.launchd.u77BSCfwiF/com.apple.testmanagerd.unix-domain.socket)
+14:41:40.906 xcodebuild[19574:269276] Constructing transport for test connection socket
+14:41:40.906 xcodebuild[19574:269276] Connected socket 54 to testmanagerd for Sim Clone 2 of iPhone 17 Pro
+14:41:40.908 xcodebuild[19574:269276] Initiating control session with IDE capabilities: <XCTCapabilities: 0x733c388a0>: {
+}

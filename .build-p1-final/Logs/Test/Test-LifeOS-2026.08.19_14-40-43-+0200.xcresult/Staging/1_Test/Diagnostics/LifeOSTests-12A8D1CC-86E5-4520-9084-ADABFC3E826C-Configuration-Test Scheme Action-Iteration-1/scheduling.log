@@ -1,0 +1,65 @@
+2026-08-19 12:40:50 +0000: Received worker from worker provider: <XCTHTestRunner: 0x735f60280, PID: 0, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:34 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished bootstrapping
+2026-08-19 12:41:34 +0000: Parallelization enabled; test execution driven by the IDE
+2026-08-19 12:41:34 +0000: Requesting parallelizable groups from worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:35 +0000: Received parallelizable groups from worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>: (
+    "<XCTTestIdentifier container, class [\"CalendarSafetyTests\"]>",
+    "<XCTTestIdentifier container, class [\"RetryHelperTests\"]>",
+    "<XCTTestIdentifier container, class [\"DataEraserTests\"]>",
+    "<XCTTestIdentifier container, class [\"AlarmManagerTests\"]>",
+    "<XCTTestIdentifier container, class [\"AppStorageKeysTests\"]>",
+    "<XCTTestIdentifier container, class [\"MemoryExtractorTests\"]>",
+    "<XCTTestIdentifier container, class [\"UIVocabularySanityTests\"]>",
+    "<XCTTestIdentifier container, class [\"UserContextBuilderTests\"]>",
+    "<XCTTestIdentifier container, class [\"LanguageForcerTests\"]>",
+    "<XCTTestIdentifier container, class [\"ImageStoreTests\"]>",
+    "<XCTTestIdentifier container, class [\"ModuleUsageTrackerTests\"]>",
+    "<XCTTestIdentifier container, class [\"CoachExpertiseTests\"]>",
+    "<XCTTestIdentifier container, class [\"ThemeContrastTests\"]>",
+    "<XCTTestIdentifier container [\"__SwiftTestingParallelizationPlaceholderIdentifier\"]>"
+)
+2026-08-19 12:41:35 +0000: Executing tests <XCTTestIdentifier container, class ["CoachExpertiseTests"]>, <XCTTestIdentifier container, class ["AppStorageKeysTests"]>, <XCTTestIdentifier container, class ["ImageStoreTests"]>, <XCTTestIdentifier container, class ["ModuleUsageTrackerTests"]>, <XCTTestIdentifier container, class ["DataEraserTests"]>, <XCTTestIdentifier container, class ["MemoryExtractorTests"]>, <XCTTestIdentifier container, class ["UIVocabularySanityTests"]>, <XCTTestIdentifier container, class ["UserContextBuilderTests"]>, <XCTTestIdentifier container, class ["AlarmManagerTests"]>, <XCTTestIdentifier container, class ["LanguageForcerTests"]>, <XCTTestIdentifier container, class ["RetryHelperTests"]>, <XCTTestIdentifier container ["__SwiftTestingParallelizationPlaceholderIdentifier"]>, <XCTTestIdentifier container, class ["ThemeContrastTests"]>, <XCTTestIdentifier container, class ["CalendarSafetyTests"]>; skipping tests 
+2026-08-19 12:41:35 +0000: Dispatching tests <XCTTestIdentifier container, class ["CoachExpertiseTests"]> to worker: <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:35 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully.
+2026-08-19 12:41:35 +0000: Dispatching tests <XCTTestIdentifier container, class ["AppStorageKeysTests"]> to worker: <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:35 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully.
+2026-08-19 12:41:35 +0000: Dispatching tests <XCTTestIdentifier container, class ["ImageStoreTests"]> to worker: <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:38 +0000: Received worker from worker provider: <XCTHTestRunner: 0x735f61040, PID: 0, device: Clone 2 of iPhone 17 Pro (69E8D480-462D-44B6-82E4-33D7D12409AB)>
+2026-08-19 12:41:38 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully.
+2026-08-19 12:41:38 +0000: Dispatching tests <XCTTestIdentifier container, class ["ModuleUsageTrackerTests"]> to worker: <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:39 +0000: Received worker from worker provider: <XCTHTestRunner: 0x7361d4f00, PID: 0, device: Clone 3 of iPhone 17 Pro (3527F9EE-6760-4BAC-9BAF-A930C3D45ADB)>
+2026-08-19 12:41:39 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully.
+2026-08-19 12:41:39 +0000: Dispatching tests <XCTTestIdentifier container, class ["DataEraserTests"]> to worker: <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:39 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully.
+2026-08-19 12:41:39 +0000: Dispatching tests <XCTTestIdentifier container, class ["MemoryExtractorTests"]> to worker: <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:40 +0000: Received worker from worker provider: <XCTHTestRunner: 0x7361d5040, PID: 0, device: Clone 4 of iPhone 17 Pro (437F40D1-A9C7-4A38-A79D-0000B06486B6)>
+2026-08-19 12:41:40 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully.
+2026-08-19 12:41:40 +0000: Dispatching tests <XCTTestIdentifier container, class ["UIVocabularySanityTests"]> to worker: <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:41 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully.
+2026-08-19 12:41:41 +0000: Dispatching tests <XCTTestIdentifier container, class ["UserContextBuilderTests"]> to worker: <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:41 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully.
+2026-08-19 12:41:41 +0000: Dispatching tests <XCTTestIdentifier container, class ["AlarmManagerTests"]> to worker: <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:43 +0000: Received worker from worker provider: <XCTHTestRunner: 0x7361d4780, PID: 0, device: Clone 5 of iPhone 17 Pro (8EB879FA-C123-4414-A471-16430A1E2FCF)>
+2026-08-19 12:41:43 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully.
+2026-08-19 12:41:43 +0000: Dispatching tests <XCTTestIdentifier container ["__SwiftTestingParallelizationPlaceholderIdentifier"]> to worker: <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:43 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully.
+2026-08-19 12:41:43 +0000: Dispatching tests <XCTTestIdentifier container, class ["RetryHelperTests"]> to worker: <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:44 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully.
+2026-08-19 12:41:44 +0000: Dispatching tests <XCTTestIdentifier container, class ["LanguageForcerTests"]> to worker: <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:44 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully.
+2026-08-19 12:41:44 +0000: Dispatching tests <XCTTestIdentifier container, class ["ThemeContrastTests"]> to worker: <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:44 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully.
+2026-08-19 12:41:44 +0000: Dispatching tests <XCTTestIdentifier container, class ["CalendarSafetyTests"]> to worker: <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)>
+2026-08-19 12:41:44 +0000: Scheduler finished dispatching test classes
+2026-08-19 12:41:44 +0000: Cancelling bootstrapping worker: <XCTHTestRunner: 0x7361d4f00, PID: 0, device: Clone 3 of iPhone 17 Pro (3527F9EE-6760-4BAC-9BAF-A930C3D45ADB)>
+2026-08-19 12:41:44 +0000: Cancelling bootstrapping worker: <XCTHTestRunner: 0x7361d5040, PID: 0, device: Clone 4 of iPhone 17 Pro (437F40D1-A9C7-4A38-A79D-0000B06486B6)>
+2026-08-19 12:41:44 +0000: Cancelling bootstrapping worker: <XCTHTestRunner: 0x7361d4780, PID: 0, device: Clone 5 of iPhone 17 Pro (8EB879FA-C123-4414-A471-16430A1E2FCF)>
+2026-08-19 12:41:44 +0000: Cancelling bootstrapping worker: <XCTHTestRunner: 0x735f61040, PID: 0, device: Clone 2 of iPhone 17 Pro (69E8D480-462D-44B6-82E4-33D7D12409AB)>
+2026-08-19 12:41:44 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully.
+2026-08-19 12:41:44 +0000: Telling worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> to shutdown
+2026-08-19 12:41:45 +0000: Worker <XCTHTestRunner: 0x7361d5040, PID: 0, device: Clone 4 of iPhone 17 Pro (437F40D1-A9C7-4A38-A79D-0000B06486B6)> finished with error: Error Domain=XCTHTestOperationCoordinatorErrorDomain Code=9 "Testing was canceled" UserInfo={NSLocalizedDescription=Testing was canceled}
+2026-08-19 12:41:45 +0000: Worker <XCTHTestRunner: 0x7361d4780, PID: 0, device: Clone 5 of iPhone 17 Pro (8EB879FA-C123-4414-A471-16430A1E2FCF)> finished with error: Error Domain=XCTHTestOperationCoordinatorErrorDomain Code=9 "Testing was canceled" UserInfo={NSLocalizedDescription=Testing was canceled}
+2026-08-19 12:41:45 +0000: Worker <XCTHTestRunner: 0x735f61040, PID: 0, device: Clone 2 of iPhone 17 Pro (69E8D480-462D-44B6-82E4-33D7D12409AB)> finished with error: Error Domain=XCTHTestOperationCoordinatorErrorDomain Code=9 "Testing was canceled" UserInfo={NSLocalizedDescription=Testing was canceled}
+2026-08-19 12:41:45 +0000: Worker <XCTHTestRunner: 0x7361d4f00, PID: 0, device: Clone 3 of iPhone 17 Pro (3527F9EE-6760-4BAC-9BAF-A930C3D45ADB)> finished with error: Error Domain=XCTHTestOperationCoordinatorErrorDomain Code=9 "Testing was canceled" UserInfo={NSLocalizedDescription=Testing was canceled}
+2026-08-19 12:41:46 +0000: Worker <XCTHTestRunner: 0x735f60280, PID: 19906, device: Clone 1 of iPhone 17 Pro (20EA8DAE-6CFB-4F73-84DB-34BA01C3D567)> finished successfully
+2026-08-19 12:41:46 +0000: Finished executing tests (cancelled: No)
