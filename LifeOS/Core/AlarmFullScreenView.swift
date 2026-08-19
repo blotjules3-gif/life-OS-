@@ -64,7 +64,7 @@ struct AlarmFullScreenView: View {
                         alarm.stopAndShowBriefing()
                     } label: {
                         Text("Arrêter")
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.system(size: stopSize, weight: .semibold))
                             .foregroundStyle(.black)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 22)
