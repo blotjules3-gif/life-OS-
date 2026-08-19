@@ -24,6 +24,15 @@ enum IntelligentExtractor {
         let sourceSnippet: String
     }
 
+    /// Résultat d'un upsert : quel field, ancienne valeur (si update), nouvelle.
+    struct PersistedChange {
+        let fieldID: String
+        let displayName: String
+        let previousValueString: String?
+        let newValueString: String
+        let unit: String?
+    }
+
     /// Analyse un message user et retourne les extractions.
     /// Idempotent : n'écrit RIEN dans le store — l'appelant décide.
     static func extract(from message: String) async -> [Extraction] {
