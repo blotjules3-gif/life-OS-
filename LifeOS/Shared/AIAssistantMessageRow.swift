@@ -103,9 +103,9 @@ struct AIAssistantMessageRow: View {
                 if !isUser { Spacer(minLength: 56) }
             }
 
-            // Bouton speaker (TTS) sous la bulle coach si prefs activent la voix
-            if !isUser, !message.isThinking, ttsEnabled {
-                speakerButton
+            // Boutons inline sous la bulle coach (feedback + TTS + safety)
+            if !isUser, !message.isThinking {
+                inlineActionRow
             }
 
             // Badge sécurité inline (dosage, médicament, finance, restriction)
