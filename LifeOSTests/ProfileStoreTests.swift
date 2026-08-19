@@ -47,12 +47,12 @@ final class ProfileStoreTests: XCTestCase {
     }
 
     func testUpsert_updatesExisting_withHigherConfidence() {
-        _ = ProfileStore.shared.upsert("body.currentWeightKg", value: 70, source: .chat, confidence: 0.7)
-        let result = ProfileStore.shared.upsert("body.currentWeightKg", value: 72, source: .chat, confidence: 0.9)
+        _ = ProfileStore.shared.upsert("body.currentWeightKg", value: 70.0, source: .chat, confidence: 0.7)
+        let result = ProfileStore.shared.upsert("body.currentWeightKg", value: 72.0, source: .chat, confidence: 0.9)
         guard case .updated(let field) = result else {
             return XCTFail("Expected .updated, got \(result)")
         }
-        XCTAssertEqual(field.valueString, "72")
+        XCTAssertEqual(field.valueString, "72.0")
         XCTAssertEqual(field.confidence, 0.9, accuracy: 0.001)
     }
 
