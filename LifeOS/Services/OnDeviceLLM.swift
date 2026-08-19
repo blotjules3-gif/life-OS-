@@ -137,12 +137,14 @@ enum OnDeviceLLM {
     private static func respondViaAppleIntelligence(
         message: String,
         moduleContext: String?,
-        injectContext: Bool
+        injectContext: Bool,
+        recentUpdates: [String]
     ) async -> String? {
         let system = buildSystemPrompt(
             message: message,
             moduleContext: moduleContext,
-            injectContext: injectContext
+            injectContext: injectContext,
+            recentUpdates: recentUpdates
         )
         let session = LanguageModelSession(instructions: system)
         // Retry léger : 2 tentatives avec 1s de délai entre les deux.
