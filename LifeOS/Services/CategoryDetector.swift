@@ -58,9 +58,9 @@ enum CategoryDetector {
             ("végétarien", 0.4), ("vegan", 0.4), ("keto", 0.4),
         ],
         "sleep": [
-            ("dormi", 0.4), ("dormir", 0.35), ("sommeil", 0.45), ("nuit", 0.25),
-            ("insomnie", 0.5), ("reveil", 0.25), ("coucher", 0.3), ("fatigue", 0.2),
-            ("sieste", 0.25), ("melatonine", 0.35),
+            ("dormi", 0.4), ("dormir", 0.35), ("dors", 0.4), ("sommeil", 0.45),
+            ("nuit", 0.25), ("insomnie", 0.5), ("reveil", 0.25), ("coucher", 0.3),
+            ("fatigue", 0.2), ("sieste", 0.25), ("melatonine", 0.35),
         ],
         "mind": [
             ("stress", 0.4), ("anxiete", 0.4), ("meditation", 0.45), ("mediter", 0.4),
