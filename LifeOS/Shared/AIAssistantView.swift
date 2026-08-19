@@ -302,6 +302,35 @@ final class AIAssistantViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Question Engine (Compléter mon profil)
+
+    /// Cible du dernier `askNextProfileQuestion` — pour enchaîner si le user y répond.
+    @Published var pendingProfileQuestionFieldID: String?
+
+    /// Déclenche la première (ou la suivante) question du QuestionEngine.
+    /// Le message coach s'affiche comme si le coach l'avait initié.
+    func askNextProfileQuestion() {
+        guard !isLoading else { return }
+        appendThinking()
+        isLoading = true
+        Task {
+            let recent = messages.suffix(6).map { (role: $0.role, text: $0.text) }
+            let suggestion = await QuestionEngine.nextQuestion(recentConversation: recent)
+            removeThinking()
+            isLoading = false
+            guard let suggestion else {
+                appendAssistantMessage(
+                    "Ton profil est complet sur les infos importantes. Tu peux continuer à me parler naturellement.",
+                    actions: []
+                )
+                pendingProfileQuestionFieldID = nil
+                return
+            }
+            pendingProfileQuestionFieldID = suggestion.targetFieldID
+            appendAssistantMessage(suggestion.text, actions: [], animateReveal: true)
+        }
+    }
+
     // MARK: - Feedback loop
 
     /// L'utilisateur a aimé cette réponse — on le loggue pour la boucle
