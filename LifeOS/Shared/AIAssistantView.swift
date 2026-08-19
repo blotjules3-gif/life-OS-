@@ -250,28 +250,46 @@ final class AIAssistantViewModel: ObservableObject {
         isLoading = true
 
         Task {
-            // Extraction automatique du profil AVANT la réponse coach :
-            // ainsi le contexte injecté au LLM est déjà à jour et les toasts
-            // apparaissent en temps réel sous la bulle utilisateur.
-            let updatedFields = await IntelligentExtractor.extractAndPersist(
+            // 1. Extraction typée → mise à jour ProfileField (avant la réponse coach
+            //    pour que le snapshot injecté au LLM soit déjà à jour).
+            let changes = await IntelligentExtractor.extractAndPersist(
                 from: content, source: .chat
             )
-            for fieldID in updatedFields {
-                if let spec = ProfileFieldCatalog.all[fieldID] {
-                    showToast("Profil : \(spec.displayName) mis à jour", module: spec.category)
+            for change in changes {
+                let unit = change.unit.map { " \($0)" } ?? ""
+                let toastText: String
+                if let prev = change.previousValueString {
+                    toastText = "\(change.displayName) : \(prev) → \(change.newValueString)\(unit)"
+                } else {
+                    toastText = "\(change.displayName) : \(change.newValueString)\(unit)"
                 }
+                showToast(toastText, module: ProfileFieldCatalog.all[change.fieldID]?.category)
             }
+
+            // 2. Détection automatique de la catégorie évoquée par le message.
+            //    Si le user tape "je dors mal", on force moduleContext=sleep
+            //    pour que CoachExpertise injecte le bloc d'expertise dédié.
+            let detectedCategory: String? = {
+                if let module { return module }
+                return CategoryDetector.detect(from: content).first?.category
+            }()
 
             let reply = await OnDeviceLLM.respond(
                 to: content,
                 ctx: modelContext,
-                moduleContext: module
+                moduleContext: detectedCategory
             )
             isServerOffline = false
             removeThinking()
             streamingText = nil
             appendAssistantMessage(reply.text, actions: [], animateReveal: true)
             isLoading = false
+
+            // 3. Invalider le cache UserContextBuilder → le prochain send()
+            //    lira les ProfileField frais qu'on vient d'insérer.
+            if !changes.isEmpty {
+                UserContextBuilder.shared.invalidateCache()
+            }
         }
     }
 
