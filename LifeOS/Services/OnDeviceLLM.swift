@@ -171,7 +171,8 @@ enum OnDeviceLLM {
     private static func buildSystemPrompt(
         message: String,
         moduleContext: String?,
-        injectContext: Bool
+        injectContext: Bool,
+        recentUpdates: [String] = []
     ) -> String {
         var parts: [String] = []
 
