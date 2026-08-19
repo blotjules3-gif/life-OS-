@@ -250,8 +250,7 @@ final class AIAssistantViewModel: ObservableObject {
         isLoading = true
 
         Task {
-            // 1. Extraction typée → mise à jour ProfileField (avant la réponse coach
-            //    pour que le snapshot injecté au LLM soit déjà à jour).
+            // 1. Extraction typée → mise à jour ProfileField.
             let changes = await IntelligentExtractor.extractAndPersist(
                 from: content, source: .chat
             )
@@ -266,18 +265,45 @@ final class AIAssistantViewModel: ObservableObject {
                 showToast(toastText, module: ProfileFieldCatalog.all[change.fieldID]?.category)
             }
 
-            // 2. Détection automatique de la catégorie évoquée par le message.
-            //    Si le user tape "je dors mal", on force moduleContext=sleep
-            //    pour que CoachExpertise injecte le bloc d'expertise dédié.
+            // 2. Détection + exécution des intents (créer habitude, tâche, rappel).
+            let executedIntents = await IntentExecutor.detectAndExecute(from: content, context: modelContext)
+            for intent in executedIntents {
+                let toastModule: String? = {
+                    switch intent.type {
+                    case .createHabit: return "productivity"
+                    case .createTodo: return "productivity"
+                    case .createReminder: return nil
+                    }
+                }()
+                showToast(intent.userFacingSummary, module: toastModule)
+            }
+
+            // 3. Détection automatique de la catégorie évoquée par le message.
             let detectedCategory: String? = {
                 if let module { return module }
                 return CategoryDetector.detect(from: content).first?.category
             }()
 
+            // 4. Préparer la liste des updates pour que le coach les mentionne EXPLICITEMENT
+            //    dans sa réponse (sinon l'utilisateur croit qu'on n'a rien pris en compte).
+            var recentUpdates: [String] = []
+            for change in changes {
+                let unit = change.unit.map { " \($0)" } ?? ""
+                if let prev = change.previousValueString {
+                    recentUpdates.append("\(change.displayName) mis à jour : \(prev) → \(change.newValueString)\(unit)")
+                } else {
+                    recentUpdates.append("\(change.displayName) enregistré : \(change.newValueString)\(unit)")
+                }
+            }
+            for intent in executedIntents {
+                recentUpdates.append(intent.userFacingSummary)
+            }
+
             let reply = await OnDeviceLLM.respond(
                 to: content,
                 ctx: modelContext,
-                moduleContext: detectedCategory
+                moduleContext: detectedCategory,
+                recentUpdates: recentUpdates
             )
             isServerOffline = false
             removeThinking()
