@@ -311,9 +311,9 @@ final class AIAssistantViewModel: ObservableObject {
             appendAssistantMessage(reply.text, actions: [], animateReveal: true)
             isLoading = false
 
-            // 3. Invalider le cache UserContextBuilder → le prochain send()
+            // 5. Invalider le cache UserContextBuilder → le prochain send()
             //    lira les ProfileField frais qu'on vient d'insérer.
-            if !changes.isEmpty {
+            if !changes.isEmpty || !executedIntents.isEmpty {
                 UserContextBuilder.shared.invalidateCache()
             }
 
