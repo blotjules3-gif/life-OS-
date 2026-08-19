@@ -105,6 +105,8 @@ struct LifeOSApp: App {
         .onAppear {
             resetDailyValuesIfNeeded()
             EngagementTracker.shared.recordOpen()
+            // Bootstrap du store profil (avant migration qui l'utilise).
+            ProfileStore.shared.setContext(container.mainContext)
             // Migration one-shot des données existantes vers ProfileField.
             ProfileMigration.runIfNeeded(context: container.mainContext)
             // Pas de demande de permission pendant l'onboarding : elle est faite
