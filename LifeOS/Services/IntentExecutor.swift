@@ -61,12 +61,15 @@ enum IntentExecutor {
         // 1) Regex FR rapides
         detected.append(contentsOf: regexPass(trimmed))
 
-        // 2) LLM fallback si Apple Intelligence dispo (couvre les messages complexes)
+        // 2) LLM AGRESSIF si Apple Intelligence dispo — c'est le vrai extracteur
+        //    d'intents pour les phrases complexes ("je veux que tu crées des rappels
+        //    quotidiens pour ma séance, mes peptides, mes protéines").
+        //    Déclenché dès que le message contient une intention plausible (verbes clés)
+        //    OU s'il fait plus de 30 chars.
         #if canImport(FoundationModels)
         if #available(iOS 26.0, *), SystemLanguageModel.default.isAvailable,
-           (detected.isEmpty || trimmed.count > 60) {
+           shouldRunLLMPass(trimmed) {
             let llm = await llmPass(trimmed)
-            // Dédup par (type, title lowercased)
             let known = Set(detected.map { "\($0.type.rawValue):\($0.title.lowercased())" })
             detected.append(contentsOf: llm.filter { !known.contains("\($0.type.rawValue):\($0.title.lowercased())") })
         }
