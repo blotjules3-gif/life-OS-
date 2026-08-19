@@ -474,6 +474,26 @@ struct HomeDashboardContent: View {
         let cutoff = Calendar.current.date(byAdding: .day, value: -14, to: .now) ?? Date()
         return moods.filter { $0.date > cutoff }.sorted { $0.date < $1.date }
     }
+
+    // A11y — descriptions vocalisées pour les Charts (VoiceOver n'annonce sinon
+    // rien d'utile sur un BarMark/LineMark).
+    private var weekChartA11ySummary: String {
+        let total = weekData.reduce(0) { $0 + $1.1 }
+        let best = weekData.max(by: { $0.1 < $1.1 })
+        let bestDay = best.flatMap {
+            let fmt = DateFormatter()
+            fmt.locale = Locale(identifier: "fr_FR")
+            fmt.dateFormat = "EEEE"
+            return "\(fmt.string(from: $0.0)) avec \($0.1)"
+        } ?? "aucun"
+        return "\(total) habitudes validées sur 7 jours. Meilleur jour : \(bestDay)."
+    }
+
+    private var moodChartA11ySummary: String {
+        guard !recentMoods.isEmpty else { return "Aucune humeur récente." }
+        let avg = Double(recentMoods.reduce(0) { $0 + $1.score }) / Double(recentMoods.count)
+        return "\(recentMoods.count) entrées humeur, moyenne \(String(format: "%.1f", avg)) sur 5."
+    }
     private var greeting: String {
         switch Calendar.current.component(.hour, from: .now) {
         case 5..<12: return "Bonjour"
