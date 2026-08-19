@@ -344,6 +344,8 @@ struct FloatingTabBar: View {
             .frame(width: 58, height: 58)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(t.label)
+        .accessibilityAddTraits(selected == t ? [.isSelected, .isButton] : [.isButton])
     }
 }
 
