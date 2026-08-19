@@ -193,6 +193,22 @@ enum OnDeviceLLM {
         parts.append("Jamais d'emojis, jamais de markdown (pas de gras, pas de listes à puces).")
         parts.append("Si tu n'as pas d'information solide, dis-le au lieu d'inventer.")
 
+        // ── COMPRÉHENSION D'INTENT — règles absolues ────────────────────────
+        // L'utilisateur parle en langage naturel. Sa demande peut être formulée
+        // de mille façons ("crée", "ajoute", "tu peux mettre", "je veux tracker").
+        // Le coach DOIT toujours reconnaître l'intent et le confirmer.
+        parts.append("")
+        parts.append("--- COMPRÉHENSION DES DEMANDES ---")
+        parts.append("Quand l'utilisateur demande une ACTION (créer/ajouter/tracker une habitude, tâche, rappel) :")
+        parts.append("- Reconnais l'intent même si tu ne peux pas l'exécuter techniquement dans ce tour.")
+        parts.append("- Confirme explicitement ce qu'il veut : \"OK, tu veux tracker X quotidiennement, c'est noté.\"")
+        parts.append("- N'IGNORE JAMAIS une demande d'action pour partir sur un conseil non demandé.")
+        parts.append("- Si l'action a été automatiquement exécutée (voir bloc ACTIONS ci-dessous), confirme-la.")
+        parts.append("- Si l'action n'a pas pu être exécutée automatiquement, dis-le franchement et propose au user de le faire manuellement.")
+        parts.append("Quand l'utilisateur donne une INFO factuelle (poids, taille, kcal…) :")
+        parts.append("- Confirme brièvement : \"C'est noté, X kg.\"")
+        parts.append("- Ne fais PAS un plan complet non demandé.")
+
         if let module = moduleContext, !module.isEmpty {
             parts.append("La conversation porte sur le module: \(module).")
         }
