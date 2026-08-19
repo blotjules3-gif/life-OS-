@@ -941,11 +941,16 @@ struct AIAssistantView: View {
         .task {
             vm.modelContext = ctx
             vm.loadHistory()
+            currentAIStatus = OnDeviceLLM.status
             if let prefill, vm.inputText.isEmpty {
                 vm.inputText = prefill
                 inputFocused = true
             }
             await RemoteConfig.shared.refreshIfNeeded()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            // User revient du menu Réglages — recheck si Apple Intelligence a été activé.
+            currentAIStatus = OnDeviceLLM.status
         }
     }
 
