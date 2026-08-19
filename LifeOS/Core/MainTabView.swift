@@ -504,23 +504,36 @@ struct MetricRing: View {
     @State private var appeared = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    // Dynamic Type — l'anneau et le chiffre grossissent avec la taille système
+    // pour rester lisibles en Larger Text sans clipping.
+    @ScaledMetric(relativeTo: .body) private var ringSize: CGFloat = 84
+    @ScaledMetric(relativeTo: .footnote) private var deltaSize: CGFloat = 10
+
     private var deltaLabel: String? {
         guard let d = delta, d != 0 else { return nil }
         return d > 0 ? "+\(d)" : "\(d)"
     }
     private var deltaColor: Color { (delta ?? 0) >= 0 ? Theme.success : Theme.danger }
 
+    private var accessibilitySummary: String {
+        let progress = goal > 0 ? "\(Int(value)) sur \(Int(goal)) \(unit)" : "\(Int(value)) \(unit)"
+        if let d = deltaLabel { return "\(label): \(progress), variation \(d)" }
+        return "\(label): \(progress)"
+    }
+
     var body: some View {
         VStack(spacing: 10) {
             ZStack {
                 ProgressRing(progress: appeared && goal > 0 ? value / goal : 0, lineWidth: 9, tint: color)
-                    .frame(width: 84, height: 84)
+                    .frame(width: ringSize, height: ringSize)
                 VStack(spacing: 1) {
                     Image(systemName: icon).font(.caption).foregroundStyle(color)
                     Text("\(Int(value))")
                         .font(.title3.bold().monospacedDigit())
                         .contentTransition(.numericText(value: value))
                         .animation(.spring(duration: 0.4), value: value)
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
                 }
             }
             .onAppear {
@@ -532,7 +545,7 @@ struct MetricRing: View {
                 Text(goal > 0 ? "/ \(Int(goal)) \(unit)" : "").font(.caption2).foregroundStyle(.secondary)
                 if let dl = deltaLabel {
                     Text(dl)
-                        .font(.system(size: 10, weight: .semibold).monospacedDigit())
+                        .font(.system(size: deltaSize, weight: .semibold).monospacedDigit())
                         .foregroundStyle(deltaColor)
                         .transition(.opacity)
                 }
@@ -546,6 +559,8 @@ struct MetricRing: View {
                 .strokeBorder(Theme.hairline, lineWidth: 0.5)
         )
         .softElevation()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilitySummary)
     }
 }
 
