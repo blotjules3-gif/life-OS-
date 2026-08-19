@@ -91,10 +91,13 @@ enum IntentExecutor {
         let m = message.lowercased()
         var out: [DetectedIntent] = []
 
-        // "ajoute X à mes habitudes", "ajoute une habitude X", "traque X"
+        // Verbes d'ajout d'habitude — élargi pour couvrir toutes les formes courantes :
+        //   "ajoute X", "crée une habitude X", "tu peux créer X", "mets X dans mes habitudes",
+        //   "je veux X", "traque X", "tracker X", "suivre X", "monitorer X"
+        // Le verbe peut être précédé de "tu peux", "tu peux me", "peux-tu", "je veux", "j'aimerais" etc.
         for pattern in [
-            #"(?:ajoute|rajoute|crée|creer|traque|tracke|track)\s+(?:une\s+)?(?:habitude|habit)?\s*[:\-]?\s*(?:de\s+|pour\s+)?([a-zA-ZÀ-ÿ0-9\-_ ]{3,40})(?=\s+(?:tous\s+les\s+jours|quotidien|chaque\s+jour|à\s+mes\s+habitudes)|$|\.|,)"#,
-            #"(?:ajoute|rajoute|crée|creer)\s+(?:l'|la\s+|une\s+)?habitude\s+(?:de\s+|pour\s+)?([a-zA-ZÀ-ÿ0-9\-_ ]{3,40})"#,
+            #"(?:ajoute|rajoute|crée|créer|cree|creer|traque|tracker|tracke|track|suivre|monitor(?:er)?|met[ts]?)\s+(?:une\s+|la\s+|l['e]\s*|de\s+la\s+)?(?:habitude|habit)?\s*[:\-]?\s*(?:de\s+|pour\s+)?([a-zA-ZÀ-ÿ0-9\-_ ]{3,40})(?=\s+(?:tous\s+les\s+jours|quotidien|chaque\s+jour|à\s+mes\s+habitudes|dans\s+mes\s+habitudes)|$|\.|,|!|\?)"#,
+            #"(?:ajoute|rajoute|crée|créer|cree|creer)\s+(?:l'|la\s+|une\s+|de\s+la\s+)?habitude\s+(?:de\s+|pour\s+)?([a-zA-ZÀ-ÿ0-9\-_ ]{3,40})"#,
         ] {
             let matches = allMatches(pattern: pattern, in: m)
             for match in matches {
