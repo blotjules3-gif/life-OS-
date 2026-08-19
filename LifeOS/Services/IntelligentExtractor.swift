@@ -156,6 +156,13 @@ enum IntelligentExtractor {
                 }
             } else if let m3 = groupValue(match, group: 3, in: m), let v = Double(m3), (100...230).contains(v) {
                 out.append(.init(fieldID: "body.heightCm", value: v, confidence: 0.95, sourceSnippet: "\(Int(v)) cm"))
+            } else if let m4 = groupValue(match, group: 4, in: m), let m5 = groupValue(match, group: 5, in: m),
+                      let meters = Double(m4), let cm = Double(m5) {
+                // "1,80 m" / "1.75 m"
+                let total = meters * 100 + cm
+                if (100...230).contains(total) {
+                    out.append(.init(fieldID: "body.heightCm", value: total, confidence: 0.95, sourceSnippet: "\(Int(total)) cm"))
+                }
             }
         }
 
