@@ -374,5 +374,15 @@ struct LifeOSShortcuts: AppShortcutsProvider {
             shortTitle: "Ouvrir un module",
             systemImageName: "square.grid.2x2"
         )
+        AppShortcut(
+            intent: IngestProfileTextIntent(),
+            phrases: [
+                "Ajoute au profil \(.applicationName)",
+                "Note dans mon profil \(.applicationName)",
+                "Enregistre dans \(.applicationName)"
+            ],
+            shortTitle: "Dicter au profil",
+            systemImageName: "waveform.badge.plus"
+        )
     }
 }
