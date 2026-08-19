@@ -36,10 +36,15 @@ enum IntelligentExtractor {
     /// Analyse un message user et retourne les extractions.
     /// Idempotent : n'écrit RIEN dans le store — l'appelant décide.
     static func extract(from message: String) async -> [Extraction] {
+        // Pré-processeur : "je pesais 70, maintenant je fais 74 kg" → on ne garde
+        // que la partie après "maintenant / actuellement / désormais". Sans ça, la
+        // première valeur numérique matche et écrase la nouvelle.
+        let preprocessed = preprocessPresentTense(message)
+
         var results: [Extraction] = []
 
         // 1. Regex FR déterministes (rapides, précises)
-        results.append(contentsOf: regexPass(message))
+        results.append(contentsOf: regexPass(preprocessed))
 
         // 2. LLM fallback si Apple Intelligence dispo ET regex a rien capté
         //    OU si le message est long/complexe
