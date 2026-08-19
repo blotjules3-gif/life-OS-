@@ -409,6 +409,8 @@ struct HomeDashboardContent: View {
                             .frame(height: 150)
                             .chartYAxis { AxisMarks { _ in AxisGridLine(); AxisValueLabel() } }
                             .chartXAxis { AxisMarks(values: .stride(by: .day)) { _ in AxisValueLabel(format: .dateTime.weekday(.narrow)) } }
+                            .accessibilityLabel("Graphique habitudes 7 derniers jours")
+                            .accessibilityValue(weekChartA11ySummary)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .card()
@@ -428,6 +430,8 @@ struct HomeDashboardContent: View {
                             .frame(height: 120)
                             .chartYScale(domain: 1...5)
                             .chartYAxis { AxisMarks(values: [1, 3, 5]) { _ in AxisGridLine(); AxisValueLabel() } }
+                            .accessibilityLabel("Graphique humeur 14 derniers jours")
+                            .accessibilityValue(moodChartA11ySummary)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .card()
