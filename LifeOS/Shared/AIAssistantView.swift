@@ -830,6 +830,17 @@ struct AIAssistantView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Button {
+                            vm.askNextProfileQuestion()
+                        } label: {
+                            Label("Compléter mon profil", systemImage: "sparkles.rectangle.stack")
+                        }
+                        Button {
+                            showProfileFields = true
+                        } label: {
+                            Label("Voir mon profil", systemImage: "person.text.rectangle")
+                        }
+                        Divider()
+                        Button {
                             showCoachPrefs = true
                         } label: {
                             Label("Personnaliser le coach", systemImage: "slider.horizontal.3")
