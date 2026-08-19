@@ -168,25 +168,32 @@ enum IntentExecutor {
     @available(iOS 26.0, *)
     private static func llmPass(_ message: String) async -> [DetectedIntent] {
         let instructions = """
-        Tu extrais TOUTES les actions demandées par l'utilisateur dans un message.
+        Tu extrais TOUTES les actions à exécuter suite à un message utilisateur.
+        L'utilisateur parle en langage naturel — décompose CHAQUE action mentionnée en un intent séparé.
 
         Types possibles :
-        - createHabit : ajouter/créer une habitude à traquer (ex: "traque ma prise de créatine", "ajoute méditation")
-        - createTodo : ajouter une tâche/rappel one-shot (ex: "note-moi appeler le dentiste")
-        - createReminder : rappel avec délai (ex: "rappelle-moi dans 2h de boire de l'eau")
+        - createHabit : habitude quotidienne récurrente ("traque ma prise de créatine", "ajoute méditation à mes habitudes", "je veux un rappel quotidien pour prendre mes peptides")
+        - createTodo : tâche/action one-shot ("note-moi appeler le dentiste", "rajoute payer le loyer")
+        - createReminder : rappel unique avec délai ("rappelle-moi dans 2h de boire")
 
-        Retourne un JSON STRICT tableau :
-        [{"type":"createHabit","title":"méditation","module":"mind","frequency":"daily","delaySeconds":null}]
+        EXEMPLE CRITIQUE :
+        Message : "je veux que tu rentres tout ça dans mes habitudes, j'aimerais un rappel quotidien fais ta séance de sport prends tes peptides prends tes protéines et prends tout ce genre de choses"
+        Extraction attendue :
+        [
+          {"type":"createHabit","title":"Faire ma séance de sport","module":"fitness","frequency":"daily","delaySeconds":null},
+          {"type":"createHabit","title":"Prendre mes peptides","module":"medical","frequency":"daily","delaySeconds":null},
+          {"type":"createHabit","title":"Prendre mes protéines","module":"nutrition","frequency":"daily","delaySeconds":null}
+        ]
+
+        Retourne un JSON STRICT tableau, uniquement le JSON :
+        [{"type":"createHabit","title":"...","module":"...","frequency":"daily","delaySeconds":null}]
 
         Règles :
-        - Extraie MULTIPLES actions si présentes dans le message.
-        - title : nom court propre (2-40 chars), pas de "je veux", "il faut", etc.
-        - module : optionnel, parmi : fitness, nutrition, sleep, mind, productivity, medical, looks, learning, finance, home
-        - frequency : "daily" pour habitude, null sinon
-        - delaySeconds : nombre de secondes pour createReminder, null sinon
-        - Ne retourne PAS un intent pour une simple information non actionnable ("je pèse 74 kg" → PAS un intent).
+        - DÉCOMPOSE une phrase "tout ça, X, Y et Z" en 3 intents distincts.
+        - title : impératif court "Faire X" / "Prendre Y" (3-40 chars), sans "je veux", sans "il faut".
+        - module : parmi fitness, nutrition, sleep, mind, productivity, medical, looks, learning, finance, home.
+        - Ne pas extraire pour de simples infos ("je pèse 74 kg" → PAS un intent, c'est un ProfileField).
         - Si rien à faire : []
-        - UNIQUEMENT le JSON, aucun autre texte.
         """
 
         let session = LanguageModelSession(instructions: instructions)
