@@ -139,9 +139,9 @@ final class ProfileStoreTests: XCTestCase {
         XCTAssertEqual(v, 4)
     }
 
-    func testValueDecoding_double() {
+    func testValueDecoding_double() throws {
         _ = ProfileStore.shared.upsert("body.currentWeightKg", value: 74.5, source: .chat, confidence: 0.9)
-        let v: Double? = ProfileStore.shared.value("body.currentWeightKg")
+        let v = try XCTUnwrap(ProfileStore.shared.value("body.currentWeightKg") as Double?)
         XCTAssertEqual(v, 74.5, accuracy: 0.001)
     }
 }

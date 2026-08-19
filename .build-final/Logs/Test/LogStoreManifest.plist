@@ -6,22 +6,22 @@
 	<integer>12</integer>
 	<key>logs</key>
 	<dict>
-		<key>1FED67E6-2D4A-4713-A8A3-BD27B569A441</key>
+		<key>FA2AFCF3-E1C2-4030-A369-145483FE0CA9</key>
 		<dict>
 			<key>auxiliaryLogUniqueIdentifier</key>
-			<string>76CB6077-C02D-406E-8983-882917D4C175</string>
+			<string>6DC85154-1B45-44FA-B9F0-7BEC1C420CD1</string>
 			<key>auxiliaryObservable</key>
 			<dict>
 				<key>highLevelStatus</key>
-				<string>W</string>
+				<string>E</string>
 				<key>totalNumberOfAnalyzerIssues</key>
 				<integer>0</integer>
 				<key>totalNumberOfErrors</key>
-				<integer>0</integer>
+				<integer>1</integer>
 				<key>totalNumberOfTestFailures</key>
 				<integer>0</integer>
 				<key>totalNumberOfWarnings</key>
-				<integer>4</integer>
+				<integer>0</integer>
 			</dict>
 			<key>className</key>
 			<string>IDESchemeActionsInvocationRecord</string>
@@ -30,7 +30,7 @@
 			<key>domainType</key>
 			<string>com.apple.dt.unit.cocoaUnitTest</string>
 			<key>fileName</key>
-			<string>Test-LifeOS-2026.08.19_21-21-25-+0200.xcresult</string>
+			<string>Test-LifeOS-2026.08.19_22-48-57-+0200.xcresult</string>
 			<key>hasAuxiliaryLog</key>
 			<true/>
 			<key>hasCoverageData</key>
@@ -40,17 +40,15 @@
 			<key>primaryObservable</key>
 			<dict>
 				<key>highLevelStatus</key>
-				<string>W</string>
-				<key>totalCodeCoverage</key>
-				<real>0.039212984996117528</real>
+				<string>E</string>
 				<key>totalNumberOfAnalyzerIssues</key>
 				<integer>0</integer>
 				<key>totalNumberOfErrors</key>
-				<integer>0</integer>
+				<integer>2</integer>
 				<key>totalNumberOfTestFailures</key>
 				<integer>0</integer>
 				<key>totalNumberOfWarnings</key>
-				<integer>4</integer>
+				<integer>0</integer>
 			</dict>
 			<key>schemeIdentifier-containerName</key>
 			<string>LifeOS project</string>
@@ -61,13 +59,13 @@
 			<key>signature</key>
 			<string>Test LifeOS</string>
 			<key>timeStartedRecording</key>
-			<real>808860085.58504498</real>
+			<real>808865337.02173197</real>
 			<key>timeStoppedRecording</key>
-			<real>808860129.78399706</real>
+			<real>808865340.29178596</real>
 			<key>title</key>
 			<string>Test LifeOS</string>
 			<key>uniqueIdentifier</key>
-			<string>1FED67E6-2D4A-4713-A8A3-BD27B569A441</string>
+			<string>FA2AFCF3-E1C2-4030-A369-145483FE0CA9</string>
 		</dict>
 	</dict>
 </dict>
