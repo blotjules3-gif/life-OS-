@@ -157,7 +157,7 @@ final class ProfileStore {
                 source: source.rawValue
             )
             ctx.insert(newField)
-            LifeOSTry(ctx.save(), context: "ProfileStore create \(fieldID)", category: AppLog.data)
+            LifeOSTry(try ctx.save(), context: "ProfileStore create \(fieldID)", category: AppLog.data)
             return .created(newField)
         }
 
@@ -195,7 +195,7 @@ final class ProfileStore {
         existing.confidence = confidence
         existing.source = source.rawValue
         existing.updatedAt = .now
-        LifeOSTry(ctx.save(), context: "ProfileStore update \(fieldID)", category: AppLog.data)
+        LifeOSTry(try ctx.save(), context: "ProfileStore update \(fieldID)", category: AppLog.data)
         return .updated(existing)
     }
 
