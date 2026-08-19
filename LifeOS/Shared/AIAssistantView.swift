@@ -1,7 +1,6 @@
 import SwiftUI
 import SwiftData
 import PhotosUI
-@preconcurrency import Vision
 import UIKit
 
 // MARK: - Persistent message model
