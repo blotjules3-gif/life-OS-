@@ -128,11 +128,21 @@ enum IntentExecutor {
         let m = message.folding(options: .diacriticInsensitive, locale: .current).lowercased()
         // Cheap check : verbe d'action ou message long
         let actionVerbs = [
-            "ajoute", "rajoute", "cree", "creer", "crée", "faire", "note",
-            "rappelle", "rappel", "traque", "tracke", "programme", "planifie",
-            "mets", "met", "j'aimerais", "je veux", "il faut", "il me faut",
-            "n'oublie", "prends", "prend", "quotidien", "chaque jour",
-            "tous les jours", "habitude"
+            // Verbes d'action directs
+            "ajoute", "rajoute", "cree", "creer", "crée", "créer",
+            "faire", "fais", "fait",
+            "note", "rappelle", "rappel", "rappelles",
+            "traque", "tracke", "tracker", "track", "suivre", "monitor", "monitorer",
+            "programme", "planifie", "planifier",
+            "mets", "met", "mettre",
+            // Verbes modaux / demandes indirectes
+            "j'aimerais", "je veux", "je voudrais", "je souhaite",
+            "il faut", "il me faut", "faudrait",
+            "peux-tu", "peux tu", "tu peux", "est-ce que tu peux",
+            "n'oublie", "prends", "prend",
+            // Marqueurs d'habitude
+            "quotidien", "quotidienne", "chaque jour", "tous les jours",
+            "habitude", "habit", "routine",
         ]
         if actionVerbs.contains(where: { m.contains($0) }) { return true }
         return message.count > 60
