@@ -991,6 +991,7 @@ struct AIAssistantView: View {
 
     private var inputSection: some View {
         VStack(spacing: 0) {
+            appleIntelligenceBanner
             coachDownBanner
             if vm.isServerOffline {
                 offlineBanner
