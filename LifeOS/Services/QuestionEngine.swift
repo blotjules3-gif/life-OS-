@@ -156,15 +156,16 @@ enum QuestionEngine {
         """
 
         let session = LanguageModelSession(instructions: instructions)
-        return await RetryHelper.withBackoffOrNil(
+        let raw = await RetryHelper.withBackoffOrNil(
             attempts: 2,
             delays: [1],
             operation: "QuestionEngine.formulateViaLLM"
         ) {
             let response = try await session.respond(to: "Formule la question maintenant.")
-            let text = response.content.trimmingCharacters(in: .whitespacesAndNewlines)
-            return text.isEmpty ? nil : text
+            return response.content
         }
+        let text = (raw ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return text.isEmpty ? nil : text
     }
     #endif
 
