@@ -79,11 +79,11 @@ final class ProfileStoreTests: XCTestCase {
     // MARK: - History
 
     func testUpsert_createsRevision_beforeUpdate() {
-        _ = ProfileStore.shared.upsert("body.currentWeightKg", value: 70, source: .chat, confidence: 0.9)
-        _ = ProfileStore.shared.upsert("body.currentWeightKg", value: 72, source: .chat, confidence: 0.9)
+        _ = ProfileStore.shared.upsert("body.currentWeightKg", value: 70.0, source: .chat, confidence: 0.9)
+        _ = ProfileStore.shared.upsert("body.currentWeightKg", value: 72.0, source: .chat, confidence: 0.9)
         let field = ProfileStore.shared.field("body.currentWeightKg")
         XCTAssertEqual(field?.history.count, 1, "Une révision doit être créée avant l'update")
-        XCTAssertEqual(field?.history.first?.previousValueString, "70")
+        XCTAssertEqual(field?.history.first?.previousValueString, "70.0")
     }
 
     func testUpsert_noHistory_forFirstInsertion() {
