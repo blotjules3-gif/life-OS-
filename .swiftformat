@@ -1,0 +1,32 @@
+# Configuration SwiftFormat pour LifeOS
+# Formatage minimal et non intrusif — n'écrase pas les choix stylistiques du projet.
+
+--swiftversion 6.0
+--indent 4
+--linebreaks lf
+--maxwidth 120
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--closingparen balanced
+--trimwhitespace always
+--indentcase false
+--commas inline
+--stripunusedargs closure-only
+--decimalgrouping 3,4
+--binarygrouping 4,8
+--hexgrouping 4,4
+--octalgrouping 4,8
+--exponentgrouping enabled
+--fractiongrouping enabled
+
+# Règles désactivées volontairement pour préserver le style LifeOS existant
+--disable redundantSelf
+--disable wrapMultilineStatementBraces
+--disable blankLinesAtStartOfScope
+--disable blankLinesAtEndOfScope
+--disable trailingCommas
+--disable organizeDeclarations
+
+# Exclusions
+--exclude backend,.build-*,build,DerivedData,.venv
