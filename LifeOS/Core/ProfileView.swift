@@ -3,7 +3,7 @@ import SwiftData
 import WidgetKit
 import UIKit
 
-private struct OrbitSatellite: Identifiable {
+struct OrbitSatellite: Identifiable {
     let category: AppCategory
     let progress: Double?
     var id: String { category.rawValue }
