@@ -237,14 +237,10 @@ final class AIAssistantViewModel: ObservableObject {
 
         appendUserMessage(content)
 
-        // Intention « ajouter » → ouvre le flux guidé (choisir quoi ajouter + rappel).
-        if let (kind, prefill) = Self.detectAddIntent(content) {
-            addFlowKind = kind
-            addFlowPrefill = prefill
-            appendAssistantMessage("Ok, je t'ai ouvert le formulaire. Tu pourras aussi y mettre un rappel.", actions: [])
-            showAddFlow = true
-            return
-        }
+        // Ancien "AddAnythingSheet" désactivé : il bypassait tout le pipeline
+        // (extraction ProfileField + IntentExecutor + acknowledge coach). Le nouveau
+        // pipeline gère habitudes/tâches/rappels via IntentExecutor + upsert profil.
+        // Ne PAS remettre `detectAddIntent` sans logique de fallback claire.
 
         appendThinking()
         isLoading = true
