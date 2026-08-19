@@ -12,13 +12,19 @@ final class UserContextBuilderTests: XCTestCase {
     private let profileKey = "lifeProfile"
     private let hasCycleKey = "userHasCycle"
 
+    @MainActor
     override func setUp() {
         super.setUp()
         UserDefaults.standard.removeObject(forKey: profileKey)
+        // Le builder est un singleton avec cache TTL 60s — sinon un test hérite
+        // du résultat du test précédent.
+        UserContextBuilder.shared.invalidateCache()
     }
 
+    @MainActor
     override func tearDown() {
         UserDefaults.standard.removeObject(forKey: profileKey)
+        UserContextBuilder.shared.invalidateCache()
         super.tearDown()
     }
 
