@@ -5,9 +5,39 @@ import Foundation
 @MainActor
 final class UserContextBuilder {
     static let shared = UserContextBuilder()
-    private init() {}
+
+    private init() {
+        // Invalider le cache quand l'app revient au premier plan — nouvelle
+        // journée = nouveau snapshot, données HealthKit peut-être mises à jour.
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.invalidateCache() }
+        }
+    }
 
     private static let group = UserDefaults(suiteName: "group.lifeos.app")
+
+    // MARK: - Cache (TTL 60s)
+    //
+    // `build(message:)` scan des dizaines de clés UserDefaults + décode plusieurs
+    // JSON du App Group. Appelé à chaque send du chat coach → coût CPU perceptible
+    // sur les vieux iPhone. Cache par clé de message (ou "" si nil) pendant 60s.
+
+    private struct CacheEntry {
+        let text: String
+        let builtAt: Date
+    }
+    private var cache: [String: CacheEntry] = [:]
+    private let cacheTTL: TimeInterval = 60
+
+    /// Vide le cache. Appelé au foreground + après modification importante
+    /// (ex. tap sur habitude, ajout d'un repas).
+    func invalidateCache() {
+        cache.removeAll()
+    }
 
     /// Construit le snapshot utilisateur + l'expertise coach.
     /// - Parameter message: message courant de l'utilisateur (optionnel). S'il est fourni
