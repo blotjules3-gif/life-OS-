@@ -50,7 +50,14 @@ final class CoachSafetyScannerTests: XCTestCase {
         XCTAssertEqual(CoachSafetyScanner.scan("30 UI d'insuline"), .medication)
         // Dosage seul (sans nom de médicament) → .dosage
         XCTAssertEqual(CoachSafetyScanner.scan("dose recommandée : 800mg"), .dosage)
-        XCTAssertEqual(CoachSafetyScanner.scan("2 ml par jour"), .dosage)
+        XCTAssertEqual(CoachSafetyScanner.scan("dosage : 250 mcg par jour"), .dosage)
+    }
+
+    func testScan_ml_notFlaggedAsDosage() {
+        // "ml" seul est ambigu (2500 ml d'eau = hydratation, pas dosage).
+        // Bug fix : on n'affiche plus de badge dosage sur les ml.
+        XCTAssertNil(CoachSafetyScanner.scan("bois 2500 ml par jour"))
+        XCTAssertNil(CoachSafetyScanner.scan("objectif hydratation : 2000/2500 ml"))
     }
 
     func testScan_medication_flagged() {
