@@ -77,7 +77,7 @@ struct AlarmFullScreenView: View {
                         alarm.snooze(minutes: snoozeMinutes)
                     } label: {
                         Text("Rappel dans \(snoozeMinutes) min")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.system(size: snoozeSize, weight: .medium))
                             .foregroundStyle(.white.opacity(0.65))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 18)
