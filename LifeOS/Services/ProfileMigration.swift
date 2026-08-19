@@ -173,6 +173,15 @@ enum ProfileMigration {
         "travel": [
             "style": "travel.style",
         ],
+        "admin": [
+            "priority": "admin.mainDocumentsBackedUp",
+        ],
+        "medical": [
+            "conditions": "medical.conditions",
+        ],
+        "cycle": [
+            "length": "cycle.averageLengthDays",
+        ],
     ]
 
     private static func migrateModuleConfigs() {
