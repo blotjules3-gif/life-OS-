@@ -122,6 +122,12 @@ private struct StableIconAndLabelOverlay: View {
             }
             .frame(width: size * 0.72, height: size * 0.72) // zone de sécurité centrée
             .offset(y: showLabel && !title.isEmpty ? -size * 0.005 : 0)
+            // La goutte a une taille physique fixe (size). Le contenu texte doit
+            // rester lisible ET tenir dedans même en Larger Text — on clamp la
+            // Dynamic Type sur cette vue seulement.
+            .dynamicTypeSize(.small ... .accessibility1)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(title.isEmpty ? "Catégorie" : title)
         }
     }
 }
