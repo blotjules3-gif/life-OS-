@@ -126,6 +126,68 @@ struct AIAssistantMessageRow: View {
         ))
     }
 
+    // MARK: - Inline actions (feedback + speaker)
+
+    @State private var feedbackGiven: FeedbackKind?
+
+    private enum FeedbackKind {
+        case liked, disliked
+    }
+
+    /// Ligne d'actions sous chaque bulle coach : like, dislike, écouter.
+    /// Fait sortir le feedback du contextMenu (découvrabilité 0) vers un tap direct.
+    private var inlineActionRow: some View {
+        HStack(spacing: 8) {
+            if let onLike {
+                inlineActionButton(
+                    icon: feedbackGiven == .liked ? "hand.thumbsup.fill" : "hand.thumbsup",
+                    label: "J'aime",
+                    active: feedbackGiven == .liked
+                ) {
+                    guard feedbackGiven == nil else { return }
+                    feedbackGiven = .liked
+                    onLike()
+                }
+            }
+            if let onDislike {
+                inlineActionButton(
+                    icon: feedbackGiven == .disliked ? "hand.thumbsdown.fill" : "hand.thumbsdown",
+                    label: "Pas top",
+                    active: feedbackGiven == .disliked
+                ) {
+                    guard feedbackGiven == nil else { return }
+                    feedbackGiven = .disliked
+                    onDislike()
+                }
+            }
+            if ttsEnabled {
+                speakerButton
+            }
+            Spacer()
+        }
+    }
+
+    private func inlineActionButton(icon: String, label: String, active: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 5) {
+                Image(systemName: icon)
+                    .font(.system(size: badgeIconSize, weight: .semibold))
+                Text(label)
+                    .font(.system(size: badgeTextSize, weight: .medium))
+            }
+            .foregroundStyle(active ? accent : .secondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                Capsule().fill(active ? accent.opacity(0.12) : Color(uiColor: .tertiarySystemBackground))
+            )
+            .overlay(Capsule().stroke(Color.secondary.opacity(0.15), lineWidth: 0.5))
+        }
+        .buttonStyle(.plain)
+        .disabled(feedbackGiven != nil && !active)
+        .accessibilityLabel(active ? "\(label), déjà noté" : label)
+    }
+
     // MARK: - Speaker
 
     private var isPlayingThisMessage: Bool {
