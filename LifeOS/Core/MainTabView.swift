@@ -267,6 +267,8 @@ struct FloatingTabBar: View {
                     .background(Self.fieldBg, in: Capsule())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Ouvrir ton coach")
+                .accessibilityHint("Pose une question ou demande une action")
 
                 if serverStatus.isOnline != nil {
                     Button {
@@ -289,6 +291,7 @@ struct FloatingTabBar: View {
                     .offset(x: 20, y: 0)
                     .transition(.scale.combined(with: .opacity))
                     .allowsHitTesting(serverStatus.isOnline == false)
+                    .accessibilityLabel(serverStatus.isOnline == true ? "Coach connecté" : "Coach hors ligne")
                 }
             }
             .frame(maxWidth: .infinity)
