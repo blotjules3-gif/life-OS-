@@ -32,7 +32,7 @@ struct AlarmFullScreenView: View {
                         .fill(Color.white.opacity(0.06))
                         .frame(width: 140, height: 140)
                     Image(systemName: "bell.fill")
-                        .font(.system(size: 52, weight: .medium))
+                        .font(.system(size: bellSize, weight: .medium))
                         .foregroundStyle(.white)
                         .rotationEffect(.degrees(bellPulse ? 18 : -18))
                         .animation(.easeInOut(duration: 0.22).repeatForever(autoreverses: true), value: bellPulse)
