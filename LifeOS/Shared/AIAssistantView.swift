@@ -290,6 +290,15 @@ final class AIAssistantViewModel: ObservableObject {
             if !changes.isEmpty {
                 UserContextBuilder.shared.invalidateCache()
             }
+
+            // 4. Si on était en mode "Compléter mon profil" et que la question
+            //    en cours a bien été answered → on enchaîne avec la suivante.
+            if let pending = pendingProfileQuestionFieldID,
+               changes.contains(where: { $0.fieldID == pending }) {
+                pendingProfileQuestionFieldID = nil
+                try? await Task.sleep(for: .milliseconds(400))
+                askNextProfileQuestion()
+            }
         }
     }
 
