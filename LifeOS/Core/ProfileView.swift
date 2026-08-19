@@ -282,10 +282,12 @@ struct ProfileView: View {
                     .monoLabel(9)
                     .foregroundStyle(facet == idx ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.tertiary))
                 Text(title)
-                    .font(.system(size: 20, weight: .black))
+                    .font(.system(size: facetTitleSize, weight: .black))
                     .textCase(.uppercase)
                     .kerning(-0.3)
                     .foregroundStyle(facet == idx ? Color.primary : Color.secondary.opacity(0.45))
+                    .minimumScaleFactor(0.75)
+                    .lineLimit(1)
                 ZStack {
                     if facet == idx {
                         Capsule()
@@ -299,7 +301,13 @@ struct ProfileView: View {
             }
         }
         .buttonStyle(LifeOSPressStyle())
+        .accessibilityLabel("Section \(title)")
+        .accessibilityAddTraits(facet == idx ? [.isSelected, .isButton] : [.isButton])
+        .accessibilitySortPriority(facet == idx ? 10 : 5)
     }
+
+    // Dynamic Type — la facette Pulse/Contrôle reste lisible en Larger Text.
+    @ScaledMetric(relativeTo: .title2) private var facetTitleSize: CGFloat = 20
 
     @ViewBuilder private var facetContent: some View {
         if facet == 0 {
