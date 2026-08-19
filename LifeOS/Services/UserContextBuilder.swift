@@ -166,6 +166,21 @@ final class UserContextBuilder {
             }
         }
 
+        // ── ProfileField — source of truth typée du profil utilisateur ──────
+        // Extraits automatiquement du chat/voix/Raccourci par IntelligentExtractor.
+        // Ne PAS redemander ces valeurs : elles sont fiables (confidence ≥ 0.60).
+        let profileFields = ProfileStore.shared.allFields()
+        if !profileFields.isEmpty {
+            lines.append("")
+            lines.append("Profil confirmé (fiable, ne PAS redemander) :")
+            for field in profileFields.prefix(30) {
+                if let spec = ProfileFieldCatalog.all[field.fieldID] {
+                    let unit = spec.unit.map { " \($0)" } ?? ""
+                    lines.append("- \(spec.displayName) : \(field.valueString)\(unit)")
+                }
+            }
+        }
+
         // ── Fenêtre de coucher cible (contexte pour reco couchée/réveil) ────
         let bedH = ud.integer(forKey: "bedHour")
         let bedM = ud.integer(forKey: "bedMinute")
