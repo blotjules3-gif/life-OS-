@@ -245,7 +245,50 @@ struct LogWorkoutSetIntent: AppIntent {
     }
 }
 
-// MARK: - AppShortcutsProvider (10 max, on en a 9)
+// MARK: - Ingest profile text (Raccourci iOS pour dictée libre)
+
+/// Accepte un texte libre depuis un Raccourci iOS, l'analyse avec
+/// `IntelligentExtractor` et met à jour le profil.
+///
+/// Exemple d'usage : l'utilisateur crée un Raccourci qui prend une entrée vocale
+/// ("Cette semaine j'ai dormi 7h et je vais 4x à la salle"), puis passe ce texte
+/// à cet Intent → le profil est mis à jour en tâche de fond.
+///
+/// 100% on-device : aucune donnée n'est envoyée à un serveur. La transcription
+/// vocale est faite par le raccourci (dictée iOS native), l'analyse par
+/// Apple Intelligence local + regex FR.
+struct IngestProfileTextIntent: AppIntent {
+    static let title: LocalizedStringResource = "Ajouter au profil (texte libre)"
+    static let description = IntentDescription(
+        "Analyse un texte libre (dictée ou saisie) et met à jour ton profil LifeOS automatiquement."
+    )
+
+    @Parameter(title: "Texte à analyser")
+    var text: String
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 4 else {
+            return .result(dialog: "Message trop court pour être analysé.")
+        }
+        // S'assure que le store a un context même si l'app n'a jamais démarré
+        // (le raccourci peut être exécuté à froid).
+        let ctx = try LocalStore.container().mainContext
+        ProfileStore.shared.setContext(ctx)
+
+        let updated = await IntelligentExtractor.extractAndPersist(from: trimmed, source: .shortcut)
+
+        guard !updated.isEmpty else {
+            return .result(dialog: "Rien de nouveau détecté. Reformule avec des chiffres ou des mots-clés (poids, kcal, séances par semaine…).")
+        }
+        let labels = updated.compactMap { ProfileFieldCatalog.all[$0]?.displayName }
+        let summary = labels.prefix(3).joined(separator: ", ")
+        return .result(dialog: "Profil mis à jour : \(summary).")
+    }
+}
+
+// MARK: - AppShortcutsProvider (10 max, on en a 10)
 
 struct LifeOSShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
