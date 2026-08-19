@@ -302,7 +302,18 @@ enum IntelligentExtractor {
                   let confidence = (item["confidence"] as? Double) ?? (item["confidence"] as? Int).map(Double.init) else {
                 return nil
             }
-            guard ProfileFieldCatalog.all[fieldID] != nil else { return nil }
+            guard let spec = ProfileFieldCatalog.all[fieldID] else { return nil }
+
+            // Range check : le LLM peut halluciner (ex: 500 kg). Rejeter hors bornes.
+            if let range = spec.range {
+                let numericValue: Double? = (value as? Double)
+                    ?? (value as? Int).map(Double.init)
+                    ?? Double("\(value)")
+                if let v = numericValue, !range.contains(v) {
+                    return nil
+                }
+            }
+
             return Extraction(
                 fieldID: fieldID,
                 value: value,
