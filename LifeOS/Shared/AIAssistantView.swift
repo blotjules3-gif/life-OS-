@@ -904,6 +904,9 @@ struct AIAssistantView: View {
             .sheet(isPresented: $showHistory) {
                 CoachHistoryView()
             }
+            .sheet(isPresented: $showProfileFields) {
+                ProfileFieldsView()
+            }
             .overlay(alignment: .top) {
                 if let toast = vm.actionToast {
                     actionToastView(toast)
