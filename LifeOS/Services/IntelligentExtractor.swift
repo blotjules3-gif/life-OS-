@@ -138,16 +138,16 @@ enum IntelligentExtractor {
         let m = normalized.lowercased()
         var out: [Extraction] = []
 
-        // Poids : "je fais 74 kg", "je pèse 68,5 kg", "74kg"
-        if let match = firstMatch(pattern: #"\b(?:je\s*(?:fais|pese|pèse)|poids)\s*(?:de\s*)?(\d{2,3}(?:[,.]\d)?)\s*kg\b"#, in: m),
+        // Poids : "je fais 74 kg", "je pèse 68,5 kg", "74kg", "70 kilos"
+        if let match = firstMatch(pattern: #"\b(?:je\s*(?:fais|pese|pèse)|poids)\s*(?:de\s*)?(\d{2,3}(?:[,.]\d)?)\s*(?:kg|kilos?)\b"#, in: m),
            let raw = groupValue(match, group: 1, in: m),
            let v = Double(raw.replacingOccurrences(of: ",", with: ".")),
            (30...250).contains(v) {
             out.append(.init(fieldID: "body.currentWeightKg", value: v, confidence: 0.95, sourceSnippet: "\(v) kg"))
         }
 
-        // Taille : "je mesure 1m78", "je fais 178 cm", "taille 1,80"
-        if let match = firstMatch(pattern: #"\b(?:je\s*mesure|taille|hauteur)\s*(?:de\s*)?(?:(\d)\s*m\s*(\d{1,2})|(\d{3})\s*cm)\b"#, in: m) {
+        // Taille : "je mesure 1m78", "1 mètre 80", "je fais 178 cm", "taille 1,80"
+        if let match = firstMatch(pattern: #"\b(?:je\s*mesure|taille|hauteur)?\s*(?:de\s*)?(?:(\d)\s*(?:m|mètres?)\s*(\d{1,2})|(\d{3})\s*cm|(\d)[,.](\d{2})\s*m)\b"#, in: m) {
             if let m1 = groupValue(match, group: 1, in: m), let m2 = groupValue(match, group: 2, in: m),
                let meters = Double(m1), let cm = Double(m2) {
                 let total = meters * 100 + cm
