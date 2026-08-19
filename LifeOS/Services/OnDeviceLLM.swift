@@ -222,18 +222,19 @@ enum OnDeviceLLM {
         injectContext: Bool,
         recentUpdates: [String]
     ) async -> String? {
-        let system = buildSystemPrompt(
+        // Pipeline complet : classify → assemble → LLM → post-process.
+        // Chaque étape ajoute de la valeur : plus court prompt si simple message,
+        // plus riche si complexe. Post-processing nettoie systématiquement.
+        let system = PromptAssembler.assemble(config: .init(
             message: message,
             moduleContext: moduleContext,
             injectContext: injectContext,
             recentUpdates: recentUpdates
-        )
+        ))
+
         let session = LanguageModelSession(instructions: system)
         // Retry léger : 2 tentatives avec 1s de délai entre les deux.
-        // Un échec ponctuel (modèle qui charge, guardrail transitoire) peut
-        // se rejouer avec succès. Si les deux échouent, on retombe sur le
-        // fallback règles au lieu de laisser l'utilisateur muet.
-        return await RetryHelper.withBackoffOrNil(
+        let raw = await RetryHelper.withBackoffOrNil(
             attempts: 2,
             delays: [1],
             operation: "AppleIntelligence.respond"
@@ -241,6 +242,14 @@ enum OnDeviceLLM {
             let response = try await session.respond(to: message)
             return response.content
         }
+        guard let raw else { return nil }
+
+        // Post-processing : nettoyage markdown/emojis, fact-check, longueur.
+        let processed = ResponsePostProcessor.process(raw)
+        if !processed.issues.isEmpty {
+            AppLog.coach.debug("PostProcessor issues: \(processed.issues.map { $0.rawValue }.joined(separator: ","), privacy: .public)")
+        }
+        return processed.text
     }
     #endif
 
