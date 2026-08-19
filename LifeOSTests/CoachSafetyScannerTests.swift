@@ -45,9 +45,11 @@ final class CoachSafetyScannerTests: XCTestCase {
     // MARK: - Scan de la réponse générée
 
     func testScan_dosage_flagged() {
+        // Le nom de médicament a priorité sur le dosage nu (badge plus informatif)
         XCTAssertEqual(CoachSafetyScanner.scan("prends 500 mg de paracétamol"), .medication)
+        XCTAssertEqual(CoachSafetyScanner.scan("30 UI d'insuline"), .medication)
+        // Dosage seul (sans nom de médicament) → .dosage
         XCTAssertEqual(CoachSafetyScanner.scan("dose recommandée : 800mg"), .dosage)
-        XCTAssertEqual(CoachSafetyScanner.scan("30 UI d'insuline"), .dosage)
         XCTAssertEqual(CoachSafetyScanner.scan("2 ml par jour"), .dosage)
     }
 
