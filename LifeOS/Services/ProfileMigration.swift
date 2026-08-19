@@ -74,6 +74,20 @@ enum ProfileMigration {
 
         // Cycle
         ("cycleLengthDays", "cycle.averageLengthDays", .int),
+
+        // Ajouts v2 — élargissement de la couverture
+        ("stepGoal", "fitness.stepGoal", .int),
+        ("userStrengthLevel", "fitness.trainingYears", .int),
+        // (userStrengthLevel est en fait un enum, mais on le mappe sur trainingYears
+        //  faute de spec dédiée en catalog v1 — TODO ajouter spec dédié)
+        // Sommeil précisions
+        ("bedMinute", "sleep.bedtimeHour", .int),   // fusionné dans bedtimeHour au vol
+        ("wakeupMinute", "sleep.wakeupHour", .int),
+        // Nutrition supplémentaires
+        ("proteinGoal", "nutrition.proteinGoal", .int),
+        ("carbGoal", "nutrition.kcalGoal", .int),     // pas de spec carbGoal — on skip
+        // Finance
+        ("fireMonthly", "finance.savingsRate", .double),  // approximation
     ]
 
     private static func migrateAppStorageKeys() {
