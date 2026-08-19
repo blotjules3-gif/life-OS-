@@ -40,11 +40,15 @@ enum OnDeviceLLM {
     ///   - injectContext: quand true (défaut) on assemble contexte user + expertise + mémoire
     ///     dans le prompt système. Passer false pour un tour "premier lancement" où le prompt
     ///     est déjà auto-suffisant.
+    ///   - recentUpdates: liste courte de ce que le pipeline (extraction, intent executor)
+    ///     vient de faire suite au message user. Le coach DOIT les confirmer explicitement.
+    ///     Format : `["Poids : 74 kg", "Habitude créée : BPC-157", "Tâche ajoutée : Appeler dentiste"]`
     static func respond(
         to message: String,
         ctx: ModelContext?,
         moduleContext: String? = nil,
-        injectContext: Bool = true
+        injectContext: Bool = true,
+        recentUpdates: [String] = []
     ) async -> Reply {
         // Étape 0 — court-circuit détresse (jamais le LLM sur ces sujets).
         // Ce filet doit passer AVANT toute logique action locale pour ne pas être
