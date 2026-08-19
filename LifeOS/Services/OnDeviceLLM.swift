@@ -162,19 +162,19 @@ enum OnDeviceLLM {
         var userFacingMessage: String {
             switch self {
             case .available:
-                return "Ton coach utilise le LLM local d'Apple. Rien ne sort de ton iPhone."
+                return "Ton coach tourne entièrement sur ton iPhone. Rien n'en sort."
             case .iosTooOld:
-                return "Ton chat coach fonctionne en mode règles. Mets à jour iOS pour activer le vrai LLM local."
+                return "Ton coach fonctionne en mode règles. Mets à jour iOS pour activer le coach intelligent."
             case .deviceNotEligible:
-                return "Ton iPhone n'a pas le neural engine requis. Le chat fonctionne en mode règles limité."
+                return "Ton iPhone n'a pas le neural engine requis. Ton coach fonctionne en mode règles limité."
             case .notEnabledInSettings:
-                return "Active Apple Intelligence dans Réglages pour un chat coach beaucoup plus intelligent."
+                return "Active Apple Intelligence dans Réglages pour un coach beaucoup plus intelligent."
             case .modelDownloading:
-                return "Le modèle Apple Intelligence est en cours de téléchargement — patiente quelques minutes."
+                return "Apple Intelligence est en cours de téléchargement — patiente quelques minutes."
             case .unknownUnavailable:
-                return "Apple Intelligence n'est pas disponible pour l'instant. Le chat continue en mode règles."
+                return "Apple Intelligence n'est pas disponible pour l'instant. Ton coach continue en mode règles."
             case .fallbackLocalCoach:
-                return "Chat en mode règles Swift (fallback). Vérifie qu'Apple Intelligence est actif dans Réglages."
+                return "Coach en mode règles (fallback). Vérifie qu'Apple Intelligence est actif dans Réglages."
             }
         }
 
