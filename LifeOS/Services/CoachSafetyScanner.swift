@@ -74,16 +74,13 @@ enum CoachSafetyScanner {
 
     /// Analyse la réponse coach et retourne le premier badge à risque
     /// détecté (au plus un badge par bulle pour rester lisible).
+    ///
+    /// Ordre de priorité : médicament > dosage > restriction > finance.
+    /// Un nom de médicament est plus informatif qu'un simple dosage.
     static func scan(_ response: String) -> RiskBadge? {
         let lower = response.lowercased()
 
-        // Dosage — nombre suivi d'une unité pharmaco (mg, mcg, µg, ug, UI, ml)
-        let dosageRegex = #"\b\d{1,4}\s?(mg|mcg|µg|ug|ui|ml)\b"#
-        if response.range(of: dosageRegex, options: .regularExpression) != nil {
-            return .dosage
-        }
-
-        // Noms de médicaments courants (liste conservatrice, FR + INN)
+        // 1) Noms de médicaments courants — plus spécifique que le dosage
         let meds: [String] = [
             "paracetamol", "paracétamol", "ibuprofene", "ibuprofène",
             "doliprane", "efferalgan", "aspirine", "aspegic",
@@ -97,7 +94,28 @@ enum CoachSafetyScanner {
             return .medication
         }
 
-        // Conseil d'achat/vente ciblé (crypto, actions nommées)
+        // 2) Dosage nu — nombre suivi d'une unité pharmaco
+        let dosageRegex = #"\b\d{1,4}\s?(mg|mcg|µg|ug|ui|ml)\b"#
+        if response.range(of: dosageRegex, options: .regularExpression) != nil {
+            return .dosage
+        }
+
+        // 3) Restriction extrême / régimes dangereux
+        // Regex kcal < 1200/j détecte 500 kcal par jour, 800 kcal/jour, etc.
+        let kcalRestrictionRegex = #"\b([1-9]\d{0,2}|1[01]\d{2})\s?kcal\s?(par|/)\s?jour\b"#
+        if lower.range(of: kcalRestrictionRegex, options: .regularExpression) != nil {
+            return .restriction
+        }
+        let restrictionCues: [String] = [
+            "moins de 1000 kcal", "moins de 800 kcal",
+            "jeune de 3 jours", "jeûne de 3 jours", "jeune de 4 jours", "jeûne de 4 jours",
+            "arrete de manger", "arrête de manger", "saute tous les repas"
+        ]
+        if restrictionCues.contains(where: { lower.contains($0) }) {
+            return .restriction
+        }
+
+        // 4) Conseil d'achat/vente ciblé (crypto, actions nommées)
         let financeCues: [String] = [
             "achete du btc", "achète du btc", "achete du bitcoin", "achète du bitcoin",
             "achete de l'eth", "achète de l'eth", "achete de l'ether",
@@ -107,16 +125,6 @@ enum CoachSafetyScanner {
         ]
         if financeCues.contains(where: { lower.contains($0) }) {
             return .finance
-        }
-
-        // Restriction extrême / régimes dangereux
-        let restrictionCues: [String] = [
-            "moins de 1000 kcal", "moins de 800 kcal", "500 kcal par jour",
-            "jeune de 3 jours", "jeûne de 3 jours", "jeune de 4 jours", "jeûne de 4 jours",
-            "arrete de manger", "arrête de manger", "saute tous les repas"
-        ]
-        if restrictionCues.contains(where: { lower.contains($0) }) {
-            return .restriction
         }
 
         return nil
