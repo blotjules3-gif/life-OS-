@@ -1061,6 +1061,7 @@ struct AIAssistantView: View {
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(accent)
             }
+            .accessibilityHidden(true)
             VStack(spacing: 3) {
                 Text("Assistant LifeOS")
                     .font(.system(size: 16, weight: .semibold))
