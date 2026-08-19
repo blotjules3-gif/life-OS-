@@ -144,12 +144,37 @@ enum IntelligentExtractor {
         let m = normalized.lowercased()
         var out: [Extraction] = []
 
-        // Poids : "je fais 74 kg", "je pèse 68,5 kg", "74kg", "70 kilos"
-        if let match = firstMatch(pattern: #"\b(?:je\s*(?:fais|pese|pèse)|poids)\s*(?:de\s*)?(\d{2,3}(?:[,.]\d)?)\s*(?:kg|kilos?)\b"#, in: m),
+        // Poids : "je fais 74 kg", "je pèse 68,5 kg", "74kg", "70 kilos", "je fais 70 kg pour 1,83m"
+        // Pattern élargi : accepte tout nombre isolé suivi de kg/kilos (mais on préfère
+        // les patterns avec verbe pour éviter les faux positifs comme "reste 20 kg de patates")
+        if let match = firstMatch(pattern: #"\b(?:je\s*(?:fais|pese|pèse)|poids|pesant)\s*(?:de\s*|environ\s*)?(\d{2,3}(?:[,.]\d)?)\s*(?:kg|kilos?)\b"#, in: m),
            let raw = groupValue(match, group: 1, in: m),
            let v = Double(raw.replacingOccurrences(of: ",", with: ".")),
            (30...250).contains(v) {
             out.append(.init(fieldID: "body.currentWeightKg", value: v, confidence: 0.95, sourceSnippet: "\(v) kg"))
+        }
+
+        // Calories mangées : "j'ai mangé 4500 calories", "4500 kcal", "2400 calories"
+        if let match = firstMatch(pattern: #"\b(?:j'?ai\s*mange?[ér]?|mange[ér]?|apport|consommation)?\s*(\d{3,5})\s*(?:kcal|calories?|cal)\b"#, in: m),
+           let raw = groupValue(match, group: 1, in: m),
+           let v = Int(raw), (500...8000).contains(v) {
+            out.append(.init(fieldID: "nutrition.kcalGoal", value: v, confidence: 0.85, sourceSnippet: "\(v) kcal"))
+        }
+
+        // Protéines : "140g de protéines", "180 grammes de protéines"
+        if let match = firstMatch(pattern: #"\b(\d{2,3})\s*(?:g|grammes?|gr)\s*(?:de\s*)?(?:protein|protéin|proteine)"#, in: m),
+           let raw = groupValue(match, group: 1, in: m),
+           let v = Int(raw), (20...400).contains(v) {
+            out.append(.init(fieldID: "nutrition.proteinGoal", value: v, confidence: 0.9, sourceSnippet: "\(v) g protéines"))
+        }
+
+        // Eau bue : "j'ai bu 3 l d'eau", "2,5 litres d'eau", "3l d'eau"
+        if let match = firstMatch(pattern: #"\b(?:j'?ai\s*bu|bu|hydrat\w*|boi[st])\s*(?:environ\s*)?(\d(?:[,.]\d)?)\s*(?:l|litres?)\s*(?:d[e']\s*eau)?\b"#, in: m),
+           let raw = groupValue(match, group: 1, in: m),
+           let liters = Double(raw.replacingOccurrences(of: ",", with: ".")),
+           (0.5...10).contains(liters) {
+            let ml = Int(liters * 1000)
+            out.append(.init(fieldID: "nutrition.waterGoal", value: ml, confidence: 0.9, sourceSnippet: "\(liters) L"))
         }
 
         // Taille : "je mesure 1m78", "1 mètre 80", "je fais 178 cm", "taille 1,80"
