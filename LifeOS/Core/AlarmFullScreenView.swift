@@ -47,7 +47,7 @@ struct AlarmFullScreenView: View {
                     .padding(.top, 20)
 
                 Text(Date.now, format: .dateTime.weekday(.wide).day().month(.wide))
-                    .font(.system(size: 18, weight: .light))
+                    .font(.system(size: dateSize, weight: .light))
                     .foregroundStyle(.white.opacity(0.55))
                     .padding(.top, 6)
 
