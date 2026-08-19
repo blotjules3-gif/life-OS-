@@ -106,14 +106,14 @@ final class ProfileStoreTests: XCTestCase {
     }
 
     func testUpsert_allowsOverwriteManual_whenExplicit() {
-        _ = ProfileStore.shared.upsert("body.currentWeightKg", value: 70, source: .manual, confidence: 1.0)
+        _ = ProfileStore.shared.upsert("body.currentWeightKg", value: 70.0, source: .manual, confidence: 1.0)
         let result = ProfileStore.shared.upsert(
-            "body.currentWeightKg", value: 75, source: .chat, confidence: 0.95, allowOverwriteManual: true
+            "body.currentWeightKg", value: 75.0, source: .chat, confidence: 0.95, allowOverwriteManual: true
         )
         guard case .updated = result else {
             return XCTFail("Expected .updated, got \(result)")
         }
-        XCTAssertEqual(ProfileStore.shared.field("body.currentWeightKg")?.valueString, "75")
+        XCTAssertEqual(ProfileStore.shared.field("body.currentWeightKg")?.valueString, "75.0")
     }
 
     // MARK: - missingFields
