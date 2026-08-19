@@ -66,7 +66,9 @@ final class CoachSafetyScannerTests: XCTestCase {
     }
 
     func testScan_restrictionExtreme_flagged() {
-        XCTAssertEqual(CoachSafetyScanner.scan("essaie 500 kcal par jour"), .dosage)
+        // "500 kcal par jour" est un régime dangereux — .restriction (pas .dosage)
+        XCTAssertEqual(CoachSafetyScanner.scan("essaie 500 kcal par jour"), .restriction)
+        XCTAssertEqual(CoachSafetyScanner.scan("moins de 1000 kcal"), .restriction)
         XCTAssertEqual(CoachSafetyScanner.scan("jeûne de 3 jours peut marcher"), .restriction)
         XCTAssertEqual(CoachSafetyScanner.scan("arrête de manger le soir"), .restriction)
     }
