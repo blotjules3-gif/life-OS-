@@ -49,12 +49,15 @@ enum IntelligentExtractor {
         // 1. Regex FR déterministes (rapides, précises)
         results.append(contentsOf: regexPass(preprocessed))
 
-        // 2. LLM fallback si Apple Intelligence dispo ET regex a rien capté
-        //    OU si le message est long/complexe
+        // 2. LLM fallback si Apple Intelligence dispo.
+        //    Déclenché AGRESSIVEMENT : dès 30 chars (au lieu de 80) OU si les regex
+        //    n'ont trouvé qu'une seule info alors que le message est long.
+        //    Motivation : dans un message complexe l'utilisateur peut mentionner
+        //    5 infos, les regex n'en capturent qu'une → LLM comble le reste.
         #if canImport(FoundationModels)
         if #available(iOS 26.0, *), SystemLanguageModel.default.isAvailable,
-           (results.isEmpty || message.count > 80) {
-            let llmResults = await llmPass(message)
+           trimmed.count > 30, (results.count < 3 || trimmed.count > 100) {
+            let llmResults = await llmPass(preprocessed)
             // Dédup par fieldID — regex prioritaires
             let knownIDs = Set(results.map { $0.fieldID })
             results.append(contentsOf: llmResults.filter { !knownIDs.contains($0.fieldID) })
