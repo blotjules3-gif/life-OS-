@@ -56,13 +56,16 @@ enum IntelligentExtractor {
         return results
     }
 
-    /// Extrait ET upsert dans le store. Retourne les fieldIDs mis à jour.
+    /// Extrait ET upsert dans le store. Retourne les changements avec diff
+    /// (ancienne → nouvelle valeur) pour affichage UI toast.
     /// Utilisé par le chat coach à chaque message user.
     @discardableResult
-    static func extractAndPersist(from message: String, source: ProfileStore.Source) async -> [String] {
+    static func extractAndPersist(from message: String, source: ProfileStore.Source) async -> [PersistedChange] {
         let extractions = await extract(from: message)
-        var updated: [String] = []
+        var changes: [PersistedChange] = []
         for extraction in extractions {
+            let existingBefore = ProfileStore.shared.field(extraction.fieldID)
+            let previous = existingBefore?.valueString
             let result = ProfileStore.shared.upsert(
                 extraction.fieldID,
                 value: extraction.value,
@@ -70,10 +73,21 @@ enum IntelligentExtractor {
                 confidence: extraction.confidence,
                 reason: "extracted_from_\(source.rawValue)"
             )
-            if case .created = result { updated.append(extraction.fieldID) }
-            if case .updated = result { updated.append(extraction.fieldID) }
+            let didWrite: Bool
+            switch result {
+            case .created, .updated: didWrite = true
+            default: didWrite = false
+            }
+            guard didWrite, let spec = ProfileFieldCatalog.all[extraction.fieldID] else { continue }
+            changes.append(PersistedChange(
+                fieldID: extraction.fieldID,
+                displayName: spec.displayName,
+                previousValueString: previous,
+                newValueString: ProfileStore.shared.field(extraction.fieldID)?.valueString ?? "",
+                unit: spec.unit
+            ))
         }
-        return updated
+        return changes
     }
 
     // MARK: - Regex pass
