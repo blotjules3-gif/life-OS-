@@ -76,6 +76,15 @@ enum Theme {
     static let space32: CGFloat = 32
     static let space48: CGFloat = 48
 
+    // Aliases sémantiques — préférer ces noms dans les nouvelles vues.
+    // Correspondance : XS=4 · S=8 · M=12 · L=16 · XL=24 · XXL=32.
+    static let spacingXS: CGFloat = 4
+    static let spacingS:  CGFloat = 8
+    static let spacingM:  CGFloat = 12
+    static let spacingL:  CGFloat = 16
+    static let spacingXL: CGFloat = 24
+    static let spacingXXL: CGFloat = 32
+
     // Vert signature de l'icône de l'app — utilisé UNIQUEMENT par le thème Vert.
     // Dans les vues : toujours Color.accentColor + Theme.onAccent, jamais volt en dur.
     static let volt = Color(hex: 0x4CF810)
