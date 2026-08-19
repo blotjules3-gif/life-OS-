@@ -94,8 +94,11 @@ enum CoachSafetyScanner {
             return .medication
         }
 
-        // 2) Dosage nu — nombre suivi d'une unité pharmaco
-        let dosageRegex = #"\b\d{1,4}\s?(mg|mcg|µg|ug|ui|ml)\b"#
+        // 2) Dosage nu — nombre suivi d'une unité pharmaco.
+        //    On NE MATCHE PLUS "ml" seul : c'est la même unité que l'eau (2500 ml
+        //    d'hydratation) → trop de faux positifs. Les vraies posologies sont
+        //    quasi toujours en mg / mcg / µg / UI.
+        let dosageRegex = #"\b\d{1,4}\s?(mg|mcg|µg|ug|ui)\b"#
         if response.range(of: dosageRegex, options: .regularExpression) != nil {
             return .dosage
         }
