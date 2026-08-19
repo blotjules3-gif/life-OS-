@@ -24,20 +24,25 @@ enum CoachSafetyScanner {
     """
 
     /// Détecte les signaux de détresse aiguë. Volontairement strict — un faux
-    /// positif est infiniment moins grave qu'un faux négatif ici.
+    /// positif est infiniment moins grave qu'un faux négatif ici. On requiert
+    /// une expression à la première personne pour éviter les mentions tierces
+    /// ("un documentaire sur le suicide" → non déclenché).
     static func detectsDistress(in raw: String) -> Bool {
         let m = raw.folding(options: .diacriticInsensitive, locale: .current).lowercased()
-        // Idéation suicidaire, automutilation, appel à l'aide critique.
-        let patterns: [String] = [
-            "suicide", "me suicider", "me tuer", "en finir",
+
+        // Patterns qui parlent explicitement de soi. Chaque item doit inclure
+        // un pronom ou une conjugaison à la 1re personne pour matcher.
+        let firstPersonPatterns: [String] = [
+            "me suicider", "me tuer", "veux mourir", "envie de mourir",
             "plus envie de vivre", "plus la force de vivre",
-            "envie de mourir", "veux mourir",
-            "me faire du mal", "me faire mal", "mautomutil",
-            "auto-mutil", "je vais me faire", "me pendre",
-            "sauter du pont", "sauter par la fenetre",
-            "trop de medoc", "avaler mes medoc"
+            "je vais en finir", "envie d'en finir", "envie den finir",
+            "me faire du mal", "me faire mal", "je vais me faire",
+            "mautomutil", "auto-mutil", "je vais me pendre", "me pendre",
+            "je vais sauter", "avaler mes medoc", "trop de medoc",
+            "je veux disparaitre", "envie de disparaitre",
+            "je veux en finir",
         ]
-        return patterns.contains(where: { m.contains($0) })
+        return firstPersonPatterns.contains(where: { m.contains($0) })
     }
 
     // MARK: - Scan de la réponse générée
