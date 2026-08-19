@@ -1427,6 +1427,87 @@ struct AIAssistantView: View {
 
     @ObservedObject private var serverStatus = ServerStatusMonitor.shared
 
+    // État banner Apple Intelligence — dismissable, persisté via AppStorage
+    // pour ne pas ré-afficher à chaque tour si l'user a déjà vu et fermé.
+    @AppStorage("aiBannerDismissedStatus") private var dismissedStatusRaw = ""
+    @State private var currentAIStatus: OnDeviceLLM.Status = .available
+
+    /// Bannière visible uniquement si Apple Intelligence n'est pas actif.
+    /// Bouton "Activer" ouvre les Réglages iOS directement (pas d'API pour l'activer par code).
+    @ViewBuilder private var appleIntelligenceBanner: some View {
+        if currentAIStatus != .available, dismissedStatusRaw != aiStatusKey(currentAIStatus) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 28)
+                    .background(Color(hex: 0x6C7BF1), in: Circle())
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(currentAIStatus.userFacingTitle)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.primary)
+                    Text(currentAIStatus.userFacingMessage)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if currentAIStatus.isActionable {
+                        Button {
+                            openIOSSettings()
+                        } label: {
+                            Text("Activer Apple Intelligence")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background(Color(hex: 0x6C7BF1), in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 4)
+                    }
+                }
+                Spacer(minLength: 0)
+                Button {
+                    dismissedStatusRaw = aiStatusKey(currentAIStatus)
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 24, height: 24)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Fermer")
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Color(hex: 0x6C7BF1).opacity(0.08))
+            .overlay(
+                Rectangle().fill(Color(hex: 0x6C7BF1).opacity(0.35)).frame(height: 0.5),
+                alignment: .bottom
+            )
+            .transition(.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    private func aiStatusKey(_ status: OnDeviceLLM.Status) -> String {
+        switch status {
+        case .available: return "available"
+        case .iosTooOld: return "iosTooOld"
+        case .deviceNotEligible: return "deviceNotEligible"
+        case .notEnabledInSettings: return "notEnabledInSettings"
+        case .modelDownloading: return "modelDownloading"
+        case .unknownUnavailable: return "unknownUnavailable"
+        case .fallbackLocalCoach: return "fallbackLocalCoach"
+        }
+    }
+
+    /// Ouvre l'app Réglages iOS. Apple ne permet pas d'ouvrir directement
+    /// la section Apple Intelligence — user doit taper dessus.
+    private func openIOSSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
+    }
+
     private var canSend: Bool {
         !vm.inputText.trimmingCharacters(in: .whitespaces).isEmpty
             && !vm.isLoading
