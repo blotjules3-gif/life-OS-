@@ -21,6 +21,10 @@ struct AIAssistantMessageRow: View {
     @AppStorage(AppStorageKeys.coachTTSEnabled) private var ttsEnabled = false
     @ObservedObject private var speech = CoachSpeech.shared
 
+    // Dynamic Type — badges et bouton speaker grossissent avec la taille système.
+    @ScaledMetric(relativeTo: .footnote) private var badgeIconSize: CGFloat = 11
+    @ScaledMetric(relativeTo: .footnote) private var badgeTextSize: CGFloat = 11
+
     var isUser: Bool { message.role == "user" }
 
     private var cleanedText: String {
