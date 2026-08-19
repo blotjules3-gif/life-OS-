@@ -25,6 +25,9 @@ jobs:
       - name: Show available simulators
         run: xcrun simctl list devices available | head -30
 
+      - name: File size guard (soft warn > 500 l.)
+        run: bash scripts/check-file-sizes.sh
+
       - name: Build LifeOS
         run: |
           xcodebuild \
