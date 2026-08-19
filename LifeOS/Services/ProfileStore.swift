@@ -158,6 +158,9 @@ final class ProfileStore {
             )
             ctx.insert(newField)
             LifeOSTry(try ctx.save(), context: "ProfileStore create \(fieldID)", category: AppLog.data)
+            // Force le flush pour que le prochain fetch trouve immédiatement le field
+            // (bug SwiftData en context in-memory : insert seul ne suffit pas au fetch).
+            ctx.processPendingChanges()
             return .created(newField)
         }
 
