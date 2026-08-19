@@ -29,7 +29,7 @@ func LifeOSTry<T>(
     } catch {
         let where_ = "\(file):\(line)"
         category.error("\(context, privacy: .public) failed at \(where_, privacy: .public): \(error.localizedDescription, privacy: .public)")
-        SentryConfig.capture(error, context: "\(context) @ \(where_)")
+        SentryConfig.capture(error: error, context: "\(context) @ \(where_)")
         return nil
     }
 }
