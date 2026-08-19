@@ -44,7 +44,20 @@ final class UserContextBuilder {
     /// - Parameter message: message courant de l'utilisateur (optionnel). S'il est fourni
     ///   on ne prend QUE les blocs d'expertise détectés dedans (économie de tokens).
     ///   Sinon on retombe sur un dispatch par modules actifs.
+    ///
+    /// Cache TTL 60s par clé de message — évite le rebuild à chaque frappe.
     func build(message: String? = nil) -> String {
+        let cacheKey = message ?? ""
+        if let entry = cache[cacheKey],
+           Date().timeIntervalSince(entry.builtAt) < cacheTTL {
+            return entry.text
+        }
+        let result = buildFresh(message: message)
+        cache[cacheKey] = CacheEntry(text: result, builtAt: .now)
+        return result
+    }
+
+    private func buildFresh(message: String? = nil) -> String {
         var lines: [String] = []
         let ud = UserDefaults.standard
         guard let grp = Self.group else { return "" }
