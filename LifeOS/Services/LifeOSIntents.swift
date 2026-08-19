@@ -277,13 +277,14 @@ struct IngestProfileTextIntent: AppIntent {
         let ctx = try LocalStore.container().mainContext
         ProfileStore.shared.setContext(ctx)
 
-        let updated = await IntelligentExtractor.extractAndPersist(from: trimmed, source: .shortcut)
+        let changes = await IntelligentExtractor.extractAndPersist(from: trimmed, source: .shortcut)
 
-        guard !updated.isEmpty else {
+        guard !changes.isEmpty else {
             return .result(dialog: "Rien de nouveau détecté. Reformule avec des chiffres ou des mots-clés (poids, kcal, séances par semaine…).")
         }
-        let labels = updated.compactMap { ProfileFieldCatalog.all[$0]?.displayName }
-        let summary = labels.prefix(3).joined(separator: ", ")
+        // Invalider le cache pour que le prochain chat utilise la nouvelle valeur
+        UserContextBuilder.shared.invalidateCache()
+        let summary = changes.prefix(3).map { $0.displayName }.joined(separator: ", ")
         return .result(dialog: "Profil mis à jour : \(summary).")
     }
 }
