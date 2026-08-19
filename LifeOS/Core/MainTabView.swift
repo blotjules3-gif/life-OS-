@@ -480,7 +480,8 @@ struct HomeDashboardContent: View {
     }
 
     private func goalBar(_ label: String, _ value: Double, _ goal: Double, _ color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
+        let pct = goal > 0 ? Int((value / goal * 100).rounded()) : 0
+        return VStack(alignment: .leading, spacing: 5) {
             HStack {
                 Text(label).font(.subheadline)
                 Spacer()
@@ -494,6 +495,8 @@ struct HomeDashboardContent: View {
                 .tint(color)
                 .animation(.spring(duration: 0.6, bounce: 0.1), value: value)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(label) — \(Int(value)) sur \(Int(goal)), \(pct) pourcent")
     }
 }
 
