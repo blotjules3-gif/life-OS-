@@ -109,6 +109,8 @@ struct LifeOSApp: App {
             ProfileStore.shared.setContext(container.mainContext)
             // Migration one-shot des données existantes vers ProfileField.
             ProfileMigration.runIfNeeded(context: container.mainContext)
+            // Enregistrer les tools coach dans le ToolRegistry (Phase 1 branchée).
+            CoachToolsBootstrap.registerAll()
             // Pas de demande de permission pendant l'onboarding : elle est faite
             // en contexte (pré-prompt) juste après la création des habitudes.
             guard onboardingDone else { return }
