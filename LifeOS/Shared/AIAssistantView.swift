@@ -938,6 +938,11 @@ struct AIAssistantView: View {
             .sheet(isPresented: $showProfileFields) {
                 ProfileFieldsView()
             }
+            #if DEBUG
+            .sheet(isPresented: $showAIDebug) {
+                AIDebugView()
+            }
+            #endif
             .overlay(alignment: .top) {
                 if let toast = vm.actionToast {
                     actionToastView(toast)
