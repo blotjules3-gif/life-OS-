@@ -240,19 +240,25 @@ enum OnDeviceLLM {
             recentUpdates: recentUpdates
         ))
 
+        // Récupère les définitions de tools autorisés (permissions user OK).
+        // Pas encore envoyés au LLM Apple (nécessite iOS 26.1+ tools API — Phase P5),
+        // mais visibles dans le budget de contexte + debug view.
+        let toolDefinitions = ToolRegistry.shared.availableDefinitions()
+
         let assembled = AIContextManager.build(
             userMessage: message,
             previousMessages: [],
             systemInstructions: systemPrompt,
             contextBlock: nil,               // déjà inclus dans systemPrompt via PromptAssembler
             recentUpdates: [],               // idem, déjà dans systemPrompt
-            toolDefinitions: [],             // pas encore de tool calling wire (P0.2 vient après)
+            toolDefinitions: toolDefinitions,
             tokenBudget: 4000
         )
 
         // Route via AIModelRouter — Apple Intelligence en priorité.
         let request = AIRequest(
             messages: assembled.messages,
+            tools: toolDefinitions,
             correlationID: correlationID
         )
         let response = await AIModelRouter.shared.execute(request)
