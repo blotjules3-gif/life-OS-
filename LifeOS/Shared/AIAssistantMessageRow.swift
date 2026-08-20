@@ -185,6 +185,7 @@ struct AIAssistantMessageRow: View {
             ForEach(CoachFeedbackStore.DislikeReason.allCases, id: \.rawValue) { reason in
                 Button {
                     CoachFeedbackStore.record(.dislike, response: cleanedText, reason: reason)
+                    AnalyticsEvents.chatFeedbackReason(reason: reason.rawValue)
                     withAnimation { showingDislikeReasons = false }
                 } label: {
                     Text(reason.label)
