@@ -231,14 +231,19 @@ enum OnDeviceLLM {
         // Sessions IA — début (log AIActivityLogger)
         let correlationID = UUID()
 
+        // Awareness contextuel : heure, jour, saison, location (best-effort)
+        let awareness = await AwarenessContext.snapshot()
+
         // Assemble prompt via PromptAssembler (garde la logique adaptative existante),
         // puis wrap via AIContextManager pour tracking budget tokens.
-        let systemPrompt = PromptAssembler.assemble(config: .init(
+        var systemPrompt = PromptAssembler.assemble(config: .init(
             message: message,
             moduleContext: moduleContext,
             injectContext: injectContext,
             recentUpdates: recentUpdates
         ))
+        // Ajout du contexte temporel/location en fin de prompt système
+        systemPrompt += "\n\n" + awareness
 
         // Récupère les définitions de tools autorisés (permissions user OK).
         // Pas encore envoyés au LLM Apple (nécessite iOS 26.1+ tools API — Phase P5),
