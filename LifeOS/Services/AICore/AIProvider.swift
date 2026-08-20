@@ -96,7 +96,7 @@ enum AIAvailability: Equatable, Sendable {
 struct AIRequest: Sendable {
 
     /// Messages de la conversation (système + user + assistant précédents).
-    let messages: [AIMessage]
+    let messages: [AIChatMessage]
 
     /// Tools que le provider peut appeler si sa capacité `.toolCalling` le permet.
     /// Si vide, réponse texte simple attendue.
@@ -118,7 +118,7 @@ struct AIRequest: Sendable {
     let correlationID: UUID
 
     init(
-        messages: [AIMessage],
+        messages: [AIChatMessage],
         tools: [AIToolDefinition] = [],
         responseSchema: AIResponseSchema? = nil,
         maxOutputTokens: Int? = nil,
@@ -139,7 +139,7 @@ struct AIRequest: Sendable {
 // MARK: - Message
 
 /// Message dans la conversation. Compatible avec le format OpenAI / Anthropic / Mistral.
-struct AIMessage: Sendable, Equatable {
+struct AIChatMessage: Sendable, Equatable {
 
     enum Role: String, Sendable {
         case system
@@ -163,9 +163,9 @@ struct AIMessage: Sendable, Equatable {
     }
 
     // Convenience
-    static func system(_ content: String) -> AIMessage { .init(role: .system, content: content) }
-    static func user(_ content: String) -> AIMessage { .init(role: .user, content: content) }
-    static func assistant(_ content: String) -> AIMessage { .init(role: .assistant, content: content) }
+    static func system(_ content: String) -> AIChatMessage { .init(role: .system, content: content) }
+    static func user(_ content: String) -> AIChatMessage { .init(role: .user, content: content) }
+    static func assistant(_ content: String) -> AIChatMessage { .init(role: .assistant, content: content) }
 }
 
 // MARK: - Tool definitions (référencées, définies dans ToolRegistry.swift)
@@ -185,7 +185,7 @@ struct AIToolDefinition: Sendable, Equatable {
 }
 
 /// Un appel de tool réclamé par le LLM. L'orchestrateur amont exécute puis
-/// renvoie le résultat en `AIMessage(role: .tool)`.
+/// renvoie le résultat en `AIChatMessage(role: .tool)`.
 struct AIToolCall: Sendable, Equatable {
     let id: String
     let toolName: String
