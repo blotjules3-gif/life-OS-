@@ -49,11 +49,12 @@ enum CoachFeedbackStore {
     // MARK: - Écriture
 
     /// Enregistre un feedback pour la réponse coach donnée.
-    static func record(_ kind: Kind, response: String) {
+    /// Pour un dislike, `reason` optionnel permet de catégoriser (trop long, hors sujet…).
+    static func record(_ kind: Kind, response: String, reason: DislikeReason? = nil) {
         let entry = Entry(
             kind: kind,
             snippet: String(response.prefix(200)),
-            at: .now
+            dislikeReason: reason
         )
         var all = load()
         all.append(entry)
