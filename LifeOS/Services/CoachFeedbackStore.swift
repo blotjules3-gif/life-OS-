@@ -70,28 +70,51 @@ enum CoachFeedbackStore {
 
     /// Résume le feedback récent pour injection dans le prompt système.
     /// Retourne "" si aucun feedback enregistré (n'ajoute rien au prompt).
+    ///
+    /// Approche v2 : catégorise les dislikes par raison au lieu d'injecter des
+    /// snippets bruts. Le LLM comprend mieux "3 dislikes trop long" que 3 extraits.
     static func summary() -> String {
         let all = load()
         guard !all.isEmpty else { return "" }
-
-        // On prend au max les 5 likes et 5 dislikes les plus récents
-        let recent = all.suffix(15)
-        let likes = recent.filter { $0.kind == .like }.suffix(5)
-        let dislikes = recent.filter { $0.kind == .dislike }.suffix(5)
-
+        let recent = Array(all.suffix(20))
         var lines: [String] = []
-        if !likes.isEmpty {
-            lines.append("Réponses appréciées (à reproduire) :")
-            for l in likes {
-                lines.append("  + \(l.snippet.prefix(summarySnippetChars))…")
-            }
+
+        // Ratio positif/négatif
+        let likes = recent.filter { $0.kind == .like }.count
+        let dislikes = recent.filter { $0.kind == .dislike }.count
+        if likes + dislikes > 0 {
+            lines.append("Ratio feedback récent : \(likes) 👍 / \(dislikes) 👎.")
         }
-        if !dislikes.isEmpty {
-            lines.append("Réponses désapprouvées (à éviter) :")
-            for d in dislikes {
+
+        // Agrégation dislikes par raison
+        let dislikeEntries = recent.filter { $0.kind == .dislike }
+        let byReason = Dictionary(grouping: dislikeEntries, by: { $0.dislikeReason })
+        var reasonLines: [String] = []
+        for (reason, entries) in byReason {
+            guard let reason else { continue }
+            reasonLines.append("- \(entries.count)× \(reason.label)")
+        }
+        if !reasonLines.isEmpty {
+            lines.append("À CORRIGER pour l'utilisateur (raisons de dislikes) :")
+            lines.append(contentsOf: reasonLines)
+        }
+
+        // Extraits (fallback)
+        let unnamedDislikes = dislikeEntries.filter { $0.dislikeReason == nil }.suffix(3)
+        if !unnamedDislikes.isEmpty {
+            lines.append("Réponses désapprouvées (sans raison précise) :")
+            for d in unnamedDislikes {
                 lines.append("  - \(d.snippet.prefix(summarySnippetChars))…")
             }
         }
+        let recentLikes = recent.filter { $0.kind == .like }.suffix(3)
+        if !recentLikes.isEmpty {
+            lines.append("Réponses appréciées (à reproduire) :")
+            for l in recentLikes {
+                lines.append("  + \(l.snippet.prefix(summarySnippetChars))…")
+            }
+        }
+
         return lines.joined(separator: "\n")
     }
 
