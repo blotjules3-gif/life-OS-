@@ -314,6 +314,14 @@ final class AIAssistantViewModel: ObservableObject {
             appendAssistantMessage(reply.text, actions: [], animateReveal: true)
             isLoading = false
 
+            // Journal fin de session (métadonnées uniquement, pas de texte)
+            let providerLabel = reply.source == .onDeviceLLM ? "apple.intelligence.on-device" : "local.rules.coach"
+            AIActivityLogger.shared.recordProviderSelection(
+                sessionID: sessionID,
+                providerID: providerLabel,
+                wasFallback: reply.source == .localRules
+            )
+
             // 5. Invalider le cache UserContextBuilder → le prochain send()
             //    lira les ProfileField frais qu'on vient d'insérer.
             if !changes.isEmpty || !executedIntents.isEmpty {
