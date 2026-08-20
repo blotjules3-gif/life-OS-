@@ -5,6 +5,70 @@
 	<key>logFormatVersion</key>
 	<integer>12</integer>
 	<key>logs</key>
-	<dict/>
+	<dict>
+		<key>E9864527-AD34-497D-973D-15E294181D67</key>
+		<dict>
+			<key>auxiliaryLogUniqueIdentifier</key>
+			<string>84A66C9F-4E21-4993-B7C3-0283515BB135</string>
+			<key>auxiliaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>10</integer>
+			</dict>
+			<key>className</key>
+			<string>IDESchemeActionsInvocationRecord</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>com.apple.dt.unit.cocoaUnitTest</string>
+			<key>fileName</key>
+			<string>Test-LifeOS-2026.08.20_04-08-43-+0200.xcresult</string>
+			<key>hasAuxiliaryLog</key>
+			<true/>
+			<key>hasCoverageData</key>
+			<true/>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>T</string>
+				<key>totalCodeCoverage</key>
+				<real>0.053319597882846077</real>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>1</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>10</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>LifeOS project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>LifeOS</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Test LifeOS</string>
+			<key>timeStartedRecording</key>
+			<real>808884523.69989598</real>
+			<key>timeStoppedRecording</key>
+			<real>808884806.44647002</real>
+			<key>title</key>
+			<string>Test LifeOS</string>
+			<key>uniqueIdentifier</key>
+			<string>E9864527-AD34-497D-973D-15E294181D67</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

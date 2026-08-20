@@ -205,8 +205,11 @@ enum IntelligentExtractor {
         }
 
         // Fréquence entraînement : "4 fois par semaine", "3x/semaine",
-        //                          "4 séances cette semaine", "j'ai fait 5 séances par semaine"
-        if let match = firstMatch(pattern: #"\b(\d)\s*(?:fois|x|séances?|seances?|entrainements?|entraînements?)\s*(?:par|/|cette|dans\s+la)\s*semaine\b"#, in: m),
+        //                          "4 séances cette semaine", "4 séances de sport par semaine"
+        //                          "j'ai fait 5 séances par semaine"
+        // Tolère jusqu'à 3 mots courts entre l'unité et "par/cette semaine"
+        // (ex: "séances de sport par semaine").
+        if let match = firstMatch(pattern: #"\b(\d)\s*(?:fois|x|séances?|seances?|entrainements?|entraînements?)(?:\s+\w+){0,3}\s*(?:par|/|cette|dans\s+la)\s*semaine\b"#, in: m),
            let raw = groupValue(match, group: 1, in: m),
            let v = Int(raw), (0...14).contains(v) {
             out.append(.init(fieldID: "fitness.gymFrequency", value: v, confidence: 0.9, sourceSnippet: "\(v)x/sem"))
