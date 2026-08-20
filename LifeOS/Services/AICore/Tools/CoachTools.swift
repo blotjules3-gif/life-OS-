@@ -243,5 +243,6 @@ enum CoachToolsBootstrap {
         registry.register(SearchMemoryTool())
         registry.register(CreateHabitTool())
         registry.register(CreateTodoTool())
+        registry.register(PhotoAnalysisTool())
     }
 }
