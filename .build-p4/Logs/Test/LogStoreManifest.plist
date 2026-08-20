@@ -6,10 +6,10 @@
 	<integer>12</integer>
 	<key>logs</key>
 	<dict>
-		<key>93D9B5A9-5F02-41E3-8F10-8BFEC819C0D7</key>
+		<key>674075A2-22DE-457A-8240-F33F4D93502F</key>
 		<dict>
 			<key>auxiliaryLogUniqueIdentifier</key>
-			<string>79E49BD8-8747-4482-9128-70B6616DDA21</string>
+			<string>F19B05D5-F299-41A4-9062-0BED68DA23F1</string>
 			<key>auxiliaryObservable</key>
 			<dict>
 				<key>highLevelStatus</key>
@@ -30,7 +30,7 @@
 			<key>domainType</key>
 			<string>com.apple.dt.unit.cocoaUnitTest</string>
 			<key>fileName</key>
-			<string>Test-LifeOS-2026.08.19_15-18-04-+0200.xcresult</string>
+			<string>Test-LifeOS-2026.08.20_03-45-26-+0200.xcresult</string>
 			<key>hasAuxiliaryLog</key>
 			<true/>
 			<key>hasCoverageData</key>
@@ -42,7 +42,7 @@
 				<key>highLevelStatus</key>
 				<string>W</string>
 				<key>totalCodeCoverage</key>
-				<real>0.036104519092881891</real>
+				<real>0.04926588598941925</real>
 				<key>totalNumberOfAnalyzerIssues</key>
 				<integer>0</integer>
 				<key>totalNumberOfErrors</key>
@@ -61,13 +61,13 @@
 			<key>signature</key>
 			<string>Test LifeOS</string>
 			<key>timeStartedRecording</key>
-			<real>808838284.18809497</real>
+			<real>808883126.42551899</real>
 			<key>timeStoppedRecording</key>
-			<real>808838339.83640206</real>
+			<real>808883228.06873405</real>
 			<key>title</key>
 			<string>Test LifeOS</string>
 			<key>uniqueIdentifier</key>
-			<string>93D9B5A9-5F02-41E3-8F10-8BFEC819C0D7</string>
+			<string>674075A2-22DE-457A-8240-F33F4D93502F</string>
 		</dict>
 	</dict>
 </dict>

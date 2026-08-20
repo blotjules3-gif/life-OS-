@@ -13,27 +13,27 @@
 				<key>testInitialStateNotRinging</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0011969804763793945</real>
+					<real>0.0012080669403076172</real>
 				</dict>
 				<key>testSnoozeStopsRinging</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.40873301029205322</real>
+					<real>0.37983989715576172</real>
 				</dict>
 				<key>testStopAndShowBriefingHidesAlarmScreen</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.041414022445678711</real>
+					<real>0.032046079635620117</real>
 				</dict>
 				<key>testStopRingingResetsState</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0040580034255981445</real>
+					<real>0.0076999664306640625</real>
 				</dict>
 				<key>testTriggerAlarmIsIdempotent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0028779506683349609</real>
+					<real>1.9604389667510986</real>
 				</dict>
 			</dict>
 			<key>AppStorageKeysTests</key>
@@ -41,12 +41,12 @@
 				<key>testCriticalKeys_matchExpectedStringValues</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00057697296142578125</real>
+					<real>0.001110076904296875</real>
 				</dict>
 				<key>testNotificationKeys_preservedWithDots</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00043392181396484375</real>
+					<real>0.00081002712249755859</real>
 				</dict>
 			</dict>
 			<key>CalendarSafetyTests</key>
@@ -54,37 +54,70 @@
 				<key>testFourteenDaysAgoNeverNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0013420581817626953</real>
+					<real>0.0031539201736450195</real>
 				</dict>
 				<key>testGoalPresetDatesNeverNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00042998790740966797</real>
+					<real>0.00092792510986328125</real>
 				</dict>
 				<key>testMoodHistoryPast6DaysNeverNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00038003921508789062</real>
+					<real>0.00081300735473632812</real>
 				</dict>
 				<key>testPastCutoffFallbackIsBeforeNow</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00035309791564941406</real>
+					<real>0.00067591667175292969</real>
 				</dict>
 				<key>testTomorrowFallbackIsAfterToday</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00034606456756591797</real>
+					<real>0.00062501430511474609</real>
 				</dict>
 				<key>testTomorrowStartNeverNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00032591819763183594</real>
+					<real>0.00058603286743164062</real>
 				</dict>
 				<key>testWeekDataDatesNeverNil</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00049901008605957031</real>
+					<real>0.00064599514007568359</real>
+				</dict>
+			</dict>
+			<key>CategoryDetectorTests</key>
+			<dict>
+				<key>testDetect_belowThreshold_excluded</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00341796875</real>
+				</dict>
+				<key>testDetect_empty_returnsEmpty</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00096201896667480469</real>
+				</dict>
+				<key>testDetect_fitness_onGymKeyword</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.001156926155090332</real>
+				</dict>
+				<key>testDetect_multipleCategories_fromComplexMessage</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0016880035400390625</real>
+				</dict>
+				<key>testDetect_orderedByScore</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0012320280075073242</real>
+				</dict>
+				<key>testDetect_sleep_onSingleKeyword</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00083494186401367188</real>
 				</dict>
 			</dict>
 			<key>CoachExpertiseTests</key>
@@ -92,47 +125,120 @@
 				<key>testBlocks_forFitnessTopic_returnsContent</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.001732945442199707</real>
+					<real>0.0015079975128173828</real>
 				</dict>
 				<key>testBlocks_forNoTopic_returnsMetaRuleOnly</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00045907497406005859</real>
+					<real>0.00073397159576416016</real>
 				</dict>
 				<key>testCombinedBlocks_emptyActiveModules_doesNotCrash</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.000370025634765625</real>
+					<real>0.00069606304168701172</real>
 				</dict>
 				<key>testCombinedBlocks_withCycle_addsCycleBlock</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0004119873046875</real>
+					<real>0.001546025276184082</real>
 				</dict>
 				<key>testDetect_emptyMessage_returnsEmpty</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00091195106506347656</real>
+					<real>0.00095105171203613281</real>
 				</dict>
 				<key>testDetect_fitness_onWorkoutKeywords</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.016437053680419922</real>
+					<real>0.0019680261611938477</real>
 				</dict>
 				<key>testDetect_mind_onMeditationKeyword</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00096106529235839844</real>
+					<real>0.0016329288482666016</real>
 				</dict>
 				<key>testDetect_nutrition_onFoodKeywords</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0012060403823852539</real>
+					<real>0.0021269321441650391</real>
 				</dict>
 				<key>testDetect_sleep_onSleepKeywords</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00080692768096923828</real>
+					<real>0.0016330480575561523</real>
+				</dict>
+			</dict>
+			<key>CoachSafetyScannerTests</key>
+			<dict>
+				<key>testDistress_caseInsensitiveAndDiacritics</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0012940168380737305</real>
+				</dict>
+				<key>testDistress_detectedOnDirectSuicidalIntent</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00078999996185302734</real>
+				</dict>
+				<key>testDistress_detectedOnSelfHarm</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00072002410888671875</real>
+				</dict>
+				<key>testDistress_notTriggeredOnBenignMentions</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00079894065856933594</real>
+				</dict>
+				<key>testDistress_reply_containsHelplineNumber</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0014230012893676758</real>
+				</dict>
+				<key>testRiskBadge_iconsAreNonEmpty</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00071895122528076172</real>
+				</dict>
+				<key>testRiskBadge_labelsAreUserFriendly</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00086498260498046875</real>
+				</dict>
+				<key>testScan_benignResponse_returnsNil</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0096900463104248047</real>
+				</dict>
+				<key>testScan_dosage_flagged</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0011639595031738281</real>
+				</dict>
+				<key>testScan_finance_flagged</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0010020732879638672</real>
+				</dict>
+				<key>testScan_medication_flagged</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00072205066680908203</real>
+				</dict>
+				<key>testScan_ml_notFlaggedAsDosage</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00091910362243652344</real>
+				</dict>
+				<key>testScan_restrictionExtreme_flagged</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.00092995166778564453</real>
+				</dict>
+				<key>testScan_returnsFirstBadgeOnly</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0073469877243041992</real>
 				</dict>
 			</dict>
 			<key>DataEraserTests</key>
@@ -140,12 +246,12 @@
 				<key>testExportBackup_countsEntities</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.062863945960998535</real>
+					<real>0.028946995735168457</real>
 				</dict>
 				<key>testExportBackup_returnsValidJSON</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.015847086906433105</real>
+					<real>0.024338006973266602</real>
 				</dict>
 			</dict>
 			<key>ImageStoreTests</key>
@@ -153,47 +259,125 @@
 				<key>testDeleteNilIsNoOp</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00039899349212646484</real>
+					<real>0.0013270378112792969</real>
 				</dict>
 				<key>testDeleteNonExistentFileIsNoOp</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.016868948936462402</real>
+					<real>0.0017840862274169922</real>
 				</dict>
 				<key>testDeleteRemovesFile</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00092899799346923828</real>
+					<real>0.0018459558486938477</real>
 				</dict>
 				<key>testLoadReturnNilForNilFilename</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00036299228668212891</real>
+					<real>0.00065791606903076172</real>
 				</dict>
 				<key>testLoadReturnNilForUnknownFilename</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00062704086303710938</real>
+					<real>0.0030970573425292969</real>
 				</dict>
 				<key>testSaveCreatesFileOnDisk</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00062501430511474609</real>
+					<real>0.0012849569320678711</real>
 				</dict>
 				<key>testSaveFilenameContainsPrefix</key>
 				<dict>
 					<key>mrnet</key>
-					<real>1.8563879728317261</real>
+					<real>0.0011209249496459961</real>
 				</dict>
 				<key>testSaveLoadRoundtrip</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.032680988311767578</real>
+					<real>0.091578006744384766</real>
 				</dict>
 				<key>testSaveReturnsNonEmptyFilename</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0060949325561523438</real>
+					<real>0.022035002708435059</real>
+				</dict>
+			</dict>
+			<key>IntelligentExtractorTests</key>
+			<dict>
+				<key>testExtractAndPersist_returnsChangesWithDiff</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.06352996826171875</real>
+				</dict>
+				<key>testExtract_diet_vegan</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.039466977119445801</real>
+				</dict>
+				<key>testExtract_diet_vegetarien_avecAccent</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.015552997589111328</real>
+				</dict>
+				<key>testExtract_empty_returnsEmpty</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.019459962844848633</real>
+				</dict>
+				<key>testExtract_frequency_digits</key>
+				<dict>
+					<key>mrnet</key>
+					<real>36.437437057495117</real>
+				</dict>
+				<key>testExtract_frequency_wordNumber</key>
+				<dict>
+					<key>mrnet</key>
+					<real>3.7045390605926514</real>
+				</dict>
+				<key>testExtract_height_cm</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.016059994697570801</real>
+				</dict>
+				<key>testExtract_height_meterCm</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.012243986129760742</real>
+				</dict>
+				<key>testExtract_height_meterMotComplet</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.014335036277770996</real>
+				</dict>
+				<key>testExtract_multipleFields_fromSingleMessage</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.017115116119384766</real>
+				</dict>
+				<key>testExtract_weight_decimal</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.018471002578735352</real>
+				</dict>
+				<key>testExtract_weight_kg</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.020238995552062988</real>
+				</dict>
+				<key>testExtract_weight_kilos</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.018133997917175293</real>
+				</dict>
+				<key>testExtract_weight_outOfRange_ignored</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.014317989349365234</real>
+				</dict>
+				<key>testExtract_weight_pivotMaintenant_keepsNewValue</key>
+				<dict>
+					<key>mrnet</key>
+					<real>2.8673239946365356</real>
 				</dict>
 			</dict>
 			<key>LanguageForcerTests</key>
@@ -201,37 +385,37 @@
 				<key>testApply_forAuto_clearsAppleLanguages</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0039020776748657227</real>
+					<real>0.0077370405197143555</real>
 				</dict>
 				<key>testApply_forFrench_overridesAppleLanguages</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0031980276107788086</real>
+					<real>0.0062249898910522461</real>
 				</dict>
 				<key>testCurrent_defaultsToAuto</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00081908702850341797</real>
+					<real>0.00164794921875</real>
 				</dict>
 				<key>testCurrent_reflectsPersistedChoice</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0031740665435791016</real>
+					<real>0.0063409805297851562</real>
 				</dict>
 				<key>testOptions_haveExpectedRawValues</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00038397312164306641</real>
+					<real>0.00084197521209716797</real>
 				</dict>
 				<key>testOptions_labelsAreNonEmpty</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00035500526428222656</real>
+					<real>0.00095999240875244141</real>
 				</dict>
 				<key>testSet_persistsChoiceToUserDefaults</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0028159618377685547</real>
+					<real>0.0062390565872192383</real>
 				</dict>
 			</dict>
 			<key>LifeOSTests</key>
@@ -239,7 +423,7 @@
 				<key>example</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00054192543029785156</real>
+					<real>0.00026297569274902344</real>
 				</dict>
 			</dict>
 			<key>MemoryExtractorTests</key>
@@ -247,62 +431,62 @@
 				<key>testExtract_blacklistedJurons_ignored</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.010468006134033203</real>
+					<real>0.020951986312866211</real>
 				</dict>
 				<key>testExtract_blacklistedVague_ignored</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0057049989700317383</real>
+					<real>0.01122593879699707</real>
 				</dict>
 				<key>testExtract_contrainte_capturesAllergy</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.015490055084228516</real>
+					<real>0.029118061065673828</real>
 				</dict>
 				<key>testExtract_emptyMessage_returnsZero</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0055860280990600586</real>
+					<real>0.012292027473449707</real>
 				</dict>
 				<key>testExtract_fait_capturesPersonalInfo</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0087660551071166992</real>
+					<real>0.011358022689819336</real>
 				</dict>
 				<key>testExtract_habitude_capturesRoutine</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.006708979606628418</real>
+					<real>0.011302947998046875</real>
 				</dict>
 				<key>testExtract_multiPatternSameMessage_dedupes</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.007229924201965332</real>
+					<real>0.011686086654663086</real>
 				</dict>
 				<key>testExtract_objectif_capturesGoal</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0084060430526733398</real>
+					<real>0.015758037567138672</real>
 				</dict>
 				<key>testExtract_sameGoalTwice_updatesInsteadOfDuplicating</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0074340105056762695</real>
+					<real>0.012053012847900391</real>
 				</dict>
 				<key>testExtract_veryShortMessage_returnsZero</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0054339170455932617</real>
+					<real>0.011483907699584961</real>
 				</dict>
 				<key>testTopMemories_limitRespected</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.011286020278930664</real>
+					<real>0.015264987945556641</real>
 				</dict>
 				<key>testTopMemories_prefersPinned</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0079469680786132812</real>
+					<real>0.013026952743530273</real>
 				</dict>
 			</dict>
 			<key>ModuleUsageTrackerTests</key>
@@ -310,37 +494,138 @@
 				<key>testCoreModules_returnsEmptyByDefault</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0015059709548950195</real>
+					<real>0.0038170814514160156</real>
 				</dict>
 				<key>testReport_sortedByCountDescending</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0069509744644165039</real>
+					<real>0.014259934425354004</real>
 				</dict>
 				<key>testReset_clearsAllData</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0071049928665161133</real>
+					<real>0.013933062553405762</real>
 				</dict>
 				<key>testTextReport_containsAllModules</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00085592269897460938</real>
+					<real>0.0015341043472290039</real>
 				</dict>
 				<key>testTrack_antiDuplicateWithin60s</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0039230585098266602</real>
+					<real>0.0084220170974731445</real>
 				</dict>
 				<key>testTrack_incrementsCount</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0044690370559692383</real>
+					<real>0.0094519853591918945</real>
 				</dict>
 				<key>testUnusedModules_returnsAllWhenNothingTracked</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.37225198745727539</real>
+					<real>0.001562952995300293</real>
+				</dict>
+			</dict>
+			<key>ProfileStoreTests</key>
+			<dict>
+				<key>testMissingFields_excludesDepsNotSatisfied</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.017068982124328613</real>
+				</dict>
+				<key>testMissingFields_excludesFilledWithHighConfidence</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.01618802547454834</real>
+				</dict>
+				<key>testUpsert_allowsOverwriteManual_whenExplicit</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.02278900146484375</real>
+				</dict>
+				<key>testUpsert_blocksLLM_overManual</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.015797019004821777</real>
+				</dict>
+				<key>testUpsert_createsField_whenAbsent</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.016165971755981445</real>
+				</dict>
+				<key>testUpsert_createsRevision_beforeUpdate</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.027058005332946777</real>
+				</dict>
+				<key>testUpsert_ignoresLowConfidence</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.013171076774597168</real>
+				</dict>
+				<key>testUpsert_ignoresUnknownFieldID</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.0097969770431518555</real>
+				</dict>
+				<key>testUpsert_noHistory_forFirstInsertion</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.020156025886535645</real>
+				</dict>
+				<key>testUpsert_updatesExisting_withHigherConfidence</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.023203015327453613</real>
+				</dict>
+				<key>testValueDecoding_double</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.014100074768066406</real>
+				</dict>
+				<key>testValueDecoding_int</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.017550945281982422</real>
+				</dict>
+			</dict>
+			<key>QuestionEngineTests</key>
+			<dict>
+				<key>testPriorityScore_criticalHigherThanMedium</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.018290996551513672</real>
+				</dict>
+				<key>testPriorityScore_droppedForFilledField</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.041754961013793945</real>
+				</dict>
+				<key>testRankedCandidates_excludesDepsNotSatisfied</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.04210507869720459</real>
+				</dict>
+				<key>testRankedCandidates_includesDepsAfterFilled</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.040549039840698242</real>
+				</dict>
+				<key>testRankedCandidates_ordersByPriorityScore</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.039774894714355469</real>
+				</dict>
+				<key>testTemplateQuestion_containsDisplayName</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.035220980644226074</real>
+				</dict>
+				<key>testTemplateQuestion_containsUnit</key>
+				<dict>
+					<key>mrnet</key>
+					<real>0.01367497444152832</real>
 				</dict>
 			</dict>
 			<key>RetryHelperTests</key>
@@ -348,27 +633,27 @@
 				<key>testWithBackoffOrNil_returnsNilOnFail</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00085103511810302734</real>
+					<real>0.011516928672790527</real>
 				</dict>
 				<key>testWithBackoffOrNil_returnsValueOnSuccess</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00044107437133789062</real>
+					<real>0.0014259815216064453</real>
 				</dict>
 				<key>testWithBackoff_allAttemptsFail_throws</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0018600225448608398</real>
+					<real>0.0062530040740966797</real>
 				</dict>
 				<key>testWithBackoff_succeedsFirstTry</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00057196617126464844</real>
+					<real>0.0011650323867797852</real>
 				</dict>
 				<key>testWithBackoff_succeedsOnRetry</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0019239187240600586</real>
+					<real>0.0033620595932006836</real>
 				</dict>
 			</dict>
 			<key>ThemeContrastTests</key>
@@ -376,17 +661,17 @@
 				<key>test_document_themes_below_normalText_threshold</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00070500373840332031</real>
+					<real>0.00095999240875244141</real>
 				</dict>
 				<key>test_onAccent_meets_WCAG_AA_largeText_forEveryTheme</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00051403045654296875</real>
+					<real>0.00085198879241943359</real>
 				</dict>
 				<key>test_selectableThemes_matchesFixtures</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00051200389862060547</real>
+					<real>0.0010669231414794922</real>
 				</dict>
 			</dict>
 			<key>ThemePaletteUniquenessTests</key>
@@ -394,7 +679,7 @@
 				<key>test_moduleTokens_noAccidentalCollision</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.00073504447937011719</real>
+					<real>0.0014290809631347656</real>
 				</dict>
 			</dict>
 			<key>UIVocabularySanityTests</key>
@@ -402,7 +687,7 @@
 				<key>testForbiddenTokensAbsentFromUIStrings</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.13336002826690674</real>
+					<real>0.22529101371765137</real>
 				</dict>
 			</dict>
 			<key>UserContextBuilderTests</key>
@@ -410,12 +695,12 @@
 				<key>testEmptyLifeProfileDoesNotEmitBlock</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.0058330297470092773</real>
+					<real>0.0096350908279418945</real>
 				</dict>
 				<key>testLifeProfileAppearsInBuiltContext</key>
 				<dict>
 					<key>mrnet</key>
-					<real>0.001891016960144043</real>
+					<real>0.0049329996109008789</real>
 				</dict>
 			</dict>
 		</dict>
