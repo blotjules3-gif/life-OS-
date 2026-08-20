@@ -222,32 +222,64 @@ enum OnDeviceLLM {
         injectContext: Bool,
         recentUpdates: [String]
     ) async -> String? {
-        // Pipeline complet : classify → assemble → LLM → post-process.
-        // Chaque étape ajoute de la valeur : plus court prompt si simple message,
-        // plus riche si complexe. Post-processing nettoie systématiquement.
-        let system = PromptAssembler.assemble(config: .init(
+        // Pipeline via AI Core (Phase 1 branchée) :
+        // 1. Classify le message
+        // 2. Assemble le prompt via AIContextManager (budget tokens explicite)
+        // 3. Route vers le meilleur provider (Apple Intelligence en priorité)
+        // 4. Post-process la réponse
+
+        // Sessions IA — début (log AIActivityLogger)
+        let correlationID = UUID()
+
+        // Assemble prompt via PromptAssembler (garde la logique adaptative existante),
+        // puis wrap via AIContextManager pour tracking budget tokens.
+        let systemPrompt = PromptAssembler.assemble(config: .init(
             message: message,
             moduleContext: moduleContext,
             injectContext: injectContext,
             recentUpdates: recentUpdates
         ))
 
-        let session = LanguageModelSession(instructions: system)
-        // Retry léger : 2 tentatives avec 1s de délai entre les deux.
-        let raw = await RetryHelper.withBackoffOrNil(
-            attempts: 2,
-            delays: [1],
-            operation: "AppleIntelligence.respond"
-        ) {
-            let response = try await session.respond(to: message)
-            return response.content
-        }
-        guard let raw else { return nil }
+        let assembled = AIContextManager.build(
+            userMessage: message,
+            previousMessages: [],
+            systemInstructions: systemPrompt,
+            contextBlock: nil,               // déjà inclus dans systemPrompt via PromptAssembler
+            recentUpdates: [],               // idem, déjà dans systemPrompt
+            toolDefinitions: [],             // pas encore de tool calling wire (P0.2 vient après)
+            tokenBudget: 4000
+        )
 
-        // Post-processing : nettoyage markdown/emojis, fact-check, longueur.
-        let processed = ResponsePostProcessor.process(raw)
+        // Route via AIModelRouter — Apple Intelligence en priorité.
+        let request = AIRequest(
+            messages: assembled.messages,
+            correlationID: correlationID
+        )
+        let response = await AIModelRouter.shared.execute(request)
+
+        // Log tokens et truncations dans AIActivityLogger
+        AIActivityLogger.shared.recordContext(
+            sessionID: correlationID,
+            totalTokens: assembled.usedTokens,
+            budgetTokens: assembled.budgetTokens,
+            sectionUsage: assembled.sectionUsage,
+            truncations: assembled.truncations
+        )
+        AIActivityLogger.shared.recordResponse(sessionID: correlationID, response: response)
+
+        // Erreur ? → fallback
+        guard response.isSuccess, !response.text.isEmpty else {
+            AppLog.coach.warning("AIModelRouter no success: \(response.error.map(String.init(describing:)) ?? "empty", privacy: .public)")
+            return nil
+        }
+
+        // Post-processing : markdown/emojis, fact-check
+        let processed = ResponsePostProcessor.process(response.text)
         if !processed.issues.isEmpty {
-            AppLog.coach.debug("PostProcessor issues: \(processed.issues.map { $0.rawValue }.joined(separator: ","), privacy: .public)")
+            AIActivityLogger.shared.recordPostProcessing(
+                sessionID: correlationID,
+                issues: processed.issues.map(\.rawValue)
+            )
         }
         return processed.text
     }
