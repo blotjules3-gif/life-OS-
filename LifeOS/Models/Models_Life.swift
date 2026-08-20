@@ -97,15 +97,43 @@ import SwiftUI
     var source: String         // "chat", "profil", "auto"
     var created: Date
     var isPinned: Bool
+    /// Type de rétention — session (transitoire), short (< 30j), long (durable),
+    /// episodic (événement ponctuel avec date). Défaut `long`.
+    var retentionType: String = "long"
+    /// Nombre de fois où l'info a été re-mentionnée / confirmée. Boost au score.
+    var confirmationCount: Int = 0
+    /// Dernière fois qu'elle a été utilisée dans un prompt coach (retrieval).
+    var lastAccessedAt: Date = Date.distantPast
 
-    init(content: String, category: String = "fait", source: String = "chat", created: Date = .now, isPinned: Bool = false) {
+    init(content: String, category: String = "fait", source: String = "chat",
+         created: Date = .now, isPinned: Bool = false, retentionType: String = "long") {
         self.content = content
         self.category = category
         self.source = source
         self.created = created
         self.isPinned = isPinned
+        self.retentionType = retentionType
+        self.confirmationCount = 0
+        self.lastAccessedAt = .distantPast
     }
+}
 
+/// Types de rétention pour MemoryEntry — utilisé par MemoryRetrieval pour scorer.
+enum MemoryRetention: String {
+    case session    // vie limitée à la conversation courante
+    case short      // < 30 jours utile
+    case long       // durable (défaut)
+    case episodic   // événement daté (ex: "j'ai été malade la semaine du 5 août")
+
+    /// Poids multiplicatif dans le score de retrieval — long > episodic > short > session.
+    var weight: Double {
+        switch self {
+        case .long: return 1.0
+        case .episodic: return 0.8
+        case .short: return 0.6
+        case .session: return 0.3
+        }
+    }
 }
 
 // MARK: - Finances
