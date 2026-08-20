@@ -129,6 +129,8 @@ struct AIAssistantMessageRow: View {
     // MARK: - Inline actions (feedback + speaker)
 
     @State private var feedbackGiven: FeedbackKind?
+    /// Vrai après tap sur 👎 → affiche les chips de raison (trop long, hors sujet…).
+    @State private var showingDislikeReasons = false
 
     private enum FeedbackKind {
         case liked, disliked
@@ -137,33 +139,63 @@ struct AIAssistantMessageRow: View {
     /// Ligne d'actions sous chaque bulle coach : like, dislike, écouter.
     /// Fait sortir le feedback du contextMenu (découvrabilité 0) vers un tap direct.
     private var inlineActionRow: some View {
-        HStack(spacing: 8) {
-            if let onLike {
-                inlineActionButton(
-                    icon: feedbackGiven == .liked ? "hand.thumbsup.fill" : "hand.thumbsup",
-                    label: "J'aime",
-                    active: feedbackGiven == .liked
-                ) {
-                    guard feedbackGiven == nil else { return }
-                    feedbackGiven = .liked
-                    onLike()
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                if let onLike {
+                    inlineActionButton(
+                        icon: feedbackGiven == .liked ? "hand.thumbsup.fill" : "hand.thumbsup",
+                        label: "J'aime",
+                        active: feedbackGiven == .liked
+                    ) {
+                        guard feedbackGiven == nil else { return }
+                        feedbackGiven = .liked
+                        onLike()
+                    }
                 }
-            }
-            if let onDislike {
-                inlineActionButton(
-                    icon: feedbackGiven == .disliked ? "hand.thumbsdown.fill" : "hand.thumbsdown",
-                    label: "Pas top",
-                    active: feedbackGiven == .disliked
-                ) {
-                    guard feedbackGiven == nil else { return }
-                    feedbackGiven = .disliked
-                    onDislike()
+                if let onDislike {
+                    inlineActionButton(
+                        icon: feedbackGiven == .disliked ? "hand.thumbsdown.fill" : "hand.thumbsdown",
+                        label: "Pas top",
+                        active: feedbackGiven == .disliked
+                    ) {
+                        guard feedbackGiven == nil else { return }
+                        feedbackGiven = .disliked
+                        onDislike()
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            showingDislikeReasons = true
+                        }
+                    }
                 }
+                if ttsEnabled {
+                    speakerButton
+                }
+                Spacer()
             }
-            if ttsEnabled {
-                speakerButton
+            if showingDislikeReasons {
+                dislikeReasonsRow
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
-            Spacer()
+        }
+    }
+
+    /// Chips à taper après un dislike pour préciser la raison.
+    /// Aide le coach à comprendre CE QUI ne va pas (pas juste "mauvais").
+    private var dislikeReasonsRow: some View {
+        HStack(spacing: 6) {
+            ForEach(CoachFeedbackStore.DislikeReason.allCases, id: \.rawValue) { reason in
+                Button {
+                    CoachFeedbackStore.record(.dislike, response: cleanedText, reason: reason)
+                    withAnimation { showingDislikeReasons = false }
+                } label: {
+                    Text(reason.label)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.orange)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 4)
+                        .background(Color.orange.opacity(0.12), in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
         }
     }
 
