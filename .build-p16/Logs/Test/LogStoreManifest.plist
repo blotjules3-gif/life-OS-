@@ -5,6 +5,70 @@
 	<key>logFormatVersion</key>
 	<integer>12</integer>
 	<key>logs</key>
-	<dict/>
+	<dict>
+		<key>0B3D6AA7-2FA9-4778-B40D-510B31AA699D</key>
+		<dict>
+			<key>auxiliaryLogUniqueIdentifier</key>
+			<string>34F8126A-DAA6-4FE4-9A16-D95DE83764AA</string>
+			<key>auxiliaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>4</integer>
+			</dict>
+			<key>className</key>
+			<string>IDESchemeActionsInvocationRecord</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>com.apple.dt.unit.cocoaUnitTest</string>
+			<key>fileName</key>
+			<string>Test-LifeOS-2026.08.20_04-00-09-+0200.xcresult</string>
+			<key>hasAuxiliaryLog</key>
+			<true/>
+			<key>hasCoverageData</key>
+			<true/>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalCodeCoverage</key>
+				<real>0.049300284629981025</real>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>4</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>LifeOS project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>LifeOS</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Test LifeOS</string>
+			<key>timeStartedRecording</key>
+			<real>808884009.94829202</real>
+			<key>timeStoppedRecording</key>
+			<real>808884118.63015103</real>
+			<key>title</key>
+			<string>Test LifeOS</string>
+			<key>uniqueIdentifier</key>
+			<string>0B3D6AA7-2FA9-4778-B40D-510B31AA699D</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

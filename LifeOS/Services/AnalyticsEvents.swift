@@ -36,6 +36,43 @@ enum AnalyticsEvents {
         Analytics.log("chat.feedback", ["positive": String(positive)])
     }
 
+    static func chatFeedbackReason(reason: String) {
+        Analytics.log("chat.feedback.reason", ["reason": reason])
+    }
+
+    /// Latence entre `chat.opened` et première réponse coach.
+    static func chatFirstResponseLatency(ms: Int) {
+        Analytics.log("chat.first_response.latency_ms", ["ms": String(ms)])
+    }
+
+    /// Nombre de messages dans une session avant fermeture.
+    static func chatSessionLength(messages: Int) {
+        Analytics.log("chat.session.length", ["messages": String(messages)])
+    }
+
+    /// User revient chatter dans une fenêtre donnée (retention).
+    static func chatRetention(windowHours: Int) {
+        Analytics.log("chat.retention", ["window_hours": String(windowHours)])
+    }
+
+    /// Tool coach appelé effectivement (get_user_profile, create_habit, etc.).
+    static func chatToolExecuted(name: String, success: Bool) {
+        Analytics.log("chat.tool.executed", [
+            "name": name,
+            "success": String(success)
+        ])
+    }
+
+    /// Nudge proactif envoyé (BGTask CoachProactiveScheduler).
+    static func coachProactiveSent(signal: String) {
+        Analytics.log("coach.proactive.sent", ["signal": signal])
+    }
+
+    /// Nudge proactif consulté (user tape la notif → deep link vers chat).
+    static func coachProactiveOpened(signal: String) {
+        Analytics.log("coach.proactive.opened", ["signal": signal])
+    }
+
     // MARK: - Modules
 
     static func moduleOpened(_ module: String) {
