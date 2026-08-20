@@ -24,7 +24,19 @@ final class AIModelRouter {
         // Extensible : MistralProvider(), ClaudeProvider(), OpenAIProvider()
     ]
 
+    /// Vrai si les tools coach ont déjà été enregistrés dans le ToolRegistry.
+    /// On boot lazy = pas besoin de toucher au LifeOSApp.onAppear.
+    private var toolsBootstrapped = false
+
     private init() {}
+
+    /// Bootstrap idempotent — enregistre les tools coach au premier appel.
+    /// Appelé automatiquement par `execute()`.
+    private func bootstrapToolsIfNeeded() {
+        guard !toolsBootstrapped else { return }
+        CoachToolsBootstrap.registerAll()
+        toolsBootstrapped = true
+    }
 
     // MARK: - Registry API
 
