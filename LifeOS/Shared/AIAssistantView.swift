@@ -744,6 +744,7 @@ struct AIAssistantView: View {
     @State private var showCoachPrefs = false
     @State private var showHistory = false
     @State private var showProfileFields = false
+    @State private var showAIDebug = false
     @State private var photoItem: PhotosPickerItem?
     @State private var speech = SpeechRecognizer()
     @State private var textBeforeVoice: String = ""
