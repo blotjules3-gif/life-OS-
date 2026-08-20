@@ -246,6 +246,13 @@ final class AIAssistantViewModel: ObservableObject {
         isLoading = true
 
         Task {
+            // Journal session IA (métadonnées seulement, aucun contenu texte)
+            let classification = MessageClassifier.classify(content)
+            let sessionID = AIActivityLogger.shared.startSession(
+                messageLength: content.count,
+                classification: classification
+            )
+
             // 1. Extraction typée → mise à jour ProfileField.
             let changes = await IntelligentExtractor.extractAndPersist(
                 from: content, source: .chat
