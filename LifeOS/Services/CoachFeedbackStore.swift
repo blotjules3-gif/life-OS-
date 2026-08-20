@@ -16,10 +16,30 @@ enum CoachFeedbackStore {
         case dislike
     }
 
+    /// Raison qualitative optionnelle d'un dislike (après tap 👎 → chip).
+    enum DislikeReason: String, Codable, CaseIterable {
+        case tooLong = "trop long"
+        case notConcrete = "pas assez concret"
+        case offTopic = "hors sujet"
+        case wrong = "faux"
+        case tone = "mauvais ton"
+
+        var label: String { rawValue }
+    }
+
     struct Entry: Codable {
         let kind: Kind
         let snippet: String   // 200 premiers chars de la réponse coach
         let at: Date
+        /// Raison du dislike, si l'user a précisé via chip. `nil` si pas de raison donnée.
+        let dislikeReason: DislikeReason?
+
+        init(kind: Kind, snippet: String, at: Date = .now, dislikeReason: DislikeReason? = nil) {
+            self.kind = kind
+            self.snippet = snippet
+            self.at = at
+            self.dislikeReason = dislikeReason
+        }
     }
 
     private static let filename = "coach_feedback.jsonl"
