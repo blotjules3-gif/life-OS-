@@ -22,7 +22,29 @@ enum DataEraser {
         eraseImageStore()
         eraseAppGroup()
         eraseBackups()
+        eraseAIArtifacts()
         AppLog.data.info("DataEraser: full erase completed")
+    }
+
+    /// Supprime les artefacts IA locaux (feedback coach, sessions activity logger,
+    /// coach reports). Séparé pour être appelable indépendamment.
+    @MainActor
+    static func eraseAIArtifacts() {
+        // Feedback store (JSONL)
+        CoachFeedbackStore.reset()
+        // Coach reports (JSONL)
+        if let dir = try? FileManager.default.url(
+            for: .documentDirectory, in: .userDomainMask,
+            appropriateFor: nil, create: false
+        ) {
+            let reportsURL = dir.appendingPathComponent("coach_reports.jsonl")
+            try? FileManager.default.removeItem(at: reportsURL)
+        }
+        // Activity logger (in-memory, cleared au reset)
+        AIActivityLogger.shared.clear()
+        // Cache UserContextBuilder
+        UserContextBuilder.shared.invalidateCache()
+        AppLog.data.info("DataEraser: AI artifacts erased")
     }
 
     /// Idem mais préserve les clés d'onboarding + thème pour éviter de refaire
