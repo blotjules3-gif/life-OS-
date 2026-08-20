@@ -53,6 +53,7 @@ final class AIModelRouter {
     /// Exécute la requête sur le premier provider éligible + disponible.
     /// Si le premier échoue à runtime, tente le suivant (fallback).
     func execute(_ request: AIRequest) async -> AIResponse {
+        bootstrapToolsIfNeeded()
         let requiredCaps = requiredCapabilities(for: request)
         let eligible = providers.filter { $0.capabilities.isSuperset(of: requiredCaps) }
 
