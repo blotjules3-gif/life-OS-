@@ -874,6 +874,14 @@ struct AIAssistantView: View {
                         } label: {
                             Label("Historique", systemImage: "clock.arrow.circlepath")
                         }
+                        #if DEBUG
+                        Divider()
+                        Button {
+                            showAIDebug = true
+                        } label: {
+                            Label("Debug coach", systemImage: "wand.and.stars")
+                        }
+                        #endif
                         Divider()
                         Button(role: .destructive) {
                             showClearConfirm = true
