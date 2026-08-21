@@ -124,7 +124,7 @@ struct AIRequest: Sendable {
         responseSchema: AIResponseSchema? = nil,
         maxOutputTokens: Int? = nil,
         temperature: Double = 0.7,
-        timeout: TimeInterval = 30,
+        timeout: TimeInterval = 20,
         correlationID: UUID = UUID()
     ) {
         self.messages = messages
