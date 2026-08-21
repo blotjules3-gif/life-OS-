@@ -88,13 +88,13 @@ enum OnDeviceLLM {
             let model = SystemLanguageModel.default
             switch model.availability {
             case .available:
-                if let text = await respondViaAppleIntelligence(
+                if let result = await respondViaAppleIntelligence(
                     message: message,
                     moduleContext: moduleContext,
                     injectContext: injectContext,
                     recentUpdates: recentUpdates
                 ) {
-                    return Reply(text: text, source: .onDeviceLLM)
+                    return Reply(text: result.text, source: .onDeviceLLM, providerID: result.providerID)
                 }
             case .unavailable:
                 break // → fallback
