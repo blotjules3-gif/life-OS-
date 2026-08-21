@@ -234,6 +234,12 @@ enum OnDeviceLLM {
         // Awareness contextuel : heure, jour, saison, location (best-effort)
         let awareness = await AwarenessContext.snapshot()
 
+        // Tool enrichment déterministe — invoque les tools du ToolRegistry
+        // AVANT le LLM pour lui fournir des données fraîches et fiables
+        // (poids réel, mémoires pertinentes, résumé profil). Silencieux si
+        // aucun pattern ne matche.
+        let toolBlock = await ToolEnrichment.enrich(message: message, sessionID: correlationID)
+
         // Assemble prompt via PromptAssembler (garde la logique adaptative existante),
         // puis wrap via AIContextManager pour tracking budget tokens.
         var systemPrompt = PromptAssembler.assemble(config: .init(
@@ -244,6 +250,9 @@ enum OnDeviceLLM {
         ))
         // Ajout du contexte temporel/location en fin de prompt système
         systemPrompt += "\n\n" + awareness
+        if !toolBlock.isEmpty {
+            systemPrompt += "\n\n" + toolBlock
+        }
 
         // Récupère les définitions de tools autorisés (permissions user OK).
         // Pas encore envoyés au LLM Apple (nécessite iOS 26.1+ tools API — Phase P5),
