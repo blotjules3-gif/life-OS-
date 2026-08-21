@@ -19,12 +19,12 @@ final class AIModelRouter {
     static let shared = AIModelRouter()
 
     /// Ordre par défaut de préférence — surcharge possible en runtime.
-    /// Apple Intelligence en premier (on-device, gratuit, privé). Mistral
-    /// en fallback : plus puissant mais dépend du réseau + latence + coût.
-    /// Le router tente Apple → si `.unavailable` ou échec → bascule Mistral.
+    /// Apple Intelligence seul (100% on-device, gratuit, privé). Si indispo
+    /// (iPhone < 15 Pro, modèle en téléchargement, Apple Intelligence off),
+    /// `OnDeviceLLM.respond` bascule directement sur `LocalCoach` (règles Swift)
+    /// — pas besoin d'un provider réseau intermédiaire.
     private var providers: [AIProvider] = [
-        AppleIntelligenceProvider(),
-        MistralProvider()
+        AppleIntelligenceProvider()
     ]
 
     /// Vrai si les tools coach ont déjà été enregistrés dans le ToolRegistry.
