@@ -959,6 +959,9 @@ struct AIAssistantView: View {
             .sheet(isPresented: $showProfileFields) {
                 ProfileFieldsView()
             }
+            .sheet(isPresented: $showAIProvider) {
+                NavigationStack { CoachAIProviderView() }
+            }
             #if DEBUG
             .sheet(isPresented: $showAIDebug) {
                 AIDebugView()
