@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Écran Réglages "Coach IA" — choix + configuration du provider LLM.
+/// Écran Réglages "Moteur du coach" — choix + configuration du provider.
 ///
 /// L'utilisateur peut :
 ///   1. Sélectionner son provider préféré (Apple Intelligence si dispo, ou un
