@@ -320,7 +320,7 @@ enum OnDeviceLLM {
                 issues: processed.issues.map(\.rawValue)
             )
         }
-        return processed.text
+        return RouterResult(text: processed.text, providerID: response.providerID)
     }
     #endif
 
