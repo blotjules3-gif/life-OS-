@@ -107,6 +107,8 @@ struct LifeOSApp: App {
             EngagementTracker.shared.recordOpen()
             // Bootstrap du store profil (avant migration qui l'utilise).
             ProfileStore.shared.setContext(container.mainContext)
+            // Bootstrap builder contexte — permet MemoryRetrieval scoré.
+            UserContextBuilder.shared.setContext(container.mainContext)
             // Migration one-shot des données existantes vers ProfileField.
             ProfileMigration.runIfNeeded(context: container.mainContext)
             // Enregistrer les tools coach dans le ToolRegistry (Phase 1 branchée).
