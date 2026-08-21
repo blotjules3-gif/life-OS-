@@ -118,6 +118,10 @@ final class AIAssistantViewModel: ObservableObject {
         let date: Date
         var isThinking: Bool = false
         let actions: [AIAction]
+        /// Provider ayant produit ce message (nil pour user, thinking, ou message
+        /// historique restauré). Résolu en nom court via `AIProviderResolver` pour
+        /// affichage sous la bulle.
+        let providerID: String?
 
         init(from model: AIMessage) {
             self.id = model.id
@@ -126,10 +130,11 @@ final class AIAssistantViewModel: ObservableObject {
             self.date = model.date
             self.actions = (try? JSONDecoder().decode([AIAction].self, from: model.actions ?? Data())) ?? []
             self.isThinking = false
+            self.providerID = nil
         }
 
         static func thinking() -> DisplayMessage {
-            var msg = DisplayMessage(id: UUID(), role: "assistant", text: "…", date: .now, actions: [])
+            var msg = DisplayMessage(id: UUID(), role: "assistant", text: "…", date: .now, actions: [], providerID: nil)
             msg.isThinking = true
             return msg
         }
@@ -139,15 +144,21 @@ final class AIAssistantViewModel: ObservableObject {
         static let streamingID = UUID()
 
         static func streaming(_ text: String) -> DisplayMessage {
-            DisplayMessage(id: streamingID, role: "assistant", text: text, date: .now, actions: [])
+            DisplayMessage(id: streamingID, role: "assistant", text: text, date: .now, actions: [], providerID: nil)
         }
 
-        private init(id: UUID, role: String, text: String, date: Date, actions: [AIAction]) {
+        private init(id: UUID, role: String, text: String, date: Date, actions: [AIAction], providerID: String?) {
             self.id = id
             self.role = role
             self.text = text
             self.date = date
             self.actions = actions
+            self.providerID = providerID
+        }
+
+        /// Factory pour message assistant frais avec providerID à afficher.
+        static func assistant(text: String, actions: [AIAction], providerID: String?) -> DisplayMessage {
+            DisplayMessage(id: UUID(), role: "assistant", text: text, date: .now, actions: actions, providerID: providerID)
         }
     }
 
