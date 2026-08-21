@@ -7,12 +7,6 @@ import Foundation
 /// Retourne `nil` = JSON malformé → `AIResponse` erreur.
 enum AIProviderHTTP {
 
-    struct ExtractedPayload {
-        let text: String
-        let inputTokens: Int?
-        let outputTokens: Int?
-    }
-
     static func perform(
         _ req: URLRequest,
         providerID: String,
