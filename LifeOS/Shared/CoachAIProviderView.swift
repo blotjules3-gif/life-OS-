@@ -3,14 +3,13 @@ import SwiftUI
 /// Écran Réglages "Moteur du coach" — choix + configuration du provider.
 ///
 /// L'utilisateur peut :
-///   1. Sélectionner son provider préféré (Apple Intelligence si dispo, ou un
-///      provider cloud dont il a la clé API)
-///   2. Ajouter/modifier la clé API de chaque provider cloud (stockée dans
-///      le Keychain, jamais dans UserDefaults)
-///   3. Tester la connectivité (envoie un ping minimal via `AIModelRouter`)
-///   4. Voir le statut de chaque provider (configuré, en erreur, actif)
+///   1. Sélectionner son provider préféré
+///   2. Ajouter/modifier la clé API (Keychain, jamais UserDefaults)
+///   3. Tester la connectivité avant enregistrement
+///   4. Voir le statut de chaque provider
 struct CoachAIProviderView: View {
     @StateObject private var vm = ViewModel()
+    @State private var showResetConfirm = false
 
     var body: some View {
         List {
@@ -25,7 +24,7 @@ struct CoachAIProviderView: View {
                     providerRow(slot)
                 }
             } header: {
-                Text("Providers cloud")
+                Text("Providers cloud (payants)")
             } footer: {
                 Text("Ces providers nécessitent une clé API. Tu payes directement le provider — LifeOS ne voit rien. La clé est stockée dans le Trousseau iOS, jamais envoyée ailleurs qu'au provider choisi.")
             }
@@ -33,7 +32,7 @@ struct CoachAIProviderView: View {
             if vm.currentPreference != nil {
                 Section {
                     Button(role: .destructive) {
-                        vm.clearPreference()
+                        showResetConfirm = true
                     } label: {
                         Text("Retour à la sélection automatique")
                     }
@@ -41,15 +40,28 @@ struct CoachAIProviderView: View {
             }
         }
         .navigationTitle("Moteur du coach")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .sheet(item: $vm.editingSlot) { slot in
-            ProviderKeyEditor(slot: slot) { key in
+            ProviderKeyEditor(
+                slot: slot,
+                existingKeyMasked: vm.maskedKey(for: slot)
+            ) { key in
                 _ = vm.saveKey(key, for: slot)
                 vm.reload()
             } onDelete: {
                 vm.deleteKey(for: slot)
                 vm.reload()
             }
+        }
+        .confirmationDialog(
+            "Retour au choix automatique du coach ?",
+            isPresented: $showResetConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Confirmer", role: .destructive) { vm.clearPreference() }
+            Button("Annuler", role: .cancel) {}
         }
         .onAppear { vm.reload() }
     }
@@ -62,17 +74,27 @@ struct CoachAIProviderView: View {
             Image(systemName: "sparkles")
                 .foregroundStyle(vm.appleAvailable ? Color.accentColor : .secondary)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Apple Intelligence")
+                HStack(spacing: 6) {
+                    Text("Apple Intelligence")
+                    if vm.appleAvailable {
+                        Text("Recommandé")
+                            .font(.caption2.weight(.semibold))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.accentColor.opacity(0.15), in: Capsule())
+                    }
+                }
                 Text(vm.appleAvailable ? "Disponible sur cet iPhone" : "Non disponible sur cet iPhone")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
             if vm.currentPreference == "apple.intelligence.on-device" {
-                Text("Actif").font(.caption).foregroundStyle(.green)
+                Text("Actif").font(.caption.weight(.semibold)).foregroundStyle(.green)
             } else if vm.appleAvailable {
                 Button("Choisir") { vm.setPreferred(providerID: "apple.intelligence.on-device") }
-                    .buttonStyle(.borderless)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
             }
         }
     }
@@ -80,7 +102,7 @@ struct CoachAIProviderView: View {
     @ViewBuilder
     private func providerRow(_ slot: SlotDisplay) -> some View {
         let hasKey = vm.slotHasKey[slot] ?? false
-        let isPreferred = vm.currentPreference == slot.preferenceValue
+        let isPreferred = vm.currentPreference == slot.providerID
         HStack {
             Image(systemName: hasKey ? "checkmark.seal.fill" : "key")
                 .foregroundStyle(hasKey ? .green : .secondary)
@@ -92,10 +114,11 @@ struct CoachAIProviderView: View {
             }
             Spacer()
             if isPreferred {
-                Text("Actif").font(.caption).foregroundStyle(.green)
+                Text("Actif").font(.caption.weight(.semibold)).foregroundStyle(.green)
             } else if hasKey {
-                Button("Choisir") { vm.setPreferred(providerID: slot.preferenceValue) }
-                    .buttonStyle(.borderless)
+                Button("Choisir") { vm.setPreferred(providerID: slot.providerID) }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
             }
         }
         .contentShape(Rectangle())
@@ -105,8 +128,7 @@ struct CoachAIProviderView: View {
 
 // MARK: - View helpers
 
-/// Miroir de `AIProviderCredentials.Slot` avec métadonnées d'affichage —
-/// évite d'importer le type interne dans la View SwiftUI.
+/// Miroir de `AIProviderCredentials.Slot` avec métadonnées d'affichage.
 private enum SlotDisplay: String, CaseIterable, Identifiable {
     case openai, anthropic, mistral, gemini
 
@@ -121,16 +143,6 @@ private enum SlotDisplay: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Le token utilisé côté `AIProviderPreference` pour matcher un provider.
-    var preferenceValue: String {
-        switch self {
-        case .openai:    return "openai"
-        case .anthropic: return "anthropic"
-        case .mistral:   return "mistral"
-        case .gemini:    return "gemini"
-        }
-    }
-
     var credentialSlot: AIProviderCredentials.Slot {
         switch self {
         case .openai:    return .openai
@@ -139,26 +151,55 @@ private enum SlotDisplay: String, CaseIterable, Identifiable {
         case .gemini:    return .gemini
         }
     }
+
+    var providerID: String { credentialSlot.providerID }
 }
 
 // MARK: - Key editor sheet
 
 private struct ProviderKeyEditor: View {
     let slot: SlotDisplay
+    let existingKeyMasked: String?
     let onSave: (String) -> Void
     let onDelete: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var key: String = ""
     @State private var showDelete = false
+    @State private var validationError: String?
+    @State private var testStatus: TestStatus = .idle
+
+    enum TestStatus: Equatable {
+        case idle
+        case testing
+        case ok(String)     // e.g. "Provider a répondu en 1.4s"
+        case failed(String) // message d'erreur
+    }
 
     var body: some View {
         NavigationStack {
             Form {
+                if let masked = existingKeyMasked {
+                    Section {
+                        HStack {
+                            Image(systemName: "checkmark.seal.fill").foregroundStyle(.green)
+                            Text("Clé enregistrée : \(masked)")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    } footer: {
+                        Text("Colle une nouvelle clé pour la remplacer, ou utilise « Supprimer » plus bas.")
+                    }
+                }
+
                 Section {
-                    SecureField("sk-... / clé API", text: $key)
+                    SecureField(existingKeyMasked == nil ? "sk-... ta clé" : "Nouvelle clé (laisser vide pour garder)",
+                                text: $key)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+                    if let err = validationError {
+                        Text(err).foregroundStyle(.red).font(.caption)
+                    }
                 } footer: {
                     if let url = slot.credentialSlot.docsURL {
                         Link("Où récupérer une clé \(slot.displayName)", destination: url)
@@ -168,26 +209,54 @@ private struct ProviderKeyEditor: View {
 
                 Section {
                     Button {
-                        onSave(key)
-                        dismiss()
+                        Task { await testKey() }
                     } label: {
-                        Text("Enregistrer la clé")
+                        HStack {
+                            if testStatus == .testing {
+                                ProgressView().controlSize(.small)
+                            } else {
+                                Image(systemName: "network")
+                            }
+                            Text("Tester la clé")
+                        }
                     }
-                    .disabled(key.trimmingCharacters(in: .whitespaces).count < 8)
+                    .disabled(key.trimmingCharacters(in: .whitespaces).isEmpty || testStatus == .testing)
+
+                    switch testStatus {
+                    case .ok(let msg):
+                        Label(msg, systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                    case .failed(let msg):
+                        Label(msg, systemImage: "xmark.circle.fill").foregroundStyle(.red).font(.footnote)
+                    default:
+                        EmptyView()
+                    }
                 }
 
                 Section {
-                    Button(role: .destructive) {
-                        showDelete = true
+                    Button {
+                        saveIfValid()
                     } label: {
-                        Text("Supprimer la clé enregistrée")
+                        Text("Enregistrer la clé")
                     }
-                } footer: {
-                    Text("La clé est stockée dans le Trousseau iOS. Elle sera supprimée aussi si tu désinstalles LifeOS.")
+                    .disabled(key.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+
+                if existingKeyMasked != nil {
+                    Section {
+                        Button(role: .destructive) {
+                            showDelete = true
+                        } label: {
+                            Text("Supprimer la clé enregistrée")
+                        }
+                    } footer: {
+                        Text("La clé est stockée dans le Trousseau iOS. Elle sera supprimée aussi si tu désinstalles LifeOS.")
+                    }
                 }
             }
             .navigationTitle(slot.displayName)
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Fermer") { dismiss() }
@@ -200,6 +269,76 @@ private struct ProviderKeyEditor: View {
                 }
                 Button("Annuler", role: .cancel) {}
             }
+        }
+    }
+
+    private func saveIfValid() {
+        let trimmed = key.trimmingCharacters(in: .whitespaces)
+        if let err = AIProviderCredentials.shared.validate(trimmed, for: slot.credentialSlot) {
+            validationError = err.localizedDescription
+            return
+        }
+        validationError = nil
+        onSave(trimmed)
+        dismiss()
+    }
+
+    /// Envoie un vrai POST minimal au provider pour valider la clé — pas de
+    /// coût perceptible (max_tokens=1). Sauve temporairement la clé, teste,
+    /// puis restaure l'état si l'user ne save pas.
+    private func testKey() async {
+        let trimmed = key.trimmingCharacters(in: .whitespaces)
+        if let err = AIProviderCredentials.shared.validate(trimmed, for: slot.credentialSlot) {
+            testStatus = .failed(err.localizedDescription)
+            return
+        }
+        testStatus = .testing
+
+        // On sauvegarde temporairement pour que le provider puisse lire la clé
+        // via son Keychain lookup. Backup de la clé précédente pour restore.
+        let previous = AIProviderCredentials.shared.key(for: slot.credentialSlot)
+        _ = AIProviderCredentials.shared.setKey(trimmed, for: slot.credentialSlot)
+
+        let start = Date()
+        let request = AIRequest(
+            messages: [
+                .system("Réponds uniquement 'ok'."),
+                .user("ping"),
+            ],
+            maxOutputTokens: 5,
+            timeout: 12
+        )
+        let response = await providerFor(slot).complete(request)
+
+        // Restore l'ancienne clé si l'user ne save pas ensuite.
+        if let previous {
+            _ = AIProviderCredentials.shared.setKey(previous, for: slot.credentialSlot)
+        } else {
+            _ = AIProviderCredentials.shared.deleteKey(for: slot.credentialSlot)
+        }
+
+        let ms = Int(Date().timeIntervalSince(start) * 1000)
+        if response.isSuccess {
+            testStatus = .ok("Réponse reçue en \(ms) ms")
+        } else if case .unavailable(.invalidCredentials) = response.error {
+            testStatus = .failed("Clé refusée par le provider (401/403).")
+        } else if case .rateLimited = response.error {
+            testStatus = .failed("Rate limit — la clé marche mais tu as trop de requêtes.")
+        } else if case .timeout = response.error {
+            testStatus = .failed("Timeout — provider trop lent ou réseau instable.")
+        } else if case .networkError = response.error {
+            testStatus = .failed("Réseau injoignable.")
+        } else {
+            testStatus = .failed("Erreur : \(response.error.map(String.init(describing:)) ?? "inconnue")")
+        }
+    }
+
+    private func providerFor(_ slot: SlotDisplay) -> any AIProvider {
+        switch slot {
+        case .openai:    return OpenAIProvider()
+        case .anthropic: return AnthropicProvider()
+        case .mistral:   return MistralProvider()
+        case .gemini:    return GeminiProvider()
         }
     }
 }
@@ -223,14 +362,22 @@ private final class ViewModel: ObservableObject {
         appleAvailable = AppleIntelligenceProvider().availability.isAvailable
     }
 
+    /// Retourne les 4 derniers chars d'une clé enregistrée, ou `nil` si aucune.
+    /// Ex: "sk-...aB3f" — assez pour reconnaître, pas assez pour compromettre.
+    func maskedKey(for slot: SlotDisplay) -> String? {
+        guard let full = AIProviderCredentials.shared.key(for: slot.credentialSlot),
+              full.count >= 4 else { return nil }
+        let last4 = String(full.suffix(4))
+        return "••••\(last4)"
+    }
+
     func saveKey(_ key: String, for slot: SlotDisplay) -> Bool {
         AIProviderCredentials.shared.setKey(key, for: slot.credentialSlot)
     }
 
     func deleteKey(for slot: SlotDisplay) {
         AIProviderCredentials.shared.deleteKey(for: slot.credentialSlot)
-        // Si c'était le préféré, on retire la préférence.
-        if currentPreference == slot.preferenceValue {
+        if currentPreference == slot.providerID {
             AIProviderPreference.shared.clearPreference()
         }
     }
