@@ -143,3 +143,54 @@ Conséquence : question type "quel est mon poids ?" → réponse potentiellement
 
 Avant : "quel est mon poids ?" → réponse générique / hallucination possible.
 Après : le coach lit son `ProfileField.body.currentWeightKg` (source SwiftData typée, avec confidence + timestamp) AVANT de répondre → info fraîche et fiable. Idem "que sais-tu de moi", "tu te souviens de X".
+
+---
+
+## Loop 3 (2026-08-21) — Multi-provider IA (choix user)
+
+### Problème identifié
+
+L'architecture n'exposait qu'Apple Intelligence + LocalCoach. ~80 % des iPhone du parc (< 15 Pro) n'ont pas Apple Intelligence → coach dégradé pour eux. Le protocol `AIProvider` était conçu pour être extensible mais aucun autre provider n'existait.
+
+### Solution — 3 briques + 4 providers + 1 UI
+
+**Fondations sécurité :**
+- `AIProviderCredentials` — store Keychain (`kSecClassGenericPassword` + `kSecAttrAccessibleAfterFirstUnlock`), un slot par provider (openai/anthropic/mistral/gemini). Jamais dans UserDefaults, jamais logué.
+- `AIProviderPreference` — UserDefaults, ID du provider préféré. `nil` = auto.
+- `AIProviderHTTP` — helper factorisé (401/403 → invalidCredentials, 429 → rateLimited, timeout, offline).
+
+**4 providers cloud** implémentant `AIProvider` :
+- `OpenAIProvider` — GPT-4o-mini par défaut, format Chat Completions
+- `AnthropicProvider` — Claude Haiku 4.5 par défaut, format Messages API (system séparé)
+- `MistralProvider` — Mistral Small Latest, format OpenAI-compatible
+- `GeminiProvider` — Gemini 2.0 Flash, format Google (rôle "model", clé en query string)
+
+**AIModelRouter modifié** : si `AIProviderPreference.preferred` matche un provider éligible, il passe en tête de la chaîne. Fallback naturel si le préféré échoue (offline, rate limit, clé invalide).
+
+**Écran Réglages** `CoachAIProviderView` — accessible via menu chat coach → "Moteur du coach" :
+- Apple Intelligence en tête si dispo, sinon grisé
+- Chaque provider cloud avec badge "Clé configurée" / "Aucune clé"
+- Tap → sheet éditeur clé (SecureField + lien vers doc provider)
+- Bouton "Choisir" → set preference user
+- Bouton "Retour à sélection automatique"
+
+### Validation
+
+- **BUILD SUCCEEDED**
+- 141/142 tests OK (fail préexistant non lié)
+- `UIVocabularySanityTests` respecté : vocabulaire UI = "Moteur du coach" (pas IA/LLM/modèle)
+- Accolades OK sur les 10 fichiers touchés
+
+### Impact utilisateur
+
+- L'user choisit son provider dans les Réglages
+- iPhone < 15 Pro : peut brancher OpenAI/Claude/Mistral/Gemini avec sa propre clé → vrai coach IA
+- iPhone 15 Pro+ : Apple Intelligence par défaut (gratuit, privé), peut basculer sur cloud pour + de puissance
+- Zéro backend LifeOS requis, zéro coût pour LifeOS (user paie sa clé API)
+- Clés stockées dans le Trousseau iOS (sécurité système)
+
+### Reste à faire (Loop 3d — optionnel)
+
+- Proxy Cloudflare Workers pour un mode "freemium LifeOS paie" (~40 lignes)
+- Test connectivité par provider ("Envoyer un ping test")
+- Affichage coût estimé par provider avant activation
