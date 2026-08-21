@@ -131,24 +131,29 @@ enum ToolEnrichment {
         return nil
     }
 
-    // MARK: - Formatting
+    // MARK: - Formatting + logging
 
     /// Rend le résultat tool prêt à injecter dans le prompt. Compact,
     /// human-readable, garde la traçabilité (nom du tool).
     private static func formatToolResult(name: String, result: AIToolResult) -> String? {
-        switch result {
-        case .success(let json):
-            let pretty = prettifyIfPossible(json)
-            return "[\(name)] \(pretty)"
-        case .error(let msg):
-            AppLog.coach.warning("ToolEnrichment \(name, privacy: .public) error: \(msg, privacy: .public)")
+        if result.success {
+            return "[\(name)] \(prettifyIfPossible(result.json))"
+        } else {
+            AppLog.coach.warning("ToolEnrichment \(name, privacy: .public) error: \(result.error ?? "", privacy: .public)")
             return nil
         }
     }
 
-    private static func isError(_ result: AIToolResult) -> Bool {
-        if case .error = result { return true }
-        return false
+    /// Log l'exécution dans AIActivityLogger si une session est en cours.
+    private static func logTool(sessionID: UUID?, name: String, result: AIToolResult, since: Date) {
+        guard let sessionID else { return }
+        let durationMs = Int(Date().timeIntervalSince(since) * 1000)
+        AIActivityLogger.shared.recordToolExecution(
+            sessionID: sessionID,
+            toolName: name,
+            success: result.success,
+            durationMs: durationMs
+        )
     }
 
     /// Simplifie le JSON pour l'humain (retire les {"key": "value"} superflus).
