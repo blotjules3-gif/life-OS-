@@ -16,7 +16,8 @@ struct GeminiProvider: AIProvider {
     }
 
     var capabilities: AICapabilities {
-        [.textGeneration, .structuredOutput, .longContext]
+        // Tool calls non parsés → ne pas déclarer .toolCalling.
+        [.textGeneration, .longContext]
     }
 
     @MainActor
