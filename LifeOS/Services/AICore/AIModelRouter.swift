@@ -72,9 +72,11 @@ final class AIModelRouter {
         // Applique la préférence utilisateur : si un provider est marqué
         // préféré ET dans la liste éligible, il passe en tête (le reste
         // conserve son ordre → fallback naturel si le préféré échoue).
+        // Match exact sur providerID — évite les bugs silencieux si un ID
+        // change (ex: rename "openai.gpt" → "openai.direct").
         let ordered: [AIProvider]
         if let pref = AIProviderPreference.shared.preferred,
-           let idx = eligible.firstIndex(where: { $0.id.contains(pref) || pref == $0.id }) {
+           let idx = eligible.firstIndex(where: { $0.id == pref }) {
             var reordered = eligible
             let chosen = reordered.remove(at: idx)
             reordered.insert(chosen, at: 0)
