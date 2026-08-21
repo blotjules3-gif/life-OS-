@@ -108,9 +108,38 @@ Ils étaient dans le repo mais totalement inertes.
 
 ### Prérequis manuel utilisateur
 
-Ajouter à `Info.plist` :
-```xml
-<key>BGTaskSchedulerPermittedIdentifiers</key>
-<array><string>com.blotjules.lifeos.coach.proactive</string></array>
-```
-Sans cette clé, iOS refusera de scheduler la BGTask (le fallback foreground continuera de fonctionner).
+~~Ajouter à `Info.plist`~~ **FAIT en Loop 2** — `BGTaskSchedulerPermittedIdentifiers` + `fetch` dans `UIBackgroundModes`.
+
+---
+
+## Loop 2 (2026-08-21) — ToolEnrichment : activer les 6 tools morts
+
+### Problème identifié
+
+`grep ToolRegistry.shared.execute LifeOS/` → **0 caller en prod** (docstrings uniquement).
+Les 6 tools enregistrés (`GetUserProfileTool`, `GetProfileFieldTool`, `SearchMemoryTool`, `CreateHabitTool`, `CreateTodoTool`, `PhotoAnalysisTool`) étaient inaccessibles au LLM.
+
+Conséquence : question type "quel est mon poids ?" → réponse potentiellement hallucinée car le LLM n'accède pas aux `ProfileField` typés ni aux `MemoryEntry` structurés.
+
+### Solution
+
+- Nouveau `LifeOS/Services/AICore/ToolEnrichment.swift` — pré-processing déterministe qui détecte 3 patterns d'intent dans le message user, invoque le tool via `ToolRegistry.shared.execute`, injecte le résultat dans le prompt sous forme d'un bloc `--- INFO RÉCUPÉRÉE POUR TOI ---`.
+- Patterns v1 :
+  - `get_profile_field` (poids, taille, âge, kcal, protéines, fréquence sport, poids cible)
+  - `get_user_profile` (résumé complet sur "qui suis-je / que sais-tu de moi")
+  - `search_memory` (extraction du sujet dans "tu te souviens de X")
+- Wire dans `OnDeviceLLM.respond` — l'enrichment est calculé en amont du `PromptAssembler.assemble` et concaténé au systemPrompt.
+- Traçabilité : chaque exécution loggée dans `AIActivityLogger` (`recordToolExecution` — durée + succès).
+- Complément Info.plist : `fetch` + `BGTaskSchedulerPermittedIdentifiers` (prérequis Loop 1 mais fait ici).
+
+### Validation
+
+- BUILD SUCCEEDED
+- **9 nouveaux tests** dans `LifeOSTests/ToolEnrichmentTests.swift` — tous verts (weight, targetWeight, height, age, gymFrequency, profile summary positif+négatif, memory search)
+- 141/142 tests OK (fail préexistant `testEmptyLifeProfileDoesNotEmitBlock` non lié)
+- Vérif accolades OK sur `ToolEnrichment.swift`, `OnDeviceLLM.swift`
+
+### Ce qui change pour l'utilisateur
+
+Avant : "quel est mon poids ?" → réponse générique / hallucination possible.
+Après : le coach lit son `ProfileField.body.currentWeightKg` (source SwiftData typée, avec confidence + timestamp) AVANT de répondre → info fraîche et fiable. Idem "que sais-tu de moi", "tu te souviens de X".
