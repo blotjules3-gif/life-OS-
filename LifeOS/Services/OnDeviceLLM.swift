@@ -65,7 +65,8 @@ enum OnDeviceLLM {
         if CoachSafetyScanner.detectsDistress(in: message) {
             return Reply(
                 text: CoachSafetyScanner.distressReply,
-                source: .localRules
+                source: .localRules,
+                providerID: "local.rules.coach"
             )
         }
 
