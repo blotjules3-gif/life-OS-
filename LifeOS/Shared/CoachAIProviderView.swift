@@ -40,7 +40,7 @@ struct CoachAIProviderView: View {
                 }
             }
         }
-        .navigationTitle("Coach IA")
+        .navigationTitle("Moteur du coach")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $vm.editingSlot) { slot in
             ProviderKeyEditor(slot: slot) { key in
