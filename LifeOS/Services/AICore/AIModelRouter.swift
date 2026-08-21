@@ -69,8 +69,22 @@ final class AIModelRouter {
         let requiredCaps = requiredCapabilities(for: request)
         let eligible = providers.filter { $0.capabilities.isSuperset(of: requiredCaps) }
 
+        // Applique la préférence utilisateur : si un provider est marqué
+        // préféré ET dans la liste éligible, il passe en tête (le reste
+        // conserve son ordre → fallback naturel si le préféré échoue).
+        let ordered: [AIProvider]
+        if let pref = AIProviderPreference.shared.preferred,
+           let idx = eligible.firstIndex(where: { $0.id.contains(pref) || pref == $0.id }) {
+            var reordered = eligible
+            let chosen = reordered.remove(at: idx)
+            reordered.insert(chosen, at: 0)
+            ordered = reordered
+        } else {
+            ordered = eligible
+        }
+
         var lastError: AIError = .unavailable(.unknown)
-        for provider in eligible {
+        for provider in ordered {
             let avail = provider.availability
             guard avail.isAvailable else {
                 if case .unavailable(let reason) = avail {
