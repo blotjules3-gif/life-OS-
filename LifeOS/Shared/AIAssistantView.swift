@@ -886,6 +886,11 @@ struct AIAssistantView: View {
                             Label("Personnaliser le coach", systemImage: "slider.horizontal.3")
                         }
                         Button {
+                            showAIProvider = true
+                        } label: {
+                            Label("Coach IA (moteur)", systemImage: "cpu")
+                        }
+                        Button {
                             showHistory = true
                         } label: {
                             Label("Historique", systemImage: "clock.arrow.circlepath")
