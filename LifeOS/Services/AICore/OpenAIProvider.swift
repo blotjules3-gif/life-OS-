@@ -20,7 +20,11 @@ struct OpenAIProvider: AIProvider {
     }
 
     var capabilities: AICapabilities {
-        [.textGeneration, .structuredOutput, .toolCalling, .longContext]
+        // Pas .toolCalling ni .structuredOutput : le provider ne parse pas
+        // les tool_calls de la réponse (feature à ajouter dans une prochaine
+        // itération). Déclarer honnêtement pour que le router ne route pas
+        // vers nous des requêtes qu'on ne saurait pas gérer.
+        [.textGeneration, .longContext]
     }
 
     @MainActor
