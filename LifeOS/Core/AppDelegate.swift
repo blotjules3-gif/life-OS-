@@ -187,12 +187,41 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         }
 
         // Réponse à une notif COACH (proactif) — foreground automatique via action.
-        if content.categoryIdentifier == "LIFEOS_COACH",
-           response.actionIdentifier == "COACH_OPEN" || response.actionIdentifier == UNNotificationDefaultActionIdentifier {
+        // Le CoachProactiveScheduler passe un prefill via userInfo["lifeos.deeplink"]
+        // au format lifeos://coach?prefill=<encoded>. On extrait le message pour
+        // le préremplir dans le chat au moment de l'ouverture.
+        if content.categoryIdentifier == "LIFEOS_COACH" || content.threadIdentifier == "coach.proactive",
+           response.actionIdentifier == "COACH_OPEN"
+             || response.actionIdentifier == UNNotificationDefaultActionIdentifier {
+            let info = content.userInfo
+            let prefill = extractCoachPrefill(from: info)
+            let signal = info["lifeos.signal"] as? String
             await MainActor.run {
-                NotificationCenter.default.post(name: .lifeOSOpenAIChat, object: nil)
+                if let signal { AnalyticsEvents.coachProactiveOpened(signal: signal) }
+                var userInfo: [AnyHashable: Any] = [:]
+                if let prefill { userInfo["prefill"] = prefill }
+                NotificationCenter.default.post(
+                    name: .lifeOSOpenAIChat,
+                    object: nil,
+                    userInfo: userInfo
+                )
             }
         }
+    }
+
+    /// Extrait le paramètre `prefill` d'un userInfo notif proactif. Accepte
+    /// soit `lifeos.deeplink` (URL encodée) soit `prefill` direct.
+    private func extractCoachPrefill(from userInfo: [AnyHashable: Any]) -> String? {
+        if let direct = userInfo["prefill"] as? String, !direct.isEmpty {
+            return direct
+        }
+        guard let deeplink = userInfo["lifeos.deeplink"] as? String,
+              let url = URL(string: deeplink),
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let prefillItem = components.queryItems?.first(where: { $0.name == "prefill" }),
+              let value = prefillItem.value?.removingPercentEncoding,
+              !value.isEmpty else { return nil }
+        return value
     }
 }
 
