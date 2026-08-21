@@ -111,7 +111,8 @@ struct AIRequest: Sendable {
     /// Température de génération (0.0 = déterministe, 1.0 = créatif). Défaut 0.7.
     let temperature: Double
 
-    /// Timeout runtime en secondes. Défaut 30s.
+    /// Timeout runtime en secondes. Défaut 20s — au-delà, un chat coach devient
+    /// insupportable et le fallback LocalCoach répondra en <100ms.
     let timeout: TimeInterval
 
     /// Correlation ID pour tracer une requête à travers les logs.
