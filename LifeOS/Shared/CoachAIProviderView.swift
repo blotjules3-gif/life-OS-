@@ -20,10 +20,12 @@ struct CoachAIProviderView: View {
                 Text("Apple Intelligence tourne 100 % sur ton iPhone. Gratuit, privé, latence <1s. Requiert un iPhone 15 Pro ou plus récent.")
             }
 
-            Section("Providers cloud") {
+            Section {
                 ForEach(SlotDisplay.allCases, id: \.self) { slot in
                     providerRow(slot)
                 }
+            } header: {
+                Text("Providers cloud")
             } footer: {
                 Text("Ces providers nécessitent une clé API. Tu payes directement le provider — LifeOS ne voit rien. La clé est stockée dans le Trousseau iOS, jamais envoyée ailleurs qu'au provider choisi.")
             }
