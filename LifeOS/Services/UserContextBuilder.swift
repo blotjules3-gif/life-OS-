@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 import UIKit
 
 // Builds a plain-text snapshot of the user's current state, injected into
@@ -6,6 +7,14 @@ import UIKit
 @MainActor
 final class UserContextBuilder {
     static let shared = UserContextBuilder()
+
+    /// Injecté au boot par LifeOSApp — permet à `buildFresh` d'appeler
+    /// `MemoryRetrieval` scoré au lieu du blob App Group flat.
+    private var ctx: ModelContext?
+
+    func setContext(_ context: ModelContext) {
+        self.ctx = context
+    }
 
     private init() {
         // Invalider le cache quand l'app revient au premier plan — nouvelle
