@@ -40,10 +40,4 @@ final class AIProviderPreference {
     func clearPreference() {
         UserDefaults.standard.removeObject(forKey: storageKey)
     }
-
-    /// Helper de matching côté router — vrai si ce providerID est le préféré.
-    /// Match exact uniquement — pas de `contains()` (source de bugs silencieux).
-    func isPreferred(providerID: String) -> Bool {
-        preferred == providerID
-    }
 }
