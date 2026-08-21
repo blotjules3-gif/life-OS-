@@ -78,6 +78,14 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             alarmCategory, confirmCategory, habitCategory, coachCategory
         ])
 
+        // Coach proactif : enregistre le BGTask (obligatoire au premier launch,
+        // sinon iOS refusera de le déclencher). Schedule le premier refresh
+        // dans 12h — iOS décide de l'heure exacte selon usage.
+        // Prérequis Info.plist : BGTaskSchedulerPermittedIdentifiers doit
+        // contenir "com.blotjules.lifeos.coach.proactive".
+        CoachProactiveScheduler.registerBackgroundTask()
+        CoachProactiveScheduler.scheduleNextRefresh()
+
         return true
     }
 }
