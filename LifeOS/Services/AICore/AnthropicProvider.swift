@@ -16,7 +16,8 @@ struct AnthropicProvider: AIProvider {
     }
 
     var capabilities: AICapabilities {
-        [.textGeneration, .structuredOutput, .toolCalling, .longContext]
+        // Tool calls non parsés → ne pas déclarer .toolCalling.
+        [.textGeneration, .longContext]
     }
 
     @MainActor
