@@ -888,7 +888,7 @@ struct AIAssistantView: View {
                         Button {
                             showAIProvider = true
                         } label: {
-                            Label("Coach IA (moteur)", systemImage: "cpu")
+                            Label("Moteur du coach", systemImage: "cpu")
                         }
                         Button {
                             showHistory = true
