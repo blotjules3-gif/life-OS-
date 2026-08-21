@@ -18,13 +18,22 @@ import Foundation
 final class AIModelRouter {
     static let shared = AIModelRouter()
 
-    /// Ordre par défaut de préférence — surcharge possible en runtime.
-    /// Apple Intelligence seul (100% on-device, gratuit, privé). Si indispo
-    /// (iPhone < 15 Pro, modèle en téléchargement, Apple Intelligence off),
-    /// `OnDeviceLLM.respond` bascule directement sur `LocalCoach` (règles Swift)
-    /// — pas besoin d'un provider réseau intermédiaire.
+    /// Ordre par défaut — priorité :
+    ///   1. Apple Intelligence (100% on-device, gratuit, privé, latence <1s)
+    ///   2. Cloud providers dans l'ordre déclaré (chacun requiert une clé
+    ///      user stockée via `AIProviderCredentials`, sinon `availability`
+    ///      retourne `.invalidCredentials` et le router passe au suivant)
+    ///   3. `OnDeviceLLM.respond` bascule sur `LocalCoach` (règles Swift) si
+    ///      aucun provider ne répond.
+    ///
+    /// L'utilisateur peut surcharger via `AIProviderPreference.setPreferred(_:)` —
+    /// dans ce cas, le provider choisi passe en tête de la chaîne.
     private var providers: [AIProvider] = [
-        AppleIntelligenceProvider()
+        AppleIntelligenceProvider(),
+        OpenAIProvider(),
+        AnthropicProvider(),
+        MistralProvider(),
+        GeminiProvider(),
     ]
 
     /// Vrai si les tools coach ont déjà été enregistrés dans le ToolRegistry.
