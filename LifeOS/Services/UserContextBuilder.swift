@@ -156,11 +156,33 @@ final class UserContextBuilder {
             lines.append("Sommeil moyen 7j: \(String(format: "%.1f", sleepAvg7d))h/nuit")
         }
 
-        // ── Mémoire long terme du coach (publiée par MemoryWidgetSyncer) ────
-        // Ce que l'utilisateur t'a dit dans le passé. Priorité aux mémoires
-        // pinnées, puis les plus récentes. Injectées dans chaque prompt pour
-        // que le coach reste cohérent avec ce qu'il "sait" de l'utilisateur.
-        if let memData = grp.data(forKey: "memory_top_10"),
+        // ── Mémoire long terme du coach ──────────────────────────────────────
+        // Priorité 1 : retrieval scoré (MemoryRetrieval) si un message et un
+        // ctx SwiftData sont disponibles — sélectionne les mémoires les plus
+        // pertinentes pour ce message précis (score composite relevance × recency
+        // × retentionWeight × confirmationBoost).
+        // Priorité 2 (fallback) : blob "memory_top_10" du App Group, populé par
+        // MemoryWidgetSyncer — utile hors chat (widgets, extensions).
+        let queryMessage = message ?? ""
+        var memoryInjected = false
+        if let ctx, !queryMessage.isEmpty {
+            let ranked = MemoryRetrieval.retrieve(for: queryMessage, context: ctx, limit: 10)
+            if !ranked.isEmpty {
+                lines.append("")
+                lines.append("Mémoire du coach (ce que l'utilisateur t'a dit) :")
+                for r in ranked {
+                    let content = r.entry.content
+                    let category = r.entry.category
+                    let pinned = r.entry.isPinned ? " ★" : ""
+                    if !content.isEmpty {
+                        lines.append("- [\(category)]\(pinned) \(content)")
+                    }
+                }
+                memoryInjected = true
+            }
+        }
+        if !memoryInjected,
+           let memData = grp.data(forKey: "memory_top_10"),
            let mems = try? JSONSerialization.jsonObject(with: memData) as? [[String: Any]],
            !mems.isEmpty {
             lines.append("")
