@@ -31,38 +31,32 @@ enum ToolEnrichment {
         // 1. Détection lookup profil ciblé — le plus fréquent.
         if let fieldID = matchProfileFieldQuery(normalized) {
             let argsJSON = #"{"fieldID":"\#(fieldID)"}"#
+            let start = Date()
             let result = await ToolRegistry.shared.execute("get_profile_field", argsJSON: argsJSON)
             if let block = formatToolResult(name: "get_profile_field", result: result) {
                 blocks.append(block)
-                AIActivityLogger.shared.recordToolExecuted(
-                    sessionID: sessionID, name: "get_profile_field",
-                    argsJSON: argsJSON, ok: !isError(result)
-                )
+                logTool(sessionID: sessionID, name: "get_profile_field", result: result, since: start)
             }
         }
 
         // 2. Demande de résumé profil global — cas explicite uniquement.
         if matchesProfileSummary(normalized) {
+            let start = Date()
             let result = await ToolRegistry.shared.execute("get_user_profile", argsJSON: "{}")
             if let block = formatToolResult(name: "get_user_profile", result: result) {
                 blocks.append(block)
-                AIActivityLogger.shared.recordToolExecuted(
-                    sessionID: sessionID, name: "get_user_profile",
-                    argsJSON: "{}", ok: !isError(result)
-                )
+                logTool(sessionID: sessionID, name: "get_user_profile", result: result, since: start)
             }
         }
 
         // 3. Recherche mémoire ciblée sur ce que le user a déjà dit.
         if let query = matchMemorySearch(normalized) {
             let argsJSON = #"{"query":"\#(escapeJSON(query))","limit":5}"#
+            let start = Date()
             let result = await ToolRegistry.shared.execute("search_memory", argsJSON: argsJSON)
             if let block = formatToolResult(name: "search_memory", result: result) {
                 blocks.append(block)
-                AIActivityLogger.shared.recordToolExecuted(
-                    sessionID: sessionID, name: "search_memory",
-                    argsJSON: argsJSON, ok: !isError(result)
-                )
+                logTool(sessionID: sessionID, name: "search_memory", result: result, since: start)
             }
         }
 
