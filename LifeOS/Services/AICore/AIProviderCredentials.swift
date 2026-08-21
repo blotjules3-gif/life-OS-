@@ -45,6 +45,67 @@ final class AIProviderCredentials {
             case .gemini:    return URL(string: "https://aistudio.google.com/app/apikey")
             }
         }
+
+        /// Préfixe attendu pour valider un format minimal avant enregistrement.
+        /// `nil` = pas de préfixe standardisé (Mistral / Gemini).
+        var expectedPrefix: String? {
+            switch self {
+            case .openai:    return "sk-"
+            case .anthropic: return "sk-ant-"
+            case .mistral:   return nil
+            case .gemini:    return nil
+            }
+        }
+
+        /// Longueur minimale plausible (garde-fou contre les copies tronquées).
+        var minLength: Int {
+            switch self {
+            case .openai:    return 40
+            case .anthropic: return 40
+            case .mistral:   return 20
+            case .gemini:    return 20
+            }
+        }
+
+        /// providerID exact utilisé par l'AIProvider concret — utilisé pour la
+        /// préférence utilisateur (match exact côté router).
+        var providerID: String {
+            switch self {
+            case .openai:    return "openai.gpt"
+            case .anthropic: return "anthropic.claude"
+            case .mistral:   return "mistral.direct"
+            case .gemini:    return "google.gemini"
+            }
+        }
+    }
+
+    /// Résultat de validation d'une clé — utilisé par le sheet éditeur pour
+    /// afficher un message clair avant enregistrement.
+    enum ValidationError: Error, LocalizedError {
+        case tooShort(min: Int)
+        case wrongPrefix(expected: String)
+
+        var errorDescription: String? {
+            switch self {
+            case .tooShort(let min):
+                return "La clé semble tronquée (moins de \(min) caractères)."
+            case .wrongPrefix(let expected):
+                return "La clé devrait commencer par \"\(expected)\" — vérifie que tu l'as copiée depuis le bon provider."
+            }
+        }
+    }
+
+    /// Valide le format d'une clé avant enregistrement. Retourne `nil` si OK,
+    /// sinon un `ValidationError` explicite.
+    func validate(_ key: String, for slot: Slot) -> ValidationError? {
+        let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.count < slot.minLength {
+            return .tooShort(min: slot.minLength)
+        }
+        if let prefix = slot.expectedPrefix, !trimmed.hasPrefix(prefix) {
+            return .wrongPrefix(expected: prefix)
+        }
+        return nil
     }
 
     private init() {}
