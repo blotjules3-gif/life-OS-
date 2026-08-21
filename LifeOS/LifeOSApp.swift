@@ -136,6 +136,13 @@ struct LifeOSApp: App {
             WidgetToggleReconciler.drainAndApply(ctx: container.mainContext)
             // Analytics — événement launch.
             Analytics.log("app.launch")
+            // Coach proactif — piggy-back au foreground (fallback si BGTask
+            // ne tourne pas encore sur ce device / permission refusée).
+            Task { @MainActor in
+                await CoachProactiveScheduler.runProactiveScan()
+            }
+            // Décroissance mémoire — cleanup 1/semaine (idempotent).
+            MemoryDecayJob.runIfNeeded(context: container.mainContext)
         }
         .onChange(of: onboardingDone) { _, done in
             if done { ContextualNotifications.shared.reschedule() }
