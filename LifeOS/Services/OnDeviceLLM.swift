@@ -77,7 +77,8 @@ enum OnDeviceLLM {
         if isLikelyLocalAction(message), let ctx {
             return Reply(
                 text: LocalCoach.respond(to: message, ctx: ctx),
-                source: .localRules
+                source: .localRules,
+                providerID: "local.rules.coach"
             )
         }
 
@@ -105,7 +106,8 @@ enum OnDeviceLLM {
         if let ctx {
             return Reply(
                 text: LocalCoach.respond(to: message, ctx: ctx),
-                source: .localRules
+                source: .localRules,
+                providerID: "local.rules.coach"
             )
         }
         return Reply(
