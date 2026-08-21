@@ -77,9 +77,11 @@ enum ToolEnrichment {
         // On requiert un marqueur d'interrogation/possession ("mon", "ma",
         // "combien", "quel") pour éviter les faux positifs sur des messages
         // qui mentionnent le mot en passant.
+        // Ordre important : spécifique AVANT général (targetWeight avant
+        // currentWeight, sinon la regex "mon poids" attrape "mon objectif poids").
         let patterns: [(String, String)] = [
-            (#"(?:mon|combien|quel)\b[^.?!]*\b(?:poids|pese|pesee|balance)\b"#, "body.currentWeightKg"),
             (#"\b(?:objectif|cible|target|goal)\b[^.?!]*\bpoids\b"#, "body.targetWeightKg"),
+            (#"(?:mon|combien|quel)\b[^.?!]*\b(?:poids|pese|pesee|balance)\b"#, "body.currentWeightKg"),
             (#"(?:ma|combien|quelle)\b[^.?!]*\btaille\b"#, "body.heightCm"),
             (#"(?:mon|quel)\b[^.?!]*\b(?:age|annees|ans)\b"#, "body.ageYears"),
             (#"(?:mes|combien|quel)\b[^.?!]*\b(?:kcal|calories|calorique)\b"#, "nutrition.kcalGoal"),
