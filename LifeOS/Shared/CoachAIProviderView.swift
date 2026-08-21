@@ -54,22 +54,21 @@ struct CoachAIProviderView: View {
 
     // MARK: - Rows
 
+    @ViewBuilder
     private var appleIntelligenceRow: some View {
-        let isPreferred = vm.currentPreference == "apple.intelligence.on-device"
-        let isAvailable = vm.appleAvailable
-        return HStack {
+        HStack {
             Image(systemName: "sparkles")
-                .foregroundStyle(isAvailable ? Color.accentColor : .secondary)
+                .foregroundStyle(vm.appleAvailable ? Color.accentColor : .secondary)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Apple Intelligence")
-                Text(isAvailable ? "Disponible sur cet iPhone" : "Non disponible sur cet iPhone")
+                Text(vm.appleAvailable ? "Disponible sur cet iPhone" : "Non disponible sur cet iPhone")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            if isPreferred {
+            if vm.currentPreference == "apple.intelligence.on-device" {
                 Text("Actif").font(.caption).foregroundStyle(.green)
-            } else if isAvailable {
+            } else if vm.appleAvailable {
                 Button("Choisir") { vm.setPreferred(providerID: "apple.intelligence.on-device") }
                     .buttonStyle(.borderless)
             }
