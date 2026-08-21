@@ -192,5 +192,43 @@ L'architecture n'exposait qu'Apple Intelligence + LocalCoach. ~80 % des iPhone d
 ### Reste à faire (Loop 3d — optionnel)
 
 - Proxy Cloudflare Workers pour un mode "freemium LifeOS paie" (~40 lignes)
-- Test connectivité par provider ("Envoyer un ping test")
 - Affichage coût estimé par provider avant activation
+- Indicateur "via [Provider]" sous chaque message coach (T1 de l'audit)
+
+---
+
+## Loop 3 — fixes post-audit (2026-08-22)
+
+Audit sans complaisance de Loop 3 → 5 BLOQUANTS + 12 MAJEURS + 8 MINEURS + 4 TROUS identifiés. Fix pass sur les items critiques réparables sans device réel :
+
+**Fixes appliqués :**
+- **B5 Capabilities menteuses** : Retiré `.toolCalling` et `.structuredOutput` des 4 providers cloud (features non parsées côté réponse) — le router ne route plus vers eux les requêtes avec tools qu'ils ne savent pas gérer.
+- **B3 Slug matching fragile** : `AIProviderPreference` stocke désormais le providerID exact (`"openai.gpt"` au lieu de `"openai"`). Router matche via `id == pref` strict (plus de `contains()` source de bugs silencieux). Migration API : suppression `setPreferred(slot:)`, garder `setPreferredProviderID`.
+- **B4 Validation format clé** : `AIProviderCredentials.validate(_:for:)` ajoutée — check prefix (`sk-` pour OpenAI, `sk-ant-` pour Anthropic) + longueur minimale (40 chars OpenAI/Anthropic, 20 Mistral/Gemini). Erreur explicite dans le sheet éditeur avant enregistrement.
+- **M3 Bouton "Tester la clé"** : ping réel au provider (max_tokens=5, timeout 12s), affiche latence ou erreur classifiée (401 refusée / rate limit / timeout / offline). Sauve temporairement + restore si l'user annule.
+- **M4 Sheet éditeur montre clé existante** : masque `••••XXXX` (4 derniers chars) + placeholder adapté. Section "Supprimer" n'apparaît que si une clé existe.
+- **M5 Timeout défaut** : 30s → 20s (`AIRequest.init`).
+- **M8 Confirmation destructive** : `confirmationDialog` sur "Retour à la sélection automatique".
+- **m1 Diagnostic macOS** : `#if os(iOS)` autour de `navigationBarTitleDisplayMode` (2 endroits).
+- **UX Apple Intelligence** : badge "Recommandé" quand dispo, boutons "Choisir" `.bordered` (au lieu de `.borderless` invisible).
+- **UX Section providers** : titre "Providers cloud (payants)" explicite.
+
+**Tests unit ajoutés (B1 partiel) :**
+- `AIProviderPreferenceTests` (7 tests) — setter/getter/clear, match STRICT vs partial, régression du bug slug
+- `AIProviderCredentialsValidationTests` (9 tests) — validation format par slot, refus clé OpenAI dans slot Anthropic, mapping providerID vs `.id` concret
+
+**Non fixés (nécessitent + de travail) :**
+- B2 test end-to-end réel — impossible sans clé API user, à faire en TestFlight
+- M1/M2 modèles hardcodés — nécessite UI de sélection modèle par provider
+- M6 retry rate limit — logique async à ajouter dans AIProviderHTTP
+- M7 logging providers cloud dans AIActivityLogger — refactor OnDeviceLLM
+- M9 kill switch coûts — nécessite compteur cumulatif persisté
+- T1 indicateur provider dans chat — refactor AIAssistantViewModel pour passer providerID par message
+- T2 coûts estimés — grosse feature à part
+
+### Validation post-fixes
+
+- BUILD SUCCEEDED
+- 157/158 tests OK (fail préexistant non lié)
+- **16 nouveaux tests unit** couvrent la préférence + validation format
+- `UIVocabularySanityTests` toujours vert
