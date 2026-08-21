@@ -71,7 +71,46 @@ Backlog défini dans `.claude/commands/improve-chat.md`.
 
 ---
 
-## Statut : 17/24 étapes complétées, 133/133 tests passent
+## Statut : 17/24 étapes complétées, 132/133 tests passent
 
 Reste :
 - P2.13 (multi-tour), P3.18-19 (reasoning), P4.24 (data audit UI), P5 (@Generable + tools API iOS 26.1) — tous nécessitent des APIs iOS 26.1+ ou effort UI conséquent
+
+Test `UserContextBuilderTests.testEmptyLifeProfileDoesNotEmitBlock` échoue en run complet, passe en isolé + après CoachExpertiseTests → pollueur d'ordre non identifié, préexistant à Loop 1.
+
+---
+
+## Loop 1 (2026-08-21) — Wire 4 dead services end-to-end
+
+Audit du début de loop : 4 services créés dans la session précédente n'avaient AUCUN caller.
+Ils étaient dans le repo mais totalement inertes.
+
+### Problème identifié
+
+- `CoachProactiveScheduler` : 0 callers → BGTask jamais enregistré, coach jamais proactif
+- `MemoryDecayJob` : 0 callers → mémoires jamais nettoyées
+- `MemoryRetrieval` : 0 callers → retrieval scoré jamais utilisé, fallback flat App Group seul en place
+- Deep link `lifeos://coach?prefill=…` : émis par scheduler mais aucun handler côté notif
+
+### Solution
+
+- `AppDelegate.didFinishLaunching` : `CoachProactiveScheduler.registerBackgroundTask()` + `.scheduleNextRefresh()`
+- `AppDelegate.NotificationDelegate` : catégorie `LIFEOS_COACH` extrait `prefill` du deep link, post `.lifeOSOpenAIChat` avec userInfo → `MainTabView` le passe à `AIAssistantView(prefill:)`
+- `LifeOSApp.didBecomeActive` : `CoachProactiveScheduler.runProactiveScan()` (fallback foreground) + `MemoryDecayJob.runIfNeeded(context:)` (cleanup 7j)
+- `LifeOSApp.onAppear` : `UserContextBuilder.shared.setContext(container.mainContext)` pour permettre retrieval scoré
+- `UserContextBuilder.buildFresh` : si ctx présent + message non vide, appelle `MemoryRetrieval.retrieve(for:context:)` scoré (relevance × recency × retention × confirmation) ; fallback App Group `memory_top_10` si pas de ctx
+
+### Validation
+
+- BUILD SUCCEEDED (warnings uniquement, non bloquants)
+- 132/133 tests passent (fail préexistant sur pollueur d'ordre, non lié à Loop 1)
+- Vérif accolades : Diff 0 sur `LifeOSApp.swift`, `AppDelegate.swift`, `UserContextBuilder.swift`
+
+### Prérequis manuel utilisateur
+
+Ajouter à `Info.plist` :
+```xml
+<key>BGTaskSchedulerPermittedIdentifiers</key>
+<array><string>com.blotjules.lifeos.coach.proactive</string></array>
+```
+Sans cette clé, iOS refusera de scheduler la BGTask (le fallback foreground continuera de fonctionner).
