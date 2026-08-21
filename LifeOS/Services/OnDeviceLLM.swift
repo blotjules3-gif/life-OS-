@@ -228,12 +228,19 @@ enum OnDeviceLLM {
 
     #if canImport(FoundationModels)
     @available(iOS 26.0, *)
+    /// Tuple retour : texte final post-processed + providerID exact ayant
+    /// répondu (utile pour l'affichage "via X" sous la bulle chat).
+    struct RouterResult {
+        let text: String
+        let providerID: String?
+    }
+
     private static func respondViaAppleIntelligence(
         message: String,
         moduleContext: String?,
         injectContext: Bool,
         recentUpdates: [String]
-    ) async -> String? {
+    ) async -> RouterResult? {
         // Pipeline via AI Core (Phase 1 branchée) :
         // 1. Classify le message
         // 2. Assemble le prompt via AIContextManager (budget tokens explicite)
