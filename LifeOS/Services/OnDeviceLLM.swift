@@ -19,11 +19,20 @@ import FoundationModels
 @MainActor
 enum OnDeviceLLM {
 
-    /// Résultat d'une réponse coach — texte + drapeau indiquant s'il vient
-    /// du LLM on-device ou du fallback règles. Aucune donnée réseau.
+    /// Résultat d'une réponse coach — texte + drapeau source + providerID
+    /// précis pour affichage sous la bulle chat (transparence user).
     struct Reply {
         let text: String
         let source: Source
+        /// ID exact du provider qui a répondu (ex: "openai.gpt", "apple.intelligence.on-device",
+        /// "local.rules.coach"). Résolu en nom affichable via `AIProviderResolver`.
+        let providerID: String?
+
+        init(text: String, source: Source, providerID: String? = nil) {
+            self.text = text
+            self.source = source
+            self.providerID = providerID
+        }
     }
 
     enum Source {
