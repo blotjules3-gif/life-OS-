@@ -29,13 +29,9 @@ final class AIProviderPreference {
         UserDefaults.standard.string(forKey: storageKey)
     }
 
-    /// Setter par slot cloud (typé).
-    func setPreferred(_ slot: AIProviderCredentials.Slot) {
-        UserDefaults.standard.set(slot.rawValue.replacingOccurrences(of: "ai.credentials.", with: ""), forKey: storageKey)
-    }
-
-    /// Setter par providerID brut (utile pour Apple Intelligence qui n'est pas
-    /// un slot Keychain).
+    /// Setter par providerID exact (ex: "openai.gpt", "apple.intelligence.on-device").
+    /// Le router matche via égalité stricte pour éviter les faux positifs si
+    /// un providerID change de nom sans qu'on mette à jour la préférence.
     func setPreferredProviderID(_ providerID: String) {
         UserDefaults.standard.set(providerID, forKey: storageKey)
     }
@@ -46,8 +42,8 @@ final class AIProviderPreference {
     }
 
     /// Helper de matching côté router — vrai si ce providerID est le préféré.
+    /// Match exact uniquement — pas de `contains()` (source de bugs silencieux).
     func isPreferred(providerID: String) -> Bool {
-        guard let pref = preferred else { return false }
-        return providerID.contains(pref) || pref == providerID
+        preferred == providerID
     }
 }
