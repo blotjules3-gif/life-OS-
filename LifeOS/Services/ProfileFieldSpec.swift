@@ -342,6 +342,10 @@ enum ProfileFieldCatalog {
               displayName: "Méthode de contraception", valueType: .enum, importance: .medium,
               dependsOn: ["body.hasCycle"],
               extractionHints: ["pilule", "stérilet", "diu", "implant", "préservatif"]),
+        .init(id: "cycle.lastPeriodStartDate", category: "cycle",
+              displayName: "Date de début des dernières règles", valueType: .date, importance: .high,
+              dependsOn: ["body.hasCycle"],
+              extractionHints: ["règles", "regles", "période", "menstruations", "commencé"]),
 
         // MARK: Admin — 0 → 4
         .init(id: "admin.taxDeclarationMonth", category: "admin",
