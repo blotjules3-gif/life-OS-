@@ -226,15 +226,15 @@ enum OnDeviceLLM {
 
     // MARK: - Apple Intelligence
 
-    #if canImport(FoundationModels)
-    @available(iOS 26.0, *)
     /// Tuple retour : texte final post-processed + providerID exact ayant
     /// répondu (utile pour l'affichage "via X" sous la bulle chat).
-    struct RouterResult {
+    private struct RouterResult {
         let text: String
         let providerID: String?
     }
 
+    #if canImport(FoundationModels)
+    @available(iOS 26.0, *)
     private static func respondViaAppleIntelligence(
         message: String,
         moduleContext: String?,
