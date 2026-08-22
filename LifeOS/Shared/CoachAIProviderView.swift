@@ -113,6 +113,27 @@ struct CoachAIProviderView: View {
         }
     }
 
+    /// Rangée d'usage par provider — affichée uniquement si l'user a des
+    /// requêtes cloud aujourd'hui. Résumé compact : "X requêtes • $Y.YY".
+    @ViewBuilder
+    private func usageRow(for slot: SlotDisplay) -> some View {
+        let snap = vm.usageSnapshot(for: slot)
+        if snap.requestCount > 0 {
+            HStack {
+                Text(slot.displayName)
+                    .font(.subheadline)
+                Spacer()
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("\(snap.requestCount) req.")
+                        .font(.caption.monospacedDigit())
+                    Text(String(format: "≈ $%.3f", snap.estimatedCostUSD))
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
     @ViewBuilder
     private func providerRow(_ slot: SlotDisplay) -> some View {
         let hasKey = vm.slotHasKey[slot] ?? false
