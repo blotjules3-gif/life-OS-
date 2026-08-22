@@ -405,6 +405,9 @@ final class AIAssistantViewModel: ObservableObject {
     /// dans la section "à éviter".
     func recordDislike(for message: DisplayMessage) {
         CoachFeedbackStore.record(.dislike, response: message.text)
+        // Refresh la suggestion d'upgrade → si ≥3 dislikes en 24h, la bannière
+        // apparaîtra au prochain re-render.
+        CoachUpgradeSuggestion.shared.refresh()
         showToast("Compris — j'ajuste au prochain message", module: nil)
     }
 
