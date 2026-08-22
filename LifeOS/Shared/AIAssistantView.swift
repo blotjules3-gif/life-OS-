@@ -1088,6 +1088,24 @@ struct AIAssistantView: View {
                     aiHeader
                         .padding(.bottom, 20)
 
+                    // Bannière suggestion upgrade — s'affiche si l'user a ≥3
+                    // dislikes en 24h sans clé cloud configurée. Snoozable 7j.
+                    if upgradeSuggestion.lastEval > .distantPast,
+                       CoachUpgradeSuggestion.shared.shouldSuggestUpgrade() {
+                        CoachUpgradeBanner(
+                            onImprove: {
+                                showAIProvider = true
+                                CoachUpgradeSuggestion.shared.dismissForNow()
+                            },
+                            onDismiss: {
+                                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                                    CoachUpgradeSuggestion.shared.dismissForNow()
+                                }
+                            }
+                        )
+                        .padding(.bottom, 16)
+                    }
+
                     // Messages
                     ForEach(vm.messages) { msg in
                         AIAssistantMessageRow(
