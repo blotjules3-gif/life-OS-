@@ -114,24 +114,53 @@ struct CoachAIProviderView: View {
     }
 
     /// Rangée d'usage par provider — affichée uniquement si l'user a des
-    /// requêtes cloud aujourd'hui. Résumé compact : "X requêtes • $Y.YY".
+    /// requêtes cloud aujourd'hui. Affiche compteur + coût EUR + moyenne
+    /// tokens/req + total 30j. Accessible VoiceOver.
     @ViewBuilder
     private func usageRow(for slot: SlotDisplay) -> some View {
-        let snap = vm.usageSnapshot(for: slot)
-        if snap.requestCount > 0 {
-            HStack {
-                Text(slot.displayName)
-                    .font(.subheadline)
-                Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(snap.requestCount) req.")
-                        .font(.caption.monospacedDigit())
-                    Text(String(format: "≈ $%.3f", snap.estimatedCostUSD))
-                        .font(.caption2.monospacedDigit())
-                        .foregroundStyle(.secondary)
+        let today = vm.usageSnapshot(for: slot)
+        let month = vm.monthlySnapshot(for: slot)
+        if today.requestCount > 0 || month.requestCount > 0 {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(slot.displayName)
+                        .font(.subheadline.weight(.medium))
+                    Spacer()
+                    Text(UsageFormatter.costEUR(usd: today.estimatedCostUSD))
+                        .font(.caption.monospacedDigit().weight(.medium))
                 }
+                HStack(spacing: 10) {
+                    Label(UsageFormatter.requestCount(today.requestCount), systemImage: "arrow.up.arrow.down")
+                    if today.averageTokensPerRequest > 0 {
+                        Text("• \(UsageFormatter.averageTokens(today.averageTokensPerRequest))")
+                    }
+                    Spacer()
+                    if month.estimatedCostUSD > 0 {
+                        Text("30j : \(UsageFormatter.costEUR(usd: month.estimatedCostUSD))")
+                    }
+                }
+                .font(.caption2)
+                .foregroundStyle(.secondary)
             }
+            .padding(.vertical, 2)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(accessibilityLabel(today: today, month: month, name: slot.displayName))
         }
+    }
+
+    /// Label VoiceOver descriptif pour la ligne d'usage — évite le lecteur
+    /// de mixer chiffres et abréviations.
+    private func accessibilityLabel(
+        today: AIProviderUsageTracker.Snapshot,
+        month: AIProviderUsageTracker.Snapshot,
+        name: String
+    ) -> String {
+        var parts = ["\(name), \(UsageFormatter.requestCount(today.requestCount)) aujourd'hui"]
+        parts.append("coût estimé \(UsageFormatter.costEUR(usd: today.estimatedCostUSD))")
+        if month.estimatedCostUSD > 0 {
+            parts.append("30 derniers jours : \(UsageFormatter.costEUR(usd: month.estimatedCostUSD))")
+        }
+        return parts.joined(separator: ", ")
     }
 
     @ViewBuilder
