@@ -44,6 +44,8 @@ enum DataEraser {
         AIActivityLogger.shared.clear()
         // Usage tracker cloud (UserDefaults, compteurs jour + coûts)
         AIProviderUsageTracker.shared.resetAll()
+        // Cost guard preference (plafond quotidien + jour de notif)
+        AICostGuardPreference.shared.reset()
         // Cache UserContextBuilder
         UserContextBuilder.shared.invalidateCache()
         AppLog.data.info("DataEraser: AI artifacts erased")
