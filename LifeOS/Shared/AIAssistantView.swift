@@ -487,7 +487,7 @@ final class AIAssistantViewModel: ObservableObject {
             firstLaunchDone = true
             isServerOffline = false
             removeThinking()
-            appendAssistantMessage(reply.text, actions: [])
+            appendAssistantMessage(reply.text, actions: [], providerID: reply.providerID)
             isLoading = false
         }
     }
