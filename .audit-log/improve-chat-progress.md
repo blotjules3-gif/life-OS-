@@ -306,3 +306,53 @@ Après : ouvre Réglages → Moteur du coach → section "Usage aujourd'hui" vis
 - **Pas de blocage** : c'est de la transparence, pas un cap. L'user décide seul. Un vrai kill switch avec seuil configurable ("bloquer si > $5/jour") = Loop 6 potentielle.
 - **Pas de graphe historique** : `recentSnapshots(days:)` existe pour ça mais l'UI ne l'affiche pas encore.
 - **Barème approximatif** : les tarifs providers changent — à revoir périodiquement. Le footer prévient l'user.
+
+---
+
+## Loop 5 — fixes post-audit (2026-08-22)
+
+Audit sans complaisance : 4 BLOQUANTS + 8 MAJEURS + 5 MINEURS + 6 TROUS identifiés. Fix pass sur ce qui est faisable sans backend externe :
+
+### Fixes appliqués
+
+**Bloquants** :
+- **B1** : Constante `pricingCatalogVersion = "2026-08"` + affichage user "barème 2026-08" dans le footer Réglages. Pas de fetch remote (trop gros), mais l'user voit à quelle date le barème a été révisé.
+- **B2** : Conversion USD → EUR via `NumberFormatter.currency` locale `fr_FR`. Nouveau `UsageFormatter.costEUR(usd:)` — utilisé partout dans l'UI. Taux fixe 0.92 (à réviser avec le barème).
+- **B3** : Tokens `nil` → **skip enregistrement** au lieu de compter `$0`. Log `AppLog.coach.warning` pour observabilité (facture réelle invisible détectée).
+- **B4** : Nouveau `AIModelRouterUsageWireTests.swift` — test intégration MockProvider → router → tracker. Vérifie : succès enregistre, erreur n'enregistre pas.
+
+**Majeurs** :
+- **M1** : Test valeur exacte `0.00027` remplacé par test **formule** : `snap.estimatedCostUSD == pricing.input + pricing.output` avec 1M tokens I/O. Robuste aux changements de tarifs.
+- **M2** : `purgeOldEntries` → `purgeOldEntriesIfNeeded` appelé UNIQUEMENT au boot du singleton, avec flag `lastPurgeKey` (idempotent 24h). Plus de O(N) à chaque record.
+- **M5** : Cap sanitaire `min(max(tokens, 0), 10_000_000)` dans `record()`. Test dédié `testRecord_absurdlyLargeTokens_areCapped` + négatifs clamped à 0.
+- **M6** : Tracker devient `ObservableObject` avec `@Published lastChange`. Vue observe via `@ObservedObject usageTracker`. Refresh live si l'user envoie un message pendant que le sheet est ouvert.
+- **M7** : `UsageFormatter.costEUR(usd:)` gère micro-coûts : `< 0,01 €` au lieu de `0,000 €` trompeur.
+- **m3** : `UsageFormatter.requestCount(_:)` gère pluriel (0/1 → "requête", ≥2 → "requêtes").
+- **m5** : `accessibilityLabel` complet sur la ligne d'usage : "OpenAI, 5 requêtes aujourd'hui, coût estimé 0,02 €, 30 derniers jours : 0,80 €".
+- **m6** : Anthropic Haiku 4.5 corrigé à $0.80/$4 (au lieu de $1/$5 approximé).
+
+**Trous rapides** :
+- **T2** : Nouveau `monthlySnapshot(providerID:)` = somme des 30 derniers jours. Affiché "30j : 12€" à droite de chaque ligne d'usage.
+- **T3** : Nouveau `Snapshot.averageTokensPerRequest` computed. Affiché "1.5k tok/req" sous la ligne.
+
+### Non fixés (out of scope loop)
+
+- **B1 refresh remote** : nécessite backend, à voir avec `RemoteConfig` existant plus tard
+- **T1 alerte seuil** : nécessite système notifs + preferences
+- **T4 comparaison providers** : nécessite écran dédié
+- **T5 migration Documents dir** : change API storage
+- **T6 export CSV** : feature à part
+- **M8 i18n** : le reste de l'app n'est pas encore traduit non plus
+
+### Validation
+
+- BUILD SUCCEEDED
+- **24 tests** total sur Loop 5 (14 initiaux enrichis + 3 nouveaux Formatter + 2 nouveaux wire router + 2 pour B3 skip + 1 pour cap + 1 pour EUR + 1 pour pricing catalog version)
+- **`AIModelRouterUsageWireTests`** couvre le wire E2E via MockProvider — régression garantie si le wire router→tracker se casse
+- 194/195 tests OK (fail préexistant non lié)
+
+### Ce qui change pour l'utilisateur
+
+Avant Loop 5 : rien (pas de tracker).
+Après Loop 5 (initial) : "5 req. • ≈ $0.023" — utile mais confus (USD, pluriel cassé, $0.000 pour micro).
+Après fixes audit : "5 requêtes • 1.2k tok/req • < 0,01 € (30j : 0,12 €)" — français, EUR, moyennes, cumul mensuel, VoiceOver, refresh live.
