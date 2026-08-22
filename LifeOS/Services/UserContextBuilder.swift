@@ -197,6 +197,40 @@ final class UserContextBuilder {
             }
         }
 
+        // ── Cycle menstruel (Loop 8) — si applicable ────────────────────────
+        // Corrélation forte cycle ↔ énergie/sommeil/motivation sport. Silencieux
+        // si `body.hasCycle` non renseigné ou pas de date de dernières règles.
+        let cycleLine = CycleAwareness.promptLine()
+        if !cycleLine.isEmpty {
+            lines.append("")
+            lines.append(cycleLine)
+        }
+
+        // ── Sleep breakdown last night (Loop 8) — publié par SleepWidgetSyncer
+        // via App Group. Le fetch HealthKit direct est trop coûteux pour un
+        // rebuild à chaque message — on lit le blob déjà synchronisé.
+        if let breakdownData = grp.data(forKey: "sleep_breakdown_last_night"),
+           let d = try? JSONSerialization.jsonObject(with: breakdownData) as? [String: Any] {
+            let deep = (d["deep"] as? Double) ?? 0
+            let rem = (d["rem"] as? Double) ?? 0
+            let awakenings = (d["awakenings"] as? Int) ?? 0
+            let bedtimeStr = d["bedtime"] as? String
+            if deep > 0 || rem > 0 {
+                var parts = [String(format: "Sommeil nuit dernière : %.1fh deep, %.1fh REM", deep, rem)]
+                if awakenings > 0 { parts.append("\(awakenings) réveils") }
+                if let b = bedtimeStr { parts.append("coucher \(b)") }
+                lines.append("")
+                lines.append(parts.joined(separator: ", "))
+            }
+        }
+
+        // ── Objectifs actifs avec progression (Loop 8) ──────────────────────
+        let goalsBlock = GoalsProgress.promptBlock()
+        if !goalsBlock.isEmpty {
+            lines.append("")
+            lines.append(goalsBlock)
+        }
+
         // ── ProfileField — source of truth typée du profil utilisateur ──────
         // Extraits automatiquement du chat/voix/Raccourci par IntelligentExtractor.
         // Ne PAS redemander ces valeurs : elles sont fiables (confidence ≥ 0.60).
