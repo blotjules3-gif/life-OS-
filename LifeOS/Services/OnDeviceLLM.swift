@@ -280,9 +280,14 @@ enum OnDeviceLLM {
         // mais visibles dans le budget de contexte + debug view.
         let toolDefinitions = ToolRegistry.shared.availableDefinitions()
 
+        // Historique — 3 derniers échanges pour continuité conversationnelle (Loop 8).
+        // Sans ça, chaque message = amnésie. Le coach voit "Tu m'as dit X → tu
+        // me demandes Y maintenant" au lieu de repartir de zéro.
+        let previousMessages = RecentConversationFetcher.recent(context: ctx, pairs: 3)
+
         let assembled = AIContextManager.build(
             userMessage: message,
-            previousMessages: [],
+            previousMessages: previousMessages,
             systemInstructions: systemPrompt,
             contextBlock: nil,               // déjà inclus dans systemPrompt via PromptAssembler
             recentUpdates: [],               // idem, déjà dans systemPrompt
