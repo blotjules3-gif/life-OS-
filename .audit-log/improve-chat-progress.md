@@ -267,3 +267,42 @@ Après : sous chaque bulle coach, un mini-label indique quelle IA a répondu. Ai
 - Quand le fallback local a pris le relais (Apple Intelligence indispo)
 - Quel provider cloud est actif si l'user en a configuré un
 - Bug tracking : si un provider donne des réponses bizarres, l'user peut le signaler précisément
+
+---
+
+## Loop 5 (2026-08-22) — Compteur d'usage cloud transparent (T2 audit)
+
+### Problème identifié
+
+Les 4 cloud providers remontaient déjà `inputTokens` / `outputTokens` dans `AIResponse` mais **personne ne les persistait**. Zéro visibilité coût pour l'user → risque facture surprise (M9 + T2 de l'audit).
+
+### Solution
+
+- Nouveau `AIProviderUsageTracker` — compteur persisté par `(providerID, jour)` dans UserDefaults, JSON compact
+- Barème tarifs USD/M tokens embarqué : GPT-4o mini ($0.15/$0.60), Claude Haiku ($1/$5), Mistral Small ($0.10/$0.30), Gemini Flash ($0.075/$0.30)
+- Skip silencieux pour Apple Intelligence + LocalCoach (pas de coût)
+- Wire dans `AIModelRouter.execute` : après chaque succès, `record(providerID, inputTokens, outputTokens)`
+- Section "Usage aujourd'hui" dans `CoachAIProviderView` — affichée uniquement si activité cloud, une ligne par provider avec "X req. • ≈ $Y.YYY"
+- Purge auto des entrées > 30 jours à chaque record (croissance bornée)
+- Reset auto au changement de jour local (compteur par `yyyy-MM-dd`)
+- Wire dans `DataEraser.eraseAIArtifacts` → RGPD-friendly
+
+### Validation
+
+- BUILD SUCCEEDED
+- **14 nouveaux tests** `AIProviderUsageTrackerTests` — enregistrement, accumulation, isolation par provider, calcul coût vs barème, reset, skip Apple/LocalCoach, snapshot recent
+- 183/184 tests OK (fail préexistant non lié)
+
+### Impact utilisateur
+
+Avant : user branche OpenAI + envoie 200 messages/jour → facture surprise mensuelle possible.
+Après : ouvre Réglages → Moteur du coach → section "Usage aujourd'hui" visible dès la première requête cloud. Voit en temps réel :
+- Nombre de requêtes envoyées par provider
+- Coût estimé cumulé du jour (accuracy ~10-20% selon variabilité tarifs providers)
+- Peut décider de changer de provider ou de revenir sur Apple Intelligence
+
+### Ce qui n'est pas fait (volontairement)
+
+- **Pas de blocage** : c'est de la transparence, pas un cap. L'user décide seul. Un vrai kill switch avec seuil configurable ("bloquer si > $5/jour") = Loop 6 potentielle.
+- **Pas de graphe historique** : `recentSnapshots(days:)` existe pour ça mais l'UI ne l'affiche pas encore.
+- **Barème approximatif** : les tarifs providers changent — à revoir périodiquement. Le footer prévient l'user.
