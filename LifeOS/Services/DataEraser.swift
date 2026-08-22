@@ -46,6 +46,8 @@ enum DataEraser {
         AIProviderUsageTracker.shared.resetAll()
         // Cost guard preference (plafond quotidien + jour de notif)
         AICostGuardPreference.shared.reset()
+        // Suggestion d'upgrade coach (snooze bannière)
+        CoachUpgradeSuggestion.shared.reset()
         // Cache UserContextBuilder
         UserContextBuilder.shared.invalidateCache()
         AppLog.data.info("DataEraser: AI artifacts erased")
