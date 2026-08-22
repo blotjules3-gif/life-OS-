@@ -126,6 +126,37 @@ enum ToolEnrichment {
         return nil
     }
 
+    /// Détecte les demandes sur la nutrition du jour.
+    static func matchesTodayNutrition(_ normalized: String) -> Bool {
+        let patterns = [
+            #"\b(?:mange|manger|mange[er]|bouffe|repas)\b[^.?!]{0,25}\b(?:aujourd[' ]hui|matin|midi|soir)\b"#,
+            #"\b(?:mes|combien)\b[^.?!]{0,15}\b(?:kcal|calories|proteines?|glucides|lipides|macros)\b"#,
+            #"\b(?:j[' ]?ai\s+mange|jai\s+mange|j[' ]?ai\s+bouffe)\b"#,
+        ]
+        return patterns.contains { normalized.range(of: $0, options: .regularExpression) != nil }
+    }
+
+    /// Détecte les demandes sur les habitudes / séances.
+    static func matchesHabitCompletions(_ normalized: String) -> Bool {
+        let patterns = [
+            #"\b(?:mes|combien|quelles?)\b[^.?!]{0,20}\bhabitudes?\b"#,
+            #"\bcombien\b[^.?!]{0,20}\b(?:seances?|entrainements?|sport)\b[^.?!]{0,15}\b(?:cette\s+semaine|aujourd[' ]hui|hier)\b"#,
+            #"\b(?:mon|ma)\s+streak\b"#,
+            #"\b(?:j[' ]?ai\s+fait\s+quoi|jai\s+fait\s+quoi)\b"#,
+        ]
+        return patterns.contains { normalized.range(of: $0, options: .regularExpression) != nil }
+    }
+
+    /// Détecte les demandes sur les todos / tâches.
+    static func matchesTodayTodos(_ normalized: String) -> Bool {
+        let patterns = [
+            #"\b(?:mes|quelles?)\s+t[âa]ches?\b"#,
+            #"\bquoi\s+faire\b[^.?!]{0,15}\b(?:aujourd[' ]hui|maintenant|ce\s+soir)\b"#,
+            #"\bma\s+to[- ]?do\b"#,
+        ]
+        return patterns.contains { normalized.range(of: $0, options: .regularExpression) != nil }
+    }
+
     /// Détecte les demandes de résumé profil complet.
     static func matchesProfileSummary(_ normalized: String) -> Bool {
         let patterns = [
