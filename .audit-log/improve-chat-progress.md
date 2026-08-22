@@ -448,3 +448,57 @@ Escalation naturelle : Apple Intelligence gratuit → si insatisfait → cloud r
 - **Onboarding actif** : étape "Choisis ton coach" dans le tunnel d'arrivée
 
 Ces items nécessitent **décision commerciale** (prix, modèle) — hors scope loop autonome.
+
+---
+
+## Loop 8 (2026-08-23) — Contexte enrichi (top 10 partie 1)
+
+### Problème identifié
+
+Le coach avait **amnésie totale** entre messages (chaque tour = contexte reconstruit à zéro), aucune connaissance du **cycle menstruel** de l'utilisatrice (feature pourtant très différenciante), aucun **détail sommeil** (deep/REM/réveils) alors que HealthKit l'expose, aucune notion de **progression objectifs**.
+
+### Solution — 4 items du top 10 combinés
+
+**Item #1 — Historique conversationnel** :
+- Nouveau `RecentConversationFetcher.recent(context:pairs:)` — fetch les N derniers `AIMessage` SwiftData, ordre chronologique, filtre vides/thinking
+- Wire dans `OnDeviceLLM.respondViaAppleIntelligence` : `previousMessages: RecentConversationFetcher.recent(context: ctx, pairs: 3)` remplace l'ancien `[]`
+- Signature enrichie de `respondViaAppleIntelligence` avec `ctx: ModelContext?`
+
+**Item #3 — Cycle menstruel** :
+- Nouveau ProfileField `cycle.lastPeriodStartDate` (string ISO 8601)
+- Nouveau `CycleAwareness` — calcule phase (menstruelle/folliculaire/ovulatoire/lutéale) + jour dans le cycle avec modulo cycles précédents
+- Injecté dans `UserContextBuilder.buildFresh` uniquement si `body.hasCycle == true` ET date renseignée (silencieux sinon)
+- Prompt line : "Cycle : phase folliculaire (J10/28)."
+
+**Item #4 — Sleep breakdown** :
+- Nouveau `HealthService.SleepBreakdown` (deep/REM/core/awake heures, awakenings > 30s, bedtime, wakeTime)
+- Nouvelle méthode `sleepBreakdownLastNight()` qui consomme les mêmes samples HealthKit que `sleepHoursLastNight` mais garde la ventilation
+- Publié dans App Group par `HealthAutoSync.syncSleep` (clé `sleep_breakdown_last_night`)
+- Lu et formaté par `UserContextBuilder.buildFresh` : "Sommeil nuit dernière : 1.3h deep, 1.8h REM, 2 réveils, coucher 23h45"
+
+**Item #6 — Objectifs actifs** :
+- Nouveau `GoalsProgress` — lit ProfileField cibles (poids, fréquence sport, km course, kcal, protéines) et calcule ratio quand possible
+- Wire dans `UserContextBuilder.buildFresh` : bloc "Objectifs actifs" avec % pour objectif poids
+- Prompt : "Objectif poids : 78 / 74 kg (95 %)"
+
+### Validation
+
+- BUILD SUCCEEDED
+- **22 nouveaux tests** (10 CycleAwarenessTests, 6 GoalsProgressTests, 7 RecentConversationFetcherTests)
+- 237/238 tests OK (fail préexistant non lié)
+- Vérif accolades OK sur 7 fichiers touchés
+
+### Impact utilisateur
+
+**Historique** : "et pour ma taille alors ?" → coach fait le lien avec les 3 derniers messages au lieu de repartir de zéro. **Change radicalement la sensation d'être compris.**
+
+**Cycle** : coach adapte ses conseils selon la phase (énergie plus basse en luteal, motivation sport max en folliculaire) — **feature très différenciante**.
+
+**Sommeil détaillé** : "j'ai mal dormi" → coach répond avec les vraies données (0.8h deep = très bas, 5 réveils = fragmenté) au lieu de généralités.
+
+**Objectifs** : "où j'en suis ?" → coach donne le vrai pourcentage de progression instantanément.
+
+### Ce qui reste top 10 (Loop 9 + Loop 10)
+
+- Loop 9 : Actions + tools (nutrition, habits completions, calendrier, IntentExecutor étendu)
+- Loop 10 : Intelligence temporelle (insights hebdo, bilan matin/soir, auto-detect "à côté")
