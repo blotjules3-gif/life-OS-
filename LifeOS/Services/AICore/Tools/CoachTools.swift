@@ -244,5 +244,9 @@ enum CoachToolsBootstrap {
         registry.register(CreateHabitTool())
         registry.register(CreateTodoTool())
         registry.register(PhotoAnalysisTool())
+        // Cross-domain tools (Loop 9) — accès nutrition, habitudes, todos
+        registry.register(GetTodayNutritionTool())
+        registry.register(GetHabitCompletionsTool())
+        registry.register(GetTodayTodosTool())
     }
 }
