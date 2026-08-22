@@ -502,3 +502,34 @@ Le coach avait **amnésie totale** entre messages (chaque tour = contexte recons
 
 - Loop 9 : Actions + tools (nutrition, habits completions, calendrier, IntentExecutor étendu)
 - Loop 10 : Intelligence temporelle (insights hebdo, bilan matin/soir, auto-detect "à côté")
+
+---
+
+## Loop 9 (2026-08-23) — Tools cross-domaines (top 10 partie 2)
+
+### Problème identifié
+
+Coach avait accès à 40 % des données LifeOS. Les 60 % restants (nutrition FoodEntry, habitudes complétées, todos) étaient invisibles → "j'ai bien mangé aujourd'hui ?" = réponse générique.
+
+### Solution
+
+- Nouveau `SharedModelContextProvider` — expose `ModelContext` global pour les tools non-View, bootstrap dans `LifeOSApp.onAppear`
+- 3 nouveaux tools dans `CrossDomainTools.swift` :
+  - `GetTodayNutritionTool` — kcal + macros + dernier repas (via `FoodEntry`)
+  - `GetHabitCompletionsTool` — habitudes actives + streak courant par habitude
+  - `GetTodayTodosTool` — pending + doneToday
+- Enregistrés dans `CoachToolsBootstrap.registerAll`
+- 3 nouveaux matchers dans `ToolEnrichment` : `matchesTodayNutrition`, `matchesHabitCompletions`, `matchesTodayTodos`
+- Formatting dédié dans `prettifyIfPossible` pour rendre chaque tool lisible dans le prompt
+
+### Validation
+
+- BUILD SUCCEEDED
+- **7 nouveaux tests** `ToolEnrichmentCrossDomainTests` (variants positifs + faux positifs)
+- Suite complète OK (sauf fail préexistant)
+
+### Impact utilisateur
+
+- "Combien j'ai mangé aujourd'hui ?" → vraies kcal + macros + dernier repas listés
+- "Mes habitudes du jour" → X/Y faites + streak par habitude
+- "Mes tâches" → pending + count doneToday
