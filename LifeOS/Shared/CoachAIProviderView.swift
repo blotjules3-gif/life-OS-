@@ -46,6 +46,45 @@ struct CoachAIProviderView: View {
                 }
             }
 
+            // Section cost guard — plafond quotidien user-configurable pour
+            // éviter les factures surprise (Loop 6).
+            Section {
+                Toggle("Limiter le coût cloud", isOn: $vm.costGuardEnabled)
+                if vm.costGuardEnabled {
+                    Stepper(
+                        value: $vm.costGuardCapEUR,
+                        in: 0.5...50,
+                        step: 0.5
+                    ) {
+                        HStack {
+                            Text("Plafond quotidien")
+                            Spacer()
+                            Text(String(format: "%.1f €/jour", vm.costGuardCapEUR))
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                        }
+                    }
+                    if vm.hasUsageToday {
+                        HStack {
+                            Text("Consommé aujourd'hui")
+                                .font(.caption)
+                            Spacer()
+                            Text(UsageFormatter.costEUR(usd: vm.todayCumulativeCostUSD))
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(
+                                    vm.isCapReached ? .red : .secondary
+                                )
+                        }
+                    }
+                }
+            } header: {
+                Text("Plafond de sécurité")
+            } footer: {
+                Text(vm.costGuardEnabled
+                     ? "Quand le plafond est atteint, ton coach continue via Apple Intelligence ou en local — les providers cloud sont mis en pause jusqu'au lendemain."
+                     : "Aucune limite — les providers cloud consomment tant qu'ils ont une clé valide. Active pour te protéger d'une facture surprise.")
+            }
+
             if vm.currentPreference != nil {
                 Section {
                     Button(role: .destructive) {
