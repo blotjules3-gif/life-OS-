@@ -234,7 +234,7 @@ final class AIAssistantViewModel: ObservableObject {
             let reply = await OnDeviceLLM.respond(to: prompt, ctx: modelContext, injectContext: false)
             isServerOffline = false
             removeThinking()
-            appendAssistantMessage(reply.text, actions: [])
+            appendAssistantMessage(reply.text, actions: [], providerID: reply.providerID)
             isLoading = false
         }
     }
