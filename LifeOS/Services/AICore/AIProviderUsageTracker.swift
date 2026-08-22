@@ -152,10 +152,11 @@ final class AIProviderUsageTracker: ObservableObject {
 
     /// Taux de conversion USD → EUR — fixe (mis à jour manuellement avec
     /// `pricingCatalogVersion`). Suffisant pour un ordre de grandeur.
-    static let usdToEURRate: Double = 0.92
+    /// `nonisolated` car constante pure — utilisable depuis n'importe où.
+    nonisolated static let usdToEURRate: Double = 0.92
 
     /// Convertit un montant USD en EUR via `usdToEURRate`.
-    static func usdToEUR(_ usd: Double) -> Double { usd * usdToEURRate }
+    nonisolated static func usdToEUR(_ usd: Double) -> Double { usd * usdToEURRate }
 
     // MARK: - Internals
 
