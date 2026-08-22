@@ -463,11 +463,20 @@ private final class ViewModel: ObservableObject {
         AIProviderUsageTracker.shared.todaySnapshot(providerID: slot.providerID)
     }
 
-    /// Vrai si au moins un provider a été utilisé aujourd'hui — évite d'afficher
-    /// une section vide dans les Réglages.
+    /// Snapshot cumulé des 30 derniers jours (proxy facture mensuelle).
+    func monthlySnapshot(for slot: SlotDisplay) -> AIProviderUsageTracker.Snapshot {
+        AIProviderUsageTracker.shared.monthlySnapshot(providerID: slot.providerID)
+    }
+
+    /// Vrai si au moins un provider a été utilisé aujourd'hui OU dans le mois.
     var hasUsageToday: Bool {
         SlotDisplay.allCases.contains { slot in
-            AIProviderUsageTracker.shared.todaySnapshot(providerID: slot.providerID).requestCount > 0
+            let today = AIProviderUsageTracker.shared.todaySnapshot(providerID: slot.providerID)
+            let month = AIProviderUsageTracker.shared.monthlySnapshot(providerID: slot.providerID)
+            return today.requestCount > 0 || month.requestCount > 0
         }
     }
+
+    /// Version du barème de tarifs (affiché en footer pour transparence).
+    var pricingCatalogVersion: String { AIProviderUsageTracker.pricingCatalogVersion }
 }
