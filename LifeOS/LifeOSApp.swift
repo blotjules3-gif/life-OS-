@@ -109,6 +109,8 @@ struct LifeOSApp: App {
             ProfileStore.shared.setContext(container.mainContext)
             // Bootstrap builder contexte — permet MemoryRetrieval scoré.
             UserContextBuilder.shared.setContext(container.mainContext)
+            // Bootstrap context partagé pour les tools cross-domaines (Loop 9).
+            SharedModelContextProvider.shared.setContext(container.mainContext)
             // Migration one-shot des données existantes vers ProfileField.
             ProfileMigration.runIfNeeded(context: container.mainContext)
             // Enregistrer les tools coach dans le ToolRegistry (Phase 1 branchée).
