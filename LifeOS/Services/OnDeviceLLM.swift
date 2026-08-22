@@ -90,6 +90,7 @@ enum OnDeviceLLM {
             case .available:
                 if let result = await respondViaAppleIntelligence(
                     message: message,
+                    ctx: ctx,
                     moduleContext: moduleContext,
                     injectContext: injectContext,
                     recentUpdates: recentUpdates
