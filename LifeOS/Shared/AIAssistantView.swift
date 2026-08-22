@@ -246,6 +246,17 @@ final class AIAssistantViewModel: ObservableObject {
         inputText = ""
         Haptics.tap()
 
+        // Auto-detect "à côté" via reformulation (Loop 10) — si l'user vient
+        // de re-taper une question similaire dans les 90s, dislike implicite.
+        let previousUser = messages.reversed().first { $0.role == "user" }
+        let previousAssistant = messages.reversed().first { $0.role == "assistant" && !$0.isThinking }
+        CoachOffTopicDetector.trackUserMessage(
+            currentText: content,
+            previousUserText: previousUser?.text,
+            previousUserDate: previousUser?.date,
+            assistantResponse: previousAssistant?.text
+        )
+
         appendUserMessage(content)
 
         // Ancien "AddAnythingSheet" désactivé : il bypassait tout le pipeline
