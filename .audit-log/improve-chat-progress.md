@@ -356,3 +356,45 @@ Audit sans complaisance : 4 BLOQUANTS + 8 MAJEURS + 5 MINEURS + 6 TROUS identifi
 Avant Loop 5 : rien (pas de tracker).
 Après Loop 5 (initial) : "5 req. • ≈ $0.023" — utile mais confus (USD, pluriel cassé, $0.000 pour micro).
 Après fixes audit : "5 requêtes • 1.2k tok/req • < 0,01 € (30j : 0,12 €)" — français, EUR, moyennes, cumul mensuel, VoiceOver, refresh live.
+
+---
+
+## Loop 6 (2026-08-22) — Kill switch coût configurable (T1 audit)
+
+### Problème identifié
+
+Loop 5 fixes ont rendu le coût **visible après coup**. Un user avec Claude Sonnet peut brûler 20 € en une soirée sans être arrêté. Le tracker informe mais ne protège pas.
+
+### Solution
+
+- Nouveau `AICostGuardPreference` — persist seuil `dailyCapEUR` (`0` = désactivé, défaut) et `lastNotifiedDay` (anti-spam notif).
+- Nouveau `AICostGuard` :
+  - `isBlocked(providerID:)` — vérifie si le cumul EUR du jour ≥ cap. Apple Intelligence + LocalCoach **toujours passants** (le user garde un coach fonctionnel).
+  - `todayCumulativeCostEUR()` — somme tous providers cloud en EUR.
+  - `checkAndNotifyIfCapReached()` — envoie 1 notification `UNMutableNotificationContent` par jour max quand le cap est franchi.
+- Wire dans `AIModelRouter.execute` : skip provider si `isBlocked`, fallback automatique sur le suivant (Apple/Local). Après succès cloud, appelle `checkAndNotifyIfCapReached`.
+- Section Réglages "Plafond de sécurité" :
+  - Toggle "Limiter le coût cloud" (défaut : off)
+  - Stepper €/jour (0.5 → 50, pas 0.5) — préréglé à 5 € à l'activation
+  - Ligne "Consommé aujourd'hui" en rouge si cap atteint
+  - Footer explicatif du comportement fallback
+- Wire dans `DataEraser.eraseAIArtifacts` : reset du cap avec le reste (RGPD).
+
+### Validation
+
+- BUILD SUCCEEDED
+- **13 nouveaux tests** `AICostGuardTests` : cap désactivé jamais bloqué, Apple Intelligence/LocalCoach jamais bloqués, cap atteint bloque tous les cloud, cumul multi-provider correct, notification de-duplication, reset preference
+- 207/208 tests OK (fail préexistant non lié)
+
+### Impact utilisateur
+
+Avant : user branche Claude, envoie 200 messages/jour → facture surprise 15-20 €/mois.
+Après : user active "Limiter à 2 €/jour" → dès que le cumul atteint 2 €, le router bascule sur Apple Intelligence ou coach local, notification "Ton seuil de 2,00 € est atteint, coach cloud mis en pause jusqu'à demain". Le coach reste fonctionnel, l'user paie pas plus que prévu.
+
+### Choix de design
+
+- **Défaut OFF** : ne surprend pas l'user existant, il l'active volontairement
+- **Cumul global** vs par-provider : bloque **tous les cloud** en même temps (simplifié)
+- **Bloquage soft** : router passe au suivant, l'user n'a pas d'erreur — juste un coach différent
+- **Fallback garanti** : Apple Intelligence + LocalCoach jamais dans le cap → coach jamais muet
+- **1 notif/jour max** : `lastNotifiedDay` marqué avant envoi (évite double-fire)
