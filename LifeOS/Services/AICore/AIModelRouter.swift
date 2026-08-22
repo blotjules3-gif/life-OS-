@@ -95,7 +95,16 @@ final class AIModelRouter {
                 continue
             }
             let response = await provider.complete(request)
-            if response.isSuccess { return response }
+            if response.isSuccess {
+                // Track cloud usage — transparence coûts pour l'user. Silencieux
+                // pour Apple Intelligence / LocalCoach (pricing nil).
+                AIProviderUsageTracker.shared.record(
+                    providerID: response.providerID,
+                    inputTokens: response.inputTokens,
+                    outputTokens: response.outputTokens
+                )
+                return response
+            }
             lastError = response.error ?? .providerError("unknown")
         }
 
