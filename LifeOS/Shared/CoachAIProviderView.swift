@@ -9,6 +9,9 @@ import SwiftUI
 ///   4. Voir le statut de chaque provider
 struct CoachAIProviderView: View {
     @StateObject private var vm = ViewModel()
+    /// Observation live du tracker → la section "Usage" se met à jour
+    /// dès qu'une requête cloud est enregistrée pendant que le sheet est ouvert.
+    @ObservedObject private var usageTracker = AIProviderUsageTracker.shared
     @State private var showResetConfirm = false
 
     var body: some View {
