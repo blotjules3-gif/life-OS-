@@ -33,16 +33,16 @@ struct CoachAIProviderView: View {
             }
 
             // Section usage — visible uniquement si au moins un provider cloud
-            // a été utilisé aujourd'hui. Aide l'user à surveiller sa facture.
+            // a été utilisé aujourd'hui ou dans le mois. Aide à surveiller la facture.
             if vm.hasUsageToday {
                 Section {
                     ForEach(SlotDisplay.allCases, id: \.self) { slot in
                         usageRow(for: slot)
                     }
                 } header: {
-                    Text("Usage aujourd'hui")
+                    Text("Usage cloud")
                 } footer: {
-                    Text("Coût estimé approximatif — vérifie ta facture réelle chez le provider. Compteur remis à zéro à minuit.")
+                    Text("Coût estimé approximatif (barème \(vm.pricingCatalogVersion), conversion 1 USD ≈ 0,92 €). Vérifie ta facture réelle chez le provider. Compteur du jour remis à zéro à minuit.")
                 }
             }
 
