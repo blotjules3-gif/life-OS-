@@ -27,6 +27,31 @@ enum HealthAutoSync {
         guard !Calendar.current.isDateInToday(lastCheck) else { return }
         guard let hours = await HealthService.shared.sleepHoursLastNight(), hours > 0.5 else { return }
         ud.set(Int(hours.rounded()), forKey: "lastSleepHours")
+
+        // Loop 8 — publier le breakdown détaillé (deep/REM/awakenings/bedtime)
+        // dans App Group pour lecture par UserContextBuilder au prochain send().
+        if let breakdown = await HealthService.shared.sleepBreakdownLastNight() {
+            let bedtimeStr: String?
+            if let b = breakdown.bedtime {
+                let f = DateFormatter()
+                f.locale = Locale(identifier: "fr_FR")
+                f.dateFormat = "HH'h'mm"
+                bedtimeStr = f.string(from: b)
+            } else {
+                bedtimeStr = nil
+            }
+            var payload: [String: Any] = [
+                "deep": (breakdown.deepHours * 10).rounded() / 10,
+                "rem": (breakdown.remHours * 10).rounded() / 10,
+                "core": (breakdown.coreHours * 10).rounded() / 10,
+                "awakenings": breakdown.awakenings,
+            ]
+            if let b = bedtimeStr { payload["bedtime"] = b }
+            if let data = try? JSONSerialization.data(withJSONObject: payload),
+               let grp = UserDefaults(suiteName: "group.lifeos.app") {
+                grp.set(data, forKey: "sleep_breakdown_last_night")
+            }
+        }
     }
 
     // MARK: - Poids
