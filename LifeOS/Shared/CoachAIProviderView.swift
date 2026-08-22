@@ -29,6 +29,20 @@ struct CoachAIProviderView: View {
                 Text("Ces providers nécessitent une clé API. Tu payes directement le provider — LifeOS ne voit rien. La clé est stockée dans le Trousseau iOS, jamais envoyée ailleurs qu'au provider choisi.")
             }
 
+            // Section usage — visible uniquement si au moins un provider cloud
+            // a été utilisé aujourd'hui. Aide l'user à surveiller sa facture.
+            if vm.hasUsageToday {
+                Section {
+                    ForEach(SlotDisplay.allCases, id: \.self) { slot in
+                        usageRow(for: slot)
+                    }
+                } header: {
+                    Text("Usage aujourd'hui")
+                } footer: {
+                    Text("Coût estimé approximatif — vérifie ta facture réelle chez le provider. Compteur remis à zéro à minuit.")
+                }
+            }
+
             if vm.currentPreference != nil {
                 Section {
                     Button(role: .destructive) {
