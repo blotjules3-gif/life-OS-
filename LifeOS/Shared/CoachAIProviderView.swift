@@ -521,4 +521,41 @@ private final class ViewModel: ObservableObject {
 
     /// Version du barème de tarifs (affiché en footer pour transparence).
     var pricingCatalogVersion: String { AIProviderUsageTracker.pricingCatalogVersion }
+
+    // MARK: - Cost guard (Loop 6)
+
+    /// Toggle activation du plafond quotidien. Setter écrit dans la préférence
+    /// via un cap par défaut de 5 € si activation, 0 si désactivation.
+    var costGuardEnabled: Bool {
+        get { AICostGuardPreference.shared.isEnabled }
+        set {
+            AICostGuardPreference.shared.dailyCapEUR = newValue ? max(0.5, AICostGuardPreference.shared.dailyCapEUR) : 0
+            if newValue && AICostGuardPreference.shared.dailyCapEUR == 0 {
+                AICostGuardPreference.shared.dailyCapEUR = 5
+            }
+            objectWillChange.send()
+        }
+    }
+
+    /// Seuil courant EUR/jour. Setter propage à la préférence.
+    var costGuardCapEUR: Double {
+        get { AICostGuardPreference.shared.dailyCapEUR }
+        set {
+            AICostGuardPreference.shared.dailyCapEUR = newValue
+            objectWillChange.send()
+        }
+    }
+
+    /// Cumul USD du jour tous providers cloud confondus (pour affichage).
+    var todayCumulativeCostUSD: Double {
+        SlotDisplay.allCases.reduce(0.0) { total, slot in
+            total + AIProviderUsageTracker.shared.todaySnapshot(providerID: slot.providerID).estimatedCostUSD
+        }
+    }
+
+    /// Vrai si le cumul du jour a atteint le cap (affichage rouge).
+    var isCapReached: Bool {
+        guard costGuardEnabled else { return false }
+        return AICostGuard.todayCumulativeCostEUR() >= costGuardCapEUR
+    }
 }
