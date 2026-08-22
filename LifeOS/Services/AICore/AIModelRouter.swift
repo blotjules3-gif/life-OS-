@@ -87,6 +87,14 @@ final class AIModelRouter {
 
         var lastError: AIError = .unavailable(.unknown)
         for provider in ordered {
+            // Cost guard — si l'user a défini un cap €/jour et qu'il est atteint,
+            // les providers cloud sont skippés (Apple Intelligence + LocalCoach
+            // passent toujours). Comportement transparent : le router bascule sur
+            // le suivant, l'user voit son coach répondre via un provider gratuit.
+            if AICostGuard.isBlocked(providerID: provider.id) {
+                lastError = .rateLimited  // sémantique "temporairement indisponible"
+                continue
+            }
             let avail = provider.availability
             guard avail.isAvailable else {
                 if case .unavailable(let reason) = avail {
@@ -103,6 +111,8 @@ final class AIModelRouter {
                     inputTokens: response.inputTokens,
                     outputTokens: response.outputTokens
                 )
+                // Vérifie si le cap vient d'être franchi → notif unique/jour.
+                AICostGuard.checkAndNotifyIfCapReached()
                 return response
             }
             lastError = response.error ?? .providerError("unknown")
