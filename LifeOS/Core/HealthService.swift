@@ -168,6 +168,83 @@ final class HealthService {
         return seconds > 0 ? seconds / 3600 : nil
     }
 
+    /// Breakdown détaillé du sommeil de la nuit dernière : deep / REM / core /
+    /// awake (heures), nombre de réveils, heure de coucher réelle.
+    /// Utilisé pour injecter dans le contexte coach — bien plus riche que la
+    /// simple durée totale.
+    struct SleepBreakdown: Sendable {
+        let deepHours: Double
+        let remHours: Double
+        let coreHours: Double
+        let awakeHours: Double
+        let awakenings: Int          // nombre d'épisodes de réveil > 30s
+        let bedtime: Date?           // début du 1er épisode de sommeil
+        let wakeTime: Date?          // fin du dernier épisode de sommeil
+
+        var totalAsleepHours: Double { deepHours + remHours + coreHours }
+    }
+
+    func sleepBreakdownLastNight() async -> SleepBreakdown? {
+        guard let type = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else { return nil }
+        let cal = Calendar.current
+        let startOfDay = cal.startOfDay(for: Date())
+        let windowStart = startOfDay.addingTimeInterval(-6 * 3600)
+        let windowEnd = startOfDay.addingTimeInterval(12 * 3600)
+        let predicate = HKQuery.predicateForSamples(withStart: windowStart, end: windowEnd)
+
+        let samples: [HKCategorySample] = await withCheckedContinuation { cont in
+            let q = HKSampleQuery(sampleType: type, predicate: predicate, limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, _ in
+                cont.resume(returning: (samples as? [HKCategorySample]) ?? [])
+            }
+            store.execute(q)
+        }
+        guard !samples.isEmpty else { return nil }
+
+        var deep: TimeInterval = 0
+        var rem: TimeInterval = 0
+        var core: TimeInterval = 0
+        var awake: TimeInterval = 0
+        var asleepEpisodes: [HKCategorySample] = []
+
+        for s in samples {
+            let dur = s.endDate.timeIntervalSince(s.startDate)
+            switch s.value {
+            case HKCategoryValueSleepAnalysis.asleepDeep.rawValue:      deep += dur
+            case HKCategoryValueSleepAnalysis.asleepREM.rawValue:       rem += dur
+            case HKCategoryValueSleepAnalysis.asleepCore.rawValue,
+                 HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue: core += dur
+            case HKCategoryValueSleepAnalysis.awake.rawValue:           awake += dur
+            default: break
+            }
+            let asleepValues: Set<Int> = [
+                HKCategoryValueSleepAnalysis.asleepUnspecified.rawValue,
+                HKCategoryValueSleepAnalysis.asleepCore.rawValue,
+                HKCategoryValueSleepAnalysis.asleepDeep.rawValue,
+                HKCategoryValueSleepAnalysis.asleepREM.rawValue,
+            ]
+            if asleepValues.contains(s.value) { asleepEpisodes.append(s) }
+        }
+
+        // Réveils = épisodes .awake > 30s (filtre les micro-réveils)
+        let awakenings = samples.filter {
+            $0.value == HKCategoryValueSleepAnalysis.awake.rawValue &&
+            $0.endDate.timeIntervalSince($0.startDate) > 30
+        }.count
+
+        let bedtime = asleepEpisodes.map(\.startDate).min()
+        let wakeTime = asleepEpisodes.map(\.endDate).max()
+
+        return SleepBreakdown(
+            deepHours: deep / 3600,
+            remHours: rem / 3600,
+            coreHours: core / 3600,
+            awakeHours: awake / 3600,
+            awakenings: awakenings,
+            bedtime: bedtime,
+            wakeTime: wakeTime
+        )
+    }
+
     /// Dernier poids enregistré dans Apple Santé.
     func latestBodyMass() async -> (kg: Double, date: Date)? {
         guard let type = HKQuantityType.quantityType(forIdentifier: .bodyMass) else { return nil }
