@@ -398,3 +398,53 @@ Après : user active "Limiter à 2 €/jour" → dès que le cumul atteint 2 €
 - **Bloquage soft** : router passe au suivant, l'user n'a pas d'erreur — juste un coach différent
 - **Fallback garanti** : Apple Intelligence + LocalCoach jamais dans le cap → coach jamais muet
 - **1 notif/jour max** : `lastNotifiedDay` marqué avant envoi (évite double-fire)
+
+---
+
+## Loop 7 (2026-08-23) — Bannière d'upgrade contextuelle intelligente
+
+### Problème identifié
+
+Apple Intelligence 3B → ~15% de réponses "à côté" pour un coach personnel = trust cassée. L'user n'a aucun signal proactif l'invitant à brancher une clé cloud pour améliorer la qualité au moment où il en a le plus besoin (frustré).
+
+### Solution — Après 10+ options envisagées
+
+Brainstorm complet évalué : OAuth providers (❌ inexistant), deep links (❌), proxy freemium backend + StoreKit (⚠️ nécessite décision commerciale), abonnement Coach Premium (⚠️ idem), magic link QR (❌), packs crédits (❌ friction récurrente).
+
+**Retenu Phase 1 (cette loop)** : bannière contextuelle qui apparaît UNIQUEMENT quand :
+1. L'user a ≥ 3 dislikes dans les 24h (frustration détectée)
+2. AUCUNE clé cloud n'est configurée (sinon inutile)
+3. Non snoozée dans les 7 derniers jours (respect du choix)
+
+**Phase 2 (loop future)** : proxy Cloudflare Workers + StoreKit "Coach Premium" — nécessite décision commerciale (prix, freemium/premium seul) que je ne peux pas prendre en autonomie.
+
+### Implémentation
+
+- `CoachFeedbackStore.recentDislikeCount(within:)` — expose compteur dislikes récents
+- Nouveau `CoachUpgradeSuggestion` (ObservableObject) — évalue `shouldSuggestUpgrade()`, snooze 7j via UserDefaults
+- Nouveau `CoachUpgradeBanner` (SwiftUI) — bannière discrète : icône sparkles, titre "Un coach plus intelligent ?", boutons "Améliorer" (→ ouvre Réglages Coach IA) + "Plus tard" (→ snooze) + close X, accessibility label combiné
+- Wire dans `AIAssistantView` : `@ObservedObject upgradeSuggestion` + rendu conditionnel au-dessus de la liste des messages
+- `recordDislike` appelle `CoachUpgradeSuggestion.refresh()` → bannière apparaît immédiatement au 3e dislike
+- Wire dans `DataEraser.eraseAIArtifacts` — reset du snooze (RGPD)
+
+### Validation
+
+- BUILD SUCCEEDED
+- **8 nouveaux tests** `CoachUpgradeSuggestionTests` : 0/2 dislikes = pas de suggestion, 3+ dislikes = suggestion, kill switch clé cloud, snooze fonctionne, reset lève le snooze, `recentDislikeCount` correct
+- 215/216 tests OK (fail préexistant non lié)
+
+### Impact utilisateur
+
+**Avant Loop 7** : user frustré (3 dislikes) → aucun signal, il continue à galérer ou abandonne le chat.
+**Après Loop 7** : au 3e dislike dans les 24h, une bannière apparaît en haut du chat avec 2 taps possibles : "Améliorer" (ouvre Coach IA pour brancher Claude/GPT/Mistral) ou "Plus tard" (snooze 7j).
+
+Escalation naturelle : Apple Intelligence gratuit → si insatisfait → cloud recommandé pile au bon moment (pas de spam onboarding).
+
+### Ce qui reste pour la "solution parfaite" (Phase 2)
+
+- **Backend proxy Cloudflare Workers** : ~40 lignes, expose /chat qui route vers Claude Haiku 4.5
+- **StoreKit 2 "Coach Premium"** : abonnement 3.99€/mois OU pack 10 messages gratuits/mois puis payant
+- **Section "Coach Premium (bientôt)"** dans les Réglages avec CTA pré-inscription
+- **Onboarding actif** : étape "Choisis ton coach" dans le tunnel d'arrivée
+
+Ces items nécessitent **décision commerciale** (prix, modèle) — hors scope loop autonome.
