@@ -42,6 +42,8 @@ enum DataEraser {
         }
         // Activity logger (in-memory, cleared au reset)
         AIActivityLogger.shared.clear()
+        // Usage tracker cloud (UserDefaults, compteurs jour + coûts)
+        AIProviderUsageTracker.shared.resetAll()
         // Cache UserContextBuilder
         UserContextBuilder.shared.invalidateCache()
         AppLog.data.info("DataEraser: AI artifacts erased")
