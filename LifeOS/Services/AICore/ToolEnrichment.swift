@@ -255,6 +255,46 @@ enum ToolEnrichment {
                     ? "Aucune mémoire trouvée"
                     : "Mémoires pertinentes :\n" + lines.joined(separator: "\n")
             }
+            // Cas get_today_nutrition
+            if let kcal = dict["totalKcal"] as? Int {
+                let protein = dict["totalProtein"] as? Double ?? 0
+                let carbs = dict["totalCarbs"] as? Double ?? 0
+                let fat = dict["totalFat"] as? Double ?? 0
+                let meals = dict["mealCount"] as? Int ?? 0
+                let last = dict["lastMealName"] as? String
+                var parts = ["Nutrition aujourd'hui : \(kcal) kcal (\(meals) repas)"]
+                if protein + carbs + fat > 0 {
+                    parts.append(String(format: "  %.0fg protéines, %.0fg glucides, %.0fg lipides", protein, carbs, fat))
+                }
+                if let last { parts.append("  Dernier repas : \(last)") }
+                return parts.joined(separator: "\n")
+            }
+            // Cas get_habit_completions
+            if let habits = dict["habits"] as? [[String: Any]] {
+                let done = dict["totalCompletedToday"] as? Int ?? 0
+                let total = dict["totalActiveHabits"] as? Int ?? 0
+                var parts = ["Habitudes aujourd'hui : \(done)/\(total) faites"]
+                let notes = habits.compactMap { h -> String? in
+                    guard let name = h["name"] as? String,
+                          let streak = h["currentStreak"] as? Int else { return nil }
+                    let check = (h["completedToday"] as? Bool ?? false) ? "✓" : "○"
+                    return "  \(check) \(name) (streak \(streak))"
+                }
+                if !notes.isEmpty { parts.append(contentsOf: notes.prefix(8)) }
+                return parts.joined(separator: "\n")
+            }
+            // Cas get_today_todos
+            if let pending = dict["pending"] as? [[String: Any]] {
+                let doneToday = dict["doneToday"] as? Int ?? 0
+                var parts = ["Todos : \(pending.count) en cours, \(doneToday) faites aujourd'hui"]
+                let items = pending.prefix(5).compactMap { t -> String? in
+                    guard let title = t["title"] as? String else { return nil }
+                    let prio = (t["priority"] as? Int ?? 0) >= 1 ? " !" : ""
+                    return "  - \(title)\(prio)"
+                }
+                if !items.isEmpty { parts.append(contentsOf: items) }
+                return parts.joined(separator: "\n")
+            }
         }
         return json
     }
