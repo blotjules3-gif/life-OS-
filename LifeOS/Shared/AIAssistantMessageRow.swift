@@ -103,6 +103,22 @@ struct AIAssistantMessageRow: View {
                 if !isUser { Spacer(minLength: 56) }
             }
 
+            // Label discret "via [Provider]" sous la bulle coach — transparence
+            // user sur quelle IA vient de répondre. Silencieux pour user/thinking
+            // ou si providerID inconnu.
+            if !isUser, !message.isThinking,
+               let providerName = AIProviderResolver.displayName(for: message.providerID) {
+                HStack(spacing: 4) {
+                    Image(systemName: AIProviderResolver.iconName(for: message.providerID))
+                        .font(.system(size: 9))
+                    Text("via \(providerName)")
+                        .font(.system(size: 10, weight: .medium))
+                }
+                .foregroundStyle(.tertiary)
+                .padding(.leading, 4)
+                .accessibilityLabel("Réponse générée via \(providerName)")
+            }
+
             // Boutons inline sous la bulle coach (feedback + TTS + safety)
             if !isUser, !message.isThinking {
                 inlineActionRow
