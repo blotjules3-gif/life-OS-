@@ -343,7 +343,7 @@ enum ProfileFieldCatalog {
               dependsOn: ["body.hasCycle"],
               extractionHints: ["pilule", "stérilet", "diu", "implant", "préservatif"]),
         .init(id: "cycle.lastPeriodStartDate", category: "cycle",
-              displayName: "Date de début des dernières règles", valueType: .date, importance: .high,
+              displayName: "Date de début des dernières règles", valueType: .string, importance: .high,
               dependsOn: ["body.hasCycle"],
               extractionHints: ["règles", "regles", "période", "menstruations", "commencé"]),
 
