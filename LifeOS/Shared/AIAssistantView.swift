@@ -322,11 +322,14 @@ final class AIAssistantViewModel: ObservableObject {
             isServerOffline = false
             removeThinking()
             streamingText = nil
-            appendAssistantMessage(reply.text, actions: [], animateReveal: true)
+            appendAssistantMessage(reply.text, actions: [], providerID: reply.providerID, animateReveal: true)
             isLoading = false
 
-            // Journal fin de session (métadonnées uniquement, pas de texte)
-            let providerLabel = reply.source == .onDeviceLLM ? "apple.intelligence.on-device" : "local.rules.coach"
+            // Journal fin de session (métadonnées uniquement, pas de texte).
+            // Le providerID exact vient de reply — fallback sur le drapeau .source
+            // si le provider n'a pas remonté d'ID (cas très ancien).
+            let providerLabel = reply.providerID
+                ?? (reply.source == .onDeviceLLM ? "apple.intelligence.on-device" : "local.rules.coach")
             AIActivityLogger.shared.recordProviderSelection(
                 sessionID: sessionID,
                 providerID: providerLabel,
