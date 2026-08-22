@@ -232,3 +232,38 @@ Audit sans complaisance de Loop 3 → 5 BLOQUANTS + 12 MAJEURS + 8 MINEURS + 4 T
 - 157/158 tests OK (fail préexistant non lié)
 - **16 nouveaux tests unit** couvrent la préférence + validation format
 - `UIVocabularySanityTests` toujours vert
+
+---
+
+## Cleanup + Loop 4 (2026-08-22) — Transparence provider dans le chat
+
+### Cleanup dead code
+
+Audit ciblé sur les symboles Loop 3 sans caller externe :
+- **Supprimé** `AIProviderHTTP.ExtractedPayload` — struct redondante avec le tuple utilisé
+- **Supprimé** `AIProviderPreference.isPreferred(providerID:)` — méthode jamais appelée en prod (router matche directement `preferred == pref`). Tests correspondants supprimés.
+- **Gardé sciemment** : `AICapabilities.streaming/vision` (utilisés dans AIDebugView), `AIError.cancelled/schemaViolation`, `AIToolCall/AIProvenance/AIResponseSchema` — types du protocol pour extensibilité future, coût nul.
+
+### Loop 4 — Trou fonctionnel T1 : "l'user ne sait jamais quel provider a répondu"
+
+**Fait :**
+- Nouveau `AIProviderResolver` — mapping `providerID` → nom court affichable ("openai.gpt" → "GPT-4o mini") + icône SF Symbol adaptée (sparkles Apple, cloud pour cloud, gearshape pour LocalCoach)
+- `OnDeviceLLM.Reply` enrichi avec `providerID: String?`
+- `RouterResult` interne pour transporter le providerID de `respondViaAppleIntelligence` jusqu'à l'appelant
+- `DisplayMessage.assistant(text:actions:providerID:)` factory pour attacher le provider au message in-memory (non persisté SwiftData — éphémère, résolu à la volée)
+- `appendAssistantMessage(providerID:)` param optionnel — les 3 callers principaux passent `reply.providerID`
+- `AIAssistantMessageRow` affiche un badge discret sous la bulle coach : "via Apple Intelligence" / "via GPT-4o mini" / "via Coach local" — police 10pt, opacité tertiaire, icône associée, accessibility label
+
+### Validation
+
+- BUILD SUCCEEDED
+- **12 nouveaux tests** `AIProviderResolverTests` — mapping par provider, régression alignment avec `.id` concrets, icônes
+- 169/170 tests OK (fail préexistant non lié)
+
+### Impact utilisateur
+
+Avant : user pense toujours parler à Apple Intelligence, aucune visibilité sur le fallback.
+Après : sous chaque bulle coach, un mini-label indique quelle IA a répondu. Aide à identifier :
+- Quand le fallback local a pris le relais (Apple Intelligence indispo)
+- Quel provider cloud est actif si l'user en a configuré un
+- Bug tracking : si un provider donne des réponses bizarres, l'user peut le signaler précisément
