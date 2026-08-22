@@ -426,4 +426,19 @@ private final class ViewModel: ObservableObject {
         AIProviderPreference.shared.clearPreference()
         currentPreference = nil
     }
+
+    // MARK: - Usage tracking
+
+    /// Snapshot d'usage du jour pour un provider donné.
+    func usageSnapshot(for slot: SlotDisplay) -> AIProviderUsageTracker.Snapshot {
+        AIProviderUsageTracker.shared.todaySnapshot(providerID: slot.providerID)
+    }
+
+    /// Vrai si au moins un provider a été utilisé aujourd'hui — évite d'afficher
+    /// une section vide dans les Réglages.
+    var hasUsageToday: Bool {
+        SlotDisplay.allCases.contains { slot in
+            AIProviderUsageTracker.shared.todaySnapshot(providerID: slot.providerID).requestCount > 0
+        }
+    }
 }
