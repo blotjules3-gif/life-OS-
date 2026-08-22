@@ -633,18 +633,32 @@ final class AIAssistantViewModel: ObservableObject {
         }
     }
 
-    private func appendAssistantMessage(_ text: String, actions: [AIAction], animateReveal: Bool = true) {
+    private func appendAssistantMessage(
+        _ text: String,
+        actions: [AIAction],
+        providerID: String? = nil,
+        animateReveal: Bool = true
+    ) {
         let actionsData = try? JSONEncoder().encode(actions)
         let msg = AIMessage(role: "assistant", text: text, actions: actionsData)
         modelContext?.insert(msg)
         do { try modelContext?.save() } catch { AppLog.data.error("appendAssistantMessage failed: \(error.localizedDescription, privacy: .public)") }
+        // Le providerID vit uniquement en session (pas persisté SwiftData)
+        // pour ne pas polluer l'historique restauré — on l'attache au
+        // DisplayMessage in-memory pour affichage sous la bulle courante.
+        let display: DisplayMessage
+        if let providerID {
+            display = .assistant(text: text, actions: actions, providerID: providerID)
+        } else {
+            display = DisplayMessage(from: msg)
+        }
         withAnimation(.spring(response: 0.42, dampingFraction: 0.75)) {
-            messages.append(DisplayMessage(from: msg))
+            messages.append(display)
         }
         Haptics.soft()
         guard animateReveal else { return }
-        revealID = msg.id
-        Task { [id = msg.id] in
+        revealID = display.id
+        Task { [id = display.id] in
             try? await Task.sleep(for: .seconds(3))
             if revealID == id { revealID = nil }
         }
