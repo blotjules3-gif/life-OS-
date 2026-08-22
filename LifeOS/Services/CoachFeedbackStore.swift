@@ -66,6 +66,16 @@ enum CoachFeedbackStore {
         Haptics.tap()
     }
 
+    // MARK: - Lecture (détection frustration)
+
+    /// Retourne le nombre de dislikes dans les `within` dernières secondes.
+    /// Utilisé par `CoachUpgradeSuggestion` pour détecter la frustration user
+    /// et proposer un upgrade cloud.
+    static func recentDislikeCount(within: TimeInterval) -> Int {
+        let cutoff = Date().addingTimeInterval(-within)
+        return load().filter { $0.kind == .dislike && $0.at >= cutoff }.count
+    }
+
     // MARK: - Lecture (injection prompt)
 
     /// Résume le feedback récent pour injection dans le prompt système.
