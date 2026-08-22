@@ -49,6 +49,36 @@ enum ToolEnrichment {
             }
         }
 
+        // 4. Nutrition du jour — patterns : "j'ai mangé combien", "mes calories aujourd'hui"
+        if matchesTodayNutrition(normalized) {
+            let start = Date()
+            let result = await ToolRegistry.shared.execute("get_today_nutrition", argsJSON: "{}")
+            if let block = formatToolResult(name: "get_today_nutrition", result: result) {
+                blocks.append(block)
+                logTool(sessionID: sessionID, name: "get_today_nutrition", result: result, since: start)
+            }
+        }
+
+        // 5. Habitudes complétées — patterns : "combien de séances", "j'ai fait quoi cette semaine"
+        if matchesHabitCompletions(normalized) {
+            let start = Date()
+            let result = await ToolRegistry.shared.execute("get_habit_completions", argsJSON: "{}")
+            if let block = formatToolResult(name: "get_habit_completions", result: result) {
+                blocks.append(block)
+                logTool(sessionID: sessionID, name: "get_habit_completions", result: result, since: start)
+            }
+        }
+
+        // 6. Todos du jour — patterns : "mes tâches", "quoi faire aujourd'hui"
+        if matchesTodayTodos(normalized) {
+            let start = Date()
+            let result = await ToolRegistry.shared.execute("get_today_todos", argsJSON: "{}")
+            if let block = formatToolResult(name: "get_today_todos", result: result) {
+                blocks.append(block)
+                logTool(sessionID: sessionID, name: "get_today_todos", result: result, since: start)
+            }
+        }
+
         // 3. Recherche mémoire ciblée sur ce que le user a déjà dit.
         if let query = matchMemorySearch(normalized) {
             let argsJSON = #"{"query":"\#(escapeJSON(query))","limit":5}"#
