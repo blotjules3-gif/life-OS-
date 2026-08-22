@@ -4,8 +4,12 @@ import XCTest
 /// Vérifie que `AIProviderUsageTracker` :
 ///   1. Enregistre correctement les requêtes cloud + tokens I/O
 ///   2. Skip silencieusement les providers gratuits (Apple, Local)
-///   3. Calcule un coût USD cohérent avec le barème
-///   4. Accumule sur la même journée, distingue par (provider, jour)
+///   3. Skip les requêtes avec tokens manquants (fix B3 audit — ne pas
+///      afficher $0 pour un appel qui a réellement coûté)
+///   4. Calcule un coût USD cohérent avec le barème (test formule, pas valeur)
+///   5. Cap sanitaire sur tokens absurdes (fix M5 audit)
+///   6. Accumule sur la même journée, distingue par (provider, jour)
+///   7. Snapshot mensuel = somme des 30 derniers jours (fix T2 audit)
 @MainActor
 final class AIProviderUsageTrackerTests: XCTestCase {
 
@@ -52,12 +56,17 @@ final class AIProviderUsageTrackerTests: XCTestCase {
         XCTAssertEqual(snap.requestCount, 0)
     }
 
-    func testRecord_nilTokens_stillIncrementsRequestCount() {
+    /// Fix B3 audit : tokens manquants → skip la requête ENTIÈRE. Sinon on
+    /// afficherait "$0 pour 1 requête" alors que le vrai coût est non-nul.
+    func testRecord_nilTokens_skipsEntireRequest() {
         AIProviderUsageTracker.shared.record(providerID: "mistral.direct", inputTokens: nil, outputTokens: nil)
         let snap = AIProviderUsageTracker.shared.todaySnapshot(providerID: "mistral.direct")
-        XCTAssertEqual(snap.requestCount, 1)
-        XCTAssertEqual(snap.inputTokens, 0)
-        XCTAssertEqual(snap.outputTokens, 0)
+        XCTAssertEqual(snap.requestCount, 0, "Une requête sans tokens ne doit pas être comptée comme 'gratuite'")
+    }
+
+    func testRecord_onlyInputTokensMissing_skipsRequest() {
+        AIProviderUsageTracker.shared.record(providerID: "openai.gpt", inputTokens: nil, outputTokens: 100)
+        XCTAssertEqual(AIProviderUsageTracker.shared.todaySnapshot(providerID: "openai.gpt").requestCount, 0)
     }
 
     // MARK: - Isolation par provider
@@ -73,21 +82,36 @@ final class AIProviderUsageTrackerTests: XCTestCase {
         XCTAssertEqual(anthropic.inputTokens, 500)
     }
 
-    // MARK: - Cost calculation
+    // MARK: - Cost — test FORMULE pas valeur (M1 audit fix)
 
-    /// GPT-4o mini : $0.15/M input, $0.60/M output.
-    /// 1M input + 1M output = $0.15 + $0.60 = $0.75
-    func testCost_openai_matchesPricing() {
+    func testCost_formula_matchesPricingCatalog() {
+        // 1M input + 1M output — coût = pricing.input + pricing.output
         AIProviderUsageTracker.shared.record(providerID: "openai.gpt", inputTokens: 1_000_000, outputTokens: 1_000_000)
         let snap = AIProviderUsageTracker.shared.todaySnapshot(providerID: "openai.gpt")
-        XCTAssertEqual(snap.estimatedCostUSD, 0.75, accuracy: 0.001)
+        guard let p = AIProviderUsageTracker.pricing(for: "openai.gpt") else { return XCTFail("pricing manquant") }
+        XCTAssertEqual(snap.estimatedCostUSD, p.inputUSDPerMillion + p.outputUSDPerMillion, accuracy: 0.0001)
     }
 
-    func testCost_smallUsage_isNegligibleButNonZero() {
-        AIProviderUsageTracker.shared.record(providerID: "openai.gpt", inputTokens: 1000, outputTokens: 200)
+    /// Vérifie que 0 tokens = 0 coût, indépendamment du barème.
+    func testCost_zeroTokens_isZero() {
+        AIProviderUsageTracker.shared.record(providerID: "openai.gpt", inputTokens: 0, outputTokens: 0)
+        XCTAssertEqual(AIProviderUsageTracker.shared.todaySnapshot(providerID: "openai.gpt").estimatedCostUSD, 0)
+    }
+
+    // MARK: - Cap sanitaire (M5 audit fix)
+
+    func testRecord_absurdlyLargeTokens_areCapped() {
+        AIProviderUsageTracker.shared.record(providerID: "openai.gpt", inputTokens: Int.max, outputTokens: Int.max)
         let snap = AIProviderUsageTracker.shared.todaySnapshot(providerID: "openai.gpt")
-        // 1000/1M * 0.15 + 200/1M * 0.60 = 0.00015 + 0.00012 = 0.00027
-        XCTAssertEqual(snap.estimatedCostUSD, 0.00027, accuracy: 0.00001)
+        XCTAssertEqual(snap.inputTokens, 10_000_000, "Cap sanitaire à 10M pour éviter chiffres absurdes")
+        XCTAssertEqual(snap.outputTokens, 10_000_000)
+    }
+
+    func testRecord_negativeTokens_areClampedToZero() {
+        AIProviderUsageTracker.shared.record(providerID: "openai.gpt", inputTokens: -100, outputTokens: -50)
+        let snap = AIProviderUsageTracker.shared.todaySnapshot(providerID: "openai.gpt")
+        XCTAssertEqual(snap.inputTokens, 0)
+        XCTAssertEqual(snap.outputTokens, 0)
     }
 
     // MARK: - Reset
@@ -114,8 +138,84 @@ final class AIProviderUsageTrackerTests: XCTestCase {
         XCTAssertNil(AIProviderUsageTracker.pricing(for: "local.rules.coach"))
     }
 
-    func testPricing_unknownProvider_returnsNil() {
-        XCTAssertNil(AIProviderUsageTracker.pricing(for: "some.unknown.provider"))
+    /// Fix m6 audit : Anthropic Haiku 4.5 corrigé à $0.80/$4.
+    func testPricing_anthropic_reflectsCorrectedRates() {
+        guard let p = AIProviderUsageTracker.pricing(for: "anthropic.claude") else { return XCTFail() }
+        XCTAssertEqual(p.inputUSDPerMillion, 0.80, accuracy: 0.001)
+        XCTAssertEqual(p.outputUSDPerMillion, 4.00, accuracy: 0.001)
+    }
+
+    func testPricingCatalogVersion_isDefinedAndNonEmpty() {
+        XCTAssertFalse(AIProviderUsageTracker.pricingCatalogVersion.isEmpty)
+    }
+
+    // MARK: - Conversion EUR (B2 audit fix)
+
+    func testUsdToEUR_appliesRate() {
+        XCTAssertEqual(AIProviderUsageTracker.usdToEUR(1.0), 0.92, accuracy: 0.001)
+        XCTAssertEqual(AIProviderUsageTracker.usdToEUR(0.0), 0)
+        XCTAssertEqual(AIProviderUsageTracker.usdToEUR(10.0), 9.2, accuracy: 0.001)
+    }
+
+    // MARK: - Formatter
+
+    func testFormatter_microCost_showsThreshold() {
+        // 0.0001 USD ≈ 0.0000092 EUR → doit afficher "< 0,01 €"
+        XCTAssertEqual(UsageFormatter.costEUR(usd: 0.0001), "< 0,01 €")
+    }
+
+    func testFormatter_zeroCost_isZeroEUR() {
+        XCTAssertTrue(UsageFormatter.costEUR(usd: 0).contains("0,00"))
+    }
+
+    func testFormatter_normalCost_formatsAsEUR() {
+        // 1 USD → 0.92 EUR
+        let s = UsageFormatter.costEUR(usd: 1.0)
+        XCTAssertTrue(s.contains("0,92"), "Attendu format EUR '0,92 €', obtenu : \(s)")
+    }
+
+    func testFormatter_requestCount_pluralization() {
+        XCTAssertEqual(UsageFormatter.requestCount(0), "0 requête")
+        XCTAssertEqual(UsageFormatter.requestCount(1), "1 requête")
+        XCTAssertEqual(UsageFormatter.requestCount(2), "2 requêtes")
+        XCTAssertEqual(UsageFormatter.requestCount(100), "100 requêtes")
+    }
+
+    func testFormatter_averageTokens_compactsThousands() {
+        XCTAssertEqual(UsageFormatter.averageTokens(500), "500 tok/req")
+        XCTAssertEqual(UsageFormatter.averageTokens(1500), "1.5k tok/req")
+    }
+
+    // MARK: - Snapshot mensuel (T2 audit)
+
+    func testMonthlySnapshot_sumsLast30Days() {
+        AIProviderUsageTracker.shared.record(providerID: "openai.gpt", inputTokens: 1000, outputTokens: 200)
+        AIProviderUsageTracker.shared.record(providerID: "openai.gpt", inputTokens: 500, outputTokens: 100)
+        let month = AIProviderUsageTracker.shared.monthlySnapshot(providerID: "openai.gpt")
+        XCTAssertEqual(month.requestCount, 2)
+        XCTAssertEqual(month.inputTokens, 1500)
+        XCTAssertEqual(month.outputTokens, 300)
+    }
+
+    func testMonthlySnapshot_noActivity_isZero() {
+        let month = AIProviderUsageTracker.shared.monthlySnapshot(providerID: "openai.gpt")
+        XCTAssertEqual(month.requestCount, 0)
+        XCTAssertEqual(month.estimatedCostUSD, 0)
+    }
+
+    // MARK: - Average tokens per request (T3 audit)
+
+    func testAverageTokensPerRequest_computedCorrectly() {
+        AIProviderUsageTracker.shared.record(providerID: "openai.gpt", inputTokens: 1000, outputTokens: 500)
+        AIProviderUsageTracker.shared.record(providerID: "openai.gpt", inputTokens: 2000, outputTokens: 500)
+        let snap = AIProviderUsageTracker.shared.todaySnapshot(providerID: "openai.gpt")
+        // (1000+500 + 2000+500) / 2 = 2000
+        XCTAssertEqual(snap.averageTokensPerRequest, 2000)
+    }
+
+    func testAverageTokensPerRequest_noRequests_isZero() {
+        let snap = AIProviderUsageTracker.shared.todaySnapshot(providerID: "openai.gpt")
+        XCTAssertEqual(snap.averageTokensPerRequest, 0)
     }
 
     // MARK: - Snapshot recent
