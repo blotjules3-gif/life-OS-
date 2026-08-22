@@ -238,6 +238,7 @@ enum OnDeviceLLM {
     @available(iOS 26.0, *)
     private static func respondViaAppleIntelligence(
         message: String,
+        ctx: ModelContext?,
         moduleContext: String?,
         injectContext: Bool,
         recentUpdates: [String]
