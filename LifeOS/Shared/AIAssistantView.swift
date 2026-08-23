@@ -1013,6 +1013,9 @@ struct AIAssistantView: View {
             .sheet(isPresented: $showAIProvider) {
                 NavigationStack { CoachAIProviderView() }
             }
+            .sheet(isPresented: $showKnowledgePreview) {
+                CoachKnowledgePreviewView()
+            }
             #if DEBUG
             .sheet(isPresented: $showAIDebug) {
                 AIDebugView()
