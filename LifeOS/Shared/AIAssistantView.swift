@@ -279,7 +279,10 @@ final class AIAssistantViewModel: ObservableObject {
         isLoading = true
 
         Task {
-            // Journal session IA (métadonnées seulement, aucun contenu texte)
+            // Journal session IA (métadonnées seulement, aucun contenu texte).
+            // Utilise displayContent (sans le préfixe [REFORMULE]) pour classifier
+            // et extraire — on ne veut pas contaminer l'extraction avec la balise.
+            let content = displayContent
             let classification = MessageClassifier.classify(content)
             let sessionID = AIActivityLogger.shared.startSession(
                 messageLength: content.count,
