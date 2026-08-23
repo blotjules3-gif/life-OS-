@@ -85,6 +85,20 @@ enum PromptAssembler {
             }
         }
 
+        // ── 8. REFORMULATION (Loop 15) — préfixe [REFORMULE] envoyé par le VM
+        // quand l'user tape "Reformule ta réponse" dans le menu contextuel.
+        if config.message.hasPrefix("[REFORMULE]") {
+            sections.append("""
+            --- REFORMULATION DEMANDÉE ---
+            L'utilisateur n'a PAS été satisfait de ta dernière réponse. Cette fois :
+            - Change d'ANGLE (perspective différente, exemple différent)
+            - Sois plus CONCRET (chiffre, action, étape)
+            - Évite le pattern précédent (ton, longueur, structure)
+            NE t'excuse PAS. Va direct à la nouvelle réponse.
+            --- FIN REFORMULATION ---
+            """)
+        }
+
         return sections.joined(separator: "\n\n")
     }
 
