@@ -20,7 +20,9 @@ enum CoachOffTopicDetector {
 
     /// Seuil de similarité (Jaccard sur tokens ≥3 chars) au-delà duquel on
     /// considère que l'user a reformulé.
-    private static let similarityThreshold: Double = 0.5
+    /// Loop 12 fix M3 — passe 0.5 → 0.7 pour réduire les faux positifs
+    /// (user qui améliore sa propre question sans que le coach ait raté).
+    private static let similarityThreshold: Double = 0.7
 
     /// Analyse un nouveau message user contre le message précédent.
     /// Enregistre un dislike implicite si :
