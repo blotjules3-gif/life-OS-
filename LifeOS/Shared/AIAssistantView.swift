@@ -1163,6 +1163,9 @@ struct AIAssistantView: View {
                                 : nil,
                             onDislike: msg.role == "assistant" && !msg.isThinking
                                 ? { vm.recordDislike(for: msg) }
+                                : nil,
+                            onRephrase: msg.role == "assistant" && !msg.isThinking
+                                ? { vm.rephrase(after: msg) }
                                 : nil
                         )
                         .id(msg.id)
