@@ -1,23 +1,18 @@
 import SwiftData
 import SwiftUI
 
-/// Écran "Ce que je sais de toi" — preview transparente de tout ce qui va
-/// dans le prompt système du coach à chaque message.
+/// Écran "Ce que je sais de toi" — preview complète et interactive de tout
+/// ce qui va dans le prompt système du coach à chaque message.
 ///
-/// Trust building : l'user voit exactement quelles données personnelles sont
-/// envoyées à l'IA (Apple Intelligence local ou provider cloud). Peut corriger
-/// ou supprimer par item.
-///
-/// Structuré en sections cohérentes avec ce que `UserContextBuilder` injecte :
-///   - Profil confirmé (ProfileField)
-///   - Cycle menstruel (si applicable)
-///   - Objectifs actifs
-///   - Sommeil dernière nuit
-///   - Mémoire long terme
-///   - Insights hebdo
+/// Loop 12 fixes :
+///   - B4 : Bouton "Corriger" par ProfileField (ouvre `ProfileFieldsView`)
+///   - M7 : Sections ajoutées : historique messages + awareness + sleep breakdown
+///   - M8 : Refresh live via `.onReceive` NotificationCenter
 struct CoachKnowledgePreviewView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @StateObject private var vm = ViewModel()
+    @State private var showingProfileEditor = false
 
     var body: some View {
         NavigationStack {
@@ -25,9 +20,17 @@ struct CoachKnowledgePreviewView: View {
                 headerSection
 
                 if !vm.profileFields.isEmpty {
-                    Section("Profil confirmé") {
+                    Section {
                         ForEach(vm.profileFields, id: \.fieldID) { field in
                             profileRow(field)
+                        }
+                    } header: {
+                        HStack {
+                            Text("Profil confirmé")
+                            Spacer()
+                            Button("Corriger") { showingProfileEditor = true }
+                                .font(.caption.weight(.medium))
+                                .textCase(nil)
                         }
                     }
                 }
@@ -46,11 +49,33 @@ struct CoachKnowledgePreviewView: View {
                     }
                 }
 
+                if !vm.sleepBreakdownLine.isEmpty {
+                    Section("Sommeil nuit dernière") {
+                        Text(vm.sleepBreakdownLine).font(.subheadline)
+                    }
+                }
+
                 if !vm.insightsBlock.isEmpty {
                     Section("Tendances cette semaine") {
                         Text(vm.insightsBlock)
                             .font(.subheadline)
                             .textSelection(.enabled)
+                    }
+                }
+
+                if !vm.recentMessages.isEmpty {
+                    Section("Historique conversationnel (3 derniers)") {
+                        ForEach(vm.recentMessages.indices, id: \.self) { i in
+                            messageRow(vm.recentMessages[i])
+                        }
+                    }
+                }
+
+                if !vm.awarenessLine.isEmpty {
+                    Section("Contexte du moment") {
+                        Text(vm.awarenessLine)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -71,7 +96,16 @@ struct CoachKnowledgePreviewView: View {
                     Button("Fermer") { dismiss() }
                 }
             }
-            .onAppear { vm.reload() }
+            .sheet(isPresented: $showingProfileEditor) {
+                ProfileFieldsView()
+                    .onDisappear { vm.reload(context: modelContext) }
+            }
+            .onAppear { vm.reload(context: modelContext) }
+            // Loop 12 fix M8 — refresh live si le user modifie un ProfileField
+            // ou une mémoire depuis un autre écran ouvert en parallèle.
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                vm.reload(context: modelContext)
+            }
         }
     }
 
@@ -79,7 +113,7 @@ struct CoachKnowledgePreviewView: View {
 
     private var headerSection: some View {
         Section {
-            Text("Voici exactement ce que ton coach connaît sur toi. Ces infos sont envoyées à chaque message pour personnaliser sa réponse. Tu peux les corriger ou les effacer via les autres écrans dédiés.")
+            Text("Voici exactement ce que ton coach connaît sur toi. Ces infos sont envoyées à chaque message pour personnaliser sa réponse. Tape « Corriger » pour éditer ton profil.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
@@ -98,6 +132,18 @@ struct CoachKnowledgePreviewView: View {
             }
             Spacer()
             confidenceBadge(field.confidence)
+        }
+    }
+
+    @ViewBuilder
+    private func messageRow(_ msg: AIMessage) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(msg.role == "user" ? "Toi" : "Coach")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(msg.role == "user" ? .blue : .green)
+            Text(msg.text.prefix(180) + (msg.text.count > 180 ? "…" : ""))
+                .font(.footnote)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -124,9 +170,14 @@ struct CoachKnowledgePreviewView: View {
 
     @ViewBuilder
     private func confidenceBadge(_ confidence: Double) -> some View {
-        let color: Color = confidence >= 0.8 ? .green : (confidence >= 0.6 ? .orange : .secondary)
-        Text(String(format: "%.0f %%", confidence * 100))
-            .font(.caption2.monospacedDigit().weight(.medium))
+        // Loop 12 fix m2 — remplace "70 %" par label lisible
+        let (label, color): (String, Color) = {
+            if confidence >= 0.85 { return ("fiable", .green) }
+            if confidence >= 0.6  { return ("modéré", .orange) }
+            return ("faible", .secondary)
+        }()
+        Text(label)
+            .font(.caption2.weight(.medium))
             .foregroundStyle(color)
     }
 }
@@ -137,16 +188,22 @@ struct CoachKnowledgePreviewView: View {
 private final class ViewModel: ObservableObject {
     @Published var profileFields: [ProfileField] = []
     @Published var memories: [MemoryEntry] = []
+    @Published var recentMessages: [AIMessage] = []
     @Published var cycleLine: String = ""
     @Published var goalsBlock: String = ""
     @Published var insightsBlock: String = ""
+    @Published var sleepBreakdownLine: String = ""
+    @Published var awarenessLine: String = ""
 
-    func reload() {
+    func reload(context: ModelContext?) {
         profileFields = ProfileStore.shared.allFields()
         cycleLine = CycleAwareness.promptLine()
         goalsBlock = GoalsProgress.promptBlock()
         insightsBlock = CoachInsights.promptBlock()
         memories = fetchTopMemories()
+        recentMessages = fetchRecentMessages(context: context)
+        sleepBreakdownLine = fetchSleepBreakdownLine()
+        awarenessLine = fetchAwarenessLine()
     }
 
     private func fetchTopMemories() -> [MemoryEntry] {
@@ -156,8 +213,43 @@ private final class ViewModel: ObservableObject {
         )
         descriptor.fetchLimit = 30
         let all = (try? ctx.fetch(descriptor)) ?? []
-        // Pinned d'abord, puis récents — SwiftData sort de bool ne marche pas
-        // directement dans FetchDescriptor, on trie ici.
         return Array((all.filter(\.isPinned) + all.filter { !$0.isPinned }).prefix(10))
+    }
+
+    private func fetchRecentMessages(context: ModelContext?) -> [AIMessage] {
+        guard let ctx = context ?? SharedModelContextProvider.shared.context else { return [] }
+        var descriptor = FetchDescriptor<AIMessage>(
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        descriptor.fetchLimit = 8
+        let all = (try? ctx.fetch(descriptor)) ?? []
+        return Array(all.reversed().suffix(6))
+    }
+
+    /// Lit le blob `sleep_breakdown_last_night` publié par HealthAutoSync.
+    private func fetchSleepBreakdownLine() -> String {
+        guard let grp = UserDefaults(suiteName: "group.lifeos.app"),
+              let data = grp.data(forKey: "sleep_breakdown_last_night"),
+              let d = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return ""
+        }
+        let deep = (d["deep"] as? Double) ?? 0
+        let rem = (d["rem"] as? Double) ?? 0
+        let awakenings = (d["awakenings"] as? Int) ?? 0
+        let bedtime = d["bedtime"] as? String
+        if deep == 0 && rem == 0 { return "" }
+        var parts = [String(format: "%.1fh deep, %.1fh REM", deep, rem)]
+        if awakenings > 0 { parts.append("\(awakenings) réveils") }
+        if let b = bedtime { parts.append("coucher \(b)") }
+        return parts.joined(separator: " · ")
+    }
+
+    /// Ligne compacte du contexte temporel/environnemental — proxy simple de
+    /// ce que `AwarenessContext` injecte au prompt (heure + moment du jour).
+    private func fetchAwarenessLine() -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "fr_FR")
+        f.dateFormat = "EEEE d MMMM, HH:mm"
+        return f.string(from: .now)
     }
 }
