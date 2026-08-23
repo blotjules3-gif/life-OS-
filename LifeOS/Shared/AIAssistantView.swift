@@ -422,6 +422,26 @@ final class AIAssistantViewModel: ObservableObject {
         showToast("Compris — j'ajuste au prochain message", module: nil)
     }
 
+    /// Loop 15 — relance le message précédent avec un system prompt correctif.
+    /// Cherche le dernier message user AVANT la réponse coach ciblée, et
+    /// re-envoie avec un préfixe qui indique "ta réponse précédente n'était
+    /// pas satisfaisante, essaie autrement".
+    func rephrase(after message: DisplayMessage) {
+        guard let coachIndex = messages.firstIndex(where: { $0.id == message.id }),
+              let userMessage = messages[..<coachIndex].reversed().first(where: { $0.role == "user" })
+        else {
+            showToast("Impossible de trouver le message à reformuler", module: nil)
+            return
+        }
+        // Log dislike auto — un rephrase = signal que la réponse a raté
+        CoachFeedbackStore.record(.dislike, response: message.text, reason: .notConcrete)
+        CoachUpgradeSuggestion.shared.refresh()
+
+        // Marque de rephrase que le prompt système va détecter en amont
+        let prompt = "[REFORMULE] " + userMessage.text
+        send(text: prompt)
+    }
+
     private func triggerWelcome() {
         let goalLabels: [String: String] = [
             "health": "Santé & forme",
