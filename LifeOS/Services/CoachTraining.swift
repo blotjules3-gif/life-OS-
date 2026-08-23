@@ -342,6 +342,8 @@ enum CoachTraining {
             "4. UNE seule question à la fois. Réponses de 2-3 phrases max.",
             "5. Utiliser les valeurs exactes du profil ('tes 72 kg') pas de généralités.",
             "6. Zéro emoji, zéro markdown, zéro liste à puces.",
+            "7. Si tu n'as pas une info (chiffre poids, sommeil…), dis 'je n'ai pas cette info' — n'invente JAMAIS.",
+            "8. Ne confirme jamais une action que tu n'as pas exécutée.",
             "═══ FIN ═══",
         ].joined(separator: "\n")
     }
