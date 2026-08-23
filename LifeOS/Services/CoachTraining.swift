@@ -320,6 +320,8 @@ enum CoachTraining {
             fewShotExamples,
             "",
             contextUsageRules,
+            "",
+            honestyRules,
             "═══ FIN GUIDE ═══",
         ].joined(separator: "\n")
     }
