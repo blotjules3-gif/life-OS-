@@ -95,6 +95,11 @@ struct AIAssistantMessageRow: View {
                                 Label("Pas satisfait", systemImage: "hand.thumbsdown")
                             }
                         }
+                        if let onRephrase {
+                            Button(action: onRephrase) {
+                                Label("Reformule ta réponse", systemImage: "arrow.triangle.2.circlepath")
+                            }
+                        }
                         if let onReport {
                             Button(role: .destructive, action: onReport) {
                                 Label("Signaler cette réponse", systemImage: "flag")
