@@ -937,6 +937,11 @@ struct AIAssistantView: View {
                             Label("Moteur du coach", systemImage: "cpu")
                         }
                         Button {
+                            showKnowledgePreview = true
+                        } label: {
+                            Label("Ce que je sais de toi", systemImage: "eye")
+                        }
+                        Button {
                             showHistory = true
                         } label: {
                             Label("Historique", systemImage: "clock.arrow.circlepath")
