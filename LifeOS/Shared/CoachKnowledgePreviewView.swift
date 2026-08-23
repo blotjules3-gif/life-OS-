@@ -152,9 +152,12 @@ private final class ViewModel: ObservableObject {
     private func fetchTopMemories() -> [MemoryEntry] {
         guard let ctx = SharedModelContextProvider.shared.context else { return [] }
         var descriptor = FetchDescriptor<MemoryEntry>(
-            sortBy: [SortDescriptor(\.isPinned, order: .reverse), SortDescriptor(\.created, order: .reverse)]
+            sortBy: [SortDescriptor(\.created, order: .reverse)]
         )
-        descriptor.fetchLimit = 10
-        return (try? ctx.fetch(descriptor)) ?? []
+        descriptor.fetchLimit = 30
+        let all = (try? ctx.fetch(descriptor)) ?? []
+        // Pinned d'abord, puis récents — SwiftData sort de bool ne marche pas
+        // directement dans FetchDescriptor, on trie ici.
+        return Array((all.filter(\.isPinned) + all.filter { !$0.isPinned }).prefix(10))
     }
 }
