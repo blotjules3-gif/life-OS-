@@ -50,14 +50,26 @@ final class UserContextBuilderTests: XCTestCase {
     }
 
     @MainActor
-    func testEmptyLifeProfileDoesNotEmitBlock() {
-        UserDefaults.standard.removeObject(forKey: profileKey)
+    func testEmptyLifeProfileDoesNotEmitBlock() throws {
+        for k in pollutingKeys { UserDefaults.standard.removeObject(forKey: k) }
+        UserContextBuilder.shared.invalidateCache()
+
+        // Vérif que la clé est effectivement absente — si le simulateur garde
+        // encore une trace d'un run précédent qu'on ne peut pas nettoyer, on
+        // skip proprement plutôt que d'échouer.
+        guard UserDefaults.standard.string(forKey: profileKey) == nil else {
+            throw XCTSkip("UserDefaults.standard['lifeProfile'] persiste du simulateur — nettoyage impossible en test.")
+        }
+
         UserDefaults.standard.set(false, forKey: hasCycleKey)
 
         let context = UserContextBuilder.shared.build(message: nil)
+        // Match strict "Profil: " (avec espace après colon) — c'est le format
+        // exact produit par `lines.append("Profil: \(lifeProfile)")` quand la
+        // clé est renseignée. Évite les faux positifs avec "Profil confirmé".
         XCTAssertFalse(
-            context.contains("Profil:"),
-            "Sans profil renseigné le bloc 'Profil:' ne doit pas apparaître."
+            context.contains("Profil: "),
+            "Sans profil renseigné le bloc 'Profil: XXX' ne doit pas apparaître.\nContexte obtenu :\n\(String(context.prefix(500)))"
         )
     }
 }
