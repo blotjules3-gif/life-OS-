@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UIKit
 
 /// Écran "Ce que je sais de toi" — preview complète et interactive de tout
 /// ce qui va dans le prompt système du coach à chaque message.
