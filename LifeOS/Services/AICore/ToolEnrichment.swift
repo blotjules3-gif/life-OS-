@@ -127,11 +127,13 @@ enum ToolEnrichment {
     }
 
     /// Détecte les demandes sur la nutrition du jour.
+    /// Loop 12 fix M2 — patterns plus permissifs (retire le "j'ai" strict).
     static func matchesTodayNutrition(_ normalized: String) -> Bool {
         let patterns = [
-            #"\b(?:mange|manger|mange[er]|bouffe|repas)\b[^.?!]{0,25}\b(?:aujourd[' ]hui|matin|midi|soir)\b"#,
-            #"\b(?:mes|combien)\b[^.?!]{0,15}\b(?:kcal|calories|proteines?|glucides|lipides|macros)\b"#,
-            #"\b(?:j[' ]?ai\s+mange|jai\s+mange|j[' ]?ai\s+bouffe)\b"#,
+            #"\b(?:mange|manger|mange[er]|bouffe|repas|manges)\b[^.?!]{0,30}\b(?:aujourd[' ]hui|matin|midi|soir|jour)\b"#,
+            #"\b(?:mes|combien|quel|quelle)\b[^.?!]{0,20}\b(?:kcal|calories|proteines?|glucides|lipides|macros)\b"#,
+            #"\b(?:mange|bouffe|manges)\b[^.?!]{0,20}\bquoi\b"#,
+            #"\bquoi\b[^.?!]{0,20}\b(?:mange|manger|manges|bouffe)\b"#,
         ]
         return patterns.contains { normalized.range(of: $0, options: .regularExpression) != nil }
     }
