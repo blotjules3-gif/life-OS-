@@ -338,8 +338,10 @@ final class AIAssistantViewModel: ObservableObject {
                 recentUpdates.append(intent.userFacingSummary)
             }
 
+            // Envoie le promptContent (avec [REFORMULE] éventuel) au LLM
+            // pour que PromptAssembler puisse détecter et adapter le system prompt.
             let reply = await OnDeviceLLM.respond(
-                to: content,
+                to: promptContent,
                 ctx: modelContext,
                 moduleContext: detectedCategory,
                 recentUpdates: recentUpdates
