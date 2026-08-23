@@ -142,48 +142,72 @@ struct GetHabitCompletionsTool: AITool {
 
 // MARK: - GetTodayTodosTool
 
-/// Retourne les todos du jour : pending + faites aujourd'hui.
+/// Retourne les todos : pending du jour + total pending + total done.
+///
+/// Note Loop 12 fix B2 : le model `TodoItem` n'a pas de champ `completedAt`
+/// (juste `done: Bool`), donc impossible de savoir quand une tâche a été
+/// complétée. On expose `totalDone` (compte cumulé de tâches faites) au lieu
+/// d'un `doneToday` mensonger. Meilleure approche : ajouter `completedAt`
+/// dans Models_Life.swift + migration — hors scope Loop 12.
 struct GetTodayTodosTool: AITool {
     struct Arguments: Codable, Sendable {}
     struct Result: Codable, Sendable {
         let pending: [TodoBrief]
-        let doneToday: Int
+        let dueTodayCount: Int    // pending avec due date = aujourd'hui
+        let totalPending: Int
+        let totalDone: Int
 
         struct TodoBrief: Codable, Sendable {
             let title: String
             let due: Date?
             let priority: Int
+            let dueToday: Bool
         }
     }
 
     static let definition = AIToolDefinition(
         name: "get_today_todos",
-        description: "Retourne les tâches en cours (non faites) + le nombre de tâches complétées aujourd'hui.",
+        description: "Retourne les tâches en cours + celles à faire aujourd'hui + totaux.",
         parametersSchema: #"{"type":"object","properties":{},"required":[]}"#
     )
     static let requiredPermissions: Set<AIPermission> = [.todosWrite]
 
     func execute(_ args: Arguments) async throws -> Result {
-        let (pending, done) = await MainActor.run { fetchTodos() }
-        return Result(pending: pending, doneToday: done)
+        let data = await MainActor.run { fetchTodos() }
+        return data
     }
 
     @MainActor
-    private func fetchTodos() -> ([Result.TodoBrief], Int) {
+    private func fetchTodos() -> Result {
         guard let ctx = SharedModelContextProvider.shared.context else {
             AppLog.coach.warning("GetTodayTodosTool: no ModelContext, skipping fetch")
-            return ([], 0)
+            return Result(pending: [], dueTodayCount: 0, totalPending: 0, totalDone: 0)
         }
         let descriptor = FetchDescriptor<TodoItem>(
             sortBy: [SortDescriptor(\.due), SortDescriptor(\.priority, order: .reverse)]
         )
         let all = (try? ctx.fetch(descriptor)) ?? []
-        let startOfDay = Calendar.current.startOfDay(for: .now)
-        let pending = all
-            .filter { !$0.done }
-            .prefix(10)
-            .map { Result.TodoBrief(title: $0.title, due: $0.due, priority: $0.priority) }
-        let doneToday = all.filter { $0.done && ($0.due ?? .distantPast) >= startOfDay }.count
-        return (Array(pending), doneToday)
+        let cal = Calendar.current
+        let startOfDay = cal.startOfDay(for: .now)
+        let startOfTomorrow = cal.date(byAdding: .day, value: 1, to: startOfDay) ?? .now
+        let pending = all.filter { !$0.done }
+        let dueTodayCount = pending.filter {
+            guard let d = $0.due else { return false }
+            return d >= startOfDay && d < startOfTomorrow
+        }.count
+        let briefs = pending.prefix(10).map { t in
+            Result.TodoBrief(
+                title: t.title,
+                due: t.due,
+                priority: t.priority,
+                dueToday: (t.due.map { $0 >= startOfDay && $0 < startOfTomorrow }) ?? false
+            )
+        }
+        return Result(
+            pending: Array(briefs),
+            dueTodayCount: dueTodayCount,
+            totalPending: pending.count,
+            totalDone: all.count - pending.count
+        )
     }
 }
