@@ -99,7 +99,10 @@ struct GetHabitCompletionsTool: AITool {
 
     @MainActor
     private func fetchHabits() -> ([Result.HabitStatus], Int) {
-        guard let ctx = SharedModelContextProvider.shared.context else { return ([], 0) }
+        guard let ctx = SharedModelContextProvider.shared.context else {
+            AppLog.coach.warning("GetHabitCompletionsTool: no ModelContext, skipping fetch")
+            return ([], 0)
+        }
         let descriptor = FetchDescriptor<Habit>(
             predicate: #Predicate { $0.isArchived == false && $0.isPending == false }
         )
