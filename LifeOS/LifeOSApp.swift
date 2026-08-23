@@ -147,8 +147,8 @@ struct LifeOSApp: App {
             }
             // Décroissance mémoire — cleanup 1/semaine (idempotent).
             MemoryDecayJob.runIfNeeded(context: container.mainContext)
-            // Bilans quotidiens matin/soir (Loop 10) — notifs répétitives 8h/21h
-            CoachDailyBilan.scheduleAll()
+            // Bilans quotidiens matin/soir — idempotent, re-schedule uniquement si config user changée
+            CoachDailyBilan.scheduleAllIfNeeded()
         }
         .onChange(of: onboardingDone) { _, done in
             if done { ContextualNotifications.shared.reschedule() }
