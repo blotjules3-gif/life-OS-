@@ -589,4 +589,33 @@ private final class ViewModel: ObservableObject {
         guard costGuardEnabled else { return false }
         return AICostGuard.todayCumulativeCostEUR() >= costGuardCapEUR
     }
+
+    // MARK: - Bilans quotidiens (Loop 14 — expose l'API Loop 12)
+
+    var bilansEnabled: Bool {
+        get { CoachDailyBilan.isEnabled }
+        set {
+            CoachDailyBilan.isEnabled = newValue
+            CoachDailyBilan.rescheduleNow()
+            objectWillChange.send()
+        }
+    }
+
+    var bilanMorningHour: Int {
+        get { CoachDailyBilan.morningHour }
+        set {
+            CoachDailyBilan.morningHour = newValue
+            CoachDailyBilan.rescheduleNow()
+            objectWillChange.send()
+        }
+    }
+
+    var bilanEveningHour: Int {
+        get { CoachDailyBilan.eveningHour }
+        set {
+            CoachDailyBilan.eveningHour = newValue
+            CoachDailyBilan.rescheduleNow()
+            objectWillChange.send()
+        }
+    }
 }
