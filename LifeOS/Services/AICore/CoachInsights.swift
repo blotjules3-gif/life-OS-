@@ -83,13 +83,20 @@ enum CoachInsights {
         )
     }
 
-    /// Nombre de séances sport cette semaine (habits avec moduleTag "fitness").
+    /// Tags reconnus comme "sport" — étendus Loop 12 fix M5.
+    private static let sportTags: Set<String> = [
+        "fitness", "sport", "gym", "workout", "muscu", "cardio",
+        "running", "run", "musculation", "training"
+    ]
+
+    /// Nombre de séances sport cette semaine (habits avec moduleTag reconnu).
     private static func sportSessions() -> Insight? {
         guard let ctx = SharedModelContextProvider.shared.context else { return nil }
         let descriptor = FetchDescriptor<Habit>(
-            predicate: #Predicate { $0.isArchived == false && ($0.moduleTag == "fitness" || $0.moduleTag == "sport") }
+            predicate: #Predicate { $0.isArchived == false }
         )
-        let habits = (try? ctx.fetch(descriptor)) ?? []
+        let allHabits = (try? ctx.fetch(descriptor)) ?? []
+        let habits = allHabits.filter { sportTags.contains($0.moduleTag.lowercased()) }
         guard !habits.isEmpty else { return nil }
         let cal = Calendar.current
         let weekStart = cal.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
