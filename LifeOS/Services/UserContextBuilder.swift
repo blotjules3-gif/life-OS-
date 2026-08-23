@@ -231,6 +231,13 @@ final class UserContextBuilder {
             lines.append(goalsBlock)
         }
 
+        // ── Insights hebdo (Loop 10) — transforme le coach en analyste ────
+        let insightsBlock = CoachInsights.promptBlock()
+        if !insightsBlock.isEmpty {
+            lines.append("")
+            lines.append(insightsBlock)
+        }
+
         // ── ProfileField — source of truth typée du profil utilisateur ──────
         // Extraits automatiquement du chat/voix/Raccourci par IntelligentExtractor.
         // Ne PAS redemander ces valeurs : elles sont fiables (confidence ≥ 0.60).
