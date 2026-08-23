@@ -170,7 +170,10 @@ struct GetTodayTodosTool: AITool {
 
     @MainActor
     private func fetchTodos() -> ([Result.TodoBrief], Int) {
-        guard let ctx = SharedModelContextProvider.shared.context else { return ([], 0) }
+        guard let ctx = SharedModelContextProvider.shared.context else {
+            AppLog.coach.warning("GetTodayTodosTool: no ModelContext, skipping fetch")
+            return ([], 0)
+        }
         let descriptor = FetchDescriptor<TodoItem>(
             sortBy: [SortDescriptor(\.due), SortDescriptor(\.priority, order: .reverse)]
         )
