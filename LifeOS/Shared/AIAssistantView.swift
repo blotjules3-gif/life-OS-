@@ -241,23 +241,34 @@ final class AIAssistantViewModel: ObservableObject {
 
     func send(text: String? = nil, module: String? = nil) {
         rotateConversationIfNeeded()
-        let content = (text ?? inputText).trimmingCharacters(in: .whitespaces)
-        guard !content.isEmpty, !isLoading else { return }
+        let rawContent = (text ?? inputText).trimmingCharacters(in: .whitespaces)
+        guard !rawContent.isEmpty, !isLoading else { return }
         inputText = ""
         Haptics.tap()
 
-        // Auto-detect "à côté" via reformulation (Loop 10) — si l'user vient
-        // de re-taper une question similaire dans les 90s, dislike implicite.
-        let previousUser = messages.reversed().first { $0.role == "user" }
-        let previousAssistant = messages.reversed().first { $0.role == "assistant" && !$0.isThinking }
-        CoachOffTopicDetector.trackUserMessage(
-            currentText: content,
-            previousUserText: previousUser?.text,
-            previousUserDate: previousUser?.date,
-            assistantResponse: previousAssistant?.text
-        )
+        // Loop 15 — préfixe interne [REFORMULE] envoyé par rephrase().
+        // On garde le préfixe pour le prompt LLM (PromptAssembler le détecte)
+        // mais on l'enlève de l'affichage user pour ne pas polluer le chat.
+        let isRephraseRequest = rawContent.hasPrefix("[REFORMULE]")
+        let displayContent = isRephraseRequest
+            ? rawContent.replacingOccurrences(of: "[REFORMULE]", with: "").trimmingCharacters(in: .whitespaces)
+            : rawContent
+        let promptContent = rawContent   // gardé tel quel pour OnDeviceLLM
 
-        appendUserMessage(content)
+        // Auto-detect "à côté" via reformulation (Loop 10) — skip si c'est un
+        // vrai rephrase explicite (sinon on double-count le dislike).
+        if !isRephraseRequest {
+            let previousUser = messages.reversed().first { $0.role == "user" }
+            let previousAssistant = messages.reversed().first { $0.role == "assistant" && !$0.isThinking }
+            CoachOffTopicDetector.trackUserMessage(
+                currentText: displayContent,
+                previousUserText: previousUser?.text,
+                previousUserDate: previousUser?.date,
+                assistantResponse: previousAssistant?.text
+            )
+        }
+
+        appendUserMessage(displayContent)
 
         // Ancien "AddAnythingSheet" désactivé : il bypassait tout le pipeline
         // (extraction ProfileField + IntentExecutor + acknowledge coach). Le nouveau
