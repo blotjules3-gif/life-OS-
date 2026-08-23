@@ -803,6 +803,7 @@ struct AIAssistantView: View {
     @State private var showProfileFields = false
     @State private var showAIDebug = false
     @State private var showAIProvider = false
+    @State private var showKnowledgePreview = false
     /// Observation live de la suggestion d'upgrade → la bannière s'affiche
     /// dès que l'user atteint 3 dislikes dans les 24h (sans clé cloud).
     @ObservedObject private var upgradeSuggestion = CoachUpgradeSuggestion.shared
