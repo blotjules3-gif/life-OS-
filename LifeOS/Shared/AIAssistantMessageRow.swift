@@ -17,6 +17,9 @@ struct AIAssistantMessageRow: View {
     var onReport: (() -> Void)? = nil
     var onLike: (() -> Void)? = nil
     var onDislike: (() -> Void)? = nil
+    /// Loop 15 — action "reformule" : relance le message précédent avec un
+    /// system prompt correctif. Réponse alternative sans que l'user retape.
+    var onRephrase: (() -> Void)? = nil
 
     @AppStorage(AppStorageKeys.coachTTSEnabled) private var ttsEnabled = false
     @ObservedObject private var speech = CoachSpeech.shared
