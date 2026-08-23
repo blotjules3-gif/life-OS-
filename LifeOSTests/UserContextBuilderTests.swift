@@ -11,11 +11,19 @@ final class UserContextBuilderTests: XCTestCase {
 
     private let profileKey = "lifeProfile"
     private let hasCycleKey = "userHasCycle"
+    /// Toutes les clés UserDefaults qui pourraient rendre le context non-vide
+    /// et faire échouer `testEmptyLifeProfileDoesNotEmitBlock`. Un test parallèle
+    /// (extraction profil, onboarding view SwiftUI, etc.) peut avoir laissé
+    /// une trace — on nettoie tout à setUp/tearDown.
+    private let pollutingKeys = [
+        "lifeProfile", "userName", "userGender",
+        "activeModules", "userHasCycle"
+    ]
 
     @MainActor
     override func setUp() {
         super.setUp()
-        UserDefaults.standard.removeObject(forKey: profileKey)
+        for k in pollutingKeys { UserDefaults.standard.removeObject(forKey: k) }
         // Le builder est un singleton avec cache TTL 60s — sinon un test hérite
         // du résultat du test précédent.
         UserContextBuilder.shared.invalidateCache()
@@ -23,7 +31,7 @@ final class UserContextBuilderTests: XCTestCase {
 
     @MainActor
     override func tearDown() {
-        UserDefaults.standard.removeObject(forKey: profileKey)
+        for k in pollutingKeys { UserDefaults.standard.removeObject(forKey: k) }
         UserContextBuilder.shared.invalidateCache()
         super.tearDown()
     }
