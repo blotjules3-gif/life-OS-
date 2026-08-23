@@ -533,3 +533,78 @@ Coach avait accès à 40 % des données LifeOS. Les 60 % restants (nutrition Foo
 - "Combien j'ai mangé aujourd'hui ?" → vraies kcal + macros + dernier repas listés
 - "Mes habitudes du jour" → X/Y faites + streak par habitude
 - "Mes tâches" → pending + count doneToday
+
+---
+
+## Loop 10 (2026-08-23) — Intelligence temporelle (top 10 partie 3)
+
+### Solution
+
+- Nouveau `CoachInsights` — 3 patterns hebdo :
+  - Régularité habitudes (jours cette semaine avec ≥1 complétion)
+  - Tendance sommeil (avg 7j vs 4 semaines précédentes)
+  - Sessions sport (habits tag "fitness")
+  - Injecté silencieusement dans `UserContextBuilder.buildFresh` — bloc "Tendances cette semaine"
+- Nouveau `CoachOffTopicDetector` — Jaccard similarity sur tokens ≥3 chars, seuil 0.5, fenêtre 90s. Reformulation détectée → dislike implicite + refresh CoachUpgradeSuggestion.
+- Nouveau `CoachDailyBilan` — 2 notifs répétitives 8h/21h via UNCalendarNotificationTrigger, deep link vers chat pré-rempli. Wire au boot LifeOSApp.
+- Wire `CoachOffTopicDetector.trackUserMessage` dans `AIAssistantViewModel.send`.
+
+### Validation
+
+- BUILD SUCCEEDED
+- **5 nouveaux tests** `CoachOffTopicDetectorTests` (Jaccard identical/different/reformulation/stopwords/case-insensitive)
+- Suite complète OK (sauf fail préexistant)
+
+### Impact utilisateur
+
+- **Insights hebdo** : coach dit "6/7 jours avec habitudes cette semaine" au lieu de généralités
+- **Auto-detect à côté** : user tape 2x une question similaire → dislike implicite auto → bannière upgrade apparaît au bon moment
+- **Bilans quotidiens** : rythme d'engagement matin/soir sans surcharger
+
+---
+
+## Loop 11 (2026-08-23) — Preview transparente "Ce que je sais de toi"
+
+### Solution
+
+- Nouveau `CoachKnowledgePreviewView` — écran SwiftUI qui affiche exactement ce que le prompt système contient :
+  - Profil confirmé (ProfileField avec badge confidence coloré)
+  - Cycle menstruel (si applicable)
+  - Objectifs actifs
+  - Tendances hebdo
+  - Mémoire long terme (top 10, pinned d'abord)
+- Wire dans menu chat coach → nouveau bouton "Ce que je sais de toi" (icon `eye`)
+- Header explicatif : "Ces infos sont envoyées à chaque message pour personnaliser sa réponse."
+
+### Validation
+
+- BUILD SUCCEEDED
+- Suite complète OK (sauf fail préexistant)
+
+### Impact utilisateur (trust building)
+
+- Transparence totale : plus de "boîte noire", user voit tout ce qui va au LLM
+- Contrôle : peut aller corriger via ProfileFieldsView ou memory sheet
+- RGPD : renforce la conformité "droit à l'information"
+
+---
+
+## Bilan roadmap complète (Loops 1-11)
+
+| # | Loop | Livré |
+|---|---|---|
+| 1 | Wire dead services (proactive + decay + retrieval) | ✅ |
+| 2 | ToolEnrichment | ✅ |
+| 3 | Multi-provider + fixes audit | ✅ |
+| 4 | Transparence provider dans chat | ✅ |
+| 5 | Compteur usage cloud + fixes | ✅ |
+| 6 | Kill switch coût configurable | ✅ |
+| 7 | Bannière upgrade contextuelle | ✅ |
+| 8 | Contexte enrichi (historique, cycle, sleep breakdown, objectifs) | ✅ |
+| 9 | Tools cross-domaines (nutrition, habits, todos) | ✅ |
+| 10 | Intelligence temporelle (insights, bilans, auto-detect) | ✅ |
+| 11 | Preview transparente "ce que je sais" | ✅ |
+
+**Il ne reste que :**
+- **Loop 12-13** : Backend proxy Cloudflare Workers + StoreKit "Coach Premium" — **nécessite tes décisions commerciales** (prix, freemium ou premium seul)
+- **Loop 14-15** : optimisations perf (parallélisation, streaming) + découpe AIAssistantView (dette technique, impact user faible)
