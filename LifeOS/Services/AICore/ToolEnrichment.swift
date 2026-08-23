@@ -283,14 +283,16 @@ enum ToolEnrichment {
                 if !notes.isEmpty { parts.append(contentsOf: notes.prefix(8)) }
                 return parts.joined(separator: "\n")
             }
-            // Cas get_today_todos
+            // Cas get_today_todos (Loop 12 fix B2 : nouvelle structure)
             if let pending = dict["pending"] as? [[String: Any]] {
-                let doneToday = dict["doneToday"] as? Int ?? 0
-                var parts = ["Todos : \(pending.count) en cours, \(doneToday) faites aujourd'hui"]
+                let dueToday = dict["dueTodayCount"] as? Int ?? 0
+                let totalPending = dict["totalPending"] as? Int ?? pending.count
+                var parts = ["Todos : \(totalPending) en cours, \(dueToday) à faire aujourd'hui"]
                 let items = pending.prefix(5).compactMap { t -> String? in
                     guard let title = t["title"] as? String else { return nil }
                     let prio = (t["priority"] as? Int ?? 0) >= 1 ? " !" : ""
-                    return "  - \(title)\(prio)"
+                    let today = (t["dueToday"] as? Bool == true) ? " (aujourd'hui)" : ""
+                    return "  - \(title)\(prio)\(today)"
                 }
                 if !items.isEmpty { parts.append(contentsOf: items) }
                 return parts.joined(separator: "\n")
