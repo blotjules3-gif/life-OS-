@@ -608,3 +608,56 @@ Coach avait accès à 40 % des données LifeOS. Les 60 % restants (nutrition Foo
 **Il ne reste que :**
 - **Loop 12-13** : Backend proxy Cloudflare Workers + StoreKit "Coach Premium" — **nécessite tes décisions commerciales** (prix, freemium ou premium seul)
 - **Loop 14-15** : optimisations perf (parallélisation, streaming) + découpe AIAssistantView (dette technique, impact user faible)
+
+---
+
+## Loop 12 (2026-08-23) — Fixes post-audit Loops 9-10-11
+
+### Contexte
+
+Audit sans complaisance des Loops 9-10-11 → **6 bloquants + 9 majeurs identifiés**. Ce loop fixe tout ce qui est faisable sans device réel.
+
+### Bloquants fixés (6/6)
+
+- **B1 `sleepTrend` mort** : `LifeSignalSyncer.SleepWidgetSyncer` publie désormais `sleep_avg_hours_28d` en plus du 7d. Le pattern insight se déclenche maintenant.
+- **B2 Count `doneToday` faux** : `GetTodayTodosTool` refactoré — nouvelle structure `{pending, dueTodayCount, totalPending, totalDone}` au lieu du menteur `doneToday`. Formatting ToolEnrichment adapté.
+- **B3 Tests intégration wire** : nouveau `CrossDomainToolsWireTests` (6 tests end-to-end MockContext → ToolRegistry.execute → JSON validé).
+- **B4 Preview interactive** : bouton "Corriger" dans le header "Profil confirmé" → ouvre `ProfileFieldsView` en sheet. Refresh après dismiss.
+- **B5 Permission notif** : `CoachDailyBilan.performScheduling()` check `authorizationStatus` avant d'ajouter les requests, log warning si refusé.
+- **B6 Heures configurables** : `CoachDailyBilan.morningHour` (5-12) et `eveningHour` (18-23) via UserDefaults avec bornes validées + toggle `isEnabled`. API prête pour UI Réglages (Loop 13).
+
+### Majeurs fixés (9/9)
+
+- **M9** : borne supérieure `< startOfTomorrow` dans nutrition tool (exclut entrées futures).
+- **M5** : `CoachInsights.sportTags` étendu (fitness/sport/gym/workout/muscu/cardio/running/run/musculation/training) + comparaison case-insensitive.
+- **M6** : `scheduleAllIfNeeded` idempotent via hash config — re-schedule uniquement si config changée (plus de add() à chaque foreground).
+- **M4** : Guard nil explicite dans les 3 tools avec `AppLog.coach.warning` — plus de silence.
+- **M3** : Seuil dislike auto passe 0.5 → 0.7 (réduit les faux positifs de reformulation).
+- **M2** : Regex matchers plus permissifs — capture "qu'est-ce que j'ai mangé aujourd'hui ?" (le pattern strict "j'ai mange" ratait).
+- **M8** : Preview refresh live via `NotificationCenter.publisher(for: didBecomeActiveNotification)`.
+- **M7** : Preview complète — ajoute sections historique messages (3 derniers), contexte du moment, sommeil breakdown.
+- **M10** : `CoachDailyBilanTests` (7 tests : défauts, setters, validation bornes, toggle).
+
+### Mineurs fixés (bonus)
+
+- **m2** : badge confidence remplace "70 %" par label lisible ("fiable"/"modéré"/"faible").
+- **m4** : deep link `CoachDailyBilan` utilise `URLComponents` au lieu de string manual.
+
+### Non fixés (out of scope)
+
+- **T1-T5** : nouvelles features (toggle privacy par tool, export RGPD, désactivation insights, config bilans UI) — méritent leurs propres loops.
+- **T6** : test device réel — impossible sans ton iPhone.
+
+### Validation
+
+- BUILD SUCCEEDED
+- **13 nouveaux tests** (`CrossDomainToolsWireTests` 6, `CoachDailyBilanTests` 7)
+- 264/265 tests OK (fail préexistant non lié)
+
+### Impact utilisateur
+
+- **sleepTrend fonctionne enfin** : "Ton sommeil s'améliore/dégrade vs 4 semaines" apparaît réellement
+- **Todos justes** : plus de chiffre trompeur, l'user voit `X en cours, Y à faire aujourd'hui`
+- **Bilans robustes** : configurables + permission vérifiée
+- **Preview riche** : ProfileField éditables + historique messages visibles + sommeil détaillé
+- **Régression protégée** : 6 tests end-to-end garantissent que le wire tool → SwiftData ne casse pas silencieusement
