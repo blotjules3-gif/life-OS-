@@ -2,38 +2,113 @@ import Foundation
 import UserNotifications
 
 /// Planifie 2 notifications quotidiennes pour créer un rythme d'engagement
-/// coach : bilan du matin (8h) et bilan du soir (21h).
+/// coach : bilan matin + bilan soir aux heures choisies par l'user.
 ///
-/// - Matin : "Bonjour, ton sommeil : Xh. Ton énergie estimée : Y/100."
-///   Le contenu est calculé à l'exécution du trigger (via `userInfo` static),
-///   la notif système montre un placeholder qui redirige vers le chat où le
-///   coach régénère un message complet avec le contexte à jour.
-///
-/// - Soir : "Récap de ta journée — X habitudes, Y kcal."
-///
-/// Chaque tap ouvre le chat avec un prefill approprié → le coach répond
-/// avec toutes les données actuelles (pas un texte figé de la veille).
-///
-/// Anti-spam : reconfigure à chaque appel de `scheduleAll` (idempotent, iOS
-/// remplace les notifications avec le même identifier).
+/// Loop 12 fixes :
+///   - B5 : vérif permission notification avant d'ajouter les requests
+///   - B6 : heures configurables via UserDefaults (défaut 8h / 21h)
+///   - M6 : `scheduleAllIfNeeded` idempotent avec flag — ne re-schedule que
+///          si la config a changé, pas à chaque foreground
 @MainActor
 enum CoachDailyBilan {
 
     private static let morningID = "coach.bilan.morning"
     private static let eveningID = "coach.bilan.evening"
 
-    /// Planifie les 2 notifs répétitives. À appeler au boot (LifeOSApp) et
-    /// après un changement des préférences de rappel.
-    static func scheduleAll() {
-        scheduleMorning()
-        scheduleEvening()
+    // Clés UserDefaults — user-configurable via CoachAIProviderView.
+    private static let enabledKey = "coach.bilan.enabled"
+    private static let morningHourKey = "coach.bilan.morning.hour"
+    private static let eveningHourKey = "coach.bilan.evening.hour"
+    private static let lastScheduledConfigKey = "coach.bilan.lastConfigHash"
+
+    static let defaultMorningHour = 8
+    static let defaultEveningHour = 21
+
+    // MARK: - Preferences
+
+    /// Vrai si l'user a activé les bilans quotidiens. Défaut : true.
+    static var isEnabled: Bool {
+        get {
+            if UserDefaults.standard.object(forKey: enabledKey) == nil { return true }
+            return UserDefaults.standard.bool(forKey: enabledKey)
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: enabledKey)
+            // Après changement, re-planifie (force re-schedule).
+            UserDefaults.standard.removeObject(forKey: lastScheduledConfigKey)
+        }
     }
 
-    /// Retire les 2 notifs — utilisé si l'user désactive les bilans.
+    static var morningHour: Int {
+        get {
+            let h = UserDefaults.standard.integer(forKey: morningHourKey)
+            return (5...12).contains(h) ? h : defaultMorningHour
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: morningHourKey)
+            UserDefaults.standard.removeObject(forKey: lastScheduledConfigKey)
+        }
+    }
+
+    static var eveningHour: Int {
+        get {
+            let h = UserDefaults.standard.integer(forKey: eveningHourKey)
+            return (18...23).contains(h) ? h : defaultEveningHour
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: eveningHourKey)
+            UserDefaults.standard.removeObject(forKey: lastScheduledConfigKey)
+        }
+    }
+
+    // MARK: - Scheduling
+
+    /// Point d'entrée idempotent (Loop 12 fix M6) — appelable à chaque
+    /// `onAppear` sans coût iOS répété. Ne re-schedule que si la config
+    /// a changé (hash calculé sur enabled + heures).
+    static func scheduleAllIfNeeded() {
+        let currentHash = configHash()
+        let lastHash = UserDefaults.standard.string(forKey: lastScheduledConfigKey)
+        guard currentHash != lastHash else { return }
+
+        Task { @MainActor in
+            await performScheduling()
+            UserDefaults.standard.set(currentHash, forKey: lastScheduledConfigKey)
+        }
+    }
+
+    /// Force le re-schedule (utilisé par l'écran Réglages après un changement).
+    static func rescheduleNow() {
+        UserDefaults.standard.removeObject(forKey: lastScheduledConfigKey)
+        scheduleAllIfNeeded()
+    }
+
     static func cancelAll() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(
             withIdentifiers: [morningID, eveningID]
         )
+        UserDefaults.standard.removeObject(forKey: lastScheduledConfigKey)
+    }
+
+    /// Effectue le vrai scheduling après vérif permission (Loop 12 fix B5).
+    private static func performScheduling() async {
+        // Cancel existant d'abord — évite doublons si l'user a changé les heures.
+        cancelAll()
+
+        guard isEnabled else {
+            AppLog.coach.info("CoachDailyBilan: désactivé, no-op")
+            return
+        }
+
+        // Loop 12 fix B5 — check permission avant scheduling
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        guard settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional else {
+            AppLog.coach.warning("CoachDailyBilan: notifications non autorisées, no-op")
+            return
+        }
+
+        scheduleMorning()
+        scheduleEvening()
     }
 
     // MARK: - Notifications
@@ -45,12 +120,12 @@ enum CoachDailyBilan {
         content.sound = .default
         content.threadIdentifier = "coach.bilan"
         content.userInfo = [
-            "lifeos.deeplink": "lifeos://coach?prefill=Fais%20le%20bilan%20de%20ma%20nuit%20et%20suggère-moi%20une%20priorité%20pour%20aujourd%27hui.",
+            "lifeos.deeplink": deepLink(prefill: "Fais le bilan de ma nuit et suggère-moi une priorité pour aujourd'hui."),
             "lifeos.signal": "daily_morning"
         ]
 
         var comps = DateComponents()
-        comps.hour = 8
+        comps.hour = morningHour
         comps.minute = 0
         let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
         let request = UNNotificationRequest(identifier: morningID, content: content, trigger: trigger)
@@ -64,15 +139,31 @@ enum CoachDailyBilan {
         content.sound = .default
         content.threadIdentifier = "coach.bilan"
         content.userInfo = [
-            "lifeos.deeplink": "lifeos://coach?prefill=Fais%20le%20récap%20de%20ma%20journée%20:%20habitudes%2C%20énergie%2C%20progrès.",
+            "lifeos.deeplink": deepLink(prefill: "Fais le récap de ma journée : habitudes, énergie, progrès."),
             "lifeos.signal": "daily_evening"
         ]
 
         var comps = DateComponents()
-        comps.hour = 21
+        comps.hour = eveningHour
         comps.minute = 0
         let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
         let request = UNNotificationRequest(identifier: eveningID, content: content, trigger: trigger)
         UNUserNotificationCenter.current().add(request) { _ in }
+    }
+
+    // MARK: - Helpers
+
+    /// Construit le deep link chat avec prefill URL-encodé proprement (fix m4).
+    private static func deepLink(prefill: String) -> String {
+        var components = URLComponents()
+        components.scheme = "lifeos"
+        components.host = "coach"
+        components.queryItems = [URLQueryItem(name: "prefill", value: prefill)]
+        return components.url?.absoluteString ?? "lifeos://coach"
+    }
+
+    /// Hash simple de la config → détecte les changements sans re-scheduler.
+    private static func configHash() -> String {
+        "\(isEnabled)-\(morningHour)-\(eveningHour)"
     }
 }
