@@ -114,11 +114,13 @@ struct SleepWidgetSyncer: View {
     private func sync() {
         guard let defaults = UserDefaults(suiteName: appGroup) else { return }
         let cal = Calendar.current
-        guard let weekAgo = cal.date(byAdding: .day, value: -7, to: .now) else { return }
+        guard let weekAgo = cal.date(byAdding: .day, value: -7, to: .now),
+              let monthAgo = cal.date(byAdding: .day, value: -28, to: .now) else { return }
         let recent = nights.filter { $0.date >= weekAgo }.prefix(7)
         if recent.isEmpty {
             defaults.removeObject(forKey: "sleep_recent_7d")
             defaults.removeObject(forKey: "sleep_avg_hours_7d")
+            defaults.removeObject(forKey: "sleep_avg_hours_28d")
             return
         }
         let payload: [[String: Any]] = recent.map { n in
@@ -127,8 +129,15 @@ struct SleepWidgetSyncer: View {
         if let data = try? JSONSerialization.data(withJSONObject: payload) {
             defaults.set(data, forKey: "sleep_recent_7d")
         }
-        let avg = recent.reduce(0.0) { $0 + $1.hours } / Double(recent.count)
-        defaults.set((avg * 10).rounded() / 10, forKey: "sleep_avg_hours_7d")
+        let avg7 = recent.reduce(0.0) { $0 + $1.hours } / Double(recent.count)
+        defaults.set((avg7 * 10).rounded() / 10, forKey: "sleep_avg_hours_7d")
+
+        // Loop 12 fix B1 — moyenne 28 jours pour le pattern sleepTrend de CoachInsights
+        let recent28 = nights.filter { $0.date >= monthAgo }
+        if !recent28.isEmpty {
+            let avg28 = recent28.reduce(0.0) { $0 + $1.hours } / Double(recent28.count)
+            defaults.set((avg28 * 10).rounded() / 10, forKey: "sleep_avg_hours_28d")
+        }
     }
 }
 
