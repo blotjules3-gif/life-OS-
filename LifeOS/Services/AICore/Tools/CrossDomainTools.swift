@@ -48,10 +48,16 @@ struct GetTodayNutritionTool: AITool {
 
     @MainActor
     private func fetchTodayFoodEntries() -> [FoodEntry] {
-        guard let ctx = SharedModelContextProvider.shared.context else { return [] }
-        let startOfDay = Calendar.current.startOfDay(for: .now)
+        guard let ctx = SharedModelContextProvider.shared.context else {
+            AppLog.coach.warning("GetTodayNutritionTool: no ModelContext, skipping fetch")
+            return []
+        }
+        let cal = Calendar.current
+        let startOfDay = cal.startOfDay(for: .now)
+        let startOfTomorrow = cal.date(byAdding: .day, value: 1, to: startOfDay) ?? .now
+        // Loop 12 fix M9 — borne supérieure pour ignorer les entrées futures (saisie manuelle erronée)
         let descriptor = FetchDescriptor<FoodEntry>(
-            predicate: #Predicate { $0.date >= startOfDay },
+            predicate: #Predicate { $0.date >= startOfDay && $0.date < startOfTomorrow },
             sortBy: [SortDescriptor(\.date, order: .forward)]
         )
         return (try? ctx.fetch(descriptor)) ?? []
