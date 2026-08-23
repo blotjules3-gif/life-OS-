@@ -85,6 +85,37 @@ struct CoachAIProviderView: View {
                      : "Aucune limite — les providers cloud consomment tant qu'ils ont une clé valide. Active pour te protéger d'une facture surprise.")
             }
 
+            // Section bilans quotidiens — Loop 14 (config UI pour l'API Loop 12).
+            Section {
+                Toggle("Bilans matin & soir", isOn: $vm.bilansEnabled)
+                if vm.bilansEnabled {
+                    Stepper(value: $vm.bilanMorningHour, in: 5...12) {
+                        HStack {
+                            Text("Notif du matin")
+                            Spacer()
+                            Text("\(vm.bilanMorningHour)h00")
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                        }
+                    }
+                    Stepper(value: $vm.bilanEveningHour, in: 18...23) {
+                        HStack {
+                            Text("Notif du soir")
+                            Spacer()
+                            Text("\(vm.bilanEveningHour)h00")
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                        }
+                    }
+                }
+            } header: {
+                Text("Rythme quotidien")
+            } footer: {
+                Text(vm.bilansEnabled
+                     ? "Ton coach t'envoie 2 notifications par jour pour ouvrir le chat au bon moment."
+                     : "Les bilans automatiques sont désactivés — le coach reste dispo à la demande.")
+            }
+
             if vm.currentPreference != nil {
                 Section {
                     Button(role: .destructive) {
