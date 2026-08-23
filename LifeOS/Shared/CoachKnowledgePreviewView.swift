@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 /// Écran "Ce que je sais de toi" — preview transparente de tout ce qui va
