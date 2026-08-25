@@ -50,6 +50,8 @@ enum DataEraser {
         CoachUpgradeSuggestion.shared.reset()
         // Mode vocal (Loop 16)
         CoachVoiceMode.shared.reset()
+        // Bilan mensuel (Loop 20)
+        MonthlyReviewScheduler.cancel()
         // Cache UserContextBuilder
         UserContextBuilder.shared.invalidateCache()
         AppLog.data.info("DataEraser: AI artifacts erased")
