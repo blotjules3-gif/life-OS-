@@ -8,6 +8,7 @@ struct LifeOSWidgetsBundle: WidgetBundle {
         HabitsWidget()
         FoodScanWidget()
         EnergyScoreWidget()
+        CoachQuickAskWidget()   // Loop 18 — raccourci coach
         if #available(iOS 16.1, *) {
             StreakActivityWidget()
         }
