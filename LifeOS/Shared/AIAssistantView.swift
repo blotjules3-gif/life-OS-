@@ -352,6 +352,12 @@ final class AIAssistantViewModel: ObservableObject {
             appendAssistantMessage(reply.text, actions: [], providerID: reply.providerID, animateReveal: true)
             isLoading = false
 
+            // Loop 16 — voice-first mode : auto-speak la réponse si activé.
+            // L'ID vient du dernier message ajouté.
+            if let lastCoachMsg = messages.reversed().first(where: { $0.role == "assistant" && !$0.isThinking }) {
+                _ = CoachVoiceMode.shared.handleAssistantReply(text: reply.text, messageID: lastCoachMsg.id)
+            }
+
             // Journal fin de session (métadonnées uniquement, pas de texte).
             // Le providerID exact vient de reply — fallback sur le drapeau .source
             // si le provider n'a pas remonté d'ID (cas très ancien).
