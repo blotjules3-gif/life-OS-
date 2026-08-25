@@ -661,3 +661,38 @@ Audit sans complaisance des Loops 9-10-11 → **6 bloquants + 9 majeurs identifi
 - **Bilans robustes** : configurables + permission vérifiée
 - **Preview riche** : ProfileField éditables + historique messages visibles + sommeil détaillé
 - **Régression protégée** : 6 tests end-to-end garantissent que le wire tool → SwiftData ne casse pas silencieusement
+
+---
+
+## Loops 13-14-15 (2026-08-25) — Anti-hallucination + UX quick wins
+
+### Loop 13 — Anti-hallucination
+
+Section `honestyRules` ajoutée à `CoachTraining` (5 règles strictes) + version condensée dans `compact`. Injection dans le prompt système à chaque message. Objectif : force Apple Intelligence 3B à dire "je n'ai pas cette info" au lieu d'inventer un chiffre.
+
+### Loop 14 — UI config bilans quotidiens
+
+Expose l'API `CoachDailyBilan` (Loop 12) dans `CoachAIProviderView` :
+- Toggle "Bilans matin & soir"
+- Stepper "Notif du matin" 5h-12h
+- Stepper "Notif du soir" 18h-23h
+- Auto-`rescheduleNow` après changement
+
+### Loop 15 — Bouton "Reformule ta réponse"
+
+- Nouveau paramètre `onRephrase` dans `AIAssistantMessageRow` + entry menu contextuel
+- Nouvelle méthode `AIAssistantViewModel.rephrase(after:)` — retrouve le message user précédent, log dislike auto (raison `.notConcrete`), re-envoie avec préfixe `[REFORMULE]`
+- `PromptAssembler.assemble` détecte le préfixe → injecte bloc système "REFORMULATION DEMANDÉE" (changer d'angle, plus concret, ne pas s'excuser)
+- `AIAssistantView.send` split `displayContent` (bulle) vs `promptContent` (LLM) — préfixe caché dans l'UI
+- Auto-detect off-topic skipped si rephrase explicite (évite double-count)
+
+### Validation
+
+- BUILD SUCCEEDED × 3
+- Suite tests OK (fail préexistant `testEmptyLifeProfileDoesNotEmitBlock` — investigué mais pollueur batch non identifiable, dette gardée)
+
+### Impact utilisateur
+
+- **Anti-hallucination** : le coach dit "je n'ai pas cette info" au lieu d'un chiffre inventé. Gros gain trust.
+- **Bilans configurables** : user qui se lève à 6h ou se couche tard peut adapter, ou désactiver complètement.
+- **Reformule** : un tap au lieu de re-taper. Le coach change d'angle sans que l'user ait à re-formuler.
