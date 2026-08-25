@@ -7,7 +7,36 @@ import Foundation
 /// Retourne `nil` = JSON malformé → `AIResponse` erreur.
 enum AIProviderHTTP {
 
+    /// Loop 17 — retry backoff sur rate limit 429.
+    /// Rate limits providers cloud sont souvent transient (< 5s). Sans retry,
+    /// on bascule direct sur le suivant → user perd la qualité du provider
+    /// choisi pour un souci temporaire. Un simple retry après 2s résout ~80%
+    /// des cas OpenAI/Anthropic free tier.
+    ///
+    /// Ordre : appel initial → si 429, sleep 2s puis 1 retry → si encore 429,
+    /// laisse le router faire son fallback.
     static func perform(
+        _ req: URLRequest,
+        providerID: String,
+        correlationID: UUID,
+        start: Date,
+        extract: @Sendable @escaping ([String: Any]) -> (text: String, inputTokens: Int?, outputTokens: Int?)?
+    ) async -> AIResponse {
+        // Premier essai
+        let firstResponse = await performOnce(req, providerID: providerID, correlationID: correlationID, start: start, extract: extract)
+        if case .rateLimited = firstResponse.error {
+            // Backoff 2s puis 1 seul retry — au-delà, on considère que le
+            // provider est vraiment saturé et le router prend le relais.
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            AppLog.coach.info("AIProviderHTTP: \(providerID, privacy: .public) rate limited, retry after 2s")
+            return await performOnce(req, providerID: providerID, correlationID: correlationID, start: start, extract: extract)
+        }
+        return firstResponse
+    }
+
+    /// Un seul appel HTTP sans retry — extrait de `perform` pour permettre le
+    /// pattern retry sans dupliquer la logique de parsing/mapping erreur.
+    private static func performOnce(
         _ req: URLRequest,
         providerID: String,
         correlationID: UUID,
