@@ -211,17 +211,31 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
 
     /// Extrait le paramètre `prefill` d'un userInfo notif proactif. Accepte
     /// soit `lifeos.deeplink` (URL encodée) soit `prefill` direct.
+    ///
+    /// Loop 20 — token spécial `[MONTHLY_REVIEW]` : remplace par le résumé
+    /// texte généré au moment du tap (données à jour, pas figées à la
+    /// programmation de la notif).
     private func extractCoachPrefill(from userInfo: [AnyHashable: Any]) -> String? {
+        let raw: String?
         if let direct = userInfo["prefill"] as? String, !direct.isEmpty {
-            return direct
+            raw = direct
+        } else if let deeplink = userInfo["lifeos.deeplink"] as? String,
+                  let url = URL(string: deeplink),
+                  let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                  let prefillItem = components.queryItems?.first(where: { $0.name == "prefill" }),
+                  let value = prefillItem.value?.removingPercentEncoding,
+                  !value.isEmpty {
+            raw = value
+        } else {
+            raw = nil
         }
-        guard let deeplink = userInfo["lifeos.deeplink"] as? String,
-              let url = URL(string: deeplink),
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              let prefillItem = components.queryItems?.first(where: { $0.name == "prefill" }),
-              let value = prefillItem.value?.removingPercentEncoding,
-              !value.isEmpty else { return nil }
-        return value
+        guard let raw else { return nil }
+        // Token [MONTHLY_REVIEW] → génère le vrai résumé à la volée
+        if raw.contains("[MONTHLY_REVIEW]") {
+            let review = MonthlyReviewGenerator.generateSummary()
+            return raw.replacingOccurrences(of: "[MONTHLY_REVIEW]", with: review)
+        }
+        return raw
     }
 }
 
