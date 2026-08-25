@@ -984,6 +984,14 @@ struct AIAssistantView: View {
                             Label("Ce que je sais de toi", systemImage: "eye")
                         }
                         Button {
+                            CoachVoiceMode.shared.isActive.toggle()
+                        } label: {
+                            Label(
+                                CoachVoiceMode.shared.isActive ? "Mode vocal ON" : "Activer mode vocal",
+                                systemImage: CoachVoiceMode.shared.isActive ? "mic.fill" : "mic"
+                            )
+                        }
+                        Button {
                             showHistory = true
                         } label: {
                             Label("Historique", systemImage: "clock.arrow.circlepath")
