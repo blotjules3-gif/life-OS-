@@ -149,6 +149,8 @@ struct LifeOSApp: App {
             MemoryDecayJob.runIfNeeded(context: container.mainContext)
             // Bilans quotidiens matin/soir — idempotent, re-schedule uniquement si config user changée
             CoachDailyBilan.scheduleAllIfNeeded()
+            // Bilan mensuel (Loop 20) — notif le 1er du mois à 10h
+            MonthlyReviewScheduler.scheduleIfNeeded()
         }
         .onChange(of: onboardingDone) { _, done in
             if done { ContextualNotifications.shared.reschedule() }
