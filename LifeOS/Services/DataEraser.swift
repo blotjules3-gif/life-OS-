@@ -48,6 +48,8 @@ enum DataEraser {
         AICostGuardPreference.shared.reset()
         // Suggestion d'upgrade coach (snooze bannière)
         CoachUpgradeSuggestion.shared.reset()
+        // Mode vocal (Loop 16)
+        CoachVoiceMode.shared.reset()
         // Cache UserContextBuilder
         UserContextBuilder.shared.invalidateCache()
         AppLog.data.info("DataEraser: AI artifacts erased")
