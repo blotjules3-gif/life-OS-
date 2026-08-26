@@ -135,8 +135,16 @@ enum SmartReminderScheduler {
     /// Prefix identifier pour matcher toutes les notifs d'un rappel.
     /// Utilise `stableID` (UUID persisté) — pas `persistentModelID.hashValue`
     /// qui n'est PAS stable entre relaunches Swift (fix B1 audit Loop 22).
+    ///
+    /// F03 audit forensique — pour les rappels créés AVANT Loop 22 (donc sans
+    /// `stableID` persisté en storage), on assigne + persiste à la première
+    /// lecture pour éviter la génération d'un nouveau UUID à chaque relaunch.
     static func baseIdentifier(_ r: CustomReminder) -> String {
-        "custom.\(r.stableID)"
+        if r.stableID.isEmpty {
+            r.stableID = UUID().uuidString
+            try? r.modelContext?.save()
+        }
+        return "custom.\(r.stableID)"
     }
 
     // MARK: - Low-level schedule
