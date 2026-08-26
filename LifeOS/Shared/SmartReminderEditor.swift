@@ -104,6 +104,13 @@ struct SmartReminderEditor: View {
                         presetButton("Semaine", mask: WeekdayMask.weekdays)
                         presetButton("Week-end", mask: WeekdayMask.weekend)
                     }
+                    // Loop 23 fix M3 — warning si aucun jour actif
+                    if weekdayMask == 0 {
+                        Label("Aucun jour sélectionné — le rappel ne se déclenchera jamais.",
+                              systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                            .font(.caption)
+                    }
                 }
 
                 Section("Catégorie") {
