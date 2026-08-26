@@ -5,16 +5,29 @@ import SwiftData
 @MainActor
 final class MonthlyReviewTests: XCTestCase {
 
-    override func setUp() {
-        super.setUp()
+    /// Container in-memory dédié aux tests — évite que le `SharedModelContextProvider`
+    /// hérite d'un contexte d'un test précédent (qui aurait pu être détruit
+    /// → context dangling → generator produit un output non-déterministe).
+    /// Fix F02 audit forensique.
+    private var testContainer: ModelContainer!
+
+    override func setUp() async throws {
+        try await super.setUp()
         UserDefaults.standard.removeObject(forKey: "coach.monthly.enabled")
         UserDefaults.standard.removeObject(forKey: "coach.monthly.lastConfig")
+        // Reset SharedModelContextProvider avec un container in-memory
+        // vide dédié pour ce test — garantit un état propre.
+        let schema = Schema([Habit.self, HabitCompletion.self, VitalRecord.self, FoodEntry.self])
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        testContainer = try ModelContainer(for: schema, configurations: [config])
+        SharedModelContextProvider.shared.setContext(testContainer.mainContext)
     }
 
-    override func tearDown() {
+    override func tearDown() async throws {
         UserDefaults.standard.removeObject(forKey: "coach.monthly.enabled")
         UserDefaults.standard.removeObject(forKey: "coach.monthly.lastConfig")
-        super.tearDown()
+        testContainer = nil
+        try await super.tearDown()
     }
 
     // MARK: - Scheduler prefs
