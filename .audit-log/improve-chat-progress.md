@@ -782,3 +782,37 @@ TTS (`CoachSpeech`) et STT (`SpeechRecognizer`) existaient déjà mais indépend
 
 **Blockers commerciaux** :
 - Backend proxy Cloudflare + StoreKit "Coach Premium" : décisions prix + modèle freemium requises
+
+---
+
+## Loop 23 (2026-08-26) — Audit + fixes Loops 13-22
+
+Audit sans complaisance de toutes les loops récentes → 2 BLOQUANTS + 5 MAJEURS + 3 MINEURS + 1 ajout utile identifiés.
+
+### Bloquants fixés
+
+- **B1 Identifier notif instable** : `SmartReminderScheduler.baseIdentifier` utilisait `persistentModelID.hashValue` — **pas stable entre relaunches Swift**. Ajout d'un champ `stableID: String = UUID().uuidString` à `CustomReminder` + refactor `baseIdentifier`. Plus de notifs zombies après relaunch.
+- **B2 Cleanup confirm notif** : résolu par B1 (identifier stable protège aussi `.confirm`).
+
+### Majeurs fixés
+
+- **M1 Indicateur Voice Mode ON** : badge "Vocal" avec icône `mic.fill` dans `aiHeader` quand actif.
+- **M2 Dislike double sur rephrase** : `@State lastRephrasedMessageID` — dislike auto loggé une seule fois par message coach.
+- **M3 Warning weekdayMask == 0** : `SmartReminderEditor` affiche warning orange + `canSave` refuse tant que ≥1 jour actif.
+- **M5 weightBlock lissé** : `MonthlyReviewGenerator` agrège records par jour, compare moyenne 7 premiers vs 7 derniers du mois. Élimine fluctuations intra-day.
+- **M6 honestyRules déjà conditionnel** : faux positif audit — les 5 règles longues sont dans `full` (moderate/complex), 2 règles courtes dans `compact` (simple). Design déjà bon.
+
+### Ajout
+
+- **A1 Bouton "Générer mon bilan maintenant"** : nouveau `MonthlyReviewSheet` accessible via section "Bilan mensuel" dans `CoachAIProviderView`. Affiche le résumé + Copier / Ouvrir dans le chat. Toggle activation notif mensuelle exposé.
+
+### Non fixés (assumés)
+
+- m1 Retry backoff bloquant sans feedback — acceptable
+- m2 Widget non testable sans iPhone
+- m3 Tests unit Loops 14/16/17 — dette
+
+### Validation
+
+- BUILD SUCCEEDED
+- Suite tests OK (sauf fail préexistant `testEmptyLifeProfileDoesNotEmitBlock`)
