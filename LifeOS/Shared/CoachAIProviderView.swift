@@ -164,6 +164,9 @@ struct CoachAIProviderView: View {
             Button("Confirmer", role: .destructive) { vm.clearPreference() }
             Button("Annuler", role: .cancel) {}
         }
+        .sheet(isPresented: $vm.showMonthlyReview) {
+            MonthlyReviewSheet()
+        }
         .onAppear { vm.reload() }
     }
 
