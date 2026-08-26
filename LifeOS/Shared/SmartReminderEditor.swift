@@ -31,6 +31,7 @@ struct SmartReminderEditor: View {
     private var canSave: Bool {
         let t = title.trimmingCharacters(in: .whitespaces)
         guard !t.isEmpty else { return false }
+        guard weekdayMask != 0 else { return false }  // Loop 23 fix M3
         switch frequency {
         case .daily:
             return true
