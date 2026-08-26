@@ -97,14 +97,27 @@ enum MonthlyReviewGenerator {
             sortBy: [SortDescriptor(\.date, order: .forward)]
         )
         let records = (try? ctx.fetch(descriptor)) ?? []
-        guard records.count >= 2,
-              let first = records.first,
-              let last = records.last else { return nil }
-        let delta = last.value - first.value
+        guard records.count >= 2 else { return nil }
+
+        // Loop 23 fix M5 — moyenne par jour pour lisser les fluctuations
+        // intra-day (poids matin vs soir). On agrège par startOfDay puis on
+        // compare la moyenne des 7 premiers vs des 7 derniers jours du mois.
+        let byDay = Dictionary(grouping: records) { cal.startOfDay(for: $0.date) }
+            .mapValues { records -> Double in
+                records.reduce(0) { $0 + $1.value } / Double(records.count)
+            }
+        let sortedDays = byDay.keys.sorted()
+        guard sortedDays.count >= 4 else { return nil }
+
+        let firstWindow = sortedDays.prefix(min(7, sortedDays.count / 2))
+        let lastWindow = sortedDays.suffix(min(7, sortedDays.count / 2))
+        let firstAvg = firstWindow.compactMap { byDay[$0] }.reduce(0, +) / Double(firstWindow.count)
+        let lastAvg = lastWindow.compactMap { byDay[$0] }.reduce(0, +) / Double(lastWindow.count)
+        let delta = lastAvg - firstAvg
         guard abs(delta) >= 0.3 else { return nil }
         let sign = delta > 0 ? "+" : ""
-        return String(format: "Poids : %@%.1f kg sur le mois (de %.1f à %.1f).",
-                     sign, delta, first.value, last.value)
+        return String(format: "Poids : %@%.1f kg sur le mois (moyenne %.1f → %.1f, lissée par jour).",
+                     sign, delta, firstAvg, lastAvg)
     }
 
     private static func nutritionBlock() -> String? {
