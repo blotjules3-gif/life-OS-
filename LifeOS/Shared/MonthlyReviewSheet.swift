@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Affiche le résumé mensuel généré à la demande (bouton "Générer maintenant"
 /// dans Réglages Coach IA — Loop 23 fix A1).
