@@ -215,6 +215,7 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     /// Loop 20 — token spécial `[MONTHLY_REVIEW]` : remplace par le résumé
     /// texte généré au moment du tap (données à jour, pas figées à la
     /// programmation de la notif).
+    @MainActor
     private func extractCoachPrefill(from userInfo: [AnyHashable: Any]) -> String? {
         let raw: String?
         if let direct = userInfo["prefill"] as? String, !direct.isEmpty {
