@@ -1278,8 +1278,19 @@ struct AIAssistantView: View {
             .accessibilityHidden(true)  // Décoratif — VoiceOver saute direct au titre
             .accessibilitySortPriority(-1)
             VStack(spacing: 3) {
-                Text("Assistant LifeOS")
-                    .font(.system(size: 16, weight: .semibold))
+                HStack(spacing: 6) {
+                    Text("Assistant LifeOS")
+                        .font(.system(size: 16, weight: .semibold))
+                    // Loop 23 fix M1 — indicateur visuel Voice Mode ON
+                    if CoachVoiceMode.shared.isActive {
+                        Label("Vocal", systemImage: "mic.fill")
+                            .font(.caption2.weight(.semibold))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.accentColor.opacity(0.18), in: Capsule())
+                            .foregroundStyle(Color.accentColor)
+                    }
+                }
                 Text("Personnalise tes modules, crée des objectifs, suis tes habitudes")
                     .font(.caption)
                     .foregroundStyle(.secondary)
