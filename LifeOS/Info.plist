@@ -46,6 +46,11 @@
 	<string>17.0</string>
 	<key>NSAccentColorName</key>
 	<string>AccentColor</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>LifeOS utilise l'appareil photo pour scanner les codes-barres, les documents et tes photos avant/après.</string>
 	<key>NSFaceIDUsageDescription</key>
