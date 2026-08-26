@@ -15,7 +15,11 @@ import SwiftData
     /// pour construire les IDs de notif iOS. `persistentModelID.hashValue`
     /// n'est PAS stable entre relaunches Swift, d'où ce UUID persisté.
     /// Loop 23 fix B1.
-    var stableID: String = UUID().uuidString
+    /// F03 audit forensique — défaut "" (pas UUID()) car le default est
+    /// ré-évalué à chaque load SwiftData pour les rows migrées → risque
+    /// UUID différent à chaque relaunch. Le `baseIdentifier` remplit lazy
+    /// au premier accès et persiste.
+    var stableID: String = ""
 
     // MARK: - Extensions rappels intelligents (nouveaux champs optionnels
     // avec valeurs par défaut → aucune migration cassante requise).
