@@ -116,6 +116,20 @@ struct CoachAIProviderView: View {
                      : "Les bilans automatiques sont désactivés — le coach reste dispo à la demande.")
             }
 
+            // Section bilan mensuel — Loop 23 fix A1 (bouton "Générer maintenant")
+            Section {
+                Toggle("Bilan mensuel automatique", isOn: $vm.monthlyReviewEnabled)
+                Button {
+                    vm.showMonthlyReview = true
+                } label: {
+                    Label("Générer mon bilan maintenant", systemImage: "doc.text.magnifyingglass")
+                }
+            } header: {
+                Text("Bilan mensuel")
+            } footer: {
+                Text("Notification le 1er de chaque mois à 10h avec un résumé auto de tes 30 derniers jours (habitudes, sommeil, poids, nutrition).")
+            }
+
             if vm.currentPreference != nil {
                 Section {
                     Button(role: .destructive) {
