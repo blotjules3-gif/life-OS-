@@ -194,8 +194,8 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
            response.actionIdentifier == "COACH_OPEN"
              || response.actionIdentifier == UNNotificationDefaultActionIdentifier {
             let info = content.userInfo
-            let prefill = extractCoachPrefill(from: info)
             let signal = info["lifeos.signal"] as? String
+            let prefill = await MainActor.run { self.extractCoachPrefill(from: info) }
             await MainActor.run {
                 if let signal { AnalyticsEvents.coachProactiveOpened(signal: signal) }
                 var userInfo: [AnyHashable: Any] = [:]
