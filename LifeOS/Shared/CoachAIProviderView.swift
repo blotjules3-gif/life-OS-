@@ -632,4 +632,17 @@ private final class ViewModel: ObservableObject {
             objectWillChange.send()
         }
     }
+
+    // MARK: - Bilan mensuel (Loop 23 fix A1)
+
+    var monthlyReviewEnabled: Bool {
+        get { MonthlyReviewScheduler.isEnabled }
+        set {
+            MonthlyReviewScheduler.isEnabled = newValue
+            MonthlyReviewScheduler.scheduleIfNeeded()
+            objectWillChange.send()
+        }
+    }
+
+    @Published var showMonthlyReview: Bool = false
 }
