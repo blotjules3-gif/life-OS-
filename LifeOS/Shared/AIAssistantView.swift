@@ -448,6 +448,11 @@ final class AIAssistantViewModel: ObservableObject {
     /// Cherche le dernier message user AVANT la réponse coach ciblée, et
     /// re-envoie avec un préfixe qui indique "ta réponse précédente n'était
     /// pas satisfaisante, essaie autrement".
+    ///
+    /// Loop 23 fix M2 — dislike auto UNIQUEMENT si l'user n'a pas déjà noté
+    /// cette réponse (évite double-count si l'user tape "Pas top" puis "Reformule").
+    private var lastRephrasedMessageID: UUID?
+
     func rephrase(after message: DisplayMessage) {
         guard let coachIndex = messages.firstIndex(where: { $0.id == message.id }),
               let userMessage = messages[..<coachIndex].reversed().first(where: { $0.role == "user" })
@@ -455,9 +460,13 @@ final class AIAssistantViewModel: ObservableObject {
             showToast("Impossible de trouver le message à reformuler", module: nil)
             return
         }
-        // Log dislike auto — un rephrase = signal que la réponse a raté
-        CoachFeedbackStore.record(.dislike, response: message.text, reason: .notConcrete)
-        CoachUpgradeSuggestion.shared.refresh()
+        // Log dislike auto uniquement si ce message n'a pas déjà été rephrasé
+        // ou explicitement disliké dans la même session.
+        if lastRephrasedMessageID != message.id {
+            CoachFeedbackStore.record(.dislike, response: message.text, reason: .notConcrete)
+            CoachUpgradeSuggestion.shared.refresh()
+            lastRephrasedMessageID = message.id
+        }
 
         // Marque de rephrase que le prompt système va détecter en amont
         let prompt = "[REFORMULE] " + userMessage.text
