@@ -11,6 +11,11 @@ import SwiftData
     var enabled: Bool = true
     var confirm: Bool = false      // notif de confirmation ~1h30 après
     var created: Date = Date()
+    /// Identifier stable entre sessions — utilisé par SmartReminderScheduler
+    /// pour construire les IDs de notif iOS. `persistentModelID.hashValue`
+    /// n'est PAS stable entre relaunches Swift, d'où ce UUID persisté.
+    /// Loop 23 fix B1.
+    var stableID: String = UUID().uuidString
 
     // MARK: - Extensions rappels intelligents (nouveaux champs optionnels
     // avec valeurs par défaut → aucune migration cassante requise).
