@@ -142,6 +142,28 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             }
         }
 
+        // F01 audit forensique — tap sur notif SmartReminder personnalisée.
+        // Identifier pattern : "custom.<stableID>.<weekday>.<hour>.<minute>"
+        // ou "custom.<stableID>.confirm". On extrait le title/body pour
+        // pré-remplir le chat coach avec un contexte utile.
+        if id.hasPrefix("custom.") {
+            let title = response.notification.request.content.title
+            let body = response.notification.request.content.body
+            let prefill: String
+            if id.hasSuffix(".confirm") {
+                prefill = "Tu me demandais de vérifier : \(title). Fait ou pas encore ?"
+            } else {
+                prefill = "Rappel : \(title). \(body). J'en fais quoi ?"
+            }
+            await MainActor.run {
+                NotificationCenter.default.post(
+                    name: .lifeOSOpenAIChat,
+                    object: nil,
+                    userInfo: ["prefill": prefill]
+                )
+            }
+        }
+
         // Réponse à une notif de CONFIRMATION (compléments, salle, etc.)
         let content = response.notification.request.content
         if content.categoryIdentifier == "LIFEOS_CONFIRM" {
