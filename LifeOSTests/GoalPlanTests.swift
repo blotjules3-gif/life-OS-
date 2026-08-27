@@ -9,6 +9,24 @@ import SwiftData
 @MainActor
 final class GoalPlanTests: XCTestCase {
 
+    private var container: ModelContainer!
+
+    override func setUp() async throws {
+        try await super.setUp()
+        // Container in-memory dédié pour éviter pollution d'un test précédent
+        // qui aurait branché un ProfileStore/SharedModelContextProvider stale.
+        let schema = Schema([ProfileField.self, ProfileFieldRevision.self, UserGoal.self])
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        container = try ModelContainer(for: schema, configurations: [config])
+        ProfileStore.shared.setContext(container.mainContext)
+        SharedModelContextProvider.shared.setContext(container.mainContext)
+    }
+
+    override func tearDown() async throws {
+        container = nil
+        try await super.tearDown()
+    }
+
     // MARK: - GoalIntentClassifier
 
     func testDetect_weightLoss_withMagnitude() {
