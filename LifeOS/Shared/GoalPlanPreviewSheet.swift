@@ -155,12 +155,20 @@ struct GoalPlanPreviewSheet: View {
     // MARK: - Actions
 
     private func apply() {
+        // C3 audit — désactive le bouton pendant l'exécution pour éviter
+        // double tap (avant même que idempotency backend intervienne).
+        guard !applied else { return }
+        applied = true
         let result = GoalPlanExecutor.apply(plan, goal: goal, context: ctx)
         applyResult = result
-        applied = true
+        // Si échec, permet un retry en re-activant le bouton
+        if !result.success { applied = false }
     }
 
     private func summaryOf(_ r: GoalPlanExecutor.ApplyResult) -> String {
+        if !r.success {
+            return r.errorMessage ?? "Erreur inconnue."
+        }
         var parts: [String] = []
         if !r.modulesActivated.isEmpty {
             parts.append("\(r.modulesActivated.count) module(s) activé(s)")
