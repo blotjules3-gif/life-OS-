@@ -270,6 +270,21 @@ final class AIAssistantViewModel: ObservableObject {
 
         appendUserMessage(displayContent)
 
+        // Loop 24 — détection d'un objectif reconnu → proposer un plan
+        // avant de router vers le LLM. L'user valide (ou non) via la sheet.
+        if !isRephraseRequest, let detection = GoalIntentClassifier.detect(in: displayContent) {
+            let goal = UserGoal(
+                title: displayContent,
+                kindRaw: detection.kind.rawValue,
+                targetValue: detection.magnitude,
+                targetUnit: detection.unit
+            )
+            let plan = GoalPlanTemplate.plan(for: goal)
+            pendingGoalPreview = (goal, plan)
+            // Ne PAS bloquer le pipeline LLM — il tourne aussi en parallèle
+            // (le user peut fermer la sheet et lire la réponse coach classique).
+        }
+
         // Ancien "AddAnythingSheet" désactivé : il bypassait tout le pipeline
         // (extraction ProfileField + IntentExecutor + acknowledge coach). Le nouveau
         // pipeline gère habitudes/tâches/rappels via IntentExecutor + upsert profil.
