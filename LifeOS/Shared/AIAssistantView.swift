@@ -278,9 +278,13 @@ final class AIAssistantViewModel: ObservableObject {
 
         appendUserMessage(displayContent)
 
-        // Loop 24 — détection d'un objectif reconnu → proposer un plan
-        // avant de router vers le LLM. L'user valide (ou non) via la sheet.
-        if !isRephraseRequest, let detection = GoalIntentClassifier.detect(in: displayContent) {
+        // Loop 24 — détection d'un objectif reconnu → proposer un plan.
+        // C2 audit fix : on SKIP le LLM pour éviter que le coach hallucine
+        // "j'ai créé pour toi X habitudes" alors que le vrai plan attend la
+        // validation user via la sheet. Un message coach factuel court est
+        // ajouté à la place pour cohérence UI.
+        if !isRephraseRequest, let detection = GoalIntentClassifier.detect(in: displayContent),
+           detection.kind != .custom {
             let goal = UserGoal(
                 title: displayContent,
                 kindRaw: detection.kind.rawValue,
@@ -289,8 +293,14 @@ final class AIAssistantViewModel: ObservableObject {
             )
             let plan = GoalPlanTemplate.plan(for: goal)
             pendingGoalPreview = .init(goal: goal, plan: plan)
-            // Ne PAS bloquer le pipeline LLM — il tourne aussi en parallèle
-            // (le user peut fermer la sheet et lire la réponse coach classique).
+            // Message coach factuel — pas d'hallucination possible
+            appendAssistantMessage(
+                "J'ai préparé un plan pour toi. Regarde ce que je propose — tu valides ce que tu veux.",
+                actions: [],
+                providerID: "local.rules.coach",
+                animateReveal: false
+            )
+            return  // Skip pipeline LLM — le plan remplace la réponse
         }
 
         // Ancien "AddAnythingSheet" désactivé : il bypassait tout le pipeline
