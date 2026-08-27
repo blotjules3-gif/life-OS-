@@ -43,7 +43,9 @@ enum LocalStore {
         // Rappels perso (centre de notifications) + programme de sport
         CustomReminder.self, GymDay.self,
         // Intelligent Profile Engine — Bloc A
-        ProfileField.self, ProfileFieldRevision.self
+        ProfileField.self, ProfileFieldRevision.self,
+        // Objectifs unifiés (Loop 24 Goal-Plan-Partner)
+        UserGoal.self
     ])
 
     @MainActor private static var current: ModelContainer?
