@@ -34,26 +34,23 @@ enum GoalPlanExecutor {
 
     /// Applique le plan et retourne un résumé de ce qui a réellement été fait.
     /// L'user peut voir ce résumé pour comprendre l'impact.
+    ///
+    /// C3 audit fix — idempotency : si un UserGoal du même kind existe déjà
+    /// en `.active` avec la même targetValue, on ne re-crée PAS un doublon.
+    /// M6 audit fix — retourne success=false + errorMessage si save() throw.
     static func apply(_ plan: GoalPlan, goal: UserGoal, context: ModelContext) -> ApplyResult {
-        var result = ApplyResult(
-            modulesActivated: [],
-            habitsCreated: 0,
-            habitsSkippedExisting: 0,
-            remindersCreated: 0,
-            profileFieldsWritten: 0,
-            profileFieldsSkipped: 0
-        )
+        // C3 idempotency check
+        let existingGoals = (try? context.fetch(FetchDescriptor<UserGoal>(
+            predicate: #Predicate { $0.statusRaw == "active" }
+        ))) ?? []
+        if existingGoals.contains(where: {
+            $0.kindRaw == goal.kindRaw && abs($0.targetValue - goal.targetValue) < 0.01
+        }) {
+            return .failed("Cet objectif est déjà actif — regarde tes objectifs en cours avant d'en créer un nouveau.")
+        }
 
         // 1. Modules
         let activated = activateModules(plan.modulesToActivate)
-        result = ApplyResult(
-            modulesActivated: activated,
-            habitsCreated: result.habitsCreated,
-            habitsSkippedExisting: result.habitsSkippedExisting,
-            remindersCreated: result.remindersCreated,
-            profileFieldsWritten: result.profileFieldsWritten,
-            profileFieldsSkipped: result.profileFieldsSkipped
-        )
 
         // 2. Habits (dédup par name existant)
         let existingHabits = (try? context.fetch(FetchDescriptor<Habit>())) ?? []
