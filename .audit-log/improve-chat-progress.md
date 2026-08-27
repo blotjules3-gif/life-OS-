@@ -816,3 +816,79 @@ Audit sans complaisance de toutes les loops récentes → 2 BLOQUANTS + 5 MAJEUR
 
 - BUILD SUCCEEDED
 - Suite tests OK (sauf fail préexistant `testEmptyLifeProfileDoesNotEmitBlock`)
+
+---
+
+## Loop 24 (2026-08-27) — Fondation Goal-Plan-Partner architecture
+
+### Contexte
+
+Spec produit user : transformer LifeOS en plateforme d'orchestration d'objectifs personnels. User tape un objectif → LifeOS propose un plan complet multi-catégories → user valide → app applique.
+
+**Règles absolues (respectées)** :
+- L'app propose, l'user décide (validation explicite via sheet)
+- Aucun partenaire hardcodé — catalogue vide au démarrage
+- Aucune capacité fictive — Partner protocol avec capabilities honnêtes
+
+### Livrés
+
+**Nouveaux modèles/services (9 fichiers)** :
+- `Models_Goals.swift` — `@Model UserGoal` (persisté) + `GoalKind` enum (9 types)
+- `Services/Goals/GoalPlan.swift` — structures non-persisted `GoalPlan`, `HabitTemplate`, `ReminderTemplate`, `ProfileFieldTemplate`, `Recommendation`
+- `Services/Goals/Partner.swift` — protocol `Partner` + `PartnerCapability` (8 capabilities) + `PartnerIntegrationLevel` (5 niveaux 0-4)
+- `Services/Goals/PartnerCatalog.swift` — registry singleton **vide par défaut**
+- `Services/Goals/GoalIntentClassifier.swift` — détection déterministe (regex) : weightLoss/muscleGain/sleepBetter/moreProductive/eatBetter/saveMoney/reduceStress/fitnessGeneral/custom
+- `Services/Goals/GoalPlanTemplate.swift` — 9 templates générant plans complets par kind
+- `Services/Goals/GoalPlanExecutor.swift` — applique un plan validé (modules + habits + reminders + profileFields), idempotent avec dédup
+- `Shared/GoalPlanPreviewSheet.swift` — preview interactive avec sections + bouton "Créer ce plan" + résumé après application
+
+**Wire** :
+- `LocalStore` — `UserGoal.self` ajouté au schema
+- `AIAssistantView.send` — détection intent goal → `pendingGoalPreview` → sheet
+- `AIAssistantViewModel.pendingGoalPreview` — `@Published` state
+- `DataEraser` — reset `UserGoal` inclus (RGPD)
+
+### Validation
+
+- BUILD SUCCEEDED
+- **12 nouveaux tests** `GoalPlanTests` — classifier variants, templates cohérents, règle "no partner hardcoded"
+- Suite complète OK (fail préexistant flaky non lié)
+
+### Comment ça marche pour l'user
+
+1. User tape "je veux perdre 5 kg" dans le chat
+2. `GoalIntentClassifier.detect` reconnaît → `weightLoss(5, kg)`
+3. `GoalPlanTemplate.plan(for:)` génère plan complet :
+   - Modules : fitness + nutrition
+   - Habits : Séance sport 3x/sem, Marche 8k pas, Pesée matin
+   - Reminders : Hydratation toutes les 2h (8h-20h)
+   - ProfileField : `body.targetWeightKg = -5kg vs actuel`
+   - Recommandations : marche quotidienne, prioriser protéines
+4. Sheet `GoalPlanPreviewSheet` affiche tout — sections claires
+5. User tap "Créer ce plan" → `GoalPlanExecutor.apply` :
+   - Active modules dans `recommendedModules`
+   - Insert Habit (dédup par name)
+   - Insert CustomReminder + `SmartReminderScheduler.reschedule`
+   - Upsert ProfileField (avec `onlyIfMissing` respect)
+   - Persist UserGoal
+6. Toast résumé : "2 modules activés, 3 habitudes créées, 1 rappel, 1 champ profil"
+
+### Architecture prête pour Phase 2+
+
+- Ajouter un partenaire = créer `MyPartner: Partner` + `PartnerCatalog.shared.register(_)`
+- Aucune modif du moteur ni des templates
+- Recommendations ont champ `partnerID` — l'UI marque clairement "Offre partenaire" vs "Recommandation neutre"
+- 5 niveaux d'intégration graduels (none → externalLink → commercial → api → execution)
+
+### Non fait volontairement (respect règle §17)
+
+- ❌ Aucun partenaire réel (Auchan, Nike, Basic-Fit, etc.) — jamais inventé
+- ❌ Aucune API mock/stub
+- ❌ Aucun prix / réduction / disponibilité fictive
+- ✅ Architecture prête pour ajouter progressivement
+
+### Ce qui reste
+
+- **Édition avant validation** : le user ne peut pas modifier le plan avant de le créer (juste accepter/rejeter). Loop 25 potentielle.
+- **Onglet dédié "Mes objectifs"** : voir historique UserGoal + progression
+- **Génération plan multi-objectifs** : si user donne 2 objectifs simultanés (perdre poids + économiser), templates additifs
