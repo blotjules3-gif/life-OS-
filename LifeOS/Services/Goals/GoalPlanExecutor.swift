@@ -16,12 +16,20 @@ import SwiftData
 enum GoalPlanExecutor {
 
     struct ApplyResult {
+        let success: Bool
+        let errorMessage: String?
         let modulesActivated: [String]
         let habitsCreated: Int
         let habitsSkippedExisting: Int
         let remindersCreated: Int
         let profileFieldsWritten: Int
         let profileFieldsSkipped: Int
+
+        static func failed(_ message: String) -> ApplyResult {
+            ApplyResult(success: false, errorMessage: message,
+                       modulesActivated: [], habitsCreated: 0, habitsSkippedExisting: 0,
+                       remindersCreated: 0, profileFieldsWritten: 0, profileFieldsSkipped: 0)
+        }
     }
 
     /// Applique le plan et retourne un résumé de ce qui a réellement été fait.
