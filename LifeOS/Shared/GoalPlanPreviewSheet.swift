@@ -29,10 +29,14 @@ struct GoalPlanPreviewSheet: View {
                 if !plan.recommendations.isEmpty { recommendationsSection }
 
                 if let result = applyResult {
-                    Section("Résultat") {
-                        Text(summaryOf(result))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                    Section(result.success ? "Résultat" : "Échec") {
+                        Label {
+                            Text(summaryOf(result))
+                                .font(.subheadline)
+                        } icon: {
+                            Image(systemName: result.success ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                .foregroundStyle(result.success ? .green : .red)
+                        }
                     }
                 }
             }
