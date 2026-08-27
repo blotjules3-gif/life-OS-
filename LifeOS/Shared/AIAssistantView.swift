@@ -1092,6 +1092,13 @@ struct AIAssistantView: View {
             .sheet(isPresented: $showKnowledgePreview) {
                 CoachKnowledgePreviewView()
             }
+            // Loop 24 — preview plan objectif
+            .sheet(item: Binding<GoalPreviewIdentifiable?>(
+                get: { vm.pendingGoalPreview.map { GoalPreviewIdentifiable(goal: $0.0, plan: $0.1) } },
+                set: { newValue in if newValue == nil { vm.pendingGoalPreview = nil } }
+            )) { wrapper in
+                GoalPlanPreviewSheet(goal: wrapper.goal, plan: wrapper.plan)
+            }
             #if DEBUG
             .sheet(isPresented: $showAIDebug) {
                 AIDebugView()
