@@ -17,11 +17,13 @@ struct GoalPlanPreviewSheet: View {
 
     @State private var applied = false
     @State private var applyResult: GoalPlanExecutor.ApplyResult?
+    @State private var conflicts: [GoalConflictDetector.Conflict] = []
 
     var body: some View {
         NavigationStack {
             List {
                 headerSection
+                if !conflicts.isEmpty { conflictsSection }
                 if !plan.modulesToActivate.isEmpty { modulesSection }
                 if !plan.habits.isEmpty { habitsSection }
                 if !plan.reminders.isEmpty { remindersSection }
