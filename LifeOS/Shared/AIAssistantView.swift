@@ -86,6 +86,14 @@ final class AIAssistantViewModel: ObservableObject {
     @Published var actionToast: ActionToast?
     @Published var revealID: UUID?
     @Published var streamingText: String?
+    /// Loop 24 — preview objectif détecté ; nil = pas de plan à valider.
+    @Published var pendingGoalPreview: GoalPreviewPayload?
+
+    struct GoalPreviewPayload: Identifiable {
+        let id = UUID()
+        let goal: UserGoal
+        let plan: GoalPlan
+    }
     @Published var showAddFlow = false
     @Published var addFlowKind: AddAnythingSheet.Kind = .task
     @Published var addFlowPrefill = ""
