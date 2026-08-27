@@ -288,7 +288,7 @@ final class AIAssistantViewModel: ObservableObject {
                 targetUnit: detection.unit
             )
             let plan = GoalPlanTemplate.plan(for: goal)
-            pendingGoalPreview = (goal, plan)
+            pendingGoalPreview = .init(goal: goal, plan: plan)
             // Ne PAS bloquer le pipeline LLM — il tourne aussi en parallèle
             // (le user peut fermer la sheet et lire la réponse coach classique).
         }
