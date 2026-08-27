@@ -12,18 +12,54 @@ import Foundation
 enum GoalPlanTemplate {
 
     /// Point d'entrée principal — retourne le plan pour un objectif donné.
+    /// C1 audit — enrichit le plan avec les recommandations partenaires
+    /// disponibles APRÈS génération du plan neutre.
     static func plan(for goal: UserGoal) -> GoalPlan {
-        switch goal.kind {
-        case .weightLoss:      return weightLossPlan(goal)
-        case .muscleGain:      return muscleGainPlan(goal)
-        case .sleepBetter:     return sleepBetterPlan(goal)
-        case .moreProductive:  return moreProductivePlan(goal)
-        case .eatBetter:       return eatBetterPlan(goal)
-        case .saveMoney:       return saveMoneyPlan(goal)
-        case .reduceStress:    return reduceStressPlan(goal)
-        case .fitnessGeneral:  return fitnessGeneralPlan(goal)
-        case .custom:          return customPlan(goal)
+        let basePlan: GoalPlan = {
+            switch goal.kind {
+            case .weightLoss:      return weightLossPlan(goal)
+            case .muscleGain:      return muscleGainPlan(goal)
+            case .sleepBetter:     return sleepBetterPlan(goal)
+            case .moreProductive:  return moreProductivePlan(goal)
+            case .eatBetter:       return eatBetterPlan(goal)
+            case .saveMoney:       return saveMoneyPlan(goal)
+            case .reduceStress:    return reduceStressPlan(goal)
+            case .fitnessGeneral:  return fitnessGeneralPlan(goal)
+            case .custom:          return customPlan(goal)
+            }
+        }()
+        return enrichWithPartners(basePlan, goal: goal)
+    }
+
+    /// C1 audit fix — ajoute des recommandations partenaires si le catalogue
+    /// en contient (Phase 2+). Catalogue vide → aucune modif du plan.
+    /// Neutralité produit : les partenaires viennent APRÈS les recos neutres,
+    /// jamais à leur place. UI marque clairement "Offre partenaire".
+    private static func enrichWithPartners(_ plan: GoalPlan, goal: UserGoal) -> GoalPlan {
+        var enriched = plan.recommendations
+        for moduleRaw in plan.modulesToActivate {
+            let partners = PartnerCatalog.shared.partners(for: moduleRaw)
+            for p in partners where p.capabilities.contains(.canRecommend) {
+                enriched.append(Recommendation(
+                    title: p.displayName,
+                    rationale: p.description,
+                    effort: .low,
+                    estimatedCostEUR: nil,
+                    partnerID: p.id,
+                    actionKey: p.capabilities.contains(.canRedirect) ? "open:\(p.externalURL?.absoluteString ?? "")" : nil
+                ))
+            }
         }
+        return GoalPlan(
+            goalKind: plan.goalKind,
+            title: plan.title,
+            summary: plan.summary,
+            modulesToActivate: plan.modulesToActivate,
+            habits: plan.habits,
+            reminders: plan.reminders,
+            profileFields: plan.profileFields,
+            recommendations: enriched
+        )
     }
 
     // MARK: - Templates individuels
