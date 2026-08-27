@@ -106,13 +106,19 @@ enum GoalPlanExecutor {
             writtenFields += 1
         }
 
-        // 5. Persist UserGoal + snapshot
+        // 5. Persist UserGoal + snapshot (M6 fix — vraie gestion erreur)
         goal.appliedPlanSummary = plan.summary
         goal.updatedAt = .now
         context.insert(goal)
-        try? context.save()
+        do {
+            try context.save()
+        } catch {
+            return .failed("Impossible d'enregistrer le plan : \(error.localizedDescription). Réessaie.")
+        }
 
         return ApplyResult(
+            success: true,
+            errorMessage: nil,
             modulesActivated: activated,
             habitsCreated: created,
             habitsSkippedExisting: skipped,
