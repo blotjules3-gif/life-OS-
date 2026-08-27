@@ -106,6 +106,7 @@ enum DataEraser {
             try ctx.delete(model: Envelope.self)
             try ctx.delete(model: Subscription.self)
             try ctx.delete(model: SavingsGoal.self)
+            try ctx.delete(model: UserGoal.self)
             try ctx.delete(model: SplitExpense.self)
             try ctx.delete(model: Holding.self)
             try ctx.delete(model: NetWorthItem.self)
