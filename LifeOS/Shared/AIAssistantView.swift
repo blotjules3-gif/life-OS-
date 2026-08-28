@@ -1027,6 +1027,11 @@ struct AIAssistantView: View {
                             Label("Ce que je sais de toi", systemImage: "eye")
                         }
                         Button {
+                            showMyGoals = true
+                        } label: {
+                            Label("Mes objectifs", systemImage: "target")
+                        }
+                        Button {
                             CoachVoiceMode.shared.isActive.toggle()
                         } label: {
                             Label(
