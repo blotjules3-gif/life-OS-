@@ -65,11 +65,16 @@ import SwiftUI
     var moduleTag: String
     var scheduledHour: Int
     var scheduledMinute: Int
+    /// Loop 25 audit — UUID du `UserGoal` qui a créé cette habitude (via
+    /// GoalPlanExecutor). Vide = habitude créée manuellement.
+    /// Permet de propager archive/delete du goal aux habits associées.
+    var sourceGoalID: String = ""
     @Relationship(deleteRule: .cascade) var completions: [HabitCompletion]
-    init(name: String = "", icon: String = "checkmark", colorHex: Int = 0x4CC38A, createdAt: Date = .now, isPending: Bool = false, isArchived: Bool = false, moduleTag: String = "", scheduledHour: Int = 9, scheduledMinute: Int = 0) {
+    init(name: String = "", icon: String = "checkmark", colorHex: Int = 0x4CC38A, createdAt: Date = .now, isPending: Bool = false, isArchived: Bool = false, moduleTag: String = "", scheduledHour: Int = 9, scheduledMinute: Int = 0, sourceGoalID: String = "") {
         self.name = name; self.icon = icon; self.colorHex = colorHex; self.createdAt = createdAt
         self.isPending = isPending; self.isArchived = isArchived; self.moduleTag = moduleTag
         self.scheduledHour = scheduledHour; self.scheduledMinute = scheduledMinute
+        self.sourceGoalID = sourceGoalID
         self.completions = []
     }
 }
