@@ -40,15 +40,15 @@ enum GoalProgressCalculator {
               let target = ProfileStore.shared.field("body.targetWeightKg"),
               let currentKg = Double(current.valueString),
               let targetKg = Double(target.valueString) else { return nil }
-        // Delta signé selon direction
-        let signedDelta = (currentKg - targetKg) * Double(direction)
-        // Progression : plus signedDelta est proche de 0, plus on approche.
-        if abs(currentKg - targetKg) < 0.3 {
+        _ = direction  // kept for future direction-aware logic (perte vs prise)
+        let absDelta = abs(currentKg - targetKg)
+        if absDelta < 0.3 {
             return Progress(ratio: 1.0, label: String(format: "%.1f kg — atteint", currentKg))
         }
-        // Approximation : on ne connaît pas le poids de départ, on utilise 5 kg comme base d'échelle
-        let scaleKg: Double = max(abs(currentKg - targetKg), 5)
-        let ratio = max(0, 1 - abs(currentKg - targetKg) / scaleKg)
+        // Approximation : sans poids de départ persisté, on borne à 5 kg comme
+        // échelle max pour éviter des ratios trop pessimistes.
+        let scaleKg: Double = max(absDelta, 5)
+        let ratio = max(0, 1 - absDelta / scaleKg)
         return Progress(
             ratio: ratio,
             label: String(format: "%.1f → %.1f kg", currentKg, targetKg)
