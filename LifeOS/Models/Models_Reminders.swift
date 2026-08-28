@@ -21,6 +21,10 @@ import SwiftData
     /// au premier accès et persiste.
     var stableID: String = ""
 
+    /// Loop 25 audit — UUID du `UserGoal` qui a créé ce rappel via
+    /// GoalPlanExecutor. Vide = rappel créé manuellement par l'user.
+    var sourceGoalID: String = ""
+
     // MARK: - Extensions rappels intelligents (nouveaux champs optionnels
     // avec valeurs par défaut → aucune migration cassante requise).
 
