@@ -120,4 +120,40 @@ final class GoalPlanTests: XCTestCase {
         XCTAssertFalse(PartnerCatalog.shared.hasAnyPartner,
                       "Aucun partenaire ne doit être hardcodé — spec §17")
     }
+
+    // MARK: - Conflict detector (M1 audit)
+
+    func testConflict_weightLossAndMuscleGain_detected() throws {
+        let existing = UserGoal(kindRaw: "weightLoss", targetValue: 5)
+        container.mainContext.insert(existing)
+        try container.mainContext.save()
+        let conflicts = GoalConflictDetector.conflicts(for: .muscleGain, context: container.mainContext)
+        XCTAssertTrue(conflicts.contains(where: { $0.severity == .warning }))
+    }
+
+    func testConflict_identicalKind_isHard() throws {
+        let existing = UserGoal(kindRaw: "sleepBetter")
+        container.mainContext.insert(existing)
+        try container.mainContext.save()
+        let conflicts = GoalConflictDetector.conflicts(for: .sleepBetter, context: container.mainContext)
+        XCTAssertTrue(conflicts.contains(where: { $0.severity == .hard }))
+    }
+
+    func testConflict_none_returnsEmpty() {
+        let conflicts = GoalConflictDetector.conflicts(for: .moreProductive, context: container.mainContext)
+        XCTAssertTrue(conflicts.isEmpty)
+    }
+
+    // MARK: - Executor idempotency (C3 audit)
+
+    func testExecutor_appliedTwice_secondCallFails() throws {
+        let goal1 = UserGoal(kindRaw: "sleepBetter", targetValue: 0)
+        let plan = GoalPlanTemplate.plan(for: goal1)
+        let r1 = GoalPlanExecutor.apply(plan, goal: goal1, context: container.mainContext)
+        XCTAssertTrue(r1.success)
+
+        let goal2 = UserGoal(kindRaw: "sleepBetter", targetValue: 0)
+        let r2 = GoalPlanExecutor.apply(plan, goal: goal2, context: container.mainContext)
+        XCTAssertFalse(r2.success, "Un objectif identique déjà actif doit être refusé")
+    }
 }
