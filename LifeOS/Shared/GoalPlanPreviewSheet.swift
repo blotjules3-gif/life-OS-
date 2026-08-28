@@ -60,6 +60,20 @@ struct GoalPlanPreviewSheet: View {
 
     // MARK: - Sections
 
+    private var conflictsSection: some View {
+        Section("Attention") {
+            ForEach(conflicts.indices, id: \.self) { i in
+                let c = conflicts[i]
+                Label {
+                    Text(c.message).font(.caption).fixedSize(horizontal: false, vertical: true)
+                } icon: {
+                    Image(systemName: c.severity == .hard ? "xmark.octagon.fill" : "exclamationmark.triangle.fill")
+                        .foregroundStyle(c.severity == .hard ? .red : .orange)
+                }
+            }
+        }
+    }
+
     private var headerSection: some View {
         Section {
             HStack(spacing: 12) {
