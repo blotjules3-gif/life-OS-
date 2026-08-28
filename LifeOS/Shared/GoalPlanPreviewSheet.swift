@@ -55,6 +55,7 @@ struct GoalPlanPreviewSheet: View {
                     }
                 }
             }
+            .onAppear { loadConflicts() }
         }
     }
 
