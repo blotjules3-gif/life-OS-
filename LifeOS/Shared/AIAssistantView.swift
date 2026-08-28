@@ -1114,6 +1114,9 @@ struct AIAssistantView: View {
             .sheet(isPresented: $showKnowledgePreview) {
                 CoachKnowledgePreviewView()
             }
+            .sheet(isPresented: $showMyGoals) {
+                MyGoalsView()
+            }
             // Loop 24 — preview plan objectif
             .sheet(item: $vm.pendingGoalPreview) { payload in
                 GoalPlanPreviewSheet(goal: payload.goal, plan: payload.plan)
