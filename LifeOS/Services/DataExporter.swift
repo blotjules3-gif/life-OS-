@@ -101,6 +101,22 @@ enum DataExporter {
         add("epargne", "Objectifs d'épargne", try ctx.fetch(FetchDescriptor<SavingsGoal>()).map {
             ["nom": $0.name, "objectif": $0.target, "actuel": $0.current, "parMois": $0.monthly]
         })
+        // Loop 24 audit m2 — UserGoal unifié (Goal-Plan architecture)
+        add("objectifs_vie", "Objectifs personnels", try ctx.fetch(FetchDescriptor<UserGoal>()).map { g in
+            var d: [String: Any] = [
+                "titre": g.title,
+                "type": g.kindRaw,
+                "cible": g.targetValue,
+                "unite": g.targetUnit,
+                "statut": g.statusRaw,
+                "cree": iso(g.createdAt),
+                "planApplique": g.appliedPlanSummary
+            ]
+            if let deadline = g.deadline { d["echeance"] = iso(deadline) }
+            if g.monthlyBudget > 0 { d["budgetMensuel"] = g.monthlyBudget }
+            if !g.constraints.isEmpty { d["contraintes"] = g.constraints }
+            return d
+        })
 
         var payload: [String: Any] = [
             "app": "LifeOS",
