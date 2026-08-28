@@ -231,6 +231,29 @@ final class UserContextBuilder {
             lines.append(goalsBlock)
         }
 
+        // ── UserGoal formels actifs (Loop 25 audit) — le coach doit
+        //    connaître les objectifs unifiés que l'user a validés via GoalPlanExecutor.
+        if let ctx {
+            let activeGoals = (try? ctx.fetch(FetchDescriptor<UserGoal>(
+                predicate: #Predicate { $0.statusRaw == "active" }
+            ))) ?? []
+            if !activeGoals.isEmpty {
+                lines.append("")
+                lines.append("Objectifs formels en cours (l'user les a explicitement validés) :")
+                for g in activeGoals.prefix(5) {
+                    var line = "- \(g.kind.displayName)"
+                    if g.targetValue > 0 {
+                        line += " (cible \(g.targetValue) \(g.targetUnit))"
+                    }
+                    let progress = GoalProgressCalculator.progress(for: g, context: ctx)
+                    if let progress {
+                        line += " — \(progress.label)"
+                    }
+                    lines.append(line)
+                }
+            }
+        }
+
         // ── Insights hebdo (Loop 10) — transforme le coach en analyste ────
         let insightsBlock = CoachInsights.promptBlock()
         if !insightsBlock.isEmpty {
