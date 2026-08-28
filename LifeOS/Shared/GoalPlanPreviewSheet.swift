@@ -174,11 +174,20 @@ struct GoalPlanPreviewSheet: View {
         // C3 audit — désactive le bouton pendant l'exécution pour éviter
         // double tap (avant même que idempotency backend intervienne).
         guard !applied else { return }
+        // Blocage dur si conflit .hard (redondance objectif identique)
+        if conflicts.contains(where: { $0.severity == .hard }) {
+            applyResult = .failed("Objectif similaire déjà actif — regarde tes objectifs en cours.")
+            return
+        }
         applied = true
         let result = GoalPlanExecutor.apply(plan, goal: goal, context: ctx)
         applyResult = result
         // Si échec, permet un retry en re-activant le bouton
         if !result.success { applied = false }
+    }
+
+    private func loadConflicts() {
+        conflicts = GoalConflictDetector.conflicts(for: plan.goalKind, context: ctx)
     }
 
     private func summaryOf(_ r: GoalPlanExecutor.ApplyResult) -> String {
