@@ -66,7 +66,8 @@ enum GoalPlanExecutor {
                 colorHex: 0x4CC38A, createdAt: .now,
                 isPending: false, isArchived: false,
                 moduleTag: tpl.moduleTag,
-                scheduledHour: tpl.scheduledHour, scheduledMinute: tpl.scheduledMinute
+                scheduledHour: tpl.scheduledHour, scheduledMinute: tpl.scheduledMinute,
+                sourceGoalID: goal.id.uuidString   // Loop 25 audit — traçabilité
             )
             context.insert(h)
             created += 1
@@ -87,6 +88,7 @@ enum GoalPlanExecutor {
                 specificHoursJSON: (try? String(data: JSONEncoder().encode(tpl.specificHours), encoding: .utf8)) ?? "[]",
                 categoryRaw: tpl.categoryRaw
             )
+            r.sourceGoalID = goal.id.uuidString   // Loop 25 audit
             context.insert(r)
             SmartReminderScheduler.reschedule(r)
             reminderCount += 1
