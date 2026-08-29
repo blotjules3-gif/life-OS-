@@ -67,12 +67,12 @@ struct ProfileFieldTemplate: Codable {
 
 // MARK: - Recommendation
 
-/// Recommandation neutre — pas d'engagement action, juste info affichée dans
-/// la preview + persistée pour rappel plus tard.
+/// Recommandation — spec §7 + §14 : chaque reco doit avoir objectif, raison,
+/// coût, effort, priorité, alternatives, partenaire éventuel, kind d'action.
 ///
 /// Distinction claire (règle produit) :
-///   - `PartnerCapability` référencé = OFFRE partenaire (peut être commerciale)
-///   - `PartnerCapability` == nil = RECOMMANDATION NEUTRE (choisie pour l'user)
+///   - `partnerID != nil` = OFFRE partenaire (peut être commerciale, marquée UI)
+///   - `partnerID == nil` = RECOMMANDATION NEUTRE (choisie pour l'user)
 struct Recommendation: Codable, Identifiable {
     var id: String { title }
     let title: String
@@ -80,12 +80,41 @@ struct Recommendation: Codable, Identifiable {
     let effort: RecommendationEffort
     let estimatedCostEUR: Double?
     /// Partner ID si cette reco vient d'un partenaire (nil = neutre).
-    /// Aucun partenaire n'existe encore — champ prêt pour Phase 2+.
     let partnerID: String?
     /// Action possible côté user (ex: "add_habit:méditation" ou "open:https://…").
     let actionKey: String?
 
+    // Loop 26 — spec §7 + §14 champs enrichis
+
+    /// Priorité 1 (critique) → 5 (bonus). Utilisée pour trier l'affichage.
+    var priority: Int = 3
+
+    /// Alternatives textuelles proposées à l'user ("Programme maison sans matériel",
+    /// "Salle partenaire à 15 €/mois"). Vide = pas d'alternatives.
+    var alternatives: [String] = []
+
+    /// Type d'action spec §14 — distinction Information/Recommandation/Prepare/Validate/Execute.
+    var kind: RecommendationKind = .recommendation
+
     enum RecommendationEffort: String, Codable {
         case low, medium, high
+    }
+
+    enum RecommendationKind: String, Codable {
+        case information    // L'app informe (fait scientifique, principe)
+        case recommendation // L'app suggère (défaut pour la plupart)
+        case preparation    // L'app prépare une action à valider
+        case validation     // L'user doit confirmer (produit financier, engagement)
+        case execution      // L'app exécute (nécessite API partenaire opérationnelle)
+
+        var displayLabel: String {
+            switch self {
+            case .information:    return "Info"
+            case .recommendation: return "Conseil"
+            case .preparation:    return "À préparer"
+            case .validation:     return "À valider"
+            case .execution:      return "Exécutable"
+            }
+        }
     }
 }
