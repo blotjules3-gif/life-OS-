@@ -328,6 +328,40 @@ struct ProfileView: View {
         }
     }
 
+    /// Loop 26 — accès rapide à MyGoalsView depuis Profil.
+    @State private var showMyGoals = false
+    private var myGoalsButton: some View {
+        Button {
+            showMyGoals = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "target")
+                    .font(.title2)
+                    .foregroundStyle(Color.accentColor)
+                    .frame(width: 32)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Mes objectifs")
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(.primary)
+                    Text("Suivre tes plans en cours et leur progression")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .foregroundStyle(.tertiary)
+                    .font(.footnote)
+            }
+            .padding()
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 20)
+        .sheet(isPresented: $showMyGoals) {
+            MyGoalsView()
+        }
+    }
+
     private var restoreHiddenButton: some View {
         Button {
             withAnimation(.spring(duration: 0.38, bounce: 0.1)) { profileHiddenRaw = "" }
