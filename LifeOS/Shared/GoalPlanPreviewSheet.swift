@@ -153,19 +153,50 @@ struct GoalPlanPreviewSheet: View {
 
     private var recommendationsSection: some View {
         Section("Conseils") {
-            ForEach(plan.recommendations) { rec in
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(rec.title).font(.subheadline.weight(.medium))
+            // Loop 26 — tri par priorité (1 = critique en premier)
+            ForEach(plan.recommendations.sorted { $0.priority < $1.priority }) { rec in
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Text(rec.title).font(.subheadline.weight(.medium))
+                        Spacer()
+                        Text(rec.kind.displayLabel)
+                            .font(.caption2.weight(.semibold))
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(kindColor(rec.kind).opacity(0.15), in: Capsule())
+                            .foregroundStyle(kindColor(rec.kind))
+                    }
                     Text(rec.rationale).font(.caption).foregroundStyle(.secondary)
-                    if rec.partnerID == nil {
-                        Text("Recommandation neutre")
+                    if !rec.alternatives.isEmpty {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Alternatives :").font(.caption2.weight(.semibold)).foregroundStyle(.tertiary)
+                            ForEach(rec.alternatives, id: \.self) { alt in
+                                Text("· \(alt)").font(.caption2).foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(.leading, 4)
+                    }
+                    if let cost = rec.estimatedCostEUR, cost > 0 {
+                        Text(String(format: "Coût estimé : %.0f €", cost))
                             .font(.caption2).foregroundStyle(.tertiary)
+                    }
+                    if rec.partnerID == nil {
+                        Text("Recommandation neutre").font(.caption2).foregroundStyle(.tertiary)
                     } else {
                         Text("Offre partenaire — \(rec.partnerID ?? "")")
                             .font(.caption2).foregroundStyle(.orange)
                     }
                 }
             }
+        }
+    }
+
+    private func kindColor(_ kind: Recommendation.RecommendationKind) -> Color {
+        switch kind {
+        case .information:    return .blue
+        case .recommendation: return .green
+        case .preparation:    return .orange
+        case .validation:     return .red
+        case .execution:      return .purple
         }
     }
 
