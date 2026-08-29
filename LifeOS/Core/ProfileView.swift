@@ -314,11 +314,13 @@ struct ProfileView: View {
             VStack(spacing: 24) {
                 weekCard
                 habitsSection
+                myGoalsButton   // Loop 26 — accès rapide "Mes objectifs"
             }
             .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
         } else {
             VStack(spacing: 24) {
                 wakeupCompact
+                myGoalsButton
                 settingsSection
                 appearanceSection
             }
