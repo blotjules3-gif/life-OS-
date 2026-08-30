@@ -56,9 +56,12 @@ enum SmartReminderScheduler {
     }
 
     /// Retire toutes les notifs planifiées pour ce rappel. Idempotent.
+    /// Fix Loop 27 warning — extrait le prefix AVANT d'entrer dans la closure
+    /// `@Sendable` de `getPendingNotificationRequests` (évite capture du
+    /// CustomReminder non-Sendable + call MainActor depuis nonisolated).
     static func cancel(_ reminder: CustomReminder) {
+        let prefix = baseIdentifier(reminder)
         UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
-            let prefix = baseIdentifier(reminder)
             let toCancel = requests
                 .map(\.identifier)
                 .filter { $0 == prefix || $0.hasPrefix(prefix + ".") }
