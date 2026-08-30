@@ -135,7 +135,6 @@ enum SmartReminderSuggestionEngine {
         if activeModules.contains(.sleep) {
             // Utilise l'heure de coucher cible du profil si dispo
             let bedH = UserDefaults.standard.integer(forKey: "bedHour")
-            let bedM = UserDefaults.standard.integer(forKey: "bedMinute")
             let prepH = bedH > 0 ? max(0, bedH - 1) : 22
             out.append(Suggestion(
                 id: "sug.sleep.wind_down",
