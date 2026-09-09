@@ -1,0 +1,332 @@
+- generic [active] [ref=f315e1]:
+  - generic:
+    - generic:
+      - 'dialog "Plateforme de Gestion du Consentement : Personnalisez vos Options"':
+        - generic [ref=f315e2]: Axeptio consent
+        - generic [ref=f315e3]:
+          - paragraph [ref=f315e4]: "Plateforme de Gestion du Consentement : Personnalisez vos Options"
+          - paragraph [ref=f315e5]: Notre plateforme vous permet d'adapter et de gérer vos paramètres de confidentialité, en garantissant la conformité avec les réglementations. Personnalisez vos préférences pour contrôler la manière dont vos informations sont manipulées.
+      - button "Gérez vos préférences en matière de cookies et données personnelles" [ref=f315e6] [cursor=pointer]
+  - generic [ref=f315e13]:
+    - generic [ref=f315e15]:
+      - generic [ref=f315e17]:
+        - paragraph [ref=f315e20]:
+          - link [ref=f315e21] [cursor=pointer]:
+            - /url: /pages/promo-de-la-rentree
+            - strong [ref=f315e22]: 👉 PROMOS DE LA RENTRÉE 👈
+        - generic:
+          - generic:
+            - paragraph:
+              - link:
+                - /url: /pages/mincir-sans-frustration
+                - strong: 👉 -5kg en moins de 30 jours 👈
+        - generic:
+          - generic:
+            - paragraph:
+              - text: 🎁
+              - strong: Livraison offerte
+              - text: dès 80€ d'achat
+      - button "Previous" [ref=f315e23] [cursor=pointer]
+      - button "Next" [ref=f315e26] [cursor=pointer]
+    - banner [ref=f315e29]:
+      - generic [ref=f315e30]:
+        - generic [ref=f315e31]:
+          - link [ref=f315e32] [cursor=pointer]:
+            - /url: /
+          - navigation [ref=f315e35]:
+            - generic [ref=f315e37]:
+              - list [ref=f315e40]:
+                - listitem [ref=f315e41]:
+                  - link [ref=f315e42] [cursor=pointer]:
+                    - /url: /pages/promo-de-la-rentree
+                    - generic [ref=f315e43]: PROMOS DE LA RENTRÉE.
+                - listitem [ref=f315e45]:
+                  - link [ref=f315e46] [cursor=pointer]:
+                    - /url: /pages/lesprit-okr
+                    - generic [ref=f315e47]: Concept.
+                - listitem [ref=f315e49]:
+                  - link [ref=f315e50] [cursor=pointer]:
+                    - /url: /blogs/tous-les-articles
+                    - generic [ref=f315e51]: Blog & recettes.
+                - listitem [ref=f315e57]:
+                  - link [ref=f315e58] [cursor=pointer]:
+                    - /url: "#"
+                    - generic [ref=f315e59]: Programmes.
+                - listitem [ref=f315e65]:
+                  - link [ref=f315e66] [cursor=pointer]:
+                    - /url: /collections/pack
+                    - generic [ref=f315e67]: Format économique.
+                - listitem [ref=f315e73]:
+                  - link [ref=f315e74] [cursor=pointer]:
+                    - /url: /collections/tous-les-produits-okr
+                    - generic [ref=f315e75]: Tous les produits.
+              - list [ref=f315e79]:
+                - listitem [ref=f315e80]:
+                  - button [ref=f315e82] [cursor=pointer]
+                - listitem [ref=f315e90]:
+                  - generic [ref=f315e91] [cursor=pointer]
+                - listitem [ref=f315e94]:
+                  - link [ref=f315e95] [cursor=pointer]:
+                    - /url: /
+                - listitem [ref=f315e100]:
+                  - link [ref=f315e101] [cursor=pointer]:
+                    - /url: /pages/storelocator
+          - generic [ref=f315e106]:
+            - link [ref=f315e107] [cursor=pointer]:
+              - /url: /account
+            - img [ref=f315e113] [cursor=pointer]
+        - navigation [ref=f315e117]:
+          - list [ref=f315e122]:
+            - listitem [ref=f315e123]:
+              - link [ref=f315e124] [cursor=pointer]:
+                - /url: /pages/mincir-sans-frustration
+                - generic [ref=f315e125]: Cures minceur.
+            - listitem [ref=f315e127]:
+              - link [ref=f315e128] [cursor=pointer]:
+                - /url: /collections/complements-minceur-master-collection
+                - generic [ref=f315e129]: Compléments minceur.
+            - listitem [ref=f315e131]:
+              - link [ref=f315e132] [cursor=pointer]:
+                - /url: /collections/collagene-marin
+                - generic [ref=f315e133]: Collagène Marin.
+            - listitem [ref=f315e135]:
+              - link [ref=f315e136] [cursor=pointer]:
+                - /url: /pages/proteine-en-poudre
+                - generic [ref=f315e137]: Protéines végétales.
+            - listitem [ref=f315e139]:
+              - link [ref=f315e140] [cursor=pointer]:
+                - /url: /collections/gamme-minceur
+                - generic [ref=f315e141]: Gamme minceur.
+            - listitem [ref=f315e147]:
+              - link [ref=f315e148] [cursor=pointer]:
+                - /url: /collections/gamme-snack
+                - generic [ref=f315e149]: Snacks protéinés.
+            - listitem [ref=f315e155]:
+              - link [ref=f315e156] [cursor=pointer]:
+                - /url: /collections/gamme-sport
+                - generic [ref=f315e157]: Repas protéinés.
+            - listitem [ref=f315e163]:
+              - link [ref=f315e164] [cursor=pointer]:
+                - /url: /collections/gamme-original
+                - generic [ref=f315e165]: Repas équilibrés.
+    - main [ref=f315e171]:
+      - generic [ref=f315e173]:
+        - generic [ref=f315e176]:
+          - heading "Contact. Contact." [level=2] [ref=f315e177]:
+            - text: Contact.
+            - generic [ref=f315e178]: Contact.
+          - paragraph [ref=f315e179]: Echangez avec nous.
+        - generic [ref=f315e181]:
+          - generic [ref=f315e182]:
+            - generic [ref=f315e183]: Nous contacter. Autrement.
+            - generic [ref=f315e184]:
+              - paragraph [ref=f315e185]: Par Whatsapp.
+              - paragraph [ref=f315e187]: Écrivez-nous au +33643741930.
+            - generic [ref=f315e188]:
+              - paragraph [ref=f315e189]: Par e-mail.
+              - paragraph [ref=f315e191]: Écrivez-nous à service.clients@okr.fr
+            - generic [ref=f315e192]:
+              - paragraph [ref=f315e193]: Nos réseaux sociaux.
+              - paragraph [ref=f315e195]: Inspirer. S’inspirer. Rejoins-nous.
+              - generic [ref=f315e196]:
+                - link [ref=f315e197] [cursor=pointer]:
+                  - /url: https://www.facebook.com/share/1AgDNYSVq5/
+                - link [ref=f315e200] [cursor=pointer]:
+                  - /url: https://www.instagram.com/okr_nutrition/
+                - link [ref=f315e203] [cursor=pointer]:
+                  - /url: https://wa.me/message/S2UIJ6K2PQT6F1
+          - generic [ref=f315e206]:
+            - generic [ref=f315e207]:
+              - paragraph [ref=f315e208]: Vous êtes ?
+              - paragraph [ref=f315e209]: Choisissez un thème parmi les options suivantes pour accéder à la demande associée.
+              - generic [ref=f315e210]:
+                - generic [ref=f315e211] [cursor=pointer]: Clients.
+                - generic [ref=f315e214] [cursor=pointer]: Partenaires.
+                - generic [ref=f315e217] [cursor=pointer]: Presse.
+                - generic [ref=f315e220] [cursor=pointer]: Professionnels.
+            - generic [ref=f315e223]:
+              - paragraph [ref=f315e224]: Clients.
+              - paragraph [ref=f315e225]: Recommander. Demander. Commenter. Partager. Tout se dire.
+              - generic [ref=f315e227]:
+                - generic [ref=f315e229]:
+                  - combobox "Votre demande * Pays" [ref=f315e230] [cursor=pointer]:
+                    - option "Commande" [selected]
+                    - option "Livraison"
+                    - option "Produit"
+                    - option "Site internet"
+                    - option "Autres"
+                  - generic [ref=f315e231] [cursor=pointer]: Votre demande *
+                - textbox "Numéro de commande" [ref=f315e233]
+                - generic [ref=f315e234]:
+                  - textbox "Prénom" [ref=f315e236]:
+                    - /placeholder: Prénom *
+                  - textbox "Nom" [ref=f315e238]:
+                    - /placeholder: Nom *
+                - textbox "E-mail" [ref=f315e240]:
+                  - /placeholder: E-mail *
+                - generic [ref=f315e242]:
+                  - combobox [ref=f315e243] [cursor=pointer]:
+                    - option "France" [selected]
+                    - option "Belgique"
+                    - option "Suisse"
+                    - option "Luxembourg"
+                    - option "---"
+                    - option "Allemagne"
+                    - option "Autriche"
+                    - option "Belgique"
+                    - option "Bulgarie"
+                    - option "Chypre"
+                    - option "Croatie"
+                    - option "Danemark"
+                    - option "Espagne"
+                    - option "Estonie"
+                    - option "Finlande"
+                    - option "France"
+                    - option "Grèce"
+                    - option "Guadeloupe"
+                    - option "Hongrie"
+                    - option "Irlande"
+                    - option "Italie"
+                    - option "La Réunion"
+                    - option "Lettonie"
+                    - option "Lituanie"
+                    - option "Luxembourg"
+                    - option "Malte"
+                    - option "Martinique"
+                    - option "Mayotte"
+                    - option "Monaco"
+                    - option "Norvège"
+                    - option "Nouvelle-Calédonie"
+                    - option "Pays-Bas"
+                    - option "Pologne"
+                    - option "Portugal"
+                    - option "Roumanie"
+                    - option "Royaume-Uni"
+                    - option "Saint-Barthélemy"
+                    - option "Saint-Martin"
+                    - option "Slovaquie"
+                    - option "Slovénie"
+                    - option "Suède"
+                    - option "Suisse"
+                    - option "Tchéquie"
+                  - generic [ref=f315e244] [cursor=pointer]: Pays
+                - textbox "Message" [ref=f315e246]:
+                  - /placeholder: Message *
+                - generic [ref=f315e247]:
+                  - button "Envoyer" [ref=f315e248] [cursor=pointer]
+                  - paragraph [ref=f315e249]:
+                    - generic [ref=f315e252]: On vous répond très rapidement
+    - contentinfo [ref=f315e254]:
+      - generic [ref=f315e256]:
+        - generic [ref=f315e258]:
+          - generic [ref=f315e259]:
+            - paragraph [ref=f315e264]: Paiement sécurisé
+            - paragraph [ref=f315e265]: Visa, Mastercard, Amex, Paypal, Maestro
+          - generic [ref=f315e266]:
+            - paragraph [ref=f315e272]: Livraison offerte
+            - paragraph [ref=f315e273]: Dès 80€ d’achat en France et en Europe
+          - generic [ref=f315e274]:
+            - paragraph [ref=f315e278]: Livré en 72h
+            - paragraph [ref=f315e279]: Partout en France et en Europe
+        - navigation [ref=f315e280]:
+          - generic [ref=f315e281]:
+            - heading "Recevez nos bons plans Newsletter" [level=3] [ref=f315e282]:
+              - text: Recevez nos bons plans
+              - generic [ref=f315e283]: Newsletter
+            - paragraph [ref=f315e284]: et nos dernières actualités !
+            - generic [ref=f315e288]:
+              - textbox "Votre adresse e-mail" [ref=f315e289]
+              - button "S'abonner" [ref=f315e290] [cursor=pointer]
+          - list [ref=f315e294]:
+            - listitem [ref=f315e295]:
+              - link "Notre mission." [ref=f315e296] [cursor=pointer]:
+                - /url: /
+              - list [ref=f315e299]:
+                - listitem [ref=f315e300]:
+                  - link "La fondation O.K.R" [ref=f315e301] [cursor=pointer]:
+                    - /url: /pages/lesprit-okr
+            - listitem [ref=f315e302]:
+              - link "Compte." [ref=f315e303] [cursor=pointer]:
+                - /url: /
+              - list [ref=f315e306]:
+                - listitem [ref=f315e307]:
+                  - link "Mon compte." [ref=f315e308] [cursor=pointer]:
+                    - /url: /account
+                - listitem [ref=f315e309]:
+                  - link "Suivi de colis." [ref=f315e310] [cursor=pointer]:
+                    - /url: https://feed.shipup.co/
+            - listitem [ref=f315e311]:
+              - link "Nos offres." [ref=f315e312] [cursor=pointer]:
+                - /url: /
+              - list [ref=f315e315]:
+                - listitem [ref=f315e316]:
+                  - link "Abonnement." [ref=f315e317] [cursor=pointer]:
+                    - /url: /pages/abonnement
+                - listitem [ref=f315e318]:
+                  - link "Etudiants." [ref=f315e319] [cursor=pointer]:
+                    - /url: /pages/reduction-etudiants
+                - listitem [ref=f315e320]:
+                  - link "Apprentis & 16-26 ans." [ref=f315e321] [cursor=pointer]:
+                    - /url: /pages/reduction-apprentis
+                - listitem [ref=f315e322]:
+                  - link "Gagnez 15€." [ref=f315e323] [cursor=pointer]:
+                    - /url: "#smile-home"
+            - listitem [ref=f315e324]:
+              - link "Aide." [ref=f315e325] [cursor=pointer]:
+                - /url: /
+              - list [ref=f315e328]:
+                - listitem [ref=f315e329]:
+                  - link "Tous les avis clients." [ref=f315e330] [cursor=pointer]:
+                    - /url: /pages/avis-clients-okr
+                - listitem [ref=f315e331]:
+                  - link "FAQ." [ref=f315e332] [cursor=pointer]:
+                    - /url: /pages/faq
+                - listitem [ref=f315e333]:
+                  - link "Conseils & Recettes." [ref=f315e334] [cursor=pointer]:
+                    - /url: /blogs/tous-les-articles
+                - listitem [ref=f315e335]:
+                  - link "Contactez nous." [ref=f315e336] [cursor=pointer]:
+                    - /url: /pages/contact
+                - listitem [ref=f315e337]:
+                  - link "Nos points de vente." [ref=f315e338] [cursor=pointer]:
+                    - /url: /pages/storelocator
+                - listitem [ref=f315e339]:
+                  - link "Demande de rétractation." [ref=f315e340] [cursor=pointer]:
+                    - /url: /pages/contact
+          - generic [ref=f315e341]:
+            - generic [ref=f315e343]:
+              - link [ref=f315e344] [cursor=pointer]:
+                - /url: https://www.facebook.com/share/1AgDNYSVq5/
+              - link [ref=f315e347] [cursor=pointer]:
+                - /url: https://www.instagram.com/okr_nutrition/
+              - link [ref=f315e350] [cursor=pointer]:
+                - /url: https://wa.me/message/S2UIJ6K2PQT6F1
+            - list [ref=f315e354]:
+              - listitem [ref=f315e355]:
+                - link "Politique de confidentialité" [ref=f315e356] [cursor=pointer]:
+                  - /url: /pages/politique-de-confidentialite
+              - listitem [ref=f315e357]:
+                - link "Mentions légales" [ref=f315e358] [cursor=pointer]:
+                  - /url: /pages/mentions-legales
+              - listitem [ref=f315e359]:
+                - link "Conditions générales de vente" [ref=f315e360] [cursor=pointer]:
+                  - /url: /pages/cgv
+            - paragraph [ref=f315e361]:
+              - text: Site par
+              - link "Maestrooo" [ref=f315e362] [cursor=pointer]:
+                - /url: https://www.maestrooo.com/
+    - generic [ref=f315e363]:
+      - button [ref=f315e364] [cursor=pointer]
+      - generic [ref=f315e371]:
+        - paragraph [ref=f315e372]: Votre panier est vide.
+        - paragraph [ref=f315e373]: Pourquoi ne pas essayer un de ces produits ?
+        - generic [ref=f315e375]:
+          - link [ref=f315e376] [cursor=pointer]:
+            - /url: /collections/gamme-minceur
+            - generic [ref=f315e379]: Gamme minceur.
+          - link [ref=f315e380] [cursor=pointer]:
+            - /url: /collections/snacks-proteines-master-collection-format-snack
+            - generic [ref=f315e383]: Barres protéinées.
+          - link [ref=f315e384] [cursor=pointer]:
+            - /url: /collections/proteines-en-poudre-master-collection-gamme-snack
+            - generic [ref=f315e387]: Protéines en poudre.
