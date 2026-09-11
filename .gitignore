@@ -31,3 +31,14 @@ backend/.venv/
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Caches de build Xcode. Ils ne doivent JAMAIS etre commites.
+# 198 629 fichiers (12,4 Go) etaient suivis ici, ce qui rendait tout rebase
+# impossible : chaque checkout ecrivait des gigaoctets de cache sur le disque.
+.build*/
+.audit-log/
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.last-deploy-hash
