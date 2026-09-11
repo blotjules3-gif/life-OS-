@@ -29,7 +29,7 @@ struct ChatQuickReplies: View {
                             .foregroundStyle(accent)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 8)
-                            .background(accent.opacity(0.10), in: Capsule())
+                            .background(accent.opacity(0.18), in: Capsule())
                             .overlay(Capsule().strokeBorder(accent.opacity(0.20), lineWidth: 0.5))
                     }
                     .buttonStyle(.plain)

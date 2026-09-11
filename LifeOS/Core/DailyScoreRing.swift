@@ -281,7 +281,7 @@ struct DailyScoreRing: View {
                 .foregroundStyle(on ? Theme.textPrimary : Theme.textSecondary)
         }
         .padding(.horizontal, 13).padding(.vertical, 7)
-        .background(on ? flame.opacity(0.13) : Color.primary.opacity(0.05), in: Capsule())
+        .background(on ? flame.opacity(0.21) : Color.primary.opacity(0.05), in: Capsule())
     }
 
     // Bande des 7 jours de la semaine

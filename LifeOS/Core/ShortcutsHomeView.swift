@@ -237,7 +237,7 @@ struct ShortcutsHomeView: View {
                 .font(.system(size: 28, weight: .semibold))
                 .foregroundStyle(Color(hex: 0xFF9F0A))
                 .frame(width: 44, height: 44)
-                .background(Color(hex: 0xFF9F0A).opacity(0.12),
+                .background(Color(hex: 0xFF9F0A).opacity(0.20),
                              in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
             VStack(alignment: .leading, spacing: 10) {
@@ -260,7 +260,7 @@ struct ShortcutsHomeView: View {
                         }
                         .padding(.horizontal, 9)
                         .padding(.vertical, 5)
-                        .background(chip.color.opacity(0.10),
+                        .background(chip.color.opacity(0.26),
                                      in: Capsule())
                     }
                 }
@@ -500,7 +500,7 @@ struct ShortcutsHomeView: View {
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(tool.tint)
                 .frame(width: 44, height: 44)
-                .background(tool.tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(tool.tint.opacity(0.20), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             Text(tool.label)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.primary)
@@ -661,7 +661,7 @@ struct ShortcutsHomeView: View {
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(Color(hex: UInt(best.colorHex)))
                             .frame(width: 30, height: 30)
-                            .background(Color(hex: UInt(best.colorHex)).opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            .background(Color(hex: UInt(best.colorHex)).opacity(0.20), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Top habitude").font(.caption).foregroundStyle(.secondary)
                             Text(best.name).font(.subheadline.weight(.semibold))
@@ -995,7 +995,7 @@ struct ShortcutsHomeView: View {
         }
         .padding(14)
         .background(
-            Color(hex: 0xFF9F0A).opacity(0.08),
+            Color(hex: 0xFF9F0A).opacity(0.16),
             in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
         )
         .overlay(
@@ -1030,7 +1030,8 @@ struct ShortcutsHomeView: View {
             Text(title).font(.system(size: 20, weight: .black)).textCase(.uppercase).kerning(-0.3)
             Spacer()
             if let trailing {
-                Button(action: action) { Text(trailing).monoLabel(11).foregroundStyle(.primary) }
+                Button(action: action) { Text(trailing).monoLabel(11).foregroundStyle(Theme.textPrimary) }
+                    .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 4)

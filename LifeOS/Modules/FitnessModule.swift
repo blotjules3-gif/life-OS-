@@ -165,7 +165,7 @@ struct FitnessHubView: View {
                     .foregroundStyle(Color.fitTint)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
-                    .background(Color.fitTint.opacity(0.15), in: Capsule())
+                    .background(Color.fitTint.opacity(0.23), in: Capsule())
             }
 
             GeometryReader { geo in
@@ -214,14 +214,14 @@ struct FitnessHubView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity)
-                    .background(Color.fitTint.opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .background(Color.fitTint.opacity(0.20), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Remplir mon profil sportif manuellement")
             }
         }
         .padding(14)
-        .background(Color.fitTint.opacity(0.06), in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+        .background(Color.fitTint.opacity(0.14), in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                 .strokeBorder(Color.fitTint.opacity(0.25), lineWidth: 1)
@@ -517,7 +517,7 @@ struct MobilityRoutineView: View {
                         NavigationLink { GuidedStretchView(title: routine.0, stretches: routine.1) } label: {
                             HStack {
                                 Image(systemName: "figure.cooldown").font(.title2).foregroundStyle(.fitTint)
-                                    .frame(width: 44, height: 44).background(Color.fitTint.opacity(0.15), in: RoundedRectangle(cornerRadius: 10))
+                                    .frame(width: 44, height: 44).background(Color.fitTint.opacity(0.23), in: RoundedRectangle(cornerRadius: 10))
                                 VStack(alignment: .leading) {
                                     Text(routine.0).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
                                     Text("\(routine.1.count) exercices").font(.caption).foregroundStyle(Theme.textSecondary)

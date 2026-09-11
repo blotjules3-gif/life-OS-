@@ -77,7 +77,7 @@ struct OrbitHero: View {
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
-                .background(Color(hex: 0xE0A23C).opacity(0.12), in: Capsule())
+                .background(Color(hex: 0xE0A23C).opacity(0.20), in: Capsule())
             }
         }
     }

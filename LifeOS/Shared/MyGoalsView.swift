@@ -131,7 +131,7 @@ struct MyGoalsView: View {
         return Text(label)
             .font(.caption2.weight(.semibold))
             .padding(.horizontal, 8).padding(.vertical, 3)
-            .background(color.opacity(0.15), in: Capsule())
+            .background(color.opacity(0.23), in: Capsule())
             .foregroundStyle(color)
     }
 

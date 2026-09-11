@@ -259,7 +259,7 @@ struct ModuleSetupView: View {
                     .font(.system(size: 28, weight: .semibold))
                     .foregroundStyle(module.tint)
                     .frame(width: 56, height: 56)
-                    .background(module.tint.opacity(0.12), in: Circle())
+                    .background(module.tint.opacity(0.20), in: Circle())
 
                 Text(q.text)
                     .font(.system(size: 22, weight: .semibold))

@@ -181,7 +181,7 @@ struct AIDebugView: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .foregroundStyle(tint)
-            .background(tint.opacity(0.15), in: Capsule())
+            .background(tint.opacity(0.23), in: Capsule())
     }
 
     private func availabilityBadge(_ avail: AIAvailability) -> some View {

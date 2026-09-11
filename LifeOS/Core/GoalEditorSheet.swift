@@ -97,7 +97,7 @@ struct GoalEditorSheet: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(color)
                     .frame(width: 32, height: 32)
-                    .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .background(color.opacity(0.22), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(goal.title)
@@ -170,7 +170,7 @@ struct GoalEditorSheet: View {
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(selected ? .white : color)
                                 .padding(.horizontal, 14).padding(.vertical, 7)
-                                .background(selected ? color : color.opacity(0.12), in: Capsule())
+                                .background(selected ? color : color.opacity(0.20), in: Capsule())
                         }
                         .buttonStyle(LifeOSPressStyle())
                     }
@@ -219,7 +219,7 @@ struct GoalEditorSheet: View {
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(color)
                     .frame(width: 28, height: 28)
-                    .background(color.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .background(color.opacity(0.22), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 VStack(alignment: .leading, spacing: 1) {
                     Text(goal.title).font(.system(size: 14)).foregroundStyle(.primary)
                     Text(goal.section).font(.caption).foregroundStyle(.secondary)

@@ -165,7 +165,7 @@ struct EveningSummaryView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(color)
                     .frame(width: 30, height: 30)
-                    .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .background(color.opacity(0.20), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 Spacer()
                 if reached {
                     Image(systemName: "checkmark.circle.fill")
@@ -181,7 +181,7 @@ struct EveningSummaryView: View {
                 .foregroundStyle(.secondary)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(color.opacity(0.12)).frame(height: 5)
+                    Capsule().fill(color.opacity(0.20)).frame(height: 5)
                     Capsule().fill(reached ? Color(hex: 0x4CC38A) : color)
                         .frame(width: geo.size.width * ratio, height: 5)
                         .animation(.spring(duration: 0.7, bounce: 0.2), value: ratio)
@@ -206,7 +206,7 @@ struct EveningSummaryView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(AppCategory.fitness.tint)
                     .frame(width: 30, height: 30)
-                    .background(AppCategory.fitness.tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .background(AppCategory.fitness.tint.opacity(0.20), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 Spacer()
                 if reached {
                     Image(systemName: "checkmark.circle.fill")
@@ -222,7 +222,7 @@ struct EveningSummaryView: View {
                 .foregroundStyle(.secondary)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(AppCategory.fitness.tint.opacity(0.12)).frame(height: 5)
+                    Capsule().fill(AppCategory.fitness.tint.opacity(0.20)).frame(height: 5)
                     Capsule().fill(reached ? Color(hex: 0x4CC38A) : AppCategory.fitness.tint)
                         .frame(width: habitsTotal > 0 ? geo.size.width * ratio : 0, height: 5)
                         .animation(.spring(duration: 0.7, bounce: 0.2), value: ratio)
@@ -342,7 +342,7 @@ struct EveningSummaryView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(20)
-        .background(AppCategory.sleep.tint.opacity(0.07), in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .background(AppCategory.sleep.tint.opacity(0.23), in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .stroke(AppCategory.sleep.tint.opacity(0.2), lineWidth: 1)

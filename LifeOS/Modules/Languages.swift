@@ -85,7 +85,7 @@ struct LanguagesView: View {
                             Text(p.name).font(.caption2.weight(.medium))
                         }
                         .frame(width: 72, height: 60)
-                        .background(lang == p.id ? Color.learnTint.opacity(0.18) : Theme.card,
+                        .background(lang == p.id ? Color.learnTint.opacity(0.26) : Theme.card,
                                     in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
                         .overlay(RoundedRectangle(cornerRadius: Theme.radiusSmall)
                             .stroke(lang == p.id ? Color.learnTint : .clear, lineWidth: 2))

@@ -77,7 +77,7 @@ struct MemoryHubView: View {
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(Theme.accent)
                         .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(Theme.accent.opacity(0.12), in: Capsule())
+                        .background(Theme.accent.opacity(0.20), in: Capsule())
                     Text(m.created, style: .relative)
                         .font(.caption2)
                         .foregroundStyle(Theme.textTertiary)

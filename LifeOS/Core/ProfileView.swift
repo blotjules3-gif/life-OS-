@@ -401,7 +401,7 @@ struct ProfileView: View {
                     .foregroundStyle(up ? Color(hex: 0x4CC38A) : Color(hex: 0xF1746C))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background((up ? Color(hex: 0x4CC38A) : Color(hex: 0xF1746C)).opacity(0.12), in: Capsule())
+                    .background((up ? Color(hex: 0x4CC38A) : Color(hex: 0xF1746C)).opacity(0.20), in: Capsule())
                 }
             }
             .padding(.horizontal, 4)
@@ -560,7 +560,7 @@ struct ProfileView: View {
                     .foregroundStyle(Color(hex: 0xE0A23C))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color(hex: 0xE0A23C).opacity(0.12), in: Capsule())
+                    .background(Color(hex: 0xE0A23C).opacity(0.20), in: Capsule())
                 }
             }
             .padding(12)
@@ -894,7 +894,7 @@ struct ProfileView: View {
                     .foregroundStyle(Color(hex: 0xF1746C))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(Color(hex: 0xF1746C).opacity(0.08))
+                    .background(Color(hex: 0xF1746C).opacity(0.24))
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
             .buttonStyle(LifeOSPressStyle())
@@ -984,7 +984,7 @@ struct ProfileView: View {
                 Image(systemName: icon)
                     .font(.system(size: 12, weight: .bold)).foregroundStyle(iconColor)
                     .frame(width: 30, height: 30)
-                    .background(iconColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .background(iconColor.opacity(0.22), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 Text(label).font(.system(size: 15, weight: .regular)).foregroundStyle(.primary)
                 Spacer()
                 trailing()

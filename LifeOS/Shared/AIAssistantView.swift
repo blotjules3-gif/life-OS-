@@ -1342,7 +1342,7 @@ struct AIAssistantView: View {
                             .font(.caption2.weight(.semibold))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color.accentColor.opacity(0.18), in: Capsule())
+                            .background(Color.accentColor.opacity(0.26), in: Capsule())
                             .foregroundStyle(Color.accentColor)
                     }
                 }
@@ -1714,7 +1714,7 @@ struct AIAssistantView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(Color(hex: 0x6C7BF1).opacity(0.08))
+            .background(Color(hex: 0x6C7BF1).opacity(0.16))
             .overlay(
                 Rectangle().fill(Color(hex: 0x6C7BF1).opacity(0.35)).frame(height: 0.5),
                 alignment: .bottom
@@ -1793,14 +1793,14 @@ struct AIAssistantView: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(Color(hex: 0xE0A23C))
                     .frame(width: 30, height: 30)
-                    .background(Color(hex: 0xE0A23C).opacity(0.15), in: Circle())
+                    .background(Color(hex: 0xE0A23C).opacity(0.23), in: Circle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Vérifier à nouveau")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
-        .background(Color(hex: 0xE0A23C).opacity(0.08))
+        .background(Color(hex: 0xE0A23C).opacity(0.16))
         .overlay(
             Rectangle().fill(Color(hex: 0xE0A23C).opacity(0.4)).frame(height: 0.5),
             alignment: .bottom

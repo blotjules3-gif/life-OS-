@@ -156,7 +156,7 @@ struct IntegrationNotice: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .background(Color.orange.opacity(0.10), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+        .background(Color.orange.opacity(0.26), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 }
 

@@ -139,7 +139,7 @@ struct NutritionSetupView: View {
                             .font(.caption.weight(.bold))
                             .foregroundStyle(on ? .white : tint)
                             .padding(.horizontal, 12).padding(.vertical, 8)
-                            .background(on ? AnyShapeStyle(tint) : AnyShapeStyle(tint.opacity(0.12)),
+                            .background(on ? AnyShapeStyle(tint) : AnyShapeStyle(tint.opacity(0.20)),
                                        in: Capsule())
                     }.buttonStyle(.plain)
                 }

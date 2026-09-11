@@ -217,7 +217,7 @@ struct AIAssistantMessageRow: View {
                         .foregroundStyle(.orange)
                         .padding(.horizontal, 9)
                         .padding(.vertical, 4)
-                        .background(Color.orange.opacity(0.12), in: Capsule())
+                        .background(Color.orange.opacity(0.20), in: Capsule())
                 }
                 .buttonStyle(.plain)
             }
@@ -306,7 +306,7 @@ struct AIAssistantMessageRow: View {
                         .foregroundStyle(accent)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
-                        .background(accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .background(accent.opacity(0.16), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
             }
         }

@@ -233,7 +233,7 @@ struct PhrasebookView: View {
                             Text(l.name).font(.caption2.weight(.medium))
                         }
                         .frame(width: 74, height: 60)
-                        .background(langKey == l.key ? Color.travelTint.opacity(0.18) : Theme.card,
+                        .background(langKey == l.key ? Color.travelTint.opacity(0.26) : Theme.card,
                                     in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
                         .overlay(RoundedRectangle(cornerRadius: Theme.radiusSmall)
                             .stroke(langKey == l.key ? Color.travelTint : .clear, lineWidth: 2))

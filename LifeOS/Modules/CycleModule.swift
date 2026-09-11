@@ -174,7 +174,7 @@ struct CycleTrackerView: View {
                             }
                         }
                         .padding(16)
-                        .background(phaseColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .background(phaseColor.opacity(0.24), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 18, style: .continuous)
                                 .stroke(phaseColor.opacity(0.25), lineWidth: 1)

@@ -177,7 +177,7 @@ struct DailyBriefingView: View {
                                             .font(.system(size: 12, weight: .semibold))
                                             .foregroundStyle(Color(hex: 0xE0A23C))
                                             .frame(width: 22, height: 22)
-                                            .background(Color(hex: 0xE0A23C).opacity(0.14), in: Circle())
+                                            .background(Color(hex: 0xE0A23C).opacity(0.22), in: Circle())
                                         Text(insight)
                                             .font(.system(size: 14, weight: .regular))
                                             .foregroundStyle(.primary)
@@ -475,7 +475,7 @@ struct DailyBriefingView: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
-            .background(Color(hex: 0xFF9F0A).opacity(0.08), in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+            .background(Color(hex: 0xFF9F0A).opacity(0.16), in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                     .stroke(Color(hex: 0xFF9F0A).opacity(0.18), lineWidth: 1)
@@ -516,7 +516,7 @@ struct DailyBriefingView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Color(hex: 0xFF9F0A))
                     .frame(width: 32, height: 32)
-                    .background(Color(hex: 0xFF9F0A).opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .background(Color(hex: 0xFF9F0A).opacity(0.22), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 VStack(alignment: .leading, spacing: 7) {
                     ForEach(0..<3, id: \.self) { _ in
                         RoundedRectangle(cornerRadius: 4, style: .continuous)
@@ -563,7 +563,7 @@ struct DailyBriefingView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Color(hex: 0xFF9F0A))
                     .frame(width: 32, height: 32)
-                    .background(Color(hex: 0xFF9F0A).opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .background(Color(hex: 0xFF9F0A).opacity(0.22), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 Text(text)
                     .font(.subheadline)
                     .foregroundStyle(.primary)

@@ -39,8 +39,25 @@ enum AppTab: String, CaseIterable, Identifiable {
 // traverse pas les NavigationStack internes des pages → il faut réserver l'espace
 // DIRECTEMENT sur chaque vue défilante racine (accueil, réveil, profil, chaque outil).
 extension View {
-    func floatingBarClearance(_ height: CGFloat = 96) -> some View {
-        safeAreaInset(edge: .bottom) { Color.clear.frame(height: height) }
+    /// Hauteur réservée sous le contenu = barre + sa marge + un peu d'air.
+    /// Dérivée des mêmes métriques que la barre, pour qu'elles ne divergent jamais.
+    static var floatingBarSpace: CGFloat {
+        let m = TabBarMetrics.forWidth(UIScreen.main.bounds.width)
+        return m.height + m.margin * 2
+    }
+
+    /// Réserve la place sous le contenu ET fait fondre le contenu avant la barre,
+    /// pour qu'il ne se coupe jamais net derrière le verre (effet de bord iOS 26).
+    @ViewBuilder
+    func floatingBarClearance(_ height: CGFloat? = nil) -> some View {
+        let base = safeAreaInset(edge: .bottom) {
+            Color.clear.frame(height: height ?? Self.floatingBarSpace)
+        }
+        if #available(iOS 26.0, *) {
+            base.scrollEdgeEffectStyle(.soft, for: .bottom)
+        } else {
+            base
+        }
     }
 }
 
@@ -59,7 +76,9 @@ struct MainTabView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             content
-                .safeAreaInset(edge: .bottom) { Color.clear.frame(height: 118) }
+                .safeAreaInset(edge: .bottom) {
+                    Color.clear.frame(height: AnyView.floatingBarSpace)
+                }
             FloatingTabBar(
                 selected: $tab,
                 onOpenAssistant: openAIAssistant
@@ -221,6 +240,36 @@ private struct FitnessWidgetSyncer: View {
 
 // MARK: - Barre flottante : [2 onglets] [assistant] [2 onglets]
 
+// MARK: - Géométrie de la barre, adaptée à la taille de l'écran
+//
+// Règle : le vide à GAUCHE, en BAS et à DROITE doit être EXACTEMENT le même.
+// La barre flotte donc depuis le vrai bord de l'écran, pas depuis la safe area.
+// Le conteneur (MainTabView) fait déjà `.ignoresSafeArea(.container, edges: .bottom)`,
+// donc `padding(.bottom, margin)` part bien du bord physique.
+//
+// L'indicateur d'accueil (home indicator) vit à ~8pt du bas et fait ~5pt de haut.
+// Avec une marge >= 14pt la barre passe toujours au-dessus, sans jamais le toucher.
+struct TabBarMetrics {
+    let margin: CGFloat        // gauche == bas == droite
+    let height: CGFloat
+    let icon: CGFloat
+    let label: CGFloat
+
+    /// Un seul point de vérité : tout dérive de la largeur de l'écran.
+    static func forWidth(_ w: CGFloat) -> TabBarMetrics {
+        // ~4.5% de la largeur, borné pour rester sain du SE au Pro Max.
+        let m = min(22, max(14, (w * 0.045).rounded()))
+        switch w {
+        case ..<380:            // iPhone SE, 13 mini
+            return .init(margin: m, height: 56, icon: 19, label: 10)
+        case 380..<420:         // iPhone 15 / 16 / 17
+            return .init(margin: m, height: 60, icon: 20, label: 10.5)
+        default:                // Plus, Pro Max
+            return .init(margin: m, height: 64, icon: 21, label: 11)
+        }
+    }
+}
+
 struct FloatingTabBar: View {
     @Binding var selected: AppTab
     var onOpenAssistant: () -> Void = {}
@@ -232,120 +281,110 @@ struct FloatingTabBar: View {
     @Environment(\.colorScheme) private var scheme
     @AppStorage(AppStorageKeys.appTheme) private var themeRaw = "classic"
 
-    private static let barBg   = Color(uiColor: .secondarySystemBackground)
-    private static let selBg   = Color(uiColor: .systemGray5)
-    private static let fieldBg = Color(uiColor: .tertiarySystemFill)
-    private static let barInset: CGFloat = 10
-
-    private let leftTabs:  [AppTab] = [.home, .wakeup]
-    private let rightTabs: [AppTab] = [.categories, .profile]
+    private let tabs: [AppTab] = [.home, .wakeup, .categories, .profile]
 
     var body: some View {
-        HStack(spacing: 6) {
+        GeometryReader { geo in
+            let m = TabBarMetrics.forWidth(geo.size.width)
+
             HStack(spacing: 0) {
-                ForEach(leftTabs) { t in tabBtn(t) }
-            }
-
-            ZStack(alignment: .topLeading) {
-                Button {
-                    Haptics.tap()
-                    serverStatus.pingNow()
-                    onOpenAssistant()
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(Color.accentColor)
-                        Text("Pose une question…")
-                            .font(.footnote)
-                            .foregroundStyle(Color(uiColor: .placeholderText))
-                            .lineLimit(1)
-                        Spacer()
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Self.fieldBg, in: Capsule())
+                ForEach(tabs) { t in
+                    tabBtn(t, m: m)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Ouvrir ton coach")
-                .accessibilityHint("Pose une question ou demande une action")
-
-                if serverStatus.isOnline != nil {
-                    Button {
-                        Haptics.tap()
-                        #if DEBUG
-                        showServerConfig = true
-                        #else
-                        serverStatus.pingNow()
-                        #endif
-                    } label: {
-                        ZStack {
-                            Color.clear.frame(width: 22, height: 22)
-                            Circle()
-                                .fill(serverStatus.dotColor)
-                                .frame(width: 6, height: 6)
-                                .overlay(Circle().stroke(Self.fieldBg, lineWidth: 1.5))
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .offset(x: 20, y: 0)
-                    .transition(.scale.combined(with: .opacity))
-                    .allowsHitTesting(serverStatus.isOnline == false)
-                    .accessibilityLabel(serverStatus.isOnline == true ? "Coach connecté" : "Coach hors ligne")
-                }
+                assistantBtn(m: m)
             }
+            .frame(height: m.height)
             .frame(maxWidth: .infinity)
+            .background(barBackground)
+            .overlay(Capsule().stroke(Theme.hairline, lineWidth: 0.5))
+            .clipShape(Capsule())
+            .softElevation(true)
+            // Le vide est IDENTIQUE à gauche, en bas et à droite.
+            .padding(.horizontal, m.margin)
+            .padding(.bottom, m.margin)
+            .frame(maxHeight: .infinity, alignment: .bottom)
             .animation(.easeInOut(duration: 0.3), value: serverStatus.isOnline)
-            #if DEBUG
-            .sheet(isPresented: $showServerConfig) {
-                ServerConfigView {
-                    showServerConfig = false
-                    serverStatus.pingNow()
-                }
-            }
-            #endif
-
-            HStack(spacing: 0) {
-                ForEach(rightTabs) { t in tabBtn(t) }
+        }
+        .frame(height: TabBarMetrics.forWidth(UIScreen.main.bounds.width).height
+                     + TabBarMetrics.forWidth(UIScreen.main.bounds.width).margin)
+        #if DEBUG
+        .sheet(isPresented: $showServerConfig) {
+            ServerConfigView {
+                showServerConfig = false
+                serverStatus.pingNow()
             }
         }
-        .frame(height: 60)
-        .padding(.horizontal, 10)
-        // iOS 26 : barre flottante en verre (Liquid Glass), coins concentriques.
-        // En thème Verre → matériau plus fin/translucide pour un vrai effet dépoli.
-        .background(themeRaw == "glass" ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(.regularMaterial),
-                    in: ConcentricRectangle(corners: .concentric, isUniform: true))
-        .overlay(ConcentricRectangle(corners: .concentric, isUniform: true)
-            .stroke(Theme.hairline, lineWidth: 0.5))
-        .softElevation(true)
-        .padding(.horizontal, Self.barInset)
-        .padding(.bottom, Self.barInset)
+        #endif
     }
 
-    private func tabBtn(_ t: AppTab) -> some View {
+    /// Verre translucide qui prend la couleur de ce qu'il y a derrière,
+    /// comme la barre de Revolut. Vrai Liquid Glass sur iOS 26, matériau sinon.
+    @ViewBuilder private var barBackground: some View {
+        if #available(iOS 26.0, *) {
+            // Vrai Liquid Glass : il réfracte le fond, donc il prend sa couleur.
+            Color.clear.glassEffect(.regular, in: .capsule)
+        } else {
+            // Avant iOS 26 : le matériau le plus fin, pour rester translucide
+            // comme la barre de Revolut plutôt qu'un aplat blanc.
+            Capsule().fill(.ultraThinMaterial)
+        }
+    }
+
+    /// L'assistant devient le 5e onglet, comme RevPoints chez Revolut.
+    private func assistantBtn(m: TabBarMetrics) -> some View {
         Button {
-            let anim: Animation? = reduceMotion ? nil : .spring(duration: 0.28, bounce: 0.35)
+            Haptics.tap()
+            serverStatus.pingNow()
+            onOpenAssistant()
+        } label: {
+            VStack(spacing: 3) {
+                ZStack {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: m.icon, weight: .medium))
+                        .foregroundStyle(Color.primary.opacity(0.55))
+                    if serverStatus.isOnline != nil {
+                        Circle()
+                            .fill(serverStatus.dotColor)
+                            .frame(width: 6, height: 6)
+                            .offset(x: 11, y: -8)
+                            .transition(.scale.combined(with: .opacity))
+                    }
+                }
+                Text("Assistant")
+                    .font(.system(size: m.label, weight: .medium))
+                    .foregroundStyle(Color.primary.opacity(0.55))
+                    .lineLimit(1).minimumScaleFactor(0.85)
+            }
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Assistant")
+    }
+
+    private func tabBtn(_ t: AppTab, m: TabBarMetrics) -> some View {
+        let isOn = selected == t
+        return Button {
+            let anim: Animation? = reduceMotion ? nil : .spring(duration: 0.28, bounce: 0.28)
             withAnimation(anim) { selected = t }
             if t == .profile { Haptics.medium() } else { Haptics.tap() }
         } label: {
-            ZStack {
-                if selected == t {
-                    RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
-                        .fill(Color.accentColor)
-                        .frame(width: 52, height: 42)
-                        .shadow(color: Color.accentColor.opacity(0.45), radius: 8, y: 3)
-                        .matchedGeometryEffect(id: "sel", in: ns)
-                }
-                Image(systemName: selected == t ? t.iconFill : t.icon)
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(selected == t ? Theme.onAccent : Color.primary.opacity(0.55))
-                    .animation(reduceMotion ? nil : .spring(duration: 0.28), value: selected)
+            VStack(spacing: 3) {
+                Image(systemName: isOn ? t.iconFill : t.icon)
+                    .font(.system(size: m.icon, weight: isOn ? .semibold : .medium))
+                    .symbolRenderingMode(.hierarchical)
+                Text(t.label)
+                    .font(.system(size: m.label, weight: isOn ? .semibold : .medium))
+                    .lineLimit(1).minimumScaleFactor(0.85)
             }
-            .frame(width: 58, height: 58)
+            // Actif = pleine encre. Inactif = estompé. Pas de pastille criarde.
+            .foregroundStyle(isOn ? Color.primary : Color.primary.opacity(0.5))
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(t.label)
-        .accessibilityAddTraits(selected == t ? [.isSelected, .isButton] : [.isButton])
+        .accessibilityAddTraits(isOn ? [.isSelected, .isButton] : .isButton)
     }
 }
 

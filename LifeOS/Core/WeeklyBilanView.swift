@@ -198,7 +198,7 @@ struct WeeklyBilanView: View {
                         }
                         .padding(14)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(hex: 0xFF9F0A).opacity(0.08), in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                        .background(Color(hex: 0xFF9F0A).opacity(0.16), in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                     }
                 }
                 .padding(20)
@@ -290,7 +290,7 @@ struct WeeklyBilanView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.accentColor.opacity(0.06), in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .background(Color.accentColor.opacity(0.14), in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .stroke(Color.accentColor.opacity(0.15), lineWidth: 1)
@@ -344,7 +344,7 @@ struct WeeklyBilanView: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Color(hex: UInt(habit.colorHex)))
                 .frame(width: 30, height: 30)
-                .background(Color(hex: UInt(habit.colorHex)).opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .background(Color(hex: UInt(habit.colorHex)).opacity(0.20), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             Text(habit.name)
                 .font(.system(size: 14, weight: .medium))
                 .lineLimit(1)

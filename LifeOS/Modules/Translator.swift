@@ -71,7 +71,7 @@ private struct TranslatorScreen: View {
                         Label(errorMsg, systemImage: "exclamationmark.triangle.fill")
                             .font(.subheadline).foregroundStyle(.orange)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(12).background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                            .padding(12).background(Color.orange.opacity(0.20), in: RoundedRectangle(cornerRadius: 12))
                     }
                     if !output.isEmpty { outputCard }
                     Text("100% sur l'appareil. Télécharge une langue pour l'utiliser hors connexion.")

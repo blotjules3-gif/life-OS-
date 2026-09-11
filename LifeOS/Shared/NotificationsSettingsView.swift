@@ -145,7 +145,7 @@ struct NotificationsSettingsView: View {
                     .font(.caption.weight(.semibold))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(Color.accentColor.opacity(0.15), in: Capsule())
+                    .background(Color.accentColor.opacity(0.23), in: Capsule())
             }
             .buttonStyle(.plain)
         }

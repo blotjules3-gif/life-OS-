@@ -232,7 +232,7 @@ struct LetterGeneratorView: View {
                     ForEach(templates) { t in
                         NavigationLink { LetterDetail(name: t.name, text: t.body) } label: {
                             HStack {
-                                Image(systemName: t.icon).font(.title3).foregroundStyle(Color.adminTint).frame(width: 40, height: 40).background(Color.adminTint.opacity(0.15), in: RoundedRectangle(cornerRadius: 10))
+                                Image(systemName: t.icon).font(.title3).foregroundStyle(Color.adminTint).frame(width: 40, height: 40).background(Color.adminTint.opacity(0.23), in: RoundedRectangle(cornerRadius: 10))
                                 Text(t.name).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
                                 Spacer(); Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(Theme.textSecondary)
                             }.card(padding: 12)

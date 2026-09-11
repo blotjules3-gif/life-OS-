@@ -60,7 +60,7 @@ struct SkincareView: View {
                                 Image(systemName: "chevron.right").foregroundStyle(.secondary)
                             }
                             .padding(14)
-                            .background(Color.looksTint.opacity(0.06), in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                            .background(Color.looksTint.opacity(0.14), in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous).stroke(Color.looksTint.opacity(0.2), lineWidth: 1))
                         }.buttonStyle(.plain)
                     }
@@ -124,7 +124,7 @@ struct SkincareView: View {
                 Text("Modifier").font(.caption).foregroundStyle(.secondary)
             }
             .padding(12)
-            .background(Color.green.opacity(0.06), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(Color.green.opacity(0.22), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         }.buttonStyle(.plain)
     }
 
@@ -278,7 +278,7 @@ struct SkinProfileSetupView: View {
                         Text(c.capitalized).font(.subheadline.weight(.medium))
                             .foregroundStyle(concerns.contains(c) ? Color.looksTint : .primary)
                             .frame(maxWidth: .infinity).padding(.vertical, 12)
-                            .background(concerns.contains(c) ? Color.looksTint.opacity(0.12) : Theme.card,
+                            .background(concerns.contains(c) ? Color.looksTint.opacity(0.20) : Theme.card,
                                         in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
                                 .stroke(concerns.contains(c) ? Color.looksTint.opacity(0.4) : Color.clear, lineWidth: 1.5))

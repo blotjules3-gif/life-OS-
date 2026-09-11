@@ -532,7 +532,7 @@ struct SupplementsView: View {
                     Spacer()
                 }
                 .padding(10)
-                .background(Color.nutriTint.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                .background(Color.nutriTint.opacity(0.20), in: RoundedRectangle(cornerRadius: 12))
 
                 HStack {
                     DatePicker("Heure", selection: $time, displayedComponents: .hourAndMinute).labelsHidden()

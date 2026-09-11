@@ -143,7 +143,7 @@ struct CoachExpertisePreviewSheet: View {
                     .foregroundStyle(color(for: topic))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
-                    .background(color(for: topic).opacity(0.12), in: Capsule())
+                    .background(color(for: topic).opacity(0.20), in: Capsule())
                 }
                 Text("Max 3 blocs (+ méta) — les 3 premiers dans l'ordre canonique sont injectés.")
                     .font(.caption2)

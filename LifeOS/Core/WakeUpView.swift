@@ -248,7 +248,7 @@ struct WakeUpView: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(Color(hex: 0x9B6CF1))
                     .frame(width: 32, height: 32)
-                    .background(Color(hex: 0x9B6CF1).opacity(0.14),
+                    .background(Color(hex: 0x9B6CF1).opacity(0.22),
                                 in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 VStack(alignment: .leading, spacing: 1) {
                     Text("Coucher conseillé")
@@ -275,7 +275,7 @@ struct WakeUpView: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(Color(hex: 0x3CB2E0))
                     .frame(width: 32, height: 32)
-                    .background(Color(hex: 0x3CB2E0).opacity(0.14),
+                    .background(Color(hex: 0x3CB2E0).opacity(0.22),
                                 in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 Text("Snooze")
                     .font(.system(size: 14, weight: .semibold))

@@ -359,7 +359,7 @@ struct PendingHabitRow: View {
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(Color(hex: UInt(habit.colorHex)))
                 .frame(width: 36, height: 36)
-                .background(Color(hex: UInt(habit.colorHex)).opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .background(Color(hex: UInt(habit.colorHex)).opacity(0.20), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
             Text(habit.name)
                 .font(.system(size: 14, weight: .medium))
@@ -441,7 +441,7 @@ struct HabitRow: View {
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(Color(hex: UInt(habit.colorHex)))
                 .frame(width: 36, height: 36)
-                .background(Color(hex: UInt(habit.colorHex)).opacity(0.12), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .background(Color(hex: UInt(habit.colorHex)).opacity(0.20), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(habit.name)

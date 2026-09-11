@@ -162,7 +162,7 @@ struct GoalPlanPreviewSheet: View {
                         Text(rec.kind.displayLabel)
                             .font(.caption2.weight(.semibold))
                             .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(kindColor(rec.kind).opacity(0.15), in: Capsule())
+                            .background(kindColor(rec.kind).opacity(0.23), in: Capsule())
                             .foregroundStyle(kindColor(rec.kind))
                     }
                     Text(rec.rationale).font(.caption).foregroundStyle(.secondary)

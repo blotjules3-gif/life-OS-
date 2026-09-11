@@ -253,7 +253,7 @@ struct ProductDetailView: View {
             Text("\(title) · \(unit)").font(.caption2).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 12)
-        .background(color.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .background(color.opacity(0.26), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
     private func novaColor(_ n: Int) -> Color {
         switch n { case 1: return Color(hex: 0x1E8F4E); case 2: return Color(hex: 0xF1C40F); case 3: return Color(hex: 0xE8821E); default: return Color(hex: 0xE03A2F) }

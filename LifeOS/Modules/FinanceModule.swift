@@ -52,7 +52,7 @@ struct AccountsView: View {
                     if let alert = anomalyAlert() {
                         HStack { Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.red); Text(alert).font(.footnote).foregroundStyle(Theme.textPrimary) }
                             .frame(maxWidth: .infinity, alignment: .leading).padding(12)
-                            .background(Color.red.opacity(0.12), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+                            .background(Color.red.opacity(0.20), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
                     }
 
                     HStack {

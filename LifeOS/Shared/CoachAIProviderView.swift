@@ -185,7 +185,7 @@ struct CoachAIProviderView: View {
                             .font(.caption2.weight(.semibold))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color.accentColor.opacity(0.15), in: Capsule())
+                            .background(Color.accentColor.opacity(0.23), in: Capsule())
                     }
                 }
                 Text(vm.appleAvailable ? "Disponible sur cet iPhone" : "Non disponible sur cet iPhone")

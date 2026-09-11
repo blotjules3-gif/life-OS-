@@ -216,7 +216,7 @@ struct FaceAnalysisView: View {
               systemImage: "exclamationmark.triangle.fill")
             .font(.subheadline).foregroundStyle(.orange)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14).background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+            .padding(14).background(Color.orange.opacity(0.20), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
     private func results(_ m: [FaceMetric]) -> some View {

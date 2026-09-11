@@ -65,7 +65,7 @@ struct LifeStatusTile: View {
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(iconColor)
                     .frame(width: 26, height: 26)
-                    .background(iconColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .background(iconColor.opacity(0.22), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                 Spacer(minLength: 0)
                 if status != .normal {
                     Circle()
