@@ -42,6 +42,7 @@ struct ProfileView: View {
     @State private var healthConnected = false
     @State private var showGoalEditor = false
     @State private var showNotificationSettings = false
+    @State private var showSoundHaptics = false
     @State private var showWakeupDetail = false
     @State private var showBriefing = false
     @State private var appeared = false
@@ -210,6 +211,9 @@ struct ProfileView: View {
                     hiddenGoalIDsRaw: $hiddenGoalIDsRaw,
                     goalEndDatesRaw: $goalEndDatesRaw
                 )
+            }
+            .sheet(isPresented: $showSoundHaptics) {
+                NavigationStack { SoundHapticsSettingsView() }
             }
             .sheet(isPresented: $showNotificationSettings) {
                 NotificationSettingsSheet(
@@ -780,6 +784,13 @@ struct ProfileView: View {
                     }
                 } action: {
                     showNotificationSettings = true
+                }
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
+                settingsRow(icon: "speaker.wave.2.fill", iconColor: Color(hex: 0x5B8DEF),
+                            label: "Sons & vibrations") {
+                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
+                } action: {
+                    showSoundHaptics = true
                 }
                 Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
                 settingsRow(icon: "slider.horizontal.3", iconColor: Color.accentColor, label: "Modifier mes objectifs") {
