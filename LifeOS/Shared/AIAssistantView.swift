@@ -980,6 +980,10 @@ struct AIAssistantView: View {
                 onAccept: { disclaimerAccepted = true },
                 onDismiss: { dismiss() }
             )
+        } else if !coachOnboardingCompleted {
+            CoachFirstLaunchSheet(onDone: {
+                coachOnboardingCompleted = true
+            })
         } else {
             chatContent
         }
