@@ -133,6 +133,24 @@ struct CoachAIProviderView: View {
                 Text("Notification le 1er de chaque mois à 10h avec un résumé auto de tes 30 derniers jours (habitudes, sommeil, poids, nutrition).")
             }
 
+            // Section providers custom — endpoints compatibles OpenAI ou Anthropic
+            // configurés par l'user (Ollama local, LM Studio, Perplexity, proxy
+            // interne, tout futur provider suivant ces standards).
+            Section {
+                ForEach(customStore.configs) { config in
+                    customProviderRow(config)
+                }
+                Button {
+                    showNewCustom = true
+                } label: {
+                    Label("Ajouter un provider compatible", systemImage: "plus.circle")
+                }
+            } header: {
+                Text("Providers compatibles")
+            } footer: {
+                Text("Ajoute n'importe quel endpoint compatible OpenAI (Ollama local, LM Studio, Perplexity, Together AI…) ou Anthropic. Ton coach gagne en compatibilité sans se limiter aux gros providers.")
+            }
+
             if vm.currentPreference != nil {
                 Section {
                     Button(role: .destructive) {
