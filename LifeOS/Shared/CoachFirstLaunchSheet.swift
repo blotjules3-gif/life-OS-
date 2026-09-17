@@ -315,30 +315,33 @@ private struct QuickKeyEntry: View {
     let onSaved: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     @State private var key: String = ""
     @State private var testing = false
     @State private var errorMsg: String?
     @State private var success = false
+    @State private var pastebardBannerVisible = false
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    HStack {
-                        Image(systemName: "key.fill")
-                            .foregroundStyle(Color.accentColor)
-                        Text(slot.displayName)
-                            .font(.headline)
+                    ProviderKeyHelpView(slot: slot) { pastedKey in
+                        key = pastedKey
+                        Task { await saveAndTest() }
                     }
-                } footer: {
-                    if let url = slot.docsURL {
-                        Link("Où récupérer une clé \(slot.displayName)", destination: url)
-                            .font(.caption)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
+                    .listRowBackground(Color.clear)
+                }
+
+                if pastebardBannerVisible {
+                    Section {
+                        clipboardBanner
                     }
                 }
 
                 Section {
-                    SecureField("Colle ta clé ici", text: $key)
+                    SecureField("Ou colle ta clé ici", text: $key)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                     if let errorMsg {
