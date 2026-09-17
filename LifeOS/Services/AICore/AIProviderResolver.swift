@@ -11,6 +11,11 @@ enum AIProviderResolver {
     /// Nom court, en français, prêt à afficher sous une bulle.
     /// Retourne `nil` pour un providerID inconnu (masque la mention plutôt
     /// que d'afficher "inconnu").
+    ///
+    /// Marqué `@MainActor` pour pouvoir résoudre les providerIDs custom via
+    /// `CustomProviderStore.shared` (isolated to MainActor). Tous les callers
+    /// UI (SwiftUI Text/Label) tournent déjà sur MainActor donc pas d'impact.
+    @MainActor
     static func displayName(for providerID: String?) -> String? {
         guard let providerID, !providerID.isEmpty else { return nil }
         switch providerID {
