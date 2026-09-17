@@ -299,6 +299,38 @@ struct CoachAIProviderView: View {
         .contentShape(Rectangle())
         .onTapGesture { vm.editingSlot = slot }
     }
+
+    /// Ligne pour un provider custom — nom + URL courte + statut de la clé.
+    @ViewBuilder
+    private func customProviderRow(_ config: CustomProviderStore.Config) -> some View {
+        let hasKey = CustomProviderStore.shared.key(for: config) != nil
+        let isPreferred = vm.currentPreference == config.providerID
+        HStack {
+            Image(systemName: hasKey ? "server.rack" : "server.rack")
+                .foregroundStyle(hasKey ? .green : .secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(config.name)
+                    .font(.subheadline.weight(.medium))
+                Text("\(config.dialect.displayName) · \(config.model)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer()
+            if isPreferred {
+                Text("Actif").font(.caption.weight(.semibold)).foregroundStyle(.green)
+            } else {
+                Button("Choisir") {
+                    AIProviderPreference.shared.setPreferredProviderID(config.providerID)
+                    vm.reload()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { editingCustom = config }
+    }
 }
 
 // MARK: - View helpers
