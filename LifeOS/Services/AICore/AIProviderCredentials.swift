@@ -21,49 +21,69 @@ final class AIProviderCredentials {
     /// Un slot par provider cloud pris en charge. Aligné avec les IDs des
     /// `AIProvider` concrets pour cohérence logs.
     enum Slot: String, CaseIterable, Sendable {
-        case openai       = "ai.credentials.openai"
-        case anthropic    = "ai.credentials.anthropic"
-        case mistral      = "ai.credentials.mistral"
-        case gemini       = "ai.credentials.gemini"
+        case openai        = "ai.credentials.openai"
+        case anthropic     = "ai.credentials.anthropic"
+        case mistral       = "ai.credentials.mistral"
+        case gemini        = "ai.credentials.gemini"
+        case openrouter    = "ai.credentials.openrouter"
+        case deepseek      = "ai.credentials.deepseek"
+        case groq          = "ai.credentials.groq"
+        case xai           = "ai.credentials.xai"
 
         /// Nom humain pour l'UI.
         var displayName: String {
             switch self {
-            case .openai:    return "OpenAI"
-            case .anthropic: return "Anthropic"
-            case .mistral:   return "Mistral AI"
-            case .gemini:    return "Google Gemini"
+            case .openai:      return "OpenAI"
+            case .anthropic:   return "Anthropic"
+            case .mistral:     return "Mistral AI"
+            case .gemini:      return "Google Gemini"
+            case .openrouter:  return "OpenRouter"
+            case .deepseek:    return "DeepSeek"
+            case .groq:        return "Groq"
+            case .xai:         return "xAI (Grok)"
             }
         }
 
         /// URL doc où récupérer une clé.
         var docsURL: URL? {
             switch self {
-            case .openai:    return URL(string: "https://platform.openai.com/api-keys")
-            case .anthropic: return URL(string: "https://console.anthropic.com/settings/keys")
-            case .mistral:   return URL(string: "https://console.mistral.ai/api-keys/")
-            case .gemini:    return URL(string: "https://aistudio.google.com/app/apikey")
+            case .openai:      return URL(string: "https://platform.openai.com/api-keys")
+            case .anthropic:   return URL(string: "https://console.anthropic.com/settings/keys")
+            case .mistral:     return URL(string: "https://console.mistral.ai/api-keys/")
+            case .gemini:      return URL(string: "https://aistudio.google.com/app/apikey")
+            case .openrouter:  return URL(string: "https://openrouter.ai/keys")
+            case .deepseek:    return URL(string: "https://platform.deepseek.com/api_keys")
+            case .groq:        return URL(string: "https://console.groq.com/keys")
+            case .xai:         return URL(string: "https://console.x.ai/")
             }
         }
 
         /// Préfixe attendu pour valider un format minimal avant enregistrement.
-        /// `nil` = pas de préfixe standardisé (Mistral / Gemini).
+        /// `nil` = pas de préfixe standardisé.
         var expectedPrefix: String? {
             switch self {
-            case .openai:    return "sk-"
-            case .anthropic: return "sk-ant-"
-            case .mistral:   return nil
-            case .gemini:    return nil
+            case .openai:      return "sk-"
+            case .anthropic:   return "sk-ant-"
+            case .mistral:     return nil
+            case .gemini:      return nil
+            case .openrouter:  return "sk-or-"
+            case .deepseek:    return "sk-"
+            case .groq:        return "gsk_"
+            case .xai:         return "xai-"
             }
         }
 
         /// Longueur minimale plausible (garde-fou contre les copies tronquées).
         var minLength: Int {
             switch self {
-            case .openai:    return 40
-            case .anthropic: return 40
-            case .mistral:   return 20
-            case .gemini:    return 20
+            case .openai:      return 40
+            case .anthropic:   return 40
+            case .mistral:     return 20
+            case .gemini:      return 20
+            case .openrouter:  return 40
+            case .deepseek:    return 30
+            case .groq:        return 40
+            case .xai:         return 40
             }
         }
 
@@ -71,10 +91,14 @@ final class AIProviderCredentials {
         /// préférence utilisateur (match exact côté router).
         var providerID: String {
             switch self {
-            case .openai:    return "openai.gpt"
-            case .anthropic: return "anthropic.claude"
-            case .mistral:   return "mistral.direct"
-            case .gemini:    return "google.gemini"
+            case .openai:      return "openai.gpt"
+            case .anthropic:   return "anthropic.claude"
+            case .mistral:     return "mistral.direct"
+            case .gemini:      return "google.gemini"
+            case .openrouter:  return "openrouter.universal"
+            case .deepseek:    return "deepseek.chat"
+            case .groq:        return "groq.llama"
+            case .xai:         return "xai.grok"
             }
         }
     }
