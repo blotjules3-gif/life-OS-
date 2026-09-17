@@ -497,10 +497,14 @@ private struct ProviderKeyEditor: View {
 
     private func providerFor(_ slot: SlotDisplay) -> any AIProvider {
         switch slot {
-        case .openai:    return OpenAIProvider()
-        case .anthropic: return AnthropicProvider()
-        case .mistral:   return MistralProvider()
-        case .gemini:    return GeminiProvider()
+        case .openrouter: return OpenRouterProvider()
+        case .openai:     return OpenAIProvider()
+        case .anthropic:  return AnthropicProvider()
+        case .mistral:    return MistralProvider()
+        case .gemini:     return GeminiProvider()
+        case .deepseek:   return DeepSeekProvider()
+        case .groq:       return GroqProvider()
+        case .xai:        return XAIProvider()
         }
     }
 }
