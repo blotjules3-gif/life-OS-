@@ -12,7 +12,10 @@ struct CoachAIProviderView: View {
     /// Observation live du tracker → la section "Usage" se met à jour
     /// dès qu'une requête cloud est enregistrée pendant que le sheet est ouvert.
     @ObservedObject private var usageTracker = AIProviderUsageTracker.shared
+    @ObservedObject private var customStore = CustomProviderStore.shared
     @State private var showResetConfirm = false
+    @State private var editingCustom: CustomProviderStore.Config?
+    @State private var showNewCustom = false
 
     var body: some View {
         List {
