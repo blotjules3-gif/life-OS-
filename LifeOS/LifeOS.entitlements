@@ -6,13 +6,5 @@
 	<true/>
 	<key>com.apple.developer.healthkit.background-delivery</key>
 	<true/>
-	<key>com.apple.developer.usernotifications.time-sensitive</key>
-	<true/>
-	<key>com.apple.developer.weatherkit</key>
-	<true/>
-	<key>com.apple.security.application-groups</key>
-	<array>
-		<string>group.lifeos.app</string>
-	</array>
 </dict>
 </plist>
