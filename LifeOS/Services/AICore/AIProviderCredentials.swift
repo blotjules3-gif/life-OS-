@@ -101,6 +101,91 @@ final class AIProviderCredentials {
             case .xai:         return "xai.grok"
             }
         }
+
+        /// Temps estimé pour créer un compte + récupérer une clé (indicatif).
+        /// Affiché sous forme "environ X min" dans le tuto.
+        var estimatedSetupMinutes: Int {
+            switch self {
+            case .groq, .gemini:                      return 2   // Sign in Google/GitHub + clé
+            case .openrouter:                         return 3
+            case .mistral, .deepseek:                 return 4
+            case .openai, .anthropic, .xai:           return 5   // Carte bancaire à ajouter
+            }
+        }
+
+        /// Vrai si l'user peut obtenir une clé sans carte bancaire.
+        var hasFreeTier: Bool {
+            switch self {
+            case .gemini, .groq, .mistral:  return true   // Free tier disponible
+            case .openrouter:               return true   // Free tier limité + crédit possible
+            case .openai, .anthropic, .xai, .deepseek:  return false
+            }
+        }
+
+        /// Mini-tuto pas-à-pas pour récupérer une clé.
+        /// Chaque string = 1 étape courte, verbe à l'infinitif ou impératif.
+        /// L'user tape sur le bouton "Ouvrir le site" puis suit les étapes ici.
+        var keyRetrievalSteps: [String] {
+            switch self {
+            case .openrouter:
+                return [
+                    "Connecte-toi avec Google ou GitHub sur openrouter.ai",
+                    "Ajoute quelques euros de crédit (Buy Credits, 5 $ minimum)",
+                    "Va dans la section Keys et clique Create Key",
+                    "Copie la clé (elle commence par sk-or-) et colle-la ici",
+                ]
+            case .openai:
+                return [
+                    "Connecte-toi sur platform.openai.com",
+                    "Ajoute une carte bancaire dans Settings → Billing",
+                    "Va dans API Keys et clique Create new secret key",
+                    "Copie la clé immédiatement (visible 1 seule fois)",
+                    "Colle-la ici",
+                ]
+            case .anthropic:
+                return [
+                    "Connecte-toi sur console.anthropic.com",
+                    "Ajoute un crédit dans Settings → Plans & Billing (min 5 $)",
+                    "Va dans Settings → API Keys et clique Create Key",
+                    "Copie la clé (elle commence par sk-ant-) et colle-la ici",
+                ]
+            case .mistral:
+                return [
+                    "Connecte-toi sur console.mistral.ai",
+                    "Active un plan (le plan Experiment est gratuit)",
+                    "Va dans API Keys et clique Create new key",
+                    "Copie la clé et colle-la ici",
+                ]
+            case .gemini:
+                return [
+                    "Va sur aistudio.google.com/app/apikey",
+                    "Connecte-toi avec ton compte Google",
+                    "Clique Create API key",
+                    "Copie la clé et colle-la ici (gratuit avec quota généreux)",
+                ]
+            case .deepseek:
+                return [
+                    "Crée un compte sur platform.deepseek.com",
+                    "Recharge 2 $ de crédit minimum",
+                    "Va dans API Keys et clique Create key",
+                    "Copie la clé (elle commence par sk-) et colle-la ici",
+                ]
+            case .groq:
+                return [
+                    "Connecte-toi avec Google ou GitHub sur console.groq.com",
+                    "Va dans API Keys et clique Create API Key",
+                    "Copie la clé (elle commence par gsk_) et colle-la ici",
+                    "Le free tier est généreux, pas besoin de carte bancaire",
+                ]
+            case .xai:
+                return [
+                    "Connecte-toi sur console.x.ai avec ton compte X",
+                    "Ajoute une carte bancaire pour créer un crédit",
+                    "Va dans API Keys et clique Create Key",
+                    "Copie la clé (elle commence par xai-) et colle-la ici",
+                ]
+            }
+        }
     }
 
     /// Résultat de validation d'une clé — utilisé par le sheet éditeur pour
