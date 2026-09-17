@@ -89,7 +89,7 @@ final class AIModelRouter {
     func execute(_ request: AIRequest) async -> AIResponse {
         bootstrapToolsIfNeeded()
         let requiredCaps = requiredCapabilities(for: request)
-        let eligible = providers.filter { $0.capabilities.isSuperset(of: requiredCaps) }
+        let eligible = resolvedProviders().filter { $0.capabilities.isSuperset(of: requiredCaps) }
 
         // Applique la préférence utilisateur : si un provider est marqué
         // préféré ET dans la liste éligible, il passe en tête (le reste
