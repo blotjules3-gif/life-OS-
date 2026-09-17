@@ -38,7 +38,7 @@ struct ProfileCoachCard: View {
             // Fond gradient sombre
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(LinearGradient(
-                    colors: [Color(hex: UInt(0x0D1B2A)), Color(hex: 0x162636)],
+                    colors: [Color(hex: 0x0D1B2A), Color(hex: 0x162636)],
                     startPoint: .topLeading, endPoint: .bottomTrailing
                 ))
 
