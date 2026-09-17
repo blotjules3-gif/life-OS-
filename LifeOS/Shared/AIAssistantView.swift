@@ -878,6 +878,7 @@ struct AIAssistantView: View {
     @StateObject private var vm = AIAssistantViewModel()
     @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
     @AppStorage(AppStorageKeys.coachDisclaimerAccepted) private var disclaimerAccepted = false
+    @AppStorage(AppStorageKeys.coachOnboardingCompleted) private var coachOnboardingCompleted = false
     private var accent: Color { (AppTheme(rawValue: appThemeRaw) ?? .classic).accent }
     @FocusState private var inputFocused: Bool
     @State private var showClearConfirm = false
@@ -979,6 +980,10 @@ struct AIAssistantView: View {
                 onAccept: { disclaimerAccepted = true },
                 onDismiss: { dismiss() }
             )
+        } else if !coachOnboardingCompleted {
+            CoachFirstLaunchSheet(onDone: {
+                coachOnboardingCompleted = true
+            })
         } else {
             chatContent
         }

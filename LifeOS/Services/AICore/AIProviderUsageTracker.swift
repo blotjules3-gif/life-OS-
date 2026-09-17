@@ -140,11 +140,21 @@ final class AIProviderUsageTracker: ObservableObject {
     /// Fix m6 : Anthropic Haiku 4.5 corrigé à $0.80/$4 (source: docs Anthropic 2026).
     static func pricing(for providerID: String) -> Pricing? {
         switch providerID {
-        case "openai.gpt":       return Pricing(inputUSDPerMillion: 0.15,  outputUSDPerMillion: 0.60)
-        case "anthropic.claude": return Pricing(inputUSDPerMillion: 0.80,  outputUSDPerMillion: 4.00)
-        case "mistral.direct":   return Pricing(inputUSDPerMillion: 0.10,  outputUSDPerMillion: 0.30)
-        case "google.gemini":    return Pricing(inputUSDPerMillion: 0.075, outputUSDPerMillion: 0.30)
-        default: return nil
+        case "openai.gpt":         return Pricing(inputUSDPerMillion: 0.15,  outputUSDPerMillion: 0.60)
+        case "anthropic.claude":   return Pricing(inputUSDPerMillion: 0.80,  outputUSDPerMillion: 4.00)
+        case "mistral.direct":     return Pricing(inputUSDPerMillion: 0.10,  outputUSDPerMillion: 0.30)
+        case "google.gemini":      return Pricing(inputUSDPerMillion: 0.075, outputUSDPerMillion: 0.30)
+        // OpenRouter : varie selon le modèle sous-jacent, on prend un ordre de
+        // grandeur pour Claude Haiku (modèle par défaut du provider).
+        case "openrouter.universal": return Pricing(inputUSDPerMillion: 0.80,  outputUSDPerMillion: 4.00)
+        case "deepseek.chat":      return Pricing(inputUSDPerMillion: 0.14,  outputUSDPerMillion: 0.28)
+        case "groq.llama":         return Pricing(inputUSDPerMillion: 0.05,  outputUSDPerMillion: 0.08)
+        case "xai.grok":           return Pricing(inputUSDPerMillion: 2.00,  outputUSDPerMillion: 10.00)
+        default:
+            // Providers custom : impossible de connaître le prix (Ollama gratuit,
+            // proxy interne, etc.). On retourne nil = pas de tracking coût,
+            // juste les requêtes.
+            return nil
         }
     }
 

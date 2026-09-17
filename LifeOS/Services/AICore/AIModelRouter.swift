@@ -30,10 +30,14 @@ final class AIModelRouter {
     /// dans ce cas, le provider choisi passe en tête de la chaîne.
     private var providers: [AIProvider] = [
         AppleIntelligenceProvider(),
+        OpenRouterProvider(),
         OpenAIProvider(),
         AnthropicProvider(),
         MistralProvider(),
         GeminiProvider(),
+        DeepSeekProvider(),
+        GroqProvider(),
+        XAIProvider(),
     ]
 
     /// Vrai si les tools coach ont déjà été enregistrés dans le ToolRegistry.
@@ -57,8 +61,26 @@ final class AIModelRouter {
         providers.insert(provider, at: 0)
     }
 
+    /// Liste dynamique de tous les providers disponibles = built-in + custom
+    /// (résolus depuis `CustomProviderStore` à chaque appel). Les custom sont
+    /// placés en fin de chaîne — l'user doit les choisir explicitement via
+    /// `AIProviderPreference` pour qu'ils passent en tête.
+    private func resolvedProviders() -> [AIProvider] {
+        let customConfigs = CustomProviderStore.shared.configs
+        let customProviders: [AIProvider] = customConfigs.map { config in
+            switch config.dialect {
+            case .openaiCompatible:
+                return CustomOpenAICompatibleProvider(configID: config.id)
+            case .anthropicCompatible:
+                return CustomAnthropicCompatibleProvider(configID: config.id)
+            }
+        }
+        return providers + customProviders
+    }
+
     /// Retourne les providers actuellement enregistrés (ordre de priorité).
-    var registered: [AIProvider] { providers }
+    /// Inclut les custom résolus dynamiquement.
+    var registered: [AIProvider] { resolvedProviders() }
 
     // MARK: - Exécution
 
@@ -67,7 +89,7 @@ final class AIModelRouter {
     func execute(_ request: AIRequest) async -> AIResponse {
         bootstrapToolsIfNeeded()
         let requiredCaps = requiredCapabilities(for: request)
-        let eligible = providers.filter { $0.capabilities.isSuperset(of: requiredCaps) }
+        let eligible = resolvedProviders().filter { $0.capabilities.isSuperset(of: requiredCaps) }
 
         // Applique la préférence utilisateur : si un provider est marqué
         // préféré ET dans la liste éligible, il passe en tête (le reste
@@ -150,7 +172,7 @@ final class AIModelRouter {
     }
 
     func snapshot() -> RouterSnapshot {
-        RouterSnapshot(providers: providers.map { p in
+        RouterSnapshot(providers: resolvedProviders().map { p in
             .init(
                 id: p.id,
                 displayName: p.displayName,

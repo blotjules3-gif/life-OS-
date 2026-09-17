@@ -1,0 +1,22 @@
+- generic [active] [ref=f45e1]:
+  - main [ref=f45e2]:
+    - generic [ref=f45e3]:
+      - generic [ref=f45e4]:
+        - img "Icône pour rocketreach.co" [ref=f45e5]
+        - heading "rocketreach.co" [level=1] [ref=f45e6]
+      - heading "Vérification de sécurité en cours" [level=2] [ref=f45e7]
+      - paragraph [ref=f45e8]: Ce site utilise un service de sécurité pour se protéger contre les bots malveillants. Cette page s’affiche pendant que le site vérifie que vous n’êtes pas un bot.
+  - contentinfo [ref=f45e15]:
+    - generic [ref=f45e17]:
+      - generic [ref=f45e19]:
+        - text: "Ray ID:"
+        - code [ref=f45e20]: a3829841f8d3ebaa
+      - generic [ref=f45e21]:
+        - generic [ref=f45e22]:
+          - text: Performances et sécurité par
+          - link "Cloudflare, nouvel onglet" [ref=f45e23] [cursor=pointer]:
+            - /url: https://www.cloudflare.com?utm_source=challenge&utm_campaign=m
+            - text: Cloudflare
+        - link "Confidentialité, nouvel onglet" [ref=f45e25] [cursor=pointer]:
+          - /url: https://www.cloudflare.com/fr-fr/privacypolicy/
+          - text: Confidentialité

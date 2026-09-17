@@ -11,6 +11,11 @@ enum AIProviderResolver {
     /// Nom court, en français, prêt à afficher sous une bulle.
     /// Retourne `nil` pour un providerID inconnu (masque la mention plutôt
     /// que d'afficher "inconnu").
+    ///
+    /// Marqué `@MainActor` pour pouvoir résoudre les providerIDs custom via
+    /// `CustomProviderStore.shared` (isolated to MainActor). Tous les callers
+    /// UI (SwiftUI Text/Label) tournent déjà sur MainActor donc pas d'impact.
+    @MainActor
     static func displayName(for providerID: String?) -> String? {
         guard let providerID, !providerID.isEmpty else { return nil }
         switch providerID {
@@ -24,11 +29,30 @@ enum AIProviderResolver {
             return "Mistral Small"
         case "google.gemini":
             return "Gemini Flash"
+        case "openrouter.universal":
+            return "OpenRouter"
+        case "deepseek.chat":
+            return "DeepSeek"
+        case "groq.llama":
+            return "Groq (Llama)"
+        case "xai.grok":
+            return "Grok"
         case "local.rules.coach":
             return "Coach local"
         case "none":
             return nil
         default:
+            // Providers custom : providerID = "custom.openai.<UUID>" ou
+            // "custom.anthropic.<UUID>". On récupère le nom convivial défini
+            // par l'user dans le CustomProviderStore.
+            if providerID.hasPrefix("custom.") {
+                let uuid = String(providerID.split(separator: ".").last ?? "")
+                if let uuidObj = UUID(uuidString: uuid),
+                   let config = CustomProviderStore.shared.configs.first(where: { $0.id == uuidObj }) {
+                    return config.name
+                }
+                return "Custom"
+            }
             return providerID
         }
     }

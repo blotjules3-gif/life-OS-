@@ -12,7 +12,10 @@ struct CoachAIProviderView: View {
     /// Observation live du tracker → la section "Usage" se met à jour
     /// dès qu'une requête cloud est enregistrée pendant que le sheet est ouvert.
     @ObservedObject private var usageTracker = AIProviderUsageTracker.shared
+    @ObservedObject private var customStore = CustomProviderStore.shared
     @State private var showResetConfirm = false
+    @State private var editingCustom: CustomProviderStore.Config?
+    @State private var showNewCustom = false
 
     var body: some View {
         List {
@@ -130,6 +133,24 @@ struct CoachAIProviderView: View {
                 Text("Notification le 1er de chaque mois à 10h avec un résumé auto de tes 30 derniers jours (habitudes, sommeil, poids, nutrition).")
             }
 
+            // Section providers custom — endpoints compatibles OpenAI ou Anthropic
+            // configurés par l'user (Ollama local, LM Studio, Perplexity, proxy
+            // interne, tout futur provider suivant ces standards).
+            Section {
+                ForEach(customStore.configs) { config in
+                    customProviderRow(config)
+                }
+                Button {
+                    showNewCustom = true
+                } label: {
+                    Label("Ajouter un provider compatible", systemImage: "plus.circle")
+                }
+            } header: {
+                Text("Providers compatibles")
+            } footer: {
+                Text("Ajoute n'importe quel endpoint compatible OpenAI (Ollama local, LM Studio, Perplexity, Together AI…) ou Anthropic. Ton coach gagne en compatibilité sans se limiter aux gros providers.")
+            }
+
             if vm.currentPreference != nil {
                 Section {
                     Button(role: .destructive) {
@@ -166,6 +187,16 @@ struct CoachAIProviderView: View {
         }
         .sheet(isPresented: $vm.showMonthlyReview) {
             MonthlyReviewSheet()
+        }
+        .sheet(item: $editingCustom) { config in
+            CustomProviderEditor(editing: config) {
+                vm.reload()
+            }
+        }
+        .sheet(isPresented: $showNewCustom) {
+            CustomProviderEditor(editing: nil) {
+                vm.reload()
+            }
         }
         .onAppear { vm.reload() }
     }
@@ -278,31 +309,71 @@ struct CoachAIProviderView: View {
         .contentShape(Rectangle())
         .onTapGesture { vm.editingSlot = slot }
     }
+
+    /// Ligne pour un provider custom — nom + URL courte + statut de la clé.
+    @ViewBuilder
+    private func customProviderRow(_ config: CustomProviderStore.Config) -> some View {
+        let hasKey = CustomProviderStore.shared.key(for: config) != nil
+        let isPreferred = vm.currentPreference == config.providerID
+        HStack {
+            Image(systemName: hasKey ? "server.rack" : "server.rack")
+                .foregroundStyle(hasKey ? .green : .secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(config.name)
+                    .font(.subheadline.weight(.medium))
+                Text("\(config.dialect.displayName) · \(config.model)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            Spacer()
+            if isPreferred {
+                Text("Actif").font(.caption.weight(.semibold)).foregroundStyle(.green)
+            } else {
+                Button("Choisir") {
+                    AIProviderPreference.shared.setPreferredProviderID(config.providerID)
+                    vm.reload()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { editingCustom = config }
+    }
 }
 
 // MARK: - View helpers
 
 /// Miroir de `AIProviderCredentials.Slot` avec métadonnées d'affichage.
 private enum SlotDisplay: String, CaseIterable, Identifiable {
-    case openai, anthropic, mistral, gemini
+    case openrouter, openai, anthropic, mistral, gemini, deepseek, groq, xai
 
     var id: String { rawValue }
 
     var displayName: String {
         switch self {
-        case .openai:    return "OpenAI (GPT-4o mini)"
-        case .anthropic: return "Anthropic (Claude Haiku)"
-        case .mistral:   return "Mistral (Small)"
-        case .gemini:    return "Google Gemini (Flash)"
+        case .openrouter: return "OpenRouter (universel)"
+        case .openai:     return "OpenAI (GPT-4o mini)"
+        case .anthropic:  return "Anthropic (Claude Haiku)"
+        case .mistral:    return "Mistral (Small)"
+        case .gemini:     return "Google Gemini (Flash)"
+        case .deepseek:   return "DeepSeek"
+        case .groq:       return "Groq (Llama)"
+        case .xai:        return "xAI (Grok)"
         }
     }
 
     var credentialSlot: AIProviderCredentials.Slot {
         switch self {
-        case .openai:    return .openai
-        case .anthropic: return .anthropic
-        case .mistral:   return .mistral
-        case .gemini:    return .gemini
+        case .openrouter: return .openrouter
+        case .openai:     return .openai
+        case .anthropic:  return .anthropic
+        case .mistral:    return .mistral
+        case .gemini:     return .gemini
+        case .deepseek:   return .deepseek
+        case .groq:       return .groq
+        case .xai:        return .xai
         }
     }
 
@@ -489,10 +560,14 @@ private struct ProviderKeyEditor: View {
 
     private func providerFor(_ slot: SlotDisplay) -> any AIProvider {
         switch slot {
-        case .openai:    return OpenAIProvider()
-        case .anthropic: return AnthropicProvider()
-        case .mistral:   return MistralProvider()
-        case .gemini:    return GeminiProvider()
+        case .openrouter: return OpenRouterProvider()
+        case .openai:     return OpenAIProvider()
+        case .anthropic:  return AnthropicProvider()
+        case .mistral:    return MistralProvider()
+        case .gemini:     return GeminiProvider()
+        case .deepseek:   return DeepSeekProvider()
+        case .groq:       return GroqProvider()
+        case .xai:        return XAIProvider()
         }
     }
 }

@@ -324,6 +324,7 @@ struct ProfileView: View {
         } else {
             VStack(spacing: 24) {
                 wakeupCompact
+                ProfileCoachCard()
                 myGoalsButton
                 settingsSection
                 appearanceSection
