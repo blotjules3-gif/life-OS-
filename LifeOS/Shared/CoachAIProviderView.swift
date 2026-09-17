@@ -188,6 +188,16 @@ struct CoachAIProviderView: View {
         .sheet(isPresented: $vm.showMonthlyReview) {
             MonthlyReviewSheet()
         }
+        .sheet(item: $editingCustom) { config in
+            CustomProviderEditor(editing: config) {
+                vm.reload()
+            }
+        }
+        .sheet(isPresented: $showNewCustom) {
+            CustomProviderEditor(editing: nil) {
+                vm.reload()
+            }
+        }
         .onAppear { vm.reload() }
     }
 
