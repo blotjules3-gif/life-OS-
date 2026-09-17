@@ -172,7 +172,7 @@ final class AIModelRouter {
     }
 
     func snapshot() -> RouterSnapshot {
-        RouterSnapshot(providers: providers.map { p in
+        RouterSnapshot(providers: resolvedProviders().map { p in
             .init(
                 id: p.id,
                 displayName: p.displayName,
