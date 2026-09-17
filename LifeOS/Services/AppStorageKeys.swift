@@ -64,6 +64,7 @@ enum AppStorageKeys {
     static let habitModulesRaw = "habitModulesRaw"
     static let fitnessCoachIntroShown = "fitnessCoachIntroShown"
     static let coachDisclaimerAccepted = "coachDisclaimerAccepted"
+    static let coachOnboardingCompleted = "coachOnboardingCompleted"
 
     // MARK: - Sommeil / réveil
     static let wakeupHour = "wakeupHour"
