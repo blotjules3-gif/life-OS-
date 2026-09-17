@@ -30,10 +30,14 @@ final class AIModelRouter {
     /// dans ce cas, le provider choisi passe en tête de la chaîne.
     private var providers: [AIProvider] = [
         AppleIntelligenceProvider(),
+        OpenRouterProvider(),
         OpenAIProvider(),
         AnthropicProvider(),
         MistralProvider(),
         GeminiProvider(),
+        DeepSeekProvider(),
+        GroqProvider(),
+        XAIProvider(),
     ]
 
     /// Vrai si les tools coach ont déjà été enregistrés dans le ToolRegistry.
