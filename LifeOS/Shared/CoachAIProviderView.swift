@@ -284,25 +284,33 @@ struct CoachAIProviderView: View {
 
 /// Miroir de `AIProviderCredentials.Slot` avec métadonnées d'affichage.
 private enum SlotDisplay: String, CaseIterable, Identifiable {
-    case openai, anthropic, mistral, gemini
+    case openrouter, openai, anthropic, mistral, gemini, deepseek, groq, xai
 
     var id: String { rawValue }
 
     var displayName: String {
         switch self {
-        case .openai:    return "OpenAI (GPT-4o mini)"
-        case .anthropic: return "Anthropic (Claude Haiku)"
-        case .mistral:   return "Mistral (Small)"
-        case .gemini:    return "Google Gemini (Flash)"
+        case .openrouter: return "OpenRouter (universel)"
+        case .openai:     return "OpenAI (GPT-4o mini)"
+        case .anthropic:  return "Anthropic (Claude Haiku)"
+        case .mistral:    return "Mistral (Small)"
+        case .gemini:     return "Google Gemini (Flash)"
+        case .deepseek:   return "DeepSeek"
+        case .groq:       return "Groq (Llama)"
+        case .xai:        return "xAI (Grok)"
         }
     }
 
     var credentialSlot: AIProviderCredentials.Slot {
         switch self {
-        case .openai:    return .openai
-        case .anthropic: return .anthropic
-        case .mistral:   return .mistral
-        case .gemini:    return .gemini
+        case .openrouter: return .openrouter
+        case .openai:     return .openai
+        case .anthropic:  return .anthropic
+        case .mistral:    return .mistral
+        case .gemini:     return .gemini
+        case .deepseek:   return .deepseek
+        case .groq:       return .groq
+        case .xai:        return .xai
         }
     }
 
