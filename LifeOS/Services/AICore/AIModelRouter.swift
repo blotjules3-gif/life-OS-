@@ -61,8 +61,26 @@ final class AIModelRouter {
         providers.insert(provider, at: 0)
     }
 
+    /// Liste dynamique de tous les providers disponibles = built-in + custom
+    /// (résolus depuis `CustomProviderStore` à chaque appel). Les custom sont
+    /// placés en fin de chaîne — l'user doit les choisir explicitement via
+    /// `AIProviderPreference` pour qu'ils passent en tête.
+    private func resolvedProviders() -> [AIProvider] {
+        let customConfigs = CustomProviderStore.shared.configs
+        let customProviders: [AIProvider] = customConfigs.map { config in
+            switch config.dialect {
+            case .openaiCompatible:
+                return CustomOpenAICompatibleProvider(configID: config.id)
+            case .anthropicCompatible:
+                return CustomAnthropicCompatibleProvider(configID: config.id)
+            }
+        }
+        return providers + customProviders
+    }
+
     /// Retourne les providers actuellement enregistrés (ordre de priorité).
-    var registered: [AIProvider] { providers }
+    /// Inclut les custom résolus dynamiquement.
+    var registered: [AIProvider] { resolvedProviders() }
 
     // MARK: - Exécution
 
