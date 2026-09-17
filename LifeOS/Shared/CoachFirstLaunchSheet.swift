@@ -270,8 +270,11 @@ private struct ProviderQuickPicker: View {
                         .lineLimit(2)
                     Spacer()
                     if slot == .openrouter {
-                        Text("★")
-                            .font(.caption.weight(.bold))
+                        Text("Reco")
+                            .font(.caption2.weight(.bold))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(Color.orange.opacity(0.18), in: Capsule())
                             .foregroundStyle(.orange)
                     }
                 }
