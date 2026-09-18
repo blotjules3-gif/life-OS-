@@ -69,7 +69,7 @@ enum CoachInsights {
     /// Compare sommeil moyen semaine vs 4 semaines précédentes via App Group.
     /// Le blob `sleep_avg_hours_7d` est publié par `SleepWidgetSyncer`.
     private static func sleepTrend() -> Insight? {
-        guard let grp = UserDefaults(suiteName: "group.lifeos.app") else { return nil }
+        guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return nil }
         let avg7d = grp.double(forKey: "sleep_avg_hours_7d")
         let avg28d = grp.double(forKey: "sleep_avg_hours_28d")
         guard avg7d > 0.5, avg28d > 0.5 else { return nil }

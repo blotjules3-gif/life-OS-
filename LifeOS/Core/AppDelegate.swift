@@ -193,7 +193,7 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                 // Enqueue via WidgetToggleReconciler — rejoué au prochain foreground
                 // pour être sûr que SwiftData est disponible. Format compatible
                 // avec la file existante widget_pending_toggles.
-                if let defaults = UserDefaults(suiteName: "group.lifeos.app") {
+                if let defaults = UserDefaults(suiteName: "group.com.chifandco.lifeos") {
                     var queue = defaults.array(forKey: "widget_pending_toggles") as? [[String: Any]] ?? []
                     queue.append(["habitName": habitName, "timestamp": Date().timeIntervalSince1970])
                     defaults.set(queue, forKey: "widget_pending_toggles")

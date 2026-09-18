@@ -28,7 +28,7 @@ final class UserContextBuilder {
         }
     }
 
-    private static let group = UserDefaults(suiteName: "group.lifeos.app")
+    private static let group = UserDefaults(suiteName: "group.com.chifandco.lifeos")
 
     // MARK: - Cache (TTL 60s)
     //

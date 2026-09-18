@@ -48,7 +48,7 @@ enum HealthAutoSync {
             ]
             if let b = bedtimeStr { payload["bedtime"] = b }
             if let data = try? JSONSerialization.data(withJSONObject: payload),
-               let grp = UserDefaults(suiteName: "group.lifeos.app") {
+               let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") {
                 grp.set(data, forKey: "sleep_breakdown_last_night")
             }
         }

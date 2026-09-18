@@ -30,7 +30,7 @@ struct ToggleHabitIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult {
-        guard let grp = UserDefaults(suiteName: "group.lifeos.app") else {
+        guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") else {
             return .result()
         }
 

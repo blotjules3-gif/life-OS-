@@ -8,13 +8,13 @@ import SwiftData
 ///
 /// Pattern : chaque syncer est une vue invisible qui @Query un modèle,
 /// écoute les changements + le passage à foreground, et publie un résumé
-/// (ex. array de scores, moyenne, dernier) dans `UserDefaults(suiteName: "group.lifeos.app")`.
+/// (ex. array de scores, moyenne, dernier) dans `UserDefaults(suiteName: "group.com.chifandco.lifeos")`.
 ///
 /// Convention de clé : `<domain>_<metric>_<horizon>` (ex. `mood_recent_7d`,
 /// `energy_score_today`, `kcal_today`). Ne jamais renommer une clé existante
 /// sans code de migration (les widgets et le coach lisent).
 
-private let appGroup = "group.lifeos.app"
+private let appGroup = "group.com.chifandco.lifeos"
 
 // MARK: - Mémoire long terme
 

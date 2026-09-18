@@ -948,7 +948,7 @@ struct AIAssistantView: View {
     private func reactiveSuggestions() -> [(label: String, message: String, module: String?)] {
         var out: [(label: String, message: String, module: String?)] = []
         let ud = UserDefaults.standard
-        let grp = UserDefaults(suiteName: "group.lifeos.app")
+        let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos")
 
         let sleepH = ud.integer(forKey: "lastSleepHours")
         let energyScore = ud.integer(forKey: "todayEnergyScore")

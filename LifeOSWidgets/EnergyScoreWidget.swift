@@ -57,7 +57,7 @@ private struct EnergyProvider: TimelineProvider {
     }
 
     private func read() -> EnergyEntry {
-        guard let grp = UserDefaults(suiteName: "group.lifeos.app") else {
+        guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") else {
             return EnergyEntry(date: .now, score: nil, label: "—", colorHex: "#8A7C6E", updatedAt: nil)
         }
         // `object(forKey:) != nil` évite de retourner 0 quand la clé n'a jamais été set.

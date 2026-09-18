@@ -53,7 +53,7 @@ struct CalAIView: View {
     }
 
     private func syncNutritionToContext() {
-        guard let grp = UserDefaults(suiteName: "group.lifeos.app") else { return }
+        guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return }
         grp.set(totals.kcal, forKey: "today_kcal")
         grp.set(Int(totals.p), forKey: "today_protein_g")
     }

@@ -72,7 +72,7 @@ enum MonthlyReviewGenerator {
     }
 
     private static func sleepBlock() -> String? {
-        guard let grp = UserDefaults(suiteName: "group.lifeos.app") else { return nil }
+        guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return nil }
         let avg28 = grp.double(forKey: "sleep_avg_hours_28d")
         let avg7 = grp.double(forKey: "sleep_avg_hours_7d")
         guard avg28 > 0.5 else { return nil }

@@ -164,7 +164,7 @@ enum DataEraser {
     }
 
     private static func eraseAppGroup() {
-        guard let defaults = UserDefaults(suiteName: "group.lifeos.app") else { return }
+        guard let defaults = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return }
         let all = defaults.dictionaryRepresentation()
         for key in all.keys {
             defaults.removeObject(forKey: key)

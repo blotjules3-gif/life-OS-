@@ -940,7 +940,7 @@ struct ProfileView: View {
                         let selected = appThemeRaw == th.rawValue
                         Button {
                             withAnimation(.spring(duration: 0.38, bounce: 0.1)) { appThemeRaw = th.rawValue }
-                            UserDefaults(suiteName: "group.lifeos.app")?
+                            UserDefaults(suiteName: "group.com.chifandco.lifeos")?
                                 .set(th.accentHex, forKey: "widget_accent_hex")
                             WidgetCenter.shared.reloadAllTimelines()
                         } label: {

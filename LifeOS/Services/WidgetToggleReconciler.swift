@@ -14,7 +14,7 @@ enum WidgetToggleReconciler {
     private static let pendingKey = "widget_pending_toggles"
 
     static func drainAndApply(ctx: ModelContext) {
-        guard let grp = UserDefaults(suiteName: "group.lifeos.app") else { return }
+        guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return }
         guard let pending = grp.array(forKey: pendingKey) as? [[String: Any]], !pending.isEmpty else {
             return
         }

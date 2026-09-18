@@ -176,7 +176,7 @@ private struct HabitWidgetSyncer: View {
             let done = h.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: today) }
             return ["name": h.name, "icon": h.icon, "colorHex": h.colorHex, "done": done]
         }
-        guard let defaults = UserDefaults(suiteName: "group.lifeos.app") else { return }
+        guard let defaults = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return }
         defaults.set(try? JSONSerialization.data(withJSONObject: entries), forKey: "widget_habits")
         defaults.set(Date(), forKey: "widget_habits_sync_date")
         defaults.set(entries.filter { $0["done"] as? Bool == true }.count, forKey: "habits_done_today")
@@ -203,7 +203,7 @@ private struct FitnessWidgetSyncer: View {
     }
 
     private func sync() {
-        guard let defaults = UserDefaults(suiteName: "group.lifeos.app") else { return }
+        guard let defaults = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return }
         let cal = Calendar.current
         guard let weekAgo = cal.date(byAdding: .day, value: -7, to: .now) else { return }
         let recent = sets.filter { $0.date >= weekAgo }

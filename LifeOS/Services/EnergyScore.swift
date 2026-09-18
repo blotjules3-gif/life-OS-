@@ -118,7 +118,7 @@ enum EnergyScore {
     /// puis `WidgetCenter.shared.reloadTimelines(ofKind: "EnergyScoreWidget")`
     /// pour forcer le refresh visuel.
     static func publishToAppGroup(_ result: Result?) {
-        guard let grp = UserDefaults(suiteName: "group.lifeos.app") else { return }
+        guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return }
         if let r = result {
             grp.set(r.score, forKey: "energyScore.value")
             grp.set(r.label, forKey: "energyScore.label")

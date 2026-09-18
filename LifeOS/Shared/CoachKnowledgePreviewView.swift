@@ -229,7 +229,7 @@ private final class ViewModel: ObservableObject {
 
     /// Lit le blob `sleep_breakdown_last_night` publié par HealthAutoSync.
     private func fetchSleepBreakdownLine() -> String {
-        guard let grp = UserDefaults(suiteName: "group.lifeos.app"),
+        guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos"),
               let data = grp.data(forKey: "sleep_breakdown_last_night"),
               let d = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return ""

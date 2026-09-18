@@ -464,7 +464,7 @@ struct HydrationView: View {
         .onChange(of: entries.count) { _, _ in syncWaterToContext() }
     }
     private func syncWaterToContext() {
-        guard let grp = UserDefaults(suiteName: "group.lifeos.app") else { return }
+        guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return }
         grp.set(todayML, forKey: "today_water_ml")
     }
     private func addBtn(_ ml: Int, _ icon: String) -> some View {

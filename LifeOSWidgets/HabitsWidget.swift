@@ -39,7 +39,7 @@ struct WidgetHabitsData {
     }
 
     static func load() -> WidgetHabitsData {
-        guard let defaults = UserDefaults(suiteName: "group.lifeos.app") else {
+        guard let defaults = UserDefaults(suiteName: "group.com.chifandco.lifeos") else {
             return WidgetHabitsData(habits: [], appGroupWorking: false, lastSync: nil, accentHex: 0)
         }
         let accentHex = defaults.object(forKey: "widget_accent_hex") as? Int ?? 0
