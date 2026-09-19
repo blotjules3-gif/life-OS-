@@ -379,7 +379,83 @@ private struct QuickKeyEntry: View {
                     Button("Fermer") { dismiss() }
                 }
             }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    detectClipboardKey()
+                }
+            }
+            .onAppear { detectClipboardKey() }
         }
+    }
+
+    // MARK: - Clipboard banner (détection auto au retour d'app)
+
+    /// Bannière affichée en tête de Form si le presse-papier contient une clé
+    /// avec le préfixe attendu par le provider ET que le champ est vide.
+    /// Sur "Oui" → remplit + déclenche le test. Sur "Non" → cache la bannière.
+    @ViewBuilder
+    private var clipboardBanner: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "doc.on.clipboard.fill")
+                .foregroundStyle(Color.accentColor)
+                .padding(.top, 2)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Clé \(slot.displayName) détectée")
+                    .font(.subheadline.weight(.semibold))
+                Text("Une clé est dans ton presse-papier. Utiliser cette clé ?")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 10) {
+                    Button {
+                        useClipboardKey()
+                    } label: {
+                        Text("Oui, l'utiliser")
+                            .font(.caption.weight(.semibold))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.accentColor, in: Capsule())
+                            .foregroundStyle(.white)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button("Ignorer") {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            pastebardBannerVisible = false
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    /// Vérifie le presse-papier et affiche la bannière si une clé plausible
+    /// pour ce provider y est présente. Aucun log du contenu presse-papier.
+    private func detectClipboardKey() {
+        guard key.isEmpty else { return }
+        let raw = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !raw.isEmpty, raw.count >= slot.minLength else {
+            pastebardBannerVisible = false
+            return
+        }
+        if let prefix = slot.expectedPrefix, !raw.hasPrefix(prefix) {
+            pastebardBannerVisible = false
+            return
+        }
+        withAnimation(.easeOut(duration: 0.25)) {
+            pastebardBannerVisible = true
+        }
+    }
+
+    private func useClipboardKey() {
+        let raw = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !raw.isEmpty else { return }
+        key = raw
+        pastebardBannerVisible = false
+        Task { await saveAndTest() }
     }
 
     private func saveAndTest() async {
