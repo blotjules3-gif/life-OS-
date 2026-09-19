@@ -1,6 +1,23 @@
 import SwiftUI
+import UIKit
 
 /// Composants UI partagés par tous les modules.
+
+extension Color {
+    /// Noir ou blanc, celui des deux qui se lit sur cette couleur.
+    ///
+    /// Indispensable ici parce que la teinte d'accent CHANGE selon le theme:
+    /// elle est noire en Classique et BLANCHE en Sombre. Ecrire "glyphe blanc"
+    /// en dur donnait un glyphe blanc sur une pastille blanche, c'est a dire
+    /// un carre vide. On mesure la luminance et on tranche.
+    var readableInk: Color {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        guard UIColor(self).getRed(&r, green: &g, blue: &b, alpha: &a) else { return .white }
+        // Luminance perceptuelle: l'oeil est bien plus sensible au vert.
+        let luma = 0.2126 * r + 0.7152 * g + 0.0722 * b
+        return luma > 0.62 ? .black : .white
+    }
+}
 
 struct SectionHeader: View {
     let title: String
@@ -38,14 +55,23 @@ struct IconBadge: View {
     var size: CGFloat = 44
     var body: some View {
         let glass = themeRaw == "glass"
+        // Pastille de COULEUR pleine, glyphe blanc. C'est la tuile des Reglages
+        // d'iOS, et c'est lisible sur clair comme sur sombre.
+        //
+        // Avant: fond Color.primary, glyphe Color(uiColor: .systemBackground).
+        // Ces deux couleurs ne se resolvent pas au meme endroit. Color.primary
+        // suit le theme force par l'app, Color(uiColor:) suit l'apparence du
+        // TELEPHONE. Theme sombre sur telephone en clair, les deux tombaient sur
+        // blanc: un carre blanc avec un glyphe invisible dedans.
         Image(systemName: icon)
             .font(.system(size: size * 0.42, weight: .bold))
-            .foregroundStyle(glass ? Color.white : Color(uiColor: .systemBackground))
+            .foregroundStyle(glass ? Color.white : tint.readableInk)
             .frame(width: size, height: size)
             .background(
                 RoundedRectangle(cornerRadius: size * 0.30, style: .continuous)
-                    .fill(glass ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Color.primary))
+                    .fill(glass ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(tint))
             )
+            .shadow(color: glass ? .clear : tint.opacity(0.35), radius: 6, y: 3)
             .overlay {
                 if glass {
                     RoundedRectangle(cornerRadius: size * 0.30, style: .continuous)

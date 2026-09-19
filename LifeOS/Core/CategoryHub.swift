@@ -410,7 +410,7 @@ struct CategoryHubView: View {
             BubbleView(
                 title: tool.title,
                 systemImage: tool.icon,
-                tint: themedTint(tool),
+                tint: bubbleTint(tool),
                 diameter: d,
                 showLabel: true,
                 time: t,
@@ -427,6 +427,22 @@ struct CategoryHubView: View {
     }
 
     // Teinte selon le thème (même logique que la grille de catégories).
+    /// Couleur de la BULLE des sous-categories: noire, glyphe blanc dessus.
+    ///
+    /// Separee de themedTint volontairement. themedTint habille les petites
+    /// pastilles des modes liste et icones, ou la couleur sert a distinguer
+    /// les outils d'un coup d'oeil. Les grosses bulles, elles, sont deja
+    /// distinguees par leur glyphe et leur libelle: les teinter en plus donnait
+    /// un patchwork. Le noir fait ressortir le fond du theme.
+    ///
+    /// Les themes decoratifs gardent leur palette, c'est tout leur interet.
+    private func bubbleTint(_ tool: CategoryTool) -> Color {
+        switch theme {
+        case .classic, .dark, .volt, .glass: return Color(hex: 0x0E0E11)
+        case .pinky, .gothic, .cloud:        return themedTint(tool)
+        }
+    }
+
     private func themedTint(_ tool: CategoryTool) -> Color {
         switch theme {
         case .classic, .dark, .volt, .glass: return tool.tint

@@ -38,14 +38,18 @@ struct LifeOSApp: App {
                     .allowsHitTesting(false)
 
                 if let container {
+                    // L'app arrive en fondu en remontant tres legerement.
                     appContent(container: container)
                         .transition(.opacity)
                         .zIndex(1)
                 } else {
+                    // Le logo continue de grossir en s'effacant: on a
+                    // l'impression d'entrer DANS l'app, pas de voir un ecran
+                    // remplace par un autre.
                     SplashView()
-                        .transition(.opacity)
+                        .transition(.scale(scale: 1.35).combined(with: .opacity))
                         .allowsHitTesting(false)
-                        .zIndex(0)
+                        .zIndex(2)
                 }
 
                 if appLock.isLocked {
@@ -54,7 +58,9 @@ struct LifeOSApp: App {
                         .zIndex(10)
                 }
             }
-            .animation(.easeInOut(duration: 0.3), value: container != nil)
+            // Un peu plus lent que 0,3 s: le zoom du logo doit avoir le temps
+            // de se lire, sinon on percoit une coupure et pas un mouvement.
+            .animation(.easeInOut(duration: 0.55), value: container != nil)
             .animation(.easeInOut(duration: 0.25), value: appLock.isLocked)
             .onChange(of: scenePhase) { _, phase in
                 if phase == .background { appLock.lockIfNeeded() }
@@ -288,52 +294,56 @@ struct LifeOSApp: App {
 
 // MARK: - Écran de chargement
 
+/// Ouverture : le serpent seul, qui grandit et s'efface.
+///
+/// Plus de "sparkles", plus de nom ecrit, plus de roue qui tourne. Le logo
+/// suffit, et une roue de chargement donne l'impression d'attendre meme quand
+/// c'est instantane.
+///
+/// Le zoom continue pendant la disparition, ce qui donne l'impression d'entrer
+/// DANS l'app plutot que de voir un ecran remplace par un autre.
 struct SplashView: View {
-    @State private var pulse = false
+    @State private var appeared = false
 
     var body: some View {
         ZStack {
-            Color(uiColor: .systemBackground).ignoresSafeArea()
+            // Le meme fond que l'app, sinon le raccord se voit au changement.
+            Theme.screenBG.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                Spacer()
-
-                VStack(spacing: 20) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.accentColor.opacity(0.08))
-                            .frame(width: 110, height: 110)
-                            .scaleEffect(pulse ? 1.08 : 1.0)
-                            .animation(
-                                .easeInOut(duration: 1.4).repeatForever(autoreverses: true),
-                                value: pulse
-                            )
-                        Circle()
-                            .fill(Color.accentColor.opacity(0.12))
-                            .frame(width: 88, height: 88)
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 36, weight: .semibold))
-                            .foregroundStyle(Color.accentColor)
-                    }
-
-                    VStack(spacing: 5) {
-                        Text("LifeOS")
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .foregroundStyle(.primary)
-                        Text("Ton système de vie")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                Spacer()
-
-                ProgressView()
-                    .controlSize(.regular)
-                    .tint(Color.accentColor)
-                    .padding(.bottom, 60)
-            }
+            Image("SplashMark")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 190, height: 190)
+                // Part legerement trop petit, finit legerement trop grand:
+                // le mouvement ne s'arrete jamais avant le fondu.
+                .scaleEffect(appeared ? 1.10 : 0.82)
+                .opacity(appeared ? 1 : 0)
+                .animation(.easeOut(duration: 0.85), value: appeared)
         }
-        .onAppear { pulse = true }
+        .onAppear { appeared = true }
     }
+}
+
+/// Fait apparaitre un element en fondu, avec un retard selon sa place.
+///
+/// Les ecrans se montaient d'un bloc, ce qui est brutal juste apres une
+/// animation d'ouverture. Ici chaque bloc arrive un cran apres le precedent.
+struct FadeIn: ViewModifier {
+    let index: Int
+    @State private var shown = false
+    func body(content: Content) -> some View {
+        content
+            .opacity(shown ? 1 : 0)
+            .offset(y: shown ? 0 : 8)
+            .onAppear {
+                withAnimation(.easeOut(duration: 0.45).delay(Double(index) * 0.06)) {
+                    shown = true
+                }
+            }
+    }
+}
+
+extension View {
+    /// `index` donne l'ordre d'arrivee, 0 en premier.
+    func fadeIn(_ index: Int = 0) -> some View { modifier(FadeIn(index: index)) }
 }

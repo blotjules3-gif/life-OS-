@@ -15,11 +15,21 @@ struct FitnessSetupView: View {
     @AppStorage(AppStorageKeys.userGender)       private var userGender = ""     // déjà connu (onboarding)
     @AppStorage(AppStorageKeys.userGoalFit)      private var userGoalFit = ""    // réutilisé par d'autres catégories
 
-    @State private var goal = "Prise de muscle"
+    // Plusieurs objectifs a la fois: viser le muscle ET le cardio est une
+    // demande normale, et l'ancien choix unique obligeait a mentir.
+    @State private var goals: Set<String> = ["Prise de muscle"]
     @State private var level = "Intermédiaire"
     @State private var freq = "4 jours"
     @State private var place = "Salle"
     @State private var emphasis: Set<String> = []
+
+    /// Le generateur de programme raisonne sur un seul objectif. On lui donne
+    /// le plus structurant de ceux coches, du plus precis au plus vague.
+    private var primaryGoal: String {
+        for g in ["Force", "Prise de muscle", "Perte de gras", "Cardio / Endurance"]
+        where goals.contains(g) { return g }
+        return "Forme générale"
+    }
 
     private let tint = AppCategory.fitness.tint
     private var isFemme: Bool { userGender == "femme" }
@@ -34,8 +44,9 @@ struct FitnessSetupView: View {
                 VStack(spacing: 18) {
                     SetupHeader(icon: "figure.run", title: "On construit ton programme",
                                 subtitle: "Quelques questions et ta semaine d'entraînement détaillée est prête.", accent: tint)
-                    SetupChoice(options: ["Prise de muscle", "Perte de gras", "Force", "Forme générale"],
-                                selection: $goal, accent: tint)
+                    SetupMultiChoice(options: ["Prise de muscle", "Perte de gras", "Force",
+                                               "Cardio / Endurance", "Forme générale"],
+                                     selection: $goals, accent: tint)
                 }
             },
             SetupPage {
@@ -85,7 +96,7 @@ struct FitnessSetupView: View {
         case 2:
             return ["Full body A", "Full body B"]
         case 3:
-            if goal == "Force" { return ["Squat focus", "Bench focus", "Deadlift focus"] }
+            if primaryGoal == "Force" { return ["Squat focus", "Bench focus", "Deadlift focus"] }
             return ["Push", "Pull", "Legs"]
         case 4:
             return ["Haut du corps A", "Bas du corps A", "Haut du corps B", "Bas du corps B"]
@@ -96,7 +107,7 @@ struct FitnessSetupView: View {
 
     /// (titre, détail) avec exercices réels issus de GymExercises.
     private var sessions: [(String, String)] {
-        sessionTitles.map { ($0, GymExercises.focus(for: $0, goal: goal)) }
+        sessionTitles.map { ($0, GymExercises.focus(for: $0, goal: primaryGoal)) }
     }
 
     /// Map les séances sur les jours de la semaine (lun→dim), le reste = repos.
@@ -147,7 +158,10 @@ struct FitnessSetupView: View {
     // MARK: enregistrement
 
     private func commit() {
-        userGoalFit = goal
+        userGoalFit = primaryGoal
+        // La liste complete a part, pour ne pas casser ceux qui comparent
+        // userGoalFit a une seule valeur exacte.
+        UserDefaults.standard.set(goals.sorted().joined(separator: ","), forKey: "userGoalsFit")
         // Efface l'ancien programme et réécrit le nouveau.
         for d in gymDays { ctx.delete(d) }
         for p in weekPlan {
@@ -172,7 +186,7 @@ struct FitnessSetupView: View {
         let map: [String: String] = ["Pecs": "Pecs", "Dos": "Dos", "Épaules": "Épaules",
                                      "Bras": "Biceps", "Jambes": "Quadriceps", "Fessiers": "Ischios", "Abdos": "Abdos"]
         var f = focus
-        let reps = GymExercises.repScheme(goal: goal)
+        let reps = GymExercises.repScheme(goal: primaryGoal)
         for e in emphasis {
             guard let group = map[e], let pool = GymExercises.catalog[group] else { continue }
             // si la séance contient déjà ce groupe, ajoute un exercice de plus

@@ -48,6 +48,8 @@ enum GymExercises {
         case "Force":           return "5×5"
         case "Perte de gras":   return "3×15"
         case "Forme générale":  return "3×12"
+        // Nouvel objectif depuis que la question accepte plusieurs reponses.
+        case "Cardio / Endurance": return "3×15"
         default:                return "4×10"   // Prise de muscle
         }
     }

@@ -97,6 +97,8 @@ struct PhotoCalorieView: View {
     @State private var pickerItem: PhotosPickerItem?
     @State private var meal = "Déjeuner"
     @State private var savedToast = false
+    @State private var aiNote = ""
+    @State private var usedAI = false
 
     private let tint = AppCategory.nutrition.tint
     private var cameraAvailable: Bool { UIImagePickerController.isSourceTypeAvailable(.camera) }
@@ -207,7 +209,17 @@ struct PhotoCalorieView: View {
                 Label("Ajouter au journal", systemImage: "plus.circle.fill").frame(maxWidth: .infinity).padding(.vertical, 12)
                     .background(tint.gradient, in: RoundedRectangle(cornerRadius: 12)).foregroundStyle(.white)
             }.buttonStyle(.plain)
-            Text("Estimation indicative — ajuste les kcal si la portion diffère.")
+            if usedAI {
+                if !aiNote.isEmpty {
+                    Text(aiNote).font(.caption).foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Label("Analysé par l'IA d'après ta photo", systemImage: "sparkles")
+                    .font(.caption2).foregroundStyle(tint)
+            }
+            Text(usedAI
+                 ? "Estimation à partir de la portion visible — ajuste si besoin."
+                 : "Estimation locale approximative — ajuste les kcal si la portion diffère.")
                 .font(.caption2).foregroundStyle(Theme.textSecondary)
         }
         .padding(16).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
@@ -241,10 +253,34 @@ struct PhotoCalorieView: View {
     }
 
     private func handle(_ img: UIImage) {
-        image = img; guess = nil; failed = false; busy = true
+        image = img; guess = nil; failed = false; busy = true; aiNote = ""; usedAI = false
         Task {
+            // 1. Vrai modele de vision s'il y a une cle. Il REGARDE l'assiette
+            //    et juge la portion, au lieu de reconnaitre un mot et de lire
+            //    une table ou une pizza vaut toujours le meme nombre.
+            if await FoodPhotoAnalyzer.isAvailable {
+                switch await FoodPhotoAnalyzer.analyze(img) {
+                case .success(let a):
+                    await MainActor.run {
+                        guess = FoodGuess(name: a.name, kcal: a.kcal, protein: a.protein,
+                                          carbs: a.carbs, fat: a.fat, confidence: 0.9)
+                        aiNote = a.note; usedAI = true; busy = false
+                        Haptics.medium()
+                    }
+                    return
+                case .failure(let e):
+                    // On n'abandonne pas: l'estimation locale vaut mieux que
+                    // rien. Mais la raison est tracee, sinon une cle morte
+                    // ressemble a un modele qui se trompe.
+                    AppLog.data.error("analyse IA du plat echouee: \(String(describing: e), privacy: .public)")
+                }
+            }
+            // 2. Repli sur appareil: gratuit, hors ligne, plus grossier.
             let g = await FoodVision.classify(img)
-            await MainActor.run { busy = false; if let g { guess = g; Haptics.medium() } else { failed = true } }
+            await MainActor.run {
+                busy = false
+                if let g { guess = g; usedAI = false; Haptics.medium() } else { failed = true }
+            }
         }
     }
     private func save(_ g: FoodGuess) {

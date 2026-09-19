@@ -118,9 +118,14 @@ struct SetupHeader: View {
     var accent: Color = .accentColor
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: icon).font(.system(size: 30, weight: .semibold)).foregroundStyle(.white)
+            // Glyphe choisi par luminance, jamais blanc en dur: l'accent vaut
+            // NOIR en theme Classique et BLANC en Sombre, donc un blanc fixe
+            // donnait tantot une tuile noire terne, tantot un carre vide.
+            Image(systemName: icon).font(.system(size: 30, weight: .semibold))
+                .foregroundStyle(accent.readableInk)
                 .frame(width: 58, height: 58)
                 .background(accent.gradient, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .shadow(color: accent.opacity(0.35), radius: 8, y: 4)
             Text(title).font(.title.bold()).foregroundStyle(Theme.textPrimary)
                 .fixedSize(horizontal: false, vertical: true)
             if !subtitle.isEmpty {

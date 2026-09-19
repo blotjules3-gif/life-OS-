@@ -150,6 +150,9 @@ struct ShortcutsHomeView: View {
     @AppStorage(AppStorageKeys.todayEnergyScore) private var todayEnergyScore = 0
     @AppStorage(AppStorageKeys.todayEnergyLabel) private var todayEnergyLabel = ""
     @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
+    @AppStorage(AppStorageKeys.onboardingDone) private var onboardingDone = false
+    // Une seule demande Sante, jamais rejouee a chaque ouverture.
+    @AppStorage("healthAskedOnHome") private var healthAsked = false
     @State private var reengageMessage: String?
     @State private var reengageSuggestion: String?
     @State private var showReengage = true
@@ -161,6 +164,7 @@ struct ShortcutsHomeView: View {
     @Query private var watersYesterday: [WaterEntry]
     @Query private var fasts: [FastingSession]
     @Query private var habits: [Habit]
+    @Query(sort: \TodoItem.due) private var todos: [TodoItem]
     @Query(sort: \MoodEntry.date, order: .reverse) private var moods: [MoodEntry]
     @Environment(\.modelContext) private var ctx
 
@@ -179,6 +183,10 @@ struct ShortcutsHomeView: View {
     }
 
     @State private var editingMetrics = false
+    @State private var newTask = ""
+    @State private var showAllTasks = false
+    @State private var showHabits = false
+    @FocusState private var taskFieldFocused: Bool
     private var enabledMetrics: [HomeMetric] {
         metricsRaw.split(separator: ",").compactMap { HomeMetric(rawValue: String($0)) }
     }
@@ -188,9 +196,7 @@ struct ShortcutsHomeView: View {
 
     private var kcalYesterday: Int  { foodsYesterday.caloriesToday }
     private var waterYesterday: Int { watersYesterday.mlToday }
-    @State private var editingMood = false
     @State private var animatedHabitIDs: Set<PersistentIdentifier> = []
-    @State private var moodDismissed = false
     @State private var showBilan = false
     @State private var fullScreenTool: ShortcutTool?
     @AppStorage(AppStorageKeys.tutorialDone) private var tutorialDone = false
@@ -209,6 +215,14 @@ struct ShortcutsHomeView: View {
     private var waterToday: Int { waters.mlToday }
     private var habitsDone: Int { habits.filter { h in h.completions.contains { Calendar.current.isDateInToday($0.date) } }.count }
     private var fastHours: Double { fasts.first(where: { $0.isActive }).map { $0.elapsed / 3600 } ?? 0 }
+    /// Relit les pas. `force` saute le cache de 5 minutes, pour que revenir
+    /// sur l'app apres une marche montre tout de suite le bon chiffre.
+    private func refreshSteps(force: Bool = false) async {
+        steps = force ? await HealthService.shared.stepsToday()
+                      : await HealthService.shared.cachedStepsToday()
+        stepsYesterday = await HealthService.shared.stepsYesterday()
+    }
+
     private var todayMood: MoodEntry? { moods.first { Calendar.current.isDateInToday($0.date) } }
 
     private var isMorningEmpty: Bool {
@@ -334,22 +348,20 @@ struct ShortcutsHomeView: View {
                     .padding(.horizontal, 4)
                     .staggered(0, appeared: homeAppeared)
 
+                    // Ordre voulu : salutation, puis le score et la série, puis
+                    // les raccourcis. Le score est ce qu'on vient regarder en
+                    // premier, les raccourcis sont ce qu'on vient toucher.
+                    DailyScoreRing()   // score unique du jour (mélange tous les objectifs)
+                        .staggered(1, appeared: homeAppeared)
+
                     if !activeShortcuts.isEmpty {
                         shortcutsSection
-                            .staggered(1, appeared: homeAppeared)
-                    }
-
-                    if !moodDismissed || editingMood {
-                        moodSection
-                            .transition(.opacity.combined(with: .move(edge: .top)))
                             .staggered(2, appeared: homeAppeared)
                     }
 
                     if showReengage, let msg = reengageMessage {
                         reengageBanner(message: msg, suggestion: reengageSuggestion)
                     }
-
-                    DailyScoreRing()   // score unique du jour (mélange tous les objectifs)
 
                     LifeBrainCard()
                         .padding(.horizontal, -Theme.pad)   // guidance transversale, en tête
@@ -363,6 +375,10 @@ struct ShortcutsHomeView: View {
 
                     habitsSection
                         .staggered(3, appeared: homeAppeared)
+                        .scrollFade()
+
+                    tasksSection
+                        .staggered(4, appeared: homeAppeared)
                         .scrollFade()
                     if !activeHabits.isEmpty {
                         weeklyRecapSection
@@ -384,6 +400,12 @@ struct ShortcutsHomeView: View {
             .background(Theme.screenBG)   // verre global : wallpaper dépoli en thème Verre
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $showHabits) {
+                NavigationStack { HabitTrackerView() }
+            }
+            .sheet(isPresented: $showAllTasks) {
+                NavigationStack { TodoView() }
+            }
             .sheet(isPresented: $editingShortcuts) {
                 ShortcutPickerSheet(enabledRaw: $enabledRaw)
             }
@@ -391,20 +413,25 @@ struct ShortcutsHomeView: View {
                 HomeMetricPickerSheet(metricsRaw: $metricsRaw)
             }
             .task {
-                // Lecture SILENCIEUSE des pas : pas de pop-up d'autorisation au lancement.
-                // La demande Santé se fait uniquement via Profil › Connecter Apple Santé.
-                steps = await HealthService.shared.cachedStepsToday()
-                stepsYesterday = await HealthService.shared.stepsYesterday()
+                // Santé : on demande UNE fois, et seulement une fois l'onboarding
+                // fini. Avant, la lecture etait totalement silencieuse pour eviter
+                // la double pop-up au lancement, mais du coup personne ne demandait
+                // jamais l'acces : les pas restaient a zero tant qu'on n'allait pas
+                // dans Profil. Ici on est apres l'onboarding, l'ecran est visible,
+                // et la demande a un sens.
+                if onboardingDone && !healthAsked {
+                    healthAsked = true
+                    _ = await HealthService.shared.requestAuthorization()
+                }
+                await refreshSteps()
                 reengageMessage    = EngagementTracker.shared.reengagementMessage
                 reengageSuggestion = EngagementTracker.shared.simplificationSuggestion
                 weeklyModuleSuggestion = WeeklyModuleSuggester.shared.currentSuggestion()
                 WeeklyModuleSuggester.shared.scheduleWeeklyNotification()
-                if todayMood != nil { moodDismissed = true }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
-                // Lecture silencieuse au retour au premier plan, sans pop-up.
-                Task { steps = await HealthService.shared.cachedStepsToday() }
-                if todayMood == nil { withAnimation { moodDismissed = false } }
+                // Au retour au premier plan on relit, sans re-demander l'acces.
+                Task { await refreshSteps() }
             }
             .sheet(isPresented: $showBilan) { WeeklyBilanView() }
             .fullScreenCover(item: $fullScreenTool) { tool in
@@ -417,7 +444,15 @@ struct ShortcutsHomeView: View {
                 }
             }
             .onAppear {
-                homeAppeared = true
+                // Le fondu en cascade doit commencer APRES l'ecran d'ouverture.
+                // L'accueil est construit pendant que le logo est encore
+                // affiche, donc l'animation se jouait derriere lui et on
+                // decouvrait un ecran deja entierement en place.
+                if !homeAppeared {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        homeAppeared = true
+                    }
+                }
                 if !tutorialDone {
                     withAnimation(.spring(duration: 0.55, bounce: 0.2).delay(1.2)) { showTutorial = true }
                 }
@@ -496,11 +531,14 @@ struct ShortcutsHomeView: View {
 
     private func shortcutTile(_ tool: ShortcutTool) -> some View {
         VStack(spacing: 8) {
+            // Pastille de couleur PLEINE, pas un lavis a 20 %. C'est la tuile
+            // des Reglages d'iOS: la couleur porte, le glyphe reste lisible.
             Image(systemName: tool.icon)
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(tool.tint)
+                .foregroundStyle(tool.tint.readableInk)
                 .frame(width: 44, height: 44)
-                .background(tool.tint.opacity(0.20), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(tool.tint, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .shadow(color: tool.tint.opacity(0.35), radius: 6, y: 3)
             Text(tool.label)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.primary)
@@ -517,7 +555,9 @@ struct ShortcutsHomeView: View {
 
     private var habitsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Habitudes")
+            // "Gerer" ouvre le suivi complet: creer une habitude ne doit pas
+            // obliger a passer par le coach, qui etait le seul chemin.
+            sectionHeader("Habitudes", trailing: "Gérer") { showHabits = true }
             if habits.isEmpty {
                 Button {
                     Haptics.tap()
@@ -728,6 +768,131 @@ struct ShortcutsHomeView: View {
         }
     }
 
+    // MARK: Section 1bis — Taches a faire (ponctuelles, pas des habitudes)
+    //
+    // Une habitude revient tous les jours, une tache se fait UNE fois et
+    // disparait. Les deux vivaient au meme endroit, donc la liste d'habitudes
+    // se remplissait de choses ponctuelles qui cassaient les series.
+
+    /// Taches pas encore faites, les plus urgentes d'abord, 5 au maximum sur
+    /// l'accueil: au dela ce n'est plus un rappel, c'est une deuxieme appli.
+    private var openTasks: [TodoItem] {
+        todos.filter { !$0.done }
+            .sorted { a, b in
+                if a.priority != b.priority { return a.priority > b.priority }
+                switch (a.due, b.due) {
+                case let (x?, y?): return x < y
+                case (nil, _?):    return false   // sans date = moins urgent
+                case (_?, nil):    return true
+                default:           return false
+                }
+            }
+    }
+
+    private var tasksSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("Tâches", trailing: "Tout voir") { showAllTasks = true }
+
+            VStack(spacing: 0) {
+                ForEach(Array(openTasks.prefix(5).enumerated()), id: \.element.persistentModelID) { i, task in
+                    taskRow(task)
+                    if i < min(openTasks.count, 5) - 1 {
+                        Divider().padding(.leading, 40)
+                    }
+                }
+
+                if !openTasks.isEmpty { Divider().padding(.leading, 40) }
+
+                // Ajout sur place: taper, Entree, c'est ajoute. Pas de feuille
+                // modale pour une ligne de texte.
+                HStack(spacing: 12) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(AppCategory.productivity.tint)
+                    TextField("Ajouter une tâche", text: $newTask)
+                        .focused($taskFieldFocused)
+                        .submitLabel(.done)
+                        .onSubmit(addTask)
+                    if !newTask.isEmpty {
+                        Button("Ajouter", action: addTask)
+                            .font(.footnote.weight(.semibold))
+                    }
+                }
+                .padding(.vertical, 12)
+                .padding(.horizontal, 14)
+            }
+            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
+                .strokeBorder(Theme.hairline, lineWidth: 0.5))
+            .softElevation()
+        }
+    }
+
+    private func taskRow(_ task: TodoItem) -> some View {
+        HStack(spacing: 12) {
+            Button {
+                withAnimation(.spring(duration: 0.25)) {
+                    task.done = true
+                    saveTasks("cocher")
+                }
+                Haptics.soft()
+            } label: {
+                Image(systemName: "circle")
+                    .font(.system(size: 20))
+                    .foregroundStyle(task.priority >= 2 ? Color(hex: 0xF1746C)
+                                   : task.priority == 1 ? Color(hex: 0xF1A33C)
+                                   : Theme.textSecondary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Terminer \(task.title)")
+
+            // Editable sur place: le titre EST le champ, pas besoin d'ouvrir
+            // un ecran pour corriger une faute.
+            TextField("Tâche", text: Binding(
+                get: { task.title },
+                set: { task.title = $0 }
+            ), axis: .vertical)
+                .lineLimit(1...3)
+                .onSubmit { saveTasks("renommer") }
+
+            if let due = task.due {
+                Text(due, format: .dateTime.day().month(.abbreviated))
+                    .font(.caption)
+                    .foregroundStyle(due < Date() ? Color(hex: 0xF1746C) : Theme.textSecondary)
+            }
+        }
+        .padding(.vertical, 11)
+        .padding(.horizontal, 14)
+        .contentShape(Rectangle())
+        // Appui long, pas balayage: swipeActions n'existe QUE dans une List,
+        // et cette section est une VStack dans un ScrollView. Le geste aurait
+        // ete inerte, sans la moindre erreur pour le signaler.
+        .contextMenu {
+            Button { task.priority = task.priority >= 2 ? 0 : task.priority + 1; saveTasks("priorité") } label: {
+                Label("Changer la priorité", systemImage: "flag")
+            }
+            Button(role: .destructive) {
+                ctx.delete(task); saveTasks("supprimer")
+            } label: { Label("Supprimer", systemImage: "trash") }
+        }
+    }
+
+    private func addTask() {
+        let t = newTask.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !t.isEmpty else { return }
+        ctx.insert(TodoItem(title: t))
+        newTask = ""
+        saveTasks("ajouter")
+        Haptics.tap()
+    }
+
+    /// Un echec d'ecriture doit se voir dans les logs, pas disparaitre: sinon
+    /// la tache semble ajoutee et revient morte au prochain lancement.
+    private func saveTasks(_ what: String) {
+        do { try ctx.save() }
+        catch { AppLog.data.error("tache \(what, privacy: .public) echouee: \(error.localizedDescription, privacy: .public)") }
+    }
+
     // MARK: Section 2 — Objectifs du jour (anneaux + 3 objectifs) — tout est cliquable
     private var goalsSection: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -788,7 +953,10 @@ struct ShortcutsHomeView: View {
         switch m {
         case .steps:    StepsView()
         case .water:    HydrationView()
-        case .calories: FoodSearchView()
+        // Appareil photo direct: on tape Calories parce qu'on a une assiette
+        // devant soi, pas pour fouiller une liste d'aliments. La recherche
+        // reste accessible depuis l'ecran photo.
+        case .calories: PhotoCalorieView(autoOpenCamera: true)
         case .fasting:  FastingView()
         case .habits:   HabitTrackerView()
         }
@@ -829,88 +997,6 @@ struct ShortcutsHomeView: View {
         }
     }
 
-    // MARK: Humeur — compact, en haut, disparaît après vote
-    private var moodSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Comment tu te sens ?")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                    .kerning(0.5)
-                moodHistoryDots
-            }
-            .padding(.horizontal, 4)
-            if let m = todayMood, !editingMood {
-                HStack(spacing: 12) {
-                    Text(moodEmoji(m.score)).font(.title)
-                    Text("Noté — revote dans 24h")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Button("Modifier") { withAnimation(.spring(duration: 0.3)) { editingMood = true } }
-                        .font(.caption).foregroundStyle(.secondary)
-                }
-                .padding(16)
-                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
-                .softElevation()
-            } else {
-                HStack(spacing: 6) {
-                    ForEach(1...5, id: \.self) { s in
-                        Button { logMood(s) } label: {
-                            Text(moodEmoji(s))
-                                .font(.system(size: 26))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 10)
-                                .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        }.buttonStyle(.plain)
-                    }
-                }
-                .padding(16)
-                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
-                .softElevation()
-            }
-        }
-    }
-
-    private var moodHistoryDots: some View {
-        let cal = Calendar.current
-        let past6 = (1...6).reversed().compactMap { off -> MoodEntry? in
-            guard let day = cal.date(byAdding: .day, value: -off, to: .now) else { return nil }
-            return moods.first { cal.isDate($0.date, inSameDayAs: day) }
-        }
-        return HStack(spacing: 4) {
-            Spacer()
-            ForEach(past6, id: \.date) { m in
-                Circle()
-                    .fill(moodColor(m.score))
-                    .frame(width: 7, height: 7)
-                    .accessibilityHidden(true)
-            }
-        }
-    }
-
-    private func moodColor(_ score: Int) -> Color {
-        switch score {
-        case 5: return Color(hex: 0x4CC38A)
-        case 4: return Color(hex: 0x30C77A)
-        case 3: return Color(hex: 0xFF9F0A)
-        case 2: return Color(hex: 0xFF6B35)
-        default: return Color(hex: 0xF1746C)
-        }
-    }
-
-    private func moodEmoji(_ s: Int) -> String { ["😞", "😕", "😐", "🙂", "😄"][max(0, min(4, s - 1))] }
-    private func logMood(_ s: Int) {
-        if let m = todayMood { m.score = s } else { ctx.insert(MoodEntry(score: s)) }
-        do { try ctx.save() } catch { AppLog.data.error("logMood failed: \(error.localizedDescription, privacy: .public)") }
-        Haptics.soft()
-        withAnimation(.spring(duration: 0.3)) { editingMood = false }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            withAnimation(.easeOut(duration: 0.4)) { moodDismissed = true }
-        }
-    }
 
     private func weeklyModuleCard(_ module: AppCategory) -> some View {
         VStack(alignment: .leading, spacing: 12) {
