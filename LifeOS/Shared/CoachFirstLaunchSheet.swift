@@ -1,45 +1,46 @@
 import SwiftUI
 
-/// Écran d'accueil au tout premier lancement du chat coach.
+/// Écran d'accueil au premier lancement du chat coach.
 ///
-/// L'utilisateur choisit comment son coach va fonctionner :
-///   1. Ma propre clé — l'user colle une clé d'un provider (OpenRouter, OpenAI…)
-///   2. Apple Intelligence — 100% local, gratuit, sur iPhone compatible
-///   3. LifeOS Premium — bouton grisé, "bientôt dispo"
-///   4. Continuer sans coach — bascule sur le coach local règles (offline)
+/// Design volontairement épuré : titre court + grille de tuiles marques,
+/// navigation en push (pas de sheets en cascade) pour éviter les bugs de
+/// présentation.
 ///
-/// L'onboarding est "soft" : rien n'oblige à choisir un provider payant. L'user
-/// peut vivre l'app avec le coach local ou Apple Intelligence.
+/// Flow :
+///   1. L'user voit la grille des marques (Claude, ChatGPT, Gemini, Mistral,
+///      Grok, DeepSeek, Llama, OpenRouter) + Apple Intelligence si dispo
+///   2. Tap sur une tuile → push vers l'écran de clé (QuickKeyEntry)
+///   3. Clé validée → dismiss + onDone
 ///
-/// Une fois un choix fait (ou "continuer sans"), le flag
-/// `coachOnboardingCompleted` empêche l'écran de réapparaître.
+/// Aucun texte technique, aucun choix de modèle. L'user pense en marque.
 struct CoachFirstLaunchSheet: View {
 
     let onDone: () -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @State private var showProviderPicker = false
-    @State private var showKeyEditor = false
-    @State private var selectedSlot: AIProviderCredentials.Slot?
     @AppStorage(AppStorageKeys.coachOnboardingCompleted) private var completed = false
     @State private var appleAvailable = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
+                VStack(spacing: 28) {
                     header
-                    choices
-                    footerNote
+                    grid
+                    if appleAvailable {
+                        appleOption
+                    }
+                    laterButton
                 }
-                .padding(20)
-                .padding(.top, 8)
+                .padding(.horizontal, 20)
+                .padding(.top, 4)
+                .padding(.bottom, 32)
             }
             .background(Theme.bg.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Plus tard") {
+                    Button("Fermer") {
                         completed = true
                         onDone()
                     }
@@ -49,263 +50,163 @@ struct CoachFirstLaunchSheet: View {
             .onAppear {
                 appleAvailable = AppleIntelligenceProvider().availability.isAvailable
             }
-            .sheet(isPresented: $showProviderPicker) {
-                ProviderQuickPicker { slot in
-                    selectedSlot = slot
-                    showProviderPicker = false
-                    // Petit délai pour éviter double-sheet.
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        showKeyEditor = true
-                    }
-                }
-            }
-            .sheet(isPresented: $showKeyEditor) {
-                if let slot = selectedSlot {
+        }
+    }
+
+    // MARK: - Header (épuré)
+
+    private var header: some View {
+        VStack(spacing: 10) {
+            Text("Choisis ton coach")
+                .font(.system(size: 30, weight: .bold))
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.center)
+            Text("Une seule question : à quelle IA veux-tu le brancher ?")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.top, 12)
+        .padding(.horizontal, 12)
+    }
+
+    // MARK: - Grille (2 colonnes, cards épurées)
+
+    private var grid: some View {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            ForEach(orderedSlots, id: \.self) { slot in
+                NavigationLink {
                     QuickKeyEntry(slot: slot) {
                         completed = true
                         AIProviderPreference.shared.setPreferredProviderID(slot.providerID)
-                        showKeyEditor = false
                         onDone()
                     }
+                } label: {
+                    tile(for: slot)
                 }
+                .buttonStyle(PressableCardStyle())
             }
         }
     }
 
-    // MARK: - Header
+    /// Ordre affichage : OpenRouter en premier (recommandé, 1 clé = 200 modèles),
+    /// puis les 3 stars du grand public, puis les autres.
+    private let orderedSlots: [AIProviderCredentials.Slot] = [
+        .openrouter, .openai, .anthropic, .gemini, .mistral, .groq, .deepseek, .xai,
+    ]
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 34, weight: .medium))
-                .foregroundStyle(Color.accentColor)
-            Text("Choisis ton coach")
-                .font(.system(size: 28, weight: .bold))
-                .foregroundStyle(.primary)
-            Text("Ton coach écoute tes données de vie et t'aide au quotidien. Tu choisis quel moteur il utilise.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    // MARK: - Choix
-
-    private var choices: some View {
-        VStack(spacing: 12) {
-            // Option 1 — Ma propre clé (mise en avant)
-            choiceCard(
-                icon: "key.fill",
-                iconColor: Color.accentColor,
-                title: "J'ai déjà une clé",
-                subtitle: "Colle une clé OpenRouter, OpenAI, Claude, Mistral… Ton compte, tes tokens, ta facture.",
-                badge: "Recommandé",
-                action: { showProviderPicker = true }
-            )
-
-            // Option 2 — Apple Intelligence (si dispo)
-            if appleAvailable {
-                choiceCard(
-                    icon: "iphone",
-                    iconColor: .green,
-                    title: "Apple Intelligence",
-                    subtitle: "100% sur ton iPhone, gratuit, aucune donnée ne sort. Latence quasi instantanée.",
-                    badge: "Gratuit",
-                    action: {
-                        AIProviderPreference.shared.setPreferredProviderID("apple.intelligence.on-device")
-                        completed = true
-                        onDone()
-                    }
-                )
-            }
-
-            // Option 3 — LifeOS Premium (bientôt)
-            choiceCard(
-                icon: "star.fill",
-                iconColor: .yellow,
-                title: "LifeOS Premium",
-                subtitle: "Bientôt : coach illimité inclus dans l'abonnement, aucune clé à gérer.",
-                badge: "Bientôt",
-                disabled: true,
-                action: { }
-            )
-
-            // Option 4 — Continuer sans clé
-            Button {
-                completed = true
-                onDone()
-            } label: {
-                HStack {
-                    Image(systemName: "arrow.right")
-                        .font(.footnote.weight(.semibold))
-                    Text("Continuer sans coach cloud")
-                        .font(.subheadline.weight(.medium))
-                }
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-            }
-        }
-    }
-
-    // MARK: - Card générique
-
-    private func choiceCard(
-        icon: String,
-        iconColor: Color,
-        title: String,
-        subtitle: String,
-        badge: String? = nil,
-        disabled: Bool = false,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack(alignment: .top, spacing: 14) {
-                Image(systemName: icon)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(disabled ? Color.secondary : iconColor)
-                    .frame(width: 36, height: 36)
+    private func tile(for slot: AIProviderCredentials.Slot) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: slot.publicIconName)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
                     .background(
-                        (disabled ? Color.secondary : iconColor).opacity(0.12),
-                        in: RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        Color(hex: slot.publicAccentHex),
+                        in: RoundedRectangle(cornerRadius: 11, style: .continuous)
                     )
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Text(title)
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(disabled ? .secondary : .primary)
-                        if let badge {
-                            Text(badge)
-                                .font(.caption2.weight(.semibold))
-                                .padding(.horizontal, 7)
-                                .padding(.vertical, 2)
-                                .background(
-                                    (disabled ? Color.secondary : iconColor).opacity(0.16),
-                                    in: Capsule()
-                                )
-                                .foregroundStyle(disabled ? Color.secondary : iconColor)
-                        }
-                        Spacer()
-                        if !disabled {
-                            Image(systemName: "chevron.right")
-                                .font(.footnote.weight(.semibold))
-                                .foregroundStyle(.tertiary)
-                        }
-                    }
-                    Text(subtitle)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                Spacer()
+                if slot == .openrouter {
+                    Text("Reco")
+                        .font(.caption2.weight(.bold))
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 3)
+                        .background(Color.orange.opacity(0.16), in: Capsule())
+                        .foregroundStyle(.orange)
                 }
+            }
+            VStack(alignment: .leading, spacing: 3) {
+                Text(slot.publicBrandName)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundStyle(.primary)
+                Text(slot.publicTagline)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .frame(minHeight: 140, alignment: .topLeading)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    // MARK: - Apple Intelligence (option gratuite en dessous de la grille)
+
+    private var appleOption: some View {
+        Button {
+            AIProviderPreference.shared.setPreferredProviderID("apple.intelligence.on-device")
+            completed = true
+            onDone()
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "iphone")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .background(Color.green, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 6) {
+                        Text("Apple Intelligence")
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundStyle(.primary)
+                        Text("Gratuit")
+                            .font(.caption2.weight(.bold))
+                            .padding(.horizontal, 7)
+                            .padding(.vertical, 2)
+                            .background(Color.green.opacity(0.16), in: Capsule())
+                            .foregroundStyle(.green)
+                    }
+                    Text("100% sur ton iPhone, aucune clé à gérer")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.bold))
+                    .foregroundStyle(.tertiary)
             }
             .padding(16)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .frame(maxWidth: .infinity)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
-        .buttonStyle(.plain)
-        .disabled(disabled)
-        .opacity(disabled ? 0.55 : 1.0)
+        .buttonStyle(PressableCardStyle())
     }
 
-    // MARK: - Footer
+    // MARK: - Bouton "Plus tard" discret
 
-    private var footerNote: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Sécurité et confidentialité")
-                .font(.caption.weight(.semibold))
+    private var laterButton: some View {
+        Button {
+            completed = true
+            onDone()
+        } label: {
+            Text("Je choisirai plus tard")
+                .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Text("Ta clé est stockée dans le Trousseau iOS. Elle n'est envoyée qu'au provider que tu choisis. LifeOS ne voit rien.")
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
-                .fixedSize(horizontal: false, vertical: true)
+                .padding(.vertical, 8)
         }
-        .padding(.top, 4)
+        .buttonStyle(.plain)
     }
 }
 
-// MARK: - Provider quick picker (grille de tuiles)
+// MARK: - Press style (skill make-interfaces-feel-better : scale 0.96)
 
-/// Grille compacte des providers cloud pour choisir vite le sien.
-private struct ProviderQuickPicker: View {
-
-    let onPick: (AIProviderCredentials.Slot) -> Void
-
-    @Environment(\.dismiss) private var dismiss
-
-    /// Ordre affichage : OpenRouter en tête (recommandé grand public),
-    /// puis les gros, puis les niches.
-    private let ordered: [AIProviderCredentials.Slot] = [
-        .openrouter, .openai, .anthropic, .mistral, .gemini, .deepseek, .groq, .xai,
-    ]
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    ForEach(ordered, id: \.self) { slot in
-                        tile(for: slot)
-                    }
-                }
-                .padding(16)
-            }
-            .background(Theme.bg.ignoresSafeArea())
-            .navigationTitle("Choisis un provider")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Annuler") { dismiss() }
-                }
-            }
-        }
-    }
-
-    private func tile(for slot: AIProviderCredentials.Slot) -> some View {
-        Button {
-            onPick(slot)
-        } label: {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: slot.publicIconName)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 36, height: 36)
-                        .background(
-                            Color(hex: slot.publicAccentHex),
-                            in: RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        )
-                    Spacer()
-                    if slot == .openrouter {
-                        Text("Reco")
-                            .font(.caption2.weight(.bold))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.orange.opacity(0.18), in: Capsule())
-                            .foregroundStyle(.orange)
-                    }
-                }
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(slot.publicBrandName)
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundStyle(.primary)
-                    Text(slot.publicTagline)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .lineLimit(2)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14)
-            .frame(minHeight: 130, alignment: .topLeading)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("\(slot.publicBrandName). \(slot.publicTagline)")
+private struct PressableCardStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 
 // MARK: - Quick key entry (colle + teste + save)
 
 /// Écran compact pour coller sa clé et la valider en 1 étape.
+/// Poussé dans la NavigationStack au tap d'une tuile (pas en sheet =
+/// évite le bug de double-présentation).
 private struct QuickKeyEntry: View {
 
     let slot: AIProviderCredentials.Slot
@@ -320,76 +221,64 @@ private struct QuickKeyEntry: View {
     @State private var pastebardBannerVisible = false
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    ProviderKeyHelpView(slot: slot) { pastedKey in
-                        key = pastedKey
-                        Task { await saveAndTest() }
-                    }
-                    .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
-                    .listRowBackground(Color.clear)
+        Form {
+            Section {
+                ProviderKeyHelpView(slot: slot) { pastedKey in
+                    key = pastedKey
+                    Task { await saveAndTest() }
                 }
+                .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
+                .listRowBackground(Color.clear)
+            }
 
-                if pastebardBannerVisible {
-                    Section {
-                        clipboardBanner
-                    }
-                }
-
+            if pastebardBannerVisible {
                 Section {
-                    SecureField("Ou colle ta clé ici", text: $key)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    if let errorMsg {
-                        Label(errorMsg, systemImage: "xmark.circle.fill")
-                            .foregroundStyle(.red)
-                            .font(.footnote)
-                    }
-                    if success {
-                        Label("Clé validée. Ton coach est prêt.", systemImage: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
-                            .font(.footnote)
-                    }
+                    clipboardBanner
                 }
+            }
 
-                Section {
-                    Button {
-                        Task { await saveAndTest() }
-                    } label: {
-                        HStack {
-                            if testing {
-                                ProgressView().controlSize(.small)
-                            } else {
-                                Image(systemName: "checkmark.seal.fill")
-                            }
-                            Text(testing ? "Test en cours…" : "Enregistrer et tester")
+            Section {
+                SecureField("Ou colle ta clé ici", text: $key)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                if let errorMsg {
+                    Label(errorMsg, systemImage: "xmark.circle.fill")
+                        .foregroundStyle(.red)
+                        .font(.footnote)
+                }
+                if success {
+                    Label("Clé validée. Ton coach est prêt.", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                        .font(.footnote)
+                }
+            }
+
+            Section {
+                Button {
+                    Task { await saveAndTest() }
+                } label: {
+                    HStack {
+                        if testing {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Image(systemName: "checkmark.seal.fill")
                         }
+                        Text(testing ? "Test en cours…" : "Enregistrer et tester")
                     }
-                    .disabled(key.trimmingCharacters(in: .whitespaces).isEmpty || testing)
                 }
+                .disabled(key.trimmingCharacters(in: .whitespaces).isEmpty || testing)
             }
-            .navigationTitle("Ajouter ta clé")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Fermer") { dismiss() }
-                }
-            }
-            .onChange(of: scenePhase) { _, newPhase in
-                if newPhase == .active {
-                    detectClipboardKey()
-                }
-            }
-            .onAppear { detectClipboardKey() }
         }
+        .navigationTitle(slot.publicBrandName)
+        .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active { detectClipboardKey() }
+        }
+        .onAppear { detectClipboardKey() }
     }
 
-    // MARK: - Clipboard banner (détection auto au retour d'app)
+    // MARK: - Clipboard banner
 
-    /// Bannière affichée en tête de Form si le presse-papier contient une clé
-    /// avec le préfixe attendu par le provider ET que le champ est vide.
-    /// Sur "Oui" → remplit + déclenche le test. Sur "Non" → cache la bannière.
     @ViewBuilder
     private var clipboardBanner: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -397,9 +286,9 @@ private struct QuickKeyEntry: View {
                 .foregroundStyle(Color.accentColor)
                 .padding(.top, 2)
             VStack(alignment: .leading, spacing: 6) {
-                Text("Clé \(slot.displayName) détectée")
+                Text("Clé \(slot.publicBrandName) détectée")
                     .font(.subheadline.weight(.semibold))
-                Text("Une clé est dans ton presse-papier. Utiliser cette clé ?")
+                Text("Une clé est dans ton presse-papier. L'utiliser ?")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -429,8 +318,6 @@ private struct QuickKeyEntry: View {
         }
     }
 
-    /// Vérifie le presse-papier et affiche la bannière si une clé plausible
-    /// pour ce provider y est présente. Aucun log du contenu presse-papier.
     private func detectClipboardKey() {
         guard key.isEmpty else { return }
         let raw = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -442,9 +329,7 @@ private struct QuickKeyEntry: View {
             pastebardBannerVisible = false
             return
         }
-        withAnimation(.easeOut(duration: 0.25)) {
-            pastebardBannerVisible = true
-        }
+        withAnimation(.easeOut(duration: 0.25)) { pastebardBannerVisible = true }
     }
 
     private func useClipboardKey() {
@@ -466,21 +351,18 @@ private struct QuickKeyEntry: View {
         }
 
         testing = true
-        // Save d'abord (le provider lit dans le Keychain)
         _ = AIProviderCredentials.shared.setKey(trimmed, for: slot)
 
-        // Ping léger
         let response = await pingProvider(slot: slot)
         testing = false
 
         if response.isSuccess {
             success = true
-            // Petit délai visuel pour que l'user voie le "validé", puis on ferme.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                 onSaved()
             }
         } else if case .unavailable(.invalidCredentials) = response.error {
-            errorMsg = "Clé refusée par \(slot.displayName). Vérifie qu'elle est bien copiée."
+            errorMsg = "Clé refusée par \(slot.publicBrandName). Vérifie qu'elle est bien copiée."
             AIProviderCredentials.shared.deleteKey(for: slot)
         } else if case .rateLimited = response.error {
             errorMsg = "Rate limit — mais ta clé marche. Tu peux enregistrer."
@@ -492,7 +374,7 @@ private struct QuickKeyEntry: View {
             errorMsg = "Pas de réseau. Vérifie ta connexion et retente."
             AIProviderCredentials.shared.deleteKey(for: slot)
         } else {
-            errorMsg = "Erreur de connexion à \(slot.displayName). Retente ou choisis un autre provider."
+            errorMsg = "Erreur de connexion à \(slot.publicBrandName). Retente ou choisis autre chose."
             AIProviderCredentials.shared.deleteKey(for: slot)
         }
     }
