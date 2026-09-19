@@ -1092,6 +1092,22 @@ struct AIAssistantView: View {
                         } label: {
                             Label("Debug coach", systemImage: "wand.and.stars")
                         }
+                        Button(role: .destructive) {
+                            DevReset.resetConnectGate()
+                            connectRefresh += 1
+                        } label: {
+                            Label("Reset connexion coach (DEV)", systemImage: "arrow.uturn.backward.circle")
+                        }
+                        Button(role: .destructive) {
+                            DevReset.resetCoach()
+                            // Force fermer le chat pour retomber sur le disclaimer
+                            disclaimerAccepted = false
+                            coachOnboardingCompleted = false
+                            connectRefresh += 1
+                            dismiss()
+                        } label: {
+                            Label("Reset TOTAL coach (DEV)", systemImage: "trash.circle.fill")
+                        }
                         #endif
                         Divider()
                         Button(role: .destructive) {
