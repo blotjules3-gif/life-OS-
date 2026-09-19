@@ -85,7 +85,7 @@ struct CoachFirstLaunchSheet: View {
                 } label: {
                     tile(for: slot)
                 }
-                .buttonStyle(PressableCardStyle())
+                .buttonStyle(PressableButtonStyle(scale: 0.96))
             }
         }
     }
@@ -173,7 +173,7 @@ struct CoachFirstLaunchSheet: View {
             .frame(maxWidth: .infinity)
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
-        .buttonStyle(PressableCardStyle())
+        .buttonStyle(PressableButtonStyle(scale: 0.96))
     }
 
     // MARK: - Bouton "Plus tard" discret
