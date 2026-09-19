@@ -30,7 +30,7 @@ final class AIProviderCredentials {
         case groq          = "ai.credentials.groq"
         case xai           = "ai.credentials.xai"
 
-        /// Nom humain pour l'UI.
+        /// Nom humain pour l'UI (usage technique — logs, debug, écran Réglages).
         var displayName: String {
             switch self {
             case .openai:      return "OpenAI"
@@ -41,6 +41,64 @@ final class AIProviderCredentials {
             case .deepseek:    return "DeepSeek"
             case .groq:        return "Groq"
             case .xai:         return "xAI (Grok)"
+            }
+        }
+
+        /// Nom grand public — celui que l'user voit quand il choisit son coach.
+        /// Zéro nom technique de modèle (Haiku, Flash, mini, Small…) — l'user
+        /// pense en marque, pas en variante.
+        var publicBrandName: String {
+            switch self {
+            case .openai:      return "ChatGPT"
+            case .anthropic:   return "Claude"
+            case .mistral:     return "Mistral"
+            case .gemini:      return "Gemini"
+            case .openrouter:  return "OpenRouter"
+            case .deepseek:    return "DeepSeek"
+            case .groq:        return "Llama"
+            case .xai:         return "Grok"
+            }
+        }
+
+        /// Baseline courte (1-liner) affichée sous le nom sur les tuiles.
+        var publicTagline: String {
+            switch self {
+            case .openai:      return "Le plus populaire"
+            case .anthropic:   return "Réponses nuancées et longues"
+            case .mistral:     return "Français, RGPD"
+            case .gemini:      return "Rapide et gratuit"
+            case .openrouter:  return "1 clé, 200+ modèles"
+            case .deepseek:    return "Ultra pas cher, fort en raisonnement"
+            case .groq:        return "Vitesse extrême"
+            case .xai:         return "L'IA de X"
+            }
+        }
+
+        /// Icône SF Symbol représentative — cohérence visuelle par marque.
+        var publicIconName: String {
+            switch self {
+            case .openai:      return "bubble.left.and.bubble.right.fill"
+            case .anthropic:   return "sparkle"
+            case .mistral:     return "wind"
+            case .gemini:      return "diamond.fill"
+            case .openrouter:  return "square.grid.3x3.fill"
+            case .deepseek:    return "brain.head.profile"
+            case .groq:        return "bolt.fill"
+            case .xai:         return "xmark"
+            }
+        }
+
+        /// Couleur d'accent (hex UInt) — pour badges, tuiles, headers.
+        var publicAccentHex: UInt {
+            switch self {
+            case .openai:      return 0x10A37F   // vert OpenAI
+            case .anthropic:   return 0xC97D5C   // beige Claude
+            case .mistral:     return 0xFF7000   // orange Mistral
+            case .gemini:      return 0x4285F4   // bleu Google
+            case .openrouter:  return 0xE6A03C   // ambre OpenRouter
+            case .deepseek:    return 0x4C6EF5   // bleu DeepSeek
+            case .groq:        return 0xF55036   // rouge Groq
+            case .xai:         return 0xA855F7   // violet xAI
             }
         }
 

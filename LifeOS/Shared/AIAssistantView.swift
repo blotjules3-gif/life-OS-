@@ -4,7 +4,6 @@ import PhotosUI
 import UIKit
 
 // MARK: - Persistent message model
-
 @Model
 final class AIMessage {
     var id: UUID
