@@ -987,9 +987,42 @@ struct AIAssistantView: View {
             CoachFirstLaunchSheet(onDone: {
                 coachOnboardingCompleted = true
             })
+        } else if !isCoachConnected {
+            // Gate bloquant plein écran tant qu'aucun provider n'est configuré.
+            // L'user ne voit AUCUN chat tant qu'il n'a pas choisi son coach.
+            CoachConnectGate(onChoose: { showConnectSheet = true })
+                .id(connectRefresh)   // force refresh après connexion
+                .sheet(isPresented: $showConnectSheet) {
+                    CoachFirstLaunchSheet(onDone: {
+                        showConnectSheet = false
+                        connectRefresh += 1   // re-évalue isCoachConnected
+                    })
+                }
         } else {
             chatContent
         }
+    }
+
+    /// Vrai si l'user a effectivement branché son coach à un moteur IA :
+    ///   - Apple Intelligence choisi (et dispo)
+    ///   - OU un provider cloud avec sa préférence explicite définie
+    ///   - OU au moins une clé Keychain valide pour un provider cloud
+    ///     (fallback : l'user a mis une clé sans forcément définir la préférence)
+    private var isCoachConnected: Bool {
+        _ = connectRefresh   // force dépendance à connectRefresh pour recomputer
+        // 1. Préférence explicite = connecté (couvre Apple Intelligence + tous cloud)
+        if let pref = AIProviderPreference.shared.preferred, !pref.isEmpty {
+            // Cas Apple Intelligence : vérifier qu'il est réellement disponible
+            if pref == "apple.intelligence.on-device" {
+                return AppleIntelligenceProvider().availability.isAvailable
+            }
+            return true
+        }
+        // 2. Au moins une clé cloud présente = connecté
+        for slot in AIProviderCredentials.Slot.allCases where AIProviderCredentials.shared.hasKey(for: slot) {
+            return true
+        }
+        return false
     }
 
     private var chatContent: some View {
