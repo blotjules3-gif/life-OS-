@@ -262,47 +262,44 @@ private struct ProviderQuickPicker: View {
         Button {
             onPick(slot)
         } label: {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text(slot.displayName)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: slot.publicIconName)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 36, height: 36)
+                        .background(
+                            Color(hex: slot.publicAccentHex),
+                            in: RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        )
                     Spacer()
                     if slot == .openrouter {
                         Text("Reco")
                             .font(.caption2.weight(.bold))
-                            .padding(.horizontal, 5)
+                            .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.orange.opacity(0.18), in: Capsule())
                             .foregroundStyle(.orange)
                     }
                 }
-                Text(shortDescription(for: slot))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(slot.publicBrandName)
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundStyle(.primary)
+                    Text(slot.publicTagline)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(2)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(14)
-            .frame(minHeight: 100, alignment: .topLeading)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .frame(minHeight: 130, alignment: .topLeading)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
-    }
-
-    /// Baseline courte affichée sur la tuile — ce que l'user gagne à le choisir.
-    private func shortDescription(for slot: AIProviderCredentials.Slot) -> String {
-        switch slot {
-        case .openrouter: return "1 clé, 200+ modèles au choix. Idéal pour tester."
-        case .openai:     return "GPT-4o mini. Standard fiable et populaire."
-        case .anthropic:  return "Claude Haiku. Réponses nuancées, longues."
-        case .mistral:    return "Français, RGPD ok. Rapide et pas cher."
-        case .gemini:     return "Google. Flash rapide, quota gratuit."
-        case .deepseek:   return "Ultra pas cher. Fort en raisonnement."
-        case .groq:       return "Vitesse extrême sur Llama. Free tier."
-        case .xai:        return "Grok. Intégration X, humour."
-        }
+        .accessibilityLabel("\(slot.publicBrandName). \(slot.publicTagline)")
     }
 }
 
