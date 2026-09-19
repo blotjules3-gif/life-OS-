@@ -878,6 +878,10 @@ struct AIAssistantView: View {
     @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
     @AppStorage(AppStorageKeys.coachDisclaimerAccepted) private var disclaimerAccepted = false
     @AppStorage(AppStorageKeys.coachOnboardingCompleted) private var coachOnboardingCompleted = false
+    @State private var showConnectSheet = false
+    /// Refresh trigger — bump quand un provider est configuré pour ré-évaluer
+    /// `isCoachConnected` (SwiftUI ne refresh pas auto sur les singletons).
+    @State private var connectRefresh = 0
     private var accent: Color { (AppTheme(rawValue: appThemeRaw) ?? .classic).accent }
     @FocusState private var inputFocused: Bool
     @State private var showClearConfirm = false
