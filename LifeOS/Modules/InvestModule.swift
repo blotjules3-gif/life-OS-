@@ -469,6 +469,12 @@ struct ListingImportSheet: View {
 struct TaxSimulatorView: View {
     @State private var income = 35000.0
     @State private var parts = 1.0
+    @State private var status: FrenchTax.Status = .single
+
+    /// Le nombre de parts ne peut pas descendre sous la base de la situation:
+    /// un couple fait deux parts, pas une.
+    private var effectiveParts: Double { max(status.baseParts, parts) }
+
     var body: some View {
         ZStack {
             Theme.background
@@ -476,43 +482,75 @@ struct TaxSimulatorView: View {
                 VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 12) {
                         SectionHeader(title: "Tes paramètres")
-                        VStack(alignment: .leading) { HStack { Text("Revenu net imposable"); Spacer(); Text("\(Int(income)) €").bold().foregroundStyle(.investTint) }; Slider(value: $income, in: 10000...200000, step: 1000).tint(.investTint) }
-                        VStack(alignment: .leading) { HStack { Text("Parts fiscales"); Spacer(); Text(String(format: "%.1f", parts)).bold().foregroundStyle(.investTint) }; Slider(value: $parts, in: 1...5, step: 0.5).tint(.investTint) }
-                    }.card()
-
-                    let tax = FrenchTax.computeIR(income: income, parts: parts)
-                    VStack(spacing: 12) {
-                        ZStack {
-                            ProgressRing(progress: income > 0 ? tax/income : 0, lineWidth: 14, tint: .investTint)
-                            VStack { Text(tax, format: .currency(code: "EUR")).font(.title2.bold()).foregroundStyle(Theme.textPrimary); Text("d'impôt").font(.caption).foregroundStyle(Theme.textSecondary) }
-                        }.frame(width: 190, height: 190)
-                        HStack(spacing: 12) {
-                            StatTile(value: String(format: "%.1f%%", income > 0 ? tax/income*100 : 0), label: "Taux moyen", icon: "percent")
-                            StatTile(value: "\(Int(income-tax))€", label: "Net après IR", icon: "eurosign.circle")
+                        Picker("Situation", selection: $status) {
+                            ForEach(FrenchTax.Status.allCases) { Text($0.rawValue).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
+                        VStack(alignment: .leading) {
+                            HStack { Text("Revenu net imposable"); Spacer()
+                                Text("\(Int(income)) €").bold().foregroundStyle(.investTint) }
+                            Slider(value: $income, in: 10000...200000, step: 1000).tint(.investTint)
+                        }
+                        VStack(alignment: .leading) {
+                            HStack { Text("Parts fiscales"); Spacer()
+                                Text(String(format: "%.1f", effectiveParts)).bold().foregroundStyle(.investTint) }
+                            Slider(value: $parts, in: 1...5, step: 0.5).tint(.investTint)
+                            Text(status == .couple
+                                 ? "2 parts pour le couple, puis une demi-part par enfant."
+                                 : "1 part, puis une demi-part par enfant.")
+                                .font(.caption2).foregroundStyle(Theme.textSecondary)
                         }
                     }.card()
 
-                    Text("Barème IR 2024 progressif par tranches, appliqué au quotient familial. Estimation indicative — hors décote, réductions et crédits d'impôt.")
+                    let r = FrenchTax.compute(income: income, parts: effectiveParts, status: status)
+                    VStack(spacing: 12) {
+                        ZStack {
+                            ProgressRing(progress: income > 0 ? r.total / income : 0, lineWidth: 14, tint: .investTint)
+                            VStack {
+                                Text(r.total, format: .currency(code: "EUR"))
+                                    .font(.title2.bold()).foregroundStyle(Theme.textPrimary)
+                                Text("d'impôt").font(.caption).foregroundStyle(Theme.textSecondary)
+                            }
+                        }.frame(width: 190, height: 190)
+                        HStack(spacing: 12) {
+                            StatTile(value: String(format: "%.1f%%", income > 0 ? r.total / income * 100 : 0),
+                                     label: "Taux moyen", icon: "percent")
+                            StatTile(value: String(format: "%.0f%%", r.marginalRate * 100),
+                                     label: "Ta tranche", icon: "chart.bar")
+                        }
+                        StatTile(value: "\(Int(income - r.total))€", label: "Net après IR", icon: "eurosign.circle")
+                    }.card()
+
+                    // Le detail, parce qu'un seul montant n'explique pas
+                    // pourquoi ajouter une part ne change presque rien.
+                    if r.capLoss > 0 || r.decote > 0 {
+                        VStack(alignment: .leading, spacing: 8) {
+                            SectionHeader(title: "Le détail")
+                            if r.capLoss > 0 {
+                                row("Avantage refusé (plafond des demi-parts)", r.capLoss, .orange)
+                                Text("Chaque demi-part rapporte au maximum \(Int(FrenchTax.halfPartCap)) € d'impôt en moins. Au-delà, l'avantage est plafonné.")
+                                    .font(.caption2).foregroundStyle(Theme.textSecondary)
+                            }
+                            if r.decote > 0 {
+                                row("Décote (revenus modestes)", -r.decote, .green)
+                            }
+                        }.card()
+                    }
+
+                    Text("Barème 2026 sur les revenus 2025, quotient familial plafonné et décote comprise. Estimation indicative : les réductions et crédits d'impôt ne sont pas pris en compte.")
                         .font(.caption).foregroundStyle(Theme.textSecondary)
                 }.padding(Theme.pad)
             }
         }
         .navigationTitle("Fiscalité").navigationBarTitleDisplayMode(.inline)
     }
-}
 
-enum FrenchTax {
-    /// Barème de l'impôt sur le revenu 2024 (revenus 2023), par part.
-    static func computeIR(income: Double, parts: Double) -> Double {
-        let brackets: [(Double, Double, Double)] = [
-            (0, 11294, 0.0), (11294, 28797, 0.11), (28797, 82341, 0.30),
-            (82341, 177106, 0.41), (177106, .infinity, 0.45)
-        ]
-        let perPart = income / parts
-        var taxPerPart = 0.0
-        for (low, high, rate) in brackets where perPart > low {
-            taxPerPart += (min(perPart, high) - low) * rate
+    private func row(_ label: String, _ amount: Double, _ tint: Color) -> some View {
+        HStack {
+            Text(label).font(.subheadline).foregroundStyle(Theme.textPrimary)
+            Spacer()
+            Text(amount, format: .currency(code: "EUR")).bold().foregroundStyle(tint)
         }
-        return (taxPerPart * parts).rounded()
     }
 }
+
