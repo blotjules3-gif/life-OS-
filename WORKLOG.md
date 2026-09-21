@@ -212,6 +212,23 @@ avant d'ecrire le code**, puis les figer dans le test. C'est comme ca que la
 regle "charges superieures au loyer donc montant annuel" a ete prise en
 faute: elle divisait par douze un cas banal, 300 de loyer et 400 de charges.
 
+## Noms des outils pilotes depuis Notion (21 septembre 2026)
+
+- Table: Notion "Apps integrees dans LifeOS" (page 3e27d2c1063e81a78d95d5e52f1d06e4),
+  colonne "Nouveau nom LifeOS". La colonne "Nom descriptif" est la cle: elle
+  doit rester egale a l'`alias` de l'outil dans `CategoryHub.swift`.
+- Serveur: `names-worker/`, Cloudflare `lifeos-names` (compte chifandcopt),
+  https://lifeos-names.chifandcopt.workers.dev/names. KV `NAMES` garde les
+  derniers noms lus. Cache 5 min. `node test.mjs` pour ses controles.
+- App: `ToolNames.swift`, lu a l'ouverture et au retour au premier plan.
+  `CategoryTool.title` est calcule: nom Notion, sinon `defaultTitle`.
+- BLOQUE sur une chose que seul Theo peut faire: creer l'integration Notion,
+  partager la page avec elle, deposer la cle dans
+  `.credentials/notion-lifeos.token`, puis `names-worker/set-notion-key.sh`.
+  D'ici la, le serveur rend les noms d'origine (`source: fallback`).
+- Ajouter un outil: l'ajouter a `FALLBACK` du serveur (`fallback.js`), sinon
+  ses renommages dans Notion sont ignores.
+
 ## Prochaine action exacte
 
 1. Debloquer la facturation GitHub, sinon rien ne se construit ni ne part sur
