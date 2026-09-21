@@ -8,7 +8,10 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 d=$(mktemp -d); trap 'rm -rf "$d"' EXIT
-for f in LifeOS/Models/*.swift; do
+# AppSchema est exclu: sans @Model les classes ne sont plus des modeles
+# SwiftData, donc sa liste ne peut pas typer ici. Elle est lue plus bas.
+for f in SharedModels/*.swift; do
+[ "$(basename "$f")" = AppSchema.swift ] && continue
 python3 - "$f" "$d/$(basename "$f")" <<'PY'
 import re,sys
 s=open(sys.argv[1],encoding="utf-8").read()
@@ -23,4 +26,15 @@ out=$(swiftc -typecheck -sdk "$(xcrun --show-sdk-path)" -target arm64-apple-maco
 n=$(printf '%s' "$out" | grep -c "error:" || true)
 [ -n "$out" ] && echo "$out" | sort -u | head -20
 echo "types des modeles: $(ls "$d" | wc -l | tr -d ' ') fichiers, $n erreur(s)"
+# Chaque nom de la liste AppSchema doit exister comme classe de modele.
+missing=$(python3 - <<'PY2'
+import re,glob
+src="".join(open(f,encoding="utf-8").read() for f in glob.glob("SharedModels/*.swift"))
+listed=re.findall(r"(\w+)\.self",open("SharedModels/AppSchema.swift").read())
+declared=set(re.findall(r"@Model\s+(?:final\s+)?class\s+(\w+)",src))
+print(" ".join(x for x in listed if x not in declared))
+PY2
+)
+[ -n "$missing" ] && { echo "modeles listes mais introuvables: $missing"; n=$((n+1)); }
+echo "liste AppSchema: $(grep -o '\.self' SharedModels/AppSchema.swift | wc -l | tr -d ' ') modeles, tous declares dans SharedModels: $([ -z "$missing" ] && echo oui || echo NON)"
 [ "$n" -eq 0 ]

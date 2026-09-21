@@ -21,32 +21,8 @@ import SwiftData
 ///    Cf. `CloudKitReadiness.report()` pour la check-list runtime.
 enum LocalStore {
 
-    static let schema = Schema([
-        // Santé
-        DreamEntry.self, SleepNight.self, FoodEntry.self, FastingSession.self, WaterEntry.self,
-        Supplement.self, PantryItem.self, ShoppingItem.self, WorkoutSet.self, StepEntry.self,
-        // Vie
-        ProgressPhoto.self, WardrobeItem.self, MoodEntry.self, TodoItem.self,
-        Habit.self, HabitCompletion.self, Note.self, MemoryEntry.self,
-        Account.self, Txn.self, Envelope.self, Subscription.self, SavingsGoal.self, SplitExpense.self,
-        // Patrimoine & reste
-        Holding.self, NetWorthItem.self, Property.self, JobApplication.self, SkillGap.self,
-        Flashcard.self, BookSummary.self, Chore.self, Pet.self, PetCare.self, Maintenance.self,
-        Vehicle.self, FuelLog.self, Contact.self, SocialEvent.self, DocVault.self, Deadline.self,
-        Trip.self, PackingItem.self,
-        // Cycle
-        CycleEntry.self,
-        // Messages du coach on-device
-        AIMessage.self,
-        // Santé médicale
-        Medication.self, MedicalAppointment.self, VitalRecord.self, Vaccination.self,
-        // Rappels perso (centre de notifications) + programme de sport
-        CustomReminder.self, GymDay.self,
-        // Intelligent Profile Engine — Bloc A
-        ProfileField.self, ProfileFieldRevision.self,
-        // Objectifs unifiés (Loop 24 Goal-Plan-Partner)
-        UserGoal.self
-    ])
+    /// Liste des modeles: voir `AppSchema`, partagee avec l'app Apple Watch.
+    static let schema = AppSchema.schema
 
     @MainActor private static var current: ModelContainer?
 

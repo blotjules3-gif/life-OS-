@@ -20,7 +20,7 @@ while IFS= read -r f; do
         echo "$out" | grep -E "error:" | head -5
         fail=$((fail + 1))
     fi
-done < <(find LifeOS LifeOSTests LifeOSWidgets -name '*.swift' 2>/dev/null)
+done < <(find LifeOS LifeOSTests LifeOSWidgets SharedModels LifeOSWatch -name '*.swift' 2>/dev/null)
 
 echo "syntaxe: $count fichiers lus, $fail en echec"
 [ "$fail" -eq 0 ]

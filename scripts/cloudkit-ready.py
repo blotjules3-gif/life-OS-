@@ -13,7 +13,7 @@ import re, glob, sys
 BASIC = {"String", "Int", "Double", "Bool", "Date", "UUID", "Data", "Float"}
 problems, models = [], {}
 
-for f in glob.glob("LifeOS/**/*.swift", recursive=True):
+for f in glob.glob("LifeOS/**/*.swift", recursive=True) + glob.glob("SharedModels/**/*.swift", recursive=True):
     s = open(f, encoding="utf-8").read()
     # Hors commentaires et hors textes entre guillemets: LocalStore en parle
     # dans un message de diagnostic, ce n'est pas un usage.

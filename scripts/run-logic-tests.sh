@@ -23,6 +23,7 @@ SUITES=(
     "EnergyScore:LifeOS/Services/EnergyScore.swift:LifeOSTests/EnergyScoreTests.swift"
     "HomeOrder:LifeOS/Services/HomeOrder.swift:LifeOSTests/HomeOrderTests.swift"
     "ToolNames:LifeOS/Services/ToolNames.swift:LifeOSTests/ToolNamesTests.swift"
+    "TabataClock:LifeOSWatch/TabataClock.swift:scripts/localtests/TabataClockTests.swift"
 )
 
 work=$(mktemp -d)
