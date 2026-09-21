@@ -229,6 +229,24 @@ faute: elle divisait par douze un cas banal, 300 de loyer et 400 de charges.
 - Ajouter un outil: l'ajouter a `FALLBACK` du serveur (`fallback.js`), sinon
   ses renommages dans Notion sont ignores.
 
+## Mac, iPad, Apple Watch et synchro (21 septembre 2026)
+
+- **iPad**: existe deja, la cible vise iPhone et iPad (`TARGETED_DEVICE_FAMILY = "1,2"`).
+- **Mac**: existe deja aussi. Le build 10 annonce `computedMinMacOsVersion 14.0`,
+  donc l'app iPad tourne sur un Mac Apple Silicon via TestFlight pour Mac.
+  Sante (pas, HRV) n'existe pas sur Mac: ces ecrans restent vides, c'est gere.
+- **Synchro**: branche `feat/multidevice`, PAS fusionnee. Les modeles passent
+  `scripts/cloudkit-ready.py` (228 problemes avant, 0 apres). Ne fusionner
+  qu'apres que `SyncMigrationTests` a PASSE en CI: c'est lui qui prouve que
+  les series des telephones survivent au changement de forme de la base.
+  Reste, cote compte Apple: activer iCloud sur l'App ID `com.chifandco.lifeos`
+  (6877WBMC34), creer le conteneur `iCloud.com.chifandco.lifeos` (le portail
+  developpeur seulement, l'API ne sait pas), regenerer le profil, ajouter
+  les cles iCloud au fichier d'entitlements, puis `cloudKitEnabled` a true.
+- **Apple Watch**: pas commencee. Nouvelle cible watchOS, qui lit la meme base
+  iCloud. A construire quand la CI tourne: une cible ajoutee a la main dans
+  le pbxproj sans pouvoir compiler une seule fois casserait le build iPhone.
+
 ## Prochaine action exacte
 
 1. Debloquer la facturation GitHub, sinon rien ne se construit ni ne part sur
