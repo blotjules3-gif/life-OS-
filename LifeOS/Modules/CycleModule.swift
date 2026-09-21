@@ -404,29 +404,43 @@ struct CycleSymptomsView: View {
 struct CycleHistoryView: View {
     @Query(sort: \CycleEntry.date, order: .reverse) private var entries: [CycleEntry]
 
-    private var avgCycle: Double {
-        // Simplifié : durée moyenne entre les premières entrées consécutives avec flux
-        let withFlow = entries.filter { $0.flow > 0 }
-        guard withFlow.count >= 2 else { return 0 }
-        var gaps: [Double] = []
-        for i in 0..<min(withFlow.count - 1, 5) {
-            let gap = withFlow[i].date.timeIntervalSince(withFlow[i + 1].date) / 86400
-            if gap > 20 { gaps.append(gap) }
-        }
-        guard !gaps.isEmpty else { return 0 }
-        return gaps.reduce(0, +) / Double(gaps.count)
+    /// Voir `CycleStats`. Le calcul precedent mesurait l'ecart entre deux
+    /// entrees consecutives avec flux et ne gardait que les ecarts de plus de
+    /// 20 jours: quand on remplit l'app chaque jour de ses regles, tous les
+    /// ecarts recents valent 1 jour, donc la moyenne ne s'affichait jamais.
+    private var stats: CycleStats.Summary? {
+        CycleStats.summary(flowDays: entries.filter { $0.flow > 0 }.map(\.date))
     }
 
     var body: some View {
         NavigationStack {
             List {
-                if avgCycle > 0 {
-                    Section("Stats") {
+                if let stats {
+                    Section {
                         HStack {
                             Text("Durée moyenne")
                             Spacer()
-                            Text("\(Int(avgCycle.rounded())) jours").foregroundStyle(.secondary)
+                            Text("\(Int(stats.averageDays.rounded())) jours").foregroundStyle(.secondary)
                         }
+                        HStack {
+                            Text("Plus court · plus long")
+                            Spacer()
+                            Text("\(stats.shortestDays) · \(stats.longestDays) jours").foregroundStyle(.secondary)
+                        }
+                        HStack {
+                            Text("Régularité")
+                            Spacer()
+                            Text(stats.isRegular ? "Régulier" : "Irrégulier")
+                                .foregroundStyle(stats.isRegular ? Color.green : Color.orange)
+                        }
+                    } header: {
+                        Text("Stats")
+                    } footer: {
+                        // Une moyenne sur un seul cycle n'en est pas une:
+                        // on dit sur combien elle porte.
+                        Text(stats.cycleCount == 1
+                             ? "Sur 1 cycle observé. Enregistre encore quelques mois pour une moyenne fiable."
+                             : "Sur \(stats.cycleCount) cycles observés.")
                     }
                 }
 

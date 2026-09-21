@@ -16,6 +16,10 @@ struct DataDeletionSheet: View {
     @State private var confirmingReset = false
     @State private var didErase = false
     @State private var exportURL: URL?
+    @State private var exporting = false
+    /// Pourquoi la sauvegarde a echoue. Sans ca, le bouton ne faisait
+    /// visiblement rien et l'utilisateur pouvait effacer quand meme.
+    @State private var exportError: String?
 
     var body: some View {
         NavigationStack {
@@ -30,8 +34,12 @@ struct DataDeletionSheet: View {
                     Button {
                         Task { await prepareExport() }
                     } label: {
-                        Label("Exporter mes données (aperçu JSON)", systemImage: "square.and.arrow.up")
+                        HStack {
+                            Label("Exporter mes données (aperçu JSON)", systemImage: "square.and.arrow.up")
+                            if exporting { Spacer(); ProgressView().controlSize(.small) }
+                        }
                     }
+                    .disabled(exporting)
                     .accessibilityLabel("Exporter un aperçu de mes données au format JSON")
 
                     if let exportURL {
@@ -39,6 +47,11 @@ struct DataDeletionSheet: View {
                             Label("Partager le fichier", systemImage: "paperplane.fill")
                         }
                         .foregroundStyle(Theme.accent)
+                    }
+                    if let exportError {
+                        Label(exportError, systemImage: "exclamationmark.triangle.fill")
+                            .font(.footnote)
+                            .foregroundStyle(.orange)
                     }
                 }
 
@@ -100,16 +113,42 @@ struct DataDeletionSheet: View {
         Haptics.success()
     }
 
+    /// Prepare le fichier de sauvegarde.
+    ///
+    /// Cet ecran est le seul filet avant un effacement irreversible. Une
+    /// panne silencieuse ici est donc la pire de l'app: le bouton ne faisait
+    /// rien de visible, aucun lien de partage n'apparaissait, et on pouvait
+    /// enchainer sur "Tout effacer" en croyant avoir sa copie. Chaque sortie
+    /// dit maintenant ce qui s'est passe.
     private func prepareExport() async {
-        let container = ctx.container
-        guard let data = DataEraser.exportBackup(container: container) else { return }
-        let filename = "lifeos-backup-\(Int(Date().timeIntervalSince1970)).json"
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
-        do {
-            try data.write(to: url)
-            await MainActor.run { exportURL = url }
-        } catch {
-            AppLog.data.error("prepareExport write failed: \(error.localizedDescription, privacy: .public)")
+        await MainActor.run { exporting = true; exportError = nil; exportURL = nil }
+
+        // Le message d'echec est volontairement le meme dans les deux cas et
+        // dit quoi faire: l'utilisateur n'a pas a distinguer "encodage rate"
+        // de "ecriture ratee", il a besoin de savoir qu'il ne doit pas
+        // effacer maintenant.
+        var failure: String?
+        var ready: URL?
+
+        if let data = DataEraser.exportBackup(container: ctx.container) {
+            let filename = "lifeos-backup-\(Int(Date().timeIntervalSince1970)).json"
+            let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+            do {
+                try data.write(to: url, options: .atomic)
+                ready = url
+            } catch {
+                AppLog.data.error("prepareExport write failed: \(error.localizedDescription, privacy: .public)")
+                failure = "Écriture impossible : \(error.localizedDescription). N'efface rien et réessaie."
+            }
+        } else {
+            AppLog.data.error("prepareExport: exportBackup a rendu nil")
+            failure = "La sauvegarde n'a pas pu être préparée. N'efface rien et réessaie."
+        }
+
+        await MainActor.run {
+            exportURL = ready
+            exportError = failure
+            exporting = false
         }
     }
 }

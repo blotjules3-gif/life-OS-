@@ -484,7 +484,11 @@ extension AppCategory {
 }
 
 private let medicalTools: [CategoryTool] = [
-    .init("pills.fill",         "Médicaments",     "Traitements en cours et rappels",  tint: .init(hex: 0xE84C4C)) { MedicalHubView() },
+    // Pointait sur MedicalHubView: toucher "Médicaments" ouvrait un second
+    // menu contenant... Médicaments, plus les trois outils deja listes juste
+    // en dessous. La liste des traitements etait donc a un cran de plus que
+    // tout le reste de la categorie, et le sous-titre mentait.
+    .init("pills.fill",         "Médicaments",     "Traitements en cours et rappels",  tint: .init(hex: 0xE84C4C)) { MedicationView() },
     .init("stethoscope",        "Rendez-vous",     "Agenda médical et suivi",          tint: .init(hex: 0xE84C4C)) { AppointmentsView() },
     .init("waveform.path.ecg",  "Carnet de santé", "Poids, tension, glycémie…",        tint: .init(hex: 0xE84C4C)) { VitalsView() },
     .init("syringe.fill",       "Vaccinations",    "Historique et rappels",            tint: .init(hex: 0xE84C4C)) { VaccinationView() },
