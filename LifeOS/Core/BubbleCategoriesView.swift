@@ -1034,7 +1034,7 @@ struct ToolSearchView: View {
             s.folding(options: .diacriticInsensitive, locale: .current).lowercased()
         }
         return allTools.filter {
-            norm($0.tool.title).contains(q) || norm($0.tool.subtitle).contains(q) || norm($0.cat.title).contains(q)
+            norm($0.tool.title).contains(q) || norm($0.tool.alias).contains(q) || norm($0.tool.subtitle).contains(q) || norm($0.cat.title).contains(q)
         }
     }
 
