@@ -1016,6 +1016,7 @@ extension AppCategory {
 // MARK: - Recherche globale d'outils (tous les pôles)
 
 struct ToolSearchView: View {
+    @AppStorage(ToolNames.storageKey) private var toolNamesRaw = ""
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
     @State private var coverTool: CategoryTool?
@@ -1034,7 +1035,7 @@ struct ToolSearchView: View {
             s.folding(options: .diacriticInsensitive, locale: .current).lowercased()
         }
         return allTools.filter {
-            norm($0.tool.title).contains(q) || norm($0.tool.alias).contains(q) || norm($0.tool.subtitle).contains(q) || norm($0.cat.title).contains(q)
+            norm($0.tool.title).contains(q) || norm($0.tool.defaultTitle).contains(q) || norm($0.tool.alias).contains(q) || norm($0.tool.subtitle).contains(q) || norm($0.cat.title).contains(q)
         }
     }
 

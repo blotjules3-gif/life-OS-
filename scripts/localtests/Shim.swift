@@ -76,3 +76,7 @@ struct XCTSkip: Error {
     let reason: String
     init(_ reason: String = "") { self.reason = reason }
 }
+
+/// Journal factice: les services purs journalisent leurs echecs.
+struct ShimLogger { func info(_ s: String) {} ; func error(_ s: String) {} }
+enum AppLog { static let general = ShimLogger(); static let data = ShimLogger() }

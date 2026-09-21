@@ -16,7 +16,9 @@ import SwiftUI
 struct CategoryTool: Identifiable, Hashable {
     let id = UUID()
     let icon: String
-    let title: String
+    /// Nom ecrit dans le code. Le nom affiche vient de Notion s'il existe.
+    let defaultTitle: String
+    var title: String { ToolNames.name(for: alias) ?? defaultTitle }
     var subtitle: String = ""
     /// Nom descriptif d'origine ("Langues", "Medicaments"). Les outils portent
     /// maintenant un nom proche de l'app qu'ils remplacent ("Trilingo" pour
@@ -30,7 +32,7 @@ struct CategoryTool: Identifiable, Hashable {
                   alias: String = "",
                   tint: Color = Theme.accent, fullScreen: Bool = false,
                   @ViewBuilder dest: @escaping () -> V) {
-        self.icon = icon; self.title = title; self.subtitle = subtitle; self.alias = alias
+        self.icon = icon; self.defaultTitle = title; self.subtitle = subtitle; self.alias = alias
         self.tint = tint; self.fullScreen = fullScreen
         self.dest = { AnyView(dest()) }
     }
@@ -93,6 +95,8 @@ enum BubbleSize: String, CaseIterable {
 
 struct CategoryHubView: View {
     let category: AppCategory
+    /// Observe pour redessiner quand des noms arrivent de Notion.
+    @AppStorage(ToolNames.storageKey) private var toolNamesRaw = ""
 
     // Les sous-catégories sont verrouillées en bulles libres (voir `layout`).
     @AppStorage(AppStorageKeys.appTheme)   private var appThemeRaw = "classic"

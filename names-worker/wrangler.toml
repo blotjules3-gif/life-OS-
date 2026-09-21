@@ -1,0 +1,13 @@
+name = "lifeos-names"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+
+# Page Notion "Apps integrees dans LifeOS". Pas un secret.
+[vars]
+NOTION_PAGE_ID = "3e27d2c1063e81a78d95d5e52f1d06e4"
+
+# Derniers noms lus dans Notion, servis si Notion tombe.
+[[kv_namespaces]]
+binding = "NAMES"
+id = "9f06b655b7fe4bb28052bc81ff4b8a76"

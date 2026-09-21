@@ -71,6 +71,12 @@ struct LifeOSApp: App {
                 appLock.lockIfNeeded()
                 await buildContainer()
             }
+            // Noms des outils, pilotes depuis Notion. En tache separee pour ne
+            // jamais retarder l'ouverture, et relus a chaque retour dans l'app.
+            .task { await ToolNames.refresh() }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { Task { await ToolNames.refresh() } }
+            }
             .alert("Problème de données", isPresented: $migrationFailed) {
                 Button("Réessayer") { Task { await buildContainer() } }
                 Button("Continuer (données perdues)", role: .destructive) { migrationFailed = false }
