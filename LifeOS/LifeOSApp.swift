@@ -253,9 +253,22 @@ struct LifeOSApp: App {
             ? ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: .automatic)
             : ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
-        let result = await Task.detached(priority: .userInitiated) {
+        var result = await Task.detached(priority: .userInitiated) {
             Result { try ModelContainer(for: schema, configurations: [config]) }
         }.value
+
+        // iCloud a echoue: on rouvre la MEME base sans iCloud avant toute
+        // autre chose. Avant, n'importe quel echec partait dans la branche
+        // ci-dessous, qui range la base dans une sauvegarde et repart a vide.
+        // Un souci de compte iCloud ou d'autorisation aurait donc vide l'app
+        // alors que les donnees locales etaient parfaitement lisibles.
+        if case .failure(let error) = result, LocalStore.cloudKitEnabled {
+            AppLog.data.error("iCloud indisponible au demarrage, base locale seule: \(error.localizedDescription, privacy: .public)")
+            let local = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+            result = await Task.detached(priority: .userInitiated) {
+                Result { try ModelContainer(for: schema, configurations: [local]) }
+            }.value
+        }
 
         switch result {
         case .success(let mc):

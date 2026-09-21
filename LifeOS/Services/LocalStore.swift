@@ -53,8 +53,14 @@ enum LocalStore {
     /// Toggle exposé aux réglages. Défaut = false le temps que la capability
     /// iCloud soit ajoutée dans Xcode + que les relations non-Optional soient
     /// migrées. Une fois les deux faits, passer à true = sync automatique.
+    ///
+    /// ACTIVE par defaut depuis que les modeles respectent les regles d'iCloud
+    /// (`scripts/cloudkit-ready.py`), que l'App ID porte le conteneur
+    /// `iCloud.com.chifandco.lifeos`, et que le demarrage retombe sur la base
+    /// locale au lieu de la vider si iCloud echoue. L'utilisateur peut couper
+    /// la synchro dans Profil › Mes donnees.
     static var cloudKitEnabled: Bool {
-        get { UserDefaults.standard.bool(forKey: "cloudKitEnabled") }
+        get { UserDefaults.standard.object(forKey: "cloudKitEnabled") as? Bool ?? true }
         set { UserDefaults.standard.set(newValue, forKey: "cloudKitEnabled") }
     }
 
@@ -85,9 +91,9 @@ enum LocalStore {
             if let c = try? ModelContainer(for: schema, configurations: [config]) {
                 return c
             }
-            // CloudKit KO (capability manquante, relations non-Optional, schéma incompatible…)
-            // On désactive le flag pour ne pas boucler, on repart en local.
-            cloudKitEnabled = false
+            // iCloud KO pour CE lancement (pas de compte, reseau...): on repart en
+            // local sans toucher au reglage. Le couper ici le coupait pour
+            // toujours, et l'utilisateur ne pouvait pas deviner pourquoi.
         }
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         return try ModelContainer(for: schema, configurations: [config])

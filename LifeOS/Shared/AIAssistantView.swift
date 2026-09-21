@@ -3,25 +3,6 @@ import SwiftData
 import PhotosUI
 import UIKit
 
-// MARK: - Persistent message model
-
-@Model
-final class AIMessage {
-    var id: UUID = UUID()
-    var role: String = ""  // "user" | "assistant"
-    var text: String = ""
-    var date: Date = .now
-    var actions: Data?  // JSON-encoded [AIAction]
-
-    init(role: String, text: String, date: Date = .now, actions: Data? = nil) {
-        self.id = UUID()
-        self.role = role
-        self.text = text
-        self.date = date
-        self.actions = actions
-    }
-}
-
 // MARK: - Action model (backend → iOS)
 
 struct AIAction: Codable, Identifiable {

@@ -16,6 +16,7 @@ struct DataDeletionSheet: View {
     @State private var confirmingReset = false
     @State private var didErase = false
     @State private var exportURL: URL?
+    @State private var syncOn = LocalStore.cloudKitEnabled
     @State private var exporting = false
     /// Pourquoi la sauvegarde a echoue. Sans ca, le bouton ne faisait
     /// visiblement rien et l'utilisateur pouvait effacer quand meme.
@@ -25,7 +26,25 @@ struct DataDeletionSheet: View {
         NavigationStack {
             List {
                 Section {
-                    Text("Toutes tes données LifeOS sont stockées **uniquement sur cet appareil**. Aucun serveur ne les conserve. Cette action est **irréversible**.")
+                    // onChange et pas didSet: un didSet sur @State ne se
+                    // declenche pas quand le Toggle ecrit par son binding.
+                    Toggle(isOn: $syncOn) {
+                        Label("Synchro iCloud", systemImage: "icloud")
+                    }
+                    .onChange(of: syncOn) { _, on in LocalStore.cloudKitEnabled = on }
+                } footer: {
+                    // Ce texte disait "uniquement sur cet appareil". Avec la
+                    // synchro, c'est faux, et c'est exactement le genre de
+                    // phrase qu'on lit avant d'effacer.
+                    Text(syncOn
+                         ? "Tes données sont sur cet appareil et dans ton iCloud, pour les retrouver sur ton iPad, ton Mac et ta montre. Aucun autre serveur ne les conserve. Le changement s'applique au prochain lancement."
+                         : "Tes données restent uniquement sur cet appareil. Aucun serveur ne les conserve. Le changement s'applique au prochain lancement.")
+                }
+
+                Section {
+                    Text(syncOn
+                         ? "Effacer ici efface aussi dans iCloud, donc sur tous tes appareils. Cette action est **irréversible**."
+                         : "Cette action est **irréversible**.")
                         .font(.footnote)
                         .foregroundStyle(Theme.textSecondary)
                 }
