@@ -280,6 +280,9 @@ struct RealEstateView: View {
     @Environment(\.modelContext) private var ctx
     @Query private var props: [Property]
     @State private var showAdd = false
+    @State private var showImport = false
+    /// Fiche lue dans une annonce, en attente de confirmation par l'utilisateur.
+    @State private var imported: ListingParser.Draft?
     private var totalCashflow: Double { props.reduce(0) { $0 + $1.monthlyCashflow } }
     private var totalEquity: Double { props.reduce(0) { $0 + $1.netEquity } }
 
@@ -314,13 +317,23 @@ struct RealEstateView: View {
                                 .contextMenu { Button(role: .destructive) { ctx.delete(p) } label: { Label("Supprimer", systemImage: "trash") } }
                         }
                     }
-                    IntegrationNotice(text: "Le scan d'annonces (LeBonCoin/SeLoger) pour estimer un bien est faisable via parsing d'URL + un modèle qui extrait surface/prix/loyer estimé. À brancher : champ « coller une annonce » → analyse → pré-remplissage du bien.")
+                    Button { showImport = true } label: {
+                        Label("Coller une annonce", systemImage: "doc.on.clipboard")
+                            .frame(maxWidth: .infinity).padding(.vertical, 12)
+                    }
+                    .buttonStyle(.bordered).tint(.investTint)
                 }.padding(Theme.pad)
             }
         }
         .navigationTitle("Immobilier").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { PropertyEditor() }
+        .sheet(isPresented: $showImport) {
+            ListingImportSheet { draft in imported = draft }
+        }
+        // Rien n'est enregistre directement depuis l'annonce: la fiche lue
+        // s'ouvre dans l'editeur normal pour etre relue et corrigee.
+        .sheet(item: $imported) { draft in PropertyEditor(draft: draft) }
     }
     private func metric(_ label: String, _ v: Double, _ c: Color) -> some View {
         VStack { Text("\(Int(v))€").font(.subheadline.bold()).foregroundStyle(c); Text(label).font(.caption2).foregroundStyle(Theme.textSecondary) }.frame(maxWidth: .infinity)
@@ -330,8 +343,23 @@ struct RealEstateView: View {
 struct PropertyEditor: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
-    @State private var name = ""; @State private var value = ""; @State private var rent = ""
-    @State private var charges = ""; @State private var loanRemaining = ""; @State private var loanPayment = ""
+    @State private var name: String; @State private var value: String; @State private var rent: String
+    @State private var charges: String; @State private var loanRemaining = ""; @State private var loanPayment = ""
+
+    /// Prix au m2 de l'annonce, affiche seulement quand l'annonce le permet.
+    /// C'est le chiffre qui dit tout de suite si le bien est cher.
+    private let pricePerM2: Double?
+
+    /// Vide par defaut, pre-rempli quand la fiche vient d'une annonce collee.
+    init(draft: ListingParser.Draft? = nil) {
+        func money(_ v: Double) -> String { v > 0 ? String(Int(v.rounded())) : "" }
+        _name    = State(initialValue: draft?.name ?? "")
+        _value   = State(initialValue: money(draft?.value ?? 0))
+        _rent    = State(initialValue: money(draft?.monthlyRent ?? 0))
+        _charges = State(initialValue: money(draft?.monthlyCharges ?? 0))
+        pricePerM2 = draft?.pricePerM2
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -341,6 +369,14 @@ struct PropertyEditor: View {
                 HStack { Text("Charges mensuelles"); Spacer(); TextField("0", text: $charges).keyboardType(.numberPad).multilineTextAlignment(.trailing) }
                 HStack { Text("Capital restant dû"); Spacer(); TextField("0", text: $loanRemaining).keyboardType(.numberPad).multilineTextAlignment(.trailing) }
                 HStack { Text("Mensualité crédit"); Spacer(); TextField("0", text: $loanPayment).keyboardType(.numberPad).multilineTextAlignment(.trailing) }
+
+                if let pricePerM2 {
+                    LabeledContent("Prix au m²", value: "\(Int(pricePerM2.rounded())) €")
+                }
+                if rent.isEmpty {
+                    Text("L'annonce ne donne pas de loyer. Saisis-le toi-même : un loyer estimé fausserait le cashflow et le rendement.")
+                        .font(.caption).foregroundStyle(Theme.textSecondary)
+                }
             }
             .navigationTitle("Nouveau bien").navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -349,6 +385,81 @@ struct PropertyEditor: View {
                     ctx.insert(Property(name: name, value: Double(value) ?? 0, monthlyRent: Double(rent) ?? 0, monthlyCharges: Double(charges) ?? 0, loanRemaining: Double(loanRemaining) ?? 0, loanPayment: Double(loanPayment) ?? 0)); dismiss()
                 }.disabled(name.isEmpty) }
             }
+        }
+    }
+}
+
+/// Colle une annonce, obtiens une fiche pre-remplie.
+///
+/// Le texte n'est jamais enregistre tel quel: il sert a remplir l'editeur
+/// normal, que l'utilisateur relit. C'est la meme regle que pour le CV, et
+/// elle compte plus ici: un chiffre faux dans un bien se propage au cashflow,
+/// au rendement, et donc a une decision d'achat.
+struct ListingImportSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    var onParsed: (ListingParser.Draft) -> Void
+
+    @State private var text = ""
+    @State private var busy = false
+    @State private var error: String?
+    @State private var aiReady = false
+
+    private var longEnough: Bool {
+        text.trimmingCharacters(in: .whitespacesAndNewlines).count >= 60
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Le texte de l'annonce") {
+                    TextField("Colle ici l'annonce (prix, surface, charges…)", text: $text, axis: .vertical)
+                        .lineLimit(5...16)
+                }
+                Section {
+                    if aiReady {
+                        Button {
+                            Task { await run() }
+                        } label: {
+                            HStack {
+                                if busy { ProgressView().controlSize(.small) }
+                                Text(busy ? "Lecture…" : "Lire l'annonce")
+                            }
+                        }
+                        .disabled(busy || !longEnough)
+                    } else {
+                        Text("Ajoute une clé dans Profil › Coach pour lire une annonce automatiquement.")
+                            .font(.footnote).foregroundStyle(Theme.textSecondary)
+                    }
+                } footer: {
+                    Text("Seuls les chiffres écrits dans l'annonce sont repris. Rien n'est estimé, et rien n'est enregistré avant que tu aies relu la fiche.")
+                }
+                if let error {
+                    Section {
+                        Label(error, systemImage: "exclamationmark.triangle.fill")
+                            .font(.footnote).foregroundStyle(.orange)
+                    }
+                }
+            }
+            .navigationTitle("Coller une annonce").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } } }
+            .task { aiReady = await MainActor.run { AIText.isConfigured } }
+        }
+    }
+
+    private func run() async {
+        busy = true; error = nil
+        defer { busy = false }
+        switch await AIText.ask(system: ListingParser.systemPrompt, user: text,
+                                maxTokens: 350, temperature: 0) {
+        case .failure(let e):
+            error = e.message
+        case .success(let raw):
+            guard let draft = ListingParser.parse(raw) else {
+                error = "Aucun chiffre exploitable dans ce texte. Colle l'annonce complète, prix et surface compris."
+                return
+            }
+            onParsed(draft)
+            dismiss()
         }
     }
 }

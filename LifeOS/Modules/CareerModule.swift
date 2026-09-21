@@ -317,9 +317,23 @@ struct SkillGapEditor: View {
 
 // MARK: - Mock interview
 
+/// Entrainement a l'entretien: des questions, des trames, et un vrai retour
+/// sur la reponse qu'on vient d'ecrire.
+///
+/// Avant, l'ecran affichait la question et le conseil, puis annoncait que le
+/// retour sur la reponse "arrivait bientot". C'etait la seule partie qui fait
+/// progresser: relire un conseil generique n'apprend rien, se faire dire que
+/// sa propre reponse n'a pas de resultat chiffre, si.
 struct MockInterviewView: View {
     @State private var index = 0
     @State private var showAnswer = false
+    @State private var myAnswer = ""
+    @State private var feedback = ""
+    @State private var busy = false
+    @State private var error: String?
+    @State private var aiReady = false
+    @FocusState private var writing: Bool
+
     private let questions = [
         "Présente-toi en 2 minutes.",
         "Quelle est ta plus grande réussite professionnelle ?",
@@ -340,30 +354,144 @@ struct MockInterviewView: View {
         "Une vraie faiblesse + le plan concret pour la corriger.",
         "3 arguments : compétence clé, fit culturel, valeur ajoutée unique."
     ]
+
+    /// Assez de matiere pour que le retour ait un sens. En dessous, le modele
+    /// ne ferait que repeter le conseil generique deja affiche.
+    private var longEnough: Bool {
+        myAnswer.trimmingCharacters(in: .whitespacesAndNewlines).count >= 40
+    }
+
     var body: some View {
         ZStack {
             Theme.background
-            VStack(spacing: 22) {
-                Text("Question \(index+1)/\(questions.count)").font(.caption).foregroundStyle(Theme.textSecondary)
-                Text(questions[index]).font(.title3.bold()).foregroundStyle(Theme.textPrimary).multilineTextAlignment(.center).padding()
-                    .frame(maxWidth: .infinity, minHeight: 140).card()
-                if showAnswer {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Label("Comment cartonner", systemImage: "lightbulb.fill").font(.subheadline.bold()).foregroundStyle(.careerTint)
-                        Text(tips[index]).font(.subheadline).foregroundStyle(Theme.textPrimary)
-                    }.frame(maxWidth: .infinity, alignment: .leading).card()
-                }
-                Button(showAnswer ? "Masquer le conseil" : "Voir le conseil") { withAnimation { showAnswer.toggle() } }
+            ScrollView {
+                VStack(spacing: 18) {
+                    Text("Question \(index+1)/\(questions.count)")
+                        .font(.caption).foregroundStyle(Theme.textSecondary)
+                    Text(questions[index])
+                        .font(.title3.bold()).foregroundStyle(Theme.textPrimary)
+                        .multilineTextAlignment(.center).padding()
+                        .frame(maxWidth: .infinity, minHeight: 130).card()
+
+                    if showAnswer {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label("Comment cartonner", systemImage: "lightbulb.fill")
+                                .font(.subheadline.bold()).foregroundStyle(.careerTint)
+                            Text(tips[index]).font(.subheadline).foregroundStyle(Theme.textPrimary)
+                        }.frame(maxWidth: .infinity, alignment: .leading).card()
+                    }
+                    Button(showAnswer ? "Masquer le conseil" : "Voir le conseil") {
+                        withAnimation { showAnswer.toggle() }
+                    }
                     .buttonStyle(.bordered).tint(.careerTint)
-                HStack {
-                    Button { index = max(0, index-1); showAnswer = false } label: { Image(systemName: "chevron.left").padding() }.disabled(index == 0).accessibilityLabel("Question précédente")
-                    Spacer()
-                    PrimaryButton(title: "Question suivante", icon: "chevron.right", tint: .careerTint) { index = (index+1) % questions.count; showAnswer = false }
-                }
-                IntegrationNotice(text: "Le mock interview « live » avec feedback sur tes réponses (ton, contenu, hésitations) arrive bientôt. Les questions et trames de réponse sont déjà là.")
-            }.padding()
+
+                    answerCard
+
+                    HStack {
+                        Button { go(-1) } label: { Image(systemName: "chevron.left").padding() }
+                            .disabled(index == 0)
+                            .accessibilityLabel("Question précédente")
+                        Spacer()
+                        PrimaryButton(title: "Question suivante", icon: "chevron.right", tint: .careerTint) { go(1) }
+                    }
+                }.padding()
+            }
         }
         .navigationTitle("Mock interview").navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer(); Button("OK") { writing = false }
+            }
+        }
+        .task { aiReady = await MainActor.run { AIText.isConfigured } }
+    }
+
+    // MARK: - Ma reponse
+
+    @ViewBuilder private var answerCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Ta réponse",
+                          subtitle: "Écris-la comme tu la dirais à l'oral")
+            TextField("Réponds ici…", text: $myAnswer, axis: .vertical)
+                .textFieldStyle(.roundedBorder)
+                .lineLimit(4...12)
+                .focused($writing)
+
+            if aiReady {
+                Button {
+                    writing = false
+                    Task { await critique() }
+                } label: {
+                    HStack {
+                        if busy { ProgressView().controlSize(.small) }
+                        Text(busy ? "Analyse…" : "Analyser ma réponse")
+                    }.frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent).tint(.careerTint)
+                .disabled(busy || !longEnough)
+
+                if !longEnough && !myAnswer.isEmpty {
+                    Text("Écris encore quelques mots pour que l'analyse soit utile.")
+                        .font(.caption).foregroundStyle(Theme.textSecondary)
+                }
+            } else {
+                Text("Ajoute une clé dans Profil › Coach pour faire analyser tes réponses.")
+                    .font(.caption).foregroundStyle(Theme.textSecondary)
+            }
+
+            if let error {
+                Label(error, systemImage: "exclamationmark.triangle.fill")
+                    .font(.footnote).foregroundStyle(.orange)
+            }
+            if !feedback.isEmpty {
+                Divider()
+                Label("Retour de ton coach", systemImage: "text.bubble.fill")
+                    .font(.subheadline.bold()).foregroundStyle(.careerTint)
+                Text(feedback).font(.subheadline).foregroundStyle(Theme.textPrimary)
+                    .textSelection(.enabled)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .card()
+    }
+
+    /// Changer de question remet la copie a zero: garder la reponse d'avant
+    /// sous une nouvelle question ferait analyser le mauvais texte.
+    private func go(_ step: Int) {
+        if step < 0 { index = max(0, index - 1) }
+        else { index = (index + 1) % questions.count }
+        showAnswer = false
+        myAnswer = ""
+        feedback = ""
+        error = nil
+        writing = false
+    }
+
+    private func critique() async {
+        busy = true; error = nil
+        defer { busy = false }
+        let sys = """
+        Tu es un recruteur expérimenté qui prépare un candidat à un entretien. \
+        Réponds en français, en tutoyant, en 120 mots maximum. \
+        Donne exactement trois parties, dans cet ordre et avec ces titres : \
+        "Ce qui marche :", "Ce qui manque :", "Ta réponse réécrite :". \
+        Juge la structure (méthode STAR), la présence d'un résultat concret et \
+        chiffré, et la longueur pour un oral. \
+        N'invente aucun fait, aucun chiffre et aucune expérience qui ne soit \
+        pas dans la réponse du candidat : s'il manque un chiffre, dis-lui d'en \
+        ajouter un, ne le fabrique pas.
+        """
+        let ask = """
+        QUESTION POSÉE :
+        \(questions[index])
+
+        RÉPONSE DU CANDIDAT :
+        \(myAnswer)
+        """
+        switch await AIText.ask(system: sys, user: ask, maxTokens: 450, temperature: 0.3) {
+        case .success(let t): feedback = t
+        case .failure(let e): error = e.message
+        }
     }
 }
 
