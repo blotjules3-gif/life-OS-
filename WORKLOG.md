@@ -117,10 +117,71 @@ Pieges a ne pas repeter:
   meme fichier. Verifier quelle structure contient la ligne AVANT de
   construire.
 
+## BLOQUE: la CI est coupee par la facturation GitHub (21 septembre 2026)
+
+Depuis 10h46, TOUS les jobs du depot de construction echouent en 5 a 10
+secondes, sans qu'aucune etape ne demarre et sans runner attribue, aussi bien
+sur `ubuntu-latest` que sur `macos-26`. Le message est dans l'annotation du
+job, pas dans les logs (les logs n'existent meme pas):
+
+    The job was not started because recent account payments have failed or
+    your spending limit needs to be increased.
+
+Pour le relire soi-meme, les logs ne servent a rien, il faut les annotations:
+
+    gh api repos/leilajkaseme-hub/lifeos-build/actions/runs/<id>/jobs \
+      -q '.jobs[].check_run_url'
+    gh api <check_run_url>/annotations
+
+Consequence: plus aucun build, donc plus aucun envoi TestFlight, tant que la
+facturation du compte `leilajkaseme-hub` n'est pas reglee. Seul Theo peut le
+faire, dans Settings puis Billing & plans. Les minutes macOS comptent dix fois
+plus que les minutes Linux, c'est ce qui vide le quota si vite.
+
+Dernier etat verte connu, avant la coupure: **360 tests, 0 defaillance,
+0 erreur de compilation**.
+
+## Verifier sans Xcode et sans CI
+
+Ce Mac n'a que les Command Line Tools, donc l'app iOS ne se construit pas
+ici. Mais `swiftc` 6.4 est bien la, et deux controles reels tournent en local.
+
+`./scripts/parse-check.sh` lit la grammaire de tous les fichiers Swift
+(299 fichiers, quelques secondes). Ca attrape exactement la categorie
+d'erreur qu'un remplacement de texte introduit: accolade en trop, structure
+coupee, code atterri hors de sa structure. Ca ne verifie AUCUN type: une vue
+SwiftUI mal typee passe ce controle.
+
+`./scripts/run-logic-tests.sh` EXECUTE pour de vrai les suites de logique
+pure, sur les MEMES fichiers de test que la CI, via un faux XCTest
+(`scripts/localtests/Shim.swift`). Aujourd'hui: ListingParser 24 controles,
+CycleStats 20, MedicationSchedule 22, tous verts. Seules les regles qui ne
+dependent que de Foundation peuvent y passer, donc rien de SwiftUI ni de
+SwiftData. C'est justement la partie ou une erreur donne un chiffre faux a
+l'utilisateur.
+
+Ajouter une suite: une ligne dans le tableau `SUITES` du script.
+
+## Faux positifs verifies cette passe (ne pas y revenir)
+
+- **Divisions par zero**: les 20 endroits qui divisent par un `.count` ont
+  tous ete relus un par un. Tous sont gardes par un `guard !x.isEmpty` ou un
+  `if x > 0` juste au-dessus. Rien a faire.
+- **Erreurs avalees**: pas un seul `catch {}` vide dans l'app. Les `try?` sur
+  `ctx.fetch` sont des lectures avec une valeur par defaut saine.
+- **Force unwrap**: un seul `as!`, sur `BGAppRefreshTask`, garanti par l'API.
+- **Notes "a brancher"**: il en reste cinq, et les cinq disent vrai (temps
+  d'ecran et bloqueur d'apps interdits par Apple sans autorisation speciale,
+  agregation bancaire, analyse du sommeil sans montre). Ne pas les
+  "corriger", ce sont des limites reelles annoncees honnetement.
+
 ## Prochaine action exacte
 
-Reprendre la liste des 79 outils de `CategoryHub.swift` et verifier ceux qui
-n'ont pas encore ete ouverts un par un. Restent notamment a juger:
-`CVBuilderView`, `MockInterviewView`, `BookSummariesView`, `RealEstateView`.
-Puis supprimer les 16 `*HubView` morts, un fichier a la fois, en verifiant
-apres chacun que le projet compile toujours.
+1. Debloquer la facturation GitHub, sinon rien ne se construit ni ne part sur
+   TestFlight. Tout le reste peut avancer sans.
+2. Reprendre la liste des 83 destinations de `CategoryHub.swift`. Un test
+   (`CategoryHubDestinationTests`) interdit desormais qu'un outil ouvre un
+   menu ou qu'un ecran soit atteint deux fois.
+3. Supprimer les 17 `*HubView` morts, un fichier a la fois, en relancant
+   `parse-check.sh` apres chacun. `MedicalHubView` etait le dernier encore
+   atteignable, il ne l'est plus.

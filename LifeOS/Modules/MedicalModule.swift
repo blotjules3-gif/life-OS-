@@ -54,6 +54,10 @@ struct MedicationView: View {
         .navigationTitle("Médicaments").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { MedicationEditor() }
+        // Remise a plat a chaque ouverture. C'est ce qui rattrape les
+        // traitements enregistres avant que les rappels existent, ceux dont
+        // la date de fin est passee, et une reinstallation de l'app.
+        .onAppear { meds.forEach { MedicationReminders.reschedule($0, ctx: ctx) } }
     }
 
     private func medRow(_ med: Medication) -> some View {
@@ -71,10 +75,26 @@ struct MedicationView: View {
                 Text(med.frequency).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
-            Toggle("", isOn: Binding(get: { med.active }, set: { med.active = $0; Haptics.tap() }))
+            Toggle("", isOn: Binding(get: { med.active }, set: { setActive(med, $0) }))
                 .labelsHidden()
         }
-        .contextMenu { Button(role: .destructive) { ctx.delete(med) } label: { Label("Supprimer", systemImage: "trash") } }
+        .contextMenu {
+            Button(role: .destructive) { remove(med) } label: { Label("Supprimer", systemImage: "trash") }
+        }
+    }
+
+    private func setActive(_ med: Medication, _ on: Bool) {
+        med.active = on
+        Haptics.tap()
+        MedicationReminders.reschedule(med, ctx: ctx)
+    }
+
+    /// Annuler AVANT de supprimer: une fois la ligne partie, son identifiant
+    /// stable n'est plus lisible et le rappel sonnerait pour un traitement
+    /// qui n'existe plus.
+    private func remove(_ med: Medication) {
+        MedicationReminders.cancel(med)
+        ctx.delete(med)
     }
 }
 
@@ -84,7 +104,8 @@ struct MedicationEditor: View {
     @State private var name = ""
     @State private var dosage = ""
     @State private var frequency = "1x/jour"
-    @State private var hourMorning = 8
+    @State private var hourMorning = MedicationSchedule.defaultMorning
+    @State private var hourEvening = MedicationSchedule.defaultEvening
     @State private var notes = ""
     @State private var hasEndDate = false
     @State private var endDate = Date()
@@ -98,11 +119,22 @@ struct MedicationEditor: View {
                     TextField("Nom (ex: Doliprane)", text: $name)
                     TextField("Dosage (ex: 500mg)", text: $dosage)
                 }
-                Section("Prise") {
+                Section {
                     Picker("Fréquence", selection: $frequency) {
                         ForEach(frequencies, id: \.self) { Text($0).tag($0) }
                     }
-                    Stepper("Heure matin : \(String(format: "%02d:00", hourMorning))", value: $hourMorning, in: 0...23)
+                    if !MedicationSchedule.isOnDemand(frequency) {
+                        Stepper("Heure matin : \(String(format: "%02d:00", hourMorning))", value: $hourMorning, in: 0...23)
+                        if doses.count > 1 {
+                            Stepper("Heure soir : \(String(format: "%02d:00", hourEvening))", value: $hourEvening, in: 0...23)
+                        }
+                    }
+                } header: {
+                    Text("Prise")
+                } footer: {
+                    // On annonce exactement ce qui va sonner: un ecran qui
+                    // promet "des rappels" sans dire lesquels ne se verifie pas.
+                    Text(reminderSummary)
                 }
                 Section("Durée") {
                     Toggle("Date de fin", isOn: $hasEndDate)
@@ -116,21 +148,94 @@ struct MedicationEditor: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Ajouter") {
-                        ctx.insert(Medication(name: name, dosage: dosage, frequency: frequency,
-                                              hourMorning: hourMorning, notes: notes,
-                                              endDate: hasEndDate ? endDate : nil))
-                        if !name.isEmpty {
-                            NotificationManager.shared.schedule(
-                                id: "med-\(name)-morning",
-                                title: "Prendre \(name)",
-                                body: dosage.isEmpty ? frequency : "\(dosage) · \(frequency)",
-                                at: Calendar.current.nextDate(after: .now, matching: DateComponents(hour: hourMorning, minute: 0), matchingPolicy: .nextTime) ?? .now
-                            )
-                        }
-                        dismiss()
-                    }.disabled(name.isEmpty)
+                    Button("Ajouter") { add() }.disabled(name.isEmpty)
                 }
+            }
+        }
+    }
+
+    private var doses: [MedicationSchedule.Dose] {
+        MedicationSchedule.doses(frequency: frequency,
+                                 hourMorning: hourMorning,
+                                 hourEvening: hourEvening)
+    }
+
+    private var reminderSummary: String {
+        if MedicationSchedule.isOnDemand(frequency) {
+            return "Aucun rappel : un traitement à prendre au besoin ne se rappelle pas à heure fixe."
+        }
+        let hours = doses.map { String(format: "%02d:00", $0.hour) }.joined(separator: ", ")
+        return MedicationSchedule.isWeekly(frequency)
+            ? "Rappel chaque semaine à \(hours), le même jour qu'aujourd'hui."
+            : "Rappel chaque jour à \(hours)."
+    }
+
+    private func add() {
+        let med = Medication(name: name, dosage: dosage, frequency: frequency,
+                             hourMorning: hourMorning, hourEvening: hourEvening,
+                             notes: notes, endDate: hasEndDate ? endDate : nil)
+        ctx.insert(med)
+        MedicationReminders.reschedule(med, ctx: ctx)
+        dismiss()
+    }
+}
+
+// MARK: - Rappels de prise
+
+/// Pose et retire les rappels d'un medicament.
+///
+/// Sorti de la vue parce que trois endroits en ont besoin: l'ajout, le
+/// basculement actif/termine, et la remise a plat a l'ouverture de l'ecran.
+/// Trois copies auraient derive.
+enum MedicationReminders {
+
+    /// Prefixe stable. Tous les identifiants d'un medicament en derivent,
+    /// ce qui permet de tous les annuler sans savoir combien il y en avait
+    /// quand ils ont ete poses.
+    private static func prefix(_ med: Medication, ctx: ModelContext) -> String {
+        if med.stableID.isEmpty {
+            med.stableID = UUID().uuidString
+            LifeOSTry(try ctx.save(), context: "stableID medicament", category: AppLog.data)
+        }
+        return "med.\(med.stableID)"
+    }
+
+    /// Jusqu'a trois prises par jour, plus une marge si la frequence baisse.
+    private static let maxDoses = 4
+
+    static func cancel(_ med: Medication) {
+        guard !med.stableID.isEmpty else { return }
+        let base = "med.\(med.stableID)"
+        for i in 0..<maxDoses { NotificationManager.shared.cancel(id: "\(base).\(i)") }
+    }
+
+    static func reschedule(_ med: Medication, ctx: ModelContext) {
+        let base = prefix(med, ctx: ctx)
+        // Toujours tout annuler d'abord: passer de 3x/jour a 1x/jour doit
+        // retirer les deux prises en trop, pas seulement replacer la premiere.
+        for i in 0..<maxDoses { NotificationManager.shared.cancel(id: "\(base).\(i)") }
+
+        guard MedicationSchedule.isRunning(active: med.active, endDate: med.endDate) else { return }
+        let doses = MedicationSchedule.doses(frequency: med.frequency,
+                                             hourMorning: med.hourMorning,
+                                             hourEvening: med.hourEvening)
+        guard !doses.isEmpty else { return }
+
+        let title = "Prendre \(med.name)"
+        let detail = med.dosage.isEmpty ? med.frequency : "\(med.dosage) · \(med.frequency)"
+
+        for (i, dose) in doses.enumerated() {
+            let id = "\(base).\(i)"
+            let body = "\(detail) — \(dose.label)"
+            if MedicationSchedule.isWeekly(med.frequency) {
+                let weekday = Calendar.current.component(.weekday, from: med.startDate)
+                NotificationManager.shared.scheduleWeekly(
+                    id: id, title: title, body: body,
+                    weekday: weekday, hour: dose.hour, minute: dose.minute)
+            } else {
+                NotificationManager.shared.scheduleDaily(
+                    id: id, title: title, body: body,
+                    hour: dose.hour, minute: dose.minute)
             }
         }
     }

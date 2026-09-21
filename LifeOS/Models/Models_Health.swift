@@ -153,6 +153,14 @@ import SwiftData
     var startDate: Date
     var endDate: Date?
     var active: Bool
+
+    /// Identifiant de notification, stable entre deux lancements.
+    /// Defaut vide et PAS UUID(), meme convention que Supplement.stableID:
+    /// SwiftData reevalue la valeur par defaut a chaque chargement des lignes
+    /// migrees, donc un UUID par defaut changerait a chaque ouverture et les
+    /// rappels deja poses deviendraient impossibles a annuler.
+    var stableID: String = ""
+
     init(name: String = "", dosage: String = "", frequency: String = "1x/jour",
          hourMorning: Int? = 8, hourEvening: Int? = nil, notes: String = "",
          startDate: Date = .now, endDate: Date? = nil, active: Bool = true) {
