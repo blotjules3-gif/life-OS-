@@ -4,19 +4,6 @@ import Charts
 
 extension ShapeStyle where Self == Color { static var medicalTint: Color { AppCategory.medical.tint } }
 
-// MARK: - Hub
-
-struct MedicalHubView: View {
-    var body: some View {
-        HubScaffold(category: .medical) {
-            ToolRow(icon: "pills.fill",           title: "Médicaments",        subtitle: "Traitements en cours et rappels",   tint: .medicalTint) { MedicationView() }
-            ToolRow(icon: "stethoscope",          title: "Rendez-vous",        subtitle: "Agenda médical et suivi",            tint: .medicalTint) { AppointmentsView() }
-            ToolRow(icon: "waveform.path.ecg",    title: "Carnet de santé",    subtitle: "Poids, tension, glycémie…",          tint: .medicalTint) { VitalsView() }
-            ToolRow(icon: "syringe.fill",         title: "Vaccinations",       subtitle: "Historique et rappels",              tint: .medicalTint) { VaccinationView() }
-        }
-    }
-}
-
 // MARK: - Médicaments
 
 struct MedicationView: View {

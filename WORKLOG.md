@@ -182,6 +182,8 @@ Ajouter une suite: une ligne dans le tableau `SUITES` du script.
 2. Reprendre la liste des 83 destinations de `CategoryHub.swift`. Un test
    (`CategoryHubDestinationTests`) interdit desormais qu'un outil ouvre un
    menu ou qu'un ecran soit atteint deux fois.
-3. Supprimer les 17 `*HubView` morts, un fichier a la fois, en relancant
-   `parse-check.sh` apres chacun. `MedicalHubView` etait le dernier encore
-   atteignable, il ne l'est plus.
+3. FAIT. Et le chiffre que j'avancais etait faux: il n'y avait pas 16 ni 17
+   `*HubView` morts, il y en avait **un seul**, `MedicalHubView`, et il
+   n'etait meme pas mort puisque l'outil "Medicaments" pointait dessus.
+   Supprime avec `ToolRow` et `HubScaffold`, ses deux seuls utilisateurs,
+   soit 59 lignes au total. Compter avant d'annoncer.
