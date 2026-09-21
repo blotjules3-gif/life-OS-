@@ -299,7 +299,14 @@ struct AppointmentsView: View {
                 }
             }
         }
-        .contextMenu { Button(role: .destructive) { ctx.delete(apt) } label: { Label("Supprimer", systemImage: "trash") } }
+        .contextMenu {
+            Button(role: .destructive) {
+                // Sans ca, le rappel de la veille sonnait pour un rendez
+                // vous annule, et rien ne permettait de le faire taire.
+                NotificationManager.shared.cancel(id: ReminderIDs.appointment(apt.date))
+                ctx.delete(apt)
+            } label: { Label("Supprimer", systemImage: "trash") }
+        }
     }
 }
 
@@ -346,7 +353,7 @@ struct AppointmentEditor: View {
                                                        location: location, notes: notes,
                                                        nextDate: hasNext ? nextDate : nil))
                         NotificationManager.shared.schedule(
-                            id: "appt-\(Int(date.timeIntervalSince1970))",
+                            id: ReminderIDs.appointment(date),
                             title: "RDV \(s) demain",
                             body: doctorName.isEmpty ? location : "\(doctorName) · \(location)",
                             at: Calendar.current.date(byAdding: .day, value: -1, to: date) ?? date
@@ -623,7 +630,14 @@ struct VaccinationView: View {
                 }
             }
         }
-        .contextMenu { Button(role: .destructive) { ctx.delete(v) } label: { Label("Supprimer", systemImage: "trash") } }
+        .contextMenu {
+            Button(role: .destructive) {
+                if let next = v.nextDueDate {
+                    NotificationManager.shared.cancel(id: ReminderIDs.vaccination(name: v.name, nextDate: next))
+                }
+                ctx.delete(v)
+            } label: { Label("Supprimer", systemImage: "trash") }
+        }
     }
 }
 
@@ -667,7 +681,7 @@ struct VaccinationEditor: View {
                         ctx.insert(Vaccination(name: name, date: date, nextDueDate: hasNext ? nextDate : nil, lot: lot, notes: notes))
                         if hasNext {
                             NotificationManager.shared.schedule(
-                                id: "vacc-\(name)-\(Int(nextDate.timeIntervalSince1970))",
+                                id: ReminderIDs.vaccination(name: name, nextDate: nextDate),
                                 title: "Rappel vaccin \(name)",
                                 body: "Le rappel est prévu pour le \(nextDate.formatted(.dateTime.day().month(.wide)))",
                                 at: Calendar.current.date(byAdding: .day, value: -30, to: nextDate) ?? nextDate

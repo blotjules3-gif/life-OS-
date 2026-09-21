@@ -34,7 +34,7 @@ struct DocVaultView: View {
                                         }
                                         Spacer()
                                     }.card(padding: 12)
-                                        .contextMenu { Button(role: .destructive) { ImageStore.delete(d.filename); ctx.delete(d) } label: { Label("Supprimer", systemImage: "trash") } }
+                                        .contextMenu { Button(role: .destructive) { NotificationManager.shared.cancel(id: ReminderIDs.document(title: d.title)); ImageStore.delete(d.filename); ctx.delete(d) } label: { Label("Supprimer", systemImage: "trash") } }
                                 }
                             }
                         }
@@ -72,7 +72,7 @@ struct DocEditor: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
                     ctx.insert(DocVault(title: title, category: category, filename: filename, expiry: hasExpiry ? expiry : nil, note: note))
-                    if hasExpiry { NotificationManager.shared.schedule(id: "doc-\(title)", title: "Document expire bientôt", body: "\(title) expire le \(expiry.formatted(date: .abbreviated, time: .omitted))", at: Calendar.current.date(byAdding: .day, value: -30, to: expiry) ?? expiry) }
+                    if hasExpiry { NotificationManager.shared.schedule(id: ReminderIDs.document(title: title), title: "Document expire bientôt", body: "\(title) expire le \(expiry.formatted(date: .abbreviated, time: .omitted))", at: Calendar.current.date(byAdding: .day, value: -30, to: expiry) ?? expiry) }
                     dismiss()
                 }.disabled(title.isEmpty) }
             }
@@ -103,7 +103,7 @@ struct DeadlinesView: View {
                                 let days = Calendar.current.dateComponents([.day], from: .now, to: d.date).day ?? 0
                                 Text(days == 0 ? "Aujourd'hui" : "J-\(days)").font(.subheadline.bold()).foregroundStyle(days <= 7 ? .orange : Theme.textSecondary)
                             }.card(padding: 12)
-                                .contextMenu { Button(role: .destructive) { ctx.delete(d) } label: { Label("Supprimer", systemImage: "trash") } }
+                                .contextMenu { Button(role: .destructive) { NotificationManager.shared.cancel(id: ReminderIDs.deadline(title: d.title)); ctx.delete(d) } label: { Label("Supprimer", systemImage: "trash") } }
                         }
                     }
                 }.padding(Theme.pad)
@@ -133,7 +133,7 @@ struct DeadlineEditor: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
                     ctx.insert(Deadline(title: title, date: date, kind: kind))
-                    if remind { NotificationManager.shared.schedule(id: "deadline-\(title)", title: "Échéance : \(title)", body: "Dans 7 jours.", at: Calendar.current.date(byAdding: .day, value: -7, to: date) ?? date) }
+                    if remind { NotificationManager.shared.schedule(id: ReminderIDs.deadline(title: title), title: "Échéance : \(title)", body: "Dans 7 jours.", at: Calendar.current.date(byAdding: .day, value: -7, to: date) ?? date) }
                     dismiss()
                 }.disabled(title.isEmpty) }
             }

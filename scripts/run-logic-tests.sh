@@ -18,6 +18,7 @@ SUITES=(
     "ListingParser:LifeOS/Services/ListingParser.swift:LifeOSTests/ListingParserTests.swift"
     "CycleStats:LifeOS/Services/CycleStats.swift:LifeOSTests/CycleStatsTests.swift"
     "MedicationSchedule:LifeOS/Services/MedicationSchedule.swift:LifeOSTests/MedicationScheduleTests.swift"
+    "ReminderIDs:LifeOS/Services/ReminderIDs.swift:LifeOSTests/ReminderIDsTests.swift"
 )
 
 work=$(mktemp -d)
@@ -39,8 +40,9 @@ for entry in "${SUITES[@]}"; do
     {
         echo 'import Foundation'
         echo "let suite = $cls()"
+        # try? : un test qui scanne le depot leve XCTSkip ici, c'est voulu.
         grep -oE 'func (test[A-Za-z0-9_]+)\(\)' "$tst" | awk '{print $2}' \
-            | sed 's/^/suite./' | sed 's/$/;/'
+            | sed 's/^/try? suite./' | sed 's/$/;/'
         echo 'print("\(checks) contrôles, \(failures.count) échecs — '"$name"'")'
         echo 'for f in failures { print("  " + f) }'
         echo 'exit(failures.isEmpty ? 0 : 1)'

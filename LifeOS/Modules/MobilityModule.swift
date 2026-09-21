@@ -52,7 +52,11 @@ struct VehicleCard: View {
                 Text(vehicle.name).font(.headline).foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Button { showFuel = true } label: { Image(systemName: "fuelpump.fill").foregroundStyle(.mobTint) }.accessibilityLabel("Ajouter un plein")
-                Button(role: .destructive) { ctx.delete(vehicle) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(.red.opacity(0.6))
+                Button(role: .destructive) {
+                    NotificationManager.shared.cancel(id: ReminderIDs.vehicleInsurance(name: vehicle.name))
+                    NotificationManager.shared.cancel(id: ReminderIDs.vehicleService(name: vehicle.name))
+                    ctx.delete(vehicle)
+                } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(.red.opacity(0.6))
             }
             HStack(spacing: 10) {
                 deadlineTile("Assurance", vehicle.insuranceRenewal)
@@ -96,8 +100,8 @@ struct VehicleEditor: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
                     let v = Vehicle(name: name, insuranceRenewal: hasInsurance ? insurance : nil, nextService: hasService ? service : nil)
                     ctx.insert(v)
-                    if hasInsurance { NotificationManager.shared.schedule(id: "ins-\(name)", title: "Assurance \(name)", body: "Renouvellement à prévoir.", at: Calendar.current.date(byAdding: .day, value: -7, to: insurance) ?? insurance) }
-                    if hasService { NotificationManager.shared.schedule(id: "serv-\(name)", title: "Révision \(name)", body: "Révision à planifier.", at: Calendar.current.date(byAdding: .day, value: -7, to: service) ?? service) }
+                    if hasInsurance { NotificationManager.shared.schedule(id: ReminderIDs.vehicleInsurance(name: name), title: "Assurance \(name)", body: "Renouvellement à prévoir.", at: Calendar.current.date(byAdding: .day, value: -7, to: insurance) ?? insurance) }
+                    if hasService { NotificationManager.shared.schedule(id: ReminderIDs.vehicleService(name: name), title: "Révision \(name)", body: "Révision à planifier.", at: Calendar.current.date(byAdding: .day, value: -7, to: service) ?? service) }
                     dismiss()
                 }.disabled(name.isEmpty) }
             }

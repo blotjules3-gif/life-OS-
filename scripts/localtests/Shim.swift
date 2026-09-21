@@ -68,3 +68,11 @@ func XCTAssertNoThrow<T>(_ a: @autoclosure () throws -> T, _ m: String = "",
                          file: String = #file, line: Int = #line) {
     do { _ = try a() } catch { record(false, "a levé \(error)", m, file, line) }
 }
+
+/// Un test qui a besoin des fichiers du depot ne peut pas tourner ici: le
+/// harnais compile une COPIE temporaire, donc `#filePath` ne designe plus le
+/// depot. Ces tests se sautent en local et tournent en CI.
+struct XCTSkip: Error {
+    let reason: String
+    init(_ reason: String = "") { self.reason = reason }
+}

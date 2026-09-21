@@ -159,7 +159,7 @@ struct PetCard: View {
                 Text(pet.name).font(.headline).foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Button { showAddEvent = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.homeTint) }.accessibilityLabel("Ajouter un événement")
-                Button(role: .destructive) { ctx.delete(pet) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(.red.opacity(0.6))
+                Button(role: .destructive) { remove(pet) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(.red.opacity(0.6))
             }
             if pet.events.isEmpty { Text("Aucun événement.").font(.caption).foregroundStyle(Theme.textSecondary) }
             ForEach(pet.events.sorted { $0.date < $1.date }) { e in
@@ -172,6 +172,17 @@ struct PetCard: View {
             }
         }.card()
         .sheet(isPresented: $showAddEvent) { PetEventEditor(pet: pet) }
+    }
+
+    /// Les soins partent en cascade avec l'animal, mais leurs rappels non:
+    /// sans cette boucle on recevait encore "Rex — Vétérinaire" pour un
+    /// animal supprime.
+    private func remove(_ pet: Pet) {
+        for e in pet.events {
+            NotificationManager.shared.cancel(
+                id: ReminderIDs.petCare(pet: pet.name, type: e.type, date: e.date))
+        }
+        ctx.delete(pet)
     }
     private func iconFor(_ t: String) -> String { switch t { case "Vétérinaire": return "cross.case.fill"; case "Vaccin": return "syringe.fill"; case "Anti-puces": return "ant.fill"; default: return "fork.knife" } }
 }
@@ -212,7 +223,7 @@ struct PetEventEditor: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
                     pet.events.append(PetCare(type: type, date: date, note: note))
-                    if remind { NotificationManager.shared.schedule(id: "pet-\(pet.name)-\(type)-\(Int(date.timeIntervalSince1970))", title: "\(pet.name) — \(type)", body: note.isEmpty ? "Rappel pour \(pet.name)" : note, at: date) }
+                    if remind { NotificationManager.shared.schedule(id: ReminderIDs.petCare(pet: pet.name, type: type, date: date), title: "\(pet.name) — \(type)", body: note.isEmpty ? "Rappel pour \(pet.name)" : note, at: date) }
                     dismiss()
                 } }
             }

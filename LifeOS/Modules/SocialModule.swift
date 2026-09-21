@@ -208,7 +208,7 @@ struct EventsView: View {
                                 }
                                 Spacer()
                             }.card(padding: 12)
-                                .contextMenu { Button(role: .destructive) { ctx.delete(e) } label: { Label("Supprimer", systemImage: "trash") } }
+                                .contextMenu { Button(role: .destructive) { NotificationManager.shared.cancel(id: ReminderIDs.socialEvent(title: e.title, date: e.date)); ctx.delete(e) } label: { Label("Supprimer", systemImage: "trash") } }
                         }
                     }
                 }.padding(Theme.pad)
@@ -237,7 +237,7 @@ struct EventEditor: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
                     ctx.insert(SocialEvent(title: title, date: date, location: location))
-                    if remind { NotificationManager.shared.schedule(id: "event-\(title)-\(Int(date.timeIntervalSince1970))", title: "Demain : \(title)", body: location.isEmpty ? "" : "\(location)", at: Calendar.current.date(byAdding: .day, value: -1, to: date) ?? date) }
+                    if remind { NotificationManager.shared.schedule(id: ReminderIDs.socialEvent(title: title, date: date), title: "Demain : \(title)", body: location.isEmpty ? "" : "\(location)", at: Calendar.current.date(byAdding: .day, value: -1, to: date) ?? date) }
                     dismiss()
                 }.disabled(title.isEmpty) }
             }

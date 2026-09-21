@@ -539,6 +539,10 @@ struct SupplementsView: View {
             .scrollContentBackground(.hidden)
         }
         .navigationTitle("Compléments").navigationBarTitleDisplayMode(.inline)
+        // Meme remise a plat que pour les medicaments: un complement cree
+        // avant que les identifiants stables existent n'avait plus aucun
+        // rappel posable. Idempotent, on annule puis on repose.
+        .onAppear { supps.forEach(reschedule) }
     }
 
     // Carte d'ajout : reco calculée EN DIRECT pendant la frappe.
