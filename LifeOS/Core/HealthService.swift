@@ -71,19 +71,40 @@ final class HealthService {
             UserDefaults.standard.set(true, forKey: "healthAuthRequested")
             return true
         } catch {
+            AppLog.general.error("autorisation Santé refusée: \(error.localizedDescription, privacy: .public)")
             return false
         }
     }
 
-    /// Enregistre une séance de musculation dans Apple Santé (Traditional Strength Training)
-    /// avec durée + kcal actives. Retourne `true` si l'écriture a réussi.
-    /// À appeler juste après le tap "Terminer" d'un tracker de séance, ou depuis un
-    /// débrief coach ("séance de 55 min, ~350 kcal").
+    /// Type de seance, pour que les appelants n'aient pas a importer HealthKit.
+    enum WorkoutKind {
+        case strength
+        case hiit
+
+        fileprivate var activityType: HKWorkoutActivityType {
+            switch self {
+            case .strength: return .traditionalStrengthTraining
+            case .hiit:     return .highIntensityIntervalTraining
+            }
+        }
+    }
+
+    /// Enregistre une seance dans Apple Sante, avec sa duree.
+    ///
+    /// L'app demandait deja l'autorisation d'ECRIRE dans Sante et n'ecrivait
+    /// jamais rien: cette fonction n'avait aucun appelant. Une permission
+    /// demandee puis inutilisee, c'est une question posee pour rien a
+    /// l'utilisateur, et un motif de refus a la revue Apple.
+    ///
+    /// `kcal` a zero est volontairement accepte: sans capteur on ne sait pas
+    /// combien quelqu'un a brule. Sante enregistre alors la duree seule, ce
+    /// qui alimente quand meme les minutes d'exercice. Mieux vaut une donnee
+    /// manquante qu'une donnee inventee dans un dossier de sante.
     @discardableResult
-    func saveStrengthWorkout(start: Date, end: Date, kcal: Double) async -> Bool {
-        guard isAvailable else { return false }
+    func saveWorkout(kind: WorkoutKind, start: Date, end: Date, kcal: Double) async -> Bool {
+        guard isAvailable, end > start else { return false }
         let config = HKWorkoutConfiguration()
-        config.activityType = .traditionalStrengthTraining
+        config.activityType = kind.activityType
         config.locationType = .indoor
         let builder = HKWorkoutBuilder(healthStore: store, configuration: config, device: .local())
         do {
@@ -101,6 +122,7 @@ final class HealthService {
             _ = try await builder.finishWorkout()
             return true
         } catch {
+            AppLog.general.error("écriture de la séance dans Santé refusée: \(error.localizedDescription, privacy: .public)")
             return false
         }
     }

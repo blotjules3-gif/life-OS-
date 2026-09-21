@@ -203,13 +203,20 @@ final class TabataEngine {
         else { run() }
     }
 
+    /// Debut de la seance en cours, pour pouvoir l'enregistrer dans Sante.
+    /// Passe par `now()` et pas par `Date()`, sinon les tests ne pourraient
+    /// plus piloter l'horloge.
+    private(set) var startedAt: Date?
+
     func begin() {
         phase = .prepare; remaining = cfg.prepare; intervalTotal = cfg.prepare; round = 1; cycle = 1
+        startedAt = now()
         Haptics.tap(); TabataSound.shared.prime(); run()
     }
 
     func reset() {
         pause(); phase = .idle; remaining = cfg.prepare; intervalTotal = cfg.prepare; round = 1; cycle = 1
+        startedAt = nil
         TabataSound.shared.end()
     }
 
@@ -455,6 +462,13 @@ struct TabataView: View {
             if phase == .active { engine.tick() }
         }
         .onAppear { engine.cfg = config; if engine.phase == .idle { engine.remaining = prepare } }
+        // Une seance finie part dans Apple Sante. C'est la seule seance de
+        // l'app qui a un vrai debut et une vraie fin, donc la seule qu'on
+        // puisse enregistrer honnetement.
+        .onChange(of: engine.phase) { _, phase in
+            guard phase == .done else { return }
+            Task { await saveSessionToHealth() }
+        }
         .onDisappear { TabataSound.shared.end() }   // libère la session audio (musique dé-duckée)
         .sheet(isPresented: $showSettings) {
             TabataSettings(prepare: $prepare, work: $work, rest: $rest, rounds: $rounds, cycles: $cycles, restCycle: $restCycle, cooldown: $cooldown, sets: $sets)
@@ -760,6 +774,25 @@ struct TabataView: View {
 }
 
 // MARK: - Réglages des intervalles
+
+
+/// Enregistrement de la seance terminee dans Apple Sante.
+private extension TabataView {
+
+    /// En dessous d'une minute ce n'est pas une seance, c'est un essai du
+    /// minuteur. L'ecrire polluerait le dossier de sante et les minutes
+    /// d'exercice de la journee.
+    static var minimumDuration: TimeInterval { 60 }
+
+    func saveSessionToHealth() async {
+        guard let start = engine.startedAt else { return }
+        let end = Date()
+        guard end.timeIntervalSince(start) >= Self.minimumDuration else { return }
+        // Aucune estimation de calories: sans capteur, on ne sait pas. Sante
+        // enregistre la duree, qui compte deja pour les minutes d'exercice.
+        await HealthService.shared.saveWorkout(kind: .hiit, start: start, end: end, kcal: 0)
+    }
+}
 
 struct TabataSettings: View {
     @Environment(\.dismiss) private var dismiss

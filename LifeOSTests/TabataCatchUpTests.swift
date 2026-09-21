@@ -95,6 +95,37 @@ final class TabataCatchUpTests: XCTestCase {
         XCTAssertEqual(e.remaining, before, "en pause, le temps ne doit pas defiler")
     }
 
+    // MARK: - Debut de seance, pour Apple Sante
+
+    /// Le debut doit venir de l'horloge injectee, pas de `Date()`, sinon une
+    /// seance enregistree dans Sante porterait la mauvaise heure.
+    func testBeginRecordsStartFromInjectedClock() {
+        let start = Date(timeIntervalSince1970: 7_000_000)
+        var clock = start
+        let e = TabataEngine(cfg: TabataConfig(prepare: 10, work: 30, rest: 15,
+                                               rounds: 2, cycles: 1, restCycle: 60, cooldown: 0))
+        e.now = { clock }
+        XCTAssertNil(e.startedAt, "rien ne commence avant le premier départ")
+        e.begin()
+        XCTAssertEqual(e.startedAt, start)
+
+        clock = clock.addingTimeInterval(120)
+        e.tick()
+        XCTAssertEqual(e.startedAt, start, "le début ne bouge pas pendant la séance")
+    }
+
+    /// Remettre a zero efface le debut: sinon la seance suivante serait
+    /// enregistree avec la duree de la precedente.
+    func testResetClearsStart() {
+        let e = TabataEngine(cfg: TabataConfig(prepare: 10, work: 30, rest: 15,
+                                               rounds: 2, cycles: 1, restCycle: 60, cooldown: 0))
+        e.now = { Date(timeIntervalSince1970: 8_000_000) }
+        e.begin()
+        XCTAssertNotNil(e.startedAt)
+        e.reset()
+        XCTAssertNil(e.startedAt)
+    }
+
     func testResetReturnsToIdle() {
         let start = Date(timeIntervalSince1970: 6_000_000)
         var clock = start
