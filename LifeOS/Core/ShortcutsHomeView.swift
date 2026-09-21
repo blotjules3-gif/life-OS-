@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 import SwiftData
 import Charts
 import UIKit
@@ -203,6 +204,12 @@ struct ShortcutsHomeView: View {
     @AppStorage(AppStorageKeys.tutorialDone) private var tutorialDone = false
     @State private var showTutorial = false
     @State private var editingShortcuts = false
+    /// Ordre des blocs de l'accueil, voir HomeLayout.
+    @AppStorage(HomeLayout.storageKey) private var layoutRaw = ""
+    @State private var editingHome = false
+    @State private var draggedWidget: HomeWidget?
+    @State private var showWidgetGallery = false
+    private var layout: HomeLayout { HomeLayout.parse(layoutRaw) }
     @State private var homeAppeared = false
 
     private let cols = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
@@ -338,6 +345,11 @@ struct ShortcutsHomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
+                    if editingHome {
+                        HomeEditBar(hiddenCount: layout.hidden.count,
+                                    onAdd: { showWidgetGallery = true },
+                                    onDone: exitHomeEditing)
+                    }
                     HStack(alignment: .bottom) {
                         Text(userName.isEmpty ? greeting : "\(greeting), \(userName)")
                             .font(.system(size: 40, weight: .black)).textCase(.uppercase).kerning(-1)
@@ -350,54 +362,68 @@ struct ShortcutsHomeView: View {
                     .padding(.horizontal, 4)
                     .staggered(0, appeared: homeAppeared)
 
-                    // Ordre voulu : salutation, puis le score et la série, puis
-                    // les raccourcis. Le score est ce qu'on vient regarder en
-                    // premier, les raccourcis sont ce qu'on vient toucher.
-                    DailyScoreRing()   // score unique du jour (mélange tous les objectifs)
-                        .staggered(1, appeared: homeAppeared)
-
-                    if !activeShortcuts.isEmpty {
-                        shortcutsSection
-                            .staggered(2, appeared: homeAppeared)
-                    }
-
+                    // Bandeaux de contexte: ils apparaissent quand il y a
+                    // quelque chose a dire et ne se deplacent pas. Un message
+                    // du moment n'a pas de place fixe a choisir.
                     if showReengage, let msg = reengageMessage {
                         reengageBanner(message: msg, suggestion: reengageSuggestion)
                     }
-
-                    LifeBrainCard()
-                        .padding(.horizontal, -Theme.pad)   // guidance transversale, en tête
-
                     if let module = weeklyModuleSuggestion {
                         weeklyModuleCard(module)
-                    }
-
-                    TodayAgendaSection()
-                        .padding(.horizontal, -Theme.pad)   // pleine largeur (compense le padding parent)
-
-                    habitsSection
-                        .staggered(3, appeared: homeAppeared)
-                        .scrollFade()
-
-                    tasksSection
-                        .staggered(4, appeared: homeAppeared)
-                        .scrollFade()
-                    if !activeHabits.isEmpty {
-                        weeklyRecapSection
-                            .staggered(4, appeared: homeAppeared)
-                            .scrollFade()
                     }
                     if isMorningEmpty {
                         morningContextCard
                             .transition(.opacity.combined(with: .move(edge: .top)))
                     }
-                    goalsSection
-                        .staggered(5, appeared: homeAppeared)
-                        .scrollFade()
+
+                    // Les blocs, dans l'ordre choisi par l'utilisateur.
+                    ForEach(Array(shownWidgets.enumerated()), id: \.element) { index, widget in
+                        homeWidget(widget)
+                            .staggered(min(index + 1, 5), appeared: homeAppeared)
+                            .modifier(HomeWidgetChrome(
+                                widget: widget,
+                                editing: editingHome,
+                                isDragged: draggedWidget == widget,
+                                onRemove: { updateLayout { $0.hide(widget) } },
+                                onShift: { d in updateLayout { $0.shift(widget, by: d) } },
+                                onDragStart: { draggedWidget = widget }))
+                            .onDrop(of: [.text], delegate: HomeDropDelegate(
+                                target: widget, raw: $layoutRaw, dragged: $draggedWidget))
+                            // Appui long pour entrer en edition, comme sur iOS.
+                            // Pas sur les taches: leurs lignes ont deja un menu
+                            // a l'appui long, les deux se marcheraient dessus.
+                            .simultaneousGesture(
+                                LongPressGesture(minimumDuration: 0.5).onEnded { _ in enterHomeEditing() },
+                                including: widget == .tasks || editingHome ? .subviews : .all)
+                    }
+
+                    if layout.visible.isEmpty {
+                        Text("Ton accueil est vide. Touche « Modifier l'accueil » pour remettre des blocs.")
+                            .font(.subheadline).foregroundStyle(Theme.textSecondary)
+                            .frame(maxWidth: .infinity).padding(.vertical, 20)
+                    }
+
+                    // Comme en bas de la vue Aujourd'hui d'iOS: un bouton
+                    // visible, pour qui ne devine pas l'appui long.
+                    if !editingHome {
+                        Button { enterHomeEditing() } label: {
+                            Text("Modifier l'accueil")
+                                .font(.subheadline.weight(.semibold))
+                                .padding(.horizontal, 18).padding(.vertical, 9)
+                                .background(.thinMaterial, in: Capsule())
+                        }
+                        .foregroundStyle(Theme.textPrimary)
+                        .frame(maxWidth: .infinity)
+                    }
                 }
                 .padding(Theme.pad)
+                .onDrop(of: [.text], delegate: HomeDropCleanup(dragged: $draggedWidget))
             }
             .floatingBarClearance()       // le dernier bloc ne passe pas sous la barre flottante
+            .sheet(isPresented: $showWidgetGallery) { HomeWidgetGallery(raw: $layoutRaw) }
+            // Changer d'onglet quitte l'edition: revenir sur un accueil qui
+            // tremble encore, sans savoir pourquoi, serait deroutant.
+            .onDisappear { exitHomeEditing() }
             .scrollContentBackground(.hidden)
             .background(Theme.screenBG)   // verre global : wallpaper dépoli en thème Verre
             .navigationTitle("")
@@ -1133,6 +1159,67 @@ struct ShortcutsHomeView: View {
             }
         }
         .padding(.horizontal, 4)
+    }
+
+    // MARK: - Blocs reordonnables
+
+    @ViewBuilder
+    private func homeWidget(_ w: HomeWidget) -> some View {
+        switch w {
+        case .score:
+            DailyScoreRing()   // score unique du jour (melange tous les objectifs)
+        case .shortcuts:
+            if hasContent(w) { shortcutsSection } else { HomeWidgetPlaceholder(widget: w) }
+        case .coach:
+            LifeBrainCard()
+                .padding(.horizontal, -Theme.pad)   // pleine largeur
+        case .agenda:
+            TodayAgendaSection()
+                .padding(.horizontal, -Theme.pad)   // pleine largeur (compense le padding parent)
+        case .habits:
+            habitsSection.scrollFade()
+        case .tasks:
+            tasksSection.scrollFade()
+        case .weekRecap:
+            if hasContent(w) { weeklyRecapSection.scrollFade() } else { HomeWidgetPlaceholder(widget: w) }
+        case .goals:
+            goalsSection.scrollFade()
+        }
+    }
+
+    /// Les blocs qui n'ont rien a montrer sont ecartes AVANT la liste, pas
+    /// rendus vides dedans: un bloc vide garde sa part d'espacement et
+    /// laisserait un trou. En edition ils restent, avec un bloc temoin, pour
+    /// pouvoir etre deplaces ou retires.
+    private var shownWidgets: [HomeWidget] {
+        layout.visible.filter { editingHome || hasContent($0) }
+    }
+
+    private func hasContent(_ w: HomeWidget) -> Bool {
+        switch w {
+        case .shortcuts: return !activeShortcuts.isEmpty
+        case .weekRecap: return !activeHabits.isEmpty
+        default:         return true
+        }
+    }
+
+    private func updateLayout(_ change: (inout HomeLayout) -> Void) {
+        var l = HomeLayout.parse(layoutRaw)
+        change(&l)
+        withAnimation(.spring(duration: 0.3)) { layoutRaw = l.raw }
+        Haptics.tap()
+    }
+
+    private func enterHomeEditing() {
+        guard !editingHome else { return }
+        Haptics.success()
+        withAnimation(.spring(duration: 0.3)) { editingHome = true }
+    }
+
+    private func exitHomeEditing() {
+        draggedWidget = nil
+        guard editingHome else { return }
+        withAnimation(.spring(duration: 0.3)) { editingHome = false }
     }
 
     private var greeting: String {
