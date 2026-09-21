@@ -231,21 +231,41 @@ faute: elle divisait par douze un cas banal, 300 de loyer et 400 de charges.
 
 ## Mac, iPad, Apple Watch et synchro (21 septembre 2026)
 
-- **iPad**: existe deja, la cible vise iPhone et iPad (`TARGETED_DEVICE_FAMILY = "1,2"`).
-- **Mac**: existe deja aussi. Le build 10 annonce `computedMinMacOsVersion 14.0`,
-  donc l'app iPad tourne sur un Mac Apple Silicon via TestFlight pour Mac.
-  Sante (pas, HRV) n'existe pas sur Mac: ces ecrans restent vides, c'est gere.
-- **Synchro**: branche `feat/multidevice`, PAS fusionnee. Les modeles passent
-  `scripts/cloudkit-ready.py` (228 problemes avant, 0 apres). Ne fusionner
-  qu'apres que `SyncMigrationTests` a PASSE en CI: c'est lui qui prouve que
-  les series des telephones survivent au changement de forme de la base.
-  Reste, cote compte Apple: activer iCloud sur l'App ID `com.chifandco.lifeos`
-  (6877WBMC34), creer le conteneur `iCloud.com.chifandco.lifeos` (le portail
-  developpeur seulement, l'API ne sait pas), regenerer le profil, ajouter
-  les cles iCloud au fichier d'entitlements, puis `cloudKitEnabled` a true.
-- **Apple Watch**: pas commencee. Nouvelle cible watchOS, qui lit la meme base
-  iCloud. A construire quand la CI tourne: une cible ajoutee a la main dans
-  le pbxproj sans pouvoir compiler une seule fois casserait le build iPhone.
+- **iPad**: existe deja (`TARGETED_DEVICE_FAMILY = "1,2"`).
+- **Mac**: existe deja. Le build 10 annonce `computedMinMacOsVersion 14.0`:
+  TestFlight pour Mac installe la version iPad sur un Mac Apple Silicon.
+- **Synchro iCloud + app Apple Watch**: TOUT est sur la branche
+  `feat/multidevice`, rien n'est fusionne, rien n'a ete compile (CI coupee
+  par la facturation GitHub, pas de Xcode ici).
+
+Fait cote compte Apple (21 septembre, par API et portail):
+- iCloud active sur `com.chifandco.lifeos` (App ID 6877WBMC34).
+- Conteneur `iCloud.com.chifandco.lifeos` cree, rattache aux deux App ID.
+- App ID Watch `com.chifandco.lifeos.watchkitapp` (65Q5V68C7G) cree.
+- Profils "LifeOS AppStore" (regenere, l'ancien etait invalide) et
+  "LifeOS Watch AppStore" crees, poses en secrets CI PROFILE_APP et
+  PROFILE_WATCH. Copies en `.credentials/lifeos-*.mobileprovision`.
+
+Fait cote code (branche):
+- 228 ecarts aux regles d'iCloud corriges, `scripts/cloudkit-ready.py` a 0.
+- Le demarrage ne vide plus la base si iCloud echoue: il rouvre la meme
+  base sans iCloud. AVANT, n'importe quel echec la rangeait en sauvegarde.
+- Synchro activee par defaut, interrupteur dans Profil › Mes donnees.
+- Environnement iCloud **Development** expres: en Production, la structure
+  doit etre poussee depuis la console CloudKit apres un lancement debug sur
+  un vrai iPhone, impossible ici. A basculer avant toute sortie App Store.
+- Modeles dans `SharedModels/`, liste unique `AppSchema`, compiles par
+  l'iPhone et la montre. `scripts/models-typecheck.sh` verifie leurs TYPES.
+- App Watch `LifeOSWatch/`: aujourd'hui, habitudes, eau, Tabata.
+
+Pour fusionner, dans cet ordre, et pas autrement:
+1. Facturation GitHub reglee.
+2. `gh workflow run Tests --repo leilajkaseme-hub/lifeos-build -f upstream_branch=feat/multidevice`
+3. Corriger ce qui ne compile pas (probable: rien n'a ete compile).
+4. `SyncMigrationTests` DOIT passer: c'est la preuve que les series des
+   telephones survivent. S'il echoue, NE PAS fusionner.
+5. Fusionner `feat/multidevice` dans `lifeos/chifco-testflight`, synchro,
+   puis `iOS TestFlight` avec upload.
 
 ## Prochaine action exacte
 
