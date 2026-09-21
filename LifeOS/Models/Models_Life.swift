@@ -5,20 +5,20 @@ import SwiftUI
 // MARK: - Looksmaxx
 
 @Model final class ProgressPhoto {
-    var date: Date
-    var filename: String
-    var category: String     // Visage / Peau / Corps
-    var note: String
+    var date: Date = .now
+    var filename: String = ""
+    var category: String = ""  // Visage / Peau / Corps
+    var note: String = ""
     init(date: Date = .now, filename: String = "", category: String = "Visage", note: String = "") {
         self.date = date; self.filename = filename; self.category = category; self.note = note
     }
 }
 
 @Model final class WardrobeItem {
-    var name: String
-    var category: String     // Haut / Bas / Chaussures / Veste / Accessoire
-    var colorName: String
-    var warmth: Int          // 1 (léger) ... 3 (chaud)
+    var name: String = ""
+    var category: String = ""  // Haut / Bas / Chaussures / Veste / Accessoire
+    var colorName: String = ""
+    var warmth: Int = 0  // 1 (léger) ... 3 (chaud)
     var filename: String?
     init(name: String = "", category: String = "Haut", colorName: String = "Noir", warmth: Int = 2, filename: String? = nil) {
         self.name = name; self.category = category; self.colorName = colorName; self.warmth = warmth; self.filename = filename
@@ -28,10 +28,10 @@ import SwiftUI
 // MARK: - Mental
 
 @Model final class MoodEntry {
-    var date: Date
-    var score: Int           // 1...5
-    var note: String
-    var gratitude: String
+    var date: Date = .now
+    var score: Int = 0  // 1...5
+    var note: String = ""
+    var gratitude: String = ""
     init(date: Date = .now, score: Int = 3, note: String = "", gratitude: String = "") {
         self.date = date; self.score = score; self.note = note; self.gratitude = gratitude
     }
@@ -40,12 +40,12 @@ import SwiftUI
 // MARK: - Productivité
 
 @Model final class TodoItem {
-    var title: String
-    var notes: String
+    var title: String = ""
+    var notes: String = ""
     var due: Date?
-    var done: Bool
-    var priority: Int        // 0 normal, 1 important, 2 urgent
-    var project: String
+    var done: Bool = false
+    var priority: Int = 0  // 0 normal, 1 important, 2 urgent
+    var project: String = ""
     var blockStart: Date?
     var blockEnd: Date?
     init(title: String = "", notes: String = "", due: Date? = nil, done: Bool = false,
@@ -56,20 +56,28 @@ import SwiftUI
 }
 
 @Model final class Habit {
-    var name: String
-    var icon: String
-    var colorHex: Int
-    var createdAt: Date
-    var isPending: Bool
-    var isArchived: Bool
-    var moduleTag: String
-    var scheduledHour: Int
-    var scheduledMinute: Int
+    var name: String = ""
+    var icon: String = ""
+    var colorHex: Int = 0
+    var createdAt: Date = .now
+    var isPending: Bool = false
+    var isArchived: Bool = false
+    var moduleTag: String = ""
+    var scheduledHour: Int = 0
+    var scheduledMinute: Int = 0
     /// Loop 25 audit — UUID du `UserGoal` qui a créé cette habitude (via
     /// GoalPlanExecutor). Vide = habitude créée manuellement.
     /// Permet de propager archive/delete du goal aux habits associées.
     var sourceGoalID: String = ""
-    @Relationship(deleteRule: .cascade) var completions: [HabitCompletion]
+    // iCloud exige une relation optionnelle ET un lien retour cote enfant.
+    // Le nom stocke ne change pas (originalName), et la propriete calculee
+    // garde l'ancienne forme non optionnelle: aucun appelant n'a bouge.
+    @Relationship(deleteRule: .cascade, originalName: "completions", inverse: \HabitCompletion.habit)
+    var completionsStore: [HabitCompletion]? = []
+    var completions: [HabitCompletion] {
+        get { completionsStore ?? [] }
+        set { completionsStore = newValue }
+    }
     init(name: String = "", icon: String = "checkmark", colorHex: Int = 0x4CC38A, createdAt: Date = .now, isPending: Bool = false, isArchived: Bool = false, moduleTag: String = "", scheduledHour: Int = 9, scheduledMinute: Int = 0, sourceGoalID: String = "") {
         self.name = name; self.icon = icon; self.colorHex = colorHex; self.createdAt = createdAt
         self.isPending = isPending; self.isArchived = isArchived; self.moduleTag = moduleTag
@@ -80,15 +88,17 @@ import SwiftUI
 }
 
 @Model final class HabitCompletion {
-    var date: Date
+    /// Lien retour, exige par la synchro iCloud. Rempli par SwiftData.
+    var habit: Habit?
+    var date: Date = .now
     init(date: Date = .now) { self.date = date }
 }
 
 @Model final class Note {
-    var title: String
-    var body: String
-    var tags: String
-    var created: Date
+    var title: String = ""
+    var body: String = ""
+    var tags: String = ""
+    var created: Date = .now
     init(title: String = "", body: String = "", tags: String = "", created: Date = .now) {
         self.title = title; self.body = body; self.tags = tags; self.created = created
     }
@@ -97,11 +107,11 @@ import SwiftUI
 // MARK: - Mémoire LifeOS
 
 @Model final class MemoryEntry {
-    var content: String        // "J'aime courir le matin", "Objectif : perdre 5kg"
-    var category: String       // "préférence", "objectif", "habitude", "fait"
-    var source: String         // "chat", "profil", "auto"
-    var created: Date
-    var isPinned: Bool
+    var content: String = ""  // "J'aime courir le matin", "Objectif : perdre 5kg"
+    var category: String = ""  // "préférence", "objectif", "habitude", "fait"
+    var source: String = ""  // "chat", "profil", "auto"
+    var created: Date = .now
+    var isPinned: Bool = false
     /// Type de rétention — session (transitoire), short (< 30j), long (durable),
     /// episodic (événement ponctuel avec date). Défaut `long`.
     var retentionType: String = "long"
@@ -144,30 +154,30 @@ enum MemoryRetention: String {
 // MARK: - Finances
 
 @Model final class Account {
-    var name: String
-    var kind: String         // Courant / Épargne / Cash
-    var balance: Double
+    var name: String = ""
+    var kind: String = ""  // Courant / Épargne / Cash
+    var balance: Double = 0
     init(name: String = "", kind: String = "Courant", balance: Double = 0) {
         self.name = name; self.kind = kind; self.balance = balance
     }
 }
 
 @Model final class Txn {
-    var date: Date
-    var amount: Double       // négatif = dépense
-    var category: String
-    var account: String
-    var note: String
+    var date: Date = .now
+    var amount: Double = 0  // négatif = dépense
+    var category: String = ""
+    var account: String = ""
+    var note: String = ""
     init(date: Date = .now, amount: Double = 0, category: String = "Divers", account: String = "Courant", note: String = "") {
         self.date = date; self.amount = amount; self.category = category; self.account = account; self.note = note
     }
 }
 
 @Model final class Envelope {
-    var name: String
-    var monthlyBudget: Double
-    var spent: Double
-    var colorHex: Int
+    var name: String = ""
+    var monthlyBudget: Double = 0
+    var spent: Double = 0
+    var colorHex: Int = 0
     /// Mois auquel `spent` se rapporte.
     ///
     /// Sans lui, un budget dit MENSUEL cumulait depuis la creation de
@@ -197,11 +207,11 @@ enum MemoryRetention: String {
 }
 
 @Model final class Subscription {
-    var name: String
-    var amount: Double
-    var cycle: String        // Mensuel / Annuel
-    var nextDate: Date
-    var active: Bool
+    var name: String = ""
+    var amount: Double = 0
+    var cycle: String = ""  // Mensuel / Annuel
+    var nextDate: Date = .now
+    var active: Bool = false
     init(name: String = "", amount: Double = 0, cycle: String = "Mensuel", nextDate: Date = .now, active: Bool = true) {
         self.name = name; self.amount = amount; self.cycle = cycle; self.nextDate = nextDate; self.active = active
     }
@@ -209,10 +219,10 @@ enum MemoryRetention: String {
 }
 
 @Model final class SavingsGoal {
-    var name: String
-    var target: Double
-    var current: Double
-    var monthly: Double
+    var name: String = ""
+    var target: Double = 0
+    var current: Double = 0
+    var monthly: Double = 0
     init(name: String = "", target: Double = 0, current: Double = 0, monthly: Double = 0) {
         self.name = name; self.target = target; self.current = current; self.monthly = monthly
     }
@@ -221,12 +231,12 @@ enum MemoryRetention: String {
 }
 
 @Model final class SplitExpense {
-    var group: String
-    var payer: String
-    var amount: Double
-    var desc: String
-    var date: Date
-    var participants: String   // CSV de noms
+    var group: String = ""
+    var payer: String = ""
+    var amount: Double = 0
+    var desc: String = ""
+    var date: Date = .now
+    var participants: String = ""  // CSV de noms
     init(group: String = "Coloc", payer: String = "Moi", amount: Double = 0, desc: String = "", date: Date = .now, participants: String = "") {
         self.group = group; self.payer = payer; self.amount = amount; self.desc = desc; self.date = date; self.participants = participants
     }

@@ -7,10 +7,10 @@ import UIKit
 
 @Model
 final class AIMessage {
-    var id: UUID
-    var role: String  // "user" | "assistant"
-    var text: String
-    var date: Date
+    var id: UUID = UUID()
+    var role: String = ""  // "user" | "assistant"
+    var text: String = ""
+    var date: Date = .now
     var actions: Data?  // JSON-encoded [AIAction]
 
     init(role: String, text: String, date: Date = .now, actions: Data? = nil) {

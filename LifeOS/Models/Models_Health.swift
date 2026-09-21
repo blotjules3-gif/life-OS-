@@ -4,10 +4,10 @@ import SwiftData
 // MARK: - Sommeil
 
 @Model final class DreamEntry {
-    var date: Date
-    var title: String
-    var text: String
-    var mood: Int          // 1...5
+    var date: Date = .now
+    var title: String = ""
+    var text: String = ""
+    var mood: Int = 0  // 1...5
     var audioFilename: String?
     init(date: Date = .now, title: String = "", text: String = "", mood: Int = 3, audioFilename: String? = nil) {
         self.date = date; self.title = title; self.text = text; self.mood = mood; self.audioFilename = audioFilename
@@ -16,11 +16,11 @@ import SwiftData
 
 /// Une nuit de sommeil enregistrée (coucher → lever) avec sa qualité ressentie.
 @Model final class SleepNight {
-    var date: Date         // jour de réveil (rattachement)
-    var bedtime: Date      // heure de coucher (souvent la veille au soir)
-    var wake: Date         // heure de réveil
-    var quality: Int       // 1...5
-    var note: String
+    var date: Date = .now  // jour de réveil (rattachement)
+    var bedtime: Date = .now  // heure de coucher (souvent la veille au soir)
+    var wake: Date = .now  // heure de réveil
+    var quality: Int = 0  // 1...5
+    var note: String = ""
     init(date: Date = .now, bedtime: Date = .now, wake: Date = .now, quality: Int = 3, note: String = "") {
         self.date = date; self.bedtime = bedtime; self.wake = wake; self.quality = quality; self.note = note
     }
@@ -35,13 +35,13 @@ import SwiftData
 // MARK: - Nutrition
 
 @Model final class FoodEntry {
-    var date: Date
-    var name: String
-    var calories: Int
-    var protein: Double
-    var carbs: Double
-    var fat: Double
-    var meal: String       // Petit-déj / Déjeuner / Dîner / Collation
+    var date: Date = .now
+    var name: String = ""
+    var calories: Int = 0
+    var protein: Double = 0
+    var carbs: Double = 0
+    var fat: Double = 0
+    var meal: String = ""  // Petit-déj / Déjeuner / Dîner / Collation
     init(date: Date = .now, name: String = "", calories: Int = 0, protein: Double = 0, carbs: Double = 0, fat: Double = 0, meal: String = "Déjeuner") {
         self.date = date; self.name = name; self.calories = calories
         self.protein = protein; self.carbs = carbs; self.fat = fat; self.meal = meal
@@ -49,9 +49,9 @@ import SwiftData
 }
 
 @Model final class FastingSession {
-    var start: Date
+    var start: Date = .now
     var end: Date?
-    var targetHours: Int
+    var targetHours: Int = 0
     init(start: Date = .now, end: Date? = nil, targetHours: Int = 16) {
         self.start = start; self.end = end; self.targetHours = targetHours
     }
@@ -60,8 +60,8 @@ import SwiftData
 }
 
 @Model final class WaterEntry {
-    var date: Date
-    var amountML: Int
+    var date: Date = .now
+    var amountML: Int = 0
     init(date: Date = .now, amountML: Int = 0) { self.date = date; self.amountML = amountML }
 }
 
@@ -98,10 +98,10 @@ import SwiftData
 
 /// Item de stock — sert au frigo (Nutrition) ET à l'anti-gaspi/péremption (Maison).
 @Model final class PantryItem {
-    var name: String
-    var quantity: String
-    var category: String     // Légume, Protéine, Laitier, Épicerie...
-    var location: String     // Frigo / Placard / Congélateur
+    var name: String = ""
+    var quantity: String = ""
+    var category: String = ""  // Légume, Protéine, Laitier, Épicerie...
+    var location: String = ""  // Frigo / Placard / Congélateur
     var expiry: Date?
     init(name: String = "", quantity: String = "1", category: String = "Épicerie", location: String = "Frigo", expiry: Date? = nil) {
         self.name = name; self.quantity = quantity; self.category = category
@@ -110,10 +110,10 @@ import SwiftData
 }
 
 @Model final class ShoppingItem {
-    var name: String
-    var quantity: String
-    var aisle: String
-    var checked: Bool
+    var name: String = ""
+    var quantity: String = ""
+    var aisle: String = ""
+    var checked: Bool = false
     init(name: String = "", quantity: String = "1", aisle: String = "Divers", checked: Bool = false) {
         self.name = name; self.quantity = quantity; self.aisle = aisle; self.checked = checked
     }
@@ -122,11 +122,11 @@ import SwiftData
 // MARK: - Fitness
 
 @Model final class WorkoutSet {
-    var date: Date
-    var exercise: String
-    var weightKg: Double
-    var reps: Int
-    var rpe: Double
+    var date: Date = .now
+    var exercise: String = ""
+    var weightKg: Double = 0
+    var reps: Int = 0
+    var rpe: Double = 0
     init(date: Date = .now, exercise: String = "", weightKg: Double = 0, reps: Int = 0, rpe: Double = 8) {
         self.date = date; self.exercise = exercise; self.weightKg = weightKg; self.reps = reps; self.rpe = rpe
     }
@@ -136,23 +136,23 @@ import SwiftData
 }
 
 @Model final class StepEntry {
-    var day: Date
-    var steps: Int
+    var day: Date = .now
+    var steps: Int = 0
     init(day: Date = .now, steps: Int = 0) { self.day = day; self.steps = steps }
 }
 
 // MARK: - Santé médicale
 
 @Model final class Medication {
-    var name: String
-    var dosage: String         // ex: "500mg"
-    var frequency: String      // ex: "2x/jour"
+    var name: String = ""
+    var dosage: String = ""  // ex: "500mg"
+    var frequency: String = ""  // ex: "2x/jour"
     var hourMorning: Int?
     var hourEvening: Int?
-    var notes: String
-    var startDate: Date
+    var notes: String = ""
+    var startDate: Date = .now
     var endDate: Date?
-    var active: Bool
+    var active: Bool = false
 
     /// Identifiant de notification, stable entre deux lancements.
     /// Defaut vide et PAS UUID(), meme convention que Supplement.stableID:
@@ -171,11 +171,11 @@ import SwiftData
 }
 
 @Model final class MedicalAppointment {
-    var date: Date
-    var specialty: String      // Généraliste, Dentiste, Cardiologue…
-    var doctorName: String
-    var location: String
-    var notes: String
+    var date: Date = .now
+    var specialty: String = ""  // Généraliste, Dentiste, Cardiologue…
+    var doctorName: String = ""
+    var location: String = ""
+    var notes: String = ""
     var nextDate: Date?
     init(date: Date = .now, specialty: String = "", doctorName: String = "",
          location: String = "", notes: String = "", nextDate: Date? = nil) {
@@ -185,12 +185,12 @@ import SwiftData
 }
 
 @Model final class VitalRecord {
-    var date: Date
-    var type: String           // "poids", "tension", "glycémie", "fréquence cardiaque", "autre"
-    var value: Double          // valeur principale (kg, mmHg systolique, g/L…)
+    var date: Date = .now
+    var type: String = ""  // "poids", "tension", "glycémie", "fréquence cardiaque", "autre"
+    var value: Double = 0  // valeur principale (kg, mmHg systolique, g/L…)
     var value2: Double?        // diastolique pour tension
-    var unit: String
-    var notes: String
+    var unit: String = ""
+    var notes: String = ""
     init(date: Date = .now, type: String = "poids", value: Double = 0,
          value2: Double? = nil, unit: String = "kg", notes: String = "") {
         self.date = date; self.type = type; self.value = value
@@ -199,11 +199,11 @@ import SwiftData
 }
 
 @Model final class Vaccination {
-    var name: String           // ex: "Grippe", "COVID-19", "Tétanos"
-    var date: Date
+    var name: String = ""  // ex: "Grippe", "COVID-19", "Tétanos"
+    var date: Date = .now
     var nextDueDate: Date?
-    var lot: String
-    var notes: String
+    var lot: String = ""
+    var notes: String = ""
     init(name: String = "", date: Date = .now, nextDueDate: Date? = nil, lot: String = "", notes: String = "") {
         self.name = name; self.date = date; self.nextDueDate = nextDueDate; self.lot = lot; self.notes = notes
     }

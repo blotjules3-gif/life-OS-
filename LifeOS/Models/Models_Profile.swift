@@ -15,10 +15,10 @@ final class ProfileField {
     /// clé de recherche dans ProfileFieldSpec. Unicité enforced au niveau du
     /// ProfileStore (pas via @Attribute(.unique) qui pose problème avec le
     /// #Predicate en SwiftData in-memory).
-    var fieldID: String
+    var fieldID: String = ""
 
     /// Catégorie du champ (`AppCategory.rawValue`). Dénormalisé pour requêtes rapides.
-    var category: String
+    var category: String = ""
 
     /// Valeur sérialisée. Format dépend de `valueType` :
     /// - int/double → "74.5"
@@ -26,23 +26,29 @@ final class ProfileField {
     /// - bool → "true"
     /// - enum → raw value du case
     /// - array → JSON array
-    var valueString: String
+    var valueString: String = ""
 
     /// Type de la valeur : "int" | "double" | "string" | "bool" | "enum" | "array".
-    var valueType: String
+    var valueType: String = ""
 
     /// Confidence de la source, entre 0.0 et 1.0.
-    var confidence: Double
+    var confidence: Double = 0
 
     /// Source de l'écriture : "chat" | "voice" | "quiz" | "shortcut" | "manual" | "migration".
-    var source: String
+    var source: String = ""
 
-    var createdAt: Date
-    var updatedAt: Date
+    var createdAt: Date = .now
+    var updatedAt: Date = .now
 
     /// Historique des révisions, snapshotée avant chaque update par ProfileStore.
-    @Relationship(deleteRule: .cascade, inverse: \ProfileFieldRevision.field)
-    var history: [ProfileFieldRevision] = []
+    /// Optionnelle pour iCloud, meme principe que Habit.completions: le nom
+    /// stocke ne change pas et `history` garde sa forme non optionnelle.
+    @Relationship(deleteRule: .cascade, originalName: "history", inverse: \ProfileFieldRevision.field)
+    var historyStore: [ProfileFieldRevision]? = []
+    var history: [ProfileFieldRevision] {
+        get { historyStore ?? [] }
+        set { historyStore = newValue }
+    }
 
     init(
         fieldID: String,
@@ -69,10 +75,10 @@ final class ProfileField {
 /// Créé automatiquement par `ProfileStore.upsert()` avant de modifier `valueString`.
 @Model
 final class ProfileFieldRevision {
-    var previousValueString: String
-    var previousConfidence: Double
-    var previousSource: String
-    var changedAt: Date
+    var previousValueString: String = ""
+    var previousConfidence: Double = 0
+    var previousSource: String = ""
+    var changedAt: Date = .now
     /// Raison libre du changement, ex: "user_correction", "llm_extraction", "migration".
     var reason: String?
 

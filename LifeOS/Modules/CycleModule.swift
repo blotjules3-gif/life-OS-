@@ -5,11 +5,11 @@ import SwiftData
 
 @Model
 final class CycleEntry {
-    var date: Date
-    var flow: Int        // 0 = aucun, 1 = léger, 2 = moyen, 3 = abondant
-    var symptoms: [String]
-    var mood: Int        // 0 = non renseigné, 1–5
-    var note: String
+    var date: Date = .now
+    var flow: Int = 0  // 0 = aucun, 1 = léger, 2 = moyen, 3 = abondant
+    var symptoms: [String] = []
+    var mood: Int = 0  // 0 = non renseigné, 1–5
+    var note: String = ""
 
     init(date: Date = .now, flow: Int = 1, symptoms: [String] = [], mood: Int = 0, note: String = "") {
         self.date = date
