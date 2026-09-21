@@ -168,11 +168,32 @@ enum MemoryRetention: String {
     var monthlyBudget: Double
     var spent: Double
     var colorHex: Int
-    init(name: String = "", monthlyBudget: Double = 0, spent: Double = 0, colorHex: Int = 0x618EF1) {
-        self.name = name; self.monthlyBudget = monthlyBudget; self.spent = spent; self.colorHex = colorHex
+    /// Mois auquel `spent` se rapporte.
+    ///
+    /// Sans lui, un budget dit MENSUEL cumulait depuis la creation de
+    /// l'enveloppe: un depassement en janvier laissait l'enveloppe rouge pour
+    /// toujours, et le plafond ne voulait plus rien dire.
+    /// Valeur par defaut fournie pour que la migration reste legere.
+    var periodStart: Date = Date.distantPast
+
+    init(name: String = "", monthlyBudget: Double = 0, spent: Double = 0,
+         colorHex: Int = 0x618EF1, periodStart: Date = .now) {
+        self.name = name; self.monthlyBudget = monthlyBudget; self.spent = spent
+        self.colorHex = colorHex; self.periodStart = periodStart
     }
     var remaining: Double { monthlyBudget - spent }
     var progress: Double { monthlyBudget == 0 ? 0 : min(1, spent / monthlyBudget) }
+
+    /// Remet la depense a zero quand on change de mois.
+    /// Rend true si un nouveau mois a ete ouvert, pour pouvoir enregistrer.
+    @discardableResult
+    func rolloverIfNeeded(now: Date = .now, calendar: Calendar = .current) -> Bool {
+        let startOfThisMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        guard periodStart < startOfThisMonth else { return false }
+        spent = 0
+        periodStart = startOfThisMonth
+        return true
+    }
 }
 
 @Model final class Subscription {

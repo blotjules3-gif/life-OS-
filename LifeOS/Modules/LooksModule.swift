@@ -5,22 +5,6 @@ extension ShapeStyle where Self == Color { static var looksTint: Color { AppCate
 
 // MARK: - Hub Looksmaxx
 
-struct LooksHubView: View {
-    var body: some View {
-        HubScaffold(category: .looks) {
-            ToolRow(icon: "face.dashed", title: "Analyse faciale",
-                    subtitle: "Symétrie, harmony — Umax", tint: .looksTint) { FaceAnalysisScaffold() }
-            ToolRow(icon: "sparkles", title: "Routine skincare",
-                    subtitle: "Matin/soir + rappels", tint: .looksTint) { SkincareView() }
-            ToolRow(icon: "camera.fill", title: "Photos avant / après",
-                    subtitle: "Suivi visuel daté", tint: .looksTint) { ProgressPhotoGalleryView() }
-            ToolRow(icon: "mouth.fill", title: "Mewing & posture",
-                    subtitle: "Rappels + minuteur", tint: .looksTint) { MewingPostureView() }
-            ToolRow(icon: "tshirt.fill", title: "Garde-robe & outfits",
-                    subtitle: "Suggestion selon météo", tint: .looksTint) { WardrobeView() }
-        }
-    }
-}
 
 // MARK: - Skincare
 
@@ -517,29 +501,3 @@ struct WardrobeEditor: View {
 
 // MARK: - Analyse faciale (scaffold)
 
-struct FaceAnalysisScaffold: View {
-    var body: some View {
-        ZStack {
-            Theme.background
-            ScrollView {
-                VStack(spacing: 16) {
-                    Image(systemName: "face.dashed").font(.system(size: 56)).foregroundStyle(.looksTint).padding(.top, 30)
-                    Text("Analyse faciale").font(.title3.bold()).foregroundStyle(Theme.textPrimary)
-                    IntegrationNotice(text: "Les scores type Umax / LooksMax AI (symétrie, ratios, « potential ») reposent sur la détection de points faciaux + un modèle entraîné, souvent contesté scientifiquement. Techniquement on peut détecter 76+ landmarks gratuitement avec le framework Vision d'Apple (VNDetectFaceLandmarks) et calculer des ratios objectifs (symétrie, tiers du visage, ratio largeur/hauteur). Le « score d'attractivité » lui nécessite un modèle ML entraîné séparé.")
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Ce qui est faisable proprement").font(.headline).foregroundStyle(Theme.textPrimary)
-                        bullet("Détection landmarks : Vision (gratuit, on-device)")
-                        bullet("Ratios objectifs : symétrie G/D, règle des tiers, FWHR")
-                        bullet("Suivi dans le temps via les photos avant/après (déjà actif)")
-                        bullet("Score « subjectif » : modèle ML à entraîner/host séparément")
-                    }.card()
-                    NavigationLink { ProgressPhotoGalleryView() } label: {
-                        Label("Commencer par une photo de référence", systemImage: "camera").foregroundStyle(.looksTint).frame(maxWidth: .infinity).card(padding: 12)
-                    }.buttonStyle(.plain)
-                }.padding(Theme.pad)
-            }
-        }
-        .navigationTitle("Analyse faciale").navigationBarTitleDisplayMode(.inline)
-    }
-    private func bullet(_ t: String) -> some View { Text("• " + t).font(.footnote).foregroundStyle(Theme.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
-}

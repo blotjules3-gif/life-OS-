@@ -5,22 +5,6 @@ extension ShapeStyle where Self == Color { static var homeTint: Color { AppCateg
 
 // MARK: - Hub Maison
 
-struct HomeHubView: View {
-    var body: some View {
-        HubScaffold(category: .home) {
-            ToolRow(icon: "calendar.badge.exclamationmark", title: "Anti-gaspi & péremption",
-                    subtitle: "Ce qui périme bientôt", tint: .homeTint) { AntiWasteView() }
-            ToolRow(icon: "frying.pan.fill", title: "Recettes avec les restes",
-                    subtitle: "Cuisine ce que tu as", tint: .homeTint) { LeftoverRecipesView() }
-            ToolRow(icon: "checklist", title: "Tâches ménagères",
-                    subtitle: "Réparties couple / coloc", tint: .homeTint) { ChoresView() }
-            ToolRow(icon: "pawprint.fill", title: "Mes animaux",
-                    subtitle: "Gamelle, véto, vaccins", tint: .homeTint) { PetsView() }
-            ToolRow(icon: "wrench.and.screwdriver.fill", title: "Maintenance récurrente",
-                    subtitle: "Filtres, révisions, plantes", tint: .homeTint) { MaintenanceView() }
-        }
-    }
-}
 
 // MARK: - Anti-gaspi (réutilise PantryItem)
 

@@ -42,3 +42,7 @@ DerivedData/
 *.xcuserstate
 xcuserdata/
 .last-deploy-hash
+
+# Recherche et rapports, hors application
+reports/
+research_notes/

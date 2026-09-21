@@ -5,20 +5,6 @@ extension ShapeStyle where Self == Color { static var adminTint: Color { AppCate
 
 // MARK: - Hub Admin
 
-struct AdminHubView: View {
-    var body: some View {
-        HubScaffold(category: .admin) {
-            ToolRow(icon: "lock.doc.fill", title: "Coffre-fort documents",
-                    subtitle: "ID, contrats, garanties", tint: .adminTint) { DocVaultView() }
-            ToolRow(icon: "bell.badge.fill", title: "Échéances",
-                    subtitle: "Impôts, assurance, abos", tint: .adminTint) { DeadlinesView() }
-            ToolRow(icon: "envelope.fill", title: "Générateur de courriers",
-                    subtitle: "Résiliation, attestation…", tint: .adminTint) { LetterGeneratorView() }
-            ToolRow(icon: "doc.viewfinder.fill", title: "Scan & classement",
-                    subtitle: "OCR auto — à brancher", tint: .adminTint) { DocScanScaffold() }
-        }
-    }
-}
 
 // MARK: - Coffre-fort documents
 
@@ -268,10 +254,3 @@ struct LetterDetail: View {
 
 // MARK: - Scan scaffold
 
-struct DocScanScaffold: View {
-    var body: some View {
-        ScaffoldPage(icon: "doc.viewfinder.fill", title: "Scan & classement auto", tint: .adminTint,
-            notice: "Le scan de documents avec recadrage et OCR est faisable 100% gratuitement et on-device avec VisionKit (VNDocumentCameraViewController pour scanner, VNRecognizeTextRequest pour lire le texte). Le classement auto (deviner la catégorie : facture, contrat, ID…) s'ajoute via des règles sur le texte reconnu ou un petit modèle. Tout reste sur l'appareil.",
-            bullets: ["Scanner : VNDocumentCameraViewController (natif, gratuit)", "OCR : Vision VNRecognizeTextRequest (on-device)", "Classement : règles mots-clés ou modèle léger", "Stockage : déjà fait dans le coffre-fort"])
-    }
-}

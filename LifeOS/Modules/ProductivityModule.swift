@@ -7,22 +7,6 @@ extension ShapeStyle where Self == Color { static var prodTint: Color { AppCateg
 
 // MARK: - Hub Productivité
 
-struct ProductivityHubView: View {
-    var body: some View {
-        HubScaffold(category: .productivity) {
-            ToolRow(icon: "checklist", title: "To-do intelligente",
-                    subtitle: "Priorités, projets, échéances", tint: .prodTint) { TodoView() }
-            ToolRow(icon: "calendar.day.timeline.left", title: "Time-blocking auto",
-                    subtitle: "L'app remplit ta journée", tint: .prodTint) { TimeBlockView() }
-            ToolRow(icon: "square.grid.3x3.fill", title: "Habit tracker",
-                    subtitle: "Streaks & régularité", tint: .prodTint) { HabitTrackerView() }
-            ToolRow(icon: "timer", title: "Focus / Pomodoro",
-                    subtitle: "25 min concentration", tint: .prodTint) { FocusTimerView() }
-            ToolRow(icon: "note.text", title: "Notes & second cerveau",
-                    subtitle: "Capture rapide + tags", tint: .prodTint) { NotesView() }
-        }
-    }
-}
 
 // MARK: - To-do
 
@@ -156,10 +140,12 @@ struct TodoEditor: View {
 // MARK: - Time-blocking auto
 
 struct TimeBlockView: View {
+    @Environment(\.modelContext) private var ctx
     @Query private var todos: [TodoItem]
     @AppStorage(AppStorageKeys.dayStart) private var dayStart = 9
     @AppStorage(AppStorageKeys.dayEnd) private var dayEnd = 18
     @State private var blocks: [(Date, Date, TodoItem)] = []
+    @State private var message: String?
 
     var body: some View {
         ZStack {
@@ -172,10 +158,20 @@ struct TimeBlockView: View {
                         Stepper("Fin \(dayEnd)h", value: $dayEnd, in: 13...23)
                     }.font(.footnote).card()
 
-                    PrimaryButton(title: "Générer ma journée", icon: "wand.and.stars", tint: .prodTint) { generate() }
+                    PrimaryButton(title: blocks.isEmpty ? "Générer ma journée" : "Regénérer",
+                                  icon: "wand.and.stars", tint: .prodTint) { generate() }
+
+                    if let message {
+                        Text(message)
+                            .font(.footnote).foregroundStyle(Theme.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 4)
+                    }
 
                     if blocks.isEmpty {
-                        IntegrationNotice(text: "Le time-blocking remplit automatiquement des créneaux d'1h avec tes tâches non terminées (les plus prioritaires d'abord), entre ton heure de début et de fin, en sautant la pause déjeuner. Ajoute des tâches dans la To-do puis génère.")
+                        EmptyState(icon: "calendar.badge.clock",
+                                   title: "Journée vide",
+                                   message: "Des créneaux d'1h sont remplis avec tes tâches non terminées, les plus prioritaires d'abord, en sautant la pause déjeuner. Ajoute des tâches dans la To-do puis génère.")
                     } else {
                         VStack(spacing: 0) {
                             ForEach(Array(blocks.enumerated()), id: \.offset) { _, b in
@@ -191,26 +187,94 @@ struct TimeBlockView: View {
                                 Divider().overlay(Theme.stroke)
                             }
                         }.card()
+
+                        Button(role: .destructive) { clearBlocks() } label: {
+                            Label("Effacer les créneaux", systemImage: "trash")
+                                .font(.footnote)
+                        }
+                        .padding(.top, 2)
                     }
                 }.padding(Theme.pad)
             }
         }
         .navigationTitle("Time-blocking").navigationBarTitleDisplayMode(.inline)
+        // Les creneaux sont sur les taches, pas dans la vue: on les relit a
+        // chaque ouverture pour retrouver la journee deja planifiee.
+        .onAppear { loadSavedBlocks() }
     }
+    /// Recharge les creneaux DEJA enregistres sur les taches.
+    ///
+    /// Avant, les creneaux ne vivaient que dans l'etat de la vue: on quittait
+    /// l'ecran et tout etait perdu, alors que TodoItem a depuis toujours des
+    /// champs blockStart et blockEnd que rien n'ecrivait.
+    private func loadSavedBlocks() {
+        let saved = todos.compactMap { t -> (Date, Date, TodoItem)? in
+            guard !t.done, let s = t.blockStart, let e = t.blockEnd else { return nil }
+            return (s, e, t)
+        }.sorted { $0.0 < $1.0 }
+        blocks = saved
+    }
+
     private func generate() {
         let pending = todos.filter { !$0.done }.sorted { $0.priority > $1.priority }
-        var result: [(Date, Date, TodoItem)] = []
+        guard !pending.isEmpty else {
+            withAnimation { blocks = [] }
+            message = "Aucune tâche à placer. Ajoute des tâches dans la To-do."
+            return
+        }
+
         let cal = Calendar.current
-        var hour = max(dayStart, cal.component(.hour, from: .now) + 1)
+        // Si la journee est deja finie, on planifie DEMAIN au lieu de ne rien
+        // rendre. Generer le soir renvoyait une liste vide sans rien expliquer.
+        let nextHour = cal.component(.hour, from: .now) + 1
+        let startsTomorrow = nextHour >= dayEnd
+        let day = startsTomorrow
+            ? cal.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+            : Date()
+        var hour = startsTomorrow ? dayStart : max(dayStart, nextHour)
+
+        var result: [(Date, Date, TodoItem)] = []
+        var placed = 0
         for t in pending {
             while hour == 13 { hour += 1 }            // saute la pause déj
             guard hour + 1 <= dayEnd else { break }
-            let start = cal.date(bySettingHour: hour, minute: 0, second: 0, of: .now)!
-            let end = cal.date(byAdding: .hour, value: 1, to: start)!
+            guard let start = cal.date(bySettingHour: hour, minute: 0, second: 0, of: day),
+                  let end = cal.date(byAdding: .hour, value: 1, to: start) else { break }
+            t.blockStart = start
+            t.blockEnd = end
             result.append((start, end, t))
+            placed += 1
             hour += 1
         }
+        // Les taches qui n'ont pas trouve de place ne gardent pas un vieux
+        // creneau de la veille, sinon l'ecran melange deux journees.
+        for t in pending.dropFirst(placed) {
+            t.blockStart = nil
+            t.blockEnd = nil
+        }
+        save()
+
+        let left = pending.count - placed
+        message = left > 0
+            ? "\(placed) tâche\(placed > 1 ? "s" : "") placée\(placed > 1 ? "s" : "")\(startsTomorrow ? " demain" : ""), \(left) sans créneau : ta journée est pleine."
+            : (startsTomorrow ? "Journée de demain planifiée." : nil)
         withAnimation { blocks = result }
+    }
+
+    /// Vide les creneaux, sans toucher aux taches elles-memes.
+    private func clearBlocks() {
+        for t in todos where t.blockStart != nil {
+            t.blockStart = nil
+            t.blockEnd = nil
+        }
+        save()
+        message = nil
+        withAnimation { blocks = [] }
+    }
+
+    private func save() {
+        do { try ctx.save() }
+        catch { AppLog.data.error("creneaux non sauvegardes: \(error.localizedDescription, privacy: .public)") }
     }
     private func priorityColor(_ p: Int) -> Color { p >= 2 ? .red : p == 1 ? .orange : .prodTint }
 }

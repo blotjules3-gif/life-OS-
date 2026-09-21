@@ -5,18 +5,6 @@ extension ShapeStyle where Self == Color { static var mobTint: Color { AppCatego
 
 // MARK: - Hub Mobilité
 
-struct MobilityHubView: View {
-    var body: some View {
-        HubScaffold(category: .mobility) {
-            ToolRow(icon: "car.fill", title: "Ma voiture",
-                    subtitle: "Assurance, révision, carburant", tint: .mobTint) { VehicleListView() }
-            ToolRow(icon: "fuelpump.fill", title: "Carburant le moins cher",
-                    subtitle: "Carte stations — à brancher", tint: .mobTint) { FuelMapScaffold() }
-            ToolRow(icon: "point.topleft.down.to.point.bottomright.curvepath", title: "Itinéraire multimodal",
-                    subtitle: "Citymapper — à brancher", tint: .mobTint) { MultimodalScaffold() }
-        }
-    }
-}
 
 // MARK: - Véhicules
 
@@ -141,23 +129,8 @@ struct FuelEditor: View {
 
 // MARK: - Scaffolds
 
-struct FuelMapScaffold: View {
-    var body: some View {
-        ScaffoldPage(icon: "fuelpump.fill", title: "Carburant le moins cher", tint: .mobTint,
-            notice: "Le prix des carburants en France est ouvert et GRATUIT via le jeu de données officiel prix-carburants.gouv.fr (data.economie.gouv.fr). Branchement : récupérer ta position → requête des stations dans un rayon → tri par prix du gazole/SP95. La carte MapKit est native iOS.",
-            bullets: ["Source gratuite : data.economie.gouv.fr (prix temps réel)", "Géoloc : CoreLocation (déjà autorisé)", "Carte : MapKit natif", "Tri par prix + type de carburant"])
-    }
-}
 
-struct MultimodalScaffold: View {
-    var body: some View {
-        ScaffoldPage(icon: "tram.fill", title: "Itinéraire multimodal", tint: .mobTint,
-            notice: "Un itinéraire porte-à-porte combinant métro/bus/train/marche (façon Citymapper) nécessite des données transport. Options : l'API Navitia (navitia.io, freemium, couvre la France), Google Directions API (payant) ou les GTFS open-data des réseaux. Le comparateur train/vol/covoit s'appuie lui sur SNCF Connect / Trainline / BlaBlaCar (APIs partenaires).",
-            bullets: ["Navitia API : itinéraires multimodaux FR (freemium)", "Apple Maps Transit : ouverture via MapKit Directions", "Comparateur : APIs SNCF / aériennes (partenariat)"])
-    }
-}
 
-/// Page de scaffold générique réutilisable.
 struct ScaffoldPage: View {
     let icon: String; let title: String; var tint: Color = Theme.accent
     let notice: String; let bullets: [String]

@@ -43,6 +43,7 @@ struct ProfileView: View {
     @State private var showGoalEditor = false
     @State private var showNotificationSettings = false
     @State private var showSoundHaptics = false
+    @State private var showCustomReminders = false
     @State private var showWakeupDetail = false
     @State private var showBriefing = false
     @State private var appeared = false
@@ -211,6 +212,9 @@ struct ProfileView: View {
                     hiddenGoalIDsRaw: $hiddenGoalIDsRaw,
                     goalEndDatesRaw: $goalEndDatesRaw
                 )
+            }
+            .sheet(isPresented: $showCustomReminders) {
+                NavigationStack { NotificationsSettingsView() }
             }
             .sheet(isPresented: $showSoundHaptics) {
                 NavigationStack { SoundHapticsSettingsView() }
@@ -785,6 +789,17 @@ struct ProfileView: View {
                     }
                 } action: {
                     showNotificationSettings = true
+                }
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
+                // Les objectifs creent des rappels tout seuls (GoalPlanExecutor)
+                // et le seul ecran capable de les lister, modifier ou
+                // supprimer n'etait relie a RIEN. L'utilisateur recevait donc
+                // des notifications qu'il ne pouvait ni voir ni eteindre.
+                settingsRow(icon: "bell.badge.fill", iconColor: Color(hex: 0xE0A23C),
+                            label: "Mes rappels personnalisés") {
+                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
+                } action: {
+                    showCustomReminders = true
                 }
                 Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
                 settingsRow(icon: "speaker.wave.2.fill", iconColor: Color(hex: 0x5B8DEF),

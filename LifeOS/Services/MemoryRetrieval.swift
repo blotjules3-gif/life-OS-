@@ -48,7 +48,11 @@ enum MemoryRetrieval {
         for m in selected {
             m.entry.lastAccessedAt = .now
         }
-        try? context.save()
+        // Forme avec try, comme IntentExecutor: dans un corps de fonction le
+        // compilateur l'exige. Dans une fermeture non throwing (action de
+        // bouton, setter de Binding) il faut au contraire l'omettre, sinon la
+        // fermeture devient throwing et ne compile plus.
+        LifeOSTry(try context.save(), context: "sauvegarde memoire", category: AppLog.data)
 
         return selected
     }

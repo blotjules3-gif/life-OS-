@@ -5,30 +5,6 @@ extension ShapeStyle where Self == Color { static var nutriTint: Color { AppCate
 
 // MARK: - Hub Nutrition
 
-struct NutritionHubView: View {
-    var body: some View {
-        HubScaffold(category: .nutrition) {
-            ToolRow(icon: "timer", title: "Jeûne intermittent",
-                    subtitle: "16:8, 18:6, OMAD — façon Zero", tint: .nutriTint) { FastingView() }
-            ToolRow(icon: "chart.pie.fill", title: "Calories & macros",
-                    subtitle: "Journal du jour + objectifs", tint: .nutriTint) { CalAIView() }
-            ToolRow(icon: "refrigerator.fill", title: "Mon frigo",
-                    subtitle: "Inventaire + idées repas", tint: .nutriTint) { FridgeView() }
-            ToolRow(icon: "cart.fill", title: "Liste de courses",
-                    subtitle: "Par rayon, cochable", tint: .nutriTint) { ShoppingListView() }
-            ToolRow(icon: "drop.fill", title: "Hydratation",
-                    subtitle: "Suivi + rappels", tint: .nutriTint) { HydrationView() }
-            ToolRow(icon: "pills.fill", title: "Compléments",
-                    subtitle: "Rappels personnalisés", tint: .nutriTint) { SupplementsView() }
-            ToolRow(icon: "allergens", title: "Allergènes & régimes",
-                    subtitle: "Halal, vegan, sans gluten…", tint: .nutriTint) { DietProfileView() }
-            ToolRow(icon: "camera.viewfinder", title: "Calories par photo",
-                    subtitle: "Cal AI — à brancher", tint: .nutriTint) { PhotoCalorieScaffold() }
-            ToolRow(icon: "barcode.viewfinder", title: "Scan code-barres santé",
-                    subtitle: "Yuka + prix + alternative", tint: .nutriTint) { ScanProductView() }
-        }
-    }
-}
 
 // MARK: - Jeûne intermittent
 
@@ -451,6 +427,44 @@ struct HydrationView: View {
                     HStack(spacing: 12) {
                         addBtn(250, "cup.and.saucer.fill"); addBtn(500, "waterbottle.fill"); addBtn(750, "drop.fill")
                     }
+
+                    // On pouvait AJOUTER de l'eau sans jamais pouvoir en
+                    // retirer: un double appui sur 250 ml restait faux pour la
+                    // journee, et le total nourrit le score du jour.
+                    if !todayEntries.isEmpty {
+                        VStack(alignment: .leading, spacing: 0) {
+                            HStack {
+                                Text("Aujourd'hui").font(.footnote.weight(.semibold))
+                                    .foregroundStyle(Theme.textSecondary)
+                                Spacer()
+                                Button {
+                                    if let last = todayEntries.first { remove(last) }
+                                } label: {
+                                    Label("Annuler le dernier", systemImage: "arrow.uturn.backward")
+                                        .font(.caption)
+                                }
+                            }
+                            .padding(.bottom, 6)
+
+                            ForEach(todayEntries) { e in
+                                HStack {
+                                    Text(e.date, style: .time)
+                                        .font(.caption).foregroundStyle(Theme.textSecondary)
+                                    Spacer()
+                                    Text("\(e.amountML) ml").font(.subheadline)
+                                        .foregroundStyle(Theme.textPrimary)
+                                    Button(role: .destructive) { remove(e) } label: {
+                                        Image(systemName: "trash").font(.caption)
+                                    }
+                                    .accessibilityLabel("Supprimer \(e.amountML) millilitres")
+                                }
+                                .padding(.vertical, 6)
+                                Divider().opacity(0.15)
+                            }
+                        }
+                        .card()
+                    }
+
                     Toggle("Rappels toutes les 2h (9h-21h)", isOn: $reminderOn)
                         .tint(.nutriTint)
                         .onChange(of: reminderOn) { _, on in on ? scheduleReminders() : cancelReminders() }
@@ -463,6 +477,19 @@ struct HydrationView: View {
         .task { syncWaterToContext() }
         .onChange(of: entries.count) { _, _ in syncWaterToContext() }
     }
+    /// Prises du jour, la plus recente en premier.
+    private var todayEntries: [WaterEntry] {
+        entries.filter { Calendar.current.isDateInToday($0.date) }
+               .sorted { $0.date > $1.date }
+    }
+
+    private func remove(_ e: WaterEntry) {
+        ctx.delete(e)
+        _ = LifeOSTry(try ctx.save(), context: "suppression prise d eau", category: AppLog.data)
+        syncWaterToContext()
+        Haptics.soft()
+    }
+
     private func syncWaterToContext() {
         guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return }
         grp.set(todayML, forKey: "today_water_ml")
@@ -553,7 +580,7 @@ struct SupplementsView: View {
     }
 
     private func suppRow(_ s: Supplement) -> some View {
-        let key = "supp\(s.persistentModelID.hashValue)"
+        let key = supplementID(s)
         let streak = ConfirmationStore.shared.streak(key)
         return HStack(spacing: 12) {
             Image(systemName: "pills.fill").foregroundStyle(.nutriTint)
@@ -603,14 +630,24 @@ struct SupplementsView: View {
     }
 
     private func delete(_ s: Supplement) {
-        let id = "supp\(s.persistentModelID.hashValue)"
+        let id = supplementID(s)
         NotificationManager.shared.cancel(id: id)
         NotificationManager.shared.cancel(id: id + ".confirm")
         ctx.delete(s)
     }
 
+    /// Identifiant de notification stable entre deux lancements.
+    /// Rempli paresseusement puis persiste, comme CustomReminder.stableID.
+    private func supplementID(_ s: Supplement) -> String {
+        if s.stableID.isEmpty {
+            s.stableID = UUID().uuidString
+            LifeOSTry(try ctx.save(), context: "stableID complement", category: AppLog.data)
+        }
+        return "supp.\(s.stableID)"
+    }
+
     private func reschedule(_ s: Supplement) {
-        let id = "supp\(s.persistentModelID.hashValue)"
+        let id = supplementID(s)
         let confirmId = id + ".confirm"
         NotificationManager.shared.cancel(id: id)
         NotificationManager.shared.cancel(id: confirmId)
@@ -696,49 +733,3 @@ enum AllergenChecker {
 
 // MARK: - Scaffolds IA
 
-struct PhotoCalorieScaffold: View {
-    var body: some View {
-        ZStack {
-            Theme.background
-            ScrollView {
-                VStack(spacing: 16) {
-                    Image(systemName: "camera.viewfinder").font(.system(size: 56)).foregroundStyle(.nutriTint).padding(.top, 30)
-                    Text("Calories par photo").font(.title3.bold()).foregroundStyle(Theme.textPrimary)
-                    IntegrationNotice(text: "Reconnaître un plat et estimer ses calories nécessite un modèle de vision (comme Cal AI). Branchement prévu : capture photo → envoi à une API de food-recognition (ex: une fonction Cloud avec un modèle multimodal) → retour kcal + macros, qui s'insèrent automatiquement dans ton journal.")
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Étapes d'activation").font(.headline).foregroundStyle(Theme.textPrimary)
-                        bullet("1. Caméra : VisionKit / AVCapture (déjà autorisé dans Info.plist)")
-                        bullet("2. Endpoint d'analyse : modèle multimodal côté serveur")
-                        bullet("3. Mapping résultat → FoodEntry (déjà prêt dans l'app)")
-                    }.card()
-                }.padding(Theme.pad)
-            }
-        }
-        .navigationTitle("Cal AI").navigationBarTitleDisplayMode(.inline)
-    }
-    private func bullet(_ t: String) -> some View { Text("• " + t).font(.footnote).foregroundStyle(Theme.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
-}
-
-struct BarcodeScaffold: View {
-    var body: some View {
-        ZStack {
-            Theme.background
-            ScrollView {
-                VStack(spacing: 16) {
-                    Image(systemName: "barcode.viewfinder").font(.system(size: 56)).foregroundStyle(.nutriTint).padding(.top, 30)
-                    Text("Scan santé + prix + alternative").font(.title3.bold()).foregroundStyle(Theme.textPrimary)
-                    IntegrationNotice(text: "Le scan d'un code-barres peut être 100% fonctionnel via l'API gratuite OpenFoodFacts (note santé Nutri-Score + additifs, comme Yuka). L'enrichissement « prix + alternative moins chère en rayon » nécessite une base prix (API enseigne ou crowdsourcing). Le lecteur de code-barres natif (VisionKit) est prêt à brancher.")
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Ce qui est gratuit & branchable tout de suite").font(.headline).foregroundStyle(Theme.textPrimary)
-                        bullet("Lecture code-barres : DataScannerViewController (VisionKit)")
-                        bullet("Fiche produit + Nutri-Score : api.openfoodfacts.org (gratuit)")
-                        bullet("Alternatives plus saines : champ « comparé à » d'OpenFoodFacts")
-                        bullet("Prix : à connecter à une source enseigne (payant/scraping)")
-                    }.card()
-                }.padding(Theme.pad)
-            }
-        }
-        .navigationTitle("Scan santé").navigationBarTitleDisplayMode(.inline)
-    }
-    private func bullet(_ t: String) -> some View { Text("• " + t).font(.footnote).foregroundStyle(Theme.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
-}

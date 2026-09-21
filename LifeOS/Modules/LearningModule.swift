@@ -5,20 +5,6 @@ extension ShapeStyle where Self == Color { static var learnTint: Color { AppCate
 
 // MARK: - Hub Apprentissage
 
-struct LearningHubView: View {
-    var body: some View {
-        HubScaffold(category: .learning) {
-            ToolRow(icon: "rectangle.on.rectangle.angled", title: "Flashcards",
-                    subtitle: "Répétition espacée (SM-2)", tint: .learnTint) { FlashcardsView() }
-            ToolRow(icon: "lightbulb.max.fill", title: "Micro-learning du jour",
-                    subtitle: "Une pépite par jour", tint: .learnTint) { MicroLearningView() }
-            ToolRow(icon: "books.vertical.fill", title: "Résumés de livres",
-                    subtitle: "Tes idées clés — Blinkist", tint: .learnTint) { BookSummariesView() }
-            ToolRow(icon: "chart.bar.fill", title: "Plan de montée en compétence",
-                    subtitle: "Skill → jalons", tint: .learnTint) { SkillPlanView() }
-        }
-    }
-}
 
 // MARK: - Flashcards (SM-2)
 
@@ -188,6 +174,8 @@ struct BookSummariesView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \BookSummary.date, order: .reverse) private var books: [BookSummary]
     @State private var showAdd = false
+    @State private var showAI = false
+    @State private var aiReady = false
     var body: some View {
         ZStack {
             Theme.background
@@ -205,13 +193,106 @@ struct BookSummariesView: View {
                                 .contextMenu { Button(role: .destructive) { ctx.delete(b) } label: { Label("Supprimer", systemImage: "trash") } }
                         }
                     }
-                    IntegrationNotice(text: "Générer automatiquement le résumé d'un livre (façon Blinkist) à partir d'un titre se branche via un modèle de langage. Ici tu captures tes propres idées clés — ce qui est en réalité bien plus efficace pour la mémorisation.")
+                    if aiReady {
+                        Button { showAI = true } label: {
+                            Label("Résumer un livre avec ton coach", systemImage: "sparkles")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent).tint(.learnTint)
+                    } else {
+                        // Pas de cle: on le dit une fois, sans promettre une
+                        // fonctionnalite qui echouerait au premier appui.
+                        Text("Ajoute une clé dans Profil › Coach pour générer un résumé automatiquement.")
+                            .font(.caption).foregroundStyle(Theme.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }.padding(Theme.pad)
             }
         }
         .navigationTitle("Résumés de livres").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { BookEditor() }
+        .sheet(isPresented: $showAI) { BookAISheet() }
+        .task { aiReady = await MainActor.run { AIText.isConfigured } }
+    }
+}
+
+/// Genere les idees cles d'un livre a partir de son titre.
+///
+/// Le modele ecrit sa PROPRE synthese: on lui interdit explicitement de citer
+/// le texte du livre. Un resume est une oeuvre nouvelle, un extrait recopie
+/// n'en est pas une.
+struct BookAISheet: View {
+    @Environment(\.modelContext) private var ctx
+    @Environment(\.dismiss) private var dismiss
+    @State private var title = ""
+    @State private var author = ""
+    @State private var ideas = ""
+    @State private var busy = false
+    @State private var error: String?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Titre du livre", text: $title)
+                    TextField("Auteur (optionnel)", text: $author)
+                }
+                Section {
+                    Button {
+                        Task { await generate() }
+                    } label: {
+                        HStack {
+                            if busy { ProgressView().controlSize(.small) }
+                            Text(busy ? "Rédaction…" : "Générer les idées clés")
+                        }
+                    }
+                    .disabled(busy || title.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+                if let error {
+                    Section { Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange).font(.footnote) }
+                }
+                if !ideas.isEmpty {
+                    Section("Idées clés") {
+                        // Editable: c'est une estimation du modele, pas une
+                        // verite, et l'utilisateur retient mieux ce qu'il reecrit.
+                        TextEditor(text: $ideas).frame(minHeight: 200)
+                    }
+                }
+            }
+            .navigationTitle("Résumé du coach").navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Enregistrer") { save() }.disabled(ideas.isEmpty)
+                }
+            }
+        }
+    }
+
+    private func generate() async {
+        busy = true; error = nil
+        defer { busy = false }
+        let who = author.trimmingCharacters(in: .whitespaces)
+        let sys = """
+        Tu résumes des livres pour quelqu'un qui veut en retenir l'essentiel.         Écris TES PROPRES phrases: ne cite pas le texte du livre, ne recopie         aucun passage. Réponds en français, 5 à 7 idées clés en puces courtes,         puis une ligne "À retenir :". Si tu ne connais pas ce livre, dis-le         franchement au lieu d'inventer.
+        """
+        let ask = "Livre : \(title)" + (who.isEmpty ? "" : "\nAuteur : \(who)")
+        switch await AIText.ask(system: sys, user: ask, maxTokens: 600) {
+        case .success(let t): ideas = t
+        case .failure(let e): error = e.message
+        }
+    }
+
+    private func save() {
+        let b = BookSummary(title: title.trimmingCharacters(in: .whitespaces),
+                            author: author.trimmingCharacters(in: .whitespaces),
+                            keyIdeas: ideas)
+        ctx.insert(b)
+        do { try ctx.save() } catch {
+            AppLog.data.error("resume livre non sauvegarde: \(error.localizedDescription, privacy: .public)")
+        }
+        dismiss()
     }
 }
 

@@ -15,23 +15,25 @@ final class ImageStoreTests: XCTestCase {
 
     // MARK: - Save
 
-    func testSaveReturnsNonEmptyFilename() {
+    func testSaveReturnsNonEmptyFilename() throws {
         let data = UIImage(systemName: "star")!.jpegData(compressionQuality: 0.8)!
-        let name = ImageStore.save(data, prefix: "test")
+        // save rend desormais un optionnel: nil signifie que l'ecriture a
+        // echoue, et l'appelant ne doit surtout pas enregistrer de nom.
+        let name = try XCTUnwrap(ImageStore.save(data, prefix: "test"))
         savedFilenames.append(name)
         XCTAssertFalse(name.isEmpty, "Le nom de fichier ne doit pas être vide")
     }
 
-    func testSaveFilenameContainsPrefix() {
+    func testSaveFilenameContainsPrefix() throws {
         let data = Data(repeating: 0xFF, count: 100)
-        let name = ImageStore.save(data, prefix: "myprefix")
+        let name = try XCTUnwrap(ImageStore.save(data, prefix: "myprefix"))
         savedFilenames.append(name)
         XCTAssertTrue(name.hasPrefix("myprefix-"), "Le nom doit commencer par le préfixe")
     }
 
-    func testSaveCreatesFileOnDisk() {
+    func testSaveCreatesFileOnDisk() throws {
         let data = Data(repeating: 0xAB, count: 256)
-        let name = ImageStore.save(data, prefix: "disktest")
+        let name = try XCTUnwrap(ImageStore.save(data, prefix: "disktest"))
         savedFilenames.append(name)
         let url = ImageStore.dir.appendingPathComponent(name)
         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path), "Le fichier doit exister sur disque après save()")
@@ -56,9 +58,9 @@ final class ImageStoreTests: XCTestCase {
         ImageStore.delete(nil)
     }
 
-    func testDeleteRemovesFile() {
+    func testDeleteRemovesFile() throws {
         let data = Data(repeating: 0x01, count: 64)
-        let name = ImageStore.save(data, prefix: "deltest")
+        let name = try XCTUnwrap(ImageStore.save(data, prefix: "deltest"))
         let url = ImageStore.dir.appendingPathComponent(name)
         XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
         ImageStore.delete(name)
@@ -75,9 +77,21 @@ final class ImageStoreTests: XCTestCase {
     func testSaveLoadRoundtrip() throws {
         let original = UIImage(systemName: "heart.fill")!
         let data = original.jpegData(compressionQuality: 1.0)!
-        let name = ImageStore.save(data, prefix: "roundtrip")
+        let name = try XCTUnwrap(ImageStore.save(data, prefix: "roundtrip"))
         savedFilenames.append(name)
         let loaded = ImageStore.load(name)
         XCTAssertNotNil(loaded, "load() doit retourner une image après save()")
     }
+
+    /// Le contrat qui manquait, et qui a coute un document perdu:
+    /// quand l'ecriture echoue, save doit rendre nil et PAS un nom de
+    /// fichier. Sinon l'appelant enregistre une fiche qui pointe vers rien.
+    func testSaveReturnsNilWhenWriteFails() throws {
+        // Un prefixe contenant une barre oblique force un chemin invalide.
+        let data = Data(repeating: 0x01, count: 32)
+        let name = ImageStore.save(data, prefix: "dossier/inexistant/x")
+        if let name { savedFilenames.append(name) }
+        XCTAssertNil(name, "une ecriture impossible doit rendre nil")
+    }
+
 }

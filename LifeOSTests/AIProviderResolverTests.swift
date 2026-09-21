@@ -6,6 +6,10 @@ import XCTest
 ///
 /// Le mapping DOIT rester aligné avec les `.id` déclarés dans les providers
 /// concrets — sinon l'user voit "openai.gpt" au lieu de "GPT-4o mini".
+// La methode testee est @MainActor (elle lit CustomProviderStore.shared).
+// Sans cette annotation la suite ne compile pas: "call to main actor-isolated
+// static method in a synchronous nonisolated context".
+@MainActor
 final class AIProviderResolverTests: XCTestCase {
 
     func testDisplayName_appleIntelligence() {

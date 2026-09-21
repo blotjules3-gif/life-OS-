@@ -95,13 +95,13 @@ struct NotificationsSettingsView: View {
         .sheet(isPresented: $creatingNew) {
             SmartReminderEditor(reminder: nil) { newR in
                 ctx.insert(newR)
-                try? ctx.save()
+                persist()
                 SmartReminderScheduler.reschedule(newR)
             }
         }
         .sheet(item: $editing) { r in
             SmartReminderEditor(reminder: r) { _ in
-                try? ctx.save()
+                persist()
                 SmartReminderScheduler.reschedule(r)
             }
         }
@@ -169,7 +169,7 @@ struct NotificationsSettingsView: View {
             categoryRaw: sug.categoryRaw
         )
         ctx.insert(r)
-        try? ctx.save()
+        persist()
         SmartReminderScheduler.reschedule(r)
     }
 
@@ -193,7 +193,7 @@ struct NotificationsSettingsView: View {
                 Spacer()
                 Toggle("", isOn: Binding(
                     get: { r.enabled },
-                    set: { r.enabled = $0; try? ctx.save(); SmartReminderScheduler.reschedule(r) }
+                    set: { r.enabled = $0; persist(); SmartReminderScheduler.reschedule(r) }
                 ))
                 .labelsHidden()
             }
@@ -232,6 +232,17 @@ struct NotificationsSettingsView: View {
             NotificationManager.shared.cancel(id: SmartReminderScheduler.baseIdentifier(r) + ".confirm")
             ctx.delete(r)
         }
-        try? ctx.save()
+        persist()
     }
+
+    /// Enregistre en signalant l'echec.
+    ///
+    /// Passer par une fonction est NECESSAIRE: LifeOSTry prend une autoclosure
+    /// qui throw, donc le try est obligatoire, et un try place directement
+    /// dans une action de bouton rendrait cette fermeture throwing, ce qui ne
+    /// compile pas la ou une fermeture non throwing est attendue.
+    private func persist() {
+        LifeOSTry(try ctx.save(), context: "sauvegarde rappel", category: AppLog.data)
+    }
+
 }

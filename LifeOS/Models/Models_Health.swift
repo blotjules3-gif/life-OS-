@@ -75,6 +75,20 @@ import SwiftData
     var withFood: Bool = true         // avec un repas / à jeun
     var advice: String = ""           // courte explication
     var confirm: Bool = true          // envoyer une notif de confirmation ~1h30 après
+    /// Identifiant stable entre les lancements, pour les IDs de notification.
+    ///
+    /// `persistentModelID.hashValue` n'est PAS stable: le hachage de Swift est
+    /// amorce au hasard a chaque demarrage du processus. L'ID calcule au
+    /// lancement suivant etait donc different, et supprimer un complement
+    /// annulait une notification qui n'existait pas: l'ancienne continuait de
+    /// sonner tous les jours, sans plus aucun moyen de l'arreter.
+    ///
+    /// Defaut vide et PAS UUID(): SwiftData reevalue la valeur par defaut a
+    /// chaque chargement des lignes migrees, ce qui redonnerait un UUID
+    /// different a chaque fois. Il est rempli paresseusement puis persiste.
+    /// Meme convention que CustomReminder.stableID.
+    var stableID: String = ""
+
     init(name: String = "", hour: Int = 8, minute: Int = 0, active: Bool = true,
          moment: String = "matin", withFood: Bool = true, advice: String = "", confirm: Bool = true) {
         self.name = name; self.hour = hour; self.minute = minute; self.active = active

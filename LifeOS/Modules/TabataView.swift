@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import SwiftData
 import Combine
 import AVFoundation
@@ -154,6 +155,11 @@ final class TabataEngine {
     var running = false
 
     private var cancellable: AnyCancellable?
+    /// Horodatage du dernier battement, pour rattraper le temps passe en arriere-plan.
+    private var lastTick: Date?
+    /// Source de l'heure, remplacable dans les tests. Sans ca, le rattrapage
+    /// en arriere-plan n'est pas verifiable autrement qu'en attendant vraiment.
+    var now: () -> Date = { Date() }
 
     init(cfg: TabataConfig) {
         self.cfg = cfg
@@ -209,16 +215,50 @@ final class TabataEngine {
 
     private func run() {
         running = true
+        lastTick = now()
+        // L'ecran ne doit pas s'eteindre au milieu d'une seance: on a les mains
+        // occupees et on ne touche pas le telephone pendant l'effort.
+        UIApplication.shared.isIdleTimerDisabled = true
         cancellable = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
             .sink { [weak self] _ in self?.tick() }
     }
-    private func pause() { running = false; cancellable?.cancel() }
+    private func pause() {
+        running = false
+        cancellable?.cancel()
+        lastTick = nil
+        UIApplication.shared.isIdleTimerDisabled = false
+    }
 
-    private func tick() {
+    /// Avance d'autant de secondes qu'il s'en est REELLEMENT ecoule.
+    ///
+    /// Avant, chaque battement retirait exactement 1 seconde. Or un Timer ne
+    /// tourne pas quand l'app passe en arriere-plan: verrouiller l'ecran en
+    /// plein Tabata mettait le chrono en pause sans le dire, et on revenait
+    /// avec un temps faux. On se cale donc sur l'horloge, pas sur le nombre de
+    /// battements recus.
+    func tick() {
+        let now = self.now()
+        var steps = 1
+        if let last = lastTick {
+            steps = Int(now.timeIntervalSince(last).rounded())
+        }
+        lastTick = now
+        guard steps > 0 else { return }
+        // Revenir deux heures plus tard ne doit pas lancer une boucle absurde.
+        let catchUp = steps > 1
+        steps = min(steps, 3600)
+        for _ in 0..<steps {
+            guard running, phase != .idle, phase != .done else { break }
+            step(silent: catchUp)
+        }
+    }
+
+    private func step(silent: Bool) {
         if remaining > 1 {
             remaining -= 1
             // Décompte sonore sur les 3 dernières secondes de chaque intervalle.
-            if remaining <= 3, phase != .idle, phase != .done { TabataSound.shared.countdown() }
+            // Muet pendant un rattrapage, sinon on entendrait cent bips d'un coup.
+            if !silent, remaining <= 3, phase != .idle, phase != .done { TabataSound.shared.countdown() }
             return
         }
         advance()   // remaining == 1 → transition (son joué dans enter/finish)
@@ -313,6 +353,7 @@ enum TabataPresets {
 // MARK: - Écran immersif
 
 struct TabataView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dismiss) private var dismiss
     @AppStorage(AppStorageKeys.tabPrepare) private var prepare = 10
     @AppStorage(AppStorageKeys.tabWork) private var work = 30
@@ -408,6 +449,11 @@ struct TabataView: View {
         }
         .animation(.easeInOut(duration: 0.25), value: engine.phase)
         .statusBarHidden()
+        // Rattrapage immediat au retour au premier plan: sans ca il faut
+        // attendre le battement suivant pour que le chrono se recale.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { engine.tick() }
+        }
         .onAppear { engine.cfg = config; if engine.phase == .idle { engine.remaining = prepare } }
         .onDisappear { TabataSound.shared.end() }   // libère la session audio (musique dé-duckée)
         .sheet(isPresented: $showSettings) {

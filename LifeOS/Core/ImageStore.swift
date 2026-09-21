@@ -5,15 +5,22 @@ import PhotosUI
 enum ImageStore {
     static var dir: URL { FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0] }
 
+    /// Ecrit l'image et rend son nom de fichier, ou nil si l'ecriture a rate.
+    ///
+    /// Avant, le nom etait rendu MEME quand l'ecriture echouait. L'appelant
+    /// enregistrait donc une fiche qui pointe vers un fichier inexistant: le
+    /// document etait perdu, la fiche restait, et l'ecran affichait une icone
+    /// de remplacement pour toujours. Un disque plein suffisait.
     @discardableResult
-    static func save(_ data: Data, prefix: String = "img") -> String {
+    static func save(_ data: Data, prefix: String = "img") -> String? {
         let name = "\(prefix)-\(UUID().uuidString).jpg"
         do {
             try data.write(to: dir.appendingPathComponent(name))
+            return name
         } catch {
             AppLog.data.error("ImageStore save failed: \(error.localizedDescription, privacy: .public)")
+            return nil
         }
-        return name
     }
 
     static func load(_ filename: String?) -> UIImage? {
@@ -74,8 +81,8 @@ struct PhotoPickerButton: View {
         }
         .task(id: selection) {
             guard let item = selection else { return }
-            if let data = try? await item.loadTransferable(type: Data.self) {
-                let name = ImageStore.save(data, prefix: prefix)
+            if let data = try? await item.loadTransferable(type: Data.self),
+               let name = ImageStore.save(data, prefix: prefix) {
                 onPicked(name)
             }
         }

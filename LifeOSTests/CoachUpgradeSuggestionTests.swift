@@ -55,12 +55,18 @@ final class CoachUpgradeSuggestionTests: XCTestCase {
 
     // MARK: - Kill switch : clé cloud configurée
 
-    func testShouldSuggest_hasCloudKey_returnsFalse() {
+    func testShouldSuggest_hasCloudKey_returnsFalse() throws {
         // Simule que l'user a déjà branché une clé (peu importe laquelle)
         _ = AIProviderCredentials.shared.setKey(
             "sk-" + String(repeating: "a", count: 45),
             for: .openai
         )
+        // Le trousseau n'est pas toujours accessible depuis l'hote de test
+        // sur un simulateur d'integration continue: l'ecriture echoue alors en
+        // silence et le test tombe en accusant la logique, qui n'y est pour
+        // rien. On verifie donc la precondition au lieu de la supposer.
+        try XCTSkipUnless(AIProviderCredentials.shared.hasKey(for: .openai),
+                          "Trousseau indisponible sur cet hote de test")
         // Même avec 5 dislikes, ne doit pas suggérer
         for i in 0..<5 {
             CoachFeedbackStore.record(.dislike, response: "réponse \(i)")

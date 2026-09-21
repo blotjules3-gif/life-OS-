@@ -6,20 +6,6 @@ extension ShapeStyle where Self == Color { static var investTint: Color { AppCat
 
 // MARK: - Hub Investissement
 
-struct InvestHubView: View {
-    var body: some View {
-        HubScaffold(category: .invest) {
-            ToolRow(icon: "chart.pie.fill", title: "Portefeuille",
-                    subtitle: "Actions + crypto en un dashboard", tint: .investTint) { PortfolioView() }
-            ToolRow(icon: "chart.line.uptrend.xyaxis", title: "Net worth & FIRE",
-                    subtitle: "Patrimoine + projection", tint: .investTint) { NetWorthView() }
-            ToolRow(icon: "house.fill", title: "Immobilier",
-                    subtitle: "Biens, loyers, cashflow", tint: .investTint) { RealEstateView() }
-            ToolRow(icon: "percent", title: "Simulateur fiscalité",
-                    subtitle: "Impôt sur le revenu (FR)", tint: .investTint) { TaxSimulatorView() }
-        }
-    }
-}
 
 // MARK: - Portefeuille
 
@@ -27,6 +13,11 @@ struct PortfolioView: View {
     @Environment(\.modelContext) private var ctx
     @Query private var holdings: [Holding]
     @State private var showAdd = false
+    @State private var refreshing = false
+    @State private var priceError: String?
+    @State private var lastRefresh: Date?
+    private var cryptoSymbols: [String] { holdings.filter { $0.kind == "Crypto" }.map(\.symbol) }
+    private var stockSymbols: [String] { holdings.filter { $0.kind != "Crypto" }.map(\.symbol) }
     private var total: Double { holdings.reduce(0) { $0 + $1.value } }
     private var totalPnL: Double { holdings.reduce(0) { $0 + $1.pnl } }
 
@@ -66,14 +57,95 @@ struct PortfolioView: View {
                             }.card(padding: 12)
                                 .contextMenu { Button(role: .destructive) { ctx.delete(h) } label: { Label("Supprimer", systemImage: "trash") } }
                         }
-                        IntegrationNotice(text: "Les prix sont saisis manuellement. Pour des cours en temps réel, branche une API gratuite : CoinGecko (crypto) ou Finnhub/Twelve Data (actions) — un simple appel HTTP qui met à jour currentPrice.")
+                        priceStatus
                     }
                 }.padding(Theme.pad)
             }
         }
         .navigationTitle("Portefeuille").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter")
+            }
+            ToolbarItem(placement: .topBarLeading) {
+                Button { Task { await refreshPrices(force: true) } } label: {
+                    if refreshing { ProgressView() } else { Image(systemName: "arrow.clockwise") }
+                }
+                .disabled(refreshing || (cryptoSymbols.isEmpty && stockSymbols.isEmpty))
+                .accessibilityLabel("Actualiser les cours")
+            }
+        }
         .sheet(isPresented: $showAdd) { HoldingEditor() }
+        .refreshable { await refreshPrices(force: true) }
+        .task { await refreshPrices(force: false) }
+    }
+
+    /// Etat de la synchro des cours, affiche a la place de l'ancienne notice.
+    @ViewBuilder private var priceStatus: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let priceError {
+                Label(priceError, systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption).foregroundStyle(.orange)
+            } else if let lastRefresh {
+                Label("Cours à jour · \(lastRefresh, style: .time)", systemImage: "checkmark.circle.fill")
+                    .font(.caption).foregroundStyle(.green)
+            }
+            // On ne pretend pas suivre les actions: aucune API boursiere n'est
+            // gratuite sans cle. Le dire vaut mieux qu'un chiffre faux.
+            if holdings.contains(where: { $0.kind != "Crypto" }) {
+                // Cours differes selon la place: on le dit plutot que de
+                // laisser croire a du temps reel.
+                Text("Actions et ETF : cours différés. Utilise le symbole de la place (MC.PA, AAPL, CW8.PA).")
+                    .font(.caption2).foregroundStyle(Theme.textSecondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 4)
+    }
+
+    /// Va chercher les cours et les ecrit dans le modele.
+    ///
+    /// Crypto et actions viennent de deux sources differentes. Un echec d'un
+    /// cote ne doit pas empecher l'autre de se mettre a jour, sinon une panne
+    /// de Yahoo gelerait aussi les cryptos.
+    private func refreshPrices(force: Bool) async {
+        guard !cryptoSymbols.isEmpty || !stockSymbols.isEmpty else { return }
+        refreshing = true
+        defer { refreshing = false }
+        var problems: [String] = []
+        var updated = 0
+
+        if !cryptoSymbols.isEmpty {
+            switch await PriceService.cryptoPrices(symbols: cryptoSymbols, force: force) {
+            case .success(let prices):
+                for h in holdings where h.kind == "Crypto" {
+                    if let p = prices[h.symbol.lowercased()] { h.currentPrice = p; updated += 1 }
+                }
+            case .failure(let e):
+                problems.append("Crypto : \(e)")
+            }
+        }
+
+        if !stockSymbols.isEmpty {
+            switch await StockService.pricesInEUR(symbols: stockSymbols, force: force) {
+            case .success(let prices):
+                for h in holdings where h.kind != "Crypto" {
+                    if let p = prices[h.symbol.uppercased()] { h.currentPrice = p; updated += 1 }
+                }
+            case .failure(let e):
+                problems.append("Actions : \(e)")
+            }
+        }
+
+        if updated > 0 {
+            // On garde les derniers prix connus en cas d'echec partiel plutot
+            // que de vider l'ecran.
+            do { try ctx.save() } catch {
+                AppLog.data.error("cours non sauvegardes: \(error.localizedDescription, privacy: .public)")
+            }
+            lastRefresh = .now
+        }
+        priceError = problems.isEmpty ? nil : problems.joined(separator: " · ")
     }
 }
 

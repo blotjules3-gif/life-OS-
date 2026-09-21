@@ -263,8 +263,30 @@ struct AddAnythingSheet: View {
         dismiss()
     }
 
+    /// Reduit un texte libre a une cle stable et lisible.
+    /// Minuscules, accents retires, tout ce qui n'est pas alphanumerique
+    /// devient un tiret, longueur bornee pour rester un identifiant sain.
+    static func slug(_ text: String) -> String {
+        let folded = text.folding(options: [.diacriticInsensitive, .caseInsensitive],
+                                  locale: Locale(identifier: "fr_FR"))
+        let cleaned = folded.map { ch -> Character in
+            ch.isLetter || ch.isNumber ? ch : "-"
+        }
+        let joined = String(cleaned)
+            .split(separator: "-", omittingEmptySubsequences: true)
+            .joined(separator: "-")
+        return String(joined.prefix(48))
+    }
+
     private func scheduleReminder(for n: String) {
-        let id = "addflow.\(kind.rawValue).\(abs(n.hashValue))"
+        // Identifiant DETERMINISTE, derive du texte lui-meme.
+        //
+        // abs(n.hashValue) n'est pas stable: le hachage de Swift est amorce au
+        // hasard a chaque demarrage du processus. Programmer deux fois le meme
+        // rappel dans deux sessions differentes creait donc DEUX notifications
+        // au lieu d'en remplacer une, et l'utilisateur recevait des doublons
+        // sans comprendre pourquoi.
+        let id = "addflow.\(kind.rawValue).\(Self.slug(n))"
         let title = "\(kind.label) : \(n)"
         let body = reminderBody(n)
         let cal = Calendar.current

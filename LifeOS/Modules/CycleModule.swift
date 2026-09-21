@@ -22,18 +22,6 @@ final class CycleEntry {
 
 // MARK: - Hub Cycle
 
-struct CycleHubView: View {
-    var body: some View {
-        HubScaffold(category: .cycle) {
-            ToolRow(icon: "calendar.badge.clock", title: "Suivi du cycle",
-                    subtitle: "Règles · durée · prédiction", tint: .cycleTint) { CycleTrackerView() }
-            ToolRow(icon: "waveform.path.ecg", title: "Symptômes",
-                    subtitle: "Crampes, humeur, énergie, peau", tint: .cycleTint) { CycleSymptomsView() }
-            ToolRow(icon: "chart.bar.fill", title: "Historique",
-                    subtitle: "Régularité · durée moyenne", tint: .cycleTint) { CycleHistoryView() }
-        }
-    }
-}
 
 extension ShapeStyle where Self == Color { static var cycleTint: Color { AppCategory.cycle.tint } }
 

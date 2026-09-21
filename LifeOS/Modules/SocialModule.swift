@@ -6,18 +6,6 @@ extension ShapeStyle where Self == Color { static var socialTint: Color { AppCat
 
 // MARK: - Hub Social
 
-struct SocialHubView: View {
-    var body: some View {
-        HubScaffold(category: .social) {
-            ToolRow(icon: "person.crop.circle.badge.clock", title: "CRM personnel",
-                    subtitle: "Qui relancer", tint: .socialTint) { CRMView() }
-            ToolRow(icon: "gift.fill", title: "Anniversaires & cadeaux",
-                    subtitle: "Rappels + idées", tint: .socialTint) { BirthdaysView() }
-            ToolRow(icon: "calendar.badge.plus", title: "Sorties & events",
-                    subtitle: "Organise tes événements", tint: .socialTint) { EventsView() }
-        }
-    }
-}
 
 // MARK: - CRM
 

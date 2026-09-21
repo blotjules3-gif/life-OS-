@@ -5,22 +5,6 @@ extension ShapeStyle where Self == Color { static var mindTint: Color { AppCateg
 
 // MARK: - Hub Mental
 
-struct MindHubView: View {
-    var body: some View {
-        HubScaffold(category: .mind) {
-            ToolRow(icon: "wind", title: "Respiration & cohérence",
-                    subtitle: "Box breathing, 365…", tint: .mindTint) { BreathingView() }
-            ToolRow(icon: "leaf.fill", title: "Méditation",
-                    subtitle: "Minuteur silencieux guidé", tint: .mindTint) { MeditationView() }
-            ToolRow(icon: "face.smiling.inverse", title: "Humeur & gratitude",
-                    subtitle: "Journal quotidien", tint: .mindTint) { MoodJournalView() }
-            ToolRow(icon: "hourglass", title: "Détox écran",
-                    subtitle: "Usage & objectifs", tint: .mindTint) { ScreenDetoxView() }
-            ToolRow(icon: "sun.horizon.fill", title: "Briefing du matin",
-                    subtitle: "Motivation + ta journée", tint: .mindTint) { MorningBriefingView() }
-        }
-    }
-}
 
 // MARK: - Respiration / cohérence cardiaque
 
@@ -215,6 +199,23 @@ struct MoodJournalView: View {
 struct ScreenDetoxView: View {
     @AppStorage(AppStorageKeys.screenGoal) private var goalHours = 3
     @AppStorage(AppStorageKeys.screenToday) private var todayMinutes = 0
+    /// Jour auquel `todayMinutes` se rapporte, en nombre de jours depuis 1970.
+    ///
+    /// Sans ca le compteur "aujourd'hui" n'etait JAMAIS remis a zero: il
+    /// cumulait depuis l'installation, donc l'anneau etait rouge a vie et
+    /// l'objectif quotidien ne voulait plus rien dire.
+    @AppStorage("screenTodayDay") private var storedDay = 0
+
+    private var todayIndex: Int {
+        Int(Calendar.current.startOfDay(for: .now).timeIntervalSince1970 / 86_400)
+    }
+
+    private func resetIfNewDay() {
+        guard storedDay != todayIndex else { return }
+        storedDay = todayIndex
+        todayMinutes = 0
+    }
+
     var body: some View {
         ZStack {
             Theme.background
@@ -240,6 +241,7 @@ struct ScreenDetoxView: View {
             }
         }
         .navigationTitle("Détox écran").navigationBarTitleDisplayMode(.inline)
+        .onAppear { resetIfNewDay() }
     }
 }
 

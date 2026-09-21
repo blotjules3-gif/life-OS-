@@ -4,24 +4,6 @@ import AVFoundation
 
 // MARK: - Hub Sommeil
 
-struct SleepHubView: View {
-    var body: some View {
-        HubScaffold(category: .sleep) {
-            ToolRow(icon: "chart.bar.xaxis", title: "Suivi du sommeil",
-                    subtitle: "Durée, dette, régularité · 7 nuits", tint: .sleepTint) { SleepDashboardView() }
-            ToolRow(icon: "bed.double.fill", title: "Heure de coucher optimale",
-                    subtitle: "Cycles de 90 min · réveil léger", tint: .sleepTint) { BedtimeCalculatorView() }
-            ToolRow(icon: "powersleep", title: "Power nap",
-                    subtitle: "Sieste calibrée 20 ou 90 min", tint: .sleepTint) { PowerNapView() }
-            ToolRow(icon: "moon.zzz.fill", title: "Coucher progressif",
-                    subtitle: "Rappel + lumière bleue + mode nuit", tint: .sleepTint) { WindDownView() }
-            ToolRow(icon: "cloud.moon.fill", title: "Journal de rêves",
-                    subtitle: "Note vocale + texte + humeur", tint: .sleepTint) { DreamJournalView() }
-            ToolRow(icon: "heart.text.square.fill", title: "Score de récupération",
-                    subtitle: "HRV + FC repos (Apple Santé)", tint: .sleepTint) { RecoveryScoreView() }
-        }
-    }
-}
 
 extension ShapeStyle where Self == Color { static var sleepTint: Color { AppCategory.sleep.tint } }
 

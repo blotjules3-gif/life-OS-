@@ -64,6 +64,7 @@ struct DocScanView: View {
     @State private var pickerItem: PhotosPickerItem?
     @State private var showCamera = false
     @State private var savedToast = false
+    @State private var saveError: String?
 
     private var cameraAvailable: Bool { VNDocumentCameraViewController.isSupported }
 
@@ -75,6 +76,14 @@ struct DocScanView: View {
                     preview
                     sourceButtons
                     if busy { ProgressView("Lecture du texte…").padding() }
+                    if let saveError {
+                        // Etat d'erreur visible: sans lui, l'utilisateur croit
+                        // son document range alors que l'image est perdue.
+                        Label(saveError, systemImage: "exclamationmark.triangle.fill")
+                            .font(.footnote).foregroundStyle(.orange)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 4)
+                    }
                     if analyzed { resultCard }
                 }
                 .padding()
@@ -189,9 +198,16 @@ struct DocScanView: View {
     }
 
     private func save() {
+        saveError = nil
         var filename: String? = nil
         if let image, let data = image.jpegData(compressionQuality: 0.8) {
             filename = ImageStore.save(data, prefix: "doc")
+            if filename == nil {
+                // On refuse d'enregistrer une fiche qui pretend avoir une
+                // image alors que le fichier n'a pas pu etre ecrit: le texte
+                // reconnu, lui, est conserve.
+                saveError = "L'image n'a pas pu être enregistrée. Le texte reconnu est conservé."
+            }
         }
         let doc = DocVault(title: title.isEmpty ? "Document" : title,
                            category: category, filename: filename, note: text)

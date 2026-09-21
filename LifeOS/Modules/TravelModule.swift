@@ -5,16 +5,6 @@ extension ShapeStyle where Self == Color { static var travelTint: Color { AppCat
 
 // MARK: - Hub Voyage
 
-struct TravelHubView: View {
-    var body: some View {
-        HubScaffold(category: .travel) {
-            ToolRow(icon: "map.fill", title: "Mes voyages",
-                    subtitle: "Itinéraire + budget + valise", tint: .travelTint) { TripsView() }
-            ToolRow(icon: "airplane.circle.fill", title: "Suivi des vols",
-                    subtitle: "Compte à rebours & statut", tint: .travelTint) { FlightTrackerView() }
-        }
-    }
-}
 
 // MARK: - Voyages
 

@@ -31,7 +31,15 @@ final class AlarmLiveActivityManager {
             weatherSymbol: cachedWeatherSymbol
         )
         let content = ActivityContent(state: state, staleDate: .now.addingTimeInterval(8 * 3600))
-        activity = try? Activity.request(attributes: attrs, content: content)
+        // try? avalait l'echec: l'activite en direct ne s'affichait pas et
+        // rien nulle part ne disait pourquoi. Les causes sont concretes
+        // (quota atteint, activites desactivees en Reglages), donc elles
+        // doivent se lire dans les journaux.
+        do {
+            activity = try Activity.request(attributes: attrs, content: content)
+        } catch {
+            AppLog.general.error("activite en direct du reveil refusee: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     func start() {
@@ -49,7 +57,15 @@ final class AlarmLiveActivityManager {
             weatherSymbol: cachedWeatherSymbol
         )
         let content = ActivityContent(state: state, staleDate: .now.addingTimeInterval(120))
-        activity = try? Activity.request(attributes: attrs, content: content)
+        // try? avalait l'echec: l'activite en direct ne s'affichait pas et
+        // rien nulle part ne disait pourquoi. Les causes sont concretes
+        // (quota atteint, activites desactivees en Reglages), donc elles
+        // doivent se lire dans les journaux.
+        do {
+            activity = try Activity.request(attributes: attrs, content: content)
+        } catch {
+            AppLog.general.error("activite en direct du reveil refusee: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     func update(phase: AlarmAttributes.ContentState.Phase, message: String = "") {

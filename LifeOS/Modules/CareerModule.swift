@@ -5,22 +5,6 @@ extension ShapeStyle where Self == Color { static var careerTint: Color { AppCat
 
 // MARK: - Hub Carrière
 
-struct CareerHubView: View {
-    var body: some View {
-        HubScaffold(category: .career) {
-            ToolRow(icon: "tray.full.fill", title: "Suivi des candidatures",
-                    subtitle: "Pipeline par statut", tint: .careerTint) { ApplicationsView() }
-            ToolRow(icon: "doc.text.fill", title: "Générateur de CV",
-                    subtitle: "Remplis → exporte", tint: .careerTint) { CVBuilderView() }
-            ToolRow(icon: "checklist.checked", title: "Compétences manquantes",
-                    subtitle: "Gap + plan pour combler", tint: .careerTint) { SkillGapView() }
-            ToolRow(icon: "mic.fill", title: "Mock interview",
-                    subtitle: "Entraînement entretien", tint: .careerTint) { MockInterviewView() }
-            ToolRow(icon: "magnifyingglass", title: "Matching d'offres",
-                    subtitle: "Offres réelles selon tes compétences", tint: .careerTint) { JobMatchView() }
-        }
-    }
-}
 
 // MARK: - Candidatures
 
@@ -106,6 +90,8 @@ struct CVBuilderView: View {
     @AppStorage(AppStorageKeys.cvExperience) private var experience = ""
     @AppStorage(AppStorageKeys.cvEducation) private var education = ""
     @AppStorage(AppStorageKeys.cvSkills) private var skills = ""
+    @State private var showOptimiser = false
+    @State private var aiReady = false
 
     private var generated: String {
         """
@@ -146,11 +132,25 @@ struct CVBuilderView: View {
                         Label("Exporter / Partager le CV", systemImage: "square.and.arrow.up").frame(maxWidth: .infinity).padding(.vertical, 14)
                             .background(Color.careerTint, in: RoundedRectangle(cornerRadius: Theme.radiusSmall)).foregroundStyle(.white)
                     }
-                    IntegrationNotice(text: "L'optimiseur de CV (réécriture orientée poste, scoring ATS) arrive bientôt. Ton contenu structuré est déjà prêt.")
+                    if aiReady {
+                        Button { showOptimiser = true } label: {
+                            Label("Adapter mon CV à une offre", systemImage: "sparkles")
+                                .frame(maxWidth: .infinity).padding(.vertical, 12)
+                        }
+                        .buttonStyle(.bordered).tint(.careerTint)
+                        .disabled(summary.isEmpty && experience.isEmpty)
+                    } else {
+                        Text("Ajoute une clé dans Profil › Coach pour adapter automatiquement ton CV à une offre.")
+                            .font(.caption).foregroundStyle(Theme.textSecondary)
+                    }
                 }.padding(Theme.pad)
             }
         }
         .navigationTitle("Générateur de CV").navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showOptimiser) {
+            CVOptimiserSheet(summary: $summary, experience: $experience, skills: $skills)
+        }
+        .task { aiReady = await MainActor.run { AIText.isConfigured } }
     }
     private func group<C: View>(_ t: String, @ViewBuilder _ c: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 10) { SectionHeader(title: t); c() }.card()
@@ -158,6 +158,88 @@ struct CVBuilderView: View {
     private func field(_ p: String, _ b: Binding<String>) -> some View { TextField(p, text: b).textFieldStyle(.roundedBorder) }
     private func editor(_ b: Binding<String>, _ p: String) -> some View {
         TextField(p, text: b, axis: .vertical).textFieldStyle(.roundedBorder).lineLimit(3...10)
+    }
+}
+
+/// Reecrit le CV en visant une offre precise.
+///
+/// Rien n'est ecrit automatiquement dans le CV: la proposition s'affiche a
+/// cote et l'utilisateur applique s'il est d'accord. Un modele qui reecrit
+/// tout seul l'experience de quelqu'un finit par lui inventer un passe.
+struct CVOptimiserSheet: View {
+    @Binding var summary: String
+    @Binding var experience: String
+    @Binding var skills: String
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var offer = ""
+    @State private var result = ""
+    @State private var busy = false
+    @State private var error: String?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("L'offre visée") {
+                    TextField("Colle ici le texte de l'annonce…", text: $offer, axis: .vertical)
+                        .lineLimit(4...12)
+                }
+                Section {
+                    Button {
+                        Task { await run() }
+                    } label: {
+                        HStack {
+                            if busy { ProgressView().controlSize(.small) }
+                            Text(busy ? "Analyse…" : "Proposer une version adaptée")
+                        }
+                    }
+                    .disabled(busy || offer.trimmingCharacters(in: .whitespaces).count < 30)
+                } footer: {
+                    Text("Colle au moins quelques lignes de l'annonce pour que l'analyse ait du sens.")
+                }
+                if let error {
+                    Section { Label(error, systemImage: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange).font(.footnote) }
+                }
+                if !result.isEmpty {
+                    Section("Proposition") {
+                        TextEditor(text: $result).frame(minHeight: 220)
+                        Button("Remplacer mon profil par ce texte") {
+                            summary = result
+                            dismiss()
+                        }
+                        .font(.footnote.weight(.semibold))
+                    }
+                }
+            }
+            .navigationTitle("Adapter à l'offre").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } } }
+        }
+    }
+
+    private func run() async {
+        busy = true; error = nil
+        defer { busy = false }
+        let sys = """
+        Tu aides à adapter un CV à une offre d'emploi. Réponds en français.         Réécris UNIQUEMENT le paragraphe de profil, en 3 à 4 lignes, en         reprenant le vocabulaire de l'annonce quand il correspond vraiment au         parcours. N'INVENTE aucune expérience, aucun diplôme, aucun chiffre         absent du CV fourni. Termine par une ligne "Mots-clés à ajouter :"         listant les termes de l'annonce absents du CV.
+        """
+        let ask = """
+        OFFRE :
+        \(offer)
+
+        PROFIL ACTUEL :
+        \(summary)
+
+        EXPÉRIENCE :
+        \(experience)
+
+        COMPÉTENCES :
+        \(skills)
+        """
+        switch await AIText.ask(system: sys, user: ask, maxTokens: 600, temperature: 0.3) {
+        case .success(let t): result = t
+        case .failure(let e): error = e.message
+        }
     }
 }
 

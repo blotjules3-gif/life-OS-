@@ -6,24 +6,6 @@ extension ShapeStyle where Self == Color { static var finTint: Color { AppCatego
 
 // MARK: - Hub Finances
 
-struct FinanceHubView: View {
-    var body: some View {
-        HubScaffold(category: .finance) {
-            ToolRow(icon: "building.columns.fill", title: "Comptes & dépenses",
-                    subtitle: "Solde + transactions + alertes", tint: .finTint) { AccountsView() }
-            ToolRow(icon: "tray.2.fill", title: "Budget par enveloppes",
-                    subtitle: "Catégorise et plafonne", tint: .finTint) { BudgetView() }
-            ToolRow(icon: "repeat.circle.fill", title: "Abonnements",
-                    subtitle: "Détecte les oubliés + résilie", tint: .finTint) { SubscriptionsView() }
-            ToolRow(icon: "person.2.circle.fill", title: "Split entre potes",
-                    subtitle: "Tricount intégré", tint: .finTint) { SplitView() }
-            ToolRow(icon: "target", title: "Objectifs d'épargne",
-                    subtitle: "Projection temps restant", tint: .finTint) { SavingsView() }
-            ToolRow(icon: "link.circle.fill", title: "Agrégation bancaire",
-                    subtitle: "Tous tes comptes agrégés", tint: .finTint) { BankOverviewView() }
-        }
-    }
-}
 
 // MARK: - Comptes & dépenses
 
@@ -199,7 +181,21 @@ struct BudgetView: View {
         .navigationTitle("Budget enveloppes").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { EnvelopeEditor() }
+        // Un budget mensuel doit repartir de zero chaque mois, sinon le
+        // plafond ne veut plus rien dire des le premier depassement.
+        .onAppear { rolloverEnvelopes() }
     }
+
+    private func rolloverEnvelopes() {
+        var changed = false
+        for e in envelopes where e.rolloverIfNeeded() { changed = true }
+        if changed { persistBudget() }
+    }
+
+    private func persistBudget() {
+        LifeOSTry(try ctx.save(), context: "nouveau mois budget", category: AppLog.data)
+    }
+
 }
 
 struct EnvelopeEditor: View {
@@ -268,7 +264,25 @@ struct SubscriptionsView: View {
         .sheet(isPresented: $showAdd) { SubscriptionEditor() }
     }
     private func forgotten(_ s: Subscription) -> Bool { s.active && s.nextDate < Calendar.current.date(byAdding: .month, value: -2, to: .now)! }
-    private func cancelURL(_ name: String) -> URL { URL(string: "https://www.google.com/search?q=résilier+\(name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? name)")! }
+    /// Recherche "resilier <abonnement>", sans jamais planter.
+    ///
+    /// L'ancienne version interpolait le nom saisi par l'utilisateur dans une
+    /// chaine puis forcait le deballage. Deux facons de planter: le repli
+    /// utilisait le nom BRUT quand l'encodage echouait, et un nom contenant
+    /// une espace ou un diese donne alors une URL invalide, donc nil, donc
+    /// crash. Un abonnement nomme "Disney +" suffisait.
+    /// URLComponents encode les parametres correctement, y compris l'accent
+    /// de "resilier" qui n'a rien a faire dans une chaine d'URL brute.
+    private func cancelURL(_ name: String) -> URL {
+        var c = URLComponents()
+        c.scheme = "https"
+        c.host = "www.google.com"
+        c.path = "/search"
+        c.queryItems = [URLQueryItem(name: "q", value: "résilier \(name)")]
+        // Repli sur la page d'accueil: on n'ouvre rien d'inattendu, et
+        // surtout on ne plante pas si l'URL ne se construit pas.
+        return c.url ?? URL(string: "https://www.google.com")!
+    }
 }
 
 struct SubscriptionEditor: View {

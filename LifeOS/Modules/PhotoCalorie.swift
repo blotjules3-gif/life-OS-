@@ -91,6 +91,9 @@ struct PhotoCalorieView: View {
     @Environment(\.modelContext) private var ctx
     @State private var image: UIImage?
     @State private var guess: FoodGuess?
+    /// Aliments detectes, modifiables un par un avant enregistrement.
+    @State private var items: [FoodRecognitionPipeline.DetectedFood] = []
+    @State private var showAddItem = false
     @State private var busy = false
     @State private var failed = false
     @State private var showCamera = false
@@ -112,7 +115,7 @@ struct PhotoCalorieView: View {
                     sourceButtons
                     if busy { ProgressView("Analyse du plat…").padding() }
                     if failed { errorCard }
-                    if let guess, !busy { resultCard(guess) }
+                    if !items.isEmpty, !busy { itemsCard }
                     if image == nil && !busy { intro }
                 }
                 .padding()
@@ -214,7 +217,7 @@ struct PhotoCalorieView: View {
                     Text(aiNote).font(.caption).foregroundStyle(Theme.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Label("Analysé par l'IA d'après ta photo", systemImage: "sparkles")
+                Label("Analysé par ton coach d'après ta photo", systemImage: "sparkles")
                     .font(.caption2).foregroundStyle(tint)
             }
             Text(usedAI
@@ -223,6 +226,119 @@ struct PhotoCalorieView: View {
                 .font(.caption2).foregroundStyle(Theme.textSecondary)
         }
         .padding(16).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    // MARK: - Resultat: une ligne par aliment, tout modifiable
+
+    private var totals: (kcal: Int, p: Double, c: Double, f: Double) {
+        items.reduce(into: (0, 0.0, 0.0, 0.0)) { acc, i in
+            acc.0 += i.kcal; acc.1 += i.protein; acc.2 += i.carbs; acc.3 += i.fat
+        }
+    }
+
+    private var itemsCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("Détecté dans ta photo").font(.headline).foregroundStyle(Theme.textPrimary)
+                Spacer()
+                Button { showAddItem = true } label: { Image(systemName: "plus.circle") }
+                    .accessibilityLabel("Ajouter un aliment")
+            }
+
+            ForEach($items) { $item in
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        // Le nom est modifiable: la reconnaissance se trompe, et
+                        // corriger vaut mieux que supprimer et ressaisir.
+                        TextField("Aliment", text: $item.name)
+                            .font(.subheadline.weight(.semibold))
+                        Spacer()
+                        Text("\(item.kcal) kcal")
+                            .font(.subheadline.bold()).foregroundStyle(tint)
+                    }
+                    HStack(spacing: 10) {
+                        Text("\(Int(item.grams)) g")
+                            .font(.caption).foregroundStyle(Theme.textSecondary).frame(width: 52, alignment: .leading)
+                        // La portion est l'hypothese la plus fragile de toute la
+                        // chaine: on la met en avant et on la rend glissante.
+                        Slider(value: $item.grams, in: 10...600, step: 5)
+                        Button(role: .destructive) {
+                            items.removeAll { $0.id == item.id }
+                        } label: { Image(systemName: "trash") }
+                        .accessibilityLabel("Retirer \(item.name)")
+                    }
+                    HStack(spacing: 12) {
+                        Text("P \(item.protein, specifier: "%.1f")").font(.caption2)
+                        Text("G \(item.carbs, specifier: "%.1f")").font(.caption2)
+                        Text("L \(item.fat, specifier: "%.1f")").font(.caption2)
+                        Spacer()
+                        Label(item.source == .openFoodFacts ? "OpenFoodFacts" : "estimation",
+                              systemImage: item.source == .openFoodFacts ? "checkmark.seal" : "questionmark.circle")
+                            .font(.caption2)
+                            .foregroundStyle(item.source == .openFoodFacts ? .green : .orange)
+                        if !usedAI {
+                            Text("\(Int(item.confidence * 100))%")
+                                .font(.caption2).foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+                }
+                .padding(.vertical, 8)
+                Divider().opacity(0.15)
+            }
+
+            HStack {
+                Text("Total").font(.headline).foregroundStyle(Theme.textPrimary)
+                Spacer()
+                Text("\(totals.kcal) kcal").font(.title3.bold()).foregroundStyle(tint)
+            }
+            HStack(spacing: 12) {
+                macro("P", totals.p); macro("G", totals.c); macro("L", totals.f)
+            }
+
+            Picker("Repas", selection: $meal) {
+                ForEach(["Petit-déj", "Déjeuner", "Dîner", "Collation"], id: \.self) { Text($0).tag($0) }
+            }.pickerStyle(.segmented)
+
+            Button { saveItems() } label: {
+                Label("Ajouter au journal", systemImage: "plus.circle.fill")
+                    .frame(maxWidth: .infinity).padding(.vertical, 12)
+                    .background(tint.gradient, in: RoundedRectangle(cornerRadius: 12))
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.plain)
+            .disabled(items.isEmpty)
+
+            if usedAI, !aiNote.isEmpty {
+                Text(aiNote).font(.caption).foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            // On annonce l'hypothese au lieu de faire croire a une mesure.
+            Text(usedAI
+                 ? "Estimation d'après la portion visible. Ajuste les grammes si besoin."
+                 : "Les portions sont des hypothèses, pas une pesée. Les valeurs viennent d'OpenFoodFacts (produits emballés). Ajuste avec le curseur.")
+                .font(.caption2).foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
+        .sheet(isPresented: $showAddItem) {
+            ManualFoodSheet { added in items.append(added) }
+        }
+    }
+
+    /// Enregistre UNE ligne de journal par aliment, pas un total anonyme:
+    /// autrement on ne peut plus corriger un seul element plus tard.
+    private func saveItems() {
+        for i in items {
+            ctx.insert(FoodEntry(name: i.name, calories: i.kcal, protein: i.protein,
+                                 carbs: i.carbs, fat: i.fat, meal: meal))
+        }
+        do { try ctx.save() } catch {
+            AppLog.data.error("repas non enregistre: \(error.localizedDescription, privacy: .public)")
+        }
+        Haptics.success()
+        withAnimation { savedToast = true }
+        image = nil; guess = nil; items = []; pickerItem = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) { withAnimation { savedToast = false } }
     }
 
     private func stepperBox(_ label: String, value: Binding<Int>, step: Int) -> some View {
@@ -253,7 +369,7 @@ struct PhotoCalorieView: View {
     }
 
     private func handle(_ img: UIImage) {
-        image = img; guess = nil; failed = false; busy = true; aiNote = ""; usedAI = false
+        image = img; guess = nil; items = []; failed = false; busy = true; aiNote = ""; usedAI = false
         Task {
             // 1. Vrai modele de vision s'il y a une cle. Il REGARDE l'assiette
             //    et juge la portion, au lieu de reconnaitre un mot et de lire
@@ -262,8 +378,12 @@ struct PhotoCalorieView: View {
                 switch await FoodPhotoAnalyzer.analyze(img) {
                 case .success(let a):
                     await MainActor.run {
-                        guess = FoodGuess(name: a.name, kcal: a.kcal, protein: a.protein,
-                                          carbs: a.carbs, fat: a.fat, confidence: 0.9)
+                        // Une seule UI de resultat, quelle que soit la source:
+                        // le coach remplit la meme liste modifiable.
+                        items = [FoodRecognitionPipeline.DetectedFood(
+                            name: a.name, confidence: 0.9, grams: 100,
+                            kcal100: Double(a.kcal), protein100: a.protein,
+                            carbs100: a.carbs, fat100: a.fat, source: .estimate)]
                         aiNote = a.note; usedAI = true; busy = false
                         Haptics.medium()
                     }
@@ -272,14 +392,21 @@ struct PhotoCalorieView: View {
                     // On n'abandonne pas: l'estimation locale vaut mieux que
                     // rien. Mais la raison est tracee, sinon une cle morte
                     // ressemble a un modele qui se trompe.
-                    AppLog.data.error("analyse IA du plat echouee: \(String(describing: e), privacy: .public)")
+                    AppLog.data.error("analyse du plat par le coach echouee: \(String(describing: e), privacy: .public)")
                 }
             }
-            // 2. Repli sur appareil: gratuit, hors ligne, plus grossier.
-            let g = await FoodVision.classify(img)
+            // 2. Sans cle: reconnaissance sur l'appareil, puis VRAIES valeurs
+            //    nutritionnelles d'OpenFoodFacts. Aucune cle, aucun compte.
+            let detected = await FoodRecognitionPipeline.analyse(img)
             await MainActor.run {
                 busy = false
-                if let g { guess = g; usedAI = false; Haptics.medium() } else { failed = true }
+                if detected.isEmpty {
+                    failed = true
+                } else {
+                    items = detected
+                    usedAI = false
+                    Haptics.medium()
+                }
             }
         }
     }
@@ -291,6 +418,72 @@ struct PhotoCalorieView: View {
         withAnimation { savedToast = true }
         image = nil; guess = nil; pickerItem = nil
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) { withAnimation { savedToast = false } }
+    }
+}
+
+// MARK: - Ajout manuel d'un aliment (recherche OpenFoodFacts)
+
+/// Quand la reconnaissance rate un element de l'assiette.
+///
+/// On cherche dans OpenFoodFacts, donc les valeurs sont reelles et non
+/// inventees, et la portion reste modifiable dans la liste apres ajout.
+struct ManualFoodSheet: View {
+    var onAdd: (FoodRecognitionPipeline.DetectedFood) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var query = ""
+    @State private var results: [FoodProduct] = []
+    @State private var searching = false
+    @State private var searched = false
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    HStack {
+                        TextField("Chercher un aliment…", text: $query)
+                            .submitLabel(.search)
+                            .onSubmit { Task { await run() } }
+                        if searching { ProgressView().controlSize(.small) }
+                    }
+                }
+                if searched && results.isEmpty && !searching {
+                    Section {
+                        Text("Aucun résultat. Essaie un mot plus simple, par exemple « riz » plutôt que « riz basmati complet ».")
+                            .font(.footnote).foregroundStyle(Theme.textSecondary)
+                    }
+                }
+                ForEach(results) { p in
+                    Button {
+                        onAdd(FoodRecognitionPipeline.DetectedFood(
+                            name: p.name.isEmpty ? query : p.name,
+                            confidence: 1,            // choisi a la main, donc certain
+                            grams: 100,
+                            kcal100: Double(p.kcal), protein100: p.protein,
+                            carbs100: p.carbs, fat100: p.fat,
+                            source: .openFoodFacts))
+                        dismiss()
+                    } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(p.name).font(.subheadline).foregroundStyle(Theme.textPrimary)
+                            Text("\(p.kcal) kcal / 100 g" + (p.brand.isEmpty ? "" : " · \(p.brand)"))
+                                .font(.caption).foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Ajouter un aliment").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } } }
+        }
+    }
+
+    private func run() async {
+        let q = query.trimmingCharacters(in: .whitespaces)
+        guard q.count >= 2 else { return }
+        searching = true
+        results = await FoodSearchService.search(q)
+        searching = false
+        searched = true
     }
 }
 

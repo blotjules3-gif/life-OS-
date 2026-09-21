@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import SwiftData
 import Charts
 import UserNotifications
@@ -7,252 +8,6 @@ extension ShapeStyle where Self == Color { static var fitTint: Color { AppCatego
 
 // MARK: - Hub Fitness
 
-struct FitnessHubView: View {
-    @State private var showTabata = false
-    @State private var showFitnessProfile = false
-    @AppStorage(AppStorageKeys.fitnessCoachIntroShown) private var coachIntroShown = false
-    @AppStorage(AppStorageKeys.userWeightKg) private var userWeightKg: Double = 0
-    @AppStorage(AppStorageKeys.userHeightCm) private var userHeightCm: Double = 0
-    @AppStorage(AppStorageKeys.userStrengthLevel) private var userStrengthLevel: String = ""
-    @AppStorage(AppStorageKeys.userBench1RM) private var userBench1RM: Double = 0
-    @AppStorage(AppStorageKeys.userSquat1RM) private var userSquat1RM: Double = 0
-    @AppStorage(AppStorageKeys.userDeadlift1RM) private var userDeadlift1RM: Double = 0
-    @AppStorage(AppStorageKeys.userWeeklyFrequency) private var userWeeklyFrequency: Int = 3
-
-    private var profileFields: [Bool] {
-        [
-            userWeightKg > 0,
-            userHeightCm > 0,
-            !userStrengthLevel.isEmpty,
-            userBench1RM > 0,
-            userSquat1RM > 0,
-            userDeadlift1RM > 0,
-        ]
-    }
-    private var filledCount: Int { profileFields.filter { $0 }.count }
-    private var totalFields: Int { profileFields.count }
-    private var profileProgress: Double {
-        totalFields > 0 ? Double(filledCount) / Double(totalFields) : 0
-    }
-    private var profileIsIncomplete: Bool {
-        // On considère "incomplet" tant qu'on n'a ni poids ni niveau (les 2 minimums pour calibrer).
-        userWeightKg == 0 || userStrengthLevel.isEmpty
-    }
-
-    var body: some View {
-        HubScaffold(category: .fitness) {
-            if profileIsIncomplete {
-                coachIntroBanner
-            }
-            Button { openCoachForSessionRequest() } label: {
-                HStack(spacing: 14) {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
-                        .frame(width: 30, height: 30)
-                        .background(Color.fitTint, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Génère ma séance du jour").font(.body).foregroundStyle(.primary)
-                        Text("Le coach te pose 6 questions et construit ta séance").font(.caption).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
-                }
-                .padding(.vertical, 3)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Génère ma séance du jour avec le coach")
-            .accessibilityHint("Ouvre le chat coach avec les six questions préparatoires")
-            Button { showFitnessProfile = true } label: {
-                HStack(spacing: 14) {
-                    Image(systemName: "person.crop.circle.badge.checkmark")
-                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
-                        .frame(width: 30, height: 30)
-                        .background(Color.fitTint, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Mon profil sportif").font(.body).foregroundStyle(.primary)
-                        Text("Poids, taille, niveau, 1RM — le coach s'en sert").font(.caption).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
-                }
-                .padding(.vertical, 3)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Éditer mon profil sportif")
-            .accessibilityHint("Poids, taille, niveau et records — utilisés par le coach")
-            ToolRow(icon: "figure.strengthtraining.traditional", title: "Séance guidée",
-                    subtitle: "Ta séance du jour, série par série + repos", tint: .fitTint) { GuidedWorkoutView() }
-            ToolRow(icon: "figure.walk", title: "Compteur de pas",
-                    subtitle: "Aujourd'hui + 7 jours (Santé)", tint: .fitTint) { StepsView() }
-            ToolRow(icon: "dumbbell.fill", title: "Muscu & progression",
-                    subtitle: "Charges, volume, 1RM, courbe", tint: .fitTint) { StrengthView() }
-            Button { showTabata = true } label: {
-                HStack(spacing: 14) {
-                    Image(systemName: "timer")
-                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
-                        .frame(width: 30, height: 30)
-                        .background(Color.fitTint, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("HIIT / Tabata").font(.body).foregroundStyle(.primary)
-                        Text("Minuteur sportif plein écran").font(.caption).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
-                }
-                .padding(.vertical, 3)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Minuteur HIIT plein écran")
-            .accessibilityHint("Lance le tabata")
-            ToolRow(icon: "figure.cooldown", title: "Mobilité & stretching",
-                    subtitle: "Routines guidées", tint: .fitTint) { MobilityRoutineView() }
-            ToolRow(icon: "flame.fill", title: "Streaks & habitudes",
-                    subtitle: "Régularité d'entraînement", tint: .fitTint) { StreaksView() }
-        }
-        .fullScreenCover(isPresented: $showTabata) { TabataView() }
-        .sheet(isPresented: $showFitnessProfile) { FitnessProfileSheet() }
-        .onAppear {
-            // Première ouverture de Muscu + profil vide → auto-lance le coach + programme rappel J+1.
-            guard !coachIntroShown, profileIsIncomplete else { return }
-            coachIntroShown = true
-            scheduleCoachIntroFollowup()
-            Task { @MainActor in
-                try? await Task.sleep(nanoseconds: 500_000_000)
-                openCoachForIntro()
-            }
-        }
-        .onChange(of: profileIsIncomplete) { _, incomplete in
-            // Dès que le profil est complet, annule le rappel J+1.
-            if !incomplete { cancelCoachIntroFollowup() }
-        }
-    }
-
-    private func scheduleCoachIntroFollowup() {
-        let content = UNMutableNotificationContent()
-        content.title = "Ta séance t'attend"
-        content.body = "2 min pour répondre au coach et il te calibre une séance parfaite."
-        content.sound = .default
-        content.userInfo = ["deeplink": "lifeos://fitness"]
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 24 * 60 * 60, repeats: false)
-        let request = UNNotificationRequest(identifier: "fitnessCoachIntroFollowup", content: content, trigger: trigger)
-        UNUserNotificationCenter.current().add(request)
-    }
-
-    private func cancelCoachIntroFollowup() {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["fitnessCoachIntroFollowup"])
-    }
-
-    private var coachIntroBanner: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                Image(systemName: "sparkles")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(width: 28, height: 28)
-                    .background(Color.fitTint, in: Circle())
-                Text("Profil sportif à compléter")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(.primary)
-                Spacer()
-                Text("\(filledCount)/\(totalFields)")
-                    .font(.system(size: 12, weight: .bold, design: .monospaced))
-                    .foregroundStyle(Color.fitTint)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(Color.fitTint.opacity(0.23), in: Capsule())
-            }
-
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Color.primary.opacity(0.07))
-                        .frame(height: 5)
-                    Capsule()
-                        .fill(LinearGradient(colors: [Color.fitTint.opacity(0.7), Color.fitTint], startPoint: .leading, endPoint: .trailing))
-                        .frame(width: max(6, geo.size.width * CGFloat(profileProgress)), height: 5)
-                        .animation(.spring(response: 0.45, dampingFraction: 0.75), value: profileProgress)
-                }
-            }
-            .frame(height: 5)
-
-            Text(filledCount == 0
-                 ? "Pour que le coach calibre tes séances, choisis ton mode."
-                 : "Encore \(totalFields - filledCount) infos pour un plan sur mesure.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            HStack(spacing: 8) {
-                Button { openCoachForIntro() } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "message.fill")
-                            .font(.system(size: 11, weight: .bold))
-                        Text("Le coach me guide")
-                            .font(.system(size: 13, weight: .semibold))
-                    }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.fitTint, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Le coach me guide pour remplir mon profil")
-                Button { showFitnessProfile = true } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "square.and.pencil")
-                            .font(.system(size: 11, weight: .bold))
-                        Text("Je remplis moi-même")
-                            .font(.system(size: 13, weight: .semibold))
-                    }
-                    .foregroundStyle(Color.fitTint)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.fitTint.opacity(0.20), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Remplir mon profil sportif manuellement")
-            }
-        }
-        .padding(14)
-        .background(Color.fitTint.opacity(0.14), in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
-                .strokeBorder(Color.fitTint.opacity(0.25), lineWidth: 1)
-        )
-        .padding(.bottom, 4)
-    }
-
-    private func openCoachForIntro() {
-        NotificationCenter.default.post(
-            name: .lifeOSOpenAIChat,
-            object: nil,
-            userInfo: ["prefill": "Je viens d'ouvrir la catégorie Muscu et je veux progresser. Pose-moi les questions nécessaires (objectif, niveau, équipement, fréquence hebdo, blessures, records bench/squat/deadlift, poids et taille) et explique-moi le pourquoi de chaque question. Une fois que j'ai répondu, propose-moi une première séance calibrée."]
-        )
-    }
-
-    private func openCoachForSessionRequest() {
-        let hour = Calendar.current.component(.hour, from: .now)
-        let timeHint: String
-        switch hour {
-        case 5..<11:  timeHint = "ce matin"
-        case 11..<14: timeHint = "ce midi"
-        case 14..<18: timeHint = "cet après-midi"
-        default:      timeHint = "ce soir"
-        }
-        NotificationCenter.default.post(
-            name: .lifeOSOpenAIChat,
-            object: nil,
-            userInfo: ["prefill": "Génère-moi ma séance pour \(timeHint). Pose-moi les questions nécessaires (objectif, équipement, temps dispo, blessures) avant de proposer, puis explique tes choix."]
-        )
-    }
-}
 
 // MARK: - Pas
 
@@ -282,7 +37,32 @@ struct StepsView: View {
                         Stepper("Objectif : \(goal) pas", value: $goal, in: 3000...25000, step: 1000).card()
                     }
                     if today == 0 && !loading {
-                        IntegrationNotice(text: "Aucun pas remonté. Active la capability HealthKit dans Xcode et autorise l'accès aux pas. Sur simulateur, les données de pas sont souvent vides — teste sur un vrai iPhone.")
+                        // Ancien texte: "Active la capability HealthKit dans
+                        // Xcode". C'est une consigne de DEVELOPPEUR affichee a
+                        // l'utilisateur, et elle ne menait a aucune action.
+                        VStack(spacing: 12) {
+                            EmptyState(icon: "figure.walk",
+                                       title: "Aucun pas pour l'instant",
+                                       message: "LifeOS lit tes pas dans Apple Santé. Si tu as refusé l'accès, tu peux l'autoriser dans Réglages.")
+                            Button {
+                                Task {
+                                    _ = await HealthService.shared.requestAuthorization()
+                                    today = await HealthService.shared.stepsToday()
+                                }
+                            } label: {
+                                Label("Autoriser Apple Santé", systemImage: "heart.fill")
+                            }
+                            .buttonStyle(.borderedProminent)
+
+                            // iOS ne redemande jamais une permission refusee:
+                            // sans ce lien l'utilisateur est bloque pour de bon.
+                            Button("Ouvrir les Réglages") {
+                                if let u = URL(string: UIApplication.openSettingsURLString) {
+                                    UIApplication.shared.open(u)
+                                }
+                            }
+                            .font(.footnote)
+                        }
                     }
                 }
                 .padding(Theme.pad)

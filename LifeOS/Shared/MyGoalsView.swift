@@ -138,13 +138,13 @@ struct MyGoalsView: View {
     private func actionsRow(_ goal: UserGoal) -> some View {
         HStack(spacing: 8) {
             if goal.status == .active {
-                Button("Pause") { goal.status = .paused; try? ctx.save() }
+                Button("Pause") { goal.status = .paused; persist() }
                     .buttonStyle(.bordered).controlSize(.mini)
             } else if goal.status == .paused {
-                Button("Réactiver") { goal.status = .active; try? ctx.save() }
+                Button("Réactiver") { goal.status = .active; persist() }
                     .buttonStyle(.bordered).controlSize(.mini)
             }
-            Button("Atteint") { goal.status = .achieved; try? ctx.save() }
+            Button("Atteint") { goal.status = .achieved; persist() }
                 .buttonStyle(.bordered).controlSize(.mini)
                 .tint(.blue)
             Button(role: .destructive) {
@@ -173,6 +173,17 @@ struct MyGoalsView: View {
             r.enabled = false
             SmartReminderScheduler.cancel(r)
         }
-        try? ctx.save()
+        persist()
     }
+
+    /// Enregistre en signalant l'echec.
+    ///
+    /// Passer par une fonction est NECESSAIRE: LifeOSTry prend une autoclosure
+    /// qui throw, donc le try est obligatoire, et un try place directement
+    /// dans une action de bouton rendrait cette fermeture throwing, ce qui ne
+    /// compile pas la ou une fermeture non throwing est attendue.
+    private func persist() {
+        LifeOSTry(try ctx.save(), context: "sauvegarde objectif", category: AppLog.data)
+    }
+
 }
