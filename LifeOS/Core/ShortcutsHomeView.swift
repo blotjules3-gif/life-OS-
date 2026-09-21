@@ -188,7 +188,8 @@ struct ShortcutsHomeView: View {
     @State private var showHabits = false
     @FocusState private var taskFieldFocused: Bool
     private var enabledMetrics: [HomeMetric] {
-        metricsRaw.split(separator: ",").compactMap { HomeMetric(rawValue: String($0)) }
+        HomeOrder.parse(metricsRaw, valid: Set(HomeMetric.allCases.map(\.rawValue)))
+            .compactMap(HomeMetric.init(rawValue:))
     }
 
     @State private var steps = 0
@@ -207,7 +208,8 @@ struct ShortcutsHomeView: View {
     private let cols = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
 
     private var activeShortcuts: [ShortcutTool] {
-        enabledRaw.split(separator: ",").compactMap { ShortcutTool(rawValue: String($0)) }
+        HomeOrder.parse(enabledRaw, valid: Set(ShortcutTool.allCases.map(\.rawValue)))
+            .compactMap(ShortcutTool.init(rawValue:))
     }
 
     // MARK: données du jour (foods/waters already filtered to today by @Query predicate)
@@ -407,10 +409,20 @@ struct ShortcutsHomeView: View {
                 NavigationStack { TodoView() }
             }
             .sheet(isPresented: $editingShortcuts) {
-                ShortcutPickerSheet(enabledRaw: $enabledRaw)
+                HomeOrderEditor(
+                    title: "Raccourcis",
+                    options: ShortcutTool.allCases.map {
+                        HomeOrderOption(id: $0.rawValue, label: $0.label, icon: $0.icon, tint: $0.tint)
+                    },
+                    raw: $enabledRaw)
             }
             .sheet(isPresented: $editingMetrics) {
-                HomeMetricPickerSheet(metricsRaw: $metricsRaw)
+                HomeOrderEditor(
+                    title: "Objectifs du jour",
+                    options: HomeMetric.allCases.map {
+                        HomeOrderOption(id: $0.rawValue, label: $0.label, icon: $0.icon, tint: $0.color)
+                    },
+                    raw: $metricsRaw)
             }
             .task {
                 // Santé : on demande UNE fois, et seulement une fois l'onboarding
@@ -1137,100 +1149,106 @@ struct ShortcutsHomeView: View {
 // MARK: - WeeklyBilanView + WeeklyShareCard → extraits dans LifeOS/Core/WeeklyBilanView.swift
 
 
-// MARK: - Éditeur de raccourcis de l'accueil
+// MARK: - Éditeur de l'accueil (raccourcis et anneaux)
 
-private struct ShortcutPickerSheet: View {
-    @Binding var enabledRaw: String
-    @Environment(\.dismiss) private var dismiss
-
-    private var enabled: [String] { enabledRaw.split(separator: ",").map(String.init) }
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    ForEach(ShortcutTool.allCases) { tool in
-                        let on = enabled.contains(tool.rawValue)
-                        Button { toggle(tool, on: on) } label: {
-                            HStack(spacing: 14) {
-                                Image(systemName: tool.icon)
-                                    .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
-                                    .frame(width: 32, height: 32)
-                                    .background(tool.tint.gradient, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                Text(tool.label).foregroundStyle(.primary)
-                                Spacer()
-                                Image(systemName: on ? "checkmark.circle.fill" : "circle")
-                                    .font(.title3)
-                                    .foregroundStyle(on ? AnyShapeStyle(tool.tint) : AnyShapeStyle(Color.secondary.opacity(0.4)))
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
-                } header: {
-                    Text("Choisis les raccourcis affichés sur l'accueil")
-                } footer: {
-                    Text("Touche pour épingler ou retirer. L'ordre suit tes sélections.")
-                }
-            }
-            .navigationTitle("Raccourcis").navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("OK") { dismiss() } } }
-        }
-    }
-
-    private func toggle(_ tool: ShortcutTool, on: Bool) {
-        var list = enabled
-        if on { list.removeAll { $0 == tool.rawValue } }
-        else { list.append(tool.rawValue) }
-        enabledRaw = list.joined(separator: ",")
-        Haptics.soft()
-    }
+/// Une ligne proposee dans l'editeur, quel que soit ce qu'elle represente.
+struct HomeOrderOption: Identifiable {
+    let id: String
+    let label: String
+    let icon: String
+    let tint: Color
 }
 
-// MARK: - Éditeur des anneaux « Objectifs du jour »
-
-private struct HomeMetricPickerSheet: View {
-    @Binding var metricsRaw: String
+/// Choisir ET ordonner ce qui s'affiche sur l'accueil.
+///
+/// Avant, la seule facon de changer l'ordre etait de tout decocher puis de
+/// recocher dans l'ordre voulu, comme l'indiquait la note en bas de liste.
+/// Maintenant: ce qui est affiche est en haut, dans l'ordre de l'accueil, et
+/// se deplace a la poignee. Le reste est en dessous et s'ajoute a la fin.
+struct HomeOrderEditor: View {
+    let title: String
+    let options: [HomeOrderOption]
+    @Binding var raw: String
     @Environment(\.dismiss) private var dismiss
 
-    private var enabled: [String] { metricsRaw.split(separator: ",").map(String.init) }
+    private var chosen: [HomeOrderOption] {
+        let byId = Dictionary(uniqueKeysWithValues: options.map { ($0.id, $0) })
+        return HomeOrder.parse(raw, valid: Set(byId.keys)).compactMap { byId[$0] }
+    }
+    private var available: [HomeOrderOption] {
+        let on = Set(chosen.map(\.id))
+        return options.filter { !on.contains($0.id) }
+    }
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    ForEach(HomeMetric.allCases) { m in
-                        let on = enabled.contains(m.rawValue)
-                        Button { toggle(m, on: on) } label: {
-                            HStack(spacing: 14) {
-                                Image(systemName: m.icon)
-                                    .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
-                                    .frame(width: 32, height: 32)
-                                    .background(m.color.gradient, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                Text(m.label).foregroundStyle(.primary)
-                                Spacer()
-                                Image(systemName: on ? "checkmark.circle.fill" : "circle")
-                                    .font(.title3)
-                                    .foregroundStyle(on ? AnyShapeStyle(m.color) : AnyShapeStyle(Color.secondary.opacity(0.4)))
-                            }
-                        }
-                        .buttonStyle(.plain)
+                    if chosen.isEmpty {
+                        Text("Rien d'affiché. Ajoute un élément ci-dessous.")
+                            .font(.subheadline).foregroundStyle(.secondary)
                     }
+                    ForEach(chosen) { o in row(o) }
+                        .onMove(perform: move)
+                        .onDelete(perform: remove)
                 } header: {
-                    Text("Choisis les anneaux affichés sur l'accueil")
+                    Text("Sur l'accueil")
                 } footer: {
-                    Text("Touche pour ajouter ou retirer. L'ordre suit tes sélections.")
+                    Text("Glisse la poignée pour changer l'ordre. L'accueil suit cet ordre.")
+                }
+
+                if !available.isEmpty {
+                    Section("Ajouter") {
+                        ForEach(available) { o in
+                            HStack {
+                                row(o)
+                                Button { add(o) } label: {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.title3).foregroundStyle(.green)
+                                }
+                                .buttonStyle(.borderless)
+                                .accessibilityLabel("Ajouter \(o.label)")
+                            }
+                            .moveDisabled(true)
+                            .deleteDisabled(true)
+                        }
+                    }
                 }
             }
-            .navigationTitle("Objectifs du jour").navigationBarTitleDisplayMode(.inline)
+            // Mode edition permanent: les poignees et les boutons de retrait
+            // sont visibles tout de suite, sans chercher un bouton Modifier.
+            .environment(\.editMode, .constant(.active))
+            .navigationTitle(title).navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("OK") { dismiss() } } }
         }
     }
 
-    private func toggle(_ m: HomeMetric, on: Bool) {
-        var list = enabled
-        if on { list.removeAll { $0 == m.rawValue } }
-        else { list.append(m.rawValue) }
-        metricsRaw = list.joined(separator: ",")
+    private func row(_ o: HomeOrderOption) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: o.icon)
+                .font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
+                .frame(width: 32, height: 32)
+                .background(o.tint.gradient, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            Text(o.label).foregroundStyle(.primary)
+            Spacer()
+        }
+    }
+
+    private func save(_ ids: [String]) {
+        raw = ids.joined(separator: ",")
         Haptics.soft()
+    }
+    private func move(from: IndexSet, to: Int) {
+        var ids = chosen.map(\.id)
+        ids.move(fromOffsets: from, toOffset: to)
+        save(ids)
+    }
+    private func remove(at offsets: IndexSet) {
+        var ids = chosen.map(\.id)
+        ids.remove(atOffsets: offsets)
+        save(ids)
+    }
+    private func add(_ o: HomeOrderOption) {
+        save(chosen.map(\.id) + [o.id])
     }
 }

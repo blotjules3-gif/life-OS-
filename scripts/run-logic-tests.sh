@@ -21,6 +21,7 @@ SUITES=(
     "ReminderIDs:LifeOS/Services/ReminderIDs.swift:LifeOSTests/ReminderIDsTests.swift"
     "FrenchTax:LifeOS/Services/FrenchTax.swift:LifeOSTests/FrenchTaxTests.swift"
     "EnergyScore:LifeOS/Services/EnergyScore.swift:LifeOSTests/EnergyScoreTests.swift"
+    "HomeOrder:LifeOS/Services/HomeOrder.swift:LifeOSTests/HomeOrderTests.swift"
 )
 
 work=$(mktemp -d)
