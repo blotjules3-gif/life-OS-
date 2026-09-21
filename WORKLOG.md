@@ -175,6 +175,43 @@ Ajouter une suite: une ligne dans le tableau `SUITES` du script.
   agregation bancaire, analyse du sommeil sans montre). Ne pas les
   "corriger", ce sont des limites reelles annoncees honnetement.
 
+## Phase 3 (meme session, CI bloquee)
+
+Defauts trouves et corriges, chacun verifie autant que l'outillage local le
+permet:
+
+- **"Medicaments" ouvrait un menu**, pas la liste des traitements. L'outil
+  pointait sur `MedicalHubView`, un second menu qui se contenait lui meme.
+- **Les rappels de prise n'existaient pas vraiment**: une notification UNIQUE
+  etait posee, donc un traitement quotidien sonnait le lendemain matin puis
+  plus jamais. "2x/jour" ne posait qu'un rappel, la date de fin n'etait pas
+  regardee, et "Au besoin" aurait rappele tous les matins de prendre un
+  antidouleur.
+- **Neuf ecrans posaient un rappel sans jamais l'annuler**: un rendez vous
+  medical supprime sonnait quand meme la veille. Les identifiants vivent
+  desormais dans `ReminderIDs`, appele des deux cotes.
+- **Le simulateur d'impot** utilisait le bareme 2024 en 2026, ignorait le
+  plafonnement du quotient familial (6 564 € d'erreur sur un cas courant, et
+  toujours dans le sens agreable) et la decote (484 € annonces au lieu de 0).
+- **La sauvegarde avant effacement** pouvait rater sans rien afficher, juste
+  avant le bouton "Tout effacer".
+- **La duree moyenne du cycle** ne s'affichait jamais pour qui remplit l'app
+  tous les jours.
+- **L'app demandait d'ecrire dans Apple Sante et n'ecrivait rien**: la
+  fonction existait sans aucun appelant. Branchee sur la fin d'une seance
+  Tabata.
+- Deux notes "a brancher" tenues: retour du coach sur une reponse
+  d'entretien, et lecture d'une annonce immobiliere collee.
+
+Regle que je me suis appliquee deux fois ici, apres m'etre trompe:
+**compter avant d'annoncer**. Il n'y avait pas 16 menus morts mais un seul,
+comme il n'y avait pas 7 439 lignes de code mort mais 539.
+
+Et une regle de methode qui a paye: **calculer les valeurs attendues a part,
+avant d'ecrire le code**, puis les figer dans le test. C'est comme ca que la
+regle "charges superieures au loyer donc montant annuel" a ete prise en
+faute: elle divisait par douze un cas banal, 300 de loyer et 400 de charges.
+
 ## Prochaine action exacte
 
 1. Debloquer la facturation GitHub, sinon rien ne se construit ni ne part sur
