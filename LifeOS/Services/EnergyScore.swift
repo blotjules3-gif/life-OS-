@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 
 /// Calcul local du Score d'Énergie (0–100), 100 % on-device.
 ///
@@ -10,10 +9,14 @@ import SwiftData
 enum EnergyScore {
 
     /// Résultat consolidé — utilisable directement en UI.
-    struct Result {
+    struct Result: Equatable {
         let score: Int         // 0…100
         let label: String      // Excellent / Bon / Correct / Faible / Très faible
         let colorHex: String   // "#RRGGBB"
+        /// Part des criteres reellement renseignes, 0…1. Un score calcule
+        /// sur un seul critere ne vaut pas un score calcule sur cinq, et
+        /// l'ecran doit pouvoir le dire.
+        let coverage: Double
     }
 
     /// Snapshot brut d'entrée du calcul — évite d'aller lire les Query 6 fois.
@@ -29,85 +32,47 @@ enum EnergyScore {
 
     // MARK: - Calcul du score
 
-    /// Pondération miroir du backend Python d'origine :
-    /// sommeil qualité 30 · sommeil durée 10 · hydratation 20 · habitudes 20 ·
-    /// humeur 15 · anti-fatigue 5 = 100 pts au total.
+    /// En dessous de cette part de criteres renseignes, un score n'a pas de
+    /// sens et vaut mieux ne pas etre affiche du tout.
+    static let minimumCoverage = 0.35
+
+    /// Ponderation, heritee du backend Python d'origine:
+    /// sommeil qualite 30 · sommeil duree 10 · hydratation 20 · habitudes 20 ·
+    /// humeur 15 · anti-fatigue 5.
+    ///
+    /// Le defaut corrige: le total etait divise par 100 quoi qu'il arrive,
+    /// meme quand un seul critere etait renseigne. Quelqu'un qui notait
+    /// uniquement une humeur a 5 sur 5 obtenait 15 sur 100, affiche
+    /// "Tres faible": l'app annoncait un effondrement d'energie a quelqu'un
+    /// qui venait de dire qu'il allait tres bien. Et comme `fatigue` n'est
+    /// jamais renseigne cote iOS, meme une journee complete plafonnait a 95.
+    ///
+    /// Le score est donc rapporte aux criteres REELLEMENT renseignes, et la
+    /// couverture est rendue avec lui.
     static func compute(_ input: Input) -> Result {
-        var score = 0.0
+        var earned = 0.0
+        var available = 0.0
 
-        if let q = input.sleepQuality {
-            score += (Double(q) / 5.0) * 30
+        func add(_ ratio: Double, weight: Double) {
+            earned += min(max(ratio, 0), 1) * weight
+            available += weight
         }
-        if let h = input.sleepHours {
-            let ratio = min(h / 8.0, 1.0)
-            score += ratio * 10
-        }
-        if let ml = input.waterML {
-            let ratio = min(Double(ml) / 2500.0, 1.0)
-            score += ratio * 20
-        }
+
+        if let q = input.sleepQuality { add(Double(q) / 5.0, weight: 30) }
+        if let h = input.sleepHours   { add(h / 8.0, weight: 10) }
+        if let ml = input.waterML     { add(Double(ml) / 2500.0, weight: 20) }
         if let total = input.habitsTotal, total > 0, let done = input.habitsDone {
-            let ratio = min(Double(done) / Double(total), 1.0)
-            score += ratio * 20
+            add(Double(done) / Double(total), weight: 20)
         }
-        if let m = input.mood {
-            score += (Double(m) / 5.0) * 15
+        if let m = input.mood         { add(Double(m) / 5.0, weight: 15) }
+        if let f = input.fatigue      { add(Double(6 - f) / 5.0, weight: 5) }
+
+        guard available > 0 else {
+            return Result(score: 0, label: label(0), colorHex: colorHex(0), coverage: 0)
         }
-        if let f = input.fatigue {
-            score += (Double(6 - f) / 5.0) * 5
-        }
-
-        let clamped = Int(score.rounded().clamped(to: 0...100))
-        return Result(score: clamped, label: label(clamped), colorHex: colorHex(clamped))
-    }
-
-    // MARK: - Lecture SwiftData
-
-    /// Calcule le score du jour à partir de SwiftData + UserDefaults (sommeil
-    /// stocké manuellement par SleepCheckSheet). Retourne nil s'il n'y a
-    /// vraiment aucune donnée pour aujourd'hui.
-    @MainActor
-    static func today(_ ctx: ModelContext) -> Result? {
-        let cal = Calendar.current
-        let ud = UserDefaults.standard
-
-        // Sommeil : SleepCheckSheet écrit dans UserDefaults à chaque check du matin.
-        let sleepHoursRaw = ud.double(forKey: "lastSleepHours")
-        let sleepQualityRaw = ud.integer(forKey: "lastSleepQuality")
-        let sleepHours: Double? = sleepHoursRaw > 0 ? sleepHoursRaw : nil
-        let sleepQuality: Int? = sleepQualityRaw > 0 ? sleepQualityRaw : nil
-
-        // Humeur : dernier MoodEntry du jour.
-        let moods = (try? ctx.fetch(FetchDescriptor<MoodEntry>())) ?? []
-        let todayMood = moods.first(where: { cal.isDateInToday($0.date) })?.score
-
-        // Eau bue aujourd'hui.
-        let waters = (try? ctx.fetch(FetchDescriptor<WaterEntry>())) ?? []
-        let ml = waters.filter { cal.isDateInToday($0.date) }.reduce(0) { $0 + $1.amountML }
-        let waterML: Int? = ml > 0 ? ml : nil
-
-        // Habitudes du jour.
-        let habits = ((try? ctx.fetch(FetchDescriptor<Habit>())) ?? [])
-            .filter { !$0.isPending && !$0.isArchived }
-        let total = habits.count
-        let done = habits.filter { h in
-            h.completions.contains { cal.isDateInToday($0.date) }
-        }.count
-
-        // Rien du tout aujourd'hui → pas de score à montrer.
-        let anyData = sleepHours != nil || sleepQuality != nil || todayMood != nil
-            || waterML != nil || total > 0
-        guard anyData else { return nil }
-
-        return compute(Input(
-            sleepHours: sleepHours,
-            sleepQuality: sleepQuality,
-            mood: todayMood,
-            fatigue: nil,   // pas encore capturé côté iOS — safe à nil
-            waterML: waterML,
-            habitsDone: total > 0 ? done : nil,
-            habitsTotal: total > 0 ? total : nil
-        ))
+        let pct = Int((earned / available * 100).rounded().clamped(to: 0...100))
+        return Result(score: pct, label: label(pct), colorHex: colorHex(pct),
+                      coverage: available / 100)
     }
 
     // MARK: - App Group publish (pour EnergyScoreWidget)
