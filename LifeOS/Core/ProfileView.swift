@@ -1022,11 +1022,27 @@ struct ProfileView: View {
                 HStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .fill(Color.accentColor.opacity(0.15))
+                            .fill(Color.accentColor.opacity(0.12))
                             .frame(width: 40, height: 40)
-                        Image(systemName: authProvider == "apple" ? "apple.logo" : (authProvider == "google" ? "globe" : (authProvider == "facebook" ? "person.2.fill" : "person.crop.circle.fill")))
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundStyle(Color.accentColor)
+                        if authProvider == "google" {
+                            Image("google_logo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 20, height: 20)
+                        } else if authProvider == "facebook" {
+                            Image("facebook_logo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 22, height: 22)
+                        } else if authProvider == "apple" {
+                            Image(systemName: "apple.logo")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundStyle(Color.accentColor)
+                        } else {
+                            Image(systemName: "person.crop.circle.fill")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundStyle(Color.accentColor)
+                        }
                     }
 
                     VStack(alignment: .leading, spacing: 2) {

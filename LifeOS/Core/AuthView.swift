@@ -157,7 +157,10 @@ struct AuthView: View {
                 signInWithGoogle()
             } label: {
                 HStack(spacing: 12) {
-                    googleLogo
+                    Image("google_logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
                     Text("Continuer avec Google")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
@@ -178,9 +181,10 @@ struct AuthView: View {
                 signInWithFacebook()
             } label: {
                 HStack(spacing: 12) {
-                    Image(systemName: "f.circle.fill")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(Color(hex: 0x1877F2))
+                    Image("facebook_logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 22, height: 22)
                     Text("Continuer avec Facebook")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
@@ -195,23 +199,6 @@ struct AuthView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
-        }
-    }
-
-    private var googleLogo: some View {
-        ZStack {
-            Circle()
-                .fill(Color.white)
-                .frame(width: 22, height: 22)
-            Text("G")
-                .font(.system(size: 15, weight: .black, design: .rounded))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.blue, .red, .yellow, .green],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
         }
     }
 
