@@ -7,12 +7,15 @@ import AuthenticationServices
 /// Une fois l'utilisateur authentifié (`isAuthenticated = true`), l'application
 /// enchaîne directement avec l'accueil d'onboarding (`OnboardingWelcome`).
 struct AuthView: View {
+    var isModal: Bool = false
+    @Environment(\.dismiss) private var dismiss
 
     @AppStorage(AppStorageKeys.isAuthenticated) private var isAuthenticated = false
     @AppStorage(AppStorageKeys.userEmail) private var userEmail = ""
     @AppStorage(AppStorageKeys.authProvider) private var authProvider = ""
     @AppStorage(AppStorageKeys.userId) private var userId = ""
     @AppStorage(AppStorageKeys.userName) private var userName = ""
+    @AppStorage(AppStorageKeys.userDisplayName) private var userDisplayName = ""
 
     enum AuthMode: String, CaseIterable {
         case login = "Connexion"
@@ -39,7 +42,23 @@ struct AuthView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
-                    Spacer(minLength: 20)
+                    if isModal {
+                        HStack {
+                            Spacer()
+                            Button {
+                                Haptics.tap()
+                                dismiss()
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 26))
+                                    .foregroundStyle(Theme.textSecondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.top, 12)
+                    } else {
+                        Spacer(minLength: 20)
+                    }
 
                     headerSection
 
@@ -482,13 +501,17 @@ struct AuthView: View {
         if userId.isEmpty {
             userId = UUID().uuidString
         }
-        if let name, !name.isEmpty, userName.isEmpty {
-            userName = name
+        if let name, !name.isEmpty {
+            userDisplayName = name
+            if userName.isEmpty {
+                userName = name
+            }
         }
 
         Haptics.success()
         withAnimation(.easeInOut(duration: 0.4)) {
             isAuthenticated = true
         }
+        dismiss()
     }
 }

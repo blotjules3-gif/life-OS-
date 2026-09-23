@@ -43,6 +43,8 @@ struct ProfileView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var showLogoutConfirmation = false
+    @State private var showAccountSheet = false
+    @State private var showAuthModal = false
 
     @State private var steps = 0
     @State private var healthConnected = false
@@ -126,12 +128,24 @@ struct ProfileView: View {
     }
 
     // MARK: - Identité
-
+    private var effectiveName: String {
+        if !name.isEmpty { return name }
+        if !userDisplayName.isEmpty { return userDisplayName }
+        return ""
+    }
     private var displayName: String {
-        name.isEmpty ? "Mon profil" : name.prefix(1).uppercased() + name.dropFirst()
+        effectiveName.isEmpty ? "Mon profil" : effectiveName.prefix(1).uppercased() + effectiveName.dropFirst()
     }
     private var userInitial: String {
-        name.isEmpty ? "L" : String(name.prefix(1)).uppercased()
+        effectiveName.isEmpty ? "L" : String(effectiveName.prefix(1)).uppercased()
+    }
+    private var accountDisplayName: String {
+        effectiveName.isEmpty ? "Mon Compte" : effectiveName
+    }
+    private var accountEmailDisplay: String {
+        if !userEmail.isEmpty && userEmail != "invite@lifeos.local" { return userEmail }
+        if isAuthenticated && authProvider != "guest" { return "Compte \(authProvider.capitalized)" }
+        return "Non synchronisé (Session locale)"
     }
     private var greeting: String {
         switch Calendar.current.component(.hour, from: .now) {
@@ -199,6 +213,23 @@ struct ProfileView: View {
             }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        Haptics.tap()
+                        showAccountSheet = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(userInitial)
+                                .font(.system(size: 13, weight: .black, design: .rounded))
+                                .foregroundStyle(Color.accentColor)
+                                .frame(width: 32, height: 32)
+                                .background(Color.accentColor.opacity(0.18), in: Circle())
+                        }
+                    }
+                    .accessibilityLabel("Mon Compte")
+                }
+            }
             .scrollContentBackground(.hidden)
             .onAppear { appeared = true }
             .task {
@@ -280,6 +311,28 @@ struct ProfileView: View {
             } message: {
                 Text("Voulez-vous vraiment vous déconnecter de votre compte LifeOS ?")
             }
+            .sheet(isPresented: $showAccountSheet) {
+                NavigationStack {
+                    AccountDetailSheet(
+                        name: $name,
+                        userDisplayName: $userDisplayName,
+                        userEmail: $userEmail,
+                        authProvider: $authProvider,
+                        isAuthenticated: $isAuthenticated,
+                        onShowAuth: {
+                            showAccountSheet = false
+                            showAuthModal = true
+                        },
+                        onLogout: {
+                            showAccountSheet = false
+                            showLogoutConfirmation = true
+                        }
+                    )
+                }
+            }
+            .sheet(isPresented: $showAuthModal) {
+                AuthView(isModal: true)
+            }
             .navigationDestination(for: AppCategory.self) { $0.destination }
         }
     }
@@ -342,10 +395,11 @@ struct ProfileView: View {
             .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
         } else {
             VStack(spacing: 24) {
+                accountCard
+                settingsSection
                 wakeupCompact
                 ProfileCoachCard()
                 myGoalsButton
-                settingsSection
                 appearanceSection
                 syncDevicesSection
             }
@@ -780,6 +834,18 @@ struct ProfileView: View {
                 .kerning(-0.3)
                 .padding(.horizontal, 4)
             VStack(spacing: 0) {
+                settingsRow(icon: "person.crop.circle.fill", iconColor: Color.accentColor,
+                            label: "Mon Compte & Profil") {
+                    HStack(spacing: 6) {
+                        Text(accountDisplayName)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(.secondary)
+                        Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
+                    }
+                } action: {
+                    showAccountSheet = true
+                }
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
                 settingsRow(icon: "heart.fill", iconColor: Color(hex: 0xF1746C),
                             label: healthConnected ? "Apple Santé connecté" : "Connecter Apple Santé") {
                     if healthConnected {
@@ -1019,58 +1085,79 @@ struct ProfileView: View {
 
             VStack(spacing: 14) {
                 // User Account Info
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.accentColor.opacity(0.12))
-                            .frame(width: 40, height: 40)
-                        if authProvider == "google" {
-                            Image("google_logo")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                        } else if authProvider == "facebook" {
-                            Image("facebook_logo")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 22, height: 22)
-                        } else if authProvider == "apple" {
-                            Image(systemName: "apple.logo")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundStyle(Color.accentColor)
+                Button {
+                    Haptics.tap()
+                    showAccountSheet = true
+                } label: {
+                    HStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.accentColor.opacity(0.12))
+                                .frame(width: 40, height: 40)
+                            if authProvider == "google" {
+                                Image("google_logo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 20, height: 20)
+                            } else if authProvider == "facebook" {
+                                Image("facebook_logo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 22, height: 22)
+                            } else if authProvider == "apple" {
+                                Image(systemName: "apple.logo")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundStyle(Color.accentColor)
+                            } else {
+                                Image(systemName: "person.crop.circle.fill")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundStyle(Color.accentColor)
+                            }
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(accountDisplayName)
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(.primary)
+                                .lineLimit(1)
+                            Text(accountEmailDisplay)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+
+                        Spacer()
+
+                        if !isAuthenticated || userEmail.isEmpty || authProvider == "guest" {
+                            Button {
+                                Haptics.tap()
+                                showAuthModal = true
+                            } label: {
+                                Text("Se connecter")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(Color.accentColor)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(Color.accentColor.opacity(0.12), in: Capsule())
+                            }
+                            .buttonStyle(.plain)
                         } else {
-                            Image(systemName: "person.crop.circle.fill")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundStyle(Color.accentColor)
+                            Button {
+                                Haptics.warning()
+                                showLogoutConfirmation = true
+                            } label: {
+                                Text("Déconnexion")
+                                    .font(.caption.bold())
+                                    .foregroundStyle(.red)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(Color.red.opacity(0.12), in: Capsule())
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(userDisplayName.isEmpty ? (userEmail.isEmpty ? "Compte LifeOS" : userEmail) : userDisplayName)
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
-                        Text(userEmail.isEmpty ? "Connecté via \(authProvider.capitalized)" : userEmail)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-
-                    Spacer()
-
-                    Button {
-                        Haptics.warning()
-                        showLogoutConfirmation = true
-                    } label: {
-                        Text("Déconnexion")
-                            .font(.caption.bold())
-                            .foregroundStyle(.red)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(Color.red.opacity(0.12), in: Capsule())
-                    }
-                    .buttonStyle(.plain)
                 }
+                .buttonStyle(.plain)
 
                 Divider().opacity(0.5)
 
@@ -1171,6 +1258,424 @@ struct ProfileView: View {
                 await AlarmLiveActivityManager.shared.startScheduled(alarmTimeString: timeString)
             }
         }
+    }
+
+    // MARK: - Account Card
+
+    private var accountCard: some View {
+        Button {
+            Haptics.tap()
+            showAccountSheet = true
+        } label: {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(Color.accentColor.opacity(0.18))
+                        .frame(width: 56, height: 56)
+                    Text(userInitial)
+                        .font(.system(size: 24, weight: .black, design: .rounded))
+                        .foregroundStyle(Color.accentColor)
+
+                    // Provider badge in bottom-right corner
+                    ZStack {
+                        Circle()
+                            .fill(Color(uiColor: .systemBackground))
+                            .frame(width: 22, height: 22)
+                            .shadow(color: .black.opacity(0.12), radius: 2)
+
+                        if authProvider == "google" {
+                            Image("google_logo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 13, height: 13)
+                        } else if authProvider == "facebook" {
+                            Image("facebook_logo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 14, height: 14)
+                        } else if authProvider == "apple" {
+                            Image(systemName: "apple.logo")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.primary)
+                        } else {
+                            Image(systemName: "person.crop.circle.fill")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundStyle(Color.accentColor)
+                        }
+                    }
+                    .offset(x: 20, y: 20)
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 8) {
+                        Text(accountDisplayName)
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+
+                        if isAuthenticated && !userEmail.isEmpty && userEmail != "invite@lifeos.local" {
+                            Text("Connecté")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(Color.green)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.green.opacity(0.15), in: Capsule())
+                        } else {
+                            Text("Invité")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(Color.orange)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.orange.opacity(0.15), in: Capsule())
+                        }
+                    }
+
+                    Text(accountEmailDisplay)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+
+                    HStack(spacing: 4) {
+                        Image(systemName: "icloud.fill")
+                            .font(.system(size: 10))
+                            .foregroundStyle(Color.accentColor)
+                        Text("Synchronisation active")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 1)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(16)
+            .surface(radius: 20)
+        }
+        .buttonStyle(LifeOSPressStyle())
+    }
+}
+
+// MARK: - AccountDetailSheet
+
+struct AccountDetailSheet: View {
+    @Binding var name: String
+    @Binding var userDisplayName: String
+    @Binding var userEmail: String
+    @Binding var authProvider: String
+    @Binding var isAuthenticated: Bool
+    var onShowAuth: () -> Void
+    var onLogout: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var editedName = ""
+    @State private var isEditingName = false
+
+    private var initial: String {
+        let n = name.isEmpty ? userDisplayName : name
+        return n.isEmpty ? "L" : String(n.prefix(1)).uppercased()
+    }
+
+    private var providerLabel: String {
+        switch authProvider.lowercased() {
+        case "apple": return "Apple ID"
+        case "google": return "Google"
+        case "facebook": return "Facebook"
+        case "email": return "Email / Mot de passe"
+        default: return "Mode Invité"
+        }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // Large Avatar & Status
+                VStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.accentColor.opacity(0.15))
+                            .frame(width: 80, height: 80)
+                        Text(initial)
+                            .font(.system(size: 36, weight: .black, design: .rounded))
+                            .foregroundStyle(Color.accentColor)
+
+                        ZStack {
+                            Circle()
+                                .fill(Color(uiColor: .systemBackground))
+                                .frame(width: 28, height: 28)
+                                .shadow(color: .black.opacity(0.12), radius: 2)
+
+                            if authProvider == "google" {
+                                Image("google_logo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 16, height: 16)
+                            } else if authProvider == "facebook" {
+                                Image("facebook_logo")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 18, height: 18)
+                            } else if authProvider == "apple" {
+                                Image(systemName: "apple.logo")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundStyle(.primary)
+                            } else {
+                                Image(systemName: "person.crop.circle.fill")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundStyle(Color.accentColor)
+                            }
+                        }
+                        .offset(x: 28, y: 28)
+                    }
+                    .padding(.top, 10)
+
+                    Text(name.isEmpty ? (userDisplayName.isEmpty ? "Utilisateur LifeOS" : userDisplayName) : name)
+                        .font(.title2.bold())
+                        .foregroundStyle(.primary)
+
+                    Text(userEmail.isEmpty ? "Compte non associé" : userEmail)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(isAuthenticated && !userEmail.isEmpty && userEmail != "invite@lifeos.local" ? Color.green : Color.orange)
+                            .frame(width: 8, height: 8)
+                        Text(isAuthenticated && !userEmail.isEmpty && userEmail != "invite@lifeos.local" ? "Compte vérifié & actif" : "Session locale")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(isAuthenticated && !userEmail.isEmpty && userEmail != "invite@lifeos.local" ? Color.green : Color.orange)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(
+                        (isAuthenticated && !userEmail.isEmpty && userEmail != "invite@lifeos.local" ? Color.green : Color.orange).opacity(0.12),
+                        in: Capsule()
+                    )
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+
+                // Section Identité
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("INFORMATIONS DU COMPTE")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 4)
+
+                    VStack(spacing: 0) {
+                        HStack {
+                            Text("Prénom / Nom")
+                                .font(.body)
+                            Spacer()
+                            if isEditingName {
+                                TextField("Ton prénom", text: $editedName)
+                                    .textFieldStyle(.roundedBorder)
+                                    .frame(maxWidth: 160)
+                                    .onSubmit {
+                                        if !editedName.trimmingCharacters(in: .whitespaces).isEmpty {
+                                            name = editedName.trimmingCharacters(in: .whitespaces)
+                                            userDisplayName = name
+                                        }
+                                        isEditingName = false
+                                    }
+                                Button("OK") {
+                                    if !editedName.trimmingCharacters(in: .whitespaces).isEmpty {
+                                        name = editedName.trimmingCharacters(in: .whitespaces)
+                                        userDisplayName = name
+                                    }
+                                    isEditingName = false
+                                }
+                                .font(.caption.bold())
+                                .buttonStyle(.borderedProminent)
+                            } else {
+                                Text(name.isEmpty ? userDisplayName : name)
+                                    .foregroundStyle(.secondary)
+                                Button {
+                                    editedName = name.isEmpty ? userDisplayName : name
+                                    isEditingName = true
+                                } label: {
+                                    Image(systemName: "pencil")
+                                        .font(.caption)
+                                        .foregroundStyle(Color.accentColor)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(14)
+
+                        Divider().opacity(0.5)
+
+                        HStack {
+                            Text("Fournisseur d'accès")
+                                .font(.body)
+                            Spacer()
+                            HStack(spacing: 6) {
+                                if authProvider == "google" {
+                                    Image("google_logo").resizable().scaledToFit().frame(width: 14, height: 14)
+                                } else if authProvider == "facebook" {
+                                    Image("facebook_logo").resizable().scaledToFit().frame(width: 14, height: 14)
+                                } else if authProvider == "apple" {
+                                    Image(systemName: "apple.logo").font(.system(size: 12, weight: .bold))
+                                }
+                                Text(providerLabel)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(14)
+
+                        Divider().opacity(0.5)
+
+                        HStack {
+                            Text("Email")
+                                .font(.body)
+                            Spacer()
+                            Text(userEmail.isEmpty ? "Non renseigné" : userEmail)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(14)
+                    }
+                    .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+
+                // Section Synchronisation
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("SYNCHRONISATION MULTI-APPAREILS")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 4)
+
+                    VStack(spacing: 12) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "arrow.triangle.2.circlepath.icloud.fill")
+                                .font(.system(size: 24))
+                                .foregroundStyle(Color.accentColor)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("iCloud & LifeOS Cloud")
+                                    .font(.subheadline.weight(.semibold))
+                                Text("Données synchronisées en continu")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Text("En ligne")
+                                .font(.caption2.bold())
+                                .foregroundStyle(Color.green)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Color.green.opacity(0.15), in: Capsule())
+                        }
+                        .padding(.bottom, 4)
+
+                        Divider().opacity(0.5)
+
+                        #if targetEnvironment(macCatalyst)
+                        let isMac = true
+                        let isPhone = false
+                        let isPad = false
+                        #else
+                        let isMac = false
+                        let isPhone = UIDevice.current.userInterfaceIdiom == .phone
+                        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+                        #endif
+
+                        HStack(spacing: 12) {
+                            deviceItem(icon: "iphone", name: "iPhone", status: isPhone ? "Cet appareil" : "Prêt", isCurrent: isPhone)
+                            deviceItem(icon: "applewatch", name: "Watch", status: "Prêt", isCurrent: false)
+                            deviceItem(icon: "ipad", name: "iPad", status: isPad ? "Cet appareil" : "Prêt", isCurrent: isPad)
+                            deviceItem(icon: "laptopcomputer", name: "Mac", status: isMac ? "Cet appareil" : "Prêt", isCurrent: isMac)
+                        }
+                    }
+                    .padding(16)
+                    .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+
+                // Actions
+                VStack(spacing: 10) {
+                    if !isAuthenticated || userEmail.isEmpty || authProvider == "guest" {
+                        Button {
+                            onShowAuth()
+                        } label: {
+                            HStack {
+                                Image(systemName: "link.badge.plus")
+                                Text("Lier un compte (Apple, Google, Facebook)")
+                                    .font(.body.weight(.semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Color.accentColor)
+                            .foregroundStyle(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        Button {
+                            onShowAuth()
+                        } label: {
+                            HStack {
+                                Image(systemName: "arrow.left.arrow.right")
+                                Text("Changer de compte")
+                                    .font(.body.weight(.medium))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(Color.primary.opacity(0.06))
+                            .foregroundStyle(.primary)
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            onLogout()
+                        } label: {
+                            HStack {
+                                Image(systemName: "rectangle.portrait.and.arrow.right")
+                                Text("Se déconnecter")
+                                    .font(.body.weight(.semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(Color.red.opacity(0.12))
+                            .foregroundStyle(.red)
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.top, 8)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
+        }
+        .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
+        .navigationTitle("Mon Compte")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Fermer") { dismiss() }
+            }
+        }
+    }
+
+    private func deviceItem(icon: String, name: String, status: String, isCurrent: Bool) -> some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 18))
+                .foregroundStyle(isCurrent ? Color.accentColor : .primary)
+                .frame(width: 34, height: 34)
+                .background(isCurrent ? Color.accentColor.opacity(0.15) : Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            Text(name)
+                .font(.system(size: 10, weight: .semibold))
+                .lineLimit(1)
+            Text(status)
+                .font(.system(size: 8))
+                .foregroundStyle(isCurrent ? Color.accentColor : .secondary)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
