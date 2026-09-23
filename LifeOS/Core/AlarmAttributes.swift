@@ -1,12 +1,14 @@
-import ActivityKit
 import Foundation
+#if canImport(ActivityKit) && !targetEnvironment(macCatalyst)
+import ActivityKit
+#endif
 
 // Shared between the app target and the Widget Extension target.
 // Add this file to BOTH targets in Xcode (Target Membership).
 
+#if canImport(ActivityKit) && !targetEnvironment(macCatalyst)
 @available(iOS 16.1, *)
 struct AlarmAttributes: ActivityAttributes {
-
     struct ContentState: Codable, Hashable {
         var phase: Phase
         var timeString: String    // "07:30"
@@ -26,3 +28,25 @@ struct AlarmAttributes: ActivityAttributes {
 
     var startTime: Date
 }
+#else
+struct AlarmAttributes {
+    struct ContentState: Codable, Hashable {
+        var phase: Phase
+        var timeString: String
+        var message: String
+        var temperature: Double?
+        var weatherSymbol: String?
+
+        enum Phase: String, Codable, Hashable {
+            case scheduled
+            case ringing
+            case speakingMessage
+            case waitingUnlock
+            case briefing
+            case dismissed
+        }
+    }
+
+    var startTime: Date
+}
+#endif

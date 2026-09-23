@@ -28,23 +28,32 @@ private let transLangs: [TransLang] = [
 
 struct TranslationView: View {
     var body: some View {
+        #if !targetEnvironment(macCatalyst)
         if #available(iOS 18.0, *) {
             TranslatorScreen()
         } else {
-            ZStack {
-                Theme.background
-                VStack(spacing: 12) {
-                    Image(systemName: "character.bubble").font(.system(size: 48)).foregroundStyle(.travelTint)
-                    Text("Traduction").font(.title3.bold())
-                    Text("La traduction hors-ligne nécessite iOS 18 ou plus récent.")
-                        .font(.subheadline).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
-                }.padding()
-            }
-            .navigationTitle("Traduction").navigationBarTitleDisplayMode(.inline)
+            fallbackView
         }
+        #else
+        fallbackView
+        #endif
+    }
+
+    private var fallbackView: some View {
+        ZStack {
+            Theme.background
+            VStack(spacing: 12) {
+                Image(systemName: "character.bubble").font(.system(size: 48)).foregroundStyle(.travelTint)
+                Text("Traduction").font(.title3.bold())
+                Text("La traduction hors-ligne nécessite iOS 18 ou plus récent.")
+                    .font(.subheadline).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
+            }.padding()
+        }
+        .navigationTitle("Traduction").navigationBarTitleDisplayMode(.inline)
     }
 }
 
+#if !targetEnvironment(macCatalyst)
 @available(iOS 18.0, *)
 private struct TranslatorScreen: View {
     @State private var source = "fr"
@@ -167,3 +176,4 @@ private struct TranslatorScreen: View {
         .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 }
+#endif

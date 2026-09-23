@@ -342,7 +342,13 @@ struct BarcodeAddSheet: View {
 
     private let meals = ["Petit-déj", "Déjeuner", "Collation", "Dîner"]
     private var factor: Double { (Double(grams.replacingOccurrences(of: ",", with: ".")) ?? 0) / 100 }
-    private var scannerAvailable: Bool { DataScannerViewController.isSupported && DataScannerViewController.isAvailable }
+    private var scannerAvailable: Bool {
+        #if targetEnvironment(macCatalyst)
+        return false
+        #else
+        return DataScannerViewController.isSupported && DataScannerViewController.isAvailable
+        #endif
+    }
 
     var body: some View {
         NavigationStack {

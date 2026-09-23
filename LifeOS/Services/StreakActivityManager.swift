@@ -1,5 +1,5 @@
 import Foundation
-#if canImport(ActivityKit)
+#if canImport(ActivityKit) && !targetEnvironment(macCatalyst)
 import ActivityKit
 #endif
 
@@ -22,7 +22,7 @@ import ActivityKit
 @MainActor
 enum StreakActivityManager {
 
-    #if canImport(ActivityKit)
+#if canImport(ActivityKit) && !targetEnvironment(macCatalyst)
     @available(iOS 16.1, *)
     static func startIfMilestone(habitName: String, iconName: String, streakDays: Int, doneToday: Bool) {
         guard let milestone = milestoneFor(streakDays) else { return }
@@ -67,6 +67,10 @@ enum StreakActivityManager {
             await activity.end(activity.content, dismissalPolicy: .immediate)
         }
     }
+    #else
+    static func startIfMilestone(habitName: String, iconName: String, streakDays: Int, doneToday: Bool) {}
+    static func update(streakDays: Int, doneToday: Bool) async {}
+    static func endAll() async {}
     #endif
 
     // MARK: - Milestones

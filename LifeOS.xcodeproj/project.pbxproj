@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		992A118E2FECC22700B312FE /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 992A118D2FECC22700B312FE /* WidgetKit.framework */; };
 		992A11902FECC22700B312FE /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 992A118F2FECC22700B312FE /* SwiftUI.framework */; };
-		992A11A12FECC22700B312FE /* LifeOSWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 992A118B2FECC22700B312FE /* LifeOSWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		992A11A12FECC22700B312FE /* LifeOSWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 992A118B2FECC22700B312FE /* LifeOSWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); platformFilters = (ios, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -39,6 +39,7 @@
 				992A11A12FECC22700B312FE /* LifeOSWidgetsExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
+			platformFilter = ios;
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -296,6 +297,9 @@
 /* Begin PBXTargetDependency section */
 		992A11A02FECC22700B312FE /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
+			platformFilters = (
+				ios,
+			);
 			target = 992A118A2FECC22700B312FE /* LifeOSWidgetsExtension */;
 			targetProxy = 992A119F2FECC22700B312FE /* PBXContainerItemProxy */;
 		};
@@ -576,7 +580,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				SUPPORTS_MACCATALYST = YES;
+				TARGETED_DEVICE_FAMILY = "1,2,6";
 			};
 			name = Debug;
 		};

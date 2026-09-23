@@ -1,3 +1,4 @@
+#if canImport(ActivityKit) && !targetEnvironment(macCatalyst)
 import ActivityKit
 import CoreLocation
 import Foundation
@@ -115,3 +116,16 @@ final class AlarmLiveActivityManager {
         return df.string(from: .now)
     }
 }
+#else
+import Foundation
+
+@MainActor
+final class AlarmLiveActivityManager {
+    static let shared = AlarmLiveActivityManager()
+    private init() {}
+    func startScheduled(alarmTimeString: String) async {}
+    func start() {}
+    func update(phase: AlarmAttributes.ContentState.Phase, message: String = "") {}
+    func end() {}
+}
+#endif

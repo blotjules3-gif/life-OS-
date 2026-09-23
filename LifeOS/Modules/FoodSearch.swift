@@ -325,7 +325,11 @@ struct ScanProductView: View {
     @State private var manual = ""
 
     private var scannerAvailable: Bool {
-        DataScannerViewController.isSupported && DataScannerViewController.isAvailable
+        #if targetEnvironment(macCatalyst)
+        return false
+        #else
+        return DataScannerViewController.isSupported && DataScannerViewController.isAvailable
+        #endif
     }
 
     var body: some View {
@@ -390,6 +394,7 @@ struct ScanProductView: View {
     }
 }
 
+#if !targetEnvironment(macCatalyst)
 // VisionKit data scanner pour les codes-barres
 struct BarcodeScanner: UIViewControllerRepresentable {
     let onScan: (String) -> Void
@@ -427,3 +432,9 @@ struct BarcodeScanner: UIViewControllerRepresentable {
         }
     }
 }
+#else
+struct BarcodeScanner: View {
+    let onScan: (String) -> Void
+    var body: some View { EmptyView() }
+}
+#endif

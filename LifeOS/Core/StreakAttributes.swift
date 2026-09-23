@@ -1,11 +1,7 @@
-import ActivityKit
 import Foundation
+#if canImport(ActivityKit) && !targetEnvironment(macCatalyst)
+import ActivityKit
 
-/// Live Activity « Streak en cours » — affiche la meilleure série d'habitudes
-/// active de l'utilisateur sur le Lock Screen + Dynamic Island.
-///
-/// Doit être compilé dans le target app ET le target widget.
-/// Fichier dupliqué à l'identique dans `LifeOSWidgets/StreakAttributes.swift`.
 @available(iOS 16.1, *)
 struct StreakAttributes: ActivityAttributes {
 
@@ -38,3 +34,18 @@ struct StreakAttributes: ActivityAttributes {
         }
     }
 }
+#else
+struct StreakAttributes {
+    let habitName: String
+    let iconName: String
+    struct ContentState: Codable, Hashable {
+        var streakDays: Int
+        var doneToday: Bool
+        var milestone: Milestone?
+        enum Milestone: String, Codable, Hashable {
+            case week, twoWeeks, month, hundred
+        }
+        var caption: String { "" }
+    }
+}
+#endif

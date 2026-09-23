@@ -1,5 +1,6 @@
 import SwiftUI
 import AVFoundation
+import CoreAudio
 
 // MARK: - Sons relaxants — générateur de bruit on-device (aucun fichier audio)
 
