@@ -10,7 +10,7 @@ struct OrbitSatellite: Identifiable {
 }
 
 struct ProfileView: View {
-    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "system"
     @AppStorage(AppStorageKeys.userName) private var name = ""
     @AppStorage(AppStorageKeys.stepGoal) private var stepGoal = 10000
     @AppStorage(AppStorageKeys.waterGoal) private var waterGoal = 2500
@@ -332,6 +332,7 @@ struct ProfileView: View {
                 myGoalsButton
                 settingsSection
                 appearanceSection
+                syncDevicesSection
             }
             .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
         }
@@ -991,6 +992,72 @@ struct ProfileView: View {
             .padding(16)
             .surface()
         }
+    }
+
+    private var syncDevicesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Synchronisation & Appareils")
+                .font(.system(size: 20, weight: .black))
+                .textCase(.uppercase)
+                .kerning(-0.3)
+                .padding(.horizontal, 4)
+
+            VStack(spacing: 14) {
+                HStack(spacing: 12) {
+                    Image(systemName: "icloud.fill")
+                        .font(.system(size: 22))
+                        .foregroundStyle(Color.accentColor)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("iCloud / Apple ID")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.primary)
+                        Text("Chiffrement bout en bout · Sans inscription")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Text("Actif")
+                        .font(.caption2.bold())
+                        .foregroundStyle(Color.green)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.green.opacity(0.15), in: Capsule())
+                }
+
+                Divider().opacity(0.5)
+
+                HStack(spacing: 16) {
+                    devicePill(icon: "iphone", name: "iPhone", status: "Cet appareil", isCurrent: true)
+                    devicePill(icon: "applewatch", name: "Watch", status: "Prêt", isCurrent: false)
+                    devicePill(icon: "ipad", name: "iPad", status: "Prêt", isCurrent: false)
+                    devicePill(icon: "laptopcomputer", name: "Mac", status: "Prêt", isCurrent: false)
+                }
+
+                Text("Vos données, habitudes et scores se synchronisent automatiquement entre votre iPhone, votre Apple Watch, votre iPad et votre Mac via votre compte iCloud personnel.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(16)
+            .surface()
+        }
+    }
+
+    private func devicePill(icon: String, name: String, status: String, isCurrent: Bool) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(isCurrent ? Color.accentColor : Theme.textPrimary)
+                .frame(width: 38, height: 38)
+                .background(isCurrent ? Color.accentColor.opacity(0.15) : Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            Text(name)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.primary)
+            Text(status)
+                .font(.system(size: 9))
+                .foregroundStyle(isCurrent ? Color.accentColor : .secondary)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private func settingsRow<T: View>(icon: String, iconColor: Color, label: String,

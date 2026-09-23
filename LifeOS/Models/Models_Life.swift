@@ -48,10 +48,35 @@ import SwiftUI
     var project: String
     var blockStart: Date?
     var blockEnd: Date?
+    var recurringDaysRaw: String = ""
+
     init(title: String = "", notes: String = "", due: Date? = nil, done: Bool = false,
-         priority: Int = 0, project: String = "Perso", blockStart: Date? = nil, blockEnd: Date? = nil) {
+         priority: Int = 0, project: String = "Perso", blockStart: Date? = nil, blockEnd: Date? = nil,
+         recurringDaysRaw: String = "") {
         self.title = title; self.notes = notes; self.due = due; self.done = done
         self.priority = priority; self.project = project; self.blockStart = blockStart; self.blockEnd = blockEnd
+        self.recurringDaysRaw = recurringDaysRaw
+    }
+
+    var isOverdue: Bool {
+        guard let due, !done else { return false }
+        return due < Date.now
+    }
+
+    /// Jours de la semaine de récurrence (1=Dim, 2=Lun, 3=Mar, 4=Mer, 5=Jeu, 6=Ven, 7=Sam)
+    var recurringDays: Set<Int> {
+        get { Set(recurringDaysRaw.split(separator: ",").compactMap { Int($0) }) }
+        set { recurringDaysRaw = newValue.sorted().map(String.init).joined(separator: ",") }
+    }
+
+    func applies(to date: Date) -> Bool {
+        if recurringDays.isEmpty {
+            guard let due else { return true }
+            return Calendar.current.isDate(due, inSameDayAs: date) || (due < date && !done)
+        } else {
+            let weekday = Calendar.current.component(.weekday, from: date)
+            return recurringDays.contains(weekday)
+        }
     }
 }
 

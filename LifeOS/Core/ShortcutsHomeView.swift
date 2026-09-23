@@ -621,20 +621,29 @@ struct ShortcutsHomeView: View {
                 }
                 .buttonStyle(PressableButtonStyle())
             } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(habits.enumerated()), id: \.element.id) { idx, habit in
-                        habitRow(habit, isLast: idx == habits.count - 1)
+                VStack(spacing: 8) {
+                    ForEach(habits) { habit in
+                        habitRow(habit)
                             .opacity(animatedHabitIDs.contains(habit.id) ? 1 : 0)
                             .offset(y: animatedHabitIDs.contains(habit.id) ? 0 : 16)
                     }
                 }
-                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
-                .softElevation()
             }
         }
         .onChange(of: habits.count) { _, _ in animateNewHabits() }
         .onAppear { animateNewHabits() }
+    }
+
+    private func habitStreak(_ habit: Habit) -> Int {
+        let cal = Calendar.current
+        var streak = 0
+        var date = cal.startOfDay(for: .now)
+        while habit.completions.contains(where: { cal.isDate($0.date, inSameDayAs: date) }) {
+            streak += 1
+            guard let prev = cal.date(byAdding: .day, value: -1, to: date) else { break }
+            date = prev
+        }
+        return streak
     }
 
     private func animateNewHabits() {
@@ -647,31 +656,68 @@ struct ShortcutsHomeView: View {
         }
     }
 
-    private func habitRow(_ habit: Habit, isLast: Bool) -> some View {
-        let done = habit.completions.contains { Calendar.current.isDateInToday($0.date) }
-        return Button { toggleHabit(habit) } label: {
-            HStack(spacing: 14) {
-                Image(systemName: done ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
-                    .foregroundStyle(done ? Color.accentColor : Color.secondary.opacity(0.4))
-                    .contentTransition(.symbolEffect(.replace))
-                Text(habit.name)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(done ? .secondary : .primary)
-                    .strikethrough(done, color: .secondary)
-                Spacer()
+    private func habitRow(_ habit: Habit) -> some View {
+        let cal = Calendar.current
+        let done = habit.completions.contains { cal.isDateInToday($0.date) }
+        let color = Color(hex: UInt(habit.colorHex))
+        let streak = habitStreak(habit)
+
+        return Button {
+            withAnimation(.spring(duration: 0.32, bounce: 0.25)) {
+                toggleHabit(habit)
             }
-            .animation(.spring(duration: 0.35, bounce: 0.4), value: done)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .contentShape(Rectangle())
+            let gen = UIImpactFeedbackGenerator(style: done ? .light : .medium)
+            gen.impactOccurred()
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(done ? color : color.opacity(0.12))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: done ? "checkmark" : habit.icon)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(done ? .white : color)
+                        .scaleEffect(done ? 1.0 : 0.92)
+                }
+                .animation(.spring(duration: 0.35, bounce: 0.3), value: done)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(habit.name)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .strikethrough(done, color: .secondary)
+                        .lineLimit(1)
+                    if habit.scheduledHour > 0 || habit.scheduledMinute > 0 {
+                        Text(String(format: "%02dh%02d", habit.scheduledHour, habit.scheduledMinute))
+                            .font(.caption2.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer()
+
+                if streak > 0 {
+                    HStack(spacing: 3) {
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 10, weight: .bold))
+                        Text("\(streak)j")
+                            .font(.system(size: 11, weight: .bold).monospacedDigit())
+                    }
+                    .foregroundStyle(Color(hex: 0xE0A23C))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(hex: 0xE0A23C).opacity(0.20), in: Capsule())
+                }
+            }
+            .padding(12)
+            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Theme.stroke, lineWidth: 1)
+            )
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("\(habit.name), \(done ? "faite" : "non faite")")
-        .accessibilityHint(done ? "Double-tapez pour décocher" : "Double-tapez pour valider")
-        .overlay(alignment: .bottom) {
-            if !isLast { Divider().padding(.leading, 52) }
-        }
+        .buttonStyle(LifeOSPressStyle())
+        .accessibilityLabel(done ? "\(habit.name) — validée aujourd'hui" : "Valider \(habit.name)")
     }
 
     private func triggerStreakActivity(for habit: Habit) {
@@ -815,7 +861,7 @@ struct ShortcutsHomeView: View {
     /// Taches pas encore faites, les plus urgentes d'abord, 5 au maximum sur
     /// l'accueil: au dela ce n'est plus un rappel, c'est une deuxieme appli.
     private var openTasks: [TodoItem] {
-        todos.filter { !$0.done }
+        todos.filter { !$0.done && $0.applies(to: .now) }
             .sorted { a, b in
                 if a.priority != b.priority { return a.priority > b.priority }
                 switch (a.due, b.due) {
@@ -831,18 +877,12 @@ struct ShortcutsHomeView: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader("Tâches", trailing: "Tout voir") { showAllTasks = true }
 
-            VStack(spacing: 0) {
-                ForEach(Array(openTasks.prefix(5).enumerated()), id: \.element.persistentModelID) { i, task in
+            VStack(spacing: 8) {
+                ForEach(openTasks.prefix(5), id: \.persistentModelID) { task in
                     taskRow(task)
-                    if i < min(openTasks.count, 5) - 1 {
-                        Divider().padding(.leading, 40)
-                    }
                 }
 
-                if !openTasks.isEmpty { Divider().padding(.leading, 40) }
-
-                // Ajout sur place: taper, Entree, c'est ajoute. Pas de feuille
-                // modale pour une ligne de texte.
+                // Ajout sur place
                 HStack(spacing: 12) {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 20))
@@ -856,13 +896,13 @@ struct ShortcutsHomeView: View {
                             .font(.footnote.weight(.semibold))
                     }
                 }
-                .padding(.vertical, 12)
-                .padding(.horizontal, 14)
+                .padding(12)
+                .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Theme.stroke, lineWidth: 1)
+                )
             }
-            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                .strokeBorder(Theme.hairline, lineWidth: 0.5))
-            .softElevation()
         }
     }
 
@@ -875,33 +915,74 @@ struct ShortcutsHomeView: View {
                 }
                 Haptics.soft()
             } label: {
-                Image(systemName: "circle")
-                    .font(.system(size: 20))
-                    .foregroundStyle(task.priority >= 2 ? Color(hex: 0xF1746C)
+                Image(systemName: task.done ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 22))
+                    .foregroundStyle(task.done ? Color.green : (task.priority >= 2 ? Color(hex: 0xF1746C)
                                    : task.priority == 1 ? Color(hex: 0xF1A33C)
-                                   : Theme.textSecondary)
+                                   : Theme.textSecondary))
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Terminer \(task.title)")
 
-            // Editable sur place: le titre EST le champ, pas besoin d'ouvrir
-            // un ecran pour corriger une faute.
-            TextField("Tâche", text: Binding(
-                get: { task.title },
-                set: { task.title = $0 }
-            ), axis: .vertical)
+            VStack(alignment: .leading, spacing: 2) {
+                TextField("Tâche", text: Binding(
+                    get: { task.title },
+                    set: { task.title = $0 }
+                ), axis: .vertical)
+                .font(.system(size: 15, weight: .medium))
+                .strikethrough(task.done, color: .secondary)
+                .foregroundStyle(task.done ? .secondary : .primary)
                 .lineLimit(1...3)
                 .onSubmit { saveTasks("renommer") }
 
+                if !task.project.isEmpty && task.project != "Perso" {
+                    Text(task.project)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer()
+
             if let due = task.due {
-                Text(due, format: .dateTime.day().month(.abbreviated))
-                    .font(.caption)
-                    .foregroundStyle(due < Date() ? Color(hex: 0xF1746C) : Theme.textSecondary)
+                if due < Date.now && !task.done {
+                    HStack(spacing: 3) {
+                        Image(systemName: "clock.badge.exclamationmark")
+                            .font(.system(size: 10, weight: .bold))
+                        Text(due, format: .dateTime.hour().minute())
+                            .font(.system(size: 11, weight: .bold).monospacedDigit())
+                        Text("En retard")
+                            .font(.system(size: 10, weight: .bold))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Color.red, in: Capsule())
+                } else {
+                    HStack(spacing: 3) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 10))
+                        Text(due, format: .dateTime.hour().minute())
+                            .font(.caption.monospacedDigit())
+                    }
+                    .foregroundStyle(Theme.textSecondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .background(Theme.bg2, in: Capsule())
+                }
+            }
+            if !task.recurringDaysRaw.isEmpty {
+                Image(systemName: "repeat")
+                    .font(.caption2)
+                    .foregroundStyle(Color.accentColor)
             }
         }
-        .padding(.vertical, 11)
-        .padding(.horizontal, 14)
-        .contentShape(Rectangle())
+        .padding(12)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Theme.stroke, lineWidth: 1)
+        )
         // Appui long, pas balayage: swipeActions n'existe QUE dans une List,
         // et cette section est une VStack dans un ScrollView. Le geste aurait
         // ete inerte, sans la moindre erreur pour le signaler.

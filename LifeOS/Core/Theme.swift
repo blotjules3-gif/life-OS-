@@ -260,22 +260,24 @@ extension Color {
 // MARK: - Thèmes de l'app (Couleur de l'app)
 
 enum AppTheme: String, CaseIterable, Identifiable {
+    case system    // Automatique selon le réglage de l'appareil (iOS)
     case classic   // Clair — blanc cassé + accent noir
     case dark      // Sombre — noir pur + accent blanc
-    case volt      // Vert — clair + accent volt (le vert de l'icône)
+    case volt      // Vert — ARCHIVÉ
     case glass     // VERRE translucide façon Apple (Liquid Glass) — ARCHIVÉ
-    case pinky     // Rose — clair rosé + accent rose
+    case pinky     // Rose — ARCHIVÉ
     case gothic    // argent liquide sombre, gothique — ARCHIVÉ
     case cloud     // nuage blanc, doux — ARCHIVÉ
 
     var id: String { rawValue }
 
-    /// Thèmes proposés dans le sélecteur. Verre/Argent/Cloud sont ARCHIVÉS (code gardé, retirés du choix).
-    static let selectable: [AppTheme] = [.classic, .dark, .volt, .pinky]
+    /// Thèmes proposés dans le sélecteur : Système (défaut), Clair et Sombre.
+    static let selectable: [AppTheme] = [.system, .classic, .dark]
     var isSelectable: Bool { Self.selectable.contains(self) }
 
     var label: String {
         switch self {
+        case .system:  return "Système"
         case .classic: return "Clair"
         case .dark:    return "Sombre"
         case .volt:    return "Vert"
@@ -287,6 +289,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     }
     var symbol: String {
         switch self {
+        case .system:  return "circle.lefthalf.filled"
         case .classic: return "sun.max.fill"
         case .dark:    return "moon.fill"
         case .volt:    return "bolt.fill"
@@ -296,9 +299,10 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .cloud:   return "cloud.fill"
         }
     }
-    /// Schéma clair/sombre forcé par le thème.
-    var scheme: ColorScheme {
+    /// Schéma clair/sombre forcé par le thème (nil = suit le système iOS).
+    var scheme: ColorScheme? {
         switch self {
+        case .system:        return nil
         case .dark, .gothic: return .dark
         default:             return .light
         }
@@ -307,6 +311,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// via `Color.accentColor` (injecté par `.tint()` à la racine).
     var accent: Color {
         switch self {
+        case .system:  return Color.primary
         case .classic: return .black
         case .dark:    return .white
         case .volt:    return Theme.volt
@@ -321,6 +326,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// Noir/blanc sont interprétés côté widget comme `.primary` (adaptatif).
     var accentHex: Int {
         switch self {
+        case .system:  return 0x000000
         case .classic: return 0x000000
         case .dark:    return 0xFFFFFF
         case .volt:    return 0x4CF810
@@ -333,6 +339,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// Couleur du contenu posé SUR l'accent (texte d'un bouton plein, etc.).
     var onAccent: Color {
         switch self {
+        case .system:  return Color(uiColor: .systemBackground)
         case .classic: return .white
         case .dark:    return .black
         case .volt:    return .black
@@ -345,6 +352,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// Pastille du sélecteur de thème : la couleur signature du thème.
     var previewFill: Color {
         switch self {
+        case .system:  return Color(uiColor: .tertiarySystemFill)
         case .classic: return Color(hex: 0xECECE7)
         case .dark:    return Color(hex: 0x0A0A0A)
         case .volt:    return Theme.volt
@@ -356,6 +364,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
     }
     var previewIcon: Color {
         switch self {
+        case .system:  return .primary
         case .classic: return .black
         case .dark:    return .white
         case .volt:    return .black
@@ -370,6 +379,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
     /// NIKE = aplat (blanc cassé / noir pur), la texture vient de la grille technique.
     var bubbleBG: [Color] {
         switch self {
+        case .system:
+            return Array(repeating: Color(uiColor: .systemGroupedBackground), count: 9)
         case .classic, .volt:
             return Array(repeating: Color(hex: 0xECECE7), count: 9)
         case .dark:
@@ -393,8 +404,8 @@ enum AppTheme: String, CaseIterable, Identifiable {
                      Color(hex: 0xEDF1F8), Color(hex: 0xF4F7FC), Color(hex: 0xF0F4FA) ]
         }
     }
-    /// Nike = thèmes à grille technique (clair/sombre/vert).
-    var isNike: Bool { self == .classic || self == .dark || self == .volt }
+    /// Nike = thèmes à grille technique (système/clair/sombre/vert).
+    var isNike: Bool { self == .system || self == .classic || self == .dark || self == .volt }
     var isGlass: Bool { self == .glass }
     /// Thèmes « modernes » (Nike + Verre) → grille de catégories façon Nike (pas les bulles).
     var isModern: Bool { isNike || isGlass }

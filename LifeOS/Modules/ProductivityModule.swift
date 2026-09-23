@@ -44,7 +44,26 @@ struct TodoView: View {
                                     HStack(spacing: 6) {
                                         Text(t.project).font(.caption2).padding(.horizontal,6).padding(.vertical,2)
                                             .background(Theme.bg2, in: Capsule()).foregroundStyle(Theme.textSecondary)
-                                        if let d = t.due { Text(d, format: .dateTime.day().month().hour().minute()).font(.caption2).foregroundStyle(d < .now && !t.done ? .red : Theme.textSecondary) }
+                                        if let d = t.due {
+                                            if d < .now && !t.done {
+                                                HStack(spacing: 3) {
+                                                    Image(systemName: "clock.badge.exclamationmark")
+                                                    Text(d, format: .dateTime.hour().minute())
+                                                    Text("En retard")
+                                                }
+                                                .font(.caption2.bold())
+                                                .foregroundStyle(.red)
+                                            } else {
+                                                Text(d, format: .dateTime.day().month().hour().minute())
+                                                    .font(.caption2)
+                                                    .foregroundStyle(Theme.textSecondary)
+                                            }
+                                        }
+                                        if !t.recurringDaysRaw.isEmpty {
+                                            Image(systemName: "repeat")
+                                                .font(.caption2)
+                                                .foregroundStyle(Color.accentColor)
+                                        }
                                     }
                                 }
                                 Spacer()
@@ -115,23 +134,66 @@ struct TodoView: View {
 struct TodoEditor: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
-    @State private var title = ""; @State private var project = "Perso"; @State private var priority = 0
-    @State private var hasDue = false; @State private var due = Date()
+    @State private var title = ""
+    @State private var project = "Perso"
+    @State private var priority = 0
+    @State private var hasDue = false
+    @State private var due = Date()
+    @State private var isRecurring = false
+    @State private var selectedDays: Set<Int> = [2, 3, 4, 5, 6] // Lun-Ven
+
+    private let dayOptions: [(day: Int, label: String)] = [
+        (2, "L"), (3, "M"), (4, "M"), (5, "J"), (6, "V"), (7, "S"), (1, "D")
+    ]
+
     var body: some View {
         NavigationStack {
             Form {
                 TextField("Tâche", text: $title)
                 TextField("Projet", text: $project)
-                Picker("Priorité", selection: $priority) { Text("Normale").tag(0); Text("Importante").tag(1); Text("Urgente").tag(2) }
+                Picker("Priorité", selection: $priority) {
+                    Text("Normale").tag(0)
+                    Text("Importante").tag(1)
+                    Text("Urgente").tag(2)
+                }
                 Toggle("Échéance", isOn: $hasDue)
-                if hasDue { DatePicker("Pour le", selection: $due) }
+                if hasDue {
+                    DatePicker("Pour le", selection: $due)
+                }
+                Toggle("Répéter certains jours", isOn: $isRecurring)
+                if isRecurring {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Jours actifs").font(.caption).foregroundStyle(.secondary)
+                        HStack(spacing: 8) {
+                            ForEach(dayOptions, id: \.day) { opt in
+                                let isSel = selectedDays.contains(opt.day)
+                                Button {
+                                    if isSel { selectedDays.remove(opt.day) }
+                                    else { selectedDays.insert(opt.day) }
+                                } label: {
+                                    Text(opt.label)
+                                        .font(.system(size: 13, weight: .bold))
+                                        .frame(width: 36, height: 36)
+                                        .background(isSel ? Color.accentColor : Color.primary.opacity(0.08), in: Circle())
+                                        .foregroundStyle(isSel ? Theme.onAccent : Theme.textPrimary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
             }
             .navigationTitle("Nouvelle tâche").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
-                    ctx.insert(TodoItem(title: title, due: hasDue ? due : nil, priority: priority, project: project)); dismiss()
-                }.disabled(title.isEmpty) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Ajouter") {
+                        let recRaw = isRecurring ? selectedDays.sorted().map(String.init).joined(separator: ",") : ""
+                        ctx.insert(TodoItem(title: title, due: hasDue ? due : nil, priority: priority, project: project, recurringDaysRaw: recRaw))
+                        dismiss()
+                    }.disabled(title.isEmpty)
+                }
             }
         }
     }

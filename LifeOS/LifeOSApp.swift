@@ -14,10 +14,10 @@ struct LifeOSApp: App {
     @State private var storeWasReset = false
     @AppStorage(AppStorageKeys.onboardingDone) private var onboardingDone = false
     @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
-    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "system"
     private var appTheme: AppTheme {
-        let t = AppTheme(rawValue: appThemeRaw) ?? .classic
-        return t.isSelectable ? t : .classic   // thème archivé → Bright
+        let t = AppTheme(rawValue: appThemeRaw) ?? .system
+        return t.isSelectable ? t : .system   // thème archivé → Système
     }
     @State private var showBriefingFromWidget = false
     @State private var showSleepCheckFromWidget = false

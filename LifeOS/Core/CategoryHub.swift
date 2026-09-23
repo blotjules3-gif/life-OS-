@@ -540,14 +540,14 @@ struct CategoryHubView: View {
     /// Les themes decoratifs gardent leur palette, c'est tout leur interet.
     private func bubbleTint(_ tool: CategoryTool) -> Color {
         switch theme {
-        case .classic, .dark, .volt, .glass: return Color(hex: 0x0E0E11)
-        case .pinky, .gothic, .cloud:        return themedTint(tool)
+        case .system, .classic, .dark, .volt, .glass: return Color(hex: 0x0E0E11)
+        case .pinky, .gothic, .cloud:                 return themedTint(tool)
         }
     }
 
     private func themedTint(_ tool: CategoryTool) -> Color {
         switch theme {
-        case .classic, .dark, .volt, .glass: return tool.tint
+        case .system, .classic, .dark, .volt, .glass: return tool.tint
         case .pinky:  return [Color(hex: 0xFF4F9D), Color(hex: 0xFF77B5), Color(hex: 0xF06EA9),
                               Color(hex: 0xFF8AC4), Color(hex: 0xE85C9E)][stableIndex(tool) % 5]
         case .gothic: return [Color(hex: 0xAEB7C4), Color(hex: 0xC6CED9), Color(hex: 0x99A3B2),
