@@ -4,11 +4,20 @@ import SwiftUI
 @main
 struct LifeOSWidgetsBundle: WidgetBundle {
     var body: some Widget {
+        // Nouveaux Widgets Clés LifeOS
+        TabataWidget()
+        HydrationWidget()
+        GymFocusWidget()
+        SleepWidget()
+        FastingWidget()
+
+        // Widgets Existants
         AlarmActivityWidget()
         HabitsWidget()
         FoodScanWidget()
         EnergyScoreWidget()
-        CoachQuickAskWidget()   // Loop 18 — raccourci coach
+        CoachQuickAskWidget()
+
         if #available(iOS 16.1, *) {
             StreakActivityWidget()
         }

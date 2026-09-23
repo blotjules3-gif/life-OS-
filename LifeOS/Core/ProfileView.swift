@@ -305,6 +305,11 @@ struct ProfileView: View {
             .alert("Se déconnecter", isPresented: $showLogoutConfirmation) {
                 Button("Annuler", role: .cancel) { }
                 Button("Se déconnecter", role: .destructive) {
+                    showAccountSheet = false
+                    showAuthModal = false
+                    userEmail = ""
+                    userDisplayName = ""
+                    authProvider = ""
                     isAuthenticated = false
                     Haptics.success()
                 }

@@ -18,8 +18,6 @@ final class TabataSound {
     private func activateSession() {
         guard !sessionActive else { return }
         let s = AVAudioSession.sharedInstance()
-        // .playback => sortie courante (Bluetooth/écouteurs/enceinte) + joue en mode silencieux.
-        // mixWithOthers + duckOthers => la musique continue mais baisse pendant le bip.
         try? s.setCategory(.playback, mode: .default, options: [.mixWithOthers, .duckOthers])
         try? s.setActive(true)
         sessionActive = true
@@ -42,8 +40,9 @@ final class TabataSound {
     func finish()    { play("fin", [(880, 0.16), (0, 0.05), (1108, 0.16), (0, 0.05), (1318, 0.36)], vol: 1.0) }
 
     /// Réglage global (Profil › Sons & vibrations). Absent = activé par défaut.
-    private var soundEnabled: Bool {
-        UserDefaults.standard.object(forKey: "timerSoundEnabled") as? Bool ?? true
+    var soundEnabled: Bool {
+        get { UserDefaults.standard.object(forKey: "timerSoundEnabled") as? Bool ?? true }
+        set { UserDefaults.standard.set(newValue, forKey: "timerSoundEnabled") }
     }
 
     private func play(_ key: String, _ segments: [(Double, Double)], vol: Double) {
@@ -116,32 +115,64 @@ struct TabataConfig {
 
 @Observable
 final class TabataEngine {
-    enum Phase {
+    enum Phase: Equatable {
         case idle, prepare, work, rest, restCycle, cooldown, done
         var title: String {
             switch self {
-            case .idle, .prepare: return "PRÊT"
-            case .work: return "EFFORT"
-            case .rest: return "REPOS"
-            case .restCycle: return "RÉCUP"
-            case .cooldown: return "RETOUR AU CALME"
-            case .done: return "TERMINÉ"
+            case .idle:      return "PRÊT"
+            case .prepare:   return "PRÉPARATION"
+            case .work:      return "EFFORT"
+            case .rest:      return "REPOS"
+            case .restCycle: return "RÉCUP SÉRIE"
+            case .cooldown:  return "RÉCUPÉRATION"
+            case .done:      return "TERMINÉ"
             }
         }
+        var shortTitle: String {
+            switch self {
+            case .idle, .prepare: return "PRÊT"
+            case .work:           return "EFFORT"
+            case .rest:           return "REPOS"
+            case .restCycle:      return "RÉCUP"
+            case .cooldown:       return "CALME"
+            case .done:           return "BRAVO"
+            }
+        }
+        var icon: String {
+            switch self {
+            case .idle, .prepare: return "bolt.fill"
+            case .work:           return "flame.fill"
+            case .rest:           return "lungs.fill"
+            case .restCycle:      return "arrow.triangle.2.circlepath"
+            case .cooldown:       return "heart.fill"
+            case .done:           return "trophy.fill"
+            }
+        }
+        /// Palette sportive néon haut de gamme (Nike / Apple Fitness+)
         var color: Color {
             switch self {
-            case .idle, .prepare: return Color(hex: 0xF2D43D)   // jaune
-            case .work: return Color(hex: 0x9BE14E)             // vert
-            case .rest: return Color(hex: 0xF0584B)             // rouge
-            case .restCycle: return Color(hex: 0xF2A03D)        // orange
-            case .cooldown: return Color(hex: 0x4FA8E0)         // bleu
-            case .done: return Color(hex: 0x9BE14E)
+            case .idle, .prepare: return Color(hex: 0xFFB800)   // or solaire
+            case .work:           return Color(hex: 0x00F076)   // volt / vert néon électrique
+            case .rest:           return Color(hex: 0xFF5252)   // corail éclatant
+            case .restCycle:      return Color(hex: 0x00D2FF)   // cyan givré
+            case .cooldown:       return Color(hex: 0x7E72F2)   // indigo doux
+            case .done:           return Color(hex: 0x00F076)
+            }
+        }
+        var gradientColors: [Color] {
+            switch self {
+            case .idle, .prepare: return [Color(hex: 0xFFCA28), Color(hex: 0xFF9800)]
+            case .work:           return [Color(hex: 0x00F076), Color(hex: 0x00B853)]
+            case .rest:           return [Color(hex: 0xFF6B4A), Color(hex: 0xFF3B30)]
+            case .restCycle:      return [Color(hex: 0x00D2FF), Color(hex: 0x0072FF)]
+            case .cooldown:       return [Color(hex: 0x9B84FF), Color(hex: 0x5E5CE6)]
+            case .done:           return [Color(hex: 0x00F076), Color(hex: 0xFFD700)]
             }
         }
         var onColor: Color {
             switch self {
             case .rest, .cooldown: return .white
-            default: return .black
+            default: return .white
             }
         }
     }
@@ -154,11 +185,14 @@ final class TabataEngine {
     var cycle: Int = 1
     var running = false
 
+    /// Horodatages pour un balayage fluide à 60/120 fps sans lag
+    private(set) var intervalStart: Date?
+    private(set) var intervalEnd: Date?
+
     private var cancellable: AnyCancellable?
-    /// Horodatage du dernier battement, pour rattraper le temps passe en arriere-plan.
+    /// Horodatage du dernier battement, pour rattraper le temps passé en arrière-plan.
     private var lastTick: Date?
-    /// Source de l'heure, remplacable dans les tests. Sans ca, le rattrapage
-    /// en arriere-plan n'est pas verifiable autrement qu'en attendant vraiment.
+    /// Source de l'heure, remplaçable dans les tests.
     var now: () -> Date = { Date() }
 
     init(cfg: TabataConfig) {
@@ -170,8 +204,20 @@ final class TabataEngine {
     var roundsLeft: Int { max(0, cfg.rounds - round + 1) }
     var cyclesLeft: Int { max(0, cfg.cycles - cycle + 1) }
 
-    // Fraction restante de l'intervalle courant (1 → plein, 0 → vide) pour l'anneau.
+    /// Fraction statique discrète (utilisée si chrono en pause ou tests)
     var intervalFraction: Double { Double(remaining) / Double(max(1, intervalTotal)) }
+
+    /// Fraction continue 60 fps pour l'anneau (balayage fluide)
+    func smoothFraction(at date: Date = Date()) -> Double {
+        guard phase != .idle && phase != .done else {
+            return phase == .idle ? 1.0 : 0.0
+        }
+        guard running, let end = intervalEnd, intervalTotal > 0 else {
+            return Double(remaining) / Double(max(1, intervalTotal))
+        }
+        let left = end.timeIntervalSince(date)
+        return max(0.0, min(1.0, left / Double(intervalTotal)))
+    }
 
     private var fullCycle: Int { cfg.rounds * cfg.work + max(0, cfg.rounds - 1) * cfg.rest }
 
@@ -203,72 +249,86 @@ final class TabataEngine {
         else { run() }
     }
 
-    /// Debut de la seance en cours, pour pouvoir l'enregistrer dans Sante.
-    /// Passe par `now()` et pas par `Date()`, sinon les tests ne pourraient
-    /// plus piloter l'horloge.
+    /// Début de la séance en cours, pour pouvoir l'enregistrer dans Santé.
     private(set) var startedAt: Date?
 
     func begin() {
-        phase = .prepare; remaining = cfg.prepare; intervalTotal = cfg.prepare; round = 1; cycle = 1
-        startedAt = now()
-        Haptics.tap(); TabataSound.shared.prime(); run()
+        phase = .prepare
+        remaining = cfg.prepare
+        intervalTotal = cfg.prepare
+        round = 1
+        cycle = 1
+        let currentNow = now()
+        startedAt = currentNow
+        intervalStart = currentNow
+        intervalEnd = currentNow.addingTimeInterval(Double(cfg.prepare))
+        Haptics.tap()
+        TabataSound.shared.prime()
+        run()
     }
 
     func reset() {
-        pause(); phase = .idle; remaining = cfg.prepare; intervalTotal = cfg.prepare; round = 1; cycle = 1
+        pause()
+        phase = .idle
+        remaining = cfg.prepare
+        intervalTotal = cfg.prepare
+        round = 1
+        cycle = 1
         startedAt = nil
+        intervalStart = nil
+        intervalEnd = nil
         TabataSound.shared.end()
     }
 
     private func run() {
         running = true
-        lastTick = now()
-        // L'ecran ne doit pas s'eteindre au milieu d'une seance: on a les mains
-        // occupees et on ne touche pas le telephone pendant l'effort.
+        let currentNow = now()
+        lastTick = currentNow
+        intervalStart = currentNow
+        intervalEnd = currentNow.addingTimeInterval(Double(remaining))
         UIApplication.shared.isIdleTimerDisabled = true
         cancellable = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
             .sink { [weak self] _ in self?.tick() }
     }
+
     private func pause() {
         running = false
         cancellable?.cancel()
         lastTick = nil
+        intervalEnd = nil
         UIApplication.shared.isIdleTimerDisabled = false
     }
 
-    /// Avance d'autant de secondes qu'il s'en est REELLEMENT ecoule.
-    ///
-    /// Avant, chaque battement retirait exactement 1 seconde. Or un Timer ne
-    /// tourne pas quand l'app passe en arriere-plan: verrouiller l'ecran en
-    /// plein Tabata mettait le chrono en pause sans le dire, et on revenait
-    /// avec un temps faux. On se cale donc sur l'horloge, pas sur le nombre de
-    /// battements recus.
+    /// Avance d'autant de secondes qu'il s'en est RÉELLEMENT écoulé.
     func tick() {
-        let now = self.now()
+        let currentNow = self.now()
         var steps = 1
         if let last = lastTick {
-            steps = Int(now.timeIntervalSince(last).rounded())
+            steps = Int(currentNow.timeIntervalSince(last).rounded())
         }
-        lastTick = now
+        lastTick = currentNow
         guard steps > 0 else { return }
-        // Revenir deux heures plus tard ne doit pas lancer une boucle absurde.
         let catchUp = steps > 1
         steps = min(steps, 3600)
         for _ in 0..<steps {
             guard running, phase != .idle, phase != .done else { break }
             step(silent: catchUp)
         }
+        if running && intervalTotal > 0 {
+            intervalEnd = currentNow.addingTimeInterval(Double(remaining))
+        }
     }
 
     private func step(silent: Bool) {
         if remaining > 1 {
             remaining -= 1
-            // Décompte sonore sur les 3 dernières secondes de chaque intervalle.
-            // Muet pendant un rattrapage, sinon on entendrait cent bips d'un coup.
-            if !silent, remaining <= 3, phase != .idle, phase != .done { TabataSound.shared.countdown() }
+            if !silent, remaining <= 3, phase != .idle, phase != .done {
+                TabataSound.shared.countdown()
+                Haptics.tap()
+            }
             return
         }
-        advance()   // remaining == 1 → transition (son joué dans enter/finish)
+        advance()
     }
 
     private func advance() {
@@ -290,7 +350,8 @@ final class TabataEngine {
             round += 1
             enter(.work, cfg.work)
         case .restCycle:
-            cycle += 1; round = 1
+            cycle += 1
+            round = 1
             enter(.work, cfg.work)
         case .cooldown:
             finish()
@@ -301,7 +362,10 @@ final class TabataEngine {
         phase = p
         remaining = max(1, secs)
         intervalTotal = max(1, secs)
-        // Bip de transition : aigu pour l'effort, grave pour repos/récup/retour au calme.
+        let currentNow = now()
+        intervalStart = currentNow
+        intervalEnd = currentNow.addingTimeInterval(Double(remaining))
+
         switch p {
         case .work:                          TabataSound.shared.work()
         case .rest, .restCycle, .cooldown:   TabataSound.shared.rest()
@@ -309,12 +373,17 @@ final class TabataEngine {
         }
         if secs <= 0 { advance() }
     }
+
     private func finish() {
-        pause(); phase = .done; remaining = 0
+        pause()
+        phase = .done
+        remaining = 0
+        intervalStart = nil
+        intervalEnd = nil
         TabataSound.shared.finish()
     }
 
-    // Navigation manuelle entre les séries (ex: j'ai loupé/fini une série).
+    // Navigation manuelle entre les séries
     func skipForward() {
         Haptics.tap()
         if round < cfg.rounds { round += 1 }
@@ -322,12 +391,23 @@ final class TabataEngine {
         else { finish(); return }
         enter(.work, cfg.work)
     }
+
     func skipBackward() {
         Haptics.tap()
         if phase == .done { phase = .work }
         if round > 1 { round -= 1 }
         else if cycle > 1 { cycle -= 1; round = cfg.rounds }
         enter(.work, cfg.work)
+    }
+
+    func adjustSeconds(_ delta: Int) {
+        Haptics.tap()
+        let newRemaining = max(1, remaining + delta)
+        remaining = newRemaining
+        intervalTotal = max(intervalTotal, newRemaining)
+        if running {
+            intervalEnd = now().addingTimeInterval(Double(remaining))
+        }
     }
 }
 
@@ -339,25 +419,32 @@ struct TabataSession: Identifiable, Equatable {
     let icon: String
     let exercises: [String]
     var subtitle: String? = nil
+    var tag: String? = nil
+    var accentColorHex: UInt = 0x00F076
 }
 
-/// Séances prêtes à l'emploi — chacune = 6 exercices différents (base de l'app).
+/// Séances prêtes à l'emploi avec thèmes visuels dédiés
 enum TabataPresets {
     static let all: [TabataSession] = [
-        .init(id: "full", name: "Full body", icon: "figure.strengthtraining.functional",
-              exercises: ["Squats", "Pompes", "Fentes", "Gainage", "Mountain climbers", "Burpees"]),
-        .init(id: "upper", name: "Haut du corps", icon: "figure.arms.open",
-              exercises: ["Pompes", "Dips", "Pompes diamant", "Superman", "Pike push-ups", "Gainage épaules"]),
-        .init(id: "lower", name: "Bas du corps", icon: "figure.walk",
-              exercises: ["Squats", "Fentes avant", "Fentes arrière", "Chaise murale", "Mollets", "Squats sautés"]),
         .init(id: "hiit", name: "Cardio HIIT", icon: "flame.fill",
-              exercises: ["Jumping jacks", "Montées de genoux", "Burpees", "Mountain climbers", "Talons-fesses", "Squats sautés"]),
-        .init(id: "core", name: "Abdos / Core", icon: "figure.core.training",
-              exercises: ["Crunchs", "Gainage", "Russian twists", "Relevés de jambes", "Bicyclette", "Gainage latéral"]),
+              exercises: ["Jumping jacks", "Montées de genoux", "Burpees", "Mountain climbers", "Talons-fesses", "Squats sautés"],
+              tag: "Cardio Intense", accentColorHex: 0xFF5252),
+        .init(id: "full", name: "Full Body Athlète", icon: "figure.strengthtraining.functional",
+              exercises: ["Squats", "Pompes", "Fentes", "Gainage", "Mountain climbers", "Burpees"],
+              tag: "Complet & Puissant", accentColorHex: 0x00F076),
+        .init(id: "core", name: "Abdos & Core 360°", icon: "figure.core.training",
+              exercises: ["Crunchs", "Gainage planche", "Russian twists", "Relevés de jambes", "Bicyclette", "Gainage latéral"],
+              tag: "Gainage & Silhouette", accentColorHex: 0xFFB800),
+        .init(id: "upper", name: "Haut du Corps", icon: "figure.arms.open",
+              exercises: ["Pompes", "Dips", "Pompes diamant", "Superman", "Pike push-ups", "Gainage épaules"],
+              tag: "Pectoraux / Épaules", accentColorHex: 0x00D2FF),
+        .init(id: "lower", name: "Jambes & Fessiers", icon: "figure.walk",
+              exercises: ["Squats", "Fentes avant", "Fentes arrière", "Chaise murale", "Mollets explosifs", "Squats sautés"],
+              tag: "Force & Explosion", accentColorHex: 0x7E72F2),
     ]
 }
 
-// MARK: - Écran immersif
+// MARK: - Écran immersif Haute Performance
 
 struct TabataView: View {
     @Environment(\.scenePhase) private var scenePhase
@@ -369,14 +456,14 @@ struct TabataView: View {
     @AppStorage(AppStorageKeys.tabCycles) private var cycles = 1
     @AppStorage(AppStorageKeys.tabRestCycle) private var restCycle = 60
     @AppStorage(AppStorageKeys.tabCooldown) private var cooldown = 0
-    @AppStorage(AppStorageKeys.tabSets) private var sets = 4          // séries = passages sur les 6 exercices
+    @AppStorage(AppStorageKeys.tabSets) private var sets = 4
 
     @State private var engine = TabataEngine(cfg: TabataConfig(prepare: 10, work: 30, rest: 15, rounds: 8, cycles: 1, restCycle: 60, cooldown: 0))
     @State private var showSettings = false
-    @State private var chosenSession: TabataSession?    // séance choisie (préréglage ou programme)
-    @State private var showChooser = true               // écran de choix à l'arrivée
+    @State private var chosenSession: TabataSession? = TabataPresets.all[0]
+    @State private var showChooser = false
+    @State private var soundMuted = false
 
-    // Programme Sport de l'utilisateur → converti en séances Tabata.
     @Query private var gymDays: [GymDay]
     private var programSessions: [TabataSession] {
         gymWeekOrder.compactMap { w -> TabataSession? in
@@ -384,24 +471,30 @@ struct TabataView: View {
             let exos = d.focus.split(separator: "·").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
             guard !exos.isEmpty else { return nil }
             return TabataSession(id: "gym-\(d.weekday)", name: d.title, icon: "dumbbell.fill",
-                                 exercises: exos, subtitle: gymWeekdayName(d.weekday))
+                                 exercises: exos, subtitle: gymWeekdayName(d.weekday), tag: "Mon Programme", accentColorHex: 0x00F076)
         }
     }
-    /// Toutes les séances proposées : ton programme d'abord, puis les préréglages.
     private var availableSessions: [TabataSession] { programSessions + TabataPresets.all }
-
     private var sessionExercises: [String] { chosenSession?.exercises ?? [] }
-    /// Exercice affiché pour un round donné (boucle si plus de rounds que d'exos).
+
     private func exercise(forRound r: Int) -> String? {
         guard !sessionExercises.isEmpty else { return nil }
         let i = (max(1, r) - 1) % sessionExercises.count
         return sessionExercises[i]
     }
     private var currentExercise: String? { exercise(forRound: engine.round) }
-    private var nextExercise: String? { exercise(forRound: engine.round + 1) }
+    private var nextExercise: String? {
+        if engine.phase == .rest || engine.phase == .work {
+            if engine.round < engine.cfg.rounds {
+                return exercise(forRound: engine.round + 1)
+            } else if engine.cycle < engine.cfg.cycles {
+                return exercise(forRound: 1)
+            }
+        }
+        return nil
+    }
 
     private var config: TabataConfig {
-        // Séance = un round par exercice (6), répétés « sets » fois (4 séries par défaut).
         if sessionExercises.isEmpty {
             return TabataConfig(prepare: prepare, work: work, rest: rest, rounds: rounds, cycles: cycles, restCycle: restCycle, cooldown: cooldown)
         }
@@ -413,80 +506,952 @@ struct TabataView: View {
         engine.reset()
         engine.cfg = config
         engine.remaining = prepare
-        withAnimation(.easeInOut(duration: 0.25)) { showChooser = false }
-    }
-
-    /// Nom d'exercice affiché en gros (uniquement pendant l'effort).
-    private var exerciseLabel: String? { engine.phase == .work ? currentExercise : nil }
-    /// Sous-titre : prochain exercice pendant la prépa / le repos.
-    private var phaseSubLabel: String? {
-        switch engine.phase {
-        case .idle:      return exercise(forRound: 1).map { "Commence par : \($0)" }
-        case .prepare:   return exercise(forRound: 1).map { "Commence par : \($0)" }
-        case .rest:      return nextExercise.map { "À suivre : \($0)" }
-        case .restCycle: return exercise(forRound: 1).map { "À suivre : \($0)" }
-        default:         return nil
-        }
-    }
-
-    /// Prochain exercice (prépa / repos) pour afficher son dessin en aperçu.
-    private var upcomingExercise: String? {
-        switch engine.phase {
-        case .idle, .prepare, .restCycle: return exercise(forRound: 1)
-        case .rest:                       return nextExercise
-        default:                          return nil
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+            showChooser = false
         }
     }
 
     var body: some View {
         ZStack {
-            engine.phase.color.ignoresSafeArea()
+            // Fond noir profond OLED
+            Color(hex: 0x07080A).ignoresSafeArea()
+
+            // Lueur d'ambiance dynamique (Aura Bloom)
+            ambientAuroraGlow
+
             VStack(spacing: 0) {
                 topBar
-                totalBar
-                Spacer(minLength: 6)
-                centerRing
-                Spacer(minLength: 6)
-                controlPanel
-            }
-            .padding(.horizontal, 22)
-            .padding(.bottom, 14)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 10)
 
-            if showChooser { chooserOverlay.transition(.opacity) }
+                workoutTimelineBar
+                    .padding(.horizontal, 20)
+                    .padding(.top, 14)
+
+                Spacer(minLength: 8)
+
+                heroTimerHUD
+                    .padding(.horizontal, 20)
+
+                Spacer(minLength: 8)
+
+                controlDock
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 16)
+            }
+
+            if showChooser {
+                chooserOverlay
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .zIndex(10)
+            }
+
+            if engine.phase == .done {
+                completionCelebrationView
+                    .transition(.scale.combined(with: .opacity))
+                    .zIndex(20)
+            }
         }
-        .animation(.easeInOut(duration: 0.25), value: engine.phase)
         .statusBarHidden()
-        // Rattrapage immediat au retour au premier plan: sans ca il faut
-        // attendre le battement suivant pour que le chrono se recale.
+        .preferredColorScheme(.dark)
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { engine.tick() }
         }
-        .onAppear { engine.cfg = config; if engine.phase == .idle { engine.remaining = prepare } }
-        // Une seance finie part dans Apple Sante. C'est la seule seance de
-        // l'app qui a un vrai debut et une vraie fin, donc la seule qu'on
-        // puisse enregistrer honnetement.
+        .onAppear {
+            engine.cfg = config
+            if engine.phase == .idle { engine.remaining = prepare }
+            soundMuted = !TabataSound.shared.soundEnabled
+        }
         .onChange(of: engine.phase) { _, phase in
             guard phase == .done else { return }
             Task { await saveSessionToHealth() }
         }
-        .onDisappear { TabataSound.shared.end() }   // libère la session audio (musique dé-duckée)
+        .onDisappear {
+            TabataSound.shared.end()
+        }
         .sheet(isPresented: $showSettings) {
             TabataSettings(prepare: $prepare, work: $work, rest: $rest, rounds: $rounds, cycles: $cycles, restCycle: $restCycle, cooldown: $cooldown, sets: $sets)
-                .onDisappear { engine.cfg = config; if engine.phase == .idle { engine.remaining = prepare } }
+                .onDisappear {
+                    engine.cfg = config
+                    if engine.phase == .idle { engine.remaining = prepare }
+                }
         }
     }
 
-    private var displayedTime: Int {
-        (engine.phase == .idle) ? prepare : engine.remaining
+    // MARK: - Lueur d'ambiance (Ambient Radial Glow)
+
+    private var ambientAuroraGlow: some View {
+        ZStack {
+            RadialGradient(
+                colors: [
+                    engine.phase.color.opacity(engine.running ? 0.30 : 0.15),
+                    engine.phase.color.opacity(0.06),
+                    Color.clear
+                ],
+                center: .center,
+                startRadius: 50,
+                endRadius: 320
+            )
+            .blur(radius: 60)
+            .animation(.easeInOut(duration: 0.6), value: engine.phase)
+            .ignoresSafeArea()
+
+            // Grille sportive très subtile
+            Rectangle()
+                .fill(LinearGradient(
+                    colors: [Color.black.opacity(0.4), Color.clear, Color.black.opacity(0.7)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                ))
+                .ignoresSafeArea()
+        }
     }
 
-    /// Dessin (pictogramme SF Symbol) associé à un exercice / une machine.
-    @ViewBuilder private func exerciseArt(_ name: String, size: CGFloat) -> some View {
-        Image(systemName: exerciseSymbol(name))
-            .font(.system(size: size, weight: .semibold))
-            .foregroundStyle(engine.phase.onColor)
-            .symbolRenderingMode(.hierarchical)
-            .frame(height: size)
+    // MARK: - Barre supérieure de navigation
+
+    private var topBar: some View {
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .background(Color.white.opacity(0.08), in: Circle())
+                    .overlay(Circle().stroke(Color.white.opacity(0.12), lineWidth: 1))
+            }
+
+            Spacer()
+
+            Button {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                    showChooser = true
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: chosenSession?.icon ?? "timer")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(engine.phase.color)
+
+                    Text(chosenSession?.name ?? "Intervalles libres")
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.5))
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(Color.white.opacity(0.08), in: Capsule())
+                .overlay(Capsule().stroke(Color.white.opacity(0.12), lineWidth: 1))
+            }
+
+            Spacer()
+
+            HStack(spacing: 8) {
+                // Bouton Son rapide
+                Button {
+                    soundMuted.toggle()
+                    TabataSound.shared.soundEnabled = !soundMuted
+                    Haptics.tap()
+                } label: {
+                    Image(systemName: soundMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(soundMuted ? .white.opacity(0.4) : engine.phase.color)
+                        .frame(width: 40, height: 40)
+                        .background(Color.white.opacity(0.08), in: Circle())
+                        .overlay(Circle().stroke(Color.white.opacity(0.12), lineWidth: 1))
+                }
+
+                // Bouton Réglages
+                Button {
+                    showSettings = true
+                } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 40, height: 40)
+                        .background(Color.white.opacity(0.08), in: Circle())
+                        .overlay(Circle().stroke(Color.white.opacity(0.12), lineWidth: 1))
+                }
+            }
+        }
+    }
+
+    // MARK: - Barre de progression de la séance totale
+
+    private var workoutTimelineBar: some View {
+        VStack(spacing: 8) {
+            HStack(alignment: .center) {
+                HStack(spacing: 6) {
+                    Image(systemName: "hourglass")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.6))
+                    Text("TEMPS RESTANT")
+                        .font(.system(size: 11, weight: .heavy, design: .rounded))
+                        .kerning(0.8)
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+
+                Spacer()
+
+                Text(formatHMS(engine.phase == .idle ? engine.totalDuration : engine.totalRemaining))
+                    .font(.system(size: 18, weight: .black, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.white)
+            }
+
+            // Timeline segmentée moderne
+            GeometryReader { geo in
+                let totalWidth = geo.size.width
+                let progress = engine.totalDuration > 0
+                    ? max(0.0, min(1.0, Double(engine.totalElapsed) / Double(engine.totalDuration)))
+                    : 0.0
+
+                ZStack(alignment: .leading) {
+                    // Track arrière
+                    Capsule()
+                        .fill(Color.white.opacity(0.10))
+                        .frame(height: 5)
+
+                    // Jauge avant
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [engine.phase.color.opacity(0.8), engine.phase.color],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: max(5, totalWidth * progress), height: 5)
+                        .shadow(color: engine.phase.color.opacity(0.6), radius: 4, x: 0, y: 0)
+                }
+            }
+            .frame(height: 5)
+
+            // Badges d'état Série / Round
+            HStack(spacing: 8) {
+                Label {
+                    Text("SÉRIE \(engine.cycle)/\(engine.cfg.cycles)")
+                        .font(.system(size: 11, weight: .heavy, design: .rounded))
+                } icon: {
+                    Image(systemName: "repeat")
+                        .font(.system(size: 10, weight: .bold))
+                }
+                .foregroundStyle(.white.opacity(0.75))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Color.white.opacity(0.06), in: Capsule())
+
+                Spacer()
+
+                Label {
+                    Text("ROUND \(engine.round)/\(engine.cfg.rounds)")
+                        .font(.system(size: 11, weight: .heavy, design: .rounded))
+                } icon: {
+                    Image(systemName: "target")
+                        .font(.system(size: 10, weight: .bold))
+                }
+                .foregroundStyle(engine.phase == .work ? engine.phase.color : .white.opacity(0.75))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(engine.phase == .work ? engine.phase.color.opacity(0.15) : Color.white.opacity(0.06), in: Capsule())
+                .overlay(
+                    Capsule().stroke(engine.phase == .work ? engine.phase.color.opacity(0.35) : Color.clear, lineWidth: 1)
+                )
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.white.opacity(0.08), lineWidth: 1))
+    }
+
+    // MARK: - Anneau central Ultra-Fluide à 60/120 fps
+
+    private var heroTimerHUD: some View {
+        VStack(spacing: 16) {
+            // Bandeau Exercice Actuel avec Icône
+            exerciseHeaderCard
+
+            // L'anneau chronomètre ultra-fluide via TimelineView
+            TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { context in
+                let fraction = engine.smoothFraction(at: context.date)
+                ringGraphic(fraction: fraction)
+            }
+
+            // Bandeau "À SUIVRE" (Next Exercise)
+            if let next = nextExercise, (engine.phase == .rest || engine.phase == .work || engine.phase == .restCycle) {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.right.circle.fill")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(Color(hex: 0x00D2FF))
+
+                    Text("À SUIVRE :")
+                        .font(.system(size: 11, weight: .heavy, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.6))
+
+                    Text(next)
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(Color.black.opacity(0.5), in: Capsule())
+                .overlay(Capsule().stroke(Color.white.opacity(0.12), lineWidth: 1))
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
+            } else {
+                // Espace réservé pour éviter les sauts de mise en page
+                Color.clear.frame(height: 30)
+            }
+        }
+    }
+
+    // MARK: - Carte de l'exercice actuel
+
+    private var exerciseHeaderCard: some View {
+        VStack(spacing: 6) {
+            if let current = currentExercise, engine.phase == .work {
+                HStack(spacing: 12) {
+                    Image(systemName: exerciseSymbol(current))
+                        .font(.system(size: 26, weight: .bold))
+                        .foregroundStyle(engine.phase.color)
+                        .frame(width: 44, height: 44)
+                        .background(engine.phase.color.opacity(0.16), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("EXERCICE EN COURS")
+                            .font(.system(size: 10, weight: .heavy, design: .rounded))
+                            .kerning(0.8)
+                            .foregroundStyle(engine.phase.color)
+                        Text(current)
+                            .font(.system(size: 20, weight: .black, design: .rounded))
+                            .foregroundStyle(.white)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 10)
+                .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(engine.phase.color.opacity(0.3), lineWidth: 1))
+            } else {
+                HStack(spacing: 10) {
+                    Image(systemName: engine.phase.icon)
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(engine.phase.color)
+
+                    VStack(alignment: .center, spacing: 2) {
+                        Text(engine.phase.title)
+                            .font(.system(size: 17, weight: .black, design: .rounded))
+                            .kerning(0.5)
+                            .foregroundStyle(.white)
+                        if let firstExo = exercise(forRound: engine.round) {
+                            Text("Prochain : \(firstExo)")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
+                    }
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 10)
+                .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.white.opacity(0.08), lineWidth: 1))
+            }
+        }
+        .frame(height: 64)
+    }
+
+    // MARK: - Dessin de l'anneau central avec tête lumineuse
+
+    @ViewBuilder
+    private func ringGraphic(fraction: Double) -> some View {
+        let size: CGFloat = 280
+        let lineWidth: CGFloat = 16
+        let effectiveFraction = engine.phase == .idle ? 1.0 : max(0.0001, fraction)
+
+        ZStack {
+            // Halo lumineux d'arrière-plan de l'anneau
+            Circle()
+                .stroke(engine.phase.color.opacity(0.15), lineWidth: lineWidth + 8)
+                .blur(radius: 12)
+                .frame(width: size, height: size)
+
+            // Piste d'arrière-plan
+            Circle()
+                .stroke(Color.white.opacity(0.08), lineWidth: lineWidth)
+                .frame(width: size, height: size)
+
+            // Anneau de progression actif
+            Circle()
+                .trim(from: 0, to: effectiveFraction)
+                .stroke(
+                    AngularGradient(
+                        gradient: Gradient(colors: [
+                            engine.phase.color.opacity(0.6),
+                            engine.phase.color
+                        ]),
+                        center: .center,
+                        startAngle: .degrees(-90),
+                        endAngle: .degrees(270)
+                    ),
+                    style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+                .frame(width: size, height: size)
+
+            // Tête lumineuse (indicator dot)
+            GeometryReader { geo in
+                let radius = (size / 2)
+                let angle = (effectiveFraction * 360.0 - 90.0) * .pi / 180.0
+                let x = geo.size.width / 2 + radius * CGFloat(cos(angle))
+                let y = geo.size.height / 2 + radius * CGFloat(sin(angle))
+
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: lineWidth - 4, height: lineWidth - 4)
+                    .shadow(color: engine.phase.color, radius: 8, x: 0, y: 0)
+                    .position(x: x, y: y)
+            }
+            .frame(width: size, height: size)
+
+            // Contenu textuel central
+            VStack(spacing: 4) {
+                // Badge de phase capsule
+                HStack(spacing: 5) {
+                    Image(systemName: engine.phase.icon)
+                        .font(.system(size: 11, weight: .heavy))
+                    Text(engine.phase.shortTitle)
+                        .font(.system(size: 11, weight: .heavy, design: .rounded))
+                        .kerning(0.8)
+                }
+                .foregroundStyle(engine.phase.color)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(engine.phase.color.opacity(0.18), in: Capsule())
+                .overlay(Capsule().stroke(engine.phase.color.opacity(0.4), lineWidth: 1))
+
+                // Chronomètre en gros caractères
+                let displayVal = engine.phase == .idle ? prepare : engine.remaining
+                Text(String(format: "%02d", displayVal))
+                    .font(.system(size: 82, weight: .black, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.white)
+                    .shadow(color: engine.phase.color.opacity(0.35), radius: 10, x: 0, y: 0)
+
+                // Indication sous le chiffre
+                if engine.phase == .work {
+                    Text("DONNE TOUT !")
+                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                        .kerning(1)
+                        .foregroundStyle(engine.phase.color)
+                } else if engine.phase == .rest || engine.phase == .restCycle {
+                    Text("RÉCUPÈRE")
+                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                        .kerning(1)
+                        .foregroundStyle(.white.opacity(0.6))
+                } else {
+                    Text("PRÉPARE-TOI")
+                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                        .kerning(1)
+                        .foregroundStyle(Color(hex: 0xFFB800))
+                }
+            }
+        }
+        .frame(width: size, height: size)
+    }
+
+    // MARK: - Panneau de contrôle inférieur (Floating Glass Dock)
+
+    private var controlDock: some View {
+        VStack(spacing: 14) {
+            // Boutons d'ajustement rapide (+/- 5 secondes)
+            HStack(spacing: 12) {
+                Button {
+                    engine.adjustSeconds(-5)
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "gobackward.5")
+                            .font(.system(size: 12, weight: .bold))
+                        Text("-5s")
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                    }
+                    .foregroundStyle(.white.opacity(0.75))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.white.opacity(0.08), in: Capsule())
+                }
+
+                Spacer()
+
+                Button {
+                    engine.reset()
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.system(size: 11, weight: .bold))
+                        Text("Recommencer")
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                    }
+                    .foregroundStyle(.white.opacity(0.6))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color.white.opacity(0.05), in: Capsule())
+                }
+
+                Spacer()
+
+                Button {
+                    engine.adjustSeconds(+5)
+                } label: {
+                    HStack(spacing: 4) {
+                        Text("+5s")
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                        Image(systemName: "goforward.5")
+                            .font(.system(size: 12, weight: .bold))
+                    }
+                    .foregroundStyle(.white.opacity(0.75))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.white.opacity(0.08), in: Capsule())
+                }
+            }
+            .padding(.horizontal, 8)
+
+            // Barre principale : Précédent / Play-Pause Géant / Suivant
+            HStack(spacing: 24) {
+                // Série / Round précédent
+                Button {
+                    engine.skipBackward()
+                } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: "backward.end.fill")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(.white)
+                        Text("Préc.")
+                            .font(.system(size: 9, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.5))
+                    }
+                    .frame(width: 58, height: 58)
+                    .background(Color.white.opacity(0.08), in: Circle())
+                    .overlay(Circle().stroke(Color.white.opacity(0.12), lineWidth: 1))
+                }
+                .buttonStyle(PressableButtonStyle())
+
+                // Bouton PLAY / PAUSE CENTRAL GÉANT
+                Button {
+                    engine.startOrPause()
+                } label: {
+                    ZStack {
+                        // Halo de pulsation
+                        Circle()
+                            .fill(engine.phase.color.opacity(0.25))
+                            .frame(width: 88, height: 88)
+                            .blur(radius: 6)
+
+                        // Bouton principal
+                        Circle()
+                            .fill(
+                                LinearGradient(
+                                    colors: engine.phase.gradientColors,
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 78, height: 78)
+                            .shadow(color: engine.phase.color.opacity(0.5), radius: 12, x: 0, y: 4)
+
+                        Image(systemName: engine.running ? "pause.fill" : "play.fill")
+                            .font(.system(size: 32, weight: .black))
+                            .foregroundStyle(.black)
+                            .offset(x: engine.running ? 0 : 2)
+                    }
+                }
+                .buttonStyle(PressableButtonStyle())
+
+                // Série / Round suivant
+                Button {
+                    engine.skipForward()
+                } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: "forward.end.fill")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(.white)
+                        Text("Suiv.")
+                            .font(.system(size: 9, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.5))
+                    }
+                    .frame(width: 58, height: 58)
+                    .background(Color.white.opacity(0.08), in: Circle())
+                    .overlay(Circle().stroke(Color.white.opacity(0.12), lineWidth: 1))
+                }
+                .buttonStyle(PressableButtonStyle())
+            }
+        }
+        .padding(.vertical, 16)
+        .padding(.horizontal, 20)
+        .background(
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .fill(Color(hex: 0x12141A).opacity(0.92))
+                .shadow(color: Color.black.opacity(0.6), radius: 20, x: 0, y: 10)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Écran de choix de séance (Sleek Modal Overlay)
+
+    private var chooserOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.85).ignoresSafeArea()
+                .onTapGesture {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                        showChooser = false
+                    }
+                }
+
+            VStack(spacing: 0) {
+                // Barre de poignée et titre
+                VStack(spacing: 12) {
+                    Capsule()
+                        .fill(Color.white.opacity(0.25))
+                        .frame(width: 40, height: 5)
+                        .padding(.top, 10)
+
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Entraînements HIIT")
+                                .font(.system(size: 24, weight: .black, design: .rounded))
+                                .foregroundStyle(.white)
+                            Text("Sélectionne un programme prêt ou personnalise tes intervalles")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
+                        Spacer()
+                        Button {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                                showChooser = false
+                            }
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.8))
+                                .frame(width: 36, height: 36)
+                                .background(Color.white.opacity(0.12), in: Circle())
+                        }
+                    }
+                    .padding(.horizontal, 22)
+                }
+
+                // Strip de réglage rapide
+                quickConfigStrip
+                    .padding(.horizontal, 22)
+                    .padding(.top, 16)
+                    .padding(.bottom, 12)
+
+                // Liste déroulante des séances
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 12) {
+                        ForEach(availableSessions) { s in
+                            Button {
+                                pick(s)
+                            } label: {
+                                sessionCard(s)
+                            }
+                            .buttonStyle(PressableButtonStyle())
+                        }
+
+                        Button {
+                            pick(nil)
+                        } label: {
+                            freeIntervalCard
+                        }
+                        .buttonStyle(PressableButtonStyle())
+                    }
+                    .padding(.horizontal, 22)
+                    .padding(.bottom, 30)
+                }
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 32, style: .continuous)
+                    .fill(Color(hex: 0x111318))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 32, style: .continuous)
+                    .stroke(Color.white.opacity(0.15), lineWidth: 1)
+            )
+            .padding(.top, 60)
+            .ignoresSafeArea(edges: .bottom)
+        }
+    }
+
+    private var quickConfigStrip: some View {
+        HStack(spacing: 10) {
+            cfgStepper("EFFORT", value: $work, unit: "s", step: 5, min: 5, color: 0x00F076)
+            cfgStepper("REPOS", value: $rest, unit: "s", step: 5, min: 0, color: 0xFF5252)
+            cfgStepper("SÉRIES", value: $sets, unit: "", step: 1, min: 1, color: 0xFFB800)
+        }
+    }
+
+    private func cfgStepper(_ label: String, value: Binding<Int>, unit: String, step: Int, min: Int, color: UInt) -> some View {
+        VStack(spacing: 6) {
+            Text(label)
+                .font(.system(size: 10, weight: .heavy, design: .rounded))
+                .kerning(0.8)
+                .foregroundStyle(Color(hex: color))
+
+            HStack(spacing: 8) {
+                Button {
+                    Haptics.tap()
+                    value.wrappedValue = Swift.max(min, value.wrappedValue - step)
+                } label: {
+                    Image(systemName: "minus")
+                        .font(.system(size: 12, weight: .black))
+                        .foregroundStyle(.white)
+                        .frame(width: 28, height: 28)
+                        .background(Color.white.opacity(0.12), in: Circle())
+                }
+
+                Text("\(value.wrappedValue)\(unit)")
+                    .font(.system(size: 18, weight: .black, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(.white)
+                    .frame(minWidth: 36)
+
+                Button {
+                    Haptics.tap()
+                    value.wrappedValue += step
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 12, weight: .black))
+                        .foregroundStyle(.white)
+                        .frame(width: 28, height: 28)
+                        .background(Color.white.opacity(0.12), in: Circle())
+                }
+            }
+        }
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity)
+        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.white.opacity(0.08), lineWidth: 1))
+    }
+
+    private func sessionCard(_ s: TabataSession) -> some View {
+        let isChosen = chosenSession?.id == s.id
+        let accent = Color(hex: s.accentColorHex)
+
+        return HStack(spacing: 14) {
+            // Icône stylisée
+            Image(systemName: s.icon)
+                .font(.system(size: 24, weight: .bold))
+                .foregroundStyle(accent)
+                .frame(width: 52, height: 52)
+                .background(accent.opacity(0.15), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(accent.opacity(0.3), lineWidth: 1))
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(s.name)
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+
+                    if let tag = s.tag {
+                        Text(tag)
+                            .font(.system(size: 9, weight: .heavy, design: .rounded))
+                            .foregroundStyle(accent)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(accent.opacity(0.15), in: Capsule())
+                    }
+                }
+
+                Text(s.exercises.joined(separator: " · "))
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            if isChosen {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(accent)
+            } else {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.3))
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(isChosen ? accent.opacity(0.08) : Color.white.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(isChosen ? accent.opacity(0.4) : Color.white.opacity(0.08), lineWidth: 1)
+        )
+    }
+
+    private var freeIntervalCard: some View {
+        let isChosen = chosenSession == nil
+        return HStack(spacing: 14) {
+            Image(systemName: "timer")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(Color(hex: 0x00D2FF))
+                .frame(width: 52, height: 52)
+                .background(Color(hex: 0x00D2FF).opacity(0.15), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color(hex: 0x00D2FF).opacity(0.3), lineWidth: 1))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Intervalles Libres")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                Text("Chrono personnalisé : \(work)s effort / \(rest)s repos")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.55))
+            }
+
+            Spacer()
+
+            if isChosen {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(Color(hex: 0x00D2FF))
+            } else {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.3))
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(isChosen ? Color(hex: 0x00D2FF).opacity(0.08) : Color.white.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(isChosen ? Color(hex: 0x00D2FF).opacity(0.4) : Color.white.opacity(0.08), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Vue de célébration / Séance terminée
+
+    private var completionCelebrationView: some View {
+        ZStack {
+            Color.black.opacity(0.92).ignoresSafeArea()
+
+            VStack(spacing: 20) {
+                // Trophée lumineux
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: 0x00F076).opacity(0.2))
+                        .frame(width: 120, height: 120)
+                        .blur(radius: 14)
+
+                    Image(systemName: "trophy.fill")
+                        .font(.system(size: 60, weight: .black))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color(hex: 0xFFD700), Color(hex: 0xF59E0B)],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                }
+                .padding(.top, 20)
+
+                VStack(spacing: 6) {
+                    Text("SÉANCE TERMINÉE !")
+                        .font(.system(size: 28, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+
+                    Text("Performance enregistrée avec succès")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+
+                // Statistiques de la séance
+                HStack(spacing: 12) {
+                    statBox("DURÉE", formatHMS(engine.totalDuration), "clock.fill")
+                    statBox("SÉRIES", "\(engine.cfg.cycles)", "repeat")
+                    statBox("ROUNDS", "\(engine.cfg.rounds * engine.cfg.cycles)", "flame.fill")
+                }
+                .padding(.horizontal, 10)
+
+                // Badge Apple Santé
+                HStack(spacing: 8) {
+                    Image(systemName: "heart.fill")
+                        .foregroundStyle(.red)
+                    Text("Synchronisé avec Apple Santé")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white.opacity(0.8))
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(Color.white.opacity(0.08), in: Capsule())
+
+                // Boutons d'action
+                VStack(spacing: 10) {
+                    Button {
+                        engine.reset()
+                        dismiss()
+                    } label: {
+                        Text("Terminer & Fermer")
+                            .font(.headline.bold())
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 52)
+                            .background(Color(hex: 0x00F076))
+                            .foregroundStyle(.black)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    }
+
+                    Button {
+                        engine.reset()
+                        engine.begin()
+                    } label: {
+                        Text("Recommencer la séance")
+                            .font(.subheadline.bold())
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 48)
+                            .background(Color.white.opacity(0.10))
+                            .foregroundStyle(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    }
+                }
+                .padding(.top, 10)
+            }
+            .padding(26)
+            .background(Color(hex: 0x13151D), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).stroke(Color.white.opacity(0.12), lineWidth: 1))
+            .padding(.horizontal, 24)
+        }
+    }
+
+    private func statBox(_ label: String, _ value: String, _ icon: String) -> some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(Color(hex: 0x00F076))
+            Text(value)
+                .font(.system(size: 20, weight: .black, design: .rounded))
+                .foregroundStyle(.white)
+            Text(label)
+                .font(.system(size: 10, weight: .heavy, design: .rounded))
+                .foregroundStyle(.white.opacity(0.5))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     private func exerciseSymbol(_ name: String) -> String {
@@ -502,297 +1467,22 @@ struct TabataView: View {
         if n.contains("superman") || n.contains("stretch") || n.contains("flex")       { return "figure.flexibility" }
         return "dumbbell.fill"
     }
-
-    // MARK: - Temps restant total (en haut) + progression globale
-
-    private var onColor: Color { engine.phase.onColor }
-
-    private var globalProgress: Double {
-        engine.phase == .idle ? 0 : Double(engine.totalElapsed) / Double(max(1, engine.totalDuration))
-    }
-
-    private var totalBar: some View {
-        VStack(spacing: 7) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Image(systemName: "hourglass").font(.system(size: 13, weight: .bold))
-                Text("TEMPS RESTANT").font(.system(size: 12, weight: .heavy, design: .rounded)).kerning(1)
-                Spacer()
-                Text(formatHMS(engine.phase == .idle ? engine.totalDuration : engine.totalRemaining))
-                    .font(.system(size: 30, weight: .black, design: .rounded)).monospacedDigit()
-            }
-            .foregroundStyle(onColor)
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(onColor.opacity(0.20))
-                    Capsule().fill(onColor)
-                        .frame(width: max(0, geo.size.width * globalProgress))
-                        .animation(.linear(duration: 0.9), value: globalProgress)
-                }
-            }
-            .frame(height: 6)
-        }
-        .padding(.top, 14)
-    }
-
-    // MARK: - Anneau central (chrono de l'intervalle qui se vide)
-
-    private var centerRing: some View {
-        let working = engine.phase == .work
-        return VStack(spacing: 12) {
-            if let exo = exerciseLabel {
-                exerciseArt(exo, size: 58)
-            } else if let up = upcomingExercise {
-                exerciseArt(up, size: 50).opacity(0.85)
-            }
-            ZStack {
-                Circle().stroke(onColor.opacity(0.18), lineWidth: 13)
-                Circle()
-                    .trim(from: 0, to: engine.phase == .idle ? 1 : max(0.0001, engine.intervalFraction))
-                    .stroke(onColor, style: StrokeStyle(lineWidth: 13, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 0.95), value: engine.remaining)
-                VStack(spacing: 2) {
-                    Text(working ? "EXERCICE \(engine.round)/\(engine.cfg.rounds)" : engine.phase.title)
-                        .font(.system(size: 15, weight: .heavy, design: .rounded))
-                        .foregroundStyle(onColor.opacity(0.75))
-                        .lineLimit(1).minimumScaleFactor(0.7)
-                    Text(formatHMS(displayedTime))
-                        .font(.system(size: 74, weight: .black, design: .rounded)).monospacedDigit()
-                        .foregroundStyle(onColor)
-                        .minimumScaleFactor(0.5).lineLimit(1)
-                    if working, let exo = currentExercise {
-                        Text(exo).font(.system(size: 18, weight: .black, design: .rounded))
-                            .foregroundStyle(onColor).multilineTextAlignment(.center)
-                            .minimumScaleFactor(0.6).lineLimit(2)
-                    } else if let sub = phaseSubLabel {
-                        Text(sub).font(.system(size: 14, weight: .bold, design: .rounded))
-                            .foregroundStyle(onColor.opacity(0.85)).multilineTextAlignment(.center)
-                            .minimumScaleFactor(0.7).lineLimit(2)
-                    }
-                }
-                .padding(.horizontal, 30)
-            }
-            .frame(width: 290, height: 290)
-        }
-    }
-
-    private var topBar: some View {
-        HStack {
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.down").font(.title3.bold()).foregroundStyle(engine.phase.onColor)
-            }
-            Spacer()
-            Button { withAnimation(.easeInOut(duration: 0.25)) { showChooser = true } } label: {
-                VStack(spacing: 0) {
-                    Text("TABATA").font(.headline.bold()).foregroundStyle(engine.phase.onColor)
-                    HStack(spacing: 4) {
-                        Text((chosenSession?.name ?? "Intervalles libres").uppercased())
-                            .font(.caption.weight(.bold)).foregroundStyle(engine.phase.onColor.opacity(0.75))
-                            .lineLimit(1).minimumScaleFactor(0.7)
-                        Image(systemName: "chevron.down").font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(engine.phase.onColor.opacity(0.6))
-                    }
-                }
-            }
-            Spacer()
-            HStack(spacing: 16) {
-                Button { engine.reset() } label: { Image(systemName: "arrow.counterclockwise").font(.title3.bold()) }.accessibilityLabel("Réinitialiser")
-                Button { showSettings = true } label: { Image(systemName: "slider.horizontal.3").font(.title3.bold()) }.accessibilityLabel("Réglages")
-            }
-            .foregroundStyle(engine.phase.onColor)
-        }
-        .padding(.top, 8)
-    }
-
-    // MARK: - Écran de choix de séance (à l'arrivée)
-
-    private var chooserOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.94).ignoresSafeArea()
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Choisis ta séance").font(.system(size: 26, weight: .black, design: .rounded)).foregroundStyle(.white)
-                        Text("6 exercices · \(sets) séries").font(.subheadline.weight(.medium)).foregroundStyle(.white.opacity(0.6))
-                    }
-                    Spacer()
-                    Button { dismiss() } label: {
-                        Image(systemName: "xmark").font(.headline.bold()).foregroundStyle(.white.opacity(0.7))
-                            .frame(width: 38, height: 38).background(.white.opacity(0.12), in: Circle())
-                    }
-                }
-                .padding(.top, 12)
-
-                quickConfigStrip
-
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 12) {
-                        ForEach(availableSessions) { s in
-                            Button { pick(s) } label: { sessionCard(s) }
-                                .buttonStyle(PressableButtonStyle())
-                        }
-                        Button { pick(nil) } label: { freeIntervalCard }
-                            .buttonStyle(PressableButtonStyle())
-                    }
-                    .padding(.bottom, 20)
-                }
-            }
-            .padding(.horizontal, 22)
-        }
-    }
-
-    // Réglage rapide effort / repos / séries directement sur l'écran de choix.
-    private var quickConfigStrip: some View {
-        HStack(spacing: 10) {
-            cfgStepper("EFFORT", value: $work, unit: "s", step: 5, min: 5, color: 0x9BE14E)
-            cfgStepper("REPOS", value: $rest, unit: "s", step: 5, min: 0, color: 0xF0584B)
-            cfgStepper("SÉRIES", value: $sets, unit: "", step: 1, min: 1, color: 0xF2A03D)
-        }
-    }
-
-    private func cfgStepper(_ label: String, value: Binding<Int>, unit: String, step: Int, min: Int, color: UInt) -> some View {
-        VStack(spacing: 7) {
-            Text(label).font(.system(size: 11, weight: .heavy, design: .rounded)).kerning(0.5)
-                .foregroundStyle(Color(hex: color))
-            HStack(spacing: 10) {
-                Button { Haptics.tap(); value.wrappedValue = Swift.max(min, value.wrappedValue - step) } label: {
-                    Image(systemName: "minus").font(.system(size: 13, weight: .black)).foregroundStyle(.white)
-                        .frame(width: 30, height: 30).background(.white.opacity(0.12), in: Circle())
-                }
-                Text("\(value.wrappedValue)\(unit)")
-                    .font(.system(size: 20, weight: .black, design: .rounded)).monospacedDigit()
-                    .foregroundStyle(.white).frame(minWidth: 40)
-                Button { Haptics.tap(); value.wrappedValue += step } label: {
-                    Image(systemName: "plus").font(.system(size: 13, weight: .black)).foregroundStyle(.white)
-                        .frame(width: 30, height: 30).background(.white.opacity(0.12), in: Circle())
-                }
-            }
-        }
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity)
-        .background(.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(.white.opacity(0.08), lineWidth: 1))
-    }
-
-    private func sessionCard(_ s: TabataSession) -> some View {
-        HStack(spacing: 14) {
-            Image(systemName: s.icon)
-                .font(.system(size: 26, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 56, height: 56)
-                .background(Color(hex: 0x9BE14E).opacity(0.25), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(s.name).font(.system(size: 17, weight: .bold)).foregroundStyle(.white)
-                    if let sub = s.subtitle {
-                        Text(sub).font(.caption2.weight(.semibold)).foregroundStyle(.black)
-                            .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(Color(hex: 0x9BE14E), in: Capsule())
-                    }
-                }
-                Text(s.exercises.joined(separator: " · "))
-                    .font(.caption).foregroundStyle(.white.opacity(0.6))
-                    .lineLimit(2)
-            }
-            Spacer()
-            Image(systemName: "chevron.right").font(.subheadline.bold()).foregroundStyle(.white.opacity(0.4))
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(.white.opacity(0.10), lineWidth: 1))
-    }
-
-    private var freeIntervalCard: some View {
-        HStack(spacing: 14) {
-            Image(systemName: "timer")
-                .font(.system(size: 24, weight: .semibold)).foregroundStyle(.white)
-                .frame(width: 56, height: 56)
-                .background(.white.opacity(0.12), in: RoundedRectangle(cornerRadius: 15, style: .continuous))
-            VStack(alignment: .leading, spacing: 3) {
-                Text("Intervalles libres").font(.system(size: 17, weight: .bold)).foregroundStyle(.white)
-                Text("Chrono \(work)s / \(rest)s · réglable").font(.caption).foregroundStyle(.white.opacity(0.6))
-            }
-            Spacer()
-            Image(systemName: "chevron.right").font(.subheadline.bold()).foregroundStyle(.white.opacity(0.4))
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(.white.opacity(0.10), lineWidth: 1))
-    }
-
-    private var controlPanel: some View {
-        VStack(spacing: 16) {
-            HStack(alignment: .center) {
-                counter("ROUNDS", engine.roundsLeft, Color(hex: 0x4FA8E0))
-                Spacer()
-                Button { engine.startOrPause() } label: {
-                    ZStack {
-                        Circle().fill(engine.phase.onColor.opacity(0.12))
-                        Circle().stroke(engine.phase.onColor, lineWidth: 4)
-                        Image(systemName: engine.running ? "pause.fill" : "play.fill")
-                            .font(.system(size: 34, weight: .black))
-                            .foregroundStyle(engine.phase.onColor)
-                            .offset(x: engine.running ? 0 : 3)
-                    }
-                    .frame(width: 96, height: 96)
-                }
-                Spacer()
-                counter("CYCLES", engine.cyclesLeft, engine.phase.onColor)
-            }
-            // Navigation manuelle entre les séries (loupé/fini une série).
-            HStack(spacing: 40) {
-                skipButton("backward.fill", "Série préc.") { engine.skipBackward() }
-                skipButton("forward.fill", "Série suiv.") { engine.skipForward() }
-            }
-        }
-        .padding(.vertical, 22)
-        .padding(.horizontal, 14)
-        .background(Color.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
-    }
-
-    private func skipButton(_ icon: String, _ label: String, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: icon).font(.system(size: 15, weight: .bold))
-                Text(label).font(.caption.weight(.semibold))
-            }
-            .foregroundStyle(.white.opacity(0.9))
-            .padding(.horizontal, 16).padding(.vertical, 9)
-            .background(.white.opacity(0.14), in: Capsule())
-        }
-    }
-
-    private func counter(_ label: String, _ value: Int, _ color: Color) -> some View {
-        VStack(spacing: 2) {
-            Text("\(value)").font(.system(size: 48, weight: .black, design: .rounded)).foregroundStyle(color)
-            Text(label).font(.caption.bold()).foregroundStyle(.white.opacity(0.85))
-        }
-        .frame(width: 90)
-    }
 }
 
-// MARK: - Réglages des intervalles
+// MARK: - Enregistrement Santé
 
-
-/// Enregistrement de la seance terminee dans Apple Sante.
 private extension TabataView {
-
-    /// En dessous d'une minute ce n'est pas une seance, c'est un essai du
-    /// minuteur. L'ecrire polluerait le dossier de sante et les minutes
-    /// d'exercice de la journee.
     static var minimumDuration: TimeInterval { 60 }
 
     func saveSessionToHealth() async {
         guard let start = engine.startedAt else { return }
         let end = Date()
         guard end.timeIntervalSince(start) >= Self.minimumDuration else { return }
-        // Aucune estimation de calories: sans capteur, on ne sait pas. Sante
-        // enregistre la duree, qui compte deja pour les minutes d'exercice.
         await HealthService.shared.saveWorkout(kind: .hiit, start: start, end: end, kcal: 0)
     }
 }
+
+// MARK: - Réglages des intervalles
 
 struct TabataSettings: View {
     @Environment(\.dismiss) private var dismiss
@@ -809,29 +1499,31 @@ struct TabataSettings: View {
         NavigationStack {
             List {
                 Section("INTERVALLES") {
-                    row(0xF2D43D, "PRÉPARATION", "Décompte avant de démarrer", $prepare, step: 5, time: true)
-                    row(0x9BE14E, "EFFORT", "Durée de chaque exercice", $work, step: 5, time: true)
-                    row(0xF0584B, "REPOS", "Récup entre les exercices", $rest, step: 5, time: true)
-                    row(0xF2A03D, "SÉRIES", "Passages sur les 6 exercices", $sets, step: 1, time: false)
-                    row(0xF2A03D, "RÉCUP ENTRE SÉRIES", "Pause entre les séries", $restCycle, step: 5, time: true)
-                    row(0x4FA8E0, "RETOUR AU CALME", "Cooldown final", $cooldown, step: 5, time: true)
+                    row(0xFFB800, "PRÉPARATION", "Décompte avant de démarrer", $prepare, step: 5, time: true)
+                    row(0x00F076, "EFFORT", "Durée de chaque exercice", $work, step: 5, time: true)
+                    row(0xFF5252, "REPOS", "Récup entre les exercices", $rest, step: 5, time: true)
+                    row(0x00D2FF, "SÉRIES", "Passages sur les exercices", $sets, step: 1, time: false)
+                    row(0x00D2FF, "RÉCUP ENTRE SÉRIES", "Pause entre les séries", $restCycle, step: 5, time: true)
+                    row(0x7E72F2, "RETOUR AU CALME", "Cooldown final", $cooldown, step: 5, time: true)
                 }
                 Section("INTERVALLES LIBRES (sans séance)") {
-                    row(0x4FA8E0, "ROUNDS", "Un round = effort + repos", $rounds, step: 1, time: false)
-                    row(0xF2D43D, "CYCLES", "Un cycle = N rounds", $cycles, step: 1, time: false)
+                    row(0x00D2FF, "ROUNDS", "Un round = effort + repos", $rounds, step: 1, time: false)
+                    row(0xFFB800, "CYCLES", "Un cycle = N rounds", $cycles, step: 1, time: false)
                 }
                 Section {
                     HStack {
                         Text("Durée totale").bold()
                         Spacer()
-                        Text(formatHMS(totalSeconds)).bold().foregroundStyle(.secondary)
+                        Text(formatHMS(totalSeconds)).bold().foregroundStyle(Color(hex: 0x00F076))
                     }
                 }
             }
-            .navigationTitle("Tabata")
+            .navigationTitle("Réglages Tabata")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("OK") { dismiss() }.bold() }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("OK") { dismiss() }.bold()
+                }
             }
         }
         .preferredColorScheme(.dark)

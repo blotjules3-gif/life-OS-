@@ -182,6 +182,24 @@ private struct HabitWidgetSyncer: View {
         defaults.set(entries.filter { $0["done"] as? Bool == true }.count, forKey: "habits_done_today")
         defaults.set(entries.count, forKey: "habits_total_today")
         defaults.set(Theme.currentTheme.accentHex, forKey: "widget_accent_hex")
+
+        // Initialisation & synchronisation des nouveaux widgets
+        if defaults.string(forKey: "tabata_last_preset") == nil {
+            defaults.set("Cardio HIIT", forKey: "tabata_last_preset")
+            defaults.set(30, forKey: "tabata_work")
+            defaults.set(15, forKey: "tabata_rest")
+            defaults.set(4, forKey: "tabata_sets")
+        }
+        if defaults.object(forKey: "water_today_ml") == nil {
+            defaults.set(1800, forKey: "water_today_ml")
+            defaults.set(2500, forKey: "water_goal_ml")
+        }
+        if defaults.string(forKey: "gym_today_title") == nil {
+            defaults.set("Pectoraux & Triceps", forKey: "gym_today_title")
+            defaults.set("Développé couché · Dips · Écartés", forKey: "gym_today_focus")
+            defaults.set(false, forKey: "gym_today_is_rest")
+        }
+
         WidgetCenter.shared.reloadAllTimelines()
     }
 }

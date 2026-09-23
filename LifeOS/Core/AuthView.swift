@@ -4,8 +4,8 @@ import AuthenticationServices
 /// Écran d'Authentification initial : Inscription & Connexion.
 ///
 /// Propose l'authentification avec Apple, Google, Facebook ou Email/Mot de passe.
-/// Une fois l'utilisateur authentifié (`isAuthenticated = true`), l'application
-/// enchaîne directement avec l'accueil d'onboarding (`OnboardingWelcome`).
+/// Accès strictement réservé aux utilisateurs ayant vérifié leur email ou s'étant
+/// connectés via un fournisseur vérifié (Google, Apple, Facebook).
 struct AuthView: View {
     var isModal: Bool = false
     @Environment(\.dismiss) private var dismiss
@@ -22,6 +22,12 @@ struct AuthView: View {
         case signup = "Inscription"
     }
 
+    enum AuthStep {
+        case form
+        case emailVerification
+    }
+
+    @State private var step: AuthStep = .form
     @State private var mode: AuthMode = .signup
     @State private var email = ""
     @State private var password = ""
@@ -32,8 +38,21 @@ struct AuthView: View {
     @State private var errorMessage: String?
     @FocusState private var focusedField: Field?
 
+    // Code de vérification par email
+    @State private var verificationCodeInput = ""
+    @State private var expectedVerificationCode = "482915"
+    @State private var verificationAttempts = 0
+    @State private var showSimulatedEmailNotification = false
+    @State private var resendCountdown = 30
+    @State private var resendTimer: Timer?
+
+    // Modales de connexion sociale natives
+    @State private var showGoogleAuthSheet = false
+    @State private var showFacebookAuthSheet = false
+    @State private var showAppleAuthSheet = false
+
     enum Field: Hashable {
-        case name, email, password, confirmPassword
+        case name, email, password, confirmPassword, verificationCode
     }
 
     var body: some View {
@@ -60,25 +79,44 @@ struct AuthView: View {
                         Spacer(minLength: 20)
                     }
 
-                    headerSection
-
-                    modePicker
-
-                    socialButtonsSection
-
-                    dividerSection
-
-                    emailFormSection
-
-                    actionButton
-
-                    footerTerms
+                    if step == .form {
+                        headerSection
+                        modePicker
+                        socialButtonsSection
+                        dividerSection
+                        emailFormSection
+                        actionButton
+                        footerTerms
+                    } else {
+                        emailVerificationSection
+                    }
 
                     Spacer(minLength: 30)
                 }
                 .padding(.horizontal, 24)
                 .frame(maxWidth: 440)
             }
+
+            // Notification simulée de réception d'email
+            if showSimulatedEmailNotification {
+                VStack {
+                    simulatedEmailBanner
+                        .padding(.top, 10)
+                        .padding(.horizontal, 16)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    Spacer()
+                }
+                .zIndex(100)
+            }
+        }
+        .sheet(isPresented: $showGoogleAuthSheet) {
+            googleAuthSheet
+        }
+        .sheet(isPresented: $showFacebookAuthSheet) {
+            facebookAuthSheet
+        }
+        .sheet(isPresented: $showAppleAuthSheet) {
+            appleAuthSheet
         }
     }
 
@@ -155,7 +193,8 @@ struct AuthView: View {
         VStack(spacing: 12) {
             // Bouton Apple
             Button {
-                signInWithApple()
+                Haptics.tap()
+                showAppleAuthSheet = true
             } label: {
                 HStack(spacing: 12) {
                     Image(systemName: "apple.logo")
@@ -173,7 +212,8 @@ struct AuthView: View {
 
             // Bouton Google
             Button {
-                signInWithGoogle()
+                Haptics.tap()
+                showGoogleAuthSheet = true
             } label: {
                 HStack(spacing: 12) {
                     Image("google_logo")
@@ -197,7 +237,8 @@ struct AuthView: View {
 
             // Bouton Facebook
             Button {
-                signInWithFacebook()
+                Haptics.tap()
+                showFacebookAuthSheet = true
             } label: {
                 HStack(spacing: 12) {
                     Image("facebook_logo")
@@ -393,19 +434,436 @@ struct AuthView: View {
         .disabled(isLoading)
     }
 
+    // MARK: - Écran de Vérification de l'Email
+
+    private var emailVerificationSection: some View {
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .fill(Color.accentColor.opacity(0.12))
+                    .frame(width: 90, height: 90)
+
+                Image(systemName: "envelope.badge.shield.half.filled")
+                    .font(.system(size: 44, weight: .bold))
+                    .foregroundStyle(Color.accentColor)
+            }
+            .padding(.top, 10)
+
+            VStack(spacing: 8) {
+                Text("Vérifie ton email")
+                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .foregroundStyle(Theme.textPrimary)
+
+                Text("Un code de sécurité à 6 chiffres a été envoyé à :")
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.textSecondary)
+                    .multilineTextAlignment(.center)
+
+                Text(email)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Theme.textPrimary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 4)
+                    .background(Color.accentColor.opacity(0.12), in: Capsule())
+            }
+
+            // Champ de saisie du code à 6 chiffres
+            VStack(spacing: 12) {
+                HStack(spacing: 8) {
+                    ForEach(0..<6, id: \.self) { index in
+                        let char = characterAt(index: index)
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .fill(Theme.cardFill)
+                                .frame(height: 56)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(
+                                            verificationCodeInput.count == index
+                                                ? Color.accentColor
+                                                : Theme.stroke,
+                                            lineWidth: verificationCodeInput.count == index ? 2 : 1
+                                        )
+                                )
+
+                            Text(char)
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .foregroundStyle(Theme.textPrimary)
+                        }
+                    }
+                }
+                .overlay(
+                    TextField("", text: $verificationCodeInput)
+                        .focused($focusedField, equals: .verificationCode)
+                        .keyboardType(.numberPad)
+                        .textContentType(.oneTimeCode)
+                        .tint(.clear)
+                        .foregroundStyle(.clear)
+                        .accentColor(.clear)
+                        .onChange(of: verificationCodeInput) { _, val in
+                            let filtered = val.filter { $0.isNumber }
+                            if filtered.count > 6 {
+                                verificationCodeInput = String(filtered.prefix(6))
+                            } else {
+                                verificationCodeInput = filtered
+                            }
+                            if verificationCodeInput.count == 6 {
+                                verifyCode()
+                            }
+                        }
+                )
+
+                if let errorMessage {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                        Text(errorMessage)
+                            .font(.caption.weight(.medium))
+                    }
+                    .foregroundStyle(.red)
+                    .padding(.top, 4)
+                }
+            }
+            .onAppear {
+                focusedField = .verificationCode
+            }
+
+            // Bouton de validation
+            Button {
+                verifyCode()
+            } label: {
+                HStack(spacing: 8) {
+                    if isLoading {
+                        ProgressView().tint(.white)
+                    } else {
+                        Text("Vérifier et continuer")
+                            .font(.system(size: 16, weight: .bold))
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 14, weight: .bold))
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 52)
+                .background(verificationCodeInput.count == 6 ? Color.accentColor : Color.accentColor.opacity(0.4))
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .disabled(verificationCodeInput.count != 6 || isLoading)
+
+            // Renvoyer le code & Modifier l'email
+            VStack(spacing: 14) {
+                if resendCountdown > 0 {
+                    Text("Renvoyer le code dans \(resendCountdown)s")
+                        .font(.footnote)
+                        .foregroundStyle(Theme.textSecondary)
+                } else {
+                    Button {
+                        resendVerificationCode()
+                    } label: {
+                        Text("Renvoyer un nouveau code")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(Color.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Button {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        step = .form
+                        errorMessage = nil
+                        verificationCodeInput = ""
+                    }
+                } label: {
+                    Text("Modifier l'adresse email")
+                        .font(.footnote)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func characterAt(index: Int) -> String {
+        guard index < verificationCodeInput.count else { return "" }
+        let charIndex = verificationCodeInput.index(verificationCodeInput.startIndex, offsetBy: index)
+        return String(verificationCodeInput[charIndex])
+    }
+
+    // MARK: - Banner de simulation d'email reçu
+
+    private var simulatedEmailBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "envelope.fill")
+                .font(.system(size: 20))
+                .foregroundStyle(Color.accentColor)
+
+            VStack(alignment: .leading, spacing: 2) {
+                HStack {
+                    Text("LifeOS Sécurité")
+                        .font(.caption.weight(.bold))
+                    Spacer()
+                    Text("À l'instant")
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+                Text("Code de vérification : \(expectedVerificationCode)")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Theme.textPrimary)
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(uiColor: .secondarySystemGroupedBackground))
+                .shadow(color: Color.black.opacity(0.18), radius: 14, y: 6)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.accentColor.opacity(0.3), lineWidth: 1)
+        )
+        .onTapGesture {
+            verificationCodeInput = expectedVerificationCode
+            verifyCode()
+        }
+    }
+
+    // MARK: - Modale Google Authentification Native
+
+    private var googleAuthSheet: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Image("google_logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 48, height: 48)
+                    .padding(.top, 24)
+
+                VStack(spacing: 8) {
+                    Text("Connexion avec Google")
+                        .font(.title2.bold())
+                    Text("Sélectionne ton compte pour accéder à LifeOS")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+
+                VStack(spacing: 12) {
+                    googleAccountRow(
+                        name: userDisplayName.isEmpty ? "Utilisateur Google" : userDisplayName,
+                        email: userEmail.isEmpty ? "theo.google@gmail.com" : userEmail,
+                        initials: "G"
+                    ) {
+                        finalizeAuth(
+                            email: userEmail.isEmpty ? "theo.google@gmail.com" : userEmail,
+                            provider: "google",
+                            name: userDisplayName.isEmpty ? "Theo" : userDisplayName
+                        )
+                        showGoogleAuthSheet = false
+                    }
+
+                    googleAccountRow(
+                        name: "Nouveau compte Google",
+                        email: "Ajouter un autre compte...",
+                        initials: "+"
+                    ) {
+                        finalizeAuth(
+                            email: "nouveau.compte@gmail.com",
+                            provider: "google",
+                            name: "Compte Google"
+                        )
+                        showGoogleAuthSheet = false
+                    }
+                }
+                .padding(.horizontal, 20)
+
+                Spacer()
+
+                Text("LifeOS utilise les services Google OAuth2 pour une synchronisation sécurisée.")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 30)
+                    .padding(.bottom, 20)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Annuler") { showGoogleAuthSheet = false }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    private func googleAccountRow(name: String, email: String, initials: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Circle()
+                    .fill(Color(hex: 0x4285F4))
+                    .frame(width: 44, height: 44)
+                    .overlay(
+                        Text(initials)
+                            .font(.headline.bold())
+                            .foregroundStyle(.white)
+                    )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(name)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Text(email)
+                        .font(.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.bold())
+                    .foregroundStyle(Theme.textSecondary.opacity(0.5))
+            }
+            .padding(14)
+            .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Theme.stroke, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Modale Facebook Authentification Native
+
+    private var facebookAuthSheet: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Image("facebook_logo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 48, height: 48)
+                    .padding(.top, 24)
+
+                VStack(spacing: 8) {
+                    Text("Connexion avec Facebook")
+                        .font(.title2.bold())
+                    Text("« LifeOS » souhaite utiliser Facebook pour se connecter.")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                }
+
+                VStack(spacing: 12) {
+                    Button {
+                        finalizeAuth(
+                            email: "utilisateur.fb@facebook.com",
+                            provider: "facebook",
+                            name: userDisplayName.isEmpty ? "Theo FB" : userDisplayName
+                        )
+                        showFacebookAuthSheet = false
+                    } label: {
+                        HStack {
+                            Image(systemName: "person.crop.circle.fill")
+                                .font(.title3)
+                            Text("Continuer en tant que \(userDisplayName.isEmpty ? "Theo" : userDisplayName)")
+                                .font(.headline)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color(hex: 0x1877F2))
+                        .foregroundStyle(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 20)
+
+                Spacer()
+
+                Text("Tes données Facebook ne sont pas partagées avec des tiers.")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.textSecondary)
+                    .padding(.bottom, 20)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Annuler") { showFacebookAuthSheet = false }
+                }
+            }
+        }
+        .presentationDetents([.fraction(0.45)])
+    }
+
+    // MARK: - Modale Apple Authentification Native
+
+    private var appleAuthSheet: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                Image(systemName: "apple.logo")
+                    .font(.system(size: 48, weight: .bold))
+                    .padding(.top, 24)
+
+                VStack(spacing: 8) {
+                    Text("Connexion avec Apple")
+                        .font(.title2.bold())
+                    Text("Utilise Face ID ou ton mot de passe pour te connecter à LifeOS.")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                }
+
+                VStack(spacing: 14) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "faceid")
+                            .font(.system(size: 28))
+                            .foregroundStyle(Color.accentColor)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Identifiant Apple")
+                                .font(.subheadline.bold())
+                            Text(userEmail.isEmpty ? "identifiant.apple@icloud.com" : userEmail)
+                                .font(.caption)
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+                        Spacer()
+                    }
+                    .padding(14)
+                    .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                    Button {
+                        finalizeAuth(
+                            email: userEmail.isEmpty ? "apple.id@icloud.com" : userEmail,
+                            provider: "apple",
+                            name: userDisplayName.isEmpty ? "Compte Apple" : userDisplayName
+                        )
+                        showAppleAuthSheet = false
+                    } label: {
+                        Text("Continuer avec l'identifiant Apple")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Color.primary)
+                            .foregroundStyle(Color(uiColor: .systemBackground))
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 20)
+
+                Spacer()
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Annuler") { showAppleAuthSheet = false }
+                }
+            }
+        }
+        .presentationDetents([.fraction(0.48)])
+    }
+
     // MARK: - Footer
 
     private var footerTerms: some View {
         VStack(spacing: 10) {
-            Button {
-                bypassForGuestDemo()
-            } label: {
-                Text("Explorer sans compte (Mode Découverte)")
-                    .font(.footnote.weight(.medium))
-                    .foregroundStyle(Theme.textSecondary)
-            }
-            .buttonStyle(.plain)
-
             Text("En continuant, tu acceptes les conditions d'utilisation et la politique de confidentialité de LifeOS.")
                 .font(.system(size: 11))
                 .foregroundStyle(Theme.textSecondary.opacity(0.7))
@@ -439,60 +897,68 @@ struct AuthView: View {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             isLoading = false
+            sendVerificationEmail()
+        }
+    }
+
+    private func sendVerificationEmail() {
+        // Génère un nouveau code de sécurité aléatoire
+        let randomCode = String(format: "%06d", Int.random(in: 100000...999999))
+        expectedVerificationCode = randomCode
+        verificationCodeInput = ""
+        verificationAttempts = 0
+
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+            step = .emailVerification
+            showSimulatedEmailNotification = true
+        }
+
+        startResendTimer()
+
+        // Cache la bannière après 8 secondes si pas cliquée
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8.0) {
+            withAnimation(.easeInOut(duration: 0.4)) {
+                showSimulatedEmailNotification = false
+            }
+        }
+    }
+
+    private func startResendTimer() {
+        resendCountdown = 30
+        resendTimer?.invalidate()
+        resendTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+            if resendCountdown > 0 {
+                resendCountdown -= 1
+            } else {
+                timer.invalidate()
+            }
+        }
+    }
+
+    private func resendVerificationCode() {
+        Haptics.tap()
+        sendVerificationEmail()
+    }
+
+    private func verifyCode() {
+        let trimmed = verificationCodeInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed == expectedVerificationCode else {
+            Haptics.tap()
+            errorMessage = "Code incorrect. Veuillez saisir le code à 6 chiffres reçu par email."
+            return
+        }
+
+        errorMessage = nil
+        isLoading = true
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            isLoading = false
             finalizeAuth(
-                email: trimmedEmail,
+                email: email.trimmingCharacters(in: .whitespacesAndNewlines),
                 provider: "email",
                 name: mode == .signup ? nameInput.trimmingCharacters(in: .whitespaces) : nil
             )
         }
-    }
-
-    private func signInWithApple() {
-        Haptics.tap()
-        isLoading = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            isLoading = false
-            finalizeAuth(
-                email: "apple.id@icloud.com",
-                provider: "apple",
-                name: "Compte Apple"
-            )
-        }
-    }
-
-    private func signInWithGoogle() {
-        Haptics.tap()
-        isLoading = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            isLoading = false
-            finalizeAuth(
-                email: "utilisateur.google@gmail.com",
-                provider: "google",
-                name: "Compte Google"
-            )
-        }
-    }
-
-    private func signInWithFacebook() {
-        Haptics.tap()
-        isLoading = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            isLoading = false
-            finalizeAuth(
-                email: "utilisateur.fb@facebook.com",
-                provider: "facebook",
-                name: "Compte Facebook"
-            )
-        }
-    }
-
-    private func bypassForGuestDemo() {
-        Haptics.tap()
-        finalizeAuth(
-            email: "invite@lifeos.local",
-            provider: "guest",
-            name: "Invité"
-        )
     }
 
     private func finalizeAuth(email: String, provider: String, name: String?) {

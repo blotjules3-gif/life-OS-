@@ -25,6 +25,7 @@ struct LifeOSApp: App {
     @State private var showWeeklyBilan = false
     @State private var showIntake = false
     @State private var showFoodScan = false
+    @State private var showTabata = false
     @AppStorage(AppStorageKeys.intakeShown) private var intakeShown = false
 
     private var recommendedModules: [AppCategory] {
@@ -201,9 +202,14 @@ struct LifeOSApp: App {
                 showSleepCheckFromWidget = true
             case "scan-food":
                 showFoodScan = true
+            case "tabata":
+                showTabata = true
             default:
                 break
             }
+        }
+        .fullScreenCover(isPresented: $showTabata) {
+            TabataView()
         }
         .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenFoodScan)) { _ in
             showFoodScan = true
