@@ -127,7 +127,7 @@ struct AIDebugView: View {
 
             if let providerID = session.providerID {
                 HStack(spacing: 6) {
-                    Image(systemName: session.wasFallback ? "arrow.uturn.backward.circle" : "sparkles")
+                    Image(systemName: session.wasFallback ? "arrow.uturn.backward.circle" : "infinity")
                         .font(.caption2).foregroundStyle(session.wasFallback ? .orange : .accentColor)
                     Text(providerID).font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
                 }

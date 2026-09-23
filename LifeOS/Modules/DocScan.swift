@@ -141,7 +141,7 @@ struct DocScanView: View {
     private var resultCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Image(systemName: "sparkles").foregroundStyle(.adminTint)
+                Image(systemName: "infinity").foregroundStyle(.adminTint)
                 Text("Classé automatiquement").font(.subheadline.weight(.semibold))
             }
             VStack(alignment: .leading, spacing: 6) {

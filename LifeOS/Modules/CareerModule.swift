@@ -134,7 +134,7 @@ struct CVBuilderView: View {
                     }
                     if aiReady {
                         Button { showOptimiser = true } label: {
-                            Label("Adapter mon CV à une offre", systemImage: "sparkles")
+                            Label("Adapter mon CV à une offre", systemImage: "infinity")
                                 .frame(maxWidth: .infinity).padding(.vertical, 12)
                         }
                         .buttonStyle(.bordered).tint(.careerTint)

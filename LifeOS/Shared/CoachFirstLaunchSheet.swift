@@ -76,7 +76,7 @@ struct CoachFirstLaunchSheet: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: "sparkles")
+            Image(systemName: "infinity")
                 .font(.system(size: 34, weight: .medium))
                 .foregroundStyle(Color.accentColor)
             Text("Choisis ton coach")

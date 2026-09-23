@@ -339,7 +339,7 @@ struct FloatingTabBar: View {
         } label: {
             VStack(spacing: 3) {
                 ZStack {
-                    Image(systemName: "sparkles")
+                    Image(systemName: "infinity")
                         .font(.system(size: m.icon, weight: .medium))
                         .foregroundStyle(Color.primary.opacity(0.55))
                     if serverStatus.isOnline != nil {

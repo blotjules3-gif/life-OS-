@@ -174,7 +174,7 @@ struct MoodJournalView: View {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(e.date, format: .dateTime.weekday().day().month().hour().minute()).font(.caption).foregroundStyle(Theme.textSecondary)
                                         if !e.note.isEmpty { Text(e.note).font(.subheadline).foregroundStyle(Theme.textPrimary) }
-                                        if !e.gratitude.isEmpty { Label(e.gratitude, systemImage: "sparkles").font(.caption).foregroundStyle(.mindTint) }
+                                        if !e.gratitude.isEmpty { Label(e.gratitude, systemImage: "infinity").font(.caption).foregroundStyle(.mindTint) }
                                     }
                                     Spacer()
                                     Button(role: .destructive) { ctx.delete(e) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(.red.opacity(0.6))

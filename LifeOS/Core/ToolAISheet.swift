@@ -21,7 +21,7 @@ struct ToolAISheet: View {
                 Theme.background
                 VStack(alignment: .leading, spacing: 16) {
                     HStack(spacing: 10) {
-                        Image(systemName: "sparkles").font(.title2).foregroundStyle(Color.accentColor)
+                        Image(systemName: "infinity").font(.title2).foregroundStyle(Color.accentColor)
                         Text("Dis ce que tu veux, je m'en occupe").font(.headline)
                     }
                     ZStack(alignment: .topLeading) {

@@ -143,7 +143,7 @@ enum LifeBrain {
                              detail: "Écoute ton corps : séances légères, fer + hydratation, et repos si besoin.",
                              tone: .info, category: .cycle, priority: 58))
         case "ovulation":
-            out.append(.init(icon: "sparkle", title: "Ovulation — pic de forme",
+            out.append(.init(icon: "infinity", title: "Ovulation — pic de forme",
                              detail: "Ta fenêtre la plus forte : cale ta séance clé ou ton record ici.",
                              tone: .good, category: .fitness, priority: 52))
         default: break

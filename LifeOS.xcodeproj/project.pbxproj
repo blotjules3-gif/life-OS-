@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		992A118E2FECC22700B312FE /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 992A118D2FECC22700B312FE /* WidgetKit.framework */; };
 		992A11902FECC22700B312FE /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 992A118F2FECC22700B312FE /* SwiftUI.framework */; };
-		992A11A12FECC22700B312FE /* LifeOSWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 992A118B2FECC22700B312FE /* LifeOSWidgetsExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); platformFilters = (ios, ); }; };
+		992A11A12FECC22700B312FE /* LifeOSWidgetsExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 992A118B2FECC22700B312FE /* LifeOSWidgetsExtension.appex */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -39,7 +39,9 @@
 				992A11A12FECC22700B312FE /* LifeOSWidgetsExtension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
-			platformFilter = ios;
+			platformFilters = (
+				ios,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */

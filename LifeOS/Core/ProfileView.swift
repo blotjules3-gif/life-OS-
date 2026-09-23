@@ -32,11 +32,17 @@ struct ProfileView: View {
     @AppStorage(AppStorageKeys.bedHour) private var bedHour = 23
     @AppStorage(AppStorageKeys.bedMinute) private var bedMinute = 0
     @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
+    @AppStorage(AppStorageKeys.isAuthenticated) private var isAuthenticated = false
+    @AppStorage(AppStorageKeys.userEmail) private var userEmail = ""
+    @AppStorage(AppStorageKeys.authProvider) private var authProvider = "email"
+    @AppStorage(AppStorageKeys.userDisplayName) private var userDisplayName = ""
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
     @Query private var habits: [Habit]
     @Environment(\.modelContext) private var ctx
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    @State private var showLogoutConfirmation = false
 
     @State private var steps = 0
     @State private var healthConnected = false
@@ -265,6 +271,15 @@ struct ProfileView: View {
                 }
             }
             #endif
+            .alert("Se déconnecter", isPresented: $showLogoutConfirmation) {
+                Button("Annuler", role: .cancel) { }
+                Button("Se déconnecter", role: .destructive) {
+                    isAuthenticated = false
+                    Haptics.success()
+                }
+            } message: {
+                Text("Voulez-vous vraiment vous déconnecter de votre compte LifeOS ?")
+            }
             .navigationDestination(for: AppCategory.self) { $0.destination }
         }
     }
@@ -824,7 +839,7 @@ struct ProfileView: View {
                 }
                 #endif
                 Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
-                settingsRow(icon: "sparkles", iconColor: Color.accentColor, label: "Coach — serveur") {
+                settingsRow(icon: "infinity", iconColor: Color.accentColor, label: "Coach — serveur") {
                     HStack(spacing: 6) {
                         Circle()
                             .fill(serverStatus.dotColor == .clear ? Color.secondary.opacity(0.3) : serverStatus.dotColor)
@@ -996,22 +1011,62 @@ struct ProfileView: View {
 
     private var syncDevicesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Synchronisation & Appareils")
+            Text("Compte & Synchronisation")
                 .font(.system(size: 20, weight: .black))
                 .textCase(.uppercase)
                 .kerning(-0.3)
                 .padding(.horizontal, 4)
 
             VStack(spacing: 14) {
+                // User Account Info
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.accentColor.opacity(0.15))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: authProvider == "apple" ? "apple.logo" : (authProvider == "google" ? "globe" : (authProvider == "facebook" ? "person.2.fill" : "person.crop.circle.fill")))
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(Color.accentColor)
+                    }
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(userDisplayName.isEmpty ? (userEmail.isEmpty ? "Compte LifeOS" : userEmail) : userDisplayName)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                        Text(userEmail.isEmpty ? "Connecté via \(authProvider.capitalized)" : userEmail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        Haptics.warning()
+                        showLogoutConfirmation = true
+                    } label: {
+                        Text("Déconnexion")
+                            .font(.caption.bold())
+                            .foregroundStyle(.red)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color.red.opacity(0.12), in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Divider().opacity(0.5)
+
                 HStack(spacing: 12) {
                     Image(systemName: "icloud.fill")
                         .font(.system(size: 22))
                         .foregroundStyle(Color.accentColor)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("iCloud / Apple ID")
+                        Text("Synchronisation Multi-Appareils")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(.primary)
-                        Text("Chiffrement bout en bout · Sans inscription")
+                        Text("Chiffrement bout en bout · Temps réel")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -1026,14 +1081,24 @@ struct ProfileView: View {
 
                 Divider().opacity(0.5)
 
+                #if targetEnvironment(macCatalyst)
+                let isMac = true
+                let isPhone = false
+                let isPad = false
+                #else
+                let isMac = false
+                let isPhone = UIDevice.current.userInterfaceIdiom == .phone
+                let isPad = UIDevice.current.userInterfaceIdiom == .pad
+                #endif
+
                 HStack(spacing: 16) {
-                    devicePill(icon: "iphone", name: "iPhone", status: "Cet appareil", isCurrent: true)
+                    devicePill(icon: "iphone", name: "iPhone", status: isPhone ? "Cet appareil" : "Prêt", isCurrent: isPhone)
                     devicePill(icon: "applewatch", name: "Watch", status: "Prêt", isCurrent: false)
-                    devicePill(icon: "ipad", name: "iPad", status: "Prêt", isCurrent: false)
-                    devicePill(icon: "laptopcomputer", name: "Mac", status: "Prêt", isCurrent: false)
+                    devicePill(icon: "ipad", name: "iPad", status: isPad ? "Cet appareil" : "Prêt", isCurrent: isPad)
+                    devicePill(icon: "laptopcomputer", name: "Mac", status: isMac ? "Cet appareil" : "Prêt", isCurrent: isMac)
                 }
 
-                Text("Vos données, habitudes et scores se synchronisent automatiquement entre votre iPhone, votre Apple Watch, votre iPad et votre Mac via votre compte iCloud personnel.")
+                Text("Vos données, habitudes et scores se synchronisent automatiquement entre votre iPhone, votre Apple Watch, votre iPad et votre Mac via votre compte personnel.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)

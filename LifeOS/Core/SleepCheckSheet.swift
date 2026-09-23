@@ -24,7 +24,7 @@ struct SleepCheckSheet: View {
         ("Mauvais",  "cloud.fill",      Color(hex: 0xE0A23C)),
         ("Correct",  "cloud.sun.fill",  Color(hex: 0x4CC38A).opacity(0.7)),
         ("Bien",     "sun.max.fill",    Color(hex: 0x4CC38A)),
-        ("Excellent","sparkles",        Color(hex: 0x3CB2E0)),
+        ("Excellent","infinity",        Color(hex: 0x3CB2E0)),
     ]
     private let moodEmoji = ["😞", "😕", "😐", "🙂", "😄"]
     private let eIcons    = ["bolt.slash","minus.circle","equal.circle","bolt","bolt.fill"]

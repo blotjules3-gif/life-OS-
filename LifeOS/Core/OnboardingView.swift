@@ -329,8 +329,8 @@ struct OnboardingWelcome: View {
                     Circle()
                         .fill(Color.accentColor.opacity(0.1))
                         .frame(width: 104, height: 104)
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 46, weight: .semibold))
+                    Image(systemName: "infinity")
+                        .font(.system(size: 46, weight: .bold))
                         .foregroundStyle(Color.accentColor)
                 }
 

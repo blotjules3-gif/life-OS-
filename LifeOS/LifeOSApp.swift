@@ -12,6 +12,7 @@ struct LifeOSApp: App {
     @State private var container: ModelContainer?
     @State private var migrationFailed = false
     @State private var storeWasReset = false
+    @AppStorage(AppStorageKeys.isAuthenticated) private var isAuthenticated = false
     @AppStorage(AppStorageKeys.onboardingDone) private var onboardingDone = false
     @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
     @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "system"
@@ -96,19 +97,24 @@ struct LifeOSApp: App {
     @ViewBuilder
     private func appContent(container: ModelContainer) -> some View {
         ZStack {
-            if !onboardingDone {
-                OnboardingView()
+            if !isAuthenticated {
+                AuthView()
                     .transition(.opacity)
                     .zIndex(0)
+            } else if !onboardingDone {
+                OnboardingView()
+                    .transition(.opacity)
+                    .zIndex(1)
             } else {
                 MainTabView()
                     .tint(appTheme.accent)
                     .transition(.opacity)
-                    .zIndex(1)
+                    .zIndex(2)
                     .fullScreenCover(isPresented: $showIntake) { IntakeHubView() }
             }
         }
         .modelContainer(container)
+        .animation(.easeInOut(duration: 0.35), value: isAuthenticated)
         .animation(.easeInOut(duration: 0.35), value: onboardingDone)
         .onChange(of: onboardingDone) { _, done in
             guard done else { return }

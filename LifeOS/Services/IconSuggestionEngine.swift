@@ -15,7 +15,7 @@ public enum IconSuggestionEngine {
         ]),
         ("Esprit & Bien-être", [
             "leaf.fill", "wind", "sun.max.fill", "moon.fill", "moon.stars.fill",
-            "bed.double.fill", "zzz", "powersleep", "sparkles", "sun.horizon.fill",
+            "bed.double.fill", "zzz", "powersleep", "infinity", "sun.horizon.fill",
             "sunrise.fill", "sunset.fill", "drop.fill", "waterbottle.fill",
             "brain.head.profile", "eye.fill", "smile.fill", "heart.circle.fill"
         ]),
@@ -71,7 +71,7 @@ public enum IconSuggestionEngine {
         "fork.knife",
         "eurosign.circle.fill",
         "checklist",
-        "sparkles",
+        "infinity",
         "target",
         "pawprint.fill"
     ]
@@ -124,11 +124,11 @@ public enum IconSuggestionEngine {
         ),
         (
             ["medit", "zen", "respir", "breathe", "calm", "relax", "paix", "yoga", "souffle"],
-            ["figure.yoga", "leaf.fill", "wind", "sparkles", "sun.max.fill", "heart.circle.fill"]
+            ["figure.yoga", "leaf.fill", "wind", "infinity", "sun.max.fill", "heart.circle.fill"]
         ),
         (
             ["clean", "menage", "ranger", "tidy", "maison", "house", "nettoy", "aspirat", "vaisselle", "lessive"],
-            ["house.fill", "bubbles.and.sparkles.fill", "trash.fill", "paintbrush.fill", "sparkles"]
+            ["house.fill", "bubbles.and.sparkles.fill", "trash.fill", "paintbrush.fill", "infinity"]
         ),
         (
             ["code", "dev", "program", "work", "travail", "boulot", "ordi", "computer", "bureau", "job"],
@@ -152,7 +152,7 @@ public enum IconSuggestionEngine {
         ),
         (
             ["soleil", "sun", "matin", "morning", "reveil", "lever"],
-            ["sun.max.fill", "sun.horizon.fill", "sunrise.fill", "sparkles"]
+            ["sun.max.fill", "sun.horizon.fill", "sunrise.fill", "infinity"]
         ),
         (
             ["voiture", "car", "conduire", "drive", "permis", "essence"],

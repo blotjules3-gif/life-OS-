@@ -23,7 +23,7 @@ struct CategoryRecapCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label("Récapitulatif", systemImage: "sparkles")
+                Label("Récapitulatif", systemImage: "infinity")
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(category.tint)
                     .textCase(.uppercase)

@@ -195,7 +195,7 @@ struct BookSummariesView: View {
                     }
                     if aiReady {
                         Button { showAI = true } label: {
-                            Label("Résumer un livre avec ton coach", systemImage: "sparkles")
+                            Label("Résumer un livre avec ton coach", systemImage: "infinity")
                                 .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.borderedProminent).tint(.learnTint)

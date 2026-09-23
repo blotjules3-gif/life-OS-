@@ -196,7 +196,7 @@ struct PhotoCalorieView: View {
     private func resultCard(_ g: FoodGuess) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Image(systemName: "sparkles").foregroundStyle(tint)
+                Image(systemName: "infinity").foregroundStyle(tint)
                 Text(g.name).font(.title3.bold()).foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Text("\(Int(g.confidence * 100))%").font(.caption).foregroundStyle(Theme.textSecondary)
@@ -217,7 +217,7 @@ struct PhotoCalorieView: View {
                     Text(aiNote).font(.caption).foregroundStyle(Theme.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Label("Analysé par ton coach d'après ta photo", systemImage: "sparkles")
+                Label("Analysé par ton coach d'après ta photo", systemImage: "infinity")
                     .font(.caption2).foregroundStyle(tint)
             }
             Text(usedAI

@@ -1331,7 +1331,7 @@ struct AIAssistantView: View {
                 Circle()
                     .fill(accent.opacity(0.18))
                     .frame(width: 56, height: 56)
-                Image(systemName: "sparkles")
+                Image(systemName: "infinity")
                     .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(accent)
             }
@@ -1676,7 +1676,7 @@ struct AIAssistantView: View {
     @ViewBuilder private var appleIntelligenceBanner: some View {
         if currentAIStatus != .available, dismissedStatusRaw != aiStatusKey(currentAIStatus) {
             HStack(alignment: .top, spacing: 10) {
-                Image(systemName: "sparkles")
+                Image(systemName: "infinity")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(width: 28, height: 28)

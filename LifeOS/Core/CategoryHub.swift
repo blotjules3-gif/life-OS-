@@ -633,7 +633,7 @@ private let fitnessTools: [CategoryTool] = [
 
 private let looksTools: [CategoryTool] = [
     .init("face.dashed", "Umaxx", "Symétrie, tiers, ratios — Vision", alias: "Analyse faciale", tint: .looksTint) { FaceAnalysisView() },
-    .init("sparkles", "TrueSkin", "Matin/soir + rappels", alias: "Routine skincare", tint: .looksTint) { SkincareView() },
+    .init("infinity", "TrueSkin", "Matin/soir + rappels", alias: "Routine skincare", tint: .looksTint) { SkincareView() },
     .init("camera.fill", "Progrez", "Suivi visuel daté", alias: "Photos avant / après", tint: .looksTint) { ProgressPhotoGalleryView() },
     .init("mouth.fill", "Mewing Klub", "Rappels + minuteur", alias: "Mewing & posture", tint: .looksTint) { MewingPostureView() },
     .init("tshirt.fill", "Wearing", "Suggestion selon météo", alias: "Garde-robe & outfits", tint: .looksTint) { WardrobeView() },

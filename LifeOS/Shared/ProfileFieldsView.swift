@@ -130,7 +130,7 @@ struct ProfileFieldsView: View {
             case "chat":      return ("chat", "bubble.left.fill")
             case "voice":     return ("voix", "waveform")
             case "quiz":      return ("quiz", "questionmark.circle.fill")
-            case "shortcut":  return ("raccourci", "sparkle.magnifyingglass")
+            case "shortcut":  return ("raccourci", "magnifyingglass")
             case "manual":    return ("manuel", "pencil.circle.fill")
             case "migration": return ("migré", "arrow.triangle.2.circlepath")
             default:          return (source, "info.circle")

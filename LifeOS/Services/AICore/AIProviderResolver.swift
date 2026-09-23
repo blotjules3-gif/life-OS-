@@ -61,7 +61,7 @@ enum AIProviderResolver {
     static func iconName(for providerID: String?) -> String {
         guard let providerID else { return "cpu" }
         switch providerID {
-        case "apple.intelligence.on-device": return "sparkles"
+        case "apple.intelligence.on-device": return "infinity"
         case "local.rules.coach":            return "gearshape"
         default:                              return "cloud"
         }

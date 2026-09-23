@@ -300,7 +300,7 @@ struct LifeOSShortcuts: AppShortcutsProvider {
                 "Ouvre le chat de \(.applicationName)"
             ],
             shortTitle: "Parler au coach",
-            systemImageName: "sparkles"
+            systemImageName: "infinity"
         )
         AppShortcut(
             intent: OpenFoodScanIntent(),

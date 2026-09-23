@@ -501,7 +501,7 @@ struct ShortcutsHomeView: View {
     private var tutorialOverlay: some View {
         VStack(spacing: 14) {
             HStack(spacing: 12) {
-                Image(systemName: "sparkles")
+                Image(systemName: "infinity")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(Color.accentColor)
                 VStack(alignment: .leading, spacing: 4) {
@@ -605,7 +605,7 @@ struct ShortcutsHomeView: View {
                     )
                 } label: {
                     HStack(spacing: 13) {
-                        IconBadge(icon: "sparkles", tint: Color(hex: 0x9B6CF1), size: 40)
+                        IconBadge(icon: "infinity", tint: Color(hex: 0x9B6CF1), size: 40)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Créer une habitude")
                                 .font(.subheadline.weight(.semibold)).foregroundStyle(.primary)

@@ -512,7 +512,7 @@ struct DailyBriefingView: View {
     @ViewBuilder private var aiBriefingCard: some View {
         if briefingLoading {
             HStack(spacing: 12) {
-                Image(systemName: "sparkles")
+                Image(systemName: "infinity")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Color(hex: 0xFF9F0A))
                     .frame(width: 32, height: 32)
@@ -559,7 +559,7 @@ struct DailyBriefingView: View {
             .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         } else if let text = aiBriefing {
             HStack(alignment: .top, spacing: 12) {
-                Image(systemName: "sparkles")
+                Image(systemName: "infinity")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(Color(hex: 0xFF9F0A))
                     .frame(width: 32, height: 32)

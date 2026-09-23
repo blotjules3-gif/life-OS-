@@ -188,7 +188,7 @@ struct GymDayEditor: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     if !day.isRest {
-                        Button { showAI = true } label: { Image(systemName: "sparkles") }.tint(.fitTint).accessibilityLabel("Assistant coach")
+                        Button { showAI = true } label: { Image(systemName: "infinity") }.tint(.fitTint).accessibilityLabel("Assistant coach")
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {

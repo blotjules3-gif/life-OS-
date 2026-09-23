@@ -24,7 +24,7 @@ enum HomeWidget: String, CaseIterable, Identifiable {
         switch self {
         case .score:     return "flame.fill"
         case .shortcuts: return "square.grid.2x2.fill"
-        case .coach:     return "sparkles"
+        case .coach:     return "infinity"
         case .agenda:    return "calendar"
         case .habits:    return "checkmark.seal.fill"
         case .tasks:     return "checklist"

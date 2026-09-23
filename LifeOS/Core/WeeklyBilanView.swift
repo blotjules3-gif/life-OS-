@@ -262,7 +262,7 @@ struct WeeklyBilanView: View {
     private var aiBilanCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
-                Image(systemName: "sparkles")
+                Image(systemName: "infinity")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Color.accentColor)
                 Text("Analyse du coach")
@@ -452,7 +452,7 @@ private struct WeeklyShareCard: View {
             Spacer()
 
             HStack(spacing: 6) {
-                Image(systemName: "sparkles")
+                Image(systemName: "infinity")
                     .font(.system(size: 13, weight: .semibold))
                 Text("LifeOS")
                     .font(.system(size: 15, weight: .bold, design: .rounded))

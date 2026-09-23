@@ -13,7 +13,7 @@ struct CoachUpgradeBanner: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "sparkles")
+            Image(systemName: "infinity")
                 .font(.title3)
                 .foregroundStyle(Color.accentColor)
                 .padding(.top, 2)

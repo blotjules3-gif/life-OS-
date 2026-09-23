@@ -210,7 +210,7 @@ let moduleSetupQuestions: [AppCategory: [ModuleQuestion]] = [
         ModuleQuestion("diet", "Regime alimentaire ?", [
             ModuleOption("omni",  "Omnivore",   "fork.knife"),
             ModuleOption("vege",  "Vegetarien", "leaf"),
-            ModuleOption("vegan", "Vegan",      "sparkles"),
+            ModuleOption("vegan", "Vegan",      "infinity"),
             ModuleOption("gf",    "Sans gluten","exclamationmark.circle"),
         ]),
         ModuleQuestion("goal", "Objectif nutrition ?", [
@@ -324,7 +324,7 @@ let moduleSetupQuestions: [AppCategory: [ModuleQuestion]] = [
         ModuleQuestion("goal", "Objectif social ?", [
             ModuleOption("meet",   "Rencontrer du monde",     "person.badge.plus"),
             ModuleOption("deepen", "Ameliorer mes relations", "heart.circle"),
-            ModuleOption("both",   "Les deux",                "sparkles"),
+            ModuleOption("both",   "Les deux",                "infinity"),
         ]),
     ],
     .home: [

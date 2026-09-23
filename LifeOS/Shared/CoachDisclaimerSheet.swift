@@ -56,7 +56,7 @@ struct CoachDisclaimerSheet: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: "sparkles")
+            Image(systemName: "infinity")
                 .font(.system(size: 30, weight: .semibold))
                 .foregroundStyle(Theme.accent)
                 .padding(.top, 8)

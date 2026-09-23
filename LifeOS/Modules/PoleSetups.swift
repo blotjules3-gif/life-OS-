@@ -161,7 +161,7 @@ struct LooksSetupView: View {
 
             // 3 — Préoccupations peau
             SetupPage { VStack(spacing: 16) {
-                SetupHeader(icon: "sparkles", title: "Tes objectifs peau",
+                SetupHeader(icon: "infinity", title: "Tes objectifs peau",
                             subtitle: "On adaptera ta routine skincare.", accent: tint)
                 SetupMultiChoice(options: ["Acné", "Points noirs", "Rides", "Taches", "Cernes", "Pores", "Rougeurs", "Éclat", "Fermeté"],
                                  selection: $concerns, accent: tint) } },
@@ -172,7 +172,7 @@ struct LooksSetupView: View {
                             subtitle: "On te proposera les étapes qui manquent (nettoyant, hydratant, SPF…).", accent: tint)
                 SetupChoice(options: ["Aucune", "Basique (nettoyant + crème)", "Complète (sérums, SPF…)"],
                             selection: $skincareLevel, accent: tint,
-                            icons: ["xmark.circle", "drop", "sparkles"]) } },
+                            icons: ["xmark.circle", "drop", "infinity"]) } },
 
             // 5 — Cheveux (couleur = base pour conseiller les sourcils)
             SetupPage { VStack(spacing: 16) {

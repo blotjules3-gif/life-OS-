@@ -206,7 +206,7 @@ struct CoachAIProviderView: View {
     @ViewBuilder
     private var appleIntelligenceRow: some View {
         HStack {
-            Image(systemName: "sparkles")
+            Image(systemName: "infinity")
                 .foregroundStyle(vm.appleAvailable ? Color.accentColor : .secondary)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {

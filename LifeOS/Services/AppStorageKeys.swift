@@ -14,6 +14,13 @@ import Foundation
 /// perdre la donnée. Pour évoluer, créer une nouvelle clé + code de migration.
 enum AppStorageKeys {
 
+    // MARK: - Authentification & Compte
+    static let isAuthenticated = "isAuthenticated"
+    static let userEmail = "userEmail"
+    static let authProvider = "authProvider"
+    static let userId = "userId"
+    static let userDisplayName = "userDisplayName"
+
     // MARK: - Identité / profil
     static let userName = "userName"
     static let userGender = "userGender"
