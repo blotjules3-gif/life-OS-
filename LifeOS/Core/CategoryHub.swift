@@ -137,12 +137,105 @@ struct CategoryHubView: View {
     }
 
     @ViewBuilder private var content: some View {
-        switch layout {
-        case .list:    listLayout
-        case .icons:   iconGrid
-        case .organic: bubbleCluster(tidy: false)
-        case .tidy:    bubbleCluster(tidy: true)
+        dashboardLayout
+    }
+
+    // MARK: - Dashboard Layout
+
+    private var dashboardLayout: some View {
+        ZStack {
+            ThemedBubbleBackground(theme: theme).ignoresSafeArea()
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 20) {
+                    categoryHeader
+
+                    CategoryRecapCard(category: category)
+
+                    shortcutsSection
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                .padding(.bottom, 120)
+            }
         }
+    }
+
+    private var categoryHeader: some View {
+        HStack(spacing: 16) {
+            IconBadge(icon: category.icon, tint: category.tint, size: 52)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(category.title)
+                    .font(.title2.bold())
+                    .foregroundStyle(.primary)
+                Text("\(tools.count) module\(tools.count > 1 ? "s" : "") & raccourcis")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+        .padding(.vertical, 4)
+    }
+
+    private var shortcutsSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("Raccourcis & Outils")
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                Spacer()
+                Text("\(tools.count)")
+                    .font(.caption2.bold())
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(category.tint.opacity(0.15))
+                    .foregroundStyle(category.tint)
+                    .clipShape(Capsule())
+            }
+
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                ForEach(tools) { tool in
+                    toolLink(tool) {
+                        dashboardToolCard(tool)
+                    }
+                }
+            }
+        }
+    }
+
+    private func dashboardToolCard(_ tool: CategoryTool) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                IconBadge(icon: tool.icon, tint: themedTint(tool), size: 36)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption2.bold())
+                    .foregroundStyle(.tertiary)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(tool.title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+
+                if !tool.subtitle.isEmpty {
+                    Text(tool.subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
+        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Theme.stroke, lineWidth: 1)
+        )
+        .contentShape(Rectangle())
     }
 
     // Navigation : push normal, ou plein écran pour les outils fullScreen.
