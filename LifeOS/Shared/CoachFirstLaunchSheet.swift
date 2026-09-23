@@ -320,7 +320,6 @@ private struct QuickKeyEntry: View {
     @State private var testing = false
     @State private var errorMsg: String?
     @State private var success = false
-    @State private var pastebardBannerVisible = false
 
     var body: some View {
         NavigationStack {
@@ -332,12 +331,6 @@ private struct QuickKeyEntry: View {
                     }
                     .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
                     .listRowBackground(Color.clear)
-                }
-
-                if pastebardBannerVisible {
-                    Section {
-                        clipboardBanner
-                    }
                 }
 
                 Section {
