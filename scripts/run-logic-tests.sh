@@ -24,6 +24,7 @@ SUITES=(
     "HomeOrder:LifeOS/Services/HomeOrder.swift:LifeOSTests/HomeOrderTests.swift"
     "ToolNames:LifeOS/Services/ToolNames.swift:LifeOSTests/ToolNamesTests.swift"
     "HomeLayout:LifeOS/Services/HomeLayout.swift:LifeOSTests/HomeLayoutTests.swift"
+    "SmartIconPicker:LifeOS/Services/IconSuggestionEngine.swift:LifeOSTests/SmartIconPickerTests.swift"
 )
 
 work=$(mktemp -d)

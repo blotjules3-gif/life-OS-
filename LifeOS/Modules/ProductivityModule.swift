@@ -581,7 +581,6 @@ struct HabitEditor: View {
     @State private var scheduledHour = 9
     @State private var scheduledMinute = 0
 
-    private let icons = ["drop.fill","book.fill","dumbbell.fill","leaf.fill","sun.max.fill","moon.fill","pencil","heart.fill","cup.and.saucer.fill","bed.double.fill"]
     private let colors = [0x4CC38A, 0x618EF1, 0xF1746C, 0xE0A23C, 0x9B6CF1, 0x3CD0C8]
     private let minutes = [0, 15, 30, 45]
 
@@ -612,13 +611,7 @@ struct HabitEditor: View {
                     .frame(height: 120)
                 }
                 Section("Icône") {
-                    LazyVGrid(columns: Array(repeating: GridItem(), count: 5)) {
-                        ForEach(icons, id: \.self) { i in
-                            Image(systemName: i).font(.title3).frame(width: 40, height: 40)
-                                .background(icon == i ? Color.accentColor.opacity(0.3) : Color.clear, in: RoundedRectangle(cornerRadius: 8))
-                                .onTapGesture { icon = i }
-                        }
-                    }
+                    SmartIconPicker(selectedIcon: $icon, queryText: name, accentColor: Color(hex: UInt(color)))
                 }
                 Section("Couleur") {
                     HStack {

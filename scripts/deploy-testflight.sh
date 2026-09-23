@@ -153,7 +153,69 @@ xcodebuild -exportArchive \
     -authenticationKeyIssuerID "$ISSUER_ID"
 
 echo "=================================================="
-echo "🎉 Build $BUILD_NUMBER envoyé avec succès sur TestFlight !"
-echo "Il apparaîtra sur votre iPhone dans l'application TestFlight"
-echo "dès que le traitement Apple sera terminé (environ 5-10 min)."
+echo "🎉 Build $BUILD_NUMBER téléversé avec succès !"
+echo "Traitement Apple et rattachement automatique à TestFlight..."
 echo "=================================================="
+
+node --input-type=module -e "
+import crypto from 'node:crypto';
+import fs from 'node:fs';
+
+const KEY_ID = '$KEY_ID';
+const ISSUER = '$ISSUER_ID';
+const key = fs.readFileSync('$KEY_PATH', 'utf8');
+const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+
+function getToken() {
+  const now = Math.floor(Date.now() / 1000);
+  const head = b64({ alg: 'ES256', kid: KEY_ID, typ: 'JWT' });
+  const body = b64({ iss: ISSUER, iat: now, exp: now + 600, aud: 'appstoreconnect-v1' });
+  const sig = crypto.sign('sha256', Buffer.from(head + '.' + body), { key, dsaEncoding: 'ieee-p1363' });
+  return head + '.' + body + '.' + sig.toString('base64url');
+}
+
+async function run() {
+  for (let attempt = 0; attempt < 25; attempt++) {
+    await new Promise(r => setTimeout(r, 15000));
+    try {
+      const res = await fetch('https://api.appstoreconnect.apple.com/v1/builds?filter[app]=6813532133&filter[version]=$BUILD_NUMBER', {
+        headers: { Authorization: 'Bearer ' + getToken() }
+      });
+      const data = await res.json();
+      const b = data.data?.[0];
+      if (!b) {
+        console.log('Réception par Apple en cours...');
+        continue;
+      }
+      const state = b.attributes?.processingState;
+      console.log('Statut du build $BUILD_NUMBER:', state);
+      if (state === 'VALID') {
+        const buildId = b.id;
+        await fetch('https://api.appstoreconnect.apple.com/v1/builds/' + buildId, {
+          method: 'PATCH',
+          headers: { Authorization: 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: { type: 'builds', id: buildId, attributes: { usesNonExemptEncryption: false } } })
+        });
+        const grpRes = await fetch('https://api.appstoreconnect.apple.com/v1/apps/6813532133/betaGroups', {
+          headers: { Authorization: 'Bearer ' + getToken() }
+        });
+        const grpData = await grpRes.json();
+        for (const grp of (grpData.data || [])) {
+          await fetch('https://api.appstoreconnect.apple.com/v1/betaGroups/' + grp.id + '/relationships/builds', {
+            method: 'POST',
+            headers: { Authorization: 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: [{ type: 'builds', id: buildId }] })
+          });
+          console.log('✓ Rattaché au groupe TestFlight:', grp.attributes.name);
+        }
+        console.log('✨ Build $BUILD_NUMBER officiellement en ligne sur ton téléphone !');
+        return;
+      }
+    } catch (e) {
+      console.error(e.message);
+    }
+  }
+}
+run();
+"
+
