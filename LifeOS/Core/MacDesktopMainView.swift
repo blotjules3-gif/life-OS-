@@ -984,7 +984,7 @@ struct MacDesktopDashboardView: View {
                             }
                         }
                         .padding(11)
-                        .applePreviewCard(cornerRadius: 14)
+                        .applePreviewInnerCard(cornerRadius: 14)
                     }
                 }
             }
@@ -1113,7 +1113,7 @@ struct MacDesktopDashboardView: View {
                 Spacer()
             }
             .padding(14)
-            .applePreviewCard(cornerRadius: 16)
+            .applePreviewInnerCard(cornerRadius: 14)
         }
         .padding(20)
         .applePreviewCard(cornerRadius: 26)
@@ -1157,7 +1157,7 @@ struct MacDesktopDashboardView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .applePreviewCard(cornerRadius: 16)
+            .applePreviewInnerCard(cornerRadius: 14)
         }
         .buttonStyle(.plain)
     }

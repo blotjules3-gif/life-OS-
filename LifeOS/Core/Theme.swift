@@ -577,6 +577,32 @@ struct ApplePreviewCardModifier: ViewModifier {
     }
 }
 
+/// Règle Apple "Jamais de verre sur du verre" (No glass on glass) :
+/// Les éléments imbriqués à l'intérieur d'une carte verre utilisent des opacités subtiles et des arêtes concentriques,
+/// évitant le flou empilé énergivore et grisâtre.
+struct ApplePreviewInnerCardModifier: ViewModifier {
+    var cornerRadius: CGFloat = 16
+    var strokeWidth: CGFloat = 0.6
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(colorScheme == .dark
+                          ? Color.white.opacity(0.04)
+                          : Color.black.opacity(0.03))
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(
+                        Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.08),
+                        lineWidth: strokeWidth
+                    )
+            )
+    }
+}
+
 /// Icône de catégorie en verre liquide monochrome : remplace les blocs de couleur par un squircle translucide épuré
 struct CategoryGlassIcon: View {
     let category: AppCategory
@@ -693,6 +719,11 @@ extension View {
     /// Carte / Conteneur ultra-arrondi (coins continus généreux 28-34pt) style Apple Aperçu
     func applePreviewCard(cornerRadius: CGFloat = 28, strokeWidth: CGFloat = 0.8) -> some View {
         self.modifier(ApplePreviewCardModifier(cornerRadius: cornerRadius, strokeWidth: strokeWidth))
+    }
+
+    /// Carte interne imbriquée (conforme à la règle "Jamais de verre sur du verre", sans second flou)
+    func applePreviewInnerCard(cornerRadius: CGFloat = 16, strokeWidth: CGFloat = 0.6) -> some View {
+        self.modifier(ApplePreviewInnerCardModifier(cornerRadius: cornerRadius, strokeWidth: strokeWidth))
     }
 
     /// Ombre douce diffuse — profondeur flottante iOS 26.
