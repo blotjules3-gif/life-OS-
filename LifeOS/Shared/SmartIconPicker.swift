@@ -41,7 +41,7 @@ public struct SmartIconPicker: View {
                 HStack(spacing: 8) {
                     Image(systemName: "square.grid.2x2")
                         .font(.system(size: 13, weight: .semibold))
-                    Text("Choisir parmi toutes les icônes (150+)")
+                    Text("Choisir parmi toutes les icônes (1 100+)")
                         .font(.system(size: 13, weight: .medium))
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -93,7 +93,7 @@ public struct SmartIconPicker: View {
     }
 }
 
-// MARK: - Catalogue complet d'icônes avec recherche
+// MARK: - Catalogue complet d'icônes avec recherche multi-mots
 
 public struct FullIconCatalogSheet: View {
 
@@ -101,48 +101,107 @@ public struct FullIconCatalogSheet: View {
     public var accentColor: Color = Color.accentColor
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
+    @State private var selectedCategoryFilter: String? = nil
 
     public init(selectedIcon: Binding<String>, accentColor: Color = Color.accentColor) {
         self._selectedIcon = selectedIcon
         self.accentColor = accentColor
     }
 
+    private var totalIconCount: Int {
+        IconSuggestionEngine.catalog.reduce(0) { $0 + $1.icons.count }
+    }
+
+    private var searchResults: [String] {
+        IconSuggestionEngine.search(query: searchText, limit: 120)
+    }
+
     private var filteredCategories: [(category: String, icons: [String])] {
         let clean = IconSuggestionEngine.normalize(searchText)
-        guard !clean.isEmpty else {
-            return IconSuggestionEngine.catalog
+        if !clean.isEmpty {
+            let matched = Set(searchResults)
+            var filtered: [(category: String, icons: [String])] = []
+            for cat in IconSuggestionEngine.catalog {
+                let matching = cat.icons.filter { matched.contains($0) }
+                if !matching.isEmpty {
+                    filtered.append((cat.category, matching))
+                }
+            }
+            return filtered
         }
 
-        var filtered: [(category: String, icons: [String])] = []
-        for cat in IconSuggestionEngine.catalog {
-            let matchingIcons = cat.icons.filter { icon in
-                let cleanIcon = IconSuggestionEngine.normalize(icon)
-                return cleanIcon.contains(clean) || cat.category.lowercased().contains(clean)
-            }
-            if !matchingIcons.isEmpty {
-                filtered.append((cat.category, matchingIcons))
-            }
+        if let filter = selectedCategoryFilter {
+            return IconSuggestionEngine.catalog.filter { $0.category == filter }
         }
-        return filtered
+        return IconSuggestionEngine.catalog
     }
 
     public var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    if filteredCategories.isEmpty {
-                        emptyView
-                    } else {
-                        ForEach(filteredCategories, id: \.category) { category, icons in
-                            categorySection(category: category, icons: icons)
+            VStack(spacing: 0) {
+                // Filtres par catégorie
+                if searchText.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            Button {
+                                selectedCategoryFilter = nil
+                            } label: {
+                                Text("Toutes (\(totalIconCount))")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(selectedCategoryFilter == nil ? accentColor : Color(uiColor: .tertiarySystemFill), in: Capsule())
+                                    .foregroundStyle(selectedCategoryFilter == nil ? Color.white : Color.primary)
+                            }
+                            .buttonStyle(.plain)
+
+                            ForEach(IconSuggestionEngine.catalog, id: \.category) { cat in
+                                let isSel = selectedCategoryFilter == cat.category
+                                Button {
+                                    selectedCategoryFilter = cat.category
+                                } label: {
+                                    Text("\(cat.category) (\(cat.icons.count))")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .background(isSel ? accentColor : Color(uiColor: .tertiarySystemFill), in: Capsule())
+                                        .foregroundStyle(isSel ? Color.white : Color.primary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                    }
+                    Divider()
+                } else {
+                    HStack {
+                        Text("\(searchResults.count) icônes trouvées pour « \(searchText) »")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 6)
+                    Divider()
+                }
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        if !searchText.isEmpty && searchResults.isEmpty {
+                            emptyView
+                        } else {
+                            ForEach(filteredCategories, id: \.category) { category, icons in
+                                categorySection(category: category, icons: icons)
+                            }
                         }
                     }
+                    .padding(16)
                 }
-                .padding(16)
             }
             .navigationTitle("Toutes les icônes")
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $searchText, prompt: "Rechercher (ex: sport, vélo, livre)")
+            .searchable(text: $searchText, prompt: "Recherche multi-mots (ex: muscu dos, vélo, café)")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Fermer") { dismiss() }
