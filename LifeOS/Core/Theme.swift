@@ -378,14 +378,14 @@ struct AmbientAuraBackdrop: View {
 // MARK: - Système Liquid Glass iOS 27 (Surfaces translucides et bordures transparentes lumineuses)
 
 enum LiquidGlass {
-    /// Bordure transparente spéculaire iOS 27 qui accroche la lumière
+    /// Bordure transparente spéculaire iOS 27 qui accroche la lumière (adaptative clair / sombre)
     static func borderGradient(opacity: Double = 1.0, tint: Color? = nil) -> LinearGradient {
         LinearGradient(
             stops: [
-                .init(color: Color.white.opacity(0.38 * opacity), location: 0.0),
-                .init(color: Color.white.opacity(0.10 * opacity), location: 0.40),
-                .init(color: (tint ?? Color.white).opacity(0.28 * opacity), location: 0.85),
-                .init(color: Color.white.opacity(0.18 * opacity), location: 1.0)
+                .init(color: Color.primary.opacity(0.38 * opacity), location: 0.0),
+                .init(color: Color.primary.opacity(0.10 * opacity), location: 0.40),
+                .init(color: (tint ?? Color.primary).opacity(0.24 * opacity), location: 0.85),
+                .init(color: Color.primary.opacity(0.18 * opacity), location: 1.0)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -411,7 +411,7 @@ struct LiquidGlassCardModifier: ViewModifier {
                             tint.opacity(0.08)
                         }
                     } else {
-                        Color.white.opacity(0.80)
+                        Color.white.opacity(0.85)
                         if let tint {
                             tint.opacity(0.05)
                         }
@@ -424,7 +424,7 @@ struct LiquidGlassCardModifier: ViewModifier {
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .strokeBorder(
-                        LiquidGlass.borderGradient(opacity: colorScheme == .dark ? 1.0 : 0.75, tint: tint),
+                        LiquidGlass.borderGradient(opacity: colorScheme == .dark ? 1.0 : 0.65, tint: tint),
                         lineWidth: strokeWidth
                     )
             )
@@ -442,13 +442,13 @@ struct LiquidGlassPillModifier: ViewModifier {
         content
             .background {
                 Capsule()
-                    .fill(colorScheme == .dark ? Color(white: 0.16, opacity: 0.55) : Color.white.opacity(0.85))
+                    .fill(colorScheme == .dark ? Color(white: 0.16, opacity: 0.55) : Color(white: 0.92, opacity: 0.85))
                     .background(.ultraThinMaterial, in: Capsule())
             }
             .overlay(
                 Capsule()
                     .strokeBorder(
-                        LiquidGlass.borderGradient(opacity: colorScheme == .dark ? 1.0 : 0.75, tint: tint),
+                        LiquidGlass.borderGradient(opacity: colorScheme == .dark ? 1.0 : 0.65, tint: tint),
                         lineWidth: strokeWidth
                     )
             )
@@ -469,13 +469,13 @@ struct CategoryGlassIcon: View {
         ZStack {
             // Lueur monochrome subtile
             Circle()
-                .fill(Color.white.opacity(colorScheme == .dark ? 0.08 : 0.12))
+                .fill(Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.06))
                 .frame(width: size * 0.75, height: size * 0.75)
                 .blur(radius: 6)
 
             // Squircle en verre liquide translucide monochrome
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(colorScheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.04))
+                .fill(Color.primary.opacity(colorScheme == .dark ? 0.06 : 0.04))
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
                 .frame(width: size, height: size)
                 .overlay(
@@ -483,9 +483,9 @@ struct CategoryGlassIcon: View {
                         .strokeBorder(
                             LinearGradient(
                                 stops: [
-                                    .init(color: Color.white.opacity(colorScheme == .dark ? 0.45 : 0.70), location: 0.0),
-                                    .init(color: Color.white.opacity(colorScheme == .dark ? 0.15 : 0.25), location: 0.5),
-                                    .init(color: Color.white.opacity(colorScheme == .dark ? 0.08 : 0.15), location: 1.0)
+                                    .init(color: Color.primary.opacity(colorScheme == .dark ? 0.45 : 0.35), location: 0.0),
+                                    .init(color: Color.primary.opacity(colorScheme == .dark ? 0.15 : 0.15), location: 0.5),
+                                    .init(color: Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.08), location: 1.0)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing

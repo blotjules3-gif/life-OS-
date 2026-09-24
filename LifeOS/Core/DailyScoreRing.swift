@@ -266,9 +266,15 @@ struct DailyScoreRing: View {
     }
 
     private var iridescent: AngularGradient {
-        AngularGradient(
-            colors: [Color.white, Color(white: 0.85), Color(white: 0.45), Color(white: 0.80), Color.white],
-            center: .center, startAngle: .degrees(-90), endAngle: .degrees(270))
+        if scheme == .dark {
+            return AngularGradient(
+                colors: [Color.white, Color(white: 0.85), Color(white: 0.45), Color(white: 0.80), Color.white],
+                center: .center, startAngle: .degrees(-90), endAngle: .degrees(270))
+        } else {
+            return AngularGradient(
+                colors: [Color.black, Color(white: 0.30), Color(white: 0.60), Color(white: 0.25), Color.black],
+                center: .center, startAngle: .degrees(-90), endAngle: .degrees(270))
+        }
     }
 
     // MARK: - Double Cercle : Score (extérieur) + Cadran 24h Habitudes & Tâches (intérieur)
@@ -282,14 +288,14 @@ struct DailyScoreRing: View {
         let items = clockItems
 
         return ZStack {
-            // Halo diffus monochrome ambiant
-            Circle().fill(Color.white)
+            // Halo diffus monochrome ambiant adaptatif
+            Circle().fill(Color.primary)
                 .frame(width: 290, height: 290).blur(radius: 40)
-                .opacity(0.05 + 0.12 * frac)
+                .opacity((scheme == .dark ? 0.05 : 0.03) + 0.08 * frac)
                 .animation(.easeOut(duration: 0.8), value: frac)
 
             // Piste score extérieure
-            Circle().stroke(Color.white.opacity(0.10), lineWidth: 8)
+            Circle().stroke(Color.primary.opacity(0.10), lineWidth: 8)
                 .frame(width: 236, height: 236)
 
             // Arc de score monochrome extérieur
@@ -301,7 +307,7 @@ struct DailyScoreRing: View {
 
             // Anneau intérieur : Cadran 24h
             Circle()
-                .stroke(Color.white.opacity(0.12), style: StrokeStyle(lineWidth: 1.5, dash: [2, 6]))
+                .stroke(Color.primary.opacity(0.12), style: StrokeStyle(lineWidth: 1.5, dash: [2, 6]))
                 .frame(width: 172, height: 172)
 
             // Repères 0h, 6h, 12h, 18h
@@ -341,9 +347,9 @@ struct DailyScoreRing: View {
         let x = 86.0 * cos(rad)
         let y = 86.0 * sin(rad)
         return Circle()
-            .fill(Color.white)
+            .fill(Color.primary)
             .frame(width: 7, height: 7)
-            .shadow(color: Color.white.opacity(0.85), radius: 4)
+            .shadow(color: Color.primary.opacity(0.60), radius: 4)
             .offset(x: x, y: y)
     }
 
@@ -352,6 +358,10 @@ struct DailyScoreRing: View {
         let x = 86.0 * cos(rad)
         let y = 86.0 * sin(rad)
         let isSelected = selectedClockItem?.id == item.id
+        let doneFill = Color.primary
+        let undoneFill = scheme == .dark ? (isSelected ? Color.white.opacity(0.20) : Color.black.opacity(0.55)) : (isSelected ? Color.black.opacity(0.12) : Color.white.opacity(0.92))
+        let strokeColor = isSelected ? Color.primary : Color.primary.opacity(0.35)
+        let iconColor = item.isDone ? (scheme == .dark ? Color.black : Color.white) : Color.primary
 
         return Button {
             withAnimation(.spring(duration: 0.3, bounce: 0.2)) {
@@ -365,19 +375,14 @@ struct DailyScoreRing: View {
         } label: {
             ZStack {
                 Circle()
-                    .fill(item.isDone ? Color.white : (isSelected ? Color.white.opacity(0.20) : Color.black.opacity(0.55)))
+                    .fill(item.isDone ? doneFill : undoneFill)
                     .frame(width: isSelected ? 26 : 22, height: isSelected ? 26 : 22)
-                    .overlay(
-                        Circle().stroke(
-                            isSelected ? Color.white : Color.white.opacity(0.40),
-                            lineWidth: isSelected ? 2 : 1.2
-                        )
-                    )
-                    .shadow(color: Color.white.opacity(isSelected ? 0.35 : 0.1), radius: 3)
+                    .overlay(Circle().stroke(strokeColor, lineWidth: isSelected ? 2 : 1.2))
+                    .shadow(color: Color.primary.opacity(isSelected ? 0.35 : 0.1), radius: 3)
 
                 Image(systemName: item.isDone ? "checkmark" : (item.isOverdue ? "exclamationmark" : item.icon))
                     .font(.system(size: isSelected ? 11 : 9, weight: .bold))
-                    .foregroundStyle(item.isDone ? Color.black : Color.white)
+                    .foregroundStyle(iconColor)
             }
         }
         .buttonStyle(.plain)
@@ -494,10 +499,10 @@ struct DailyScoreRing: View {
         let on = n > 0
         return HStack(spacing: 6) {
             Image(systemName: "flame.fill").font(.system(size: 13, weight: .bold))
-                .foregroundStyle(on ? Color.white : Color.white.opacity(0.40))
+                .foregroundStyle(on ? Color.primary : Color.secondary.opacity(0.60))
             Text(on ? "\(n) jour\(n > 1 ? "s" : "") de série" : "Démarre ta série aujourd'hui")
                 .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(on ? Color.white : Color.white.opacity(0.60))
+                .foregroundStyle(on ? Color.primary : Color.secondary)
         }
         .padding(.horizontal, 13).padding(.vertical, 7)
         .liquidGlassPill()
@@ -526,22 +531,22 @@ struct DailyScoreRing: View {
                 Haptics.tap(); withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { selected = day }
             } label: {
                 ZStack {
-                    Circle().fill(isSel ? AnyShapeStyle(Color.white)
-                                        : AnyShapeStyle(future ? AnyShapeStyle(Color.white.opacity(0.04)) : AnyShapeStyle(Color.white.opacity(0.08))))
-                        .overlay(Circle().strokeBorder(today && !isSel ? Color.white : Color.white.opacity(0.18),
+                    Circle().fill(isSel ? AnyShapeStyle(Color.primary)
+                                        : AnyShapeStyle(future ? AnyShapeStyle(Color.primary.opacity(0.04)) : AnyShapeStyle(Color.primary.opacity(0.08))))
+                        .overlay(Circle().strokeBorder(today && !isSel ? Color.primary : Color.primary.opacity(0.18),
                                                        lineWidth: today && !isSel ? 1.5 : 0.8))
                     if showScore {
                         Text("\(sc)").font(.system(size: 13, weight: .black)).monospacedDigit()
-                            .foregroundStyle(isSel ? Color.black : Color.white)
+                            .foregroundStyle(isSel ? (scheme == .dark ? Color.black : Color.white) : Color.primary)
                     } else {
-                        Image(systemName: "circle.dashed").font(.caption).foregroundStyle(Color.white.opacity(0.35))
+                        Image(systemName: "circle.dashed").font(.caption).foregroundStyle(Color.primary.opacity(0.35))
                     }
                 }
                 .frame(width: 42, height: 42)
             }
             .buttonStyle(.plain)
             Text(letter).font(.system(size: 11, weight: .bold))
-                .foregroundStyle(isSel ? Color.white : Color.white.opacity(0.50))
+                .foregroundStyle(isSel ? Color.primary : Color.secondary)
         }
     }
 

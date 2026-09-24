@@ -54,7 +54,7 @@ enum DesktopNavSection: Hashable, Identifiable {
     }
 
     var color: Color {
-        Color.white
+        Color.primary
     }
 }
 
@@ -121,32 +121,32 @@ struct MacDesktopMainView: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(Color.white.opacity(0.10))
+                        .fill(Color.primary.opacity(0.08))
                         .frame(width: 38, height: 38)
-                        .overlay(Circle().strokeBorder(Color.white.opacity(0.20), lineWidth: 1))
+                        .overlay(Circle().strokeBorder(Color.primary.opacity(0.18), lineWidth: 1))
                     Image(systemName: "infinity")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("LifeOS")
                         .font(AppFont.heading(size: 19, weight: .black))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                     Text("Système Personnel")
                         .font(AppFont.body(size: 11, weight: .medium))
-                        .foregroundStyle(Color.white.opacity(0.50))
+                        .foregroundStyle(Color.secondary)
                 }
 
                 Spacer()
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(Color.white.opacity(0.02))
+            .background(Color.primary.opacity(0.02))
             .overlay(
                 Rectangle()
                     .frame(height: 1)
-                    .foregroundStyle(Color.white.opacity(0.08)),
+                    .foregroundStyle(Color.primary.opacity(0.08)),
                 alignment: .bottom
             )
 
@@ -157,7 +157,7 @@ struct MacDesktopMainView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("ESPACE DE TRAVAIL")
                             .font(AppFont.body(size: 10, weight: .bold))
-                            .foregroundStyle(Color.white.opacity(0.40))
+                            .foregroundStyle(Color.secondary.opacity(0.80))
                             .kerning(0.8)
                             .padding(.horizontal, 12)
                             .padding(.bottom, 4)
@@ -173,7 +173,7 @@ struct MacDesktopMainView: View {
                         HStack {
                             Text("CATÉGORIES")
                                 .font(AppFont.body(size: 10, weight: .bold))
-                                .foregroundStyle(Color.white.opacity(0.40))
+                                .foregroundStyle(Color.secondary.opacity(0.80))
                                 .kerning(0.8)
                             Spacer()
                             Button {
@@ -184,7 +184,7 @@ struct MacDesktopMainView: View {
                                     Text("Trier")
                                 }
                                 .font(AppFont.body(size: 11, weight: .semibold))
-                                .foregroundStyle(Color.white.opacity(0.60))
+                                .foregroundStyle(Color.primary)
                             }
                             .buttonStyle(.plain)
                             .help("Trier l'ordre des catégories")
@@ -201,7 +201,7 @@ struct MacDesktopMainView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("VUE D'ENSEMBLE")
                             .font(AppFont.body(size: 10, weight: .bold))
-                            .foregroundStyle(Color.white.opacity(0.40))
+                            .foregroundStyle(Color.secondary.opacity(0.80))
                             .kerning(0.8)
                             .padding(.horizontal, 12)
                             .padding(.bottom, 4)
@@ -219,23 +219,23 @@ struct MacDesktopMainView: View {
             } label: {
                 HStack(spacing: 12) {
                     Circle()
-                        .fill(Color.white.opacity(0.10))
+                        .fill(Color.primary.opacity(0.08))
                         .frame(width: 34, height: 34)
-                        .overlay(Circle().strokeBorder(Color.white.opacity(0.20), lineWidth: 1))
+                        .overlay(Circle().strokeBorder(Color.primary.opacity(0.18), lineWidth: 1))
                         .overlay(
                             Text(String(displayName.prefix(1)).uppercased())
                                 .font(AppFont.heading(size: 14, weight: .black))
-                                .foregroundStyle(Color.white)
+                                .foregroundStyle(Color.primary)
                         )
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(displayName)
                             .font(AppFont.heading(size: 13, weight: .bold))
-                            .foregroundStyle(Color.white)
+                            .foregroundStyle(Color.primary)
                             .lineLimit(1)
                         Text(userEmail.isEmpty ? "Compte local" : userEmail)
                             .font(AppFont.body(size: 11, weight: .regular))
-                            .foregroundStyle(Color.white.opacity(0.50))
+                            .foregroundStyle(Color.secondary)
                             .lineLimit(1)
                     }
 
@@ -243,7 +243,7 @@ struct MacDesktopMainView: View {
 
                     Image(systemName: "gearshape")
                         .font(.system(size: 14))
-                        .foregroundStyle(Color.white.opacity(0.60))
+                        .foregroundStyle(Color.secondary)
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
@@ -252,11 +252,11 @@ struct MacDesktopMainView: View {
             .buttonStyle(.plain)
             .padding(10)
         }
-        .background(Color.black.opacity(0.30))
+        .background(Color.primary.opacity(0.02))
         .overlay(
             Rectangle()
                 .frame(width: 1)
-                .foregroundStyle(Color.white.opacity(0.07)),
+                .foregroundStyle(Color.primary.opacity(0.07)),
             alignment: .trailing
         )
     }
@@ -269,12 +269,12 @@ struct MacDesktopMainView: View {
             HStack(spacing: 12) {
                 Image(systemName: section.icon)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(isSelected ? Color.white : Color.white.opacity(0.60))
+                    .foregroundStyle(isSelected ? Color.primary : Color.secondary)
                     .frame(width: 22)
 
                 Text(section.label)
                     .font(AppFont.body(size: 13, weight: isSelected ? .bold : .medium))
-                    .foregroundStyle(isSelected ? Color.white : Color.white.opacity(0.70))
+                    .foregroundStyle(isSelected ? Color.primary : Color.secondary)
                     .lineLimit(1)
 
                 Spacer()
@@ -284,10 +284,10 @@ struct MacDesktopMainView: View {
             .background {
                 if isSelected {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.white.opacity(0.12))
+                        .fill(Color.primary.opacity(0.12))
                         .overlay(
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .strokeBorder(Color.white.opacity(0.24), lineWidth: 1)
+                                .strokeBorder(Color.primary.opacity(0.24), lineWidth: 1)
                         )
                 }
             }
@@ -383,6 +383,7 @@ struct MacDesktopDashboardView: View {
     let onSelectCategory: (AppCategory) -> Void
 
     @Environment(\.modelContext) private var ctx
+    @Environment(\.colorScheme) private var scheme
 
     @Query(sort: \Habit.createdAt) private var habits: [Habit]
     @Query(sort: \TodoItem.priority, order: .reverse) private var todos: [TodoItem]
@@ -508,15 +509,15 @@ struct MacDesktopDashboardView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "star.fill")
                         .font(.system(size: 14))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                     Text("Modules Prioritaires")
                         .font(AppFont.heading(size: 17, weight: .black))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                 }
                 Spacer()
                 Text("Classés selon vos préférences")
                     .font(AppFont.body(size: 12, weight: .regular))
-                    .foregroundStyle(Color.white.opacity(0.45))
+                    .foregroundStyle(Color.secondary)
             }
 
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 3), spacing: 14) {
@@ -530,17 +531,17 @@ struct MacDesktopDashboardView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(cat.title)
                                     .font(AppFont.heading(size: 13, weight: .bold))
-                                    .foregroundStyle(Color.white)
+                                    .foregroundStyle(Color.primary)
                                     .lineLimit(1)
                                 Text(cat.subtitle)
                                     .font(AppFont.body(size: 11, weight: .regular))
-                                    .foregroundStyle(Color.white.opacity(0.50))
+                                    .foregroundStyle(Color.secondary)
                                     .lineLimit(1)
                             }
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(Color.white.opacity(0.30))
+                                .foregroundStyle(Color.secondary.opacity(0.60))
                         }
                         .padding(12)
                         .liquidGlassCard(cornerRadius: 12)
@@ -561,12 +562,12 @@ struct MacDesktopDashboardView: View {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 8) {
                     Circle()
-                        .fill(Color.white)
+                        .fill(Color.primary)
                         .frame(width: 7, height: 7)
-                        .shadow(color: Color.white.opacity(0.8), radius: 3)
+                        .shadow(color: Color.primary.opacity(0.40), radius: 3)
                     Text(currentDateString.uppercased())
                         .font(AppFont.body(size: 10, weight: .bold))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                         .kerning(1.2)
                 }
                 .padding(.horizontal, 10)
@@ -576,11 +577,11 @@ struct MacDesktopDashboardView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Bonjour, \(displayName)")
                         .font(AppFont.heading(size: 30, weight: .black))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
 
                     Text("Ton système personnel résumé en un seul cadran interactif. Retrouve tes habitudes et tâches à leur heure.")
                         .font(AppFont.body(size: 12, weight: .regular))
-                        .foregroundStyle(Color.white.opacity(0.60))
+                        .foregroundStyle(Color.secondary)
                         .lineSpacing(3)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -588,10 +589,10 @@ struct MacDesktopDashboardView: View {
                 HStack(spacing: 8) {
                     HStack(spacing: 6) {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(Color.white)
+                            .foregroundStyle(Color.primary)
                         Text("\(doneHabitsCount) / \(activeHabits.count) validées")
                             .font(AppFont.body(size: 11, weight: .semibold))
-                            .foregroundStyle(Color.white)
+                            .foregroundStyle(Color.primary)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
@@ -599,10 +600,10 @@ struct MacDesktopDashboardView: View {
 
                     HStack(spacing: 6) {
                         Image(systemName: "flame.fill")
-                            .foregroundStyle(Color.white)
+                            .foregroundStyle(Color.primary)
                         Text(energyLabel.isEmpty ? "Forme optimale" : energyLabel)
                             .font(AppFont.body(size: 11, weight: .semibold))
-                            .foregroundStyle(Color.white)
+                            .foregroundStyle(Color.primary)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
@@ -660,25 +661,25 @@ struct MacDesktopDashboardView: View {
         HStack(spacing: 10) {
             ZStack {
                 Circle()
-                    .fill(Color.white.opacity(0.08))
+                    .fill(Color.primary.opacity(0.08))
                     .frame(width: 32, height: 32)
-                    .overlay(Circle().strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
+                    .overlay(Circle().strokeBorder(Color.primary.opacity(0.18), lineWidth: 1))
                 Image(systemName: icon)
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.primary)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(AppFont.body(size: 10, weight: .medium))
-                    .foregroundStyle(Color.white.opacity(0.50))
+                    .foregroundStyle(Color.secondary)
                     .lineLimit(1)
                 Text(value)
                     .font(AppFont.heading(size: 13, weight: .black))
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.primary)
                     .lineLimit(1)
                 Text(detail)
                     .font(AppFont.body(size: 10, weight: .regular))
-                    .foregroundStyle(Color.white.opacity(0.40))
+                    .foregroundStyle(Color.secondary.opacity(0.80))
                     .lineLimit(1)
             }
             Spacer()
@@ -696,10 +697,10 @@ struct MacDesktopDashboardView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 17))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                     Text("Habitudes du jour")
                         .font(AppFont.sans(size: 19, weight: .black))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                 }
 
                 Spacer()
@@ -714,8 +715,8 @@ struct MacDesktopDashboardView: View {
                                 .font(AppFont.body(size: 11, weight: .semibold))
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 5)
-                                .background(selectedFilter == filter ? Color.white.opacity(0.20) : Color.clear)
-                                .foregroundStyle(selectedFilter == filter ? Color.white : Color.white.opacity(0.55))
+                                .background(selectedFilter == filter ? Color.primary.opacity(0.15) : Color.clear)
+                                .foregroundStyle(selectedFilter == filter ? Color.primary : Color.secondary)
                                 .clipShape(Capsule())
                         }
                         .buttonStyle(.plain)
@@ -734,7 +735,7 @@ struct MacDesktopDashboardView: View {
                     .font(AppFont.body(size: 11, weight: .bold))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.primary)
                 }
                 .buttonStyle(.plain)
                 .liquidGlassPill()
@@ -744,15 +745,15 @@ struct MacDesktopDashboardView: View {
                 VStack(spacing: 12) {
                     Image(systemName: "checkmark.circle.badge.questionmark")
                         .font(.system(size: 34))
-                        .foregroundStyle(Color.white.opacity(0.40))
+                        .foregroundStyle(Color.secondary)
                     Text("Aucune habitude pour ce moment de la journée.")
                         .font(AppFont.body(size: 13, weight: .medium))
-                        .foregroundStyle(Color.white.opacity(0.60))
+                        .foregroundStyle(Color.secondary)
                     Button("Créer une nouvelle habitude") {
                         onOpenHabitCreator()
                     }
                     .font(AppFont.body(size: 12, weight: .bold))
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.primary)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 32)
@@ -776,41 +777,41 @@ struct MacDesktopDashboardView: View {
             // Icon squircle en verre liquide monochrome
             ZStack {
                 Circle()
-                    .fill(Color.white.opacity(isDone ? 0.15 : 0.06))
+                    .fill(Color.primary.opacity(isDone ? 0.12 : 0.05))
                     .frame(width: 32, height: 32)
                     .blur(radius: 6)
 
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.white.opacity(isDone ? 0.20 : 0.08))
+                    .fill(Color.primary.opacity(isDone ? 0.15 : 0.06))
                     .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .frame(width: 44, height: 44)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .strokeBorder(Color.white.opacity(isDone ? 0.40 : 0.18), lineWidth: 1)
+                            .strokeBorder(Color.primary.opacity(isDone ? 0.35 : 0.15), lineWidth: 1)
                     )
                 Image(systemName: habit.icon)
                     .font(.system(size: 19, weight: .semibold))
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.primary)
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(habit.name)
                     .font(AppFont.sans(size: 14, weight: .bold))
-                    .foregroundStyle(isDone ? Color.white.opacity(0.50) : Color.white)
-                    .strikethrough(isDone, color: Color.white.opacity(0.40))
+                    .foregroundStyle(isDone ? Color.secondary : Color.primary)
+                    .strikethrough(isDone, color: Color.secondary.opacity(0.50))
                     .lineLimit(1)
 
                 HStack(spacing: 6) {
                     Text(String(format: "%02dh%02d", habit.scheduledHour, habit.scheduledMinute))
                         .font(AppFont.body(size: 11, weight: .semibold))
-                        .foregroundStyle(Color.white.opacity(0.50))
+                        .foregroundStyle(Color.secondary)
 
                     if habit.completions.count > 0 {
                         Text("·")
-                            .foregroundStyle(Color.white.opacity(0.30))
+                            .foregroundStyle(Color.secondary.opacity(0.60))
                         Text("🔥 \(habit.completions.count) j")
                             .font(AppFont.body(size: 11, weight: .bold))
-                            .foregroundStyle(Color.white.opacity(0.80))
+                            .foregroundStyle(Color.primary.opacity(0.85))
                     }
                 }
             }
@@ -823,16 +824,16 @@ struct MacDesktopDashboardView: View {
             } label: {
                 ZStack {
                     Circle()
-                        .strokeBorder(Color.white.opacity(isDone ? 0.80 : 0.25), lineWidth: 1.5)
+                        .strokeBorder(Color.primary.opacity(isDone ? 0.80 : 0.25), lineWidth: 1.5)
                         .frame(width: 30, height: 30)
 
                     if isDone {
                         Circle()
-                            .fill(Color.white)
+                            .fill(Color.primary)
                             .frame(width: 30, height: 30)
                         Image(systemName: "checkmark")
                             .font(.system(size: 13, weight: .black))
-                            .foregroundStyle(Color.black)
+                            .foregroundStyle(scheme == .dark ? Color.black : Color.white)
                     }
                 }
             }
@@ -863,21 +864,21 @@ struct MacDesktopDashboardView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "checklist")
                         .font(.system(size: 17))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                     Text("Objectifs & Tâches")
                         .font(AppFont.sans(size: 19, weight: .black))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                 }
                 Spacer()
                 Text("\(todos.filter { !$0.done }.count) restantes")
                     .font(AppFont.body(size: 11, weight: .semibold))
-                    .foregroundStyle(Color.white.opacity(0.50))
+                    .foregroundStyle(Color.secondary)
             }
 
             // Champ d'ajout rapide
             HStack(spacing: 10) {
                 Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.primary)
                     .font(.system(size: 19))
                 TextField("Nouvelle tâche à accomplir...", text: $newTaskTitle)
                     .font(AppFont.sans(size: 13, weight: .medium))
@@ -885,7 +886,7 @@ struct MacDesktopDashboardView: View {
                 if !newTaskTitle.isEmpty {
                     Button("Ajouter", action: addNewTask)
                         .font(AppFont.body(size: 12, weight: .bold))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                 }
             }
             .padding(12)
@@ -897,15 +898,15 @@ struct MacDesktopDashboardView: View {
                 VStack(spacing: 12) {
                     HStack(spacing: 8) {
                         Image(systemName: "sparkles")
-                            .foregroundStyle(Color.white.opacity(0.70))
+                            .foregroundStyle(Color.primary)
                         Text("Toutes les tâches du jour sont accomplies ! ✦")
                             .font(AppFont.body(size: 13, weight: .semibold))
-                            .foregroundStyle(Color.white)
+                            .foregroundStyle(Color.primary)
                     }
 
                     Text("Rien d'urgent pour l'instant. Tu peux ajouter une tâche ou choisir un focus rapide :")
                         .font(AppFont.body(size: 11, weight: .regular))
-                        .foregroundStyle(Color.white.opacity(0.50))
+                        .foregroundStyle(Color.secondary)
                         .multilineTextAlignment(.center)
 
                     HStack(spacing: 8) {
@@ -930,13 +931,13 @@ struct MacDesktopDashboardView: View {
                             } label: {
                                 Image(systemName: "circle")
                                     .font(.system(size: 17))
-                                    .foregroundStyle(Color.white.opacity(0.60))
+                                    .foregroundStyle(Color.secondary)
                             }
                             .buttonStyle(.plain)
 
                             Text(todo.title)
                                 .font(AppFont.sans(size: 14, weight: .bold))
-                                .foregroundStyle(Color.white)
+                                .foregroundStyle(Color.primary)
 
                             Spacer()
 
@@ -946,7 +947,7 @@ struct MacDesktopDashboardView: View {
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 3)
                                     .liquidGlassPill()
-                                    .foregroundStyle(Color.white.opacity(0.60))
+                                    .foregroundStyle(Color.secondary)
                             }
                         }
                         .padding(11)
@@ -967,7 +968,7 @@ struct MacDesktopDashboardView: View {
         } label: {
             Text(title)
                 .font(AppFont.body(size: 11, weight: .semibold))
-                .foregroundStyle(Color.white)
+                .foregroundStyle(Color.primary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
                 .liquidGlassPill()
@@ -990,21 +991,21 @@ struct MacDesktopDashboardView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Métriques du Jour")
                 .font(AppFont.sans(size: 18, weight: .black))
-                .foregroundStyle(Color.white)
+                .foregroundStyle(Color.primary)
 
             // Eau
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Label("Hydratation", systemImage: "drop.fill")
                         .font(AppFont.sans(size: 13, weight: .bold))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                     Spacer()
                     Text("\(waterToday) / \(waterGoal) ml")
                         .font(AppFont.body(size: 13, weight: .bold))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                 }
                 ProgressView(value: min(Double(waterToday), Double(waterGoal)), total: Double(waterGoal))
-                    .tint(Color.white)
+                    .tint(Color.primary)
 
                 HStack(spacing: 8) {
                     Spacer()
@@ -1020,7 +1021,7 @@ struct MacDesktopDashboardView: View {
                         .font(AppFont.body(size: 11, weight: .bold))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                     }
                     .buttonStyle(.plain)
                     .liquidGlassPill()
@@ -1037,7 +1038,7 @@ struct MacDesktopDashboardView: View {
                         .font(AppFont.body(size: 11, weight: .bold))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                     }
                     .buttonStyle(.plain)
                     .liquidGlassPill()
@@ -1051,14 +1052,14 @@ struct MacDesktopDashboardView: View {
                 HStack {
                     Label("Calories consommées", systemImage: "flame.fill")
                         .font(AppFont.sans(size: 13, weight: .bold))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                     Spacer()
                     Text("\(kcalToday) / \(kcalGoal) kcal")
                         .font(AppFont.body(size: 13, weight: .bold))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                 }
                 ProgressView(value: min(Double(kcalToday), Double(kcalGoal)), total: Double(kcalGoal))
-                    .tint(Color.white)
+                    .tint(Color.primary)
             }
             .padding(14)
             .liquidGlassCard(cornerRadius: 14)
@@ -1067,14 +1068,14 @@ struct MacDesktopDashboardView: View {
             HStack(spacing: 12) {
                 Image(systemName: "hourglass")
                     .font(.system(size: 19))
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.primary)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Jeûne Intermittent")
                         .font(AppFont.sans(size: 13, weight: .bold))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                     Text(activeFast != nil ? "En cours · \(Int((activeFast?.elapsed ?? 0) / 3600))h écoulées" : "Aucun jeûne actif")
                         .font(AppFont.body(size: 11, weight: .medium))
-                        .foregroundStyle(Color.white.opacity(0.50))
+                        .foregroundStyle(Color.secondary)
                 }
                 Spacer()
             }
@@ -1091,7 +1092,7 @@ struct MacDesktopDashboardView: View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Outils Rapides")
                 .font(AppFont.sans(size: 18, weight: .black))
-                .foregroundStyle(Color.white)
+                .foregroundStyle(Color.primary)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 toolTile(title: "HIIT / Tabata", icon: "timer", action: onOpenTabata)
@@ -1109,16 +1110,16 @@ struct MacDesktopDashboardView: View {
             VStack(spacing: 8) {
                 ZStack {
                     Circle()
-                        .fill(Color.white.opacity(0.10))
+                        .fill(Color.primary.opacity(0.08))
                         .frame(width: 40, height: 40)
-                        .overlay(Circle().strokeBorder(Color.white.opacity(0.20), lineWidth: 1))
+                        .overlay(Circle().strokeBorder(Color.primary.opacity(0.18), lineWidth: 1))
                     Image(systemName: icon)
                         .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                 }
                 Text(title)
                     .font(AppFont.sans(size: 12, weight: .bold))
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.primary)
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity)
@@ -1134,15 +1135,15 @@ struct MacDesktopDashboardView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "sparkles")
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.primary)
                 Text("Conseil Coach LifeOS")
                     .font(AppFont.sans(size: 14, weight: .black))
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.primary)
             }
 
             Text("Tu as maintenu une excellente régularité cette semaine. Prends 5 minutes pour ta séance de respiration en fin d'après-midi.")
                 .font(AppFont.body(size: 12, weight: .regular))
-                .foregroundStyle(Color.white.opacity(0.60))
+                .foregroundStyle(Color.secondary)
                 .lineSpacing(3)
 
             Button(action: onOpenAssistant) {
@@ -1151,7 +1152,7 @@ struct MacDesktopDashboardView: View {
                     Image(systemName: "arrow.right")
                 }
                 .font(AppFont.body(size: 12, weight: .bold))
-                .foregroundStyle(Color.white)
+                .foregroundStyle(Color.primary)
             }
             .buttonStyle(.plain)
             .padding(.top, 4)
@@ -1302,7 +1303,7 @@ struct MacDesktopCategoriesOverview: View {
                         .font(AppFont.body(size: 12, weight: .bold))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.primary)
                     }
                     .buttonStyle(.plain)
                     .liquidGlassPill()
@@ -1312,7 +1313,7 @@ struct MacDesktopCategoriesOverview: View {
                 // Barre de filtre rapide
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
-                        .foregroundStyle(Color.white.opacity(0.60))
+                        .foregroundStyle(Color.secondary)
                     TextField("Filtrer une catégorie ou un outil...", text: $searchText)
                         .textFieldStyle(.plain)
                         .font(AppFont.body(size: 13, weight: .regular))
@@ -1321,7 +1322,7 @@ struct MacDesktopCategoriesOverview: View {
                             searchText = ""
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(Color.white.opacity(0.60))
+                                .foregroundStyle(Color.secondary)
                         }
                         .buttonStyle(.plain)
                     }
@@ -1353,7 +1354,7 @@ struct MacDesktopCategoriesOverview: View {
                 // Numéro de rang
                 Text(String(format: "#%02d", rank))
                     .font(AppFont.body(size: 11, weight: .bold))
-                    .foregroundStyle(Color.white.opacity(0.60))
+                    .foregroundStyle(Color.secondary)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .liquidGlassPill()
@@ -1367,22 +1368,22 @@ struct MacDesktopCategoriesOverview: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(cat.title)
                     .font(AppFont.heading(size: 17, weight: .black))
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.primary)
 
                 Text(cat.subtitle)
                     .font(AppFont.body(size: 12, weight: .regular))
-                    .foregroundStyle(Color.white.opacity(0.55))
+                    .foregroundStyle(Color.secondary)
                     .lineLimit(2)
             }
 
             HStack {
                 Text("Ouvrir le module")
                     .font(AppFont.body(size: 11, weight: .bold))
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.primary)
                 Spacer()
                 Image(systemName: "arrow.right.circle.fill")
                     .font(.system(size: 18))
-                    .foregroundStyle(Color.white.opacity(0.85))
+                    .foregroundStyle(Color.primary.opacity(0.85))
             }
             .padding(.top, 4)
         }
