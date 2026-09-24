@@ -629,6 +629,18 @@ struct ShortcutsHomeView: View {
         }
     }
 
+    private func habitStreak(_ habit: Habit) -> Int {
+        let cal = Calendar.current
+        var streak = 0
+        var date = cal.startOfDay(for: .now)
+        while habit.completions.contains(where: { cal.isDate($0.date, inSameDayAs: date) }) {
+            streak += 1
+            guard let prev = cal.date(byAdding: .day, value: -1, to: date) else { break }
+            date = prev
+        }
+        return streak
+    }
+
     private func habitRow(_ habit: Habit) -> some View {
         let cal = Calendar.current
         let done = habit.completions.contains { cal.isDateInToday($0.date) }

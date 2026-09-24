@@ -1073,7 +1073,7 @@ struct ToolSearchView: View {
 
     private func rowLabel(_ hit: Hit) -> some View {
         HStack(spacing: 12) {
-            IconBadge(icon: hit.tool.icon, tint: themedTint(hit.cat), size: 40)
+            IconBadge(icon: hit.tool.icon, tint: hit.cat.tint, size: 40)
             VStack(alignment: .leading, spacing: 2) {
                 Text(hit.tool.title).font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary).lineLimit(1)
