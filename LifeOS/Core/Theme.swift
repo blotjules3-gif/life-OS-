@@ -456,6 +456,127 @@ struct LiquidGlassPillModifier: ViewModifier {
     }
 }
 
+// MARK: - Système Apple Aperçu (Preview iOS) : Boutons capsules translucides, îlots flottants & coins ultra-arrondis
+
+struct ApplePreviewPillModifier: ViewModifier {
+    var height: CGFloat = 52
+    var strokeWidth: CGFloat = 0.8
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .frame(height: height)
+            .background {
+                Capsule()
+                    .fill(colorScheme == .dark
+                          ? Color(white: 0.12, opacity: 0.65)
+                          : Color.white.opacity(0.85))
+                    .background(.ultraThinMaterial, in: Capsule())
+            }
+            .overlay(
+                Capsule()
+                    .strokeBorder(
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.35 : 0.15), location: 0.0),
+                                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.10 : 0.06), location: 0.5),
+                                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.20 : 0.10), location: 1.0)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: strokeWidth
+                    )
+            )
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.28 : 0.04), radius: 8, x: 0, y: 3)
+    }
+}
+
+struct ApplePreviewIslandModifier: ViewModifier {
+    var strokeWidth: CGFloat = 0.6
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background {
+                Capsule()
+                    .fill(colorScheme == .dark
+                          ? Color(white: 0.10, opacity: 0.70)
+                          : Color.white.opacity(0.85))
+                    .background(.ultraThinMaterial, in: Capsule())
+            }
+            .overlay(
+                Capsule()
+                    .strokeBorder(
+                        Color.primary.opacity(colorScheme == .dark ? 0.25 : 0.12),
+                        lineWidth: strokeWidth
+                    )
+            )
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.35 : 0.08), radius: 12, x: 0, y: 4)
+    }
+}
+
+struct ApplePreviewCircleModifier: ViewModifier {
+    var size: CGFloat = 40
+    var strokeWidth: CGFloat = 0.6
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .frame(width: size, height: size)
+            .background {
+                Circle()
+                    .fill(colorScheme == .dark
+                          ? Color(white: 0.12, opacity: 0.70)
+                          : Color.white.opacity(0.85))
+                    .background(.ultraThinMaterial, in: Circle())
+            }
+            .overlay(
+                Circle()
+                    .strokeBorder(
+                        Color.primary.opacity(colorScheme == .dark ? 0.25 : 0.12),
+                        lineWidth: strokeWidth
+                    )
+            )
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.28 : 0.05), radius: 8, x: 0, y: 3)
+    }
+}
+
+struct ApplePreviewCardModifier: ViewModifier {
+    var cornerRadius: CGFloat = 28
+    var strokeWidth: CGFloat = 0.8
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(colorScheme == .dark
+                          ? Color(white: 0.09, opacity: 0.65)
+                          : Color.white.opacity(0.88))
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.28 : 0.12), location: 0.0),
+                                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.04), location: 0.5),
+                                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.16 : 0.08), location: 1.0)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: strokeWidth
+                    )
+            )
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.35 : 0.05), radius: 14, x: 0, y: 6)
+    }
+}
+
 /// Icône de catégorie en verre liquide monochrome : remplace les blocs de couleur par un squircle translucide épuré
 struct CategoryGlassIcon: View {
     let category: AppCategory
@@ -552,6 +673,26 @@ extension View {
     /// Capsule / Pillule Liquid Glass avec bordure transparente
     func liquidGlassPill(tint: Color? = nil, strokeWidth: CGFloat = 1.0) -> some View {
         self.modifier(LiquidGlassPillModifier(tint: tint, strokeWidth: strokeWidth))
+    }
+
+    /// Bouton Capsule translucide style Apple Aperçu (Preview iOS)
+    func applePreviewPill(height: CGFloat = 52, strokeWidth: CGFloat = 0.8) -> some View {
+        self.modifier(ApplePreviewPillModifier(height: height, strokeWidth: strokeWidth))
+    }
+
+    /// Îlot / Barre d'outils flottante capsule style Apple Aperçu
+    func applePreviewIsland(strokeWidth: CGFloat = 0.6) -> some View {
+        self.modifier(ApplePreviewIslandModifier(strokeWidth: strokeWidth))
+    }
+
+    /// Bouton circulaire flottant style Apple Aperçu (ex: retour, options)
+    func applePreviewCircle(size: CGFloat = 40, strokeWidth: CGFloat = 0.6) -> some View {
+        self.modifier(ApplePreviewCircleModifier(size: size, strokeWidth: strokeWidth))
+    }
+
+    /// Carte / Conteneur ultra-arrondi (coins continus généreux 28-34pt) style Apple Aperçu
+    func applePreviewCard(cornerRadius: CGFloat = 28, strokeWidth: CGFloat = 0.8) -> some View {
+        self.modifier(ApplePreviewCardModifier(cornerRadius: cornerRadius, strokeWidth: strokeWidth))
     }
 
     /// Ombre douce diffuse — profondeur flottante iOS 26.

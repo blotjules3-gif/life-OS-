@@ -268,7 +268,7 @@ struct MacDesktopMainView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: section.icon)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 15, weight: isSelected ? .bold : .semibold))
                     .foregroundStyle(isSelected ? Color.primary : Color.secondary)
                     .frame(width: 22)
 
@@ -279,15 +279,14 @@ struct MacDesktopMainView: View {
 
                 Spacer()
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 14)
             .padding(.vertical, 8)
             .background {
                 if isSelected {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.primary.opacity(0.12))
+                    Capsule()
+                        .fill(Color.primary.opacity(0.10))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .strokeBorder(Color.primary.opacity(0.24), lineWidth: 1)
+                            Capsule().strokeBorder(Color.primary.opacity(0.18), lineWidth: 0.8)
                         )
                 }
             }
@@ -551,7 +550,7 @@ struct MacDesktopDashboardView: View {
             }
         }
         .padding(20)
-        .liquidGlassCard(cornerRadius: 18)
+        .applePreviewCard(cornerRadius: 26)
     }
 
     // MARK: - 1. Hero Header Panoramique avec DailyScoreRing (Monochrome & Équilibré)
@@ -572,7 +571,7 @@ struct MacDesktopDashboardView: View {
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .liquidGlassPill()
+                .applePreviewIsland()
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Bonjour, \(displayName)")
@@ -596,7 +595,7 @@ struct MacDesktopDashboardView: View {
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .liquidGlassPill()
+                    .applePreviewIsland()
 
                     HStack(spacing: 6) {
                         Image(systemName: "flame.fill")
@@ -607,10 +606,43 @@ struct MacDesktopDashboardView: View {
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .liquidGlassPill()
+                    .applePreviewIsland()
+                }
+
+                // Boutons d'actions rapides Apple Preview
+                HStack(spacing: 10) {
+                    Button {
+                        onOpenHabitCreator()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 13, weight: .bold))
+                            Text("Nouvelle habitude")
+                                .font(AppFont.heading(size: 12, weight: .bold))
+                        }
+                        .foregroundStyle(Color.primary)
+                        .padding(.horizontal, 14)
+                    }
+                    .buttonStyle(.plain)
+                    .applePreviewPill(height: 38)
+
+                    Button {
+                        onOpenAssistant()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 13, weight: .semibold))
+                            Text("Assistant IA")
+                                .font(AppFont.heading(size: 12, weight: .bold))
+                        }
+                        .foregroundStyle(Color.primary)
+                        .padding(.horizontal, 14)
+                    }
+                    .buttonStyle(.plain)
+                    .applePreviewPill(height: 38)
                 }
             }
-            .frame(minWidth: 260, maxWidth: 330, alignment: .leading)
+            .frame(minWidth: 260, maxWidth: 350, alignment: .leading)
 
             Spacer(minLength: 8)
 
@@ -654,7 +686,7 @@ struct MacDesktopDashboardView: View {
                 .frame(width: 320)
         }
         .padding(24)
-        .liquidGlassCard(cornerRadius: 22)
+        .applePreviewCard(cornerRadius: 28)
     }
 
     private func heroVitalTile(icon: String, title: String, value: String, detail: String) -> some View {
@@ -705,25 +737,25 @@ struct MacDesktopDashboardView: View {
 
                 Spacer()
 
-                // Filtres de temps monochromes
+                // Filtres de temps monochromes style Apple Preview
                 HStack(spacing: 4) {
                     ForEach(HabitFilter.allCases, id: \.self) { filter in
                         Button {
                             selectedFilter = filter
                         } label: {
                             Text(filter.rawValue)
-                                .font(AppFont.body(size: 11, weight: .semibold))
+                                .font(AppFont.body(size: 11, weight: selectedFilter == filter ? .bold : .semibold))
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 5)
-                                .background(selectedFilter == filter ? Color.primary.opacity(0.15) : Color.clear)
+                                .background(selectedFilter == filter ? Color.primary.opacity(0.12) : Color.clear)
                                 .foregroundStyle(selectedFilter == filter ? Color.primary : Color.secondary)
                                 .clipShape(Capsule())
                         }
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(3)
-                .liquidGlassPill()
+                .padding(2)
+                .applePreviewIsland()
 
                 Button {
                     onOpenHabitCreator()
@@ -734,11 +766,10 @@ struct MacDesktopDashboardView: View {
                     }
                     .font(AppFont.body(size: 11, weight: .bold))
                     .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
                     .foregroundStyle(Color.primary)
                 }
                 .buttonStyle(.plain)
-                .liquidGlassPill()
+                .applePreviewPill(height: 32)
             }
 
             if filteredHabits.isEmpty {
@@ -757,7 +788,7 @@ struct MacDesktopDashboardView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 32)
-                .liquidGlassCard(cornerRadius: 16)
+                .applePreviewCard(cornerRadius: 18)
             } else {
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
                     ForEach(filteredHabits) { habit in
@@ -767,7 +798,7 @@ struct MacDesktopDashboardView: View {
             }
         }
         .padding(20)
-        .liquidGlassCard(cornerRadius: 18)
+        .applePreviewCard(cornerRadius: 26)
     }
 
     private func desktopHabitCard(_ habit: Habit) -> some View {
@@ -875,13 +906,14 @@ struct MacDesktopDashboardView: View {
                     .foregroundStyle(Color.secondary)
             }
 
-            // Champ d'ajout rapide
+            // Champ d'ajout rapide style îlot Apple Preview
             HStack(spacing: 10) {
                 Image(systemName: "plus.circle.fill")
                     .foregroundStyle(Color.primary)
-                    .font(.system(size: 19))
+                    .font(.system(size: 18, weight: .bold))
                 TextField("Nouvelle tâche à accomplir...", text: $newTaskTitle)
                     .font(AppFont.sans(size: 13, weight: .medium))
+                    .textFieldStyle(.plain)
                     .onSubmit(addNewTask)
                 if !newTaskTitle.isEmpty {
                     Button("Ajouter", action: addNewTask)
@@ -889,8 +921,9 @@ struct MacDesktopDashboardView: View {
                         .foregroundStyle(Color.primary)
                 }
             }
-            .padding(12)
-            .liquidGlassCard(cornerRadius: 12)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .applePreviewIsland()
 
             // Liste des tâches ou suggestions productives si vide (pour ne laisser aucun vide)
             let pending = todos.filter { !$0.done }
@@ -919,7 +952,7 @@ struct MacDesktopDashboardView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 18)
-                .liquidGlassCard(cornerRadius: 14)
+                .applePreviewCard(cornerRadius: 18)
             } else {
                 VStack(spacing: 8) {
                     ForEach(pending.prefix(6)) { todo in
@@ -946,18 +979,18 @@ struct MacDesktopDashboardView: View {
                                     .font(AppFont.body(size: 10, weight: .semibold))
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 3)
-                                    .liquidGlassPill()
+                                    .applePreviewIsland()
                                     .foregroundStyle(Color.secondary)
                             }
                         }
                         .padding(11)
-                        .liquidGlassCard(cornerRadius: 10)
+                        .applePreviewCard(cornerRadius: 14)
                     }
                 }
             }
         }
         .padding(20)
-        .liquidGlassCard(cornerRadius: 18)
+        .applePreviewCard(cornerRadius: 26)
     }
 
     private func quickSuggestionChip(_ title: String) -> some View {
@@ -1080,10 +1113,10 @@ struct MacDesktopDashboardView: View {
                 Spacer()
             }
             .padding(14)
-            .liquidGlassCard(cornerRadius: 14)
+            .applePreviewCard(cornerRadius: 16)
         }
         .padding(20)
-        .liquidGlassCard(cornerRadius: 18)
+        .applePreviewCard(cornerRadius: 26)
     }
 
     // MARK: - Raccourcis Outils Rapides (Monochrome)
@@ -1102,7 +1135,7 @@ struct MacDesktopDashboardView: View {
             }
         }
         .padding(20)
-        .liquidGlassCard(cornerRadius: 18)
+        .applePreviewCard(cornerRadius: 26)
     }
 
     private func toolTile(title: String, icon: String, action: @escaping () -> Void) -> some View {
@@ -1124,7 +1157,7 @@ struct MacDesktopDashboardView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .liquidGlassCard(cornerRadius: 12)
+            .applePreviewCard(cornerRadius: 16)
         }
         .buttonStyle(.plain)
     }
@@ -1158,7 +1191,7 @@ struct MacDesktopDashboardView: View {
             .padding(.top, 4)
         }
         .padding(18)
-        .liquidGlassCard(cornerRadius: 18)
+        .applePreviewCard(cornerRadius: 24)
     }
 }
 
@@ -1301,16 +1334,15 @@ struct MacDesktopCategoriesOverview: View {
                             Text("Trier les catégories")
                         }
                         .font(AppFont.body(size: 12, weight: .bold))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, 16)
                         .foregroundStyle(Color.primary)
                     }
                     .buttonStyle(.plain)
-                    .liquidGlassPill()
+                    .applePreviewPill(height: 38)
                     .help("Modifier l'ordre d'affichage des catégories")
                 }
 
-                // Barre de filtre rapide
+                // Barre de filtre rapide style îlot Apple Preview
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(Color.secondary)
@@ -1327,9 +1359,9 @@ struct MacDesktopCategoriesOverview: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 16)
                 .padding(.vertical, 10)
-                .liquidGlassCard(cornerRadius: 12)
+                .applePreviewIsland()
 
                 // Grille de cartes
                 LazyVGrid(columns: columns, spacing: 18) {
@@ -1357,7 +1389,7 @@ struct MacDesktopCategoriesOverview: View {
                     .foregroundStyle(Color.secondary)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
-                    .liquidGlassPill()
+                    .applePreviewIsland()
 
                 Spacer()
 
@@ -1388,7 +1420,7 @@ struct MacDesktopCategoriesOverview: View {
             .padding(.top, 4)
         }
         .padding(18)
-        .liquidGlassCard(cornerRadius: 18)
+        .applePreviewCard(cornerRadius: 24)
     }
 }
 

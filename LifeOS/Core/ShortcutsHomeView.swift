@@ -349,20 +349,62 @@ struct ShortcutsHomeView: View {
                                     onAdd: { showWidgetGallery = true },
                                     onDone: exitHomeEditing)
                     }
-                    HStack(alignment: .bottom) {
-                        Text(userName.isEmpty ? greeting : "\(greeting), \(userName)")
-                            .font(AppFont.sans(size: 38, weight: .black))
-                            .textCase(.uppercase)
-                            .kerning(-0.8)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.7)
-                        Spacer()
-                        if todayEnergyScore > 0 {
-                            energyBadge
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(alignment: .bottom) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(userName.isEmpty ? greeting : "\(greeting), \(userName)")
+                                    .font(AppFont.sans(size: 34, weight: .black))
+                                    .textCase(.uppercase)
+                                    .kerning(-0.8)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.7)
+                                Text("Gérez votre journée, vos habitudes et vos objectifs.")
+                                    .font(AppFont.body(size: 14, weight: .regular))
+                                    .foregroundStyle(Color.secondary)
+                            }
+                            Spacer()
+                            if todayEnergyScore > 0 {
+                                energyBadge
+                            }
                         }
                     }
                     .padding(.horizontal, 4)
                     .staggered(0, appeared: homeAppeared)
+
+                    // Boutons capsules style Apple Aperçu ("Nouveau document" / "Scanner")
+                    VStack(spacing: 12) {
+                        Button {
+                            showAllTasks = true
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 17, weight: .bold))
+                                Text("Nouvelle tâche")
+                                    .font(AppFont.heading(size: 16, weight: .bold))
+                            }
+                            .foregroundStyle(Color.primary)
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.plain)
+                        .applePreviewPill(height: 52)
+
+                        Button {
+                            editingShortcuts = true
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "square.grid.2x2")
+                                    .font(.system(size: 16, weight: .semibold))
+                                Text("Personnaliser les raccourcis")
+                                    .font(AppFont.heading(size: 16, weight: .bold))
+                            }
+                            .foregroundStyle(Color.primary)
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.plain)
+                        .applePreviewPill(height: 52)
+                    }
+                    .padding(.horizontal, 2)
+                    .staggered(1, appeared: homeAppeared)
 
                     // Bandeaux de contexte: ils apparaissent quand il y a
                     // quelque chose a dire et ne se deplacent pas. Un message
@@ -1221,21 +1263,27 @@ struct ShortcutsHomeView: View {
     }
 
     private func sectionHeader(_ title: String, trailing: String? = nil, action: @escaping () -> Void = {}) -> some View {
-        HStack(alignment: .firstTextBaseline) {
+        HStack(alignment: .center) {
             Text(title)
-                .font(AppFont.sans(size: 20, weight: .black))
+                .font(AppFont.heading(size: 20, weight: .black))
                 .textCase(.uppercase)
                 .kerning(-0.3)
+                .foregroundStyle(Color.primary)
             Spacer()
             if let trailing {
                 Button(action: action) {
-                    Text(trailing)
-                        .font(AppFont.body(size: 11, weight: .bold))
-                        .textCase(.uppercase)
-                        .kerning(0.8)
-                        .foregroundStyle(Theme.textPrimary)
+                    HStack(spacing: 5) {
+                        Text(trailing)
+                            .font(AppFont.body(size: 11, weight: .bold))
+                            .textCase(.uppercase)
+                            .kerning(0.5)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 9, weight: .bold))
+                    }
+                    .foregroundStyle(Color.primary)
                 }
                 .buttonStyle(.plain)
+                .applePreviewIsland()
             }
         }
         .padding(.horizontal, 4)

@@ -317,27 +317,43 @@ struct FloatingTabBar: View {
     var body: some View {
         GeometryReader { geo in
             let m = TabBarMetrics.forWidth(geo.size.width)
+            let horizontalMargin = max(24, m.margin + 16)
 
-            HStack(spacing: 0) {
+            HStack(spacing: 4) {
                 ForEach(tabs) { t in
                     tabBtn(t, m: m)
                 }
                 assistantBtn(m: m)
             }
-            .frame(height: m.height)
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .frame(height: m.height + 4)
             .background(barBackground)
-            .overlay(Capsule().stroke(Theme.hairline, lineWidth: 0.5))
+            .overlay(
+                Capsule()
+                    .strokeBorder(
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color.primary.opacity(scheme == .dark ? 0.32 : 0.15), location: 0.0),
+                                .init(color: Color.primary.opacity(scheme == .dark ? 0.08 : 0.05), location: 0.50),
+                                .init(color: Color.primary.opacity(scheme == .dark ? 0.18 : 0.10), location: 1.0)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 0.8
+                    )
+            )
             .clipShape(Capsule())
-            .softElevation(true)
-            // Le vide est IDENTIQUE à gauche, en bas et à droite.
-            .padding(.horizontal, m.margin)
-            .padding(.bottom, m.margin)
-            .frame(maxHeight: .infinity, alignment: .bottom)
+            .shadow(color: Color.black.opacity(scheme == .dark ? 0.40 : 0.08), radius: 18, x: 0, y: 7)
+            .padding(.horizontal, horizontalMargin)
+            .padding(.bottom, m.margin + 4)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            .animation(.spring(response: 0.32, dampingFraction: 0.76), value: selected)
             .animation(.easeInOut(duration: 0.3), value: serverStatus.isOnline)
         }
         .frame(height: TabBarMetrics.forWidth(UIScreen.main.bounds.width).height
-                     + TabBarMetrics.forWidth(UIScreen.main.bounds.width).margin)
+                     + TabBarMetrics.forWidth(UIScreen.main.bounds.width).margin + 12)
         #if DEBUG
         .sheet(isPresented: $showServerConfig) {
             ServerConfigView {
@@ -348,20 +364,14 @@ struct FloatingTabBar: View {
         #endif
     }
 
-    /// Verre translucide qui prend la couleur de ce qu'il y a derrière,
-    /// comme la barre de Revolut. Vrai Liquid Glass sur iOS 26, matériau sinon.
+    /// Verre translucide ultra-fin façon Apple Aperçu
     @ViewBuilder private var barBackground: some View {
-        if #available(iOS 26.0, *) {
-            // Vrai Liquid Glass : il réfracte le fond, donc il prend sa couleur.
-            Color.clear.glassEffect(.regular, in: .capsule)
-        } else {
-            // Avant iOS 26 : le matériau le plus fin, pour rester translucide
-            // comme la barre de Revolut plutôt qu'un aplat blanc.
-            Capsule().fill(.ultraThinMaterial)
-        }
+        Capsule()
+            .fill(scheme == .dark ? Color(white: 0.10, opacity: 0.72) : Color.white.opacity(0.85))
+            .background(.ultraThinMaterial, in: Capsule())
     }
 
-    /// L'assistant devient le 5e onglet, comme RevPoints chez Revolut.
+    /// L'assistant devient le 5e onglet intégré dans l'îlot
     private func assistantBtn(m: TabBarMetrics) -> some View {
         Button {
             Haptics.tap()
@@ -372,7 +382,7 @@ struct FloatingTabBar: View {
                 ZStack {
                     Image(systemName: "infinity")
                         .font(.system(size: m.icon, weight: .medium))
-                        .foregroundStyle(Color.primary.opacity(0.55))
+                        .foregroundStyle(Color.primary.opacity(0.60))
                     if serverStatus.isOnline != nil {
                         Circle()
                             .fill(serverStatus.dotColor)
@@ -382,11 +392,12 @@ struct FloatingTabBar: View {
                     }
                 }
                 Text("Assistant")
-                    .font(.system(size: m.label, weight: .medium))
-                    .foregroundStyle(Color.primary.opacity(0.55))
+                    .font(AppFont.body(size: m.label, weight: .medium))
+                    .foregroundStyle(Color.primary.opacity(0.60))
                     .lineLimit(1).minimumScaleFactor(0.85)
             }
             .frame(maxWidth: .infinity)
+            .frame(maxHeight: .infinity)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -400,17 +411,27 @@ struct FloatingTabBar: View {
             withAnimation(anim) { selected = t }
             if t == .profile { Haptics.medium() } else { Haptics.tap() }
         } label: {
-            VStack(spacing: 3) {
-                Image(systemName: isOn ? t.iconFill : t.icon)
-                    .font(.system(size: m.icon, weight: isOn ? .semibold : .medium))
-                    .symbolRenderingMode(.hierarchical)
-                Text(t.label)
-                    .font(.system(size: m.label, weight: isOn ? .semibold : .medium))
-                    .lineLimit(1).minimumScaleFactor(0.85)
+            ZStack {
+                // Pastille dépolie Apple Preview enveloppant l'onglet actif
+                if isOn {
+                    Capsule()
+                        .fill(scheme == .dark ? Color.white.opacity(0.14) : Color.primary.opacity(0.08))
+                        .matchedGeometryEffect(id: "activeTabPill", in: ns)
+                }
+
+                VStack(spacing: 3) {
+                    Image(systemName: isOn ? t.iconFill : t.icon)
+                        .font(.system(size: m.icon, weight: isOn ? .bold : .medium))
+                        .symbolRenderingMode(.hierarchical)
+                    Text(t.label)
+                        .font(AppFont.body(size: m.label, weight: isOn ? .bold : .medium))
+                        .lineLimit(1).minimumScaleFactor(0.85)
+                }
+                .padding(.vertical, 4)
+                .foregroundStyle(isOn ? Color.primary : Color.primary.opacity(0.55))
             }
-            // Actif = pleine encre. Inactif = estompé. Pas de pastille criarde.
-            .foregroundStyle(isOn ? Color.primary : Color.primary.opacity(0.5))
             .frame(maxWidth: .infinity)
+            .frame(maxHeight: .infinity)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
