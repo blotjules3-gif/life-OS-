@@ -303,7 +303,7 @@ enum Theme {
     @ViewBuilder static var background: some View { screenBG }
 }
 
-/// Aura ambiante fluide très tamisée et sombre se déplaçant très lentement à travers l'écran
+/// Aura ambiante fluide monochrome très tamisée se déplaçant très lentement à travers l'écran
 struct AmbientAuraBackdrop: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var phase: CGFloat = 0.0
@@ -322,45 +322,43 @@ struct AmbientAuraBackdrop: View {
                 }
 
                 if colorScheme == .dark {
-                    // Orbe 1 : Indigo nocturne tamisé
+                    // Orbes monochromes lunaires / argentés subtils — aucun pixel de couleur
                     Circle()
-                        .fill(Color(hex: 0x1E1238).opacity(0.50))
+                        .fill(Color.white.opacity(0.045))
                         .frame(width: max(w * 0.65, 380), height: max(w * 0.65, 380))
-                        .blur(radius: 130)
+                        .blur(radius: 140)
                         .offset(
                             x: cos(phase) * (w * 0.22),
                             y: sin(phase * 0.8) * (h * 0.16) - (h * 0.12)
                         )
 
-                    // Orbe 2 : Océan / Cyan profond très sombre
                     Circle()
-                        .fill(Color(hex: 0x082532).opacity(0.45))
+                        .fill(Color(white: 0.90).opacity(0.035))
                         .frame(width: max(w * 0.58, 340), height: max(w * 0.58, 340))
-                        .blur(radius: 140)
+                        .blur(radius: 150)
                         .offset(
                             x: sin(phase * 0.7) * (w * 0.25),
                             y: cos(phase * 0.9) * (h * 0.18) + (h * 0.08)
                         )
 
-                    // Orbe 3 : Prune / Magenta très sombre
                     Circle()
-                        .fill(Color(hex: 0x2A0E22).opacity(0.40))
+                        .fill(Color(white: 0.80).opacity(0.038))
                         .frame(width: max(w * 0.50, 300), height: max(w * 0.50, 300))
-                        .blur(radius: 120)
+                        .blur(radius: 130)
                         .offset(
                             x: -cos(phase * 0.6) * (w * 0.20),
                             y: -sin(phase * 0.7) * (h * 0.14)
                         )
                 } else {
-                    // Mode clair : auras pastel très subtiles
+                    // Mode clair : lueurs blanches subtiles
                     Circle()
-                        .fill(Color(hex: 0x9FD0E8).opacity(0.30))
+                        .fill(Color.white.opacity(0.60))
                         .frame(width: max(w * 0.60, 340), height: max(w * 0.60, 340))
                         .blur(radius: 110)
                         .offset(x: cos(phase) * (w * 0.20), y: sin(phase * 0.8) * (h * 0.15))
 
                     Circle()
-                        .fill(Color(hex: 0xC7A6D8).opacity(0.25))
+                        .fill(Color(white: 0.88).opacity(0.40))
                         .frame(width: max(w * 0.55, 300), height: max(w * 0.55, 300))
                         .blur(radius: 115)
                         .offset(x: sin(phase * 0.7) * (w * 0.22), y: cos(phase * 0.9) * (h * 0.16))
@@ -458,7 +456,7 @@ struct LiquidGlassPillModifier: ViewModifier {
     }
 }
 
-/// Icône de catégorie en verre liquide : remplace les blocs de couleur criards par un squircle translucide
+/// Icône de catégorie en verre liquide monochrome : remplace les blocs de couleur par un squircle translucide épuré
 struct CategoryGlassIcon: View {
     let category: AppCategory
     var size: CGFloat = 40
@@ -469,15 +467,15 @@ struct CategoryGlassIcon: View {
 
     var body: some View {
         ZStack {
-            // Lueur fusion douce et élégante en arrière-plan
+            // Lueur monochrome subtile
             Circle()
-                .fill(category.tint.opacity(colorScheme == .dark ? 0.22 : 0.14))
+                .fill(Color.white.opacity(colorScheme == .dark ? 0.08 : 0.12))
                 .frame(width: size * 0.75, height: size * 0.75)
-                .blur(radius: 8)
+                .blur(radius: 6)
 
-            // Squircle en verre liquide translucide à faible opacité (non saturé, ultra premium)
+            // Squircle en verre liquide translucide monochrome
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(category.tint.opacity(colorScheme == .dark ? 0.14 : 0.08))
+                .fill(colorScheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.04))
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
                 .frame(width: size, height: size)
                 .overlay(
@@ -485,9 +483,9 @@ struct CategoryGlassIcon: View {
                         .strokeBorder(
                             LinearGradient(
                                 stops: [
-                                    .init(color: Color.white.opacity(colorScheme == .dark ? 0.48 : 0.70), location: 0.0),
-                                    .init(color: category.tint.opacity(colorScheme == .dark ? 0.35 : 0.30), location: 0.5),
-                                    .init(color: Color.white.opacity(colorScheme == .dark ? 0.18 : 0.25), location: 1.0)
+                                    .init(color: Color.white.opacity(colorScheme == .dark ? 0.45 : 0.70), location: 0.0),
+                                    .init(color: Color.white.opacity(colorScheme == .dark ? 0.15 : 0.25), location: 0.5),
+                                    .init(color: Color.white.opacity(colorScheme == .dark ? 0.08 : 0.15), location: 1.0)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -496,10 +494,10 @@ struct CategoryGlassIcon: View {
                         )
                 )
 
-            // Symbole net et contrasté
+            // Symbole monochrome net et contrasté
             Image(systemName: category.icon)
                 .font(.system(size: iconSize, weight: .semibold))
-                .foregroundStyle(category.tint)
+                .foregroundStyle(Color.primary)
         }
     }
 }

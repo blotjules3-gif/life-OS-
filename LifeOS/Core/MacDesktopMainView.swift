@@ -54,16 +54,7 @@ enum DesktopNavSection: Hashable, Identifiable {
     }
 
     var color: Color {
-        switch self {
-        case .dashboard: return Color.accentColor
-        case .habits: return Color(hex: 0x4CC38A)
-        case .wakeup: return Color(hex: 0x6C7BF1)
-        case .assistant: return Color(hex: 0x9B6CF1)
-        case .tabata: return Color(hex: 0xF1746C)
-        case .category(let cat): return cat.tint
-        case .allCategories: return .secondary
-        case .profile: return .primary
-        }
+        Color.white
     }
 }
 
@@ -95,10 +86,8 @@ struct MacDesktopMainView: View {
         NavigationSplitView {
             sidebarContent
                 .navigationSplitViewColumnWidth(min: 240, ideal: 270, max: 320)
-                .background(AmbientAuraBackdrop())
         } detail: {
             detailContent
-                .background(AmbientAuraBackdrop())
         }
         .background(AmbientAuraBackdrop())
         .sheet(isPresented: $showNewHabitModal) {
@@ -124,7 +113,7 @@ struct MacDesktopMainView: View {
         }
     }
 
-    // MARK: - Barre latérale macOS
+    // MARK: - Barre latérale macOS Monochrome Unifiée
 
     private var sidebarContent: some View {
         VStack(spacing: 0) {
@@ -132,82 +121,97 @@ struct MacDesktopMainView: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(Color.accentColor.opacity(0.15))
+                        .fill(Color.white.opacity(0.10))
                         .frame(width: 38, height: 38)
+                        .overlay(Circle().strokeBorder(Color.white.opacity(0.20), lineWidth: 1))
                     Image(systemName: "infinity")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(Color.white)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("LifeOS")
                         .font(AppFont.heading(size: 19, weight: .black))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(Color.white)
                     Text("Système Personnel")
                         .font(AppFont.body(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.white.opacity(0.50))
                 }
 
                 Spacer()
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(Color.white.opacity(0.03))
+            .background(Color.white.opacity(0.02))
             .overlay(
                 Rectangle()
                     .frame(height: 1)
-                    .foregroundStyle(LiquidGlass.borderGradient(opacity: 0.5)),
+                    .foregroundStyle(Color.white.opacity(0.08)),
                 alignment: .bottom
             )
 
-            // Navigation List avec ordre personnalisé des catégories
-            List(selection: $selection) {
-                Section {
-                    navRow(.dashboard)
-                    navRow(.habits)
-                    navRow(.assistant)
-                    navRow(.tabata)
-                } header: {
-                    Text("ESPACE DE TRAVAIL")
-                        .font(AppFont.body(size: 11, weight: .bold))
-                        .foregroundStyle(.secondary)
-                }
+            // Navigation List fluide monochrome
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 18) {
+                    // Section ESPACE DE TRAVAIL
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("ESPACE DE TRAVAIL")
+                            .font(AppFont.body(size: 10, weight: .bold))
+                            .foregroundStyle(Color.white.opacity(0.40))
+                            .kerning(0.8)
+                            .padding(.horizontal, 12)
+                            .padding(.bottom, 4)
 
-                Section {
-                    ForEach(categoryOrderManager.order) { cat in
-                        navRow(.category(cat))
+                        sidebarButton(.dashboard)
+                        sidebarButton(.habits)
+                        sidebarButton(.assistant)
+                        sidebarButton(.tabata)
                     }
-                } header: {
-                    HStack {
-                        Text("CATÉGORIES")
-                            .font(AppFont.body(size: 11, weight: .bold))
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Button {
-                            showOrderSheet = true
-                        } label: {
-                            HStack(spacing: 3) {
-                                Image(systemName: "arrow.up.arrow.down")
-                                Text("Trier")
+
+                    // Section CATÉGORIES
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack {
+                            Text("CATÉGORIES")
+                                .font(AppFont.body(size: 10, weight: .bold))
+                                .foregroundStyle(Color.white.opacity(0.40))
+                                .kerning(0.8)
+                            Spacer()
+                            Button {
+                                showOrderSheet = true
+                            } label: {
+                                HStack(spacing: 3) {
+                                    Image(systemName: "arrow.up.arrow.down")
+                                    Text("Trier")
+                                }
+                                .font(AppFont.body(size: 11, weight: .semibold))
+                                .foregroundStyle(Color.white.opacity(0.60))
                             }
-                            .font(AppFont.body(size: 11, weight: .semibold))
-                            .foregroundStyle(Color.accentColor)
+                            .buttonStyle(.plain)
+                            .help("Trier l'ordre des catégories")
                         }
-                        .buttonStyle(.plain)
-                        .help("Trier l'ordre des catégories")
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 4)
+
+                        ForEach(categoryOrderManager.order) { cat in
+                            sidebarButton(.category(cat))
+                        }
+                    }
+
+                    // Section VUE D'ENSEMBLE
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("VUE D'ENSEMBLE")
+                            .font(AppFont.body(size: 10, weight: .bold))
+                            .foregroundStyle(Color.white.opacity(0.40))
+                            .kerning(0.8)
+                            .padding(.horizontal, 12)
+                            .padding(.bottom, 4)
+
+                        sidebarButton(.allCategories)
                     }
                 }
-
-                Section {
-                    navRow(.allCategories)
-                } header: {
-                    Text("VUE D'ENSEMBLE")
-                        .font(AppFont.body(size: 11, weight: .bold))
-                        .foregroundStyle(.secondary)
-                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 12)
             }
-            .listStyle(.sidebar)
-            .scrollContentBackground(.hidden)
 
             // Profil & Réglages en bas de la barre latérale
             Button {
@@ -215,22 +219,23 @@ struct MacDesktopMainView: View {
             } label: {
                 HStack(spacing: 12) {
                     Circle()
-                        .fill(Color.accentColor.opacity(0.2))
+                        .fill(Color.white.opacity(0.10))
                         .frame(width: 34, height: 34)
+                        .overlay(Circle().strokeBorder(Color.white.opacity(0.20), lineWidth: 1))
                         .overlay(
                             Text(String(displayName.prefix(1)).uppercased())
                                 .font(AppFont.heading(size: 14, weight: .black))
-                                .foregroundStyle(Color.accentColor)
+                                .foregroundStyle(Color.white)
                         )
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(displayName)
                             .font(AppFont.heading(size: 13, weight: .bold))
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(Color.white)
                             .lineLimit(1)
                         Text(userEmail.isEmpty ? "Compte local" : userEmail)
                             .font(AppFont.body(size: 11, weight: .regular))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.white.opacity(0.50))
                             .lineLimit(1)
                     }
 
@@ -238,29 +243,57 @@ struct MacDesktopMainView: View {
 
                     Image(systemName: "gearshape")
                         .font(.system(size: 14))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.white.opacity(0.60))
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .liquidGlassCard(cornerRadius: 12, tint: selection == .profile ? Color.accentColor : nil)
+                .liquidGlassCard(cornerRadius: 12)
             }
             .buttonStyle(.plain)
             .padding(10)
         }
-        .background(Theme.bg.ignoresSafeArea())
+        .background(Color.black.opacity(0.30))
+        .overlay(
+            Rectangle()
+                .frame(width: 1)
+                .foregroundStyle(Color.white.opacity(0.07)),
+            alignment: .trailing
+        )
     }
 
-    private func navRow(_ section: DesktopNavSection) -> some View {
-        NavigationLink(value: section) {
-            Label {
-                Text(section.label)
-                    .font(AppFont.body(size: 14, weight: selection == section ? .bold : .medium))
-            } icon: {
+    private func sidebarButton(_ section: DesktopNavSection) -> some View {
+        let isSelected = selection == section
+        return Button {
+            selection = section
+        } label: {
+            HStack(spacing: 12) {
                 Image(systemName: section.icon)
-                    .font(.system(size: 15))
-                    .foregroundStyle(section.color)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(isSelected ? Color.white : Color.white.opacity(0.60))
+                    .frame(width: 22)
+
+                Text(section.label)
+                    .font(AppFont.body(size: 13, weight: isSelected ? .bold : .medium))
+                    .foregroundStyle(isSelected ? Color.white : Color.white.opacity(0.70))
+                    .lineLimit(1)
+
+                Spacer()
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background {
+                if isSelected {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.white.opacity(0.12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .strokeBorder(Color.white.opacity(0.24), lineWidth: 1)
+                        )
+                }
+            }
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Contenu de Détail Desktop
@@ -437,186 +470,241 @@ struct MacDesktopDashboardView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                // MARK: 1. Hero Header Desktop
+                // MARK: 1. Hero Header Panoramique Desktop (Remplit l'espace sans vide)
                 headerHero
 
                 // MARK: 2. Modules prioritaires (Sport, Nutrition, Tâches...)
                 topPriorityCategoriesStrip
 
-                // MARK: 3. Grille Desktop 2 Colonnes
+                // MARK: 3. Grille Desktop 2 Colonnes Pleine Largeur
                 HStack(alignment: .top, spacing: 24) {
-                    // Colonne de Gauche (60%) : Tâches quotidiennes To-Do & Habitudes
+                    // Colonne de Gauche (Flexible) : Tâches quotidiennes & Habitudes
                     VStack(alignment: .leading, spacing: 24) {
                         todosSection
                         habitsSection
                     }
                     .frame(maxWidth: .infinity)
 
-                    // Colonne de Droite (40%) : Métriques, Outils rapides, Coach
+                    // Colonne de Droite (Largeur généreuse 400pt) : Métriques, Outils rapides, Coach
                     VStack(alignment: .leading, spacing: 24) {
                         metricsPanel
                         quickToolsGrid
                         coachInsightCard
                     }
-                    .frame(width: 360)
+                    .frame(width: 400)
                 }
             }
             .padding(.horizontal, 32)
             .padding(.vertical, 24)
         }
-        .background(AmbientAuraBackdrop())
+        .background(Color.clear)
     }
 
-    // MARK: - Bandeau Modules Prioritaires Desktop
+    // MARK: - Bandeau Modules Prioritaires Desktop (Monochrome)
 
     private var topPriorityCategoriesStrip: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 HStack(spacing: 8) {
                     Image(systemName: "star.fill")
-                        .font(.system(size: 15))
-                        .foregroundStyle(.yellow)
+                        .font(.system(size: 14))
+                        .foregroundStyle(Color.white)
                     Text("Modules Prioritaires")
-                        .font(AppFont.heading(size: 18, weight: .black))
+                        .font(AppFont.heading(size: 17, weight: .black))
+                        .foregroundStyle(Color.white)
                 }
                 Spacer()
                 Text("Classés selon vos préférences")
                     .font(AppFont.body(size: 12, weight: .regular))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.white.opacity(0.45))
             }
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 3), spacing: 14) {
                 ForEach(CategoryOrderManager.shared.order.prefix(6)) { cat in
                     Button {
                         onSelectCategory(cat)
                     } label: {
                         HStack(spacing: 12) {
-                            CategoryGlassIcon(category: cat, size: 36, cornerRadius: 10, iconSize: 16)
+                            CategoryGlassIcon(category: cat, size: 38, cornerRadius: 10, iconSize: 17)
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(cat.title)
                                     .font(AppFont.heading(size: 13, weight: .bold))
-                                    .foregroundStyle(.primary)
+                                    .foregroundStyle(Color.white)
                                     .lineLimit(1)
                                 Text(cat.subtitle)
                                     .font(AppFont.body(size: 11, weight: .regular))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.white.opacity(0.50))
                                     .lineLimit(1)
                             }
                             Spacer()
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(.tertiary)
+                                .foregroundStyle(Color.white.opacity(0.30))
                         }
-                        .padding(10)
-                        .liquidGlassCard(cornerRadius: 12, tint: cat.tint)
+                        .padding(12)
+                        .liquidGlassCard(cornerRadius: 12)
                     }
                     .buttonStyle(.plain)
                 }
             }
         }
-        .padding(18)
+        .padding(20)
         .liquidGlassCard(cornerRadius: 18)
     }
 
-    // MARK: - 1. Hero Header avec DailyScoreRing
+    // MARK: - 1. Hero Header Panoramique avec DailyScoreRing (Monochrome & Équilibré)
 
     private var headerHero: some View {
-        HStack(alignment: .center, spacing: 32) {
+        HStack(alignment: .center, spacing: 24) {
+            // Segment 1 (Gauche) : Identité, Salutation & Statuts
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 8) {
                     Circle()
-                        .fill(Color.green)
-                        .frame(width: 8, height: 8)
+                        .fill(Color.white)
+                        .frame(width: 7, height: 7)
+                        .shadow(color: Color.white.opacity(0.8), radius: 3)
                     Text(currentDateString.uppercased())
-                        .font(AppFont.body(size: 11, weight: .bold))
-                        .foregroundStyle(Color.accentColor)
-                        .kerning(1.0)
+                        .font(AppFont.body(size: 10, weight: .bold))
+                        .foregroundStyle(Color.white)
+                        .kerning(1.2)
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .liquidGlassPill(tint: Color.accentColor)
+                .liquidGlassPill()
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Bonjour, \(displayName)")
-                        .font(AppFont.heading(size: 34, weight: .black))
-                        .foregroundStyle(.primary)
+                        .font(AppFont.heading(size: 30, weight: .black))
+                        .foregroundStyle(Color.white)
 
                     Text("Ton système personnel résumé en un seul cadran interactif. Retrouve tes habitudes et tâches à leur heure.")
-                        .font(AppFont.body(size: 13, weight: .regular))
-                        .foregroundStyle(.secondary)
+                        .font(AppFont.body(size: 12, weight: .regular))
+                        .foregroundStyle(Color.white.opacity(0.60))
                         .lineSpacing(3)
-                        .frame(maxWidth: 380, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
-                HStack(spacing: 12) {
+                HStack(spacing: 8) {
                     HStack(spacing: 6) {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(Color.green)
+                            .foregroundStyle(Color.white)
                         Text("\(doneHabitsCount) / \(activeHabits.count) validées")
-                            .font(AppFont.body(size: 12, weight: .semibold))
+                            .font(AppFont.body(size: 11, weight: .semibold))
+                            .foregroundStyle(Color.white)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 7)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
                     .liquidGlassPill()
 
                     HStack(spacing: 6) {
                         Image(systemName: "flame.fill")
-                            .foregroundStyle(Color.orange)
+                            .foregroundStyle(Color.white)
                         Text(energyLabel.isEmpty ? "Forme optimale" : energyLabel)
-                            .font(AppFont.body(size: 12, weight: .semibold))
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 7)
-                    .liquidGlassPill()
-
-                    HStack(spacing: 6) {
-                        ZStack {
-                            Circle()
-                                .stroke(Color.accentColor.opacity(0.2), lineWidth: 3)
-                                .frame(width: 22, height: 22)
-                            Circle()
-                                .trim(from: 0, to: CGFloat(min(max(energyScore, 10), 100)) / 100.0)
-                                .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                                .frame(width: 22, height: 22)
-                                .rotationEffect(.degrees(-90))
-                        }
-                        Text("\(energyScore)")
-                            .font(AppFont.body(size: 12, weight: .bold))
-                            .foregroundStyle(Color.accentColor)
+                            .font(AppFont.body(size: 11, weight: .semibold))
+                            .foregroundStyle(Color.white)
                     }
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 7)
+                    .padding(.vertical, 6)
                     .liquidGlassPill()
                 }
             }
+            .frame(minWidth: 260, maxWidth: 330, alignment: .leading)
 
-            Spacer(minLength: 20)
+            Spacer(minLength: 8)
 
-            // Le Cercle interactif : Score du jour + cadran 24h & habitudes
+            // Segment 2 (Centre) : 4 Tuiles Métriques Haute Résolution (Comble le vide desktop)
+            VStack(spacing: 10) {
+                HStack(spacing: 10) {
+                    heroVitalTile(
+                        icon: "checklist",
+                        title: "Tâches à faire",
+                        value: "\(todos.filter { !$0.done }.count) restantes",
+                        detail: "\(todos.filter { $0.done }.count) terminées"
+                    )
+                    heroVitalTile(
+                        icon: "drop.fill",
+                        title: "Hydratation",
+                        value: "\(waterToday) ml",
+                        detail: "Objectif \(waterGoal) ml"
+                    )
+                }
+                HStack(spacing: 10) {
+                    heroVitalTile(
+                        icon: "flame.fill",
+                        title: "Calories",
+                        value: "\(kcalToday) kcal",
+                        detail: "Objectif \(kcalGoal) kcal"
+                    )
+                    heroVitalTile(
+                        icon: "bolt.fill",
+                        title: "Score Énergie",
+                        value: "\(energyScore) / 100",
+                        detail: energyLabel.isEmpty ? "Optimal" : energyLabel
+                    )
+                }
+            }
+            .frame(maxWidth: .infinity)
+
+            Spacer(minLength: 8)
+
+            // Segment 3 (Droite) : Le Cadran 24h interactif monochrome & score
             DailyScoreRing()
-                .frame(maxWidth: 440)
+                .frame(width: 320)
         }
         .padding(24)
         .liquidGlassCard(cornerRadius: 22)
     }
 
-    // MARK: - Habitudes du Jour
+    private func heroVitalTile(icon: String, title: String, value: String, detail: String) -> some View {
+        HStack(spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(Color.white.opacity(0.08))
+                    .frame(width: 32, height: 32)
+                    .overlay(Circle().strokeBorder(Color.white.opacity(0.18), lineWidth: 1))
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(Color.white)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(AppFont.body(size: 10, weight: .medium))
+                    .foregroundStyle(Color.white.opacity(0.50))
+                    .lineLimit(1)
+                Text(value)
+                    .font(AppFont.heading(size: 13, weight: .black))
+                    .foregroundStyle(Color.white)
+                    .lineLimit(1)
+                Text(detail)
+                    .font(AppFont.body(size: 10, weight: .regular))
+                    .foregroundStyle(Color.white.opacity(0.40))
+                    .lineLimit(1)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .liquidGlassCard(cornerRadius: 12)
+    }
+
+    // MARK: - Habitudes du Jour (Monochrome)
 
     private var habitsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 18))
-                        .foregroundStyle(Color(hex: 0x4CC38A))
+                        .font(.system(size: 17))
+                        .foregroundStyle(Color.white)
                     Text("Habitudes du jour")
-                        .font(AppFont.sans(size: 20, weight: .black))
+                        .font(AppFont.sans(size: 19, weight: .black))
+                        .foregroundStyle(Color.white)
                 }
 
                 Spacer()
 
-                // Filtres de temps
+                // Filtres de temps monochromes
                 HStack(spacing: 4) {
                     ForEach(HabitFilter.allCases, id: \.self) { filter in
                         Button {
@@ -626,8 +714,8 @@ struct MacDesktopDashboardView: View {
                                 .font(AppFont.body(size: 11, weight: .semibold))
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 5)
-                                .background(selectedFilter == filter ? Color.accentColor : Color.clear)
-                                .foregroundStyle(selectedFilter == filter ? .white : .secondary)
+                                .background(selectedFilter == filter ? Color.white.opacity(0.20) : Color.clear)
+                                .foregroundStyle(selectedFilter == filter ? Color.white : Color.white.opacity(0.55))
                                 .clipShape(Capsule())
                         }
                         .buttonStyle(.plain)
@@ -643,31 +731,31 @@ struct MacDesktopDashboardView: View {
                         Image(systemName: "plus")
                         Text("Ajouter")
                     }
-                    .font(AppFont.body(size: 12, weight: .bold))
+                    .font(AppFont.body(size: 11, weight: .bold))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.white)
                 }
                 .buttonStyle(.plain)
-                .liquidGlassPill(tint: Color.accentColor)
+                .liquidGlassPill()
             }
 
             if filteredHabits.isEmpty {
                 VStack(spacing: 12) {
                     Image(systemName: "checkmark.circle.badge.questionmark")
-                        .font(.system(size: 38))
-                        .foregroundStyle(.secondary.opacity(0.6))
+                        .font(.system(size: 34))
+                        .foregroundStyle(Color.white.opacity(0.40))
                     Text("Aucune habitude pour ce moment de la journée.")
                         .font(AppFont.body(size: 13, weight: .medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.white.opacity(0.60))
                     Button("Créer une nouvelle habitude") {
                         onOpenHabitCreator()
                     }
                     .font(AppFont.body(size: 12, weight: .bold))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(Color.white)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 36)
+                .padding(.vertical, 32)
                 .liquidGlassCard(cornerRadius: 16)
             } else {
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
@@ -683,79 +771,75 @@ struct MacDesktopDashboardView: View {
 
     private func desktopHabitCard(_ habit: Habit) -> some View {
         let isDone = habit.completions.contains { Calendar.current.isDateInToday($0.date) }
-        let color = Color(hex: UInt(habit.colorHex))
 
         return HStack(spacing: 14) {
-            // Icon squircle en verre liquide avec couleur translucide
+            // Icon squircle en verre liquide monochrome
             ZStack {
                 Circle()
-                    .fill(color.opacity(isDone ? 0.25 : 0.12))
+                    .fill(Color.white.opacity(isDone ? 0.15 : 0.06))
                     .frame(width: 32, height: 32)
-                    .blur(radius: 8)
+                    .blur(radius: 6)
 
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(isDone ? color.opacity(0.85) : color.opacity(0.12))
+                    .fill(Color.white.opacity(isDone ? 0.20 : 0.08))
                     .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .frame(width: 44, height: 44)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .strokeBorder(
-                                LiquidGlass.borderGradient(tint: color),
-                                lineWidth: 1
-                            )
+                            .strokeBorder(Color.white.opacity(isDone ? 0.40 : 0.18), lineWidth: 1)
                     )
                 Image(systemName: habit.icon)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(isDone ? .white : color)
+                    .font(.system(size: 19, weight: .semibold))
+                    .foregroundStyle(Color.white)
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(habit.name)
                     .font(AppFont.sans(size: 14, weight: .bold))
-                    .foregroundStyle(isDone ? .secondary : .primary)
-                    .strikethrough(isDone, color: .secondary.opacity(0.6))
+                    .foregroundStyle(isDone ? Color.white.opacity(0.50) : Color.white)
+                    .strikethrough(isDone, color: Color.white.opacity(0.40))
                     .lineLimit(1)
 
                 HStack(spacing: 6) {
                     Text(String(format: "%02dh%02d", habit.scheduledHour, habit.scheduledMinute))
                         .font(AppFont.body(size: 11, weight: .semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.white.opacity(0.50))
 
                     if habit.completions.count > 0 {
                         Text("·")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.white.opacity(0.30))
                         Text("🔥 \(habit.completions.count) j")
                             .font(AppFont.body(size: 11, weight: .bold))
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Color.white.opacity(0.80))
                     }
                 }
             }
 
             Spacer()
 
-            // Bouton validation
+            // Bouton validation monochrome
             Button {
                 toggleHabit(habit)
             } label: {
                 ZStack {
                     Circle()
-                        .strokeBorder(isDone ? color : Color.white.opacity(0.25), lineWidth: 1.5)
+                        .strokeBorder(Color.white.opacity(isDone ? 0.80 : 0.25), lineWidth: 1.5)
                         .frame(width: 30, height: 30)
 
                     if isDone {
                         Circle()
-                            .fill(color)
+                            .fill(Color.white)
                             .frame(width: 30, height: 30)
                         Image(systemName: "checkmark")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(.white)
+                            .font(.system(size: 13, weight: .black))
+                            .foregroundStyle(Color.black)
                     }
                 }
             }
             .buttonStyle(.plain)
         }
         .padding(14)
-        .liquidGlassCard(cornerRadius: 14, tint: isDone ? color : nil)
+        .liquidGlassCard(cornerRadius: 14)
     }
 
     private func toggleHabit(_ habit: Habit) {
@@ -771,50 +855,72 @@ struct MacDesktopDashboardView: View {
         Haptics.soft()
     }
 
-    // MARK: - To-Do & Priorités
+    // MARK: - To-Do & Priorités (Monochrome & Comblement de l'espace)
 
     private var todosSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 HStack(spacing: 8) {
                     Image(systemName: "checklist")
-                        .font(.system(size: 18))
-                        .foregroundStyle(Color(hex: 0x3CB2E0))
+                        .font(.system(size: 17))
+                        .foregroundStyle(Color.white)
                     Text("Objectifs & Tâches")
-                        .font(AppFont.sans(size: 20, weight: .black))
+                        .font(AppFont.sans(size: 19, weight: .black))
+                        .foregroundStyle(Color.white)
                 }
                 Spacer()
                 Text("\(todos.filter { !$0.done }.count) restantes")
                     .font(AppFont.body(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.white.opacity(0.50))
             }
 
             // Champ d'ajout rapide
             HStack(spacing: 10) {
                 Image(systemName: "plus.circle.fill")
-                    .foregroundStyle(Color.accentColor)
-                    .font(.system(size: 20))
+                    .foregroundStyle(Color.white)
+                    .font(.system(size: 19))
                 TextField("Nouvelle tâche à accomplir...", text: $newTaskTitle)
                     .font(AppFont.sans(size: 13, weight: .medium))
                     .onSubmit(addNewTask)
                 if !newTaskTitle.isEmpty {
                     Button("Ajouter", action: addNewTask)
                         .font(AppFont.body(size: 12, weight: .bold))
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(Color.white)
                 }
             }
             .padding(12)
             .liquidGlassCard(cornerRadius: 12)
 
-            // Liste des 5 premières tâches
-            VStack(spacing: 8) {
-                let pending = todos.filter { !$0.done }
-                if pending.isEmpty {
-                    Text("Toutes les tâches sont terminées ! Bravo 🎉")
-                        .font(AppFont.body(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .padding(.vertical, 8)
-                } else {
+            // Liste des tâches ou suggestions productives si vide (pour ne laisser aucun vide)
+            let pending = todos.filter { !$0.done }
+            if pending.isEmpty {
+                VStack(spacing: 12) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "sparkles")
+                            .foregroundStyle(Color.white.opacity(0.70))
+                        Text("Toutes les tâches du jour sont accomplies ! ✦")
+                            .font(AppFont.body(size: 13, weight: .semibold))
+                            .foregroundStyle(Color.white)
+                    }
+
+                    Text("Rien d'urgent pour l'instant. Tu peux ajouter une tâche ou choisir un focus rapide :")
+                        .font(AppFont.body(size: 11, weight: .regular))
+                        .foregroundStyle(Color.white.opacity(0.50))
+                        .multilineTextAlignment(.center)
+
+                    HStack(spacing: 8) {
+                        quickSuggestionChip("🏋️‍♂️ Séance de sport")
+                        quickSuggestionChip("💧 Boire 500ml")
+                        quickSuggestionChip("📖 20 min lecture")
+                        quickSuggestionChip("🌙 Bilan de soirée")
+                    }
+                    .padding(.top, 4)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 18)
+                .liquidGlassCard(cornerRadius: 14)
+            } else {
+                VStack(spacing: 8) {
                     ForEach(pending.prefix(6)) { todo in
                         HStack(spacing: 12) {
                             Button {
@@ -823,14 +929,14 @@ struct MacDesktopDashboardView: View {
                                 Haptics.soft()
                             } label: {
                                 Image(systemName: "circle")
-                                    .font(.system(size: 18))
-                                    .foregroundStyle(todo.priority >= 2 ? Color.red : Color.secondary)
+                                    .font(.system(size: 17))
+                                    .foregroundStyle(Color.white.opacity(0.60))
                             }
                             .buttonStyle(.plain)
 
                             Text(todo.title)
                                 .font(AppFont.sans(size: 14, weight: .bold))
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(Color.white)
 
                             Spacer()
 
@@ -840,10 +946,10 @@ struct MacDesktopDashboardView: View {
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 3)
                                     .liquidGlassPill()
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.white.opacity(0.60))
                             }
                         }
-                        .padding(10)
+                        .padding(11)
                         .liquidGlassCard(cornerRadius: 10)
                     }
                 }
@@ -851,6 +957,22 @@ struct MacDesktopDashboardView: View {
         }
         .padding(20)
         .liquidGlassCard(cornerRadius: 18)
+    }
+
+    private func quickSuggestionChip(_ title: String) -> some View {
+        Button {
+            ctx.insert(TodoItem(title: title, due: Date()))
+            try? ctx.save()
+            Haptics.soft()
+        } label: {
+            Text(title)
+                .font(AppFont.body(size: 11, weight: .semibold))
+                .foregroundStyle(Color.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .liquidGlassPill()
+        }
+        .buttonStyle(.plain)
     }
 
     private func addNewTask() {
@@ -862,27 +984,29 @@ struct MacDesktopDashboardView: View {
         Haptics.soft()
     }
 
-    // MARK: - Panneau Métriques (Colonne Droite)
+    // MARK: - Panneau Métriques (Colonne Droite, Monochrome)
 
     private var metricsPanel: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Métriques du Jour")
                 .font(AppFont.sans(size: 18, weight: .black))
+                .foregroundStyle(Color.white)
 
             // Eau
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Label("Hydratation", systemImage: "drop.fill")
                         .font(AppFont.sans(size: 13, weight: .bold))
-                        .foregroundStyle(Color(hex: 0x3CD0C8))
+                        .foregroundStyle(Color.white)
                     Spacer()
                     Text("\(waterToday) / \(waterGoal) ml")
                         .font(AppFont.body(size: 13, weight: .bold))
+                        .foregroundStyle(Color.white)
                 }
                 ProgressView(value: min(Double(waterToday), Double(waterGoal)), total: Double(waterGoal))
-                    .tint(Color(hex: 0x3CD0C8))
+                    .tint(Color.white)
 
-                HStack {
+                HStack(spacing: 8) {
                     Spacer()
                     Button {
                         ctx.insert(WaterEntry(date: .now, amountML: 250))
@@ -896,113 +1020,129 @@ struct MacDesktopDashboardView: View {
                         .font(AppFont.body(size: 11, weight: .bold))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .foregroundStyle(Color(hex: 0x3CD0C8))
+                        .foregroundStyle(Color.white)
                     }
                     .buttonStyle(.plain)
-                    .liquidGlassPill(tint: Color(hex: 0x3CD0C8))
+                    .liquidGlassPill()
+
+                    Button {
+                        ctx.insert(WaterEntry(date: .now, amountML: 500))
+                        try? ctx.save()
+                        Haptics.soft()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "plus")
+                            Text("500 ml")
+                        }
+                        .font(AppFont.body(size: 11, weight: .bold))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .foregroundStyle(Color.white)
+                    }
+                    .buttonStyle(.plain)
+                    .liquidGlassPill()
                 }
             }
             .padding(14)
-            .liquidGlassCard(cornerRadius: 14, tint: Color(hex: 0x3CD0C8))
+            .liquidGlassCard(cornerRadius: 14)
 
             // Calories
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Label("Calories consommées", systemImage: "flame.fill")
                         .font(AppFont.sans(size: 13, weight: .bold))
-                        .foregroundStyle(Color(hex: 0xF1746C))
+                        .foregroundStyle(Color.white)
                     Spacer()
                     Text("\(kcalToday) / \(kcalGoal) kcal")
                         .font(AppFont.body(size: 13, weight: .bold))
+                        .foregroundStyle(Color.white)
                 }
                 ProgressView(value: min(Double(kcalToday), Double(kcalGoal)), total: Double(kcalGoal))
-                    .tint(Color(hex: 0xF1746C))
+                    .tint(Color.white)
             }
             .padding(14)
-            .liquidGlassCard(cornerRadius: 14, tint: Color(hex: 0xF1746C))
+            .liquidGlassCard(cornerRadius: 14)
 
             // Jeûne & Statut
             HStack(spacing: 12) {
                 Image(systemName: "hourglass")
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color.orange)
+                    .font(.system(size: 19))
+                    .foregroundStyle(Color.white)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Jeûne Intermittent")
                         .font(AppFont.sans(size: 13, weight: .bold))
+                        .foregroundStyle(Color.white)
                     Text(activeFast != nil ? "En cours · \(Int((activeFast?.elapsed ?? 0) / 3600))h écoulées" : "Aucun jeûne actif")
                         .font(AppFont.body(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.white.opacity(0.50))
                 }
                 Spacer()
             }
             .padding(14)
-            .liquidGlassCard(cornerRadius: 14, tint: Color.orange)
+            .liquidGlassCard(cornerRadius: 14)
         }
         .padding(20)
         .liquidGlassCard(cornerRadius: 18)
     }
 
-    // MARK: - Raccourcis Outils Rapides
+    // MARK: - Raccourcis Outils Rapides (Monochrome)
 
     private var quickToolsGrid: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Outils Rapides")
                 .font(AppFont.sans(size: 18, weight: .black))
+                .foregroundStyle(Color.white)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                toolTile(title: "HIIT / Tabata", icon: "timer", color: Color(hex: 0xF1746C), action: onOpenTabata)
-                toolTile(title: "Coach IA", icon: "sparkles", color: Color(hex: 0x9B6CF1), action: onOpenAssistant)
-                toolTile(title: "Focus Pomodoro", icon: "brain.head.profile", color: Color(hex: 0x3CB2E0), action: onOpenAssistant)
-                toolTile(title: "Bilan Soir", icon: "sunset.fill", color: Color(hex: 0xE0A23C), action: onOpenAssistant)
+                toolTile(title: "HIIT / Tabata", icon: "timer", action: onOpenTabata)
+                toolTile(title: "Coach IA", icon: "sparkles", action: onOpenAssistant)
+                toolTile(title: "Focus Pomodoro", icon: "brain.head.profile", action: onOpenAssistant)
+                toolTile(title: "Bilan du Soir", icon: "sunset.fill", action: onOpenAssistant)
             }
         }
         .padding(20)
         .liquidGlassCard(cornerRadius: 18)
     }
 
-    private func toolTile(title: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
+    private func toolTile(title: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 8) {
                 ZStack {
                     Circle()
-                        .fill(color.opacity(0.18))
+                        .fill(Color.white.opacity(0.10))
                         .frame(width: 40, height: 40)
-                        .blur(radius: 6)
-                    Circle()
-                        .fill(color.opacity(0.12))
-                        .frame(width: 40, height: 40)
-                        .overlay(Circle().strokeBorder(LiquidGlass.borderGradient(tint: color), lineWidth: 1))
+                        .overlay(Circle().strokeBorder(Color.white.opacity(0.20), lineWidth: 1))
                     Image(systemName: icon)
                         .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(color)
+                        .foregroundStyle(Color.white)
                 }
                 Text(title)
                     .font(AppFont.sans(size: 12, weight: .bold))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.white)
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .liquidGlassCard(cornerRadius: 12, tint: color)
+            .liquidGlassCard(cornerRadius: 12)
         }
         .buttonStyle(.plain)
     }
 
-    // MARK: - Carte Coach IA Proactif
+    // MARK: - Carte Coach IA Proactif (Monochrome)
 
     private var coachInsightCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "sparkles")
-                    .foregroundStyle(Color(hex: 0x9B6CF1))
+                    .foregroundStyle(Color.white)
                 Text("Conseil Coach LifeOS")
                     .font(AppFont.sans(size: 14, weight: .black))
-                    .foregroundStyle(Color(hex: 0x9B6CF1))
+                    .foregroundStyle(Color.white)
             }
 
             Text("Tu as maintenu une excellente régularité cette semaine. Prends 5 minutes pour ta séance de respiration en fin d'après-midi.")
                 .font(AppFont.body(size: 12, weight: .regular))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.white.opacity(0.60))
                 .lineSpacing(3)
 
             Button(action: onOpenAssistant) {
@@ -1011,13 +1151,13 @@ struct MacDesktopDashboardView: View {
                     Image(systemName: "arrow.right")
                 }
                 .font(AppFont.body(size: 12, weight: .bold))
-                .foregroundStyle(Color(hex: 0x9B6CF1))
+                .foregroundStyle(Color.white)
             }
             .buttonStyle(.plain)
             .padding(.top, 4)
         }
         .padding(18)
-        .liquidGlassCard(cornerRadius: 18, tint: Color(hex: 0x9B6CF1))
+        .liquidGlassCard(cornerRadius: 18)
     }
 }
 
@@ -1162,17 +1302,17 @@ struct MacDesktopCategoriesOverview: View {
                         .font(AppFont.body(size: 12, weight: .bold))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(Color.white)
                     }
                     .buttonStyle(.plain)
-                    .liquidGlassPill(tint: Color.accentColor)
+                    .liquidGlassPill()
                     .help("Modifier l'ordre d'affichage des catégories")
                 }
 
                 // Barre de filtre rapide
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.white.opacity(0.60))
                     TextField("Filtrer une catégorie ou un outil...", text: $searchText)
                         .textFieldStyle(.plain)
                         .font(AppFont.body(size: 13, weight: .regular))
@@ -1181,7 +1321,7 @@ struct MacDesktopCategoriesOverview: View {
                             searchText = ""
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.white.opacity(0.60))
                         }
                         .buttonStyle(.plain)
                     }
@@ -1204,7 +1344,7 @@ struct MacDesktopCategoriesOverview: View {
             }
             .padding(32)
         }
-        .background(AmbientAuraBackdrop())
+        .background(Color.clear)
     }
 
     private func categoryCard(_ cat: AppCategory, rank: Int) -> some View {
@@ -1213,41 +1353,41 @@ struct MacDesktopCategoriesOverview: View {
                 // Numéro de rang
                 Text(String(format: "#%02d", rank))
                     .font(AppFont.body(size: 11, weight: .bold))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.white.opacity(0.60))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .liquidGlassPill()
 
                 Spacer()
 
-                // Icône en verre liquide translucide
+                // Icône en verre liquide translucide monochrome
                 CategoryGlassIcon(category: cat, size: 44, cornerRadius: 12, iconSize: 20)
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(cat.title)
                     .font(AppFont.heading(size: 17, weight: .black))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.white)
 
                 Text(cat.subtitle)
                     .font(AppFont.body(size: 12, weight: .regular))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.white.opacity(0.55))
                     .lineLimit(2)
             }
 
             HStack {
                 Text("Ouvrir le module")
                     .font(AppFont.body(size: 11, weight: .bold))
-                    .foregroundStyle(cat.tint)
+                    .foregroundStyle(Color.white)
                 Spacer()
                 Image(systemName: "arrow.right.circle.fill")
                     .font(.system(size: 18))
-                    .foregroundStyle(cat.tint.opacity(0.85))
+                    .foregroundStyle(Color.white.opacity(0.85))
             }
             .padding(.top, 4)
         }
         .padding(18)
-        .liquidGlassCard(cornerRadius: 18, tint: cat.tint)
+        .liquidGlassCard(cornerRadius: 18)
     }
 }
 
