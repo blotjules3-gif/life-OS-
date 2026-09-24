@@ -127,11 +127,20 @@ extension View {
 /// Design system de LifeOS — aligné sur le système de design Chifbay :
 /// Titres audacieux en Satoshi (Bold / Black) et typographie de lecture fluide en Inter.
 enum Theme {
-    // Surfaces système adaptatives (bright = blanc cassé / dark = noir pur — voir AppTheme.bubbleBG).
-    static let bg = Color(uiColor: .systemGroupedBackground)
-    static let bg2 = Color(uiColor: .tertiarySystemGroupedBackground)
-    static let card = Color(uiColor: .secondarySystemGroupedBackground)
-    static let stroke = Color.primary.opacity(0.16)
+    // Surfaces adaptatives OLED Black & Liquid Glass :
+    // En dark mode : Noir Pur (#000000) et verre translucide avec contour lumineux
+    static let bg = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark ? UIColor.black : UIColor(red: 0.96, green: 0.96, blue: 0.97, alpha: 1.0)
+    })
+    static let bg2 = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark ? UIColor(white: 0.08, alpha: 0.70) : UIColor(red: 0.93, green: 0.93, blue: 0.94, alpha: 1.0)
+    })
+    static let card = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark ? UIColor(white: 0.09, alpha: 0.60) : UIColor.white
+    })
+    static let stroke = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.20) : UIColor(white: 0.0, alpha: 0.10)
+    })
     static let textPrimary = Color.primary
     // UIColor.secondaryLabel meets ≥3:1 on system backgrounds in both light and dark
     static let textSecondary = Color(uiColor: .secondaryLabel)
@@ -281,18 +290,144 @@ enum Theme {
     }
 
     /// Fond d'écran adaptatif : en thème Verre = wallpaper flou (les surfaces se dépolissent
-    /// par-dessus). Sinon fond système. Utilisé par TOUS les écrans (accueil, réveil, chat,
-    /// questionnaires, profil…) pour que le verre soit global.
+    /// par-dessus). Sinon fond noir pur OLED en dark mode ou blanc cassé en light mode.
     @ViewBuilder static var screenBG: some View {
         if isGlassActive {
             GlassBackdrop()
         } else {
-            Color(uiColor: .systemGroupedBackground).ignoresSafeArea()
+            bg.ignoresSafeArea()
         }
     }
 
     /// Ancien nom conservé (mêmes règles que screenBG).
     @ViewBuilder static var background: some View { screenBG }
+}
+
+// MARK: - Système Liquid Glass iOS 27 (Surfaces translucides et bordures transparentes lumineuses)
+
+enum LiquidGlass {
+    /// Bordure transparente spéculaire iOS 27 qui accroche la lumière
+    static func borderGradient(opacity: Double = 1.0, tint: Color? = nil) -> LinearGradient {
+        LinearGradient(
+            stops: [
+                .init(color: Color.white.opacity(0.38 * opacity), location: 0.0),
+                .init(color: Color.white.opacity(0.10 * opacity), location: 0.40),
+                .init(color: (tint ?? Color.white).opacity(0.28 * opacity), location: 0.85),
+                .init(color: Color.white.opacity(0.18 * opacity), location: 1.0)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+}
+
+struct LiquidGlassCardModifier: ViewModifier {
+    var cornerRadius: CGFloat = 18
+    var tint: Color? = nil
+    var strokeWidth: CGFloat = 1.0
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                ZStack {
+                    if colorScheme == .dark {
+                        // En dark mode : noir translucide OLED façon Apple VisionOS / iOS 27
+                        Color(hex: 0x121214).opacity(0.60)
+                        if let tint {
+                            tint.opacity(0.08)
+                        }
+                    } else {
+                        Color.white.opacity(0.80)
+                        if let tint {
+                            tint.opacity(0.05)
+                        }
+                    }
+                }
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            }
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(
+                        LiquidGlass.borderGradient(opacity: colorScheme == .dark ? 1.0 : 0.75, tint: tint),
+                        lineWidth: strokeWidth
+                    )
+            )
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.38 : 0.06), radius: 14, x: 0, y: 7)
+    }
+}
+
+struct LiquidGlassPillModifier: ViewModifier {
+    var tint: Color? = nil
+    var strokeWidth: CGFloat = 1.0
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                Capsule()
+                    .fill(colorScheme == .dark ? Color(white: 0.16, opacity: 0.55) : Color.white.opacity(0.85))
+                    .background(.ultraThinMaterial, in: Capsule())
+            }
+            .overlay(
+                Capsule()
+                    .strokeBorder(
+                        LiquidGlass.borderGradient(opacity: colorScheme == .dark ? 1.0 : 0.75, tint: tint),
+                        lineWidth: strokeWidth
+                    )
+            )
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.25 : 0.05), radius: 8, x: 0, y: 3)
+    }
+}
+
+/// Icône de catégorie en verre liquide : remplace les blocs de couleur criards par un squircle translucide
+struct CategoryGlassIcon: View {
+    let category: AppCategory
+    var size: CGFloat = 40
+    var cornerRadius: CGFloat = 12
+    var iconSize: CGFloat = 18
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        ZStack {
+            // Lueur fusion douce et élégante en arrière-plan
+            Circle()
+                .fill(category.tint.opacity(colorScheme == .dark ? 0.22 : 0.14))
+                .frame(width: size * 0.75, height: size * 0.75)
+                .blur(radius: 8)
+
+            // Squircle en verre liquide translucide à faible opacité (non saturé, ultra premium)
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(category.tint.opacity(colorScheme == .dark ? 0.14 : 0.08))
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                .frame(width: size, height: size)
+                .overlay(
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .strokeBorder(
+                            LinearGradient(
+                                stops: [
+                                    .init(color: Color.white.opacity(colorScheme == .dark ? 0.48 : 0.70), location: 0.0),
+                                    .init(color: category.tint.opacity(colorScheme == .dark ? 0.35 : 0.30), location: 0.5),
+                                    .init(color: Color.white.opacity(colorScheme == .dark ? 0.18 : 0.25), location: 1.0)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                )
+
+            // Symbole net et contrasté
+            Image(systemName: category.icon)
+                .font(.system(size: iconSize, weight: .semibold))
+                .foregroundStyle(category.tint)
+        }
+    }
 }
 
 /// Fond « verre » global : fond d'écran doux et flou par-dessus lequel toutes les
@@ -329,6 +464,24 @@ struct PressableButtonStyle: ButtonStyle {
 }
 
 extension View {
+    /// Carte Liquid Glass avec bordure transparente lumineuse iOS 27
+    func liquidGlassCard(cornerRadius: CGFloat = 18, tint: Color? = nil, strokeWidth: CGFloat = 1.0) -> some View {
+        self.modifier(LiquidGlassCardModifier(cornerRadius: cornerRadius, tint: tint, strokeWidth: strokeWidth))
+    }
+
+    /// Bordure Liquid Glass transparente 1px
+    func liquidGlassBorder(cornerRadius: CGFloat = 18, tint: Color? = nil, strokeWidth: CGFloat = 1.0) -> some View {
+        self.overlay(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .strokeBorder(LiquidGlass.borderGradient(tint: tint), lineWidth: strokeWidth)
+        )
+    }
+
+    /// Capsule / Pillule Liquid Glass avec bordure transparente
+    func liquidGlassPill(tint: Color? = nil, strokeWidth: CGFloat = 1.0) -> some View {
+        self.modifier(LiquidGlassPillModifier(tint: tint, strokeWidth: strokeWidth))
+    }
+
     /// Ombre douce diffuse — profondeur flottante iOS 26.
     func softElevation(_ strong: Bool = false) -> some View {
         shadow(color: strong ? Theme.shadow : Theme.shadowSoft, radius: strong ? 18 : 11, y: strong ? 8 : 4)

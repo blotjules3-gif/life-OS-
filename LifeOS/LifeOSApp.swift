@@ -35,7 +35,7 @@ struct LifeOSApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                Color(uiColor: .systemBackground)
+                Theme.bg
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
 

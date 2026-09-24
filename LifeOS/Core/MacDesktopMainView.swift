@@ -149,9 +149,13 @@ struct MacDesktopMainView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(Color(uiColor: .secondarySystemBackground).opacity(0.5))
-
-            Divider()
+            .background(Color.white.opacity(0.03))
+            .overlay(
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundStyle(LiquidGlass.borderGradient(opacity: 0.5)),
+                alignment: .bottom
+            )
 
             // Navigation List avec ordre personnalisé des catégories
             List(selection: $selection) {
@@ -200,8 +204,7 @@ struct MacDesktopMainView: View {
                 }
             }
             .listStyle(.sidebar)
-
-            Divider()
+            .scrollContentBackground(.hidden)
 
             // Profil & Réglages en bas de la barre latérale
             Button {
@@ -236,12 +239,12 @@ struct MacDesktopMainView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(selection == .profile ? Color.accentColor.opacity(0.12) : Color.clear)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .liquidGlassCard(cornerRadius: 12, tint: selection == .profile ? Color.accentColor : nil)
             }
             .buttonStyle(.plain)
             .padding(10)
         }
+        .background(Theme.bg.ignoresSafeArea())
     }
 
     private func navRow(_ section: DesktopNavSection) -> some View {
@@ -458,13 +461,13 @@ struct MacDesktopDashboardView: View {
             .padding(.horizontal, 32)
             .padding(.vertical, 24)
         }
-        .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
+        .background(Theme.bg.ignoresSafeArea())
     }
 
     // MARK: - Bandeau Modules Prioritaires Desktop
 
     private var topPriorityCategoriesStrip: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack {
                 HStack(spacing: 8) {
                     Image(systemName: "star.fill")
@@ -485,14 +488,7 @@ struct MacDesktopDashboardView: View {
                         onSelectCategory(cat)
                     } label: {
                         HStack(spacing: 12) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(cat.tint.gradient)
-                                    .frame(width: 36, height: 36)
-                                Image(systemName: cat.icon)
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundStyle(.white)
-                            }
+                            CategoryGlassIcon(category: cat, size: 36, cornerRadius: 10, iconSize: 16)
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(cat.title)
@@ -510,16 +506,14 @@ struct MacDesktopDashboardView: View {
                                 .foregroundStyle(.tertiary)
                         }
                         .padding(10)
-                        .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+                        .liquidGlassCard(cornerRadius: 12, tint: cat.tint)
                     }
                     .buttonStyle(.plain)
                 }
             }
         }
         .padding(18)
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.primary.opacity(0.06), lineWidth: 1))
+        .liquidGlassCard(cornerRadius: 18)
     }
 
     // MARK: - 1. Hero Header
@@ -570,9 +564,7 @@ struct MacDesktopDashboardView: View {
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 14)
-            .background(Color(uiColor: .secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.primary.opacity(0.06), lineWidth: 1))
+            .liquidGlassCard(cornerRadius: 16)
         }
     }
 
@@ -609,7 +601,7 @@ struct MacDesktopDashboardView: View {
                     }
                 }
                 .padding(3)
-                .background(Color(uiColor: .tertiarySystemFill), in: Capsule())
+                .liquidGlassPill()
 
                 Button {
                     onOpenHabitCreator()
@@ -621,11 +613,10 @@ struct MacDesktopDashboardView: View {
                     .font(AppFont.body(size: 12, weight: .bold))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color.accentColor.opacity(0.12))
                     .foregroundStyle(Color.accentColor)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
                 .buttonStyle(.plain)
+                .liquidGlassPill(tint: Color.accentColor)
             }
 
             if filteredHabits.isEmpty {
@@ -644,7 +635,7 @@ struct MacDesktopDashboardView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 36)
-                .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+                .liquidGlassCard(cornerRadius: 16)
             } else {
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
                     ForEach(filteredHabits) { habit in
@@ -654,9 +645,7 @@ struct MacDesktopDashboardView: View {
             }
         }
         .padding(20)
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.primary.opacity(0.06), lineWidth: 1))
+        .liquidGlassCard(cornerRadius: 18)
     }
 
     private func desktopHabitCard(_ habit: Habit) -> some View {
@@ -664,11 +653,24 @@ struct MacDesktopDashboardView: View {
         let color = Color(hex: UInt(habit.colorHex))
 
         return HStack(spacing: 14) {
-            // Icon
+            // Icon squircle en verre liquide avec couleur translucide
             ZStack {
+                Circle()
+                    .fill(color.opacity(isDone ? 0.25 : 0.12))
+                    .frame(width: 32, height: 32)
+                    .blur(radius: 8)
+
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(isDone ? color : color.opacity(0.15))
+                    .fill(isDone ? color.opacity(0.85) : color.opacity(0.12))
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .frame(width: 44, height: 44)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(
+                                LiquidGlass.borderGradient(tint: color),
+                                lineWidth: 1
+                            )
+                    )
                 Image(systemName: habit.icon)
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(isDone ? .white : color)
@@ -704,7 +706,7 @@ struct MacDesktopDashboardView: View {
             } label: {
                 ZStack {
                     Circle()
-                        .stroke(isDone ? color : Color.secondary.opacity(0.3), lineWidth: 2)
+                        .strokeBorder(isDone ? color : Color.white.opacity(0.25), lineWidth: 1.5)
                         .frame(width: 30, height: 30)
 
                     if isDone {
@@ -720,12 +722,7 @@ struct MacDesktopDashboardView: View {
             .buttonStyle(.plain)
         }
         .padding(14)
-        .background(Color(uiColor: .tertiarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(isDone ? color.opacity(0.4) : Color.clear, lineWidth: 1.5)
-        )
+        .liquidGlassCard(cornerRadius: 14, tint: isDone ? color : nil)
     }
 
     private func toggleHabit(_ habit: Habit) {
@@ -774,7 +771,7 @@ struct MacDesktopDashboardView: View {
                 }
             }
             .padding(12)
-            .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+            .liquidGlassCard(cornerRadius: 12)
 
             // Liste des 5 premières tâches
             VStack(spacing: 8) {
@@ -809,20 +806,18 @@ struct MacDesktopDashboardView: View {
                                     .font(AppFont.body(size: 10, weight: .semibold))
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 3)
-                                    .background(Color.secondary.opacity(0.12), in: Capsule())
+                                    .liquidGlassPill()
                                     .foregroundStyle(.secondary)
                             }
                         }
                         .padding(10)
-                        .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10))
+                        .liquidGlassCard(cornerRadius: 10)
                     }
                 }
             }
         }
         .padding(20)
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.primary.opacity(0.06), lineWidth: 1))
+        .liquidGlassCard(cornerRadius: 18)
     }
 
     private func addNewTask() {
@@ -868,15 +863,14 @@ struct MacDesktopDashboardView: View {
                         .font(AppFont.body(size: 11, weight: .bold))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(Color(hex: 0x3CD0C8).opacity(0.15))
                         .foregroundStyle(Color(hex: 0x3CD0C8))
-                        .clipShape(Capsule())
                     }
                     .buttonStyle(.plain)
+                    .liquidGlassPill(tint: Color(hex: 0x3CD0C8))
                 }
             }
             .padding(14)
-            .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+            .liquidGlassCard(cornerRadius: 14, tint: Color(hex: 0x3CD0C8))
 
             // Calories
             VStack(alignment: .leading, spacing: 8) {
@@ -892,7 +886,7 @@ struct MacDesktopDashboardView: View {
                     .tint(Color(hex: 0xF1746C))
             }
             .padding(14)
-            .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+            .liquidGlassCard(cornerRadius: 14, tint: Color(hex: 0xF1746C))
 
             // Jeûne & Statut
             HStack(spacing: 12) {
@@ -909,12 +903,10 @@ struct MacDesktopDashboardView: View {
                 Spacer()
             }
             .padding(14)
-            .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+            .liquidGlassCard(cornerRadius: 14, tint: Color.orange)
         }
         .padding(20)
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.primary.opacity(0.06), lineWidth: 1))
+        .liquidGlassCard(cornerRadius: 18)
     }
 
     // MARK: - Raccourcis Outils Rapides
@@ -932,9 +924,7 @@ struct MacDesktopDashboardView: View {
             }
         }
         .padding(20)
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.primary.opacity(0.06), lineWidth: 1))
+        .liquidGlassCard(cornerRadius: 18)
     }
 
     private func toolTile(title: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
@@ -942,8 +932,13 @@ struct MacDesktopDashboardView: View {
             VStack(spacing: 8) {
                 ZStack {
                     Circle()
-                        .fill(color.opacity(0.15))
+                        .fill(color.opacity(0.18))
                         .frame(width: 40, height: 40)
+                        .blur(radius: 6)
+                    Circle()
+                        .fill(color.opacity(0.12))
+                        .frame(width: 40, height: 40)
+                        .overlay(Circle().strokeBorder(LiquidGlass.borderGradient(tint: color), lineWidth: 1))
                     Image(systemName: icon)
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(color)
@@ -955,7 +950,7 @@ struct MacDesktopDashboardView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+            .liquidGlassCard(cornerRadius: 12, tint: color)
         }
         .buttonStyle(.plain)
     }
@@ -989,15 +984,7 @@ struct MacDesktopDashboardView: View {
             .padding(.top, 4)
         }
         .padding(18)
-        .background(
-            LinearGradient(
-                colors: [Color(hex: 0x9B6CF1).opacity(0.12), Color(hex: 0x9B6CF1).opacity(0.04)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            in: RoundedRectangle(cornerRadius: 18)
-        )
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color(hex: 0x9B6CF1).opacity(0.2), lineWidth: 1))
+        .liquidGlassCard(cornerRadius: 18, tint: Color(hex: 0x9B6CF1))
     }
 }
 
@@ -1142,10 +1129,10 @@ struct MacDesktopCategoriesOverview: View {
                         .font(AppFont.body(size: 12, weight: .bold))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
-                        .background(Color.accentColor.opacity(0.12), in: Capsule())
                         .foregroundStyle(Color.accentColor)
                     }
                     .buttonStyle(.plain)
+                    .liquidGlassPill(tint: Color.accentColor)
                     .help("Modifier l'ordre d'affichage des catégories")
                 }
 
@@ -1168,7 +1155,7 @@ struct MacDesktopCategoriesOverview: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+                .liquidGlassCard(cornerRadius: 12)
 
                 // Grille de cartes
                 LazyVGrid(columns: columns, spacing: 18) {
@@ -1184,7 +1171,7 @@ struct MacDesktopCategoriesOverview: View {
             }
             .padding(32)
         }
-        .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
+        .background(Theme.bg.ignoresSafeArea())
     }
 
     private func categoryCard(_ cat: AppCategory, rank: Int) -> some View {
@@ -1192,20 +1179,16 @@ struct MacDesktopCategoriesOverview: View {
             HStack(alignment: .top) {
                 // Numéro de rang
                 Text(String(format: "#%02d", rank))
-                    .font(AppFont.body(size: 12, weight: .bold))
+                    .font(AppFont.body(size: 11, weight: .bold))
                     .foregroundStyle(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .liquidGlassPill()
 
                 Spacer()
 
-                // Icône
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(cat.tint.gradient)
-                        .frame(width: 44, height: 44)
-                    Image(systemName: cat.icon)
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
+                // Icône en verre liquide translucide
+                CategoryGlassIcon(category: cat, size: 44, cornerRadius: 12, iconSize: 20)
             }
 
             VStack(alignment: .leading, spacing: 4) {
@@ -1226,17 +1209,12 @@ struct MacDesktopCategoriesOverview: View {
                 Spacer()
                 Image(systemName: "arrow.right.circle.fill")
                     .font(.system(size: 18))
-                    .foregroundStyle(cat.tint.opacity(0.8))
+                    .foregroundStyle(cat.tint.opacity(0.85))
             }
             .padding(.top, 4)
         }
         .padding(18)
-        .background(Color(uiColor: .secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
-        )
+        .liquidGlassCard(cornerRadius: 18, tint: cat.tint)
     }
 }
 
