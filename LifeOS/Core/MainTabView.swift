@@ -330,22 +330,25 @@ struct FloatingTabBar: View {
             .frame(height: m.height + 4)
             .background(barBackground)
             .overlay(
+                // 1. Arête externe de glace spéculaire
                 Capsule()
                     .strokeBorder(
-                        LinearGradient(
-                            stops: [
-                                .init(color: Color.primary.opacity(scheme == .dark ? 0.32 : 0.15), location: 0.0),
-                                .init(color: Color.primary.opacity(scheme == .dark ? 0.08 : 0.05), location: 0.50),
-                                .init(color: Color.primary.opacity(scheme == .dark ? 0.18 : 0.10), location: 1.0)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 0.8
+                        LiquidGlass.iceEdgeGradient(colorScheme: scheme, opacity: 1.0),
+                        lineWidth: 1.0
                     )
             )
+            .overlay(
+                // 2. Biseau caustique interne
+                Capsule()
+                    .strokeBorder(
+                        LiquidGlass.innerCausticGradient(colorScheme: scheme),
+                        lineWidth: 0.8
+                    )
+                    .padding(0.8)
+            )
             .clipShape(Capsule())
-            .shadow(color: Color.black.opacity(scheme == .dark ? 0.40 : 0.08), radius: 18, x: 0, y: 7)
+            .shadow(color: Color.black.opacity(scheme == .dark ? 0.42 : 0.07), radius: 18, x: 0, y: 7)
+            .shadow(color: Color.white.opacity(scheme == .dark ? 0.06 : 0.28), radius: 1, x: 0, y: 1)
             .padding(.horizontal, horizontalMargin)
             .padding(.bottom, m.margin + 4)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -364,10 +367,10 @@ struct FloatingTabBar: View {
         #endif
     }
 
-    /// Verre translucide ultra-fin façon Apple Aperçu
+    /// Verre translucide cristallin façon Apple iOS 27
     @ViewBuilder private var barBackground: some View {
         Capsule()
-            .fill(scheme == .dark ? Color(white: 0.10, opacity: 0.72) : Color.white.opacity(0.85))
+            .fill(scheme == .dark ? Color.white.opacity(0.06) : Color.white.opacity(0.28))
             .background(.ultraThinMaterial, in: Capsule())
     }
 

@@ -128,18 +128,18 @@ extension View {
 /// Titres audacieux en Satoshi (Bold / Black) et typographie de lecture fluide en Inter.
 enum Theme {
     // Surfaces adaptatives OLED Black & Liquid Glass :
-    // En dark mode : Noir Pur (#000000) et verre translucide avec contour lumineux
+    // En dark mode : Noir Pur (#000000) et verre cristallin translucide avec arête de glace spéculaire
     static let bg = Color(UIColor { trait in
         trait.userInterfaceStyle == .dark ? UIColor.black : UIColor(red: 0.96, green: 0.96, blue: 0.97, alpha: 1.0)
     })
     static let bg2 = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark ? UIColor(white: 0.08, alpha: 0.70) : UIColor(red: 0.93, green: 0.93, blue: 0.94, alpha: 1.0)
+        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.08) : UIColor(white: 1.0, alpha: 0.20)
     })
     static let card = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark ? UIColor(white: 0.09, alpha: 0.60) : UIColor.white
+        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.05) : UIColor(white: 1.0, alpha: 0.28)
     })
     static let stroke = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.20) : UIColor(white: 0.0, alpha: 0.10)
+        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.35) : UIColor(white: 1.0, alpha: 0.65)
     })
     static let textPrimary = Color.primary
     // UIColor.secondaryLabel meets ≥3:1 on system backgrounds in both light and dark
@@ -223,9 +223,13 @@ enum Theme {
     // Dans les vues : toujours Color.accentColor + Theme.onAccent, jamais volt en dur.
     static let volt = Color(hex: 0x4CF810)
 
-    // Liseré discret + ombre douce (profondeur iOS 26, pas de brutalisme).
-    static let hairline = Color.primary.opacity(0.10)
-    static let line = Color.primary.opacity(0.22)      // trait de grille technique
+    // Liseré spéculaire discret + ombre douce (Liquid Glass iOS 27).
+    static let hairline = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.25) : UIColor(white: 1.0, alpha: 0.60)
+    })
+    static let line = Color(UIColor { trait in
+        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.15) : UIColor(white: 1.0, alpha: 0.40)
+    })
     static let shadow = Color.black.opacity(0.10)
     static let shadowSoft = Color.black.opacity(0.06)
 
@@ -282,11 +286,11 @@ enum Theme {
     /// un contraste WCAG AA (≥ 4.5:1).
     static var onAccent: Color { currentTheme.onAccent }
 
-    /// Remplissage de carte adaptatif : verre dépoli en thème Verre, sinon surface opaque.
+    /// Remplissage de carte adaptatif Liquid Glass : verre dépoli ultra-fin cristallin.
     /// À utiliser dans `.background(Theme.cardFill, in: shape)` pour que TOUTES les cartes
-    /// suivent le thème (glass global).
+    /// suivent le design Liquid Glass iOS 27.
     static var cardFill: AnyShapeStyle {
-        isGlassActive ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(card)
+        AnyShapeStyle(.ultraThinMaterial)
     }
 
     /// Fond d'écran adaptatif : aura fluide tamisée se déplaçant lentement sur noir OLED,
@@ -375,26 +379,80 @@ struct AmbientAuraBackdrop: View {
     }
 }
 
-// MARK: - Système Liquid Glass iOS 27 (Surfaces translucides et bordures transparentes lumineuses)
+// MARK: - Système Liquid Glass iOS 27 (Surfaces Cristallines Translucides & Arêtes d'Eau / Glace Spéculaires)
 
 enum LiquidGlass {
-    /// Bordure transparente spéculaire iOS 27 qui accroche la lumière (adaptative clair / sombre)
+    /// Arête de glace / biseau d'eau spéculaire iOS 27 (Incident lumineux top-leading -> Caustique bottom-trailing)
+    /// Reproduit fidèlement la réfraction de l'eau et de la glace sans jamais utiliser de trait gris opaque.
+    static func iceEdgeGradient(colorScheme: ColorScheme, opacity: Double = 1.0, tint: Color? = nil) -> LinearGradient {
+        if colorScheme == .dark {
+            return LinearGradient(
+                stops: [
+                    // Apex réfléchissant (angle incident supérieur gauche) : éclat blanc pur cristallin
+                    .init(color: Color.white.opacity(0.85 * opacity), location: 0.0),
+                    // Réfraction cristalline le long du contour
+                    .init(color: Color.white.opacity(0.28 * opacity), location: 0.30),
+                    // Corps du verre translucide
+                    .init(color: (tint ?? Color.white).opacity(0.10 * opacity), location: 0.65),
+                    // Retour caustique interne au coin inférieur droit
+                    .init(color: Color.white.opacity(0.35 * opacity), location: 1.0)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        } else {
+            return LinearGradient(
+                stops: [
+                    // En mode clair : éclat spéculaire blanc pur qui découpe la forme
+                    .init(color: Color.white.opacity(0.95 * opacity), location: 0.0),
+                    // Réfraction d'arête
+                    .init(color: Color.white.opacity(0.40 * opacity), location: 0.35),
+                    // Fausse ombre d'occlusion très subtile
+                    .init(color: Color.black.opacity(0.04 * opacity), location: 0.70),
+                    // Caustique de contact
+                    .init(color: Color.white.opacity(0.45 * opacity), location: 1.0)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
+
+    /// Deuxième biseau interne caustique (donne l'épaisseur physique 3D du bloc de glace / ménisque d'eau)
+    static func innerCausticGradient(colorScheme: ColorScheme) -> LinearGradient {
+        if colorScheme == .dark {
+            return LinearGradient(
+                stops: [
+                    .init(color: Color.white.opacity(0.38), location: 0.0),
+                    .init(color: Color.white.opacity(0.05), location: 0.35),
+                    .init(color: Color.clear, location: 0.65),
+                    .init(color: Color.white.opacity(0.20), location: 1.0)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        } else {
+            return LinearGradient(
+                stops: [
+                    .init(color: Color.white.opacity(0.60), location: 0.0),
+                    .init(color: Color.white.opacity(0.12), location: 0.35),
+                    .init(color: Color.clear, location: 0.65),
+                    .init(color: Color.white.opacity(0.25), location: 1.0)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
+
+    /// Rétrocompatibilité : bordure spéculaire cristalline (sans aucun noir ou gris)
     static func borderGradient(opacity: Double = 1.0, tint: Color? = nil) -> LinearGradient {
-        LinearGradient(
-            stops: [
-                .init(color: Color.primary.opacity(0.38 * opacity), location: 0.0),
-                .init(color: Color.primary.opacity(0.10 * opacity), location: 0.40),
-                .init(color: (tint ?? Color.primary).opacity(0.24 * opacity), location: 0.85),
-                .init(color: Color.primary.opacity(0.18 * opacity), location: 1.0)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+        iceEdgeGradient(colorScheme: .dark, opacity: opacity, tint: tint)
     }
 }
 
 struct LiquidGlassCardModifier: ViewModifier {
-    var cornerRadius: CGFloat = 18
+    var cornerRadius: CGFloat = 20
     var tint: Color? = nil
     var strokeWidth: CGFloat = 1.0
 
@@ -405,15 +463,16 @@ struct LiquidGlassCardModifier: ViewModifier {
             .background {
                 ZStack {
                     if colorScheme == .dark {
-                        // En dark mode : noir translucide OLED façon Apple VisionOS / iOS 27
-                        Color(hex: 0x121214).opacity(0.60)
+                        // Translucide cristallin : très basse opacité pour laisser respirer l'aura ambiante
+                        Color.white.opacity(0.045)
                         if let tint {
                             tint.opacity(0.08)
                         }
                     } else {
-                        Color.white.opacity(0.85)
+                        // Mode clair : verre dépoli translucide non-opaque
+                        Color.white.opacity(0.25)
                         if let tint {
-                            tint.opacity(0.05)
+                            tint.opacity(0.06)
                         }
                     }
                 }
@@ -422,13 +481,24 @@ struct LiquidGlassCardModifier: ViewModifier {
             }
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             .overlay(
+                // 1. Arête externe spéculaire façon glace / eau
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .strokeBorder(
-                        LiquidGlass.borderGradient(opacity: colorScheme == .dark ? 1.0 : 0.65, tint: tint),
+                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 1.0, tint: tint),
                         lineWidth: strokeWidth
                     )
             )
+            .overlay(
+                // 2. Biseau caustique interne (épaisseur du verre)
+                RoundedRectangle(cornerRadius: max(0, cornerRadius - 1), style: .continuous)
+                    .strokeBorder(
+                        LiquidGlass.innerCausticGradient(colorScheme: colorScheme),
+                        lineWidth: 0.8
+                    )
+                    .padding(0.8)
+            )
             .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.38 : 0.06), radius: 14, x: 0, y: 7)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.22), radius: 1, x: 0, y: 1)
     }
 }
 
@@ -442,17 +512,26 @@ struct LiquidGlassPillModifier: ViewModifier {
         content
             .background {
                 Capsule()
-                    .fill(colorScheme == .dark ? Color(white: 0.16, opacity: 0.55) : Color(white: 0.92, opacity: 0.85))
+                    .fill(colorScheme == .dark ? Color.white.opacity(0.055) : Color.white.opacity(0.25))
                     .background(.ultraThinMaterial, in: Capsule())
             }
             .overlay(
                 Capsule()
                     .strokeBorder(
-                        LiquidGlass.borderGradient(opacity: colorScheme == .dark ? 1.0 : 0.65, tint: tint),
+                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 1.0, tint: tint),
                         lineWidth: strokeWidth
                     )
             )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.25 : 0.05), radius: 8, x: 0, y: 3)
+            .overlay(
+                Capsule()
+                    .strokeBorder(
+                        LiquidGlass.innerCausticGradient(colorScheme: colorScheme),
+                        lineWidth: 0.8
+                    )
+                    .padding(0.8)
+            )
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.28 : 0.05), radius: 8, x: 0, y: 3)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.20), radius: 1, x: 0, y: 1)
     }
 }
 
@@ -460,7 +539,7 @@ struct LiquidGlassPillModifier: ViewModifier {
 
 struct ApplePreviewPillModifier: ViewModifier {
     var height: CGFloat = 52
-    var strokeWidth: CGFloat = 0.8
+    var strokeWidth: CGFloat = 1.0
     @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
@@ -469,31 +548,32 @@ struct ApplePreviewPillModifier: ViewModifier {
             .background {
                 Capsule()
                     .fill(colorScheme == .dark
-                          ? Color(white: 0.12, opacity: 0.65)
-                          : Color.white.opacity(0.85))
+                          ? Color.white.opacity(0.06)
+                          : Color.white.opacity(0.28))
                     .background(.ultraThinMaterial, in: Capsule())
             }
             .overlay(
                 Capsule()
                     .strokeBorder(
-                        LinearGradient(
-                            stops: [
-                                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.35 : 0.15), location: 0.0),
-                                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.10 : 0.06), location: 0.5),
-                                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.20 : 0.10), location: 1.0)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
+                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 1.0),
                         lineWidth: strokeWidth
                     )
             )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.28 : 0.04), radius: 8, x: 0, y: 3)
+            .overlay(
+                Capsule()
+                    .strokeBorder(
+                        LiquidGlass.innerCausticGradient(colorScheme: colorScheme),
+                        lineWidth: 0.8
+                    )
+                    .padding(0.8)
+            )
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.30 : 0.05), radius: 10, x: 0, y: 4)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.24), radius: 1, x: 0, y: 1)
     }
 }
 
 struct ApplePreviewIslandModifier: ViewModifier {
-    var strokeWidth: CGFloat = 0.6
+    var strokeWidth: CGFloat = 0.8
     @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
@@ -503,24 +583,25 @@ struct ApplePreviewIslandModifier: ViewModifier {
             .background {
                 Capsule()
                     .fill(colorScheme == .dark
-                          ? Color(white: 0.10, opacity: 0.70)
-                          : Color.white.opacity(0.85))
+                          ? Color.white.opacity(0.06)
+                          : Color.white.opacity(0.28))
                     .background(.ultraThinMaterial, in: Capsule())
             }
             .overlay(
                 Capsule()
                     .strokeBorder(
-                        Color.primary.opacity(colorScheme == .dark ? 0.25 : 0.12),
+                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 0.9),
                         lineWidth: strokeWidth
                     )
             )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.35 : 0.08), radius: 12, x: 0, y: 4)
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.32 : 0.06), radius: 10, x: 0, y: 4)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.20), radius: 1, x: 0, y: 0.5)
     }
 }
 
 struct ApplePreviewCircleModifier: ViewModifier {
     var size: CGFloat = 40
-    var strokeWidth: CGFloat = 0.6
+    var strokeWidth: CGFloat = 0.8
     @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
@@ -529,24 +610,25 @@ struct ApplePreviewCircleModifier: ViewModifier {
             .background {
                 Circle()
                     .fill(colorScheme == .dark
-                          ? Color(white: 0.12, opacity: 0.70)
-                          : Color.white.opacity(0.85))
+                          ? Color.white.opacity(0.06)
+                          : Color.white.opacity(0.28))
                     .background(.ultraThinMaterial, in: Circle())
             }
             .overlay(
                 Circle()
                     .strokeBorder(
-                        Color.primary.opacity(colorScheme == .dark ? 0.25 : 0.12),
+                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 0.9),
                         lineWidth: strokeWidth
                     )
             )
             .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.28 : 0.05), radius: 8, x: 0, y: 3)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.20), radius: 1, x: 0, y: 0.5)
     }
 }
 
 struct ApplePreviewCardModifier: ViewModifier {
     var cornerRadius: CGFloat = 28
-    var strokeWidth: CGFloat = 0.8
+    var strokeWidth: CGFloat = 1.0
     @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
@@ -554,26 +636,30 @@ struct ApplePreviewCardModifier: ViewModifier {
             .background {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(colorScheme == .dark
-                          ? Color(white: 0.09, opacity: 0.65)
-                          : Color.white.opacity(0.88))
+                          ? Color.white.opacity(0.045)
+                          : Color.white.opacity(0.26))
                     .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             }
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             .overlay(
+                // Arête externe de glace
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .strokeBorder(
-                        LinearGradient(
-                            stops: [
-                                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.28 : 0.12), location: 0.0),
-                                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.04), location: 0.5),
-                                .init(color: Color.primary.opacity(colorScheme == .dark ? 0.16 : 0.08), location: 1.0)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
+                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 1.0),
                         lineWidth: strokeWidth
                     )
             )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.35 : 0.05), radius: 14, x: 0, y: 6)
+            .overlay(
+                // Biseau interne caustique
+                RoundedRectangle(cornerRadius: max(0, cornerRadius - 1), style: .continuous)
+                    .strokeBorder(
+                        LiquidGlass.innerCausticGradient(colorScheme: colorScheme),
+                        lineWidth: 0.8
+                    )
+                    .padding(0.8)
+            )
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.38 : 0.06), radius: 16, x: 0, y: 7)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.22), radius: 1, x: 0, y: 1)
     }
 }
 
@@ -582,7 +668,7 @@ struct ApplePreviewCardModifier: ViewModifier {
 /// évitant le flou empilé énergivore et grisâtre.
 struct ApplePreviewInnerCardModifier: ViewModifier {
     var cornerRadius: CGFloat = 16
-    var strokeWidth: CGFloat = 0.6
+    var strokeWidth: CGFloat = 0.8
     @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
@@ -590,13 +676,21 @@ struct ApplePreviewInnerCardModifier: ViewModifier {
             .background {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(colorScheme == .dark
-                          ? Color.white.opacity(0.04)
-                          : Color.black.opacity(0.03))
+                          ? Color.white.opacity(0.035)
+                          : Color.black.opacity(0.025))
             }
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .strokeBorder(
-                        Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.08),
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color.white.opacity(colorScheme == .dark ? 0.35 : 0.50), location: 0.0),
+                                .init(color: Color.white.opacity(colorScheme == .dark ? 0.08 : 0.12), location: 0.60),
+                                .init(color: Color.white.opacity(colorScheme == .dark ? 0.20 : 0.25), location: 1.0)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
                         lineWidth: strokeWidth
                     )
             )
@@ -620,23 +714,15 @@ struct CategoryGlassIcon: View {
                 .frame(width: size * 0.75, height: size * 0.75)
                 .blur(radius: 6)
 
-            // Squircle en verre liquide translucide monochrome
+            // Squircle en verre liquide translucide avec arête de glace
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(Color.primary.opacity(colorScheme == .dark ? 0.06 : 0.04))
+                .fill(colorScheme == .dark ? Color.white.opacity(0.06) : Color.white.opacity(0.28))
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
                 .frame(width: size, height: size)
                 .overlay(
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                         .strokeBorder(
-                            LinearGradient(
-                                stops: [
-                                    .init(color: Color.primary.opacity(colorScheme == .dark ? 0.45 : 0.35), location: 0.0),
-                                    .init(color: Color.primary.opacity(colorScheme == .dark ? 0.15 : 0.15), location: 0.5),
-                                    .init(color: Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.08), location: 1.0)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
+                            LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 0.9),
                             lineWidth: 1
                         )
                 )
@@ -682,18 +768,41 @@ struct PressableButtonStyle: ButtonStyle {
     }
 }
 
+struct LiquidGlassBorderModifier: ViewModifier {
+    var cornerRadius: CGFloat = 18
+    var tint: Color? = nil
+    var strokeWidth: CGFloat = 1.0
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .strokeBorder(
+                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 1.0, tint: tint),
+                        lineWidth: strokeWidth
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: max(0, cornerRadius - 1), style: .continuous)
+                    .strokeBorder(
+                        LiquidGlass.innerCausticGradient(colorScheme: colorScheme),
+                        lineWidth: 0.8
+                    )
+                    .padding(0.8)
+            )
+    }
+}
+
 extension View {
     /// Carte Liquid Glass avec bordure transparente lumineuse iOS 27
     func liquidGlassCard(cornerRadius: CGFloat = 18, tint: Color? = nil, strokeWidth: CGFloat = 1.0) -> some View {
         self.modifier(LiquidGlassCardModifier(cornerRadius: cornerRadius, tint: tint, strokeWidth: strokeWidth))
     }
 
-    /// Bordure Liquid Glass transparente 1px
+    /// Bordure Liquid Glass spéculaire façon biseau de glace
     func liquidGlassBorder(cornerRadius: CGFloat = 18, tint: Color? = nil, strokeWidth: CGFloat = 1.0) -> some View {
-        self.overlay(
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .strokeBorder(LiquidGlass.borderGradient(tint: tint), lineWidth: strokeWidth)
-        )
+        self.modifier(LiquidGlassBorderModifier(cornerRadius: cornerRadius, tint: tint, strokeWidth: strokeWidth))
     }
 
     /// Capsule / Pillule Liquid Glass avec bordure transparente

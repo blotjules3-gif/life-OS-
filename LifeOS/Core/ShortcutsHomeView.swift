@@ -290,17 +290,7 @@ struct ShortcutsHomeView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            LinearGradient(
-                colors: [Color(hex: 0xFF9F0A).opacity(0.07), Color(hex: 0xFF9F0A).opacity(0.02)],
-                startPoint: .topLeading, endPoint: .bottomTrailing
-            ),
-            in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                .stroke(Color(hex: 0xFF9F0A).opacity(0.15), lineWidth: 1)
-        )
+        .liquidGlassCard(cornerRadius: Theme.radius, tint: Color(hex: 0xFF9F0A))
     }
 
     // MARK: données hebdo
@@ -630,7 +620,7 @@ struct ShortcutsHomeView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .liquidGlassCard(cornerRadius: Theme.radius)
     }
 
     // MARK: Section 1 — Habitudes
@@ -740,11 +730,7 @@ struct ShortcutsHomeView: View {
                 }
             }
             .padding(12)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Theme.stroke, lineWidth: 1)
-            )
+            .liquidGlassCard(cornerRadius: 14)
         }
         .buttonStyle(LifeOSPressStyle())
         .accessibilityLabel(done ? "\(habit.name) — validée aujourd'hui" : "Valider \(habit.name)")
@@ -838,11 +824,7 @@ struct ShortcutsHomeView: View {
                 .buttonStyle(.plain)
             }
             .padding(16)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                    .stroke(weeklyScoreColor.opacity(0.15), lineWidth: 1)
-            )
+            .liquidGlassCard(cornerRadius: Theme.radius, tint: weeklyScoreColor)
         }
     }
 
@@ -927,11 +909,7 @@ struct ShortcutsHomeView: View {
                     }
                 }
                 .padding(12)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Theme.stroke, lineWidth: 1)
-                )
+                .liquidGlassCard(cornerRadius: 14)
             }
         }
     }
@@ -1008,11 +986,7 @@ struct ShortcutsHomeView: View {
             }
         }
         .padding(12)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Theme.stroke, lineWidth: 1)
-        )
+        .liquidGlassCard(cornerRadius: 14)
         // Appui long, pas balayage: swipeActions n'existe QUE dans une List,
         // et cette section est une VStack dans un ScrollView. Le geste aurait
         // ete inerte, sans la moindre erreur pour le signaler.
@@ -1065,9 +1039,7 @@ struct ShortcutsHomeView: View {
                 }
             }
             .padding(16)
-            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
-                .softElevation()
+            .liquidGlassCard(cornerRadius: Theme.radius)
         }
     }
 
@@ -1191,13 +1163,7 @@ struct ShortcutsHomeView: View {
             }
         }
         .padding(14)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
-                .softElevation()
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                .stroke(module.tint.opacity(0.2), lineWidth: 1)
-        )
+        .liquidGlassCard(cornerRadius: Theme.radius, tint: module.tint)
     }
 
     private func reengageBanner(message: String, suggestion: String?) -> some View {
@@ -1229,14 +1195,7 @@ struct ShortcutsHomeView: View {
             }
         }
         .padding(14)
-        .background(
-            Color(hex: 0xFF9F0A).opacity(0.16),
-            in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                .stroke(Color(hex: 0xFF9F0A).opacity(0.2), lineWidth: 1)
-        )
+        .liquidGlassCard(cornerRadius: Theme.radius, tint: Color(hex: 0xFF9F0A))
     }
 
     private var energyBadge: some View {
