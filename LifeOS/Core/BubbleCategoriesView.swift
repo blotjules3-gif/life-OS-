@@ -120,26 +120,26 @@ enum BubbleLayout {
     // (grande + moyenne + petite, décalées) — voir packOrganic() qui calcule le placement
     // serré (bulles qui se touchent, sans chevauchement) tenant sur UN seul écran.
     static let categories: [BubbleCategory] = [
-        // Rangée 1
-        .init(title: "Social",       systemImage: "person.2.fill",             tint: Color(red: 1.00, green: 0.20, blue: 0.55), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
-        .init(title: "Bien-être",    systemImage: "face.smiling",              tint: Color(red: 1.00, green: 0.54, blue: 0.10), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
-        .init(title: "Éducation",    systemImage: "graduationcap.fill",        tint: Color(red: 1.00, green: 0.80, blue: 0.18), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
-        // Rangée 2
-        .init(title: "Tâches",       systemImage: "checklist",                 tint: Color(red: 0.14, green: 0.78, blue: 0.80), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
-        .init(title: "Mental",       systemImage: "brain.head.profile",        tint: Color(red: 0.66, green: 0.32, blue: 0.96), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
-        .init(title: "Documents",    systemImage: "folder.fill",               tint: Color(red: 0.74, green: 0.84, blue: 0.97), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
-        // Rangée 3
-        .init(title: "Travail",      systemImage: "briefcase.fill",            tint: Color(red: 1.00, green: 0.72, blue: 0.24), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
-        .init(title: "Sommeil",      systemImage: "moon.stars.fill",           tint: Color(red: 0.42, green: 0.40, blue: 0.95), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
+        // Rangée 1 : Modules phares (Sport, Nutrition, Tâches prioritaires)
         .init(title: "Sport",        systemImage: "figure.run",                tint: Color(red: 1.00, green: 0.18, blue: 0.20), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
-        // Rangée 4
         .init(title: "Alimentation", systemImage: "fork.knife",                tint: Color(red: 0.28, green: 0.80, blue: 0.36), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
-        .init(title: "Transports",   systemImage: "tram.fill",                 tint: Color(red: 0.16, green: 0.74, blue: 0.78), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
-        .init(title: "Maison",       systemImage: "house.fill",                tint: Color(red: 0.24, green: 0.56, blue: 0.96), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
-        // Rangée 5
-        .init(title: "Bourse",       systemImage: "chart.line.uptrend.xyaxis", tint: Color(red: 0.16, green: 0.80, blue: 0.62), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
-        .init(title: "Voyage",       systemImage: "airplane",                  tint: Color(red: 0.20, green: 0.50, blue: 1.00), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
+        .init(title: "Tâches",       systemImage: "checklist",                 tint: Color(red: 0.14, green: 0.78, blue: 0.80), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
+        // Rangée 2 : Focus mental, Finances & Sommeil
+        .init(title: "Mental",       systemImage: "brain.head.profile",        tint: Color(red: 0.66, green: 0.32, blue: 0.96), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
         .init(title: "Finance",      systemImage: "creditcard.fill",           tint: Color(red: 0.13, green: 0.52, blue: 1.00), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
+        .init(title: "Sommeil",      systemImage: "moon.stars.fill",           tint: Color(red: 0.42, green: 0.40, blue: 0.95), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
+        // Rangée 3 : Bourse/Invest, Documents coffre-fort & Travail
+        .init(title: "Bourse",       systemImage: "chart.line.uptrend.xyaxis", tint: Color(red: 0.16, green: 0.80, blue: 0.62), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.8),
+        .init(title: "Documents",    systemImage: "folder.fill",               tint: Color(red: 0.74, green: 0.84, blue: 0.97), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
+        .init(title: "Travail",      systemImage: "briefcase.fill",            tint: Color(red: 1.00, green: 0.72, blue: 0.24), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
+        // Rangée 4 : Éducation, Bien-être & Maison
+        .init(title: "Éducation",    systemImage: "graduationcap.fill",        tint: Color(red: 1.00, green: 0.80, blue: 0.18), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
+        .init(title: "Bien-être",    systemImage: "face.smiling",              tint: Color(red: 1.00, green: 0.54, blue: 0.10), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.8),
+        .init(title: "Maison",       systemImage: "house.fill",                tint: Color(red: 0.24, green: 0.56, blue: 0.96), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
+        // Rangée 5 : Transports, Voyage & Social (en bas)
+        .init(title: "Transports",   systemImage: "tram.fill",                 tint: Color(red: 0.16, green: 0.74, blue: 0.78), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
+        .init(title: "Voyage",       systemImage: "airplane",                  tint: Color(red: 0.20, green: 0.50, blue: 1.00), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.8),
+        .init(title: "Social",       systemImage: "person.2.fill",             tint: Color(red: 1.00, green: 0.20, blue: 0.55), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
     ]
 }
 
@@ -177,10 +177,12 @@ struct BubbleCategoriesView: View {
     @AppStorage(AppStorageKeys.catOffsets)    private var catOffsetsRaw = ""  // "titre:dx:dy,…" — (legacy, plus utilisé)
     @AppStorage(AppStorageKeys.catAnchors)    private var catAnchorsRaw = ""  // "titre:fx:fy,…" — position ancrée (fraction)
     @AppStorage(AppStorageKeys.catColors)     private var catColorsRaw = ""   // "titre:RRGGBB,…" — couleur perso par catégorie
+    @ObservedObject private var categoryOrderManager = CategoryOrderManager.shared
     @State private var editing = false
     @State private var showAdd = false
     @State private var showSearch = false
     @State private var showCatIntake = false
+    @State private var showOrderSheet = false
     @State private var tappedID: UUID?
     @State private var drag: [UUID: CGSize] = [:]
     @State private var colorEditTarget: ColorEditTarget?
@@ -283,12 +285,13 @@ struct BubbleCategoriesView: View {
     private var hiddenList: [BubbleCategory] {
         BubbleLayout.categories.filter { !$0.isFiller && hidden.contains($0.title) }
     }
-    // catégories (sans fillers) pour les modes rangé/icônes/liste
+    // catégories (sans fillers) ordonnées selon les préférences de l'utilisateur
     private var mains: [BubbleCategory] {
-        BubbleLayout.categories.filter { !$0.isFiller && !hidden.contains($0.title) }
+        let base = BubbleLayout.categories.filter { !$0.isFiller && !hidden.contains($0.title) }
+        return categoryOrderManager.sortBubbleCategories(base)
     }
     private var mainsByImportance: [BubbleCategory] {
-        mains.sorted { (parseWeights()[$0.title] ?? 0) > (parseWeights()[$1.title] ?? 0) }
+        mains
     }
 
     var body: some View {
@@ -302,6 +305,7 @@ struct BubbleCategoriesView: View {
         .overlay(alignment: .bottomTrailing) { if !theme.isModern && editing && (layout == .organic || layout == .tidy) { addButton } }
         .sheet(isPresented: $showAdd) { addSheet }
         .sheet(isPresented: $showSearch) { ToolSearchView() }
+        .sheet(isPresented: $showOrderSheet) { CategoryOrderSheet() }
         .sheet(item: $colorEditTarget) { target in
             CategoryColorSheet(
                 title: target.title,
@@ -369,10 +373,27 @@ struct BubbleCategoriesView: View {
     private var nikeGrid: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Catégories")
-                    .font(.system(size: 34, weight: .black)).textCase(.uppercase).kerning(-1)
-                    .foregroundStyle(.primary)
-                    .padding(.horizontal, 4)
+                HStack(alignment: .center) {
+                    Text("Catégories")
+                        .font(.system(size: 34, weight: .black)).textCase(.uppercase).kerning(-1)
+                        .foregroundStyle(.primary)
+
+                    Spacer()
+
+                    Button {
+                        showOrderSheet = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.up.arrow.down")
+                            Text("Trier")
+                        }
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.primary)
+                        .padding(.horizontal, 12).padding(.vertical, 7)
+                        .background(.regularMaterial, in: Capsule())
+                    }
+                }
+                .padding(.horizontal, 4)
                 searchPill
                 if CategorySetup.fraction < 1.0 { catProgressHeader }
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
@@ -772,12 +793,26 @@ struct BubbleCategoriesView: View {
     }
 
     private var editButton: some View {
-        Button { setEditing(!editing) } label: {
-            Text(editing ? "OK" : "Modifier")
-                .font(.subheadline.weight(.bold))
-                .foregroundStyle(Color.primary)
-                .padding(.horizontal, 14).padding(.vertical, 8)
-                .background(.regularMaterial, in: Capsule())
+        HStack(spacing: 8) {
+            Button {
+                showOrderSheet = true
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            } label: {
+                Image(systemName: "arrow.up.arrow.down")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Color.primary)
+                    .frame(width: 36, height: 36)
+                    .background(.regularMaterial, in: Circle())
+            }
+            .accessibilityLabel("Trier les catégories")
+
+            Button { setEditing(!editing) } label: {
+                Text(editing ? "OK" : "Modifier")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color.primary)
+                    .padding(.horizontal, 14).padding(.vertical, 8)
+                    .background(.regularMaterial, in: Capsule())
+            }
         }
         .padding(.top, Theme.space8).padding(.trailing, Theme.pad)
     }

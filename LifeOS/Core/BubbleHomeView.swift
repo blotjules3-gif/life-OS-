@@ -126,7 +126,7 @@ struct BubbleHomeView: View {
 
     /// Empilement glouton en spirale : les grosses bulles au centre, le reste autour.
     private func layout() -> [Bubble] {
-        let sorted = AppCategory.allCases
+        let sorted = AppCategory.ordered
             .map { (cat: $0, r: radius($0)) }
             .sorted { $0.r > $1.r }
         var placed: [(CGPoint, CGFloat)] = []

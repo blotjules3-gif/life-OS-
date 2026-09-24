@@ -74,7 +74,10 @@ struct MacDesktopMainView: View {
     @State private var showNewHabitModal = false
     @State private var showAssistantSheet = false
     @State private var showTabataFullScreen = false
+    @State private var showOrderSheet = false
     @State private var assistantPrefill: String?
+
+    @ObservedObject private var categoryOrderManager = CategoryOrderManager.shared
 
     @AppStorage(AppStorageKeys.userName) private var userName = ""
     @AppStorage(AppStorageKeys.userDisplayName) private var userDisplayName = ""
@@ -99,6 +102,9 @@ struct MacDesktopMainView: View {
             NavigationStack {
                 NewHabitQuickSheet()
             }
+        }
+        .sheet(isPresented: $showOrderSheet) {
+            CategoryOrderSheet()
         }
         .fullScreenCover(isPresented: $showTabataFullScreen) {
             TabataView()
@@ -147,31 +153,41 @@ struct MacDesktopMainView: View {
 
             Divider()
 
-            // Navigation List
+            // Navigation List avec ordre personnalisé des catégories
             List(selection: $selection) {
-                Section("ESPACE PRINCIPAL") {
+                Section("ESPACE DE TRAVAIL") {
                     navRow(.dashboard)
                     navRow(.habits)
-                    navRow(.wakeup)
                     navRow(.assistant)
-                }
-
-                Section("SANTÉ & CORPS") {
-                    navRow(.category(.fitness))
-                    navRow(.category(.nutrition))
-                    navRow(.category(.sleep))
-                    navRow(.category(.looks))
-                }
-
-                Section("MENTAL & PRODUCTIVITÉ") {
-                    navRow(.category(.mind))
-                    navRow(.category(.productivity))
-                    navRow(.category(.learning))
-                    navRow(.category(.finance))
-                }
-
-                Section("OUTILS SPÉCIAUX") {
                     navRow(.tabata)
+                }
+
+                Section {
+                    ForEach(categoryOrderManager.order) { cat in
+                        navRow(.category(cat))
+                    }
+                } header: {
+                    HStack {
+                        Text("CATÉGORIES")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Button {
+                            showOrderSheet = true
+                        } label: {
+                            HStack(spacing: 3) {
+                                Image(systemName: "arrow.up.arrow.down")
+                                Text("Trier")
+                            }
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Color.accentColor)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Trier l'ordre des catégories")
+                    }
+                }
+
+                Section("VUE D'ENSEMBLE") {
                     navRow(.allCategories)
                 }
             }
@@ -243,7 +259,8 @@ struct MacDesktopMainView: View {
                 MacDesktopDashboardView(
                     onOpenTabata: { showTabataFullScreen = true },
                     onOpenHabitCreator: { showNewHabitModal = true },
-                    onOpenAssistant: { selection = .assistant }
+                    onOpenAssistant: { selection = .assistant },
+                    onSelectCategory: { cat in selection = .category(cat) }
                 )
             case .habits:
                 HabitTrackerView()
@@ -256,13 +273,15 @@ struct MacDesktopMainView: View {
             case .category(let cat):
                 cat.destination
             case .allCategories:
-                NavigationStack {
-                    BubbleCategoriesView(onSelect: { title in
-                        if let cat = AppCategory(bubbleTitle: title) {
-                            selection = .category(cat)
-                        }
-                    })
-                }
+                MacDesktopCategoriesOverview(
+                    categories: categoryOrderManager.order,
+                    onSelectCategory: { cat in
+                        selection = .category(cat)
+                    },
+                    onOpenSort: {
+                        showOrderSheet = true
+                    }
+                )
             case .profile:
                 ProfileView()
             }
@@ -275,6 +294,15 @@ struct MacDesktopMainView: View {
                     Label("Ajouter une habitude", systemImage: "plus")
                 }
                 .help("Créer une nouvelle habitude")
+            }
+
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showOrderSheet = true
+                } label: {
+                    Label("Trier", systemImage: "arrow.up.arrow.down")
+                }
+                .help("Trier l'ordre des catégories")
             }
 
             ToolbarItem(placement: .primaryAction) {
@@ -305,6 +333,7 @@ struct MacDesktopDashboardView: View {
     let onOpenTabata: () -> Void
     let onOpenHabitCreator: () -> Void
     let onOpenAssistant: () -> Void
+    let onSelectCategory: (AppCategory) -> Void
 
     @Environment(\.modelContext) private var ctx
 
@@ -318,11 +347,13 @@ struct MacDesktopDashboardView: View {
     init(
         onOpenTabata: @escaping () -> Void,
         onOpenHabitCreator: @escaping () -> Void,
-        onOpenAssistant: @escaping () -> Void
+        onOpenAssistant: @escaping () -> Void,
+        onSelectCategory: @escaping (AppCategory) -> Void = { _ in }
     ) {
         self.onOpenTabata = onOpenTabata
         self.onOpenHabitCreator = onOpenHabitCreator
         self.onOpenAssistant = onOpenAssistant
+        self.onSelectCategory = onSelectCategory
     }
 
     @AppStorage(AppStorageKeys.userName) private var userName = ""
@@ -391,16 +422,19 @@ struct MacDesktopDashboardView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
+            VStack(alignment: .leading, spacing: 24) {
                 // MARK: 1. Hero Header Desktop
                 headerHero
 
-                // MARK: 2. Grille Desktop 2 Colonnes
+                // MARK: 2. Modules prioritaires (Sport, Nutrition, Tâches...)
+                topPriorityCategoriesStrip
+
+                // MARK: 3. Grille Desktop 2 Colonnes
                 HStack(alignment: .top, spacing: 24) {
-                    // Colonne de Gauche (60%) : Habitudes & To-Do
+                    // Colonne de Gauche (60%) : Tâches quotidiennes To-Do & Habitudes
                     VStack(alignment: .leading, spacing: 24) {
-                        habitsSection
                         todosSection
+                        habitsSection
                     }
                     .frame(maxWidth: .infinity)
 
@@ -417,6 +451,67 @@ struct MacDesktopDashboardView: View {
             .padding(.vertical, 24)
         }
         .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
+    }
+
+    // MARK: - Bandeau Modules Prioritaires Desktop
+
+    private var topPriorityCategoriesStrip: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                HStack(spacing: 8) {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 15))
+                        .foregroundStyle(.yellow)
+                    Text("Modules Prioritaires")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                }
+                Spacer()
+                Text("Classés selon vos préférences")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 3), spacing: 12) {
+                ForEach(CategoryOrderManager.shared.order.prefix(6)) { cat in
+                    Button {
+                        onSelectCategory(cat)
+                    } label: {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(cat.tint.gradient)
+                                    .frame(width: 36, height: 36)
+                                Image(systemName: cat.icon)
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(.white)
+                            }
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(cat.title)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(.primary)
+                                    .lineLimit(1)
+                                Text(cat.subtitle)
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .padding(10)
+                        .background(Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(18)
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.primary.opacity(0.06), lineWidth: 1))
     }
 
     // MARK: - 1. Hero Header
@@ -990,3 +1085,152 @@ struct NewHabitQuickSheet: View {
         }
     }
 }
+
+// MARK: - Vue d'ensemble des Catégories sur macOS Desktop
+
+struct MacDesktopCategoriesOverview: View {
+    let categories: [AppCategory]
+    let onSelectCategory: (AppCategory) -> Void
+    let onOpenSort: () -> Void
+
+    @State private var searchText = ""
+
+    private var filteredCategories: [AppCategory] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if query.isEmpty {
+            return categories
+        }
+        return categories.filter {
+            $0.title.localizedCaseInsensitiveContains(query) ||
+            $0.subtitle.localizedCaseInsensitiveContains(query)
+        }
+    }
+
+    private let columns = [
+        GridItem(.adaptive(minimum: 280, maximum: 380), spacing: 18)
+    ]
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                // Header
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Catégories & Modules")
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundStyle(.primary)
+                        Text("Tous vos modules LifeOS organisés selon vos priorités")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        onOpenSort()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.up.arrow.down")
+                            Text("Trier les catégories")
+                        }
+                        .font(.system(size: 13, weight: .semibold))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(Color.accentColor.opacity(0.12), in: Capsule())
+                        .foregroundStyle(Color.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Modifier l'ordre d'affichage des catégories")
+                }
+
+                // Barre de filtre rapide
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    TextField("Filtrer une catégorie ou un outil...", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 14))
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+
+                // Grille de cartes
+                LazyVGrid(columns: columns, spacing: 18) {
+                    ForEach(Array(filteredCategories.enumerated()), id: \.element.id) { index, cat in
+                        Button {
+                            onSelectCategory(cat)
+                        } label: {
+                            categoryCard(cat, rank: index + 1)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(32)
+        }
+        .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
+    }
+
+    private func categoryCard(_ cat: AppCategory, rank: Int) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top) {
+                // Numéro de rang
+                Text(String(format: "#%02d", rank))
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                // Icône
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(cat.tint.gradient)
+                        .frame(width: 44, height: 44)
+                    Image(systemName: cat.icon)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(cat.title)
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundStyle(.primary)
+
+                Text(cat.subtitle)
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+
+            HStack {
+                Text("Ouvrir le module")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(cat.tint)
+                Spacer()
+                Image(systemName: "arrow.right.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(cat.tint.opacity(0.8))
+            }
+            .padding(.top, 4)
+        }
+        .padding(18)
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+        )
+    }
+}
+

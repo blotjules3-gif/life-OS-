@@ -3,8 +3,14 @@ import SwiftUI
 /// Les 17 pôles de LifeOS (16 pour tous + `cycle` conditionnel). Pilotent la
 /// grille du tableau de bord et la navigation.
 enum AppCategory: String, CaseIterable, Identifiable {
-    case sleep, nutrition, fitness, looks, mind, productivity, finance,
-         invest, career, learning, home, mobility, social, admin, travel, cycle, medical
+    case fitness, nutrition, productivity, mind, finance,
+         invest, sleep, admin, learning, career,
+         looks, home, mobility, travel, social, medical, cycle
+
+    /// Liste des catégories ordonnée selon les préférences de l'utilisateur (ou défaut optimisé plateforme)
+    static var ordered: [AppCategory] {
+        CategoryOrderManager.shared.order
+    }
 
     var id: String { rawValue }
 
