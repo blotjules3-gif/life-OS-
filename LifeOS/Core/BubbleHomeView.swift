@@ -25,7 +25,7 @@ struct BubbleHomeView: View {
             .navigationTitle("Mes pôles")
             .safeAreaInset(edge: .top, spacing: 0) {
                 Text("Appuie sur une bulle · reste appuyé pour ajuster l'importance")
-                    .font(AppFont.mono(size: 11, weight: .medium))
+                    .font(AppFont.body(size: 11, weight: .medium))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
                     .padding(.bottom, 6)

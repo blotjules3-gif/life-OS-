@@ -16,6 +16,10 @@
 		<string>Satoshi-Regular.otf</string>
 		<string>Satoshi-Italic.otf</string>
 		<string>Satoshi-BoldItalic.otf</string>
+		<string>Inter-Regular.otf</string>
+		<string>Inter-Medium.otf</string>
+		<string>Inter-SemiBold.otf</string>
+		<string>Inter-Bold.otf</string>
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>

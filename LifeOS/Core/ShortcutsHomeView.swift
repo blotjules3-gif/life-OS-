@@ -1209,11 +1209,11 @@ struct ShortcutsHomeView: View {
         }()
         return VStack(alignment: .trailing, spacing: 1) {
             Text("\(todayEnergyScore)")
-                .font(AppFont.mono(size: 28, weight: .bold))
+                .font(AppFont.heading(size: 28, weight: .black))
                 .foregroundStyle(scoreColor)
                 .contentTransition(.numericText())
             Text(todayEnergyLabel.isEmpty ? "ÉNERGIE" : todayEnergyLabel)
-                .font(AppFont.mono(size: 10, weight: .bold))
+                .font(AppFont.body(size: 10, weight: .bold))
                 .textCase(.uppercase)
                 .kerning(0.8)
                 .foregroundStyle(scoreColor.opacity(0.8))
@@ -1230,9 +1230,9 @@ struct ShortcutsHomeView: View {
             if let trailing {
                 Button(action: action) {
                     Text(trailing)
-                        .font(AppFont.mono(size: 11, weight: .bold))
+                        .font(AppFont.body(size: 11, weight: .bold))
                         .textCase(.uppercase)
-                        .kerning(1.0)
+                        .kerning(0.8)
                         .foregroundStyle(Theme.textPrimary)
                 }
                 .buttonStyle(.plain)

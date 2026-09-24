@@ -1320,14 +1320,14 @@ struct ProfileView: View {
 
                         if isAuthenticated && !userEmail.isEmpty && userEmail != "invite@lifeos.local" {
                             Text("Connecté")
-                                .font(AppFont.mono(size: 10, weight: .bold))
+                                .font(AppFont.body(size: 10, weight: .bold))
                                 .foregroundStyle(Color.green)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(Color.green.opacity(0.15), in: Capsule())
                         } else {
                             Text("Invité")
-                                .font(AppFont.mono(size: 10, weight: .bold))
+                                .font(AppFont.body(size: 10, weight: .bold))
                                 .foregroundStyle(Color.orange)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -1336,7 +1336,7 @@ struct ProfileView: View {
                     }
 
                     Text(accountEmailDisplay)
-                        .font(AppFont.mono(size: 12, weight: .medium))
+                        .font(AppFont.body(size: 12, weight: .regular))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
 

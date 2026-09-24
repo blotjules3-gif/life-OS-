@@ -138,12 +138,10 @@ struct MacDesktopMainView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("LifeOS")
-                        .font(AppFont.sans(size: 19, weight: .black))
+                        .font(AppFont.heading(size: 19, weight: .black))
                         .foregroundStyle(.primary)
                     Text("Système Personnel")
-                        .font(AppFont.mono(size: 10, weight: .bold))
-                        .textCase(.uppercase)
-                        .kerning(0.8)
+                        .font(AppFont.body(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
 
@@ -163,9 +161,8 @@ struct MacDesktopMainView: View {
                     navRow(.assistant)
                     navRow(.tabata)
                 } header: {
-                    Text("// ESPACE DE TRAVAIL")
-                        .font(AppFont.mono(size: 11, weight: .bold))
-                        .kerning(1.0)
+                    Text("ESPACE DE TRAVAIL")
+                        .font(AppFont.body(size: 11, weight: .bold))
                         .foregroundStyle(.secondary)
                 }
 
@@ -175,9 +172,8 @@ struct MacDesktopMainView: View {
                     }
                 } header: {
                     HStack {
-                        Text("// CATÉGORIES")
-                            .font(AppFont.mono(size: 11, weight: .bold))
-                            .kerning(1.0)
+                        Text("CATÉGORIES")
+                            .font(AppFont.body(size: 11, weight: .bold))
                             .foregroundStyle(.secondary)
                         Spacer()
                         Button {
@@ -187,7 +183,7 @@ struct MacDesktopMainView: View {
                                 Image(systemName: "arrow.up.arrow.down")
                                 Text("Trier")
                             }
-                            .font(AppFont.mono(size: 11, weight: .bold))
+                            .font(AppFont.body(size: 11, weight: .semibold))
                             .foregroundStyle(Color.accentColor)
                         }
                         .buttonStyle(.plain)
@@ -198,9 +194,8 @@ struct MacDesktopMainView: View {
                 Section {
                     navRow(.allCategories)
                 } header: {
-                    Text("// VUE D'ENSEMBLE")
-                        .font(AppFont.mono(size: 11, weight: .bold))
-                        .kerning(1.0)
+                    Text("VUE D'ENSEMBLE")
+                        .font(AppFont.body(size: 11, weight: .bold))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -218,17 +213,17 @@ struct MacDesktopMainView: View {
                         .frame(width: 34, height: 34)
                         .overlay(
                             Text(String(displayName.prefix(1)).uppercased())
-                                .font(AppFont.sans(size: 14, weight: .black))
+                                .font(AppFont.heading(size: 14, weight: .black))
                                 .foregroundStyle(Color.accentColor)
                         )
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(displayName)
-                            .font(AppFont.sans(size: 13, weight: .bold))
+                            .font(AppFont.heading(size: 13, weight: .bold))
                             .foregroundStyle(.primary)
                             .lineLimit(1)
                         Text(userEmail.isEmpty ? "Compte local" : userEmail)
-                            .font(AppFont.mono(size: 10, weight: .medium))
+                            .font(AppFont.body(size: 11, weight: .regular))
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }
@@ -253,7 +248,7 @@ struct MacDesktopMainView: View {
         NavigationLink(value: section) {
             Label {
                 Text(section.label)
-                    .font(AppFont.sans(size: 14, weight: selection == section ? .black : .bold))
+                    .font(AppFont.body(size: 14, weight: selection == section ? .bold : .medium))
             } icon: {
                 Image(systemName: section.icon)
                     .font(.system(size: 15))
@@ -476,11 +471,11 @@ struct MacDesktopDashboardView: View {
                         .font(.system(size: 15))
                         .foregroundStyle(.yellow)
                     Text("Modules Prioritaires")
-                        .font(AppFont.sans(size: 18, weight: .black))
+                        .font(AppFont.heading(size: 18, weight: .black))
                 }
                 Spacer()
                 Text("Classés selon vos préférences")
-                    .font(AppFont.mono(size: 11, weight: .medium))
+                    .font(AppFont.body(size: 12, weight: .regular))
                     .foregroundStyle(.secondary)
             }
 
@@ -501,11 +496,11 @@ struct MacDesktopDashboardView: View {
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(cat.title)
-                                    .font(AppFont.sans(size: 13, weight: .bold))
+                                    .font(AppFont.heading(size: 13, weight: .bold))
                                     .foregroundStyle(.primary)
                                     .lineLimit(1)
                                 Text(cat.subtitle)
-                                    .font(AppFont.mono(size: 11, weight: .medium))
+                                    .font(AppFont.body(size: 11, weight: .regular))
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)
                             }
@@ -533,17 +528,15 @@ struct MacDesktopDashboardView: View {
         HStack(alignment: .center, spacing: 18) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(currentDateString)
-                    .font(AppFont.mono(size: 12, weight: .bold))
+                    .font(AppFont.body(size: 13, weight: .semibold))
                     .foregroundStyle(Color.accentColor)
-                    .textCase(.uppercase)
-                    .kerning(1.2)
 
                 Text("Bonjour, \(displayName)")
-                    .font(AppFont.sans(size: 34, weight: .black))
+                    .font(AppFont.heading(size: 34, weight: .black))
                     .foregroundStyle(.primary)
 
                 Text("Tu as complété \(doneHabitsCount) sur \(activeHabits.count) habitudes prévues aujourd'hui.")
-                    .font(AppFont.mono(size: 13, weight: .medium))
+                    .font(AppFont.body(size: 14, weight: .regular))
                     .foregroundStyle(.secondary)
             }
 
@@ -562,18 +555,16 @@ struct MacDesktopDashboardView: View {
                         .rotationEffect(.degrees(-90))
 
                     Text("\(energyScore)")
-                        .font(AppFont.mono(size: 19, weight: .bold))
+                        .font(AppFont.heading(size: 19, weight: .black))
                         .foregroundStyle(Color.accentColor)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Score Énergie")
-                        .font(AppFont.mono(size: 10, weight: .bold))
-                        .textCase(.uppercase)
-                        .kerning(0.8)
+                        .font(AppFont.body(size: 11, weight: .semibold))
                         .foregroundStyle(.secondary)
                     Text(energyLabel.isEmpty ? "Excellente forme" : energyLabel)
-                        .font(AppFont.sans(size: 15, weight: .bold))
+                        .font(AppFont.heading(size: 15, weight: .bold))
                         .foregroundStyle(.primary)
                 }
             }
@@ -607,7 +598,7 @@ struct MacDesktopDashboardView: View {
                             selectedFilter = filter
                         } label: {
                             Text(filter.rawValue)
-                                .font(AppFont.mono(size: 11, weight: .bold))
+                                .font(AppFont.body(size: 11, weight: .semibold))
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 5)
                                 .background(selectedFilter == filter ? Color.accentColor : Color.clear)
@@ -627,7 +618,7 @@ struct MacDesktopDashboardView: View {
                         Image(systemName: "plus")
                         Text("Ajouter")
                     }
-                    .font(AppFont.mono(size: 12, weight: .bold))
+                    .font(AppFont.body(size: 12, weight: .bold))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .background(Color.accentColor.opacity(0.12))
@@ -643,12 +634,12 @@ struct MacDesktopDashboardView: View {
                         .font(.system(size: 38))
                         .foregroundStyle(.secondary.opacity(0.6))
                     Text("Aucune habitude pour ce moment de la journée.")
-                        .font(AppFont.mono(size: 13, weight: .medium))
+                        .font(AppFont.body(size: 13, weight: .medium))
                         .foregroundStyle(.secondary)
                     Button("Créer une nouvelle habitude") {
                         onOpenHabitCreator()
                     }
-                    .font(AppFont.mono(size: 12, weight: .bold))
+                    .font(AppFont.body(size: 12, weight: .bold))
                     .foregroundStyle(Color.accentColor)
                 }
                 .frame(maxWidth: .infinity)
@@ -692,14 +683,14 @@ struct MacDesktopDashboardView: View {
 
                 HStack(spacing: 6) {
                     Text(String(format: "%02dh%02d", habit.scheduledHour, habit.scheduledMinute))
-                        .font(AppFont.mono(size: 11, weight: .semibold))
+                        .font(AppFont.body(size: 11, weight: .semibold))
                         .foregroundStyle(.secondary)
 
                     if habit.completions.count > 0 {
                         Text("·")
                             .foregroundStyle(.secondary)
                         Text("🔥 \(habit.completions.count) j")
-                            .font(AppFont.mono(size: 11, weight: .bold))
+                            .font(AppFont.body(size: 11, weight: .bold))
                             .foregroundStyle(.orange)
                     }
                 }
@@ -764,7 +755,7 @@ struct MacDesktopDashboardView: View {
                 }
                 Spacer()
                 Text("\(todos.filter { !$0.done }.count) restantes")
-                    .font(AppFont.mono(size: 11, weight: .bold))
+                    .font(AppFont.body(size: 11, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
 
@@ -778,7 +769,7 @@ struct MacDesktopDashboardView: View {
                     .onSubmit(addNewTask)
                 if !newTaskTitle.isEmpty {
                     Button("Ajouter", action: addNewTask)
-                        .font(AppFont.mono(size: 12, weight: .bold))
+                        .font(AppFont.body(size: 12, weight: .bold))
                         .foregroundStyle(Color.accentColor)
                 }
             }
@@ -790,7 +781,7 @@ struct MacDesktopDashboardView: View {
                 let pending = todos.filter { !$0.done }
                 if pending.isEmpty {
                     Text("Toutes les tâches sont terminées ! Bravo 🎉")
-                        .font(AppFont.mono(size: 12, weight: .medium))
+                        .font(AppFont.body(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                         .padding(.vertical, 8)
                 } else {
@@ -815,7 +806,7 @@ struct MacDesktopDashboardView: View {
 
                             if !todo.project.isEmpty {
                                 Text(todo.project)
-                                    .font(AppFont.mono(size: 10, weight: .bold))
+                                    .font(AppFont.body(size: 10, weight: .semibold))
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 3)
                                     .background(Color.secondary.opacity(0.12), in: Capsule())
@@ -858,7 +849,7 @@ struct MacDesktopDashboardView: View {
                         .foregroundStyle(Color(hex: 0x3CD0C8))
                     Spacer()
                     Text("\(waterToday) / \(waterGoal) ml")
-                        .font(AppFont.mono(size: 13, weight: .bold))
+                        .font(AppFont.body(size: 13, weight: .bold))
                 }
                 ProgressView(value: min(Double(waterToday), Double(waterGoal)), total: Double(waterGoal))
                     .tint(Color(hex: 0x3CD0C8))
@@ -874,7 +865,7 @@ struct MacDesktopDashboardView: View {
                             Image(systemName: "plus")
                             Text("250 ml")
                         }
-                        .font(AppFont.mono(size: 11, weight: .bold))
+                        .font(AppFont.body(size: 11, weight: .bold))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
                         .background(Color(hex: 0x3CD0C8).opacity(0.15))
@@ -895,7 +886,7 @@ struct MacDesktopDashboardView: View {
                         .foregroundStyle(Color(hex: 0xF1746C))
                     Spacer()
                     Text("\(kcalToday) / \(kcalGoal) kcal")
-                        .font(AppFont.mono(size: 13, weight: .bold))
+                        .font(AppFont.body(size: 13, weight: .bold))
                 }
                 ProgressView(value: min(Double(kcalToday), Double(kcalGoal)), total: Double(kcalGoal))
                     .tint(Color(hex: 0xF1746C))
@@ -912,7 +903,7 @@ struct MacDesktopDashboardView: View {
                     Text("Jeûne Intermittent")
                         .font(AppFont.sans(size: 13, weight: .bold))
                     Text(activeFast != nil ? "En cours · \(Int((activeFast?.elapsed ?? 0) / 3600))h écoulées" : "Aucun jeûne actif")
-                        .font(AppFont.mono(size: 11, weight: .medium))
+                        .font(AppFont.body(size: 11, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -982,7 +973,7 @@ struct MacDesktopDashboardView: View {
             }
 
             Text("Tu as maintenu une excellente régularité cette semaine. Prends 5 minutes pour ta séance de respiration en fin d'après-midi.")
-                .font(AppFont.mono(size: 12, weight: .medium))
+                .font(AppFont.body(size: 12, weight: .regular))
                 .foregroundStyle(.secondary)
                 .lineSpacing(3)
 
@@ -991,7 +982,7 @@ struct MacDesktopDashboardView: View {
                     Text("Discuter avec le coach")
                     Image(systemName: "arrow.right")
                 }
-                .font(AppFont.mono(size: 12, weight: .bold))
+                .font(AppFont.body(size: 12, weight: .bold))
                 .foregroundStyle(Color(hex: 0x9B6CF1))
             }
             .buttonStyle(.plain)
@@ -1132,10 +1123,10 @@ struct MacDesktopCategoriesOverview: View {
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Catégories & Modules")
-                            .font(AppFont.sans(size: 28, weight: .black))
+                            .font(AppFont.heading(size: 28, weight: .black))
                             .foregroundStyle(.primary)
                         Text("Tous vos modules LifeOS organisés selon vos priorités")
-                            .font(AppFont.mono(size: 13, weight: .medium))
+                            .font(AppFont.body(size: 13, weight: .regular))
                             .foregroundStyle(.secondary)
                     }
 
@@ -1148,7 +1139,7 @@ struct MacDesktopCategoriesOverview: View {
                             Image(systemName: "arrow.up.arrow.down")
                             Text("Trier les catégories")
                         }
-                        .font(AppFont.mono(size: 12, weight: .bold))
+                        .font(AppFont.body(size: 12, weight: .bold))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
                         .background(Color.accentColor.opacity(0.12), in: Capsule())
@@ -1164,7 +1155,7 @@ struct MacDesktopCategoriesOverview: View {
                         .foregroundStyle(.secondary)
                     TextField("Filtrer une catégorie ou un outil...", text: $searchText)
                         .textFieldStyle(.plain)
-                        .font(AppFont.mono(size: 13, weight: .medium))
+                        .font(AppFont.body(size: 13, weight: .regular))
                     if !searchText.isEmpty {
                         Button {
                             searchText = ""
@@ -1201,7 +1192,7 @@ struct MacDesktopCategoriesOverview: View {
             HStack(alignment: .top) {
                 // Numéro de rang
                 Text(String(format: "#%02d", rank))
-                    .font(AppFont.mono(size: 12, weight: .bold))
+                    .font(AppFont.body(size: 12, weight: .bold))
                     .foregroundStyle(.secondary)
 
                 Spacer()
@@ -1219,18 +1210,18 @@ struct MacDesktopCategoriesOverview: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(cat.title)
-                    .font(AppFont.sans(size: 17, weight: .black))
+                    .font(AppFont.heading(size: 17, weight: .black))
                     .foregroundStyle(.primary)
 
                 Text(cat.subtitle)
-                    .font(AppFont.mono(size: 12, weight: .medium))
+                    .font(AppFont.body(size: 12, weight: .regular))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
 
             HStack {
                 Text("Ouvrir le module")
-                    .font(AppFont.mono(size: 11, weight: .bold))
+                    .font(AppFont.body(size: 11, weight: .bold))
                     .foregroundStyle(cat.tint)
                 Spacer()
                 Image(systemName: "arrow.right.circle.fill")

@@ -352,7 +352,7 @@ struct OnboardingWelcome: View {
                         .font(AppFont.sans(size: 32, weight: .black))
                         .multilineTextAlignment(.center)
                     Text("Ton système personnel pour tout\norganiser et progresser chaque jour.")
-                        .font(AppFont.mono(size: 13, weight: .medium))
+                        .font(AppFont.body(size: 14, weight: .regular))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
@@ -382,10 +382,10 @@ struct OnboardingWelcome: View {
                     Button(action: onSignIn) {
                         HStack(spacing: 4) {
                             Text("Tu as déjà un compte ?")
-                                .font(AppFont.mono(size: 12, weight: .medium))
+                                .font(AppFont.body(size: 13, weight: .regular))
                                 .foregroundStyle(Theme.textSecondary)
                             Text("Se connecter")
-                                .font(AppFont.mono(size: 12, weight: .bold))
+                                .font(AppFont.body(size: 13, weight: .bold))
                                 .foregroundStyle(Color.accentColor)
                         }
                         .padding(.vertical, 6)

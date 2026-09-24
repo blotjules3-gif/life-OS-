@@ -388,10 +388,10 @@ struct HabitTrackerView: View {
                                 Circle()
                                     .fill(Color.orange)
                                     .frame(width: 6, height: 6)
-                                Text("// PROPOSÉES PAR LIFEOS")
-                                    .font(AppFont.mono(size: 10, weight: .bold))
+                                Text("PROPOSÉES PAR LIFEOS")
+                                    .font(AppFont.body(size: 11, weight: .bold))
                                     .foregroundStyle(.secondary)
-                                    .kerning(1.2)
+                                    .kerning(0.5)
                             }
                             ForEach(pendingHabits) { h in
                                 PendingHabitRow(habit: h)
@@ -405,10 +405,10 @@ struct HabitTrackerView: View {
                     } else if !activeHabits.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
                             if !pendingHabits.isEmpty {
-                                Text("// MES HABITUDES")
-                                    .font(AppFont.mono(size: 10, weight: .bold))
+                                Text("MES HABITUDES")
+                                    .font(AppFont.body(size: 11, weight: .bold))
                                     .foregroundStyle(.secondary)
-                                    .kerning(1.2)
+                                    .kerning(0.5)
                             }
                             ForEach(activeHabits) { h in HabitRow(habit: h, onEdit: { editingHabit = h }, onDelete: { softDelete(h) }) }
                         }
@@ -574,7 +574,7 @@ struct HabitRow: View {
                     .font(AppFont.sans(size: 15, weight: .bold))
                     .foregroundStyle(Theme.textPrimary)
                 Text(timeLabel)
-                    .font(AppFont.mono(size: 12, weight: .semibold))
+                    .font(AppFont.body(size: 12, weight: .medium))
                     .foregroundStyle(.secondary)
             }
 
@@ -584,7 +584,7 @@ struct HabitRow: View {
                 HStack(spacing: 3) {
                     Image(systemName: "flame.fill").font(.caption2).foregroundStyle(.orange)
                     Text("\(streak)")
-                        .font(AppFont.mono(size: 12, weight: .bold))
+                        .font(AppFont.body(size: 12, weight: .bold))
                         .foregroundStyle(.orange)
                 }
             }
