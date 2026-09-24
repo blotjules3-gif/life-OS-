@@ -27,6 +27,7 @@ cp -R /tmp/lifeos-catalyst/Build/Products/Debug-maccatalyst/LifeOS.app ~/Applica
 
 # 4. Lancement et mise au premier plan
 killall LifeOS 2>/dev/null || true
+sleep 1
 open ~/Applications/LifeOS.app
 sleep 0.5
 osascript -e 'tell application "LifeOS" to activate' 2>/dev/null || true

@@ -145,6 +145,7 @@ struct FaceAnalysisView: View {
     @State private var busy = false
     @State private var noFace = false
     @State private var pickerItem: PhotosPickerItem?
+    @State private var showFilePicker = false
 
     private var overall: Int {
         guard let m = metrics, !m.isEmpty else { return 0 }
@@ -157,6 +158,26 @@ struct FaceAnalysisView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     preview
+                    #if targetEnvironment(macCatalyst)
+                    HStack(spacing: 12) {
+                        Button {
+                            showFilePicker = true
+                        } label: {
+                            Label(image == nil ? "Fichiers (Finder)..." : "Changer de fichier", systemImage: "folder.fill")
+                                .frame(maxWidth: .infinity).padding(.vertical, 12)
+                                .background(Color.looksTint.gradient, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+                                .foregroundStyle(.white).font(.headline)
+                        }
+                        .buttonStyle(.plain)
+
+                        PhotosPicker(selection: $pickerItem, matching: .images) {
+                            Label("Photothèque", systemImage: "photo.on.rectangle")
+                                .frame(maxWidth: .infinity).padding(.vertical, 12)
+                                .background(Theme.bg2, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+                                .foregroundStyle(Color.looksTint).font(.headline)
+                        }
+                    }
+                    #else
                     PhotosPicker(selection: $pickerItem, matching: .images) {
                         Label(image == nil ? "Choisir un portrait" : "Changer de photo",
                               systemImage: "photo.on.rectangle")
@@ -164,6 +185,7 @@ struct FaceAnalysisView: View {
                             .background(Color.looksTint.gradient, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
                             .foregroundStyle(.white).font(.headline)
                     }
+                    #endif
                     if busy { ProgressView("Analyse des points du visage…").padding() }
                     if noFace { errorCard }
                     if let m = metrics, !busy { results(m) }
@@ -172,8 +194,21 @@ struct FaceAnalysisView: View {
                 }
                 .padding(Theme.pad)
             }
+            .onDesktopImageDrop { img in
+                Task { await run(img) }
+            }
         }
         .navigationTitle("Analyse faciale").navigationBarTitleDisplayMode(.inline)
+        .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.image]) { result in
+            switch result {
+            case .success(let url):
+                if let img = DesktopImageHelper.loadImage(from: url) {
+                    Task { await run(img) }
+                }
+            case .failure:
+                break
+            }
+        }
         .onChange(of: pickerItem) { _, item in
             guard let item else { return }
             Task {
@@ -193,10 +228,16 @@ struct FaceAnalysisView: View {
             } else {
                 VStack(spacing: 10) {
                     Image(systemName: "face.dashed").font(.system(size: 54)).foregroundStyle(.looksTint)
+                    #if targetEnvironment(macCatalyst)
+                    Text("Glisse un portrait ici ou choisis un fichier").font(.headline).foregroundStyle(Theme.textPrimary)
                     Text("Photo de face, bien éclairée").font(.subheadline).foregroundStyle(Theme.textSecondary)
+                    #else
+                    Text("Photo de face, bien éclairée").font(.subheadline).foregroundStyle(Theme.textSecondary)
+                    #endif
                 }
                 .frame(maxWidth: .infinity).padding(.vertical, 40)
                 .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18))
+                .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [6])).foregroundStyle(Color.looksTint.opacity(0.35)))
             }
         }
     }

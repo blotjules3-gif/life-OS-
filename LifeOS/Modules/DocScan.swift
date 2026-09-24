@@ -63,6 +63,7 @@ struct DocScanView: View {
     @State private var analyzed = false
     @State private var pickerItem: PhotosPickerItem?
     @State private var showCamera = false
+    @State private var showFilePicker = false
     @State private var savedToast = false
     @State private var saveError: String?
 
@@ -88,9 +89,22 @@ struct DocScanView: View {
                 }
                 .padding()
             }
+            .onDesktopImageDrop { img in
+                handle(img)
+            }
             if savedToast { toast }
         }
         .navigationTitle("Scan & classement").navigationBarTitleDisplayMode(.inline)
+        .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.image, .pdf]) { result in
+            switch result {
+            case .success(let url):
+                if let img = DesktopImageHelper.loadImage(from: url) {
+                    handle(img)
+                }
+            case .failure:
+                break
+            }
+        }
         .sheet(isPresented: $showCamera) {
             DocumentScannerView { img in if let img { handle(img) } }
                 .ignoresSafeArea()
@@ -114,18 +128,37 @@ struct DocScanView: View {
             } else {
                 VStack(spacing: 10) {
                     Image(systemName: "doc.viewfinder.fill").font(.system(size: 46)).foregroundStyle(.adminTint)
+                    #if targetEnvironment(macCatalyst)
+                    Text("Glisse un document ici ou choisis un fichier").font(.headline).foregroundStyle(Theme.textPrimary)
+                    Text("Supporte les images et les documents PDF").font(.caption).foregroundStyle(Theme.textSecondary)
+                    #else
                     Text("Scanne ou choisis un document").font(.subheadline).foregroundStyle(Theme.textSecondary)
                     Text("LifeOS lit le texte, devine la catégorie et le range tout seul.")
                         .font(.caption).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
+                    #endif
                 }
                 .frame(maxWidth: .infinity).padding(.vertical, 34)
                 .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [6])).foregroundStyle(Color.adminTint.opacity(0.35)))
             }
         }
     }
 
     private var sourceButtons: some View {
         HStack(spacing: 12) {
+            #if targetEnvironment(macCatalyst)
+            Button {
+                showFilePicker = true
+            } label: {
+                Label("Fichiers (Finder)...", systemImage: "folder.fill").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent).tint(.adminTint)
+
+            PhotosPicker(selection: $pickerItem, matching: .images) {
+                Label("Photothèque", systemImage: "photo").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered).tint(.adminTint)
+            #else
             if cameraAvailable {
                 Button { showCamera = true } label: {
                     Label("Scanner", systemImage: "camera.fill").frame(maxWidth: .infinity)
@@ -135,6 +168,7 @@ struct DocScanView: View {
                 Label("Choisir une photo", systemImage: "photo").frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered).tint(.adminTint)
+            #endif
         }
     }
 

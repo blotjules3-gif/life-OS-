@@ -97,6 +97,7 @@ struct PhotoCalorieView: View {
     @State private var busy = false
     @State private var failed = false
     @State private var showCamera = false
+    @State private var showFilePicker = false
     @State private var pickerItem: PhotosPickerItem?
     @State private var meal = "Déjeuner"
     @State private var savedToast = false
@@ -120,11 +121,24 @@ struct PhotoCalorieView: View {
                 }
                 .padding()
             }
+            .onDesktopImageDrop { img in
+                handle(img)
+            }
             if savedToast { toast }
         }
         .navigationTitle("Calories par photo").navigationBarTitleDisplayMode(.inline)
         .fullScreenCover(isPresented: $showCamera) {
             CameraPicker { img in if let img { handle(img) } }.ignoresSafeArea()
+        }
+        .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.image]) { result in
+            switch result {
+            case .success(let url):
+                if let img = DesktopImageHelper.loadImage(from: url) {
+                    handle(img)
+                }
+            case .failure:
+                break
+            }
         }
         .onChange(of: pickerItem) { _, item in
             guard let item else { return }
@@ -150,18 +164,46 @@ struct PhotoCalorieView: View {
                     .frame(maxWidth: .infinity).frame(height: 240).clipped()
                     .clipShape(RoundedRectangle(cornerRadius: 16))
             } else {
-                VStack(spacing: 10) {
-                    Image(systemName: "camera.viewfinder").font(.system(size: 50)).foregroundStyle(tint)
+                VStack(spacing: 12) {
+                    Image(systemName: "photo.badge.plus").font(.system(size: 48)).foregroundStyle(tint)
+                    #if targetEnvironment(macCatalyst)
+                    Text("Glisse une photo ici ou choisis un fichier")
+                        .font(.headline)
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("Glisser-déposer depuis le Finder ou clic ci-dessous")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.textSecondary)
+                    #else
                     Text("Photographie ton assiette").font(.subheadline).foregroundStyle(Theme.textSecondary)
+                    #endif
                 }
                 .frame(maxWidth: .infinity).padding(.vertical, 40)
                 .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [6])).foregroundStyle(tint.opacity(0.35)))
             }
         }
     }
 
     private var sourceButtons: some View {
         HStack(spacing: 12) {
+            #if targetEnvironment(macCatalyst)
+            Button {
+                showFilePicker = true
+            } label: {
+                Label("Fichiers (Finder)...", systemImage: "folder.fill")
+                    .frame(maxWidth: .infinity).padding(.vertical, 12)
+                    .background(tint.gradient, in: RoundedRectangle(cornerRadius: 12))
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.plain)
+
+            PhotosPicker(selection: $pickerItem, matching: .images) {
+                Label("Photothèque", systemImage: "photo.on.rectangle")
+                    .frame(maxWidth: .infinity).padding(.vertical, 12)
+                    .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 12))
+                    .foregroundStyle(tint)
+            }
+            #else
             if cameraAvailable {
                 Button { showCamera = true } label: {
                     Label("Prendre une photo", systemImage: "camera.fill").frame(maxWidth: .infinity).padding(.vertical, 12)
@@ -173,6 +215,7 @@ struct PhotoCalorieView: View {
                     .frame(maxWidth: .infinity).padding(.vertical, 12)
                     .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 12)).foregroundStyle(tint)
             }
+            #endif
         }
     }
 

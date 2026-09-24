@@ -262,6 +262,7 @@ struct FaceScanView: View {
 
     @State private var pickerItem: PhotosPickerItem?
     @State private var showCamera = false
+    @State private var showFilePicker = false
     @State private var image: UIImage?
     @State private var result: FaceAnalysis?
     @State private var loading = false
@@ -275,6 +276,23 @@ struct FaceScanView: View {
                 placeholder
             }
 
+            #if targetEnvironment(macCatalyst)
+            HStack(spacing: 10) {
+                Button { showFilePicker = true } label: {
+                    Label("Fichiers (Finder)...", systemImage: "folder.fill")
+                        .font(.subheadline.weight(.bold)).frame(maxWidth: .infinity).padding(.vertical, 13)
+                        .background(accent, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                        .foregroundStyle(Theme.onAccent)
+                }.buttonStyle(.plain)
+
+                PhotosPicker(selection: $pickerItem, matching: .images) {
+                    Label("Photothèque", systemImage: "photo.on.rectangle")
+                        .font(.subheadline.weight(.bold)).frame(maxWidth: .infinity).padding(.vertical, 13)
+                        .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                        .foregroundStyle(Theme.textPrimary)
+                }
+            }
+            #else
             HStack(spacing: 10) {
                 Button { showCamera = true } label: {
                     Label("Prendre une photo", systemImage: "camera.fill")
@@ -289,14 +307,28 @@ struct FaceScanView: View {
                         .foregroundStyle(Theme.textPrimary)
                 }
             }
+            #endif
             if failed {
                 Text("Aucun visage détecté — cadre bien ton visage de face, en lumière.")
                     .font(.caption).foregroundStyle(.orange).multilineTextAlignment(.center)
             }
-            Text("Analyse 100 % sur ton iPhone — aucune photo n'est envoyée.")
+            Text("Analyse 100 % sur ton appareil — aucune photo n'est envoyée.")
                 .font(.caption2).foregroundStyle(Theme.textSecondary)
         }
         .padding(.horizontal, 14)
+        .onDesktopImageDrop { img in
+            analyze(img)
+        }
+        .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.image]) { res in
+            switch res {
+            case .success(let url):
+                if let img = DesktopImageHelper.loadImage(from: url) {
+                    analyze(img)
+                }
+            case .failure:
+                break
+            }
+        }
         .fullScreenCover(isPresented: $showCamera) {
             CameraPicker { img in showCamera = false; if let img { analyze(img) } }.ignoresSafeArea()
         }
@@ -314,13 +346,19 @@ struct FaceScanView: View {
         VStack(spacing: 12) {
             ZStack {
                 RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Theme.bg2).frame(height: 190)
+                    .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [6])).foregroundStyle(accent.opacity(0.35)))
                 if loading {
                     ProgressView().tint(accent)
                 } else {
                     VStack(spacing: 8) {
                         Image(systemName: "face.dashed").font(.system(size: 44, weight: .semibold)).foregroundStyle(accent)
+                        #if targetEnvironment(macCatalyst)
+                        Text("Glisse un portrait ici ou choisis un fichier").font(.headline).foregroundStyle(Theme.textPrimary)
+                        Text("Pour te recommander la coupe adaptée").font(.caption).foregroundStyle(Theme.textSecondary)
+                        #else
                         Text("Analyse ta forme de visage").font(.headline).foregroundStyle(Theme.textPrimary)
                         Text("Pour te recommander LA coupe adaptée").font(.caption).foregroundStyle(Theme.textSecondary)
+                        #endif
                     }
                 }
             }

@@ -75,9 +75,52 @@ struct PhotoPickerButton: View {
     var prefix: String = "img"
     let onPicked: (String) -> Void
     @State private var selection: PhotosPickerItem?
+    #if targetEnvironment(macCatalyst)
+    @State private var showFilePicker = false
+    #endif
+
     var body: some View {
+        #if targetEnvironment(macCatalyst)
+        Menu {
+            Button {
+                showFilePicker = true
+            } label: {
+                Label("Fichiers (Finder)...", systemImage: "folder")
+            }
+            PhotosPicker(selection: $selection, matching: .images) {
+                Label("Photothèque...", systemImage: "photo")
+            }
+        } label: {
+            if label.isEmpty {
+                Image(systemName: "plus.circle.fill")
+                    .imageScale(.large)
+            } else {
+                Label(label, systemImage: "photo.badge.plus")
+            }
+        }
+        .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.image]) { result in
+            if case .success(let url) = result,
+               let data = DesktopImageHelper.loadData(from: url),
+               let name = ImageStore.save(data, prefix: prefix) {
+                onPicked(name)
+            }
+        }
+        .task(id: selection) {
+            guard let item = selection else { return }
+            if let data = try? await item.loadTransferable(type: Data.self),
+               let name = ImageStore.save(data, prefix: prefix) {
+                onPicked(name)
+            }
+            selection = nil
+        }
+        #else
         PhotosPicker(selection: $selection, matching: .images) {
-            Label(label, systemImage: "photo.badge.plus")
+            if label.isEmpty {
+                Image(systemName: "plus.circle.fill")
+                    .imageScale(.large)
+            } else {
+                Label(label, systemImage: "photo.badge.plus")
+            }
         }
         .task(id: selection) {
             guard let item = selection else { return }
@@ -86,5 +129,7 @@ struct PhotoPickerButton: View {
                 onPicked(name)
             }
         }
+        #endif
     }
 }
+

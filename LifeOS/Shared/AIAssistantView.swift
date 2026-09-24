@@ -894,6 +894,7 @@ struct AIAssistantView: View {
     /// dès que l'user atteint 3 dislikes dans les 24h (sans clé cloud).
     @ObservedObject private var upgradeSuggestion = CoachUpgradeSuggestion.shared
     @State private var photoItem: PhotosPickerItem?
+    @State private var showFilePicker = false
     @State private var speech = SpeechRecognizer()
     @State private var textBeforeVoice: String = ""
     @State private var micPulse = false
@@ -1139,6 +1140,19 @@ struct AIAssistantView: View {
                 }
             }
             .animation(.spring(response: 0.35, dampingFraction: 0.82), value: vm.actionToast?.id)
+            .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.image]) { result in
+                switch result {
+                case .success(let url):
+                    if let img = DesktopImageHelper.loadImage(from: url) {
+                        vm.analyzeImage(img)
+                    }
+                case .failure:
+                    break
+                }
+            }
+            .onDesktopImageDrop { img in
+                vm.analyzeImage(img)
+            }
         }
         .task {
             vm.modelContext = ctx
@@ -1440,15 +1454,38 @@ struct AIAssistantView: View {
                         .accessibilityHidden(true)
                 } else {
                     let loading = vm.isLoading
-                    PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
-                        Image(systemName: "photo.on.rectangle.angled")
-                            .font(.system(size: 20, weight: .medium))
-                            .foregroundStyle(loading ? Color.secondary : accent)
-                            .frame(width: 44, height: 44)
-                            .contentShape(Rectangle())
+                    Group {
+                        #if targetEnvironment(macCatalyst)
+                        Menu {
+                            Button {
+                                showFilePicker = true
+                            } label: {
+                                Label("Fichiers (Finder)...", systemImage: "folder")
+                            }
+                            PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
+                                Label("Photothèque...", systemImage: "photo")
+                            }
+                        } label: {
+                            Image(systemName: "photo.on.rectangle.angled")
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundStyle(loading ? Color.secondary : accent)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
+                        }
+                        .disabled(loading)
+                        .accessibilityLabel("Ajouter une photo")
+                        #else
+                        PhotosPicker(selection: $photoItem, matching: .images, photoLibrary: .shared()) {
+                            Image(systemName: "photo.on.rectangle.angled")
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundStyle(loading ? Color.secondary : accent)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
+                        }
+                        .disabled(loading)
+                        .accessibilityLabel("Ajouter une photo")
+                        #endif
                     }
-                    .disabled(loading)
-                    .accessibilityLabel("Ajouter une photo")
                     .onChange(of: photoItem) { _, item in
                         guard let item else { return }
                         Task {
