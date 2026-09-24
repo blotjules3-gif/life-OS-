@@ -540,12 +540,6 @@ struct TabataView: View {
                     .padding(.bottom, 16)
             }
 
-            if showChooser {
-                chooserOverlay
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .zIndex(10)
-            }
-
             if engine.phase == .done {
                 completionCelebrationView
                     .transition(.scale.combined(with: .opacity))
@@ -554,6 +548,12 @@ struct TabataView: View {
         }
         .statusBarHidden()
         .preferredColorScheme(.dark)
+        .sheet(isPresented: $showChooser) {
+            chooserSheetContent
+                .presentationDetents([.fraction(0.85), .large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Color(hex: 0x111318))
+        }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { engine.tick() }
         }
@@ -1105,89 +1105,62 @@ struct TabataView: View {
         )
     }
 
-    // MARK: - Écran de choix de séance (Sleek Modal Overlay)
+    // MARK: - Écran de choix de séance (Native Modal Sheet)
 
-    private var chooserOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.85).ignoresSafeArea()
-                .onTapGesture {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                        showChooser = false
-                    }
+    private var chooserSheetContent: some View {
+        VStack(spacing: 0) {
+            // Barre d'en-tête
+            HStack {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Entraînements HIIT")
+                        .font(.system(size: 22, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                    Text("Sélectionne un programme prêt ou personnalise tes intervalles")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.6))
                 }
+                Spacer()
+                Button {
+                    showChooser = false
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .frame(width: 32, height: 32)
+                        .background(Color.white.opacity(0.12), in: Circle())
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
 
-            VStack(spacing: 0) {
-                // Barre de poignée et titre
+            // Strip de réglage rapide
+            quickConfigStrip
+                .padding(.horizontal, 20)
+                .padding(.top, 14)
+                .padding(.bottom, 12)
+
+            // Liste déroulante des séances
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: 12) {
-                    Capsule()
-                        .fill(Color.white.opacity(0.25))
-                        .frame(width: 40, height: 5)
-                        .padding(.top, 10)
-
-                    HStack {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Entraînements HIIT")
-                                .font(.system(size: 24, weight: .black, design: .rounded))
-                                .foregroundStyle(.white)
-                            Text("Sélectionne un programme prêt ou personnalise tes intervalles")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.6))
-                        }
-                        Spacer()
+                    ForEach(availableSessions) { s in
                         Button {
-                            withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
-                                showChooser = false
-                            }
+                            pick(s)
                         } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(.white.opacity(0.8))
-                                .frame(width: 36, height: 36)
-                                .background(Color.white.opacity(0.12), in: Circle())
-                        }
-                    }
-                    .padding(.horizontal, 22)
-                }
-
-                // Strip de réglage rapide
-                quickConfigStrip
-                    .padding(.horizontal, 22)
-                    .padding(.top, 16)
-                    .padding(.bottom, 12)
-
-                // Liste déroulante des séances
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 12) {
-                        ForEach(availableSessions) { s in
-                            Button {
-                                pick(s)
-                            } label: {
-                                sessionCard(s)
-                            }
-                            .buttonStyle(PressableButtonStyle())
-                        }
-
-                        Button {
-                            pick(nil)
-                        } label: {
-                            freeIntervalCard
+                            sessionCard(s)
                         }
                         .buttonStyle(PressableButtonStyle())
                     }
-                    .padding(.horizontal, 22)
-                    .padding(.bottom, 30)
+
+                    Button {
+                        pick(nil)
+                    } label: {
+                        freeIntervalCard
+                    }
+                    .buttonStyle(PressableButtonStyle())
                 }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 30)
             }
-            .background(
-                RoundedRectangle(cornerRadius: 32, style: .continuous)
-                    .fill(Color(hex: 0x111318))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 32, style: .continuous)
-                    .stroke(Color.white.opacity(0.15), lineWidth: 1)
-            )
-            .padding(.top, 60)
-            .ignoresSafeArea(edges: .bottom)
         }
     }
 

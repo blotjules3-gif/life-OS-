@@ -94,13 +94,32 @@ import SwiftUI
     /// GoalPlanExecutor). Vide = habitude créée manuellement.
     /// Permet de propager archive/delete du goal aux habits associées.
     var sourceGoalID: String = ""
+    /// Jours actifs (1=Dim, 2=Lun, 3=Mar, 4=Mer, 5=Jeu, 6=Ven, 7=Sam).
+    var activeDaysRaw: String = "1,2,3,4,5,6,7"
     @Relationship(deleteRule: .cascade) var completions: [HabitCompletion]
-    init(name: String = "", icon: String = "checkmark", colorHex: Int = 0x4CC38A, createdAt: Date = .now, isPending: Bool = false, isArchived: Bool = false, moduleTag: String = "", scheduledHour: Int = 9, scheduledMinute: Int = 0, sourceGoalID: String = "") {
+    init(name: String = "", icon: String = "checkmark", colorHex: Int = 0x4CC38A, createdAt: Date = .now, isPending: Bool = false, isArchived: Bool = false, moduleTag: String = "", scheduledHour: Int = 9, scheduledMinute: Int = 0, sourceGoalID: String = "", activeDaysRaw: String = "1,2,3,4,5,6,7") {
         self.name = name; self.icon = icon; self.colorHex = colorHex; self.createdAt = createdAt
         self.isPending = isPending; self.isArchived = isArchived; self.moduleTag = moduleTag
         self.scheduledHour = scheduledHour; self.scheduledMinute = scheduledMinute
         self.sourceGoalID = sourceGoalID
+        self.activeDaysRaw = activeDaysRaw
         self.completions = []
+    }
+
+    /// Jours de la semaine actifs (1=Dim, 2=Lun, 3=Mar, 4=Mer, 5=Jeu, 6=Ven, 7=Sam)
+    var activeDays: Set<Int> {
+        get {
+            let set = Set(activeDaysRaw.split(separator: ",").compactMap { Int($0) })
+            return set.isEmpty ? Set(1...7) : set
+        }
+        set {
+            activeDaysRaw = newValue.sorted().map(String.init).joined(separator: ",")
+        }
+    }
+
+    func isActive(on date: Date = .now) -> Bool {
+        let weekday = Calendar.current.component(.weekday, from: date)
+        return activeDays.contains(weekday)
     }
 }
 

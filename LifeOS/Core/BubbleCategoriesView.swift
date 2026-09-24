@@ -420,7 +420,7 @@ struct BubbleCategoriesView: View {
             HStack(alignment: .top) {
                 Text(String(format: "%02d", index + 1)).monoLabel(12).foregroundStyle(.secondary)
                 Spacer()
-                IconBadge(icon: cat.systemImage, size: 42)
+                IconBadge(icon: cat.systemImage, tint: themedTint(cat), size: 42)
             }
             Spacer(minLength: 20)
             Text(cat.title)
@@ -1073,7 +1073,7 @@ struct ToolSearchView: View {
 
     private func rowLabel(_ hit: Hit) -> some View {
         HStack(spacing: 12) {
-            IconBadge(icon: hit.tool.icon, size: 40)
+            IconBadge(icon: hit.tool.icon, tint: themedTint(hit.cat), size: 40)
             VStack(alignment: .leading, spacing: 2) {
                 Text(hit.tool.title).font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Theme.textPrimary).lineLimit(1)

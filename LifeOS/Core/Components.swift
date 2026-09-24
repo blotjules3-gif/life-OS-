@@ -5,17 +5,23 @@ import UIKit
 
 extension Color {
     /// Noir ou blanc, celui des deux qui se lit sur cette couleur.
-    ///
-    /// Indispensable ici parce que la teinte d'accent CHANGE selon le theme:
-    /// elle est noire en Classique et BLANCHE en Sombre. Ecrire "glyphe blanc"
-    /// en dur donnait un glyphe blanc sur une pastille blanche, c'est a dire
-    /// un carre vide. On mesure la luminance et on tranche.
     var readableInk: Color {
+        let ui = UIColor(self).resolvedColor(with: UITraitCollection.current)
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        guard UIColor(self).getRed(&r, green: &g, blue: &b, alpha: &a) else { return .white }
-        // Luminance perceptuelle: l'oeil est bien plus sensible au vert.
-        let luma = 0.2126 * r + 0.7152 * g + 0.0722 * b
-        return luma > 0.62 ? .black : .white
+        if ui.getRed(&r, green: &g, blue: &b, alpha: &a) {
+            let luma = 0.2126 * r + 0.7152 * g + 0.0722 * b
+            return luma > 0.6 ? .black : .white
+        }
+        if let rgb = ui.cgColor.converted(to: CGColorSpaceCreateDeviceRGB(), intent: .defaultIntent, options: nil),
+           let comps = rgb.components, comps.count >= 3 {
+            let luma = 0.2126 * comps[0] + 0.7152 * comps[1] + 0.0722 * comps[2]
+            return luma > 0.6 ? .black : .white
+        }
+        var white: CGFloat = 0
+        if ui.getWhite(&white, alpha: &a) {
+            return white > 0.6 ? .black : .white
+        }
+        return .black
     }
 }
 

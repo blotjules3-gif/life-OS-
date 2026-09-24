@@ -42,7 +42,6 @@ struct AuthView: View {
     @State private var verificationCodeInput = ""
     @State private var expectedVerificationCode = "482915"
     @State private var verificationAttempts = 0
-    @State private var showSimulatedEmailNotification = false
     @State private var resendCountdown = 30
     @State private var resendTimer: Timer?
 
@@ -95,18 +94,6 @@ struct AuthView: View {
                 }
                 .padding(.horizontal, 24)
                 .frame(maxWidth: 440)
-            }
-
-            // Notification simulée de réception d'email
-            if showSimulatedEmailNotification {
-                VStack {
-                    simulatedEmailBanner
-                        .padding(.top, 10)
-                        .padding(.horizontal, 16)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                    Spacer()
-                }
-                .zIndex(100)
             }
         }
         .sheet(isPresented: $showGoogleAuthSheet) {
@@ -580,6 +567,11 @@ struct AuthView: View {
                         .foregroundStyle(Theme.textSecondary)
                 }
                 .buttonStyle(.plain)
+
+                Text("Pense à vérifier ton dossier de courriers indésirables / spams.")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.textSecondary.opacity(0.7))
+                    .multilineTextAlignment(.center)
             }
         }
     }
@@ -588,44 +580,6 @@ struct AuthView: View {
         guard index < verificationCodeInput.count else { return "" }
         let charIndex = verificationCodeInput.index(verificationCodeInput.startIndex, offsetBy: index)
         return String(verificationCodeInput[charIndex])
-    }
-
-    // MARK: - Banner de simulation d'email reçu
-
-    private var simulatedEmailBanner: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "envelope.fill")
-                .font(.system(size: 20))
-                .foregroundStyle(Color.accentColor)
-
-            VStack(alignment: .leading, spacing: 2) {
-                HStack {
-                    Text("LifeOS Sécurité")
-                        .font(.caption.weight(.bold))
-                    Spacer()
-                    Text("À l'instant")
-                        .font(.caption2)
-                        .foregroundStyle(Theme.textSecondary)
-                }
-                Text("Code de vérification : \(expectedVerificationCode)")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Theme.textPrimary)
-            }
-        }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(uiColor: .secondarySystemGroupedBackground))
-                .shadow(color: Color.black.opacity(0.18), radius: 14, y: 6)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.accentColor.opacity(0.3), lineWidth: 1)
-        )
-        .onTapGesture {
-            verificationCodeInput = expectedVerificationCode
-            verifyCode()
-        }
     }
 
     // MARK: - Modale Google Authentification Native
@@ -908,19 +862,16 @@ struct AuthView: View {
         verificationCodeInput = ""
         verificationAttempts = 0
 
+        let targetEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        Task {
+            _ = await EmailVerificationService.shared.sendCode(randomCode, to: targetEmail)
+        }
+
         withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
             step = .emailVerification
-            showSimulatedEmailNotification = true
         }
 
         startResendTimer()
-
-        // Cache la bannière après 8 secondes si pas cliquée
-        DispatchQueue.main.asyncAfter(deadline: .now() + 8.0) {
-            withAnimation(.easeInOut(duration: 0.4)) {
-                showSimulatedEmailNotification = false
-            }
-        }
     }
 
     private func startResendTimer() {

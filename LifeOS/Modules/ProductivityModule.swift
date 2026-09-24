@@ -642,15 +642,69 @@ struct HabitEditor: View {
     @State private var color = 0x4CC38A
     @State private var scheduledHour = 9
     @State private var scheduledMinute = 0
+    @State private var selectedDays: Set<Int> = Set(1...7)
 
     private let colors = [0x4CC38A, 0x618EF1, 0xF1746C, 0xE0A23C, 0x9B6CF1, 0x3CD0C8]
     private let minutes = [0, 15, 30, 45]
+    private let dayOptions: [(day: Int, label: String)] = [
+        (2, "L"), (3, "M"), (4, "M"), (5, "J"), (6, "V"), (7, "S"), (1, "D")
+    ]
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Habitude") {
                     TextField("Nom", text: $name)
+                }
+                Section("Jours actifs") {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 8) {
+                            ForEach(dayOptions, id: \.day) { opt in
+                                let isSel = selectedDays.contains(opt.day)
+                                Button {
+                                    if isSel {
+                                        if selectedDays.count > 1 { selectedDays.remove(opt.day) }
+                                    } else {
+                                        selectedDays.insert(opt.day)
+                                    }
+                                } label: {
+                                    Text(opt.label)
+                                        .font(.system(size: 14, weight: .bold))
+                                        .frame(width: 38, height: 38)
+                                        .background(isSel ? Color.accentColor : Color.primary.opacity(0.08), in: Circle())
+                                        .foregroundStyle(isSel ? Theme.onAccent : Theme.textPrimary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.vertical, 4)
+
+                        HStack(spacing: 8) {
+                            Button("Tous les jours") {
+                                selectedDays = Set(1...7)
+                            }
+                            .font(.system(size: 11, weight: .semibold))
+                            .buttonStyle(.bordered)
+                            .tint(selectedDays.count == 7 ? .accentColor : .secondary)
+
+                            Button("Semaine") {
+                                selectedDays = [2, 3, 4, 5, 6]
+                            }
+                            .font(.system(size: 11, weight: .semibold))
+                            .buttonStyle(.bordered)
+                            .tint(selectedDays == [2, 3, 4, 5, 6] ? .accentColor : .secondary)
+
+                            Button("Week-end") {
+                                selectedDays = [7, 1]
+                            }
+                            .font(.system(size: 11, weight: .semibold))
+                            .buttonStyle(.bordered)
+                            .tint(selectedDays == [7, 1] ? .accentColor : .secondary)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    .padding(.vertical, 4)
                 }
                 Section("Horaire") {
                     HStack(spacing: 0) {
@@ -688,7 +742,11 @@ struct HabitEditor: View {
                 if editingHabit != nil {
                     Section {
                         Button(role: .destructive) {
-                            if let h = editingHabit { ctx.delete(h) }
+                            if let h = editingHabit {
+                                ctx.delete(h)
+                                do { try ctx.save() } catch { AppLog.data.error("delete habit failed: \(error.localizedDescription, privacy: .public)") }
+                                WidgetCenter.shared.reloadAllTimelines()
+                            }
                             dismiss()
                         } label: {
                             HStack {
@@ -706,12 +764,20 @@ struct HabitEditor: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(editingHabit == nil ? "Créer" : "Enregistrer") {
+                        let daysRaw = selectedDays.sorted().map(String.init).joined(separator: ",")
                         if let h = editingHabit {
                             h.name = name; h.icon = icon; h.colorHex = color
                             h.scheduledHour = scheduledHour; h.scheduledMinute = scheduledMinute
+                            h.activeDaysRaw = daysRaw
                         } else {
-                            ctx.insert(Habit(name: name, icon: icon, colorHex: color, scheduledHour: scheduledHour, scheduledMinute: scheduledMinute))
+                            ctx.insert(Habit(name: name, icon: icon, colorHex: color, scheduledHour: scheduledHour, scheduledMinute: scheduledMinute, activeDaysRaw: daysRaw))
                         }
+                        do {
+                            try ctx.save()
+                        } catch {
+                            AppLog.data.error("save habit failed: \(error.localizedDescription, privacy: .public)")
+                        }
+                        WidgetCenter.shared.reloadAllTimelines()
                         dismiss()
                     }.disabled(name.isEmpty)
                 }
@@ -720,6 +786,7 @@ struct HabitEditor: View {
                 guard let h = editingHabit else { return }
                 name = h.name; icon = h.icon; color = h.colorHex
                 scheduledHour = h.scheduledHour; scheduledMinute = h.scheduledMinute
+                selectedDays = h.activeDays
             }
         }
     }

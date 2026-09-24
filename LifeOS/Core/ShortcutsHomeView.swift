@@ -198,7 +198,6 @@ struct ShortcutsHomeView: View {
 
     private var kcalYesterday: Int  { foodsYesterday.caloriesToday }
     private var waterYesterday: Int { watersYesterday.mlToday }
-    @State private var animatedHabitIDs: Set<PersistentIdentifier> = []
     @State private var showBilan = false
     @State private var fullScreenTool: ShortcutTool?
     @AppStorage(AppStorageKeys.tutorialDone) private var tutorialDone = false
@@ -591,25 +590,25 @@ struct ShortcutsHomeView: View {
 
     // MARK: Section 1 — Habitudes
 
+    private var todayHabits: [Habit] {
+        habits.filter { !$0.isArchived && !$0.isPending && $0.isActive(on: .now) }
+    }
+
     private var habitsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // "Gerer" ouvre le suivi complet: creer une habitude ne doit pas
-            // obliger a passer par le coach, qui etait le seul chemin.
+            // "Gérer" ouvre le suivi complet: créer et configurer ses habitudes
             sectionHeader("Habitudes", trailing: "Gérer") { showHabits = true }
-            if habits.isEmpty {
+            if todayHabits.isEmpty {
                 Button {
                     Haptics.tap()
-                    NotificationCenter.default.post(
-                        name: .lifeOSOpenAIChat, object: nil,
-                        userInfo: ["prefill": "Crée-moi une nouvelle habitude quotidienne"]
-                    )
+                    showHabits = true
                 } label: {
                     HStack(spacing: 13) {
                         IconBadge(icon: "infinity", tint: Color(hex: 0x9B6CF1), size: 40)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Créer une habitude")
                                 .font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
-                            Text("Demande à ton coach")
+                            Text("Personnalise tes habitudes du jour")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
@@ -622,36 +621,10 @@ struct ShortcutsHomeView: View {
                 .buttonStyle(PressableButtonStyle())
             } else {
                 VStack(spacing: 8) {
-                    ForEach(habits) { habit in
+                    ForEach(todayHabits) { habit in
                         habitRow(habit)
-                            .opacity(animatedHabitIDs.contains(habit.id) ? 1 : 0)
-                            .offset(y: animatedHabitIDs.contains(habit.id) ? 0 : 16)
                     }
                 }
-            }
-        }
-        .onChange(of: habits.count) { _, _ in animateNewHabits() }
-        .onAppear { animateNewHabits() }
-    }
-
-    private func habitStreak(_ habit: Habit) -> Int {
-        let cal = Calendar.current
-        var streak = 0
-        var date = cal.startOfDay(for: .now)
-        while habit.completions.contains(where: { cal.isDate($0.date, inSameDayAs: date) }) {
-            streak += 1
-            guard let prev = cal.date(byAdding: .day, value: -1, to: date) else { break }
-            date = prev
-        }
-        return streak
-    }
-
-    private func animateNewHabits() {
-        let newIDs = Set(habits.map { $0.id }).subtracting(animatedHabitIDs)
-        guard !newIDs.isEmpty else { return }
-        for (i, id) in newIDs.sorted(by: { $0.hashValue < $1.hashValue }).enumerated() {
-            withAnimation(.spring(duration: 0.45, bounce: 0.2).delay(Double(i) * 0.07)) {
-                _ = animatedHabitIDs.insert(id)
             }
         }
     }
