@@ -214,8 +214,11 @@ async function run() {
     } catch (e) {
       console.error(e.message);
     }
-  }
-}
 run();
 "
 
+echo ""
+echo "=================================================="
+echo "  Mise à jour automatique de LifeOS sur Mac"
+echo "=================================================="
+"$REPO_DIR/scripts/run-mac.sh" || true
