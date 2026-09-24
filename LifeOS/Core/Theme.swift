@@ -127,19 +127,20 @@ extension View {
 /// Design system de LifeOS — aligné sur le système de design Chifbay :
 /// Titres audacieux en Satoshi (Bold / Black) et typographie de lecture fluide en Inter.
 enum Theme {
-    // Surfaces adaptatives OLED Black & Liquid Glass :
+    // Surfaces adaptatives OLED Black & Apple Preview Liquid Glass :
     // En dark mode : Noir Pur (#000000) et verre cristallin translucide avec arête de glace spéculaire
+    // En light mode : Exact Apple Preview (#EEEEEF fond, #F5F5F7 cartes, #E8E8ED boutons intérieurs, #D4D4D5 ombre 1px)
     static let bg = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark ? UIColor.black : UIColor(red: 0.96, green: 0.96, blue: 0.97, alpha: 1.0)
+        trait.userInterfaceStyle == .dark ? UIColor.black : UIColor(red: 0.933, green: 0.933, blue: 0.937, alpha: 1.0) // #EEEEEF
     })
     static let bg2 = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.08) : UIColor(white: 1.0, alpha: 0.20)
+        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.08) : UIColor(red: 0.910, green: 0.910, blue: 0.929, alpha: 1.0) // #E8E8ED
     })
     static let card = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.05) : UIColor(white: 1.0, alpha: 0.28)
+        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.05) : UIColor(red: 0.961, green: 0.961, blue: 0.969, alpha: 1.0) // #F5F5F7
     })
     static let stroke = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.35) : UIColor(white: 1.0, alpha: 0.65)
+        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.35) : UIColor(red: 0.831, green: 0.831, blue: 0.835, alpha: 1.0) // #D4D4D5
     })
     static let textPrimary = Color.primary
     // UIColor.secondaryLabel meets ≥3:1 on system backgrounds in both light and dark
@@ -223,12 +224,12 @@ enum Theme {
     // Dans les vues : toujours Color.accentColor + Theme.onAccent, jamais volt en dur.
     static let volt = Color(hex: 0x4CF810)
 
-    // Liseré spéculaire discret + ombre douce (Liquid Glass iOS 27).
+    // Liseré spéculaire discret + ombre douce (Liquid Glass iOS 27 / Apple Preview).
     static let hairline = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.25) : UIColor(white: 1.0, alpha: 0.60)
+        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.25) : UIColor(red: 0.902, green: 0.902, blue: 0.910, alpha: 1.0) // #E6E6E8
     })
     static let line = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.15) : UIColor(white: 1.0, alpha: 0.40)
+        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.15) : UIColor(red: 0.831, green: 0.831, blue: 0.835, alpha: 1.0) // #D4D4D5
     })
     static let shadow = Color.black.opacity(0.10)
     static let shadowSoft = Color.black.opacity(0.06)
@@ -318,11 +319,11 @@ struct AmbientAuraBackdrop: View {
             let h = geo.size.height
 
             ZStack {
-                // Base noir pur absolu OLED en dark, ou blanc cassé en clair
+                // Base noir pur absolu OLED en dark, ou Apple Preview #EEEEEF en clair
                 if colorScheme == .dark {
                     Color.black
                 } else {
-                    Color(red: 0.95, green: 0.95, blue: 0.96)
+                    Color(hex: 0xEEEEEF)
                 }
 
                 if colorScheme == .dark {
@@ -354,15 +355,15 @@ struct AmbientAuraBackdrop: View {
                             y: -sin(phase * 0.7) * (h * 0.14)
                         )
                 } else {
-                    // Mode clair : lueurs blanches subtiles
+                    // Mode clair : lueurs satinées #F5F5F7 et blanc pur subtiles
                     Circle()
-                        .fill(Color.white.opacity(0.70))
+                        .fill(Color.white.opacity(0.65))
                         .frame(width: max(w * 0.65, 360), height: max(w * 0.65, 360))
                         .blur(radius: 110)
                         .offset(x: cos(phase) * (w * 0.20), y: sin(phase * 0.8) * (h * 0.15))
 
                     Circle()
-                        .fill(Color(white: 0.90).opacity(0.45))
+                        .fill(Color(hex: 0xF5F5F7).opacity(0.50))
                         .frame(width: max(w * 0.55, 300), height: max(w * 0.55, 300))
                         .blur(radius: 115)
                         .offset(x: sin(phase * 0.7) * (w * 0.22), y: cos(phase * 0.9) * (h * 0.16))
@@ -403,17 +404,14 @@ enum LiquidGlass {
                 endPoint: .bottomTrailing
             )
         } else {
+            // Mode clair Apple Preview exact : pure white #FFFFFF au sommet/gauche, #F8F8F9, #EDEDEE, #E6E6E8
             return LinearGradient(
                 stops: [
-                    // En mode clair : éclat spéculaire blanc pur qui découpe la forme
-                    .init(color: Color.white.opacity(1.0 * opacity), location: 0.0),
-                    // Réfraction d'arête
-                    .init(color: Color.white.opacity(0.60 * opacity), location: 0.20),
-                    // Corps du verre
-                    .init(color: Color.white.opacity(0.20 * opacity), location: 0.50),
-                    // Caustique de contact
-                    .init(color: Color.white.opacity(0.50 * opacity), location: 0.88),
-                    .init(color: Color.white.opacity(0.25 * opacity), location: 1.0)
+                    .init(color: Color.white.opacity(1.0 * opacity), location: 0.0),             // #FFFFFF pure white on edge
+                    .init(color: Color(hex: 0xF8F8F9).opacity(0.95 * opacity), location: 0.18), // #F8F8F9
+                    .init(color: Color(hex: 0xEDEDEE).opacity(0.70 * opacity), location: 0.50), // #EDEDEE
+                    .init(color: Color(hex: 0xE6E6E8).opacity(0.85 * opacity), location: 0.85), // #E6E6E8
+                    .init(color: Color.white.opacity(0.75 * opacity), location: 1.0)              // #FFFFFF contact bounce
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -438,11 +436,11 @@ enum LiquidGlass {
         } else {
             return LinearGradient(
                 stops: [
-                    .init(color: Color.white.opacity(0.70), location: 0.0),
-                    .init(color: Color.white.opacity(0.25), location: 0.22),
+                    .init(color: Color.white.opacity(0.90), location: 0.0),
+                    .init(color: Color(hex: 0xF8F8F9).opacity(0.30), location: 0.25),
                     .init(color: Color.clear, location: 0.55),
-                    .init(color: Color.white.opacity(0.40), location: 0.88),
-                    .init(color: Color.white.opacity(0.16), location: 1.0)
+                    .init(color: Color.white.opacity(0.50), location: 0.88),
+                    .init(color: Color(hex: 0xE6E6E8).opacity(0.30), location: 1.0)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -452,15 +450,28 @@ enum LiquidGlass {
 
     /// Lueur de courbure convexe de surface (effet dôme d'eau / surface d'iceberg poli)
     static func surfaceCurvatureSheen(colorScheme: ColorScheme) -> LinearGradient {
-        LinearGradient(
-            stops: [
-                .init(color: Color.white.opacity(colorScheme == .dark ? 0.09 : 0.24), location: 0.0),
-                .init(color: Color.white.opacity(colorScheme == .dark ? 0.02 : 0.06), location: 0.30),
-                .init(color: Color.clear, location: 0.65)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
+        if colorScheme == .dark {
+            return LinearGradient(
+                stops: [
+                    .init(color: Color.white.opacity(0.09), location: 0.0),
+                    .init(color: Color.white.opacity(0.02), location: 0.30),
+                    .init(color: Color.clear, location: 0.65)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        } else {
+            // Mode clair Apple Preview : éclat zénithal blanc pur sur le haut qui fond vers #F5F5F7
+            return LinearGradient(
+                stops: [
+                    .init(color: Color.white.opacity(0.85), location: 0.0),
+                    .init(color: Color(hex: 0xF8F8FA).opacity(0.35), location: 0.20),
+                    .init(color: Color.clear, location: 0.55)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
     }
 
     /// Rétrocompatibilité : bordure spéculaire cristalline (sans aucun noir ou gris)
@@ -480,16 +491,34 @@ struct LiquidGlassCardModifier: ViewModifier {
         content
             .background {
                 ZStack {
-                    // Substrat en verre ultra-fin cristallin
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(colorScheme == .dark
-                              ? (tint != nil ? tint!.opacity(0.08) : Color.white.opacity(0.045))
-                              : (tint != nil ? tint!.opacity(0.06) : Color.white.opacity(0.20)))
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                    if colorScheme == .dark {
+                        // Substrat en verre ultra-fin cristallin
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .fill(tint != nil ? tint!.opacity(0.08) : Color.white.opacity(0.045))
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
 
-                    // Lueur spéculaire de courbure convexe de surface
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                    } else {
+                        // Substrat Apple Preview exact : blanc pur au bord qui fond vers #F5F5F7
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    stops: [
+                                        .init(color: Color.white, location: 0.0),
+                                        .init(color: Color(hex: 0xF8F8FA), location: 0.12),
+                                        .init(color: Color(hex: 0xF5F5F7), location: 0.35),
+                                        .init(color: Color(hex: 0xF5F5F7), location: 1.0)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                    }
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
@@ -510,9 +539,9 @@ struct LiquidGlassCardModifier: ViewModifier {
                     )
                     .padding(0.9)
             )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.38 : 0.06), radius: 18, x: 0, y: 9)
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.20 : 0.03), radius: 4, x: 0, y: 2)
-            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.28), radius: 1, x: 0, y: 1)
+            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.38) : Color(hex: 0xD4D4D5), radius: colorScheme == .dark ? 18 : 1, x: 0, y: colorScheme == .dark ? 9 : 1)
+            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.20) : Color.black.opacity(0.04), radius: colorScheme == .dark ? 4 : 8, x: 0, y: colorScheme == .dark ? 2 : 4)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.60), radius: 1, x: 0, y: 0.5)
     }
 }
 
@@ -526,12 +555,30 @@ struct LiquidGlassPillModifier: ViewModifier {
         content
             .background {
                 ZStack {
-                    Capsule()
-                        .fill(colorScheme == .dark ? Color.white.opacity(0.055) : Color.white.opacity(0.22))
-                        .background(.ultraThinMaterial, in: Capsule())
+                    if colorScheme == .dark {
+                        Capsule()
+                            .fill(Color.white.opacity(0.055))
+                            .background(.ultraThinMaterial, in: Capsule())
 
-                    Capsule()
-                        .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                        Capsule()
+                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                    } else {
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    stops: [
+                                        .init(color: Color.white, location: 0.0),
+                                        .init(color: Color(hex: 0xF7F7F8), location: 0.18),
+                                        .init(color: Color(hex: 0xF5F5F7), location: 0.45),
+                                        .init(color: Color(hex: 0xF5F5F7), location: 1.0)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                        Capsule()
+                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                    }
                 }
             }
             .overlay(
@@ -549,8 +596,8 @@ struct LiquidGlassPillModifier: ViewModifier {
                     )
                     .padding(0.9)
             )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.30 : 0.05), radius: 10, x: 0, y: 4)
-            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.26), radius: 1, x: 0, y: 1)
+            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.30) : Color(hex: 0xD4D4D5), radius: colorScheme == .dark ? 10 : 1, x: 0, y: colorScheme == .dark ? 4 : 1)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.50), radius: 1, x: 0, y: 0.5)
     }
 }
 
@@ -566,14 +613,30 @@ struct ApplePreviewPillModifier: ViewModifier {
             .frame(height: height)
             .background {
                 ZStack {
-                    Capsule()
-                        .fill(colorScheme == .dark
-                              ? Color.white.opacity(0.06)
-                              : Color.white.opacity(0.22))
-                        .background(.ultraThinMaterial, in: Capsule())
+                    if colorScheme == .dark {
+                        Capsule()
+                            .fill(Color.white.opacity(0.06))
+                            .background(.ultraThinMaterial, in: Capsule())
 
-                    Capsule()
-                        .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                        Capsule()
+                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                    } else {
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    stops: [
+                                        .init(color: Color.white, location: 0.0),
+                                        .init(color: Color(hex: 0xF7F7F8), location: 0.18),
+                                        .init(color: Color(hex: 0xF5F5F7), location: 0.45),
+                                        .init(color: Color(hex: 0xF5F5F7), location: 1.0)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                        Capsule()
+                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                    }
                 }
             }
             .overlay(
@@ -591,8 +654,9 @@ struct ApplePreviewPillModifier: ViewModifier {
                     )
                     .padding(0.9)
             )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.32 : 0.05), radius: 12, x: 0, y: 5)
-            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.26), radius: 1, x: 0, y: 1)
+            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.32) : Color(hex: 0xD4D4D5), radius: colorScheme == .dark ? 12 : 1, x: 0, y: colorScheme == .dark ? 5 : 1)
+            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.15) : Color.black.opacity(0.03), radius: colorScheme == .dark ? 3 : 5, x: 0, y: colorScheme == .dark ? 1 : 2.5)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.60), radius: 1, x: 0, y: 0.5)
     }
 }
 
@@ -605,26 +669,26 @@ struct ApplePreviewIslandModifier: ViewModifier {
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background {
-                ZStack {
-                    Capsule()
-                        .fill(colorScheme == .dark
-                              ? Color.white.opacity(0.06)
-                              : Color.white.opacity(0.24))
-                        .background(.ultraThinMaterial, in: Capsule())
-
-                    Capsule()
-                        .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
-                }
+                Capsule()
+                    .fill(colorScheme == .dark
+                          ? Color.white.opacity(0.06)
+                          : Color(hex: 0xE8E8ED)) // #E8E8ED pour les boutons/îlots intérieurs
             }
             .overlay(
                 Capsule()
                     .strokeBorder(
-                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 0.95),
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color.white.opacity(colorScheme == .dark ? 0.40 : 0.90), location: 0.0),
+                                .init(color: colorScheme == .dark ? Color.white.opacity(0.12) : Color(hex: 0xDCDCE0), location: 1.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
                         lineWidth: strokeWidth
                     )
             )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.32 : 0.06), radius: 10, x: 0, y: 4)
-            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.20), radius: 1, x: 0, y: 0.5)
+            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.32) : Color(hex: 0xD4D4D5).opacity(0.50), radius: colorScheme == .dark ? 10 : 1, x: 0, y: colorScheme == .dark ? 4 : 0.5)
     }
 }
 
@@ -637,26 +701,26 @@ struct ApplePreviewCircleModifier: ViewModifier {
         content
             .frame(width: size, height: size)
             .background {
-                ZStack {
-                    Circle()
-                        .fill(colorScheme == .dark
-                              ? Color.white.opacity(0.06)
-                              : Color.white.opacity(0.24))
-                        .background(.ultraThinMaterial, in: Circle())
-
-                    Circle()
-                        .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
-                }
+                Circle()
+                    .fill(colorScheme == .dark
+                          ? Color.white.opacity(0.06)
+                          : Color(hex: 0xE8E8ED))
             }
             .overlay(
                 Circle()
                     .strokeBorder(
-                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 0.95),
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color.white.opacity(colorScheme == .dark ? 0.40 : 0.90), location: 0.0),
+                                .init(color: colorScheme == .dark ? Color.white.opacity(0.12) : Color(hex: 0xDCDCE0), location: 1.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
                         lineWidth: strokeWidth
                     )
             )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.28 : 0.05), radius: 8, x: 0, y: 3)
-            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.20), radius: 1, x: 0, y: 0.5)
+            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.28) : Color(hex: 0xD4D4D5).opacity(0.40), radius: colorScheme == .dark ? 8 : 1, x: 0, y: colorScheme == .dark ? 3 : 0.5)
     }
 }
 
@@ -669,14 +733,33 @@ struct ApplePreviewCardModifier: ViewModifier {
         content
             .background {
                 ZStack {
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(colorScheme == .dark
-                              ? Color.white.opacity(0.045)
-                              : Color.white.opacity(0.20))
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                    if colorScheme == .dark {
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .fill(Color.white.opacity(0.045))
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
 
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                    } else {
+                        // Substrat Apple Preview exact : blanc pur au bord qui fond vers #F5F5F7
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    stops: [
+                                        .init(color: Color.white, location: 0.0),
+                                        .init(color: Color(hex: 0xF8F8FA), location: 0.12),
+                                        .init(color: Color(hex: 0xF5F5F7), location: 0.35),
+                                        .init(color: Color(hex: 0xF5F5F7), location: 1.0)
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                    }
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
@@ -697,9 +780,9 @@ struct ApplePreviewCardModifier: ViewModifier {
                     )
                     .padding(0.9)
             )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.40 : 0.06), radius: 18, x: 0, y: 9)
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.20 : 0.03), radius: 4, x: 0, y: 2)
-            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.26), radius: 1, x: 0, y: 1)
+            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.40) : Color(hex: 0xD4D4D5), radius: colorScheme == .dark ? 18 : 1, x: 0, y: colorScheme == .dark ? 9 : 1)
+            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.20) : Color.black.opacity(0.04), radius: colorScheme == .dark ? 4 : 10, x: 0, y: colorScheme == .dark ? 2 : 5)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.60), radius: 1, x: 0, y: 0.5)
     }
 }
 
@@ -717,16 +800,16 @@ struct ApplePreviewInnerCardModifier: ViewModifier {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(colorScheme == .dark
                           ? Color.white.opacity(0.035)
-                          : Color.black.opacity(0.025))
+                          : Color(hex: 0xE8E8ED)) // Exact #E8E8ED pour les boutons/boîtes intérieures !
             }
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .strokeBorder(
                         LinearGradient(
                             stops: [
-                                .init(color: Color.white.opacity(colorScheme == .dark ? 0.35 : 0.50), location: 0.0),
-                                .init(color: Color.white.opacity(colorScheme == .dark ? 0.08 : 0.12), location: 0.60),
-                                .init(color: Color.white.opacity(colorScheme == .dark ? 0.20 : 0.25), location: 1.0)
+                                .init(color: Color.white.opacity(colorScheme == .dark ? 0.35 : 0.85), location: 0.0),
+                                .init(color: colorScheme == .dark ? Color.white.opacity(0.08) : Color(hex: 0xDCDCE0), location: 0.60),
+                                .init(color: Color.white.opacity(colorScheme == .dark ? 0.20 : 0.30), location: 1.0)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -734,6 +817,7 @@ struct ApplePreviewInnerCardModifier: ViewModifier {
                         lineWidth: strokeWidth
                     )
             )
+            .shadow(color: colorScheme == .dark ? Color.clear : Color(hex: 0xD4D4D5).opacity(0.40), radius: 1, x: 0, y: 0.5)
     }
 }
 

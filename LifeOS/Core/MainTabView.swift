@@ -347,8 +347,8 @@ struct FloatingTabBar: View {
                     .padding(0.9)
             )
             .clipShape(Capsule())
-            .shadow(color: Color.black.opacity(scheme == .dark ? 0.42 : 0.07), radius: 18, x: 0, y: 7)
-            .shadow(color: Color.white.opacity(scheme == .dark ? 0.06 : 0.28), radius: 1, x: 0, y: 1)
+            .shadow(color: scheme == .dark ? Color.black.opacity(0.42) : Color(hex: 0xD4D4D5), radius: scheme == .dark ? 18 : 1, x: 0, y: scheme == .dark ? 7 : 1)
+            .shadow(color: scheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.04), radius: scheme == .dark ? 1 : 10, x: 0, y: scheme == .dark ? 1 : 5)
             .padding(.horizontal, horizontalMargin)
             .padding(.bottom, m.margin + 4)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -370,12 +370,32 @@ struct FloatingTabBar: View {
     /// Verre translucide cristallin avec courbure convexe façon Apple iOS 27
     @ViewBuilder private var barBackground: some View {
         ZStack {
-            Capsule()
-                .fill(scheme == .dark ? Color.white.opacity(0.06) : Color.white.opacity(0.22))
-                .background(.ultraThinMaterial, in: Capsule())
+            if scheme == .dark {
+                Capsule()
+                    .fill(Color.white.opacity(0.06))
+                    .background(.ultraThinMaterial, in: Capsule())
 
-            Capsule()
-                .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: scheme))
+                Capsule()
+                    .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: scheme))
+            } else {
+                Capsule()
+                    .fill(
+                        LinearGradient(
+                            stops: [
+                                .init(color: Color.white, location: 0.0),
+                                .init(color: Color(hex: 0xF8F8FA), location: 0.15),
+                                .init(color: Color(hex: 0xF5F5F7), location: 0.45),
+                                .init(color: Color(hex: 0xF5F5F7), location: 1.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .background(.ultraThinMaterial, in: Capsule())
+
+                Capsule()
+                    .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: scheme))
+            }
         }
     }
 
@@ -420,10 +440,10 @@ struct FloatingTabBar: View {
             if t == .profile { Haptics.medium() } else { Haptics.tap() }
         } label: {
             ZStack {
-                // Pastille dépolie Apple Preview enveloppant l'onglet actif
+                // Pastille dépolie Apple Preview enveloppant l'onglet actif (#E8E8ED)
                 if isOn {
                     Capsule()
-                        .fill(scheme == .dark ? Color.white.opacity(0.14) : Color.primary.opacity(0.08))
+                        .fill(scheme == .dark ? Color.white.opacity(0.14) : Color(hex: 0xE8E8ED))
                         .matchedGeometryEffect(id: "activeTabPill", in: ns)
                 }
 
