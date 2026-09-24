@@ -210,10 +210,11 @@ async function run() {
         }
         console.log('✨ Build $BUILD_NUMBER officiellement en ligne sur ton téléphone !');
         return;
-      }
     } catch (e) {
       console.error(e.message);
     }
+  }
+}
 run();
 "
 
