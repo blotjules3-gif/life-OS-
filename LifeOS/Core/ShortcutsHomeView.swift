@@ -351,8 +351,11 @@ struct ShortcutsHomeView: View {
                     }
                     HStack(alignment: .bottom) {
                         Text(userName.isEmpty ? greeting : "\(greeting), \(userName)")
-                            .font(.system(size: 40, weight: .black)).textCase(.uppercase).kerning(-1)
-                            .lineLimit(2).minimumScaleFactor(0.7)
+                            .font(AppFont.sans(size: 38, weight: .black))
+                            .textCase(.uppercase)
+                            .kerning(-0.8)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.7)
                         Spacer()
                         if todayEnergyScore > 0 {
                             energyBadge
@@ -1206,22 +1209,33 @@ struct ShortcutsHomeView: View {
         }()
         return VStack(alignment: .trailing, spacing: 1) {
             Text("\(todayEnergyScore)")
-                .font(AppFont.sans(size: 28, weight: .bold))
+                .font(AppFont.mono(size: 28, weight: .bold))
                 .foregroundStyle(scoreColor)
                 .contentTransition(.numericText())
-            Text(todayEnergyLabel.isEmpty ? "Énergie" : todayEnergyLabel)
-                .font(.system(size: 11, weight: .medium))
+            Text(todayEnergyLabel.isEmpty ? "ÉNERGIE" : todayEnergyLabel)
+                .font(AppFont.mono(size: 10, weight: .bold))
+                .textCase(.uppercase)
+                .kerning(0.8)
                 .foregroundStyle(scoreColor.opacity(0.8))
         }
     }
 
     private func sectionHeader(_ title: String, trailing: String? = nil, action: @escaping () -> Void = {}) -> some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(title).font(.system(size: 20, weight: .black)).textCase(.uppercase).kerning(-0.3)
+            Text(title)
+                .font(AppFont.sans(size: 20, weight: .black))
+                .textCase(.uppercase)
+                .kerning(-0.3)
             Spacer()
             if let trailing {
-                Button(action: action) { Text(trailing).monoLabel(11).foregroundStyle(Theme.textPrimary) }
-                    .buttonStyle(.plain)
+                Button(action: action) {
+                    Text(trailing)
+                        .font(AppFont.mono(size: 11, weight: .bold))
+                        .textCase(.uppercase)
+                        .kerning(1.0)
+                        .foregroundStyle(Theme.textPrimary)
+                }
+                .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 4)

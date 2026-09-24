@@ -349,10 +349,10 @@ struct OnboardingWelcome: View {
 
                 VStack(spacing: 12) {
                     Text("Bienvenue sur LifeOS")
-                        .font(.system(.title, weight: .bold))
+                        .font(AppFont.sans(size: 32, weight: .black))
                         .multilineTextAlignment(.center)
                     Text("Ton système personnel pour tout\norganiser et progresser chaque jour.")
-                        .font(.callout)
+                        .font(AppFont.mono(size: 13, weight: .medium))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
@@ -367,7 +367,7 @@ struct OnboardingWelcome: View {
                         HStack(spacing: 8) {
                             Image(systemName: "bolt.fill").font(.system(size: 13, weight: .bold))
                             Text("Démarrage express — 30 sec")
-                                .font(.system(size: 15, weight: .semibold))
+                                .font(AppFont.sans(size: 15, weight: .black))
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
@@ -382,12 +382,12 @@ struct OnboardingWelcome: View {
                     Button(action: onSignIn) {
                         HStack(spacing: 4) {
                             Text("Tu as déjà un compte ?")
+                                .font(AppFont.mono(size: 12, weight: .medium))
                                 .foregroundStyle(Theme.textSecondary)
                             Text("Se connecter")
-                                .fontWeight(.semibold)
+                                .font(AppFont.mono(size: 12, weight: .bold))
                                 .foregroundStyle(Color.accentColor)
                         }
-                        .font(.system(size: 14))
                         .padding(.vertical, 6)
                     }
                     .buttonStyle(.plain)
@@ -979,7 +979,7 @@ struct OnboardingButton: View {
     var body: some View {
         Button(action: action) {
             Text(label)
-                .font(.headline)
+                .font(AppFont.sans(size: 16, weight: .black))
                 .foregroundStyle(enabled ? .white : .secondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)

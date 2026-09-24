@@ -1278,7 +1278,7 @@ struct ProfileView: View {
                         .fill(Color.accentColor.opacity(0.18))
                         .frame(width: 56, height: 56)
                     Text(userInitial)
-                        .font(AppFont.sans(size: 24, weight: .bold))
+                        .font(AppFont.sans(size: 24, weight: .black))
                         .foregroundStyle(Color.accentColor)
 
                     // Provider badge in bottom-right corner
@@ -1314,20 +1314,20 @@ struct ProfileView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
                         Text(accountDisplayName)
-                            .font(.system(size: 17, weight: .bold))
+                            .font(AppFont.sans(size: 17, weight: .black))
                             .foregroundStyle(.primary)
                             .lineLimit(1)
 
                         if isAuthenticated && !userEmail.isEmpty && userEmail != "invite@lifeos.local" {
                             Text("Connecté")
-                                .font(.system(size: 10, weight: .bold))
+                                .font(AppFont.mono(size: 10, weight: .bold))
                                 .foregroundStyle(Color.green)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(Color.green.opacity(0.15), in: Capsule())
                         } else {
                             Text("Invité")
-                                .font(.system(size: 10, weight: .bold))
+                                .font(AppFont.mono(size: 10, weight: .bold))
                                 .foregroundStyle(Color.orange)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -1336,7 +1336,7 @@ struct ProfileView: View {
                     }
 
                     Text(accountEmailDisplay)
-                        .font(.system(size: 13))
+                        .font(AppFont.mono(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
 

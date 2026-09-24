@@ -25,7 +25,8 @@ struct BubbleHomeView: View {
             .navigationTitle("Mes pôles")
             .safeAreaInset(edge: .top, spacing: 0) {
                 Text("Appuie sur une bulle · reste appuyé pour ajuster l'importance")
-                    .font(.caption).foregroundStyle(.secondary)
+                    .font(AppFont.mono(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity)
                     .padding(.bottom, 6)
                     .background(Theme.bg)
@@ -49,7 +50,7 @@ struct BubbleHomeView: View {
                         .font(.system(size: b.radius * 0.42, weight: .semibold))
                     if b.radius > 48 {
                         Text(shortName(b.cat))
-                            .font(.system(size: max(10, b.radius * 0.20), weight: .semibold))
+                            .font(AppFont.sans(size: max(10, b.radius * 0.20), weight: .black))
                             .lineLimit(1).minimumScaleFactor(0.6)
                             .padding(.horizontal, 4)
                     }

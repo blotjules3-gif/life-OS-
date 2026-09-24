@@ -8,6 +8,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        // Enregistrement précoce des polices personnalisées (Satoshi)
+        _ = AppFont.sans(size: 14)
+
         // Override langue AVANT toute UI — l'user peut avoir forcé FR ou EN
         // depuis les réglages. Sans ce call précoce, iOS resterait sur la langue
         // système jusqu'au prochain relaunch.

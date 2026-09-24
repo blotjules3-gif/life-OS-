@@ -388,8 +388,8 @@ struct HabitTrackerView: View {
                                 Circle()
                                     .fill(Color.orange)
                                     .frame(width: 6, height: 6)
-                                Text("PROPOSEES PAR LIFEOS")
-                                    .font(.system(size: 10, weight: .bold))
+                                Text("// PROPOSÉES PAR LIFEOS")
+                                    .font(AppFont.mono(size: 10, weight: .bold))
                                     .foregroundStyle(.secondary)
                                     .kerning(1.2)
                             }
@@ -405,8 +405,8 @@ struct HabitTrackerView: View {
                     } else if !activeHabits.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
                             if !pendingHabits.isEmpty {
-                                Text("MES HABITUDES")
-                                    .font(.system(size: 10, weight: .bold))
+                                Text("// MES HABITUDES")
+                                    .font(AppFont.mono(size: 10, weight: .bold))
                                     .foregroundStyle(.secondary)
                                     .kerning(1.2)
                             }
@@ -571,10 +571,10 @@ struct HabitRow: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(habit.name)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(AppFont.sans(size: 15, weight: .bold))
                     .foregroundStyle(Theme.textPrimary)
                 Text(timeLabel)
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                    .font(AppFont.mono(size: 12, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
 
@@ -583,7 +583,9 @@ struct HabitRow: View {
             if streak > 0 {
                 HStack(spacing: 3) {
                     Image(systemName: "flame.fill").font(.caption2).foregroundStyle(.orange)
-                    Text("\(streak)").font(.system(size: 12, weight: .bold)).foregroundStyle(.orange)
+                    Text("\(streak)")
+                        .font(AppFont.mono(size: 12, weight: .bold))
+                        .foregroundStyle(.orange)
                 }
             }
 

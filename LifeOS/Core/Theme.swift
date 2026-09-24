@@ -1,47 +1,89 @@
 import SwiftUI
+import CoreText
 import UIKit
 
-// MARK: - Deux Polices Uniques pour Toute l'App : Avenir Next & Monospace
+// MARK: - Deux Polices Uniques pour Toute l'App : Satoshi (Extra Bold / Bold) & Monospace
 
 enum AppFont {
-    /// Police 1 : Avenir Next (élégante, géométrique, moderne) pour tous les textes, boutons & titres
-    static func sans(size: CGFloat, weight: Font.Weight = .regular) -> Font {
+    /// Enregistrement automatique des polices Satoshi au chargement
+    private static let _registerFontsOnce: Void = {
+        let fontFiles = [
+            "Satoshi-Black",
+            "Satoshi-Bold",
+            "Satoshi-Medium",
+            "Satoshi-Regular",
+            "Satoshi-Italic",
+            "Satoshi-BoldItalic"
+        ]
+        let extensions = ["otf", "ttf"]
+        for base in fontFiles {
+            for ext in extensions {
+                if let url = Bundle.main.url(forResource: base, withExtension: ext) {
+                    var error: Unmanaged<CFError>?
+                    CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error)
+                }
+            }
+        }
+        if let resURL = Bundle.main.resourceURL,
+           let items = try? FileManager.default.contentsOfDirectory(at: resURL, includingPropertiesForKeys: nil) {
+            for url in items where (url.pathExtension == "otf" || url.pathExtension == "ttf") && url.lastPathComponent.contains("Satoshi") {
+                var error: Unmanaged<CFError>?
+                CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error)
+            }
+        }
+    }()
+
+    /// Police 1 : Satoshi (Extra Bold / Bold) pour tous les grands titres, boutons & navigation
+    static func sans(size: CGFloat, weight: Font.Weight = .bold) -> Font {
+        _ = _registerFontsOnce
         let fontName: String
         switch weight {
-        case .ultraLight, .thin, .light:
-            fontName = "AvenirNext-Regular"
+        case .black, .heavy:
+            fontName = "Satoshi-Black"
+        case .bold, .semibold:
+            fontName = "Satoshi-Bold"
         case .medium:
-            fontName = "AvenirNext-Medium"
-        case .semibold:
-            fontName = "AvenirNext-DemiBold"
-        case .bold:
-            fontName = "AvenirNext-Bold"
-        case .heavy, .black:
-            fontName = "AvenirNext-Heavy"
+            fontName = "Satoshi-Medium"
         default:
-            fontName = "AvenirNext-Regular"
+            // "Il faut que les fontes soient bold, soient gras" -> biais résolu vers Satoshi Bold
+            fontName = "Satoshi-Bold"
         }
-        return Font.custom(fontName, size: size)
+
+        if UIFont(name: fontName, size: size) != nil {
+            return Font.custom(fontName, size: size)
+        }
+        // Fallback système si besoin
+        return Font.system(size: size, weight: weight == .regular ? .bold : weight)
     }
 
-    /// Police 2 : Monospace (SF Mono / Monospaced) pour tous les chiffres, chronos, scores, badges & métriques
-    static func mono(size: CGFloat, weight: Font.Weight = .regular) -> Font {
+    /// Police 2 : Monospace (SF Mono) omniprésent pour métriques, sous-titres, dates, badges, tags & labels techniques
+    static func mono(size: CGFloat, weight: Font.Weight = .semibold) -> Font {
         Font.system(size: size, weight: weight, design: .monospaced)
     }
 }
 
 extension View {
-    func fontSans(_ size: CGFloat, weight: Font.Weight = .regular) -> some View {
+    func fontSans(_ size: CGFloat, weight: Font.Weight = .bold) -> some View {
         self.font(AppFont.sans(size: size, weight: weight))
     }
 
-    func fontMono(_ size: CGFloat, weight: Font.Weight = .regular) -> some View {
+    func fontMono(_ size: CGFloat, weight: Font.Weight = .semibold) -> some View {
         self.font(AppFont.mono(size: size, weight: weight))
+    }
+
+    /// Tag / Badge technique en monospace majuscule avec léger espacement
+    func fontMonoTag(_ size: CGFloat = 11, weight: Font.Weight = .bold) -> some View {
+        self.font(AppFont.mono(size: size, weight: weight)).textCase(.uppercase).kerning(0.8)
+    }
+
+    /// Stat / Chiffre clé en monospace à espacement fixe
+    func fontMonoStat(_ size: CGFloat = 16, weight: Font.Weight = .bold) -> some View {
+        self.font(AppFont.mono(size: size, weight: weight)).monospacedDigit()
     }
 }
 
-/// Design system de LifeOS — langage NIKE : noir & blanc haute intensité, accent VOLT,
-/// coins nets, typographie grasse/majuscule, labels techniques monospace, grilles.
+/// Design system de LifeOS — langage high-tech & néo-éditorial :
+/// Titres percutants en Satoshi Extra Bold / Black & typographie technique en SF Mono.
 enum Theme {
     // Surfaces système adaptatives (bright = blanc cassé / dark = noir pur — voir AppTheme.bubbleBG).
     static let bg = Color(uiColor: .systemGroupedBackground)
@@ -56,19 +98,23 @@ enum Theme {
 
     static let padWide: CGFloat = 28   // onboarding / large content areas
 
-    // MARK: - Système typographique Pro (Avenir Next + Monospace)
-    static let fontDisplay   = AppFont.sans(size: 44, weight: .bold)
-    static let fontHero      = AppFont.sans(size: 36, weight: .bold)
-    static let fontTitle     = AppFont.sans(size: 28, weight: .bold)
-    static let fontTitle2    = AppFont.sans(size: 22, weight: .bold)
-    static let fontTitle3    = AppFont.sans(size: 18, weight: .semibold)
-    static let fontHeadline  = AppFont.sans(size: 16, weight: .semibold)
-    static let fontBody      = AppFont.sans(size: 15, weight: .regular)
-    static let fontCallout   = AppFont.sans(size: 14, weight: .regular)
-    static let fontSub       = AppFont.sans(size: 14, weight: .regular)
-    static let fontFootnote  = AppFont.sans(size: 12, weight: .regular)
-    static let fontCaption   = AppFont.sans(size: 11, weight: .medium)
-    static let fontCaption2  = AppFont.sans(size: 10, weight: .medium)
+    // MARK: - Système typographique Pro (Satoshi ExtraBold + Technical Mono)
+    static let fontDisplay   = AppFont.sans(size: 40, weight: .black)
+    static let fontHero      = AppFont.sans(size: 32, weight: .black)
+    static let fontTitle     = AppFont.sans(size: 26, weight: .bold)
+    static let fontTitle2    = AppFont.sans(size: 20, weight: .bold)
+    static let fontTitle3    = AppFont.sans(size: 17, weight: .bold)
+    static let fontHeadline  = AppFont.sans(size: 15, weight: .bold)
+
+    // Textes de lecture et descriptions
+    static let fontBody      = AppFont.sans(size: 15, weight: .bold)
+
+    // Éléments de structure, données, sous-titres, dates & métadonnées en Monospace technique
+    static let fontCallout   = AppFont.mono(size: 13, weight: .medium)
+    static let fontSub       = AppFont.mono(size: 12, weight: .medium)
+    static let fontFootnote  = AppFont.mono(size: 11, weight: .medium)
+    static let fontCaption   = AppFont.mono(size: 10, weight: .bold)
+    static let fontCaption2  = AppFont.mono(size: 9, weight: .bold)
 
     // MARK: - Palette sémantique (remplace les Color(hex:) éparpillés)
 
