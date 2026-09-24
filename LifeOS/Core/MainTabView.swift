@@ -74,6 +74,18 @@ struct MainTabView: View {
     private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
 
     var body: some View {
+#if targetEnvironment(macCatalyst)
+        ZStack {
+            HabitWidgetSyncer()
+            FitnessWidgetSyncer()
+            MoodWidgetSyncer()
+            SleepWidgetSyncer()
+            NutritionTodaySyncer()
+            MemoryWidgetSyncer()
+
+            MacDesktopMainView()
+        }
+#else
         ZStack(alignment: .bottom) {
             content
                 .safeAreaInset(edge: .bottom) {
@@ -106,6 +118,7 @@ struct MainTabView: View {
                 }
             }
         }
+#endif
     }
 
     private func openAIAssistant() {

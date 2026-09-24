@@ -25,10 +25,13 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
         // Fond système immédiat sur toutes les fenêtres — évite le flash blanc en mode sombre.
         DispatchQueue.main.async {
-            UIApplication.shared.connectedScenes
-                .compactMap { $0 as? UIWindowScene }
-                .flatMap { $0.windows }
-                .forEach { $0.backgroundColor = UIColor.systemBackground }
+            for scene in UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }) {
+                scene.windows.forEach { $0.backgroundColor = UIColor.systemBackground }
+                #if targetEnvironment(macCatalyst)
+                scene.sizeRestrictions?.minimumSize = CGSize(width: 1050, height: 680)
+                scene.titlebar?.titleVisibility = .visible
+                #endif
+            }
         }
 
         // Catégorie alarme — action "Ouvrir" pour amener l'app en foreground immédiatement
