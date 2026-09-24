@@ -412,6 +412,7 @@ struct MacDesktopDashboardView: View {
 
     @State private var newTaskTitle = ""
     @State private var selectedFilter: HabitFilter = .all
+    @State private var habitDisplayMode: String = "timeline"
 
     enum HabitFilter: String, CaseIterable {
         case all = "Toutes"
@@ -737,25 +738,64 @@ struct MacDesktopDashboardView: View {
 
                 Spacer()
 
-                // Filtres de temps monochromes style Apple Preview
+                // Bascule Frise 24h / Cartes
                 HStack(spacing: 4) {
-                    ForEach(HabitFilter.allCases, id: \.self) { filter in
-                        Button {
-                            selectedFilter = filter
-                        } label: {
-                            Text(filter.rawValue)
-                                .font(AppFont.body(size: 11, weight: selectedFilter == filter ? .bold : .semibold))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(selectedFilter == filter ? Color.primary.opacity(0.12) : Color.clear)
-                                .foregroundStyle(selectedFilter == filter ? Color.primary : Color.secondary)
-                                .clipShape(Capsule())
+                    Button {
+                        habitDisplayMode = "timeline"
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock.arrow.circlepath")
+                            Text("Frise 24h")
                         }
-                        .buttonStyle(.plain)
+                        .font(AppFont.body(size: 11, weight: habitDisplayMode == "timeline" ? .bold : .semibold))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(habitDisplayMode == "timeline" ? Color.primary.opacity(0.12) : Color.clear)
+                        .foregroundStyle(habitDisplayMode == "timeline" ? Color.primary : Color.secondary)
+                        .clipShape(Capsule())
                     }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        habitDisplayMode = "grid"
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "square.grid.2x2")
+                            Text("Cartes")
+                        }
+                        .font(AppFont.body(size: 11, weight: habitDisplayMode == "grid" ? .bold : .semibold))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(habitDisplayMode == "grid" ? Color.primary.opacity(0.12) : Color.clear)
+                        .foregroundStyle(habitDisplayMode == "grid" ? Color.primary : Color.secondary)
+                        .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding(2)
                 .applePreviewIsland()
+
+                if habitDisplayMode == "grid" {
+                    // Filtres de temps monochromes style Apple Preview
+                    HStack(spacing: 4) {
+                        ForEach(HabitFilter.allCases, id: \.self) { filter in
+                            Button {
+                                selectedFilter = filter
+                            } label: {
+                                Text(filter.rawValue)
+                                    .font(AppFont.body(size: 11, weight: selectedFilter == filter ? .bold : .semibold))
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(selectedFilter == filter ? Color.primary.opacity(0.12) : Color.clear)
+                                    .foregroundStyle(selectedFilter == filter ? Color.primary : Color.secondary)
+                                    .clipShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(2)
+                    .applePreviewIsland()
+                }
 
                 Button {
                     onOpenHabitCreator()
@@ -772,27 +812,32 @@ struct MacDesktopDashboardView: View {
                 .applePreviewPill(height: 32)
             }
 
-            if filteredHabits.isEmpty {
-                VStack(spacing: 12) {
-                    Image(systemName: "checkmark.circle.badge.questionmark")
-                        .font(.system(size: 34))
-                        .foregroundStyle(Color.secondary)
-                    Text("Aucune habitude pour ce moment de la journée.")
-                        .font(AppFont.body(size: 13, weight: .medium))
-                        .foregroundStyle(Color.secondary)
-                    Button("Créer une nouvelle habitude") {
-                        onOpenHabitCreator()
-                    }
-                    .font(AppFont.body(size: 12, weight: .bold))
-                    .foregroundStyle(Color.primary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 32)
-                .applePreviewCard(cornerRadius: 18)
+            if habitDisplayMode == "timeline" {
+                HabitTrackerTimelineView(showHeader: false, isEmbedded: true)
+                    .frame(height: 520)
             } else {
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
-                    ForEach(filteredHabits) { habit in
-                        desktopHabitCard(habit)
+                if filteredHabits.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "checkmark.circle.badge.questionmark")
+                            .font(.system(size: 34))
+                            .foregroundStyle(Color.secondary)
+                        Text("Aucune habitude pour ce moment de la journée.")
+                            .font(AppFont.body(size: 13, weight: .medium))
+                            .foregroundStyle(Color.secondary)
+                        Button("Créer une nouvelle habitude") {
+                            onOpenHabitCreator()
+                        }
+                        .font(AppFont.body(size: 12, weight: .bold))
+                        .foregroundStyle(Color.primary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 32)
+                    .applePreviewCard(cornerRadius: 18)
+                } else {
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
+                        ForEach(filteredHabits) { habit in
+                            desktopHabitCard(habit)
+                        }
                     }
                 }
             }

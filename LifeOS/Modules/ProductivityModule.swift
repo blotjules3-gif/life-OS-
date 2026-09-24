@@ -134,13 +134,26 @@ struct TodoView: View {
 struct TodoEditor: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
+    var initialDue: Date? = nil
+
     @State private var title = ""
     @State private var project = "Perso"
     @State private var priority = 0
-    @State private var hasDue = false
-    @State private var due = Date()
+    @State private var hasDue: Bool
+    @State private var due: Date
     @State private var isRecurring = false
     @State private var selectedDays: Set<Int> = [2, 3, 4, 5, 6] // Lun-Ven
+
+    init(initialDue: Date? = nil) {
+        self.initialDue = initialDue
+        if let initialDue {
+            _hasDue = State(initialValue: true)
+            _due = State(initialValue: initialDue)
+        } else {
+            _hasDue = State(initialValue: false)
+            _due = State(initialValue: Date())
+        }
+    }
 
     private let dayOptions: [(day: Int, label: String)] = [
         (2, "L"), (3, "M"), (4, "M"), (5, "J"), (6, "V"), (7, "S"), (1, "D")
@@ -378,81 +391,21 @@ struct HabitTrackerView: View {
     }
 
     var body: some View {
-        ZStack {
-            Theme.background
-            ScrollView {
-                VStack(spacing: 14) {
-                    if !pendingHabits.isEmpty {
-                        VStack(alignment: .leading, spacing: 10) {
-                            HStack(spacing: 6) {
-                                Circle()
-                                    .fill(Color.orange)
-                                    .frame(width: 6, height: 6)
-                                Text("PROPOSÉES PAR LIFEOS")
-                                    .font(AppFont.body(size: 11, weight: .bold))
-                                    .foregroundStyle(.secondary)
-                                    .kerning(0.5)
-                            }
-                            ForEach(pendingHabits) { h in
-                                PendingHabitRow(habit: h)
-                            }
-                        }
-                        Divider().opacity(0.4)
-                    }
-
-                    if activeHabits.isEmpty && pendingHabits.isEmpty {
-                        EmptyState(icon: "square.grid.3x3", title: "Aucune habitude", message: "Crée ta première habitude à suivre.")
-                    } else if !activeHabits.isEmpty {
-                        VStack(alignment: .leading, spacing: 10) {
-                            if !pendingHabits.isEmpty {
-                                Text("MES HABITUDES")
-                                    .font(AppFont.body(size: 11, weight: .bold))
-                                    .foregroundStyle(.secondary)
-                                    .kerning(0.5)
-                            }
-                            ForEach(activeHabits) { h in HabitRow(habit: h, onEdit: { editingHabit = h }, onDelete: { softDelete(h) }) }
-                        }
-                    }
-                }.padding(Theme.pad)
-            }
-            .refreshable { syncHabitsToWidget() }
-        }
-        .navigationTitle("Habit tracker").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
-        .sheet(isPresented: $showAdd) { HabitEditor() }
-        .sheet(item: $editingHabit) { h in HabitEditor(editingHabit: h) }
-        .overlay(alignment: .bottom) {
-            if pendingDeleteHabit != nil {
-                HStack(spacing: 12) {
-                    Image(systemName: "trash").foregroundStyle(.secondary)
-                    Text("Habitude supprimée")
-                        .font(.system(size: 14, weight: .medium))
-                    Spacer()
-                    Button("Annuler", action: undoDelete)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Theme.accent)
+        HabitTrackerTimelineView()
+            .navigationTitle("Habit tracker")
+            .navigationBarTitleDisplayMode(.inline)
+            .task {
+                let modules = habitModulesRaw.split(separator: ",").map(String.init)
+                if !modules.isEmpty && allHabits.isEmpty {
+                    HabitDefaults.insertPendingHabits(for: modules, into: ctx)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
-                .padding(.horizontal, Theme.pad)
-                .padding(.bottom, 16)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.spring(duration: 0.35), value: pendingDeleteHabit != nil)
+                NotificationManager.shared.schedulePendingHabitNotification(pendingCount: pendingHabits.count)
+                syncHabitsToWidget()
             }
-        }
-        .task {
-            let modules = habitModulesRaw.split(separator: ",").map(String.init)
-            if !modules.isEmpty && allHabits.isEmpty {
-                HabitDefaults.insertPendingHabits(for: modules, into: ctx)
+            .onChange(of: pendingHabits.count) { _, new in
+                NotificationManager.shared.schedulePendingHabitNotification(pendingCount: new)
             }
-            NotificationManager.shared.schedulePendingHabitNotification(pendingCount: pendingHabits.count)
-            syncHabitsToWidget()
-        }
-        .onChange(of: pendingHabits.count) { _, new in
-            NotificationManager.shared.schedulePendingHabitNotification(pendingCount: new)
-        }
-        .onChange(of: allHabits.count) { _, _ in syncHabitsToWidget() }
+            .onChange(of: allHabits.count) { _, _ in syncHabitsToWidget() }
     }
 
     private func syncHabitsToWidget() {
@@ -638,6 +591,7 @@ struct HabitEditor: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     var editingHabit: Habit? = nil
+    var initialHour: Int? = nil
 
     @State private var name = ""
     @State private var icon = "drop.fill"
@@ -785,10 +739,13 @@ struct HabitEditor: View {
                 }
             }
             .onAppear {
-                guard let h = editingHabit else { return }
-                name = h.name; icon = h.icon; color = h.colorHex
-                scheduledHour = h.scheduledHour; scheduledMinute = h.scheduledMinute
-                selectedDays = h.activeDays
+                if let h = editingHabit {
+                    name = h.name; icon = h.icon; color = h.colorHex
+                    scheduledHour = h.scheduledHour; scheduledMinute = h.scheduledMinute
+                    selectedDays = h.activeDays
+                } else if let initialHour {
+                    scheduledHour = initialHour
+                }
             }
         }
     }
