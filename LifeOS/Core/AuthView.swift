@@ -142,7 +142,7 @@ struct AuthView: View {
 
             VStack(spacing: 8) {
                 Text("LifeOS")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.system(size: 32, weight: .bold))
                     .foregroundStyle(Theme.textPrimary)
 
                 Text(mode == .signup
@@ -452,7 +452,7 @@ struct AuthView: View {
 
             VStack(spacing: 8) {
                 Text("Vérifie ton email")
-                    .font(.system(size: 26, weight: .bold, design: .rounded))
+                    .font(.system(size: 26, weight: .bold))
                     .foregroundStyle(Theme.textPrimary)
 
                 Text("Un code de sécurité à 6 chiffres a été envoyé à :")
@@ -488,7 +488,7 @@ struct AuthView: View {
                                 )
 
                             Text(char)
-                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .font(.system(size: 24, weight: .bold))
                                 .foregroundStyle(Theme.textPrimary)
                         }
                     }

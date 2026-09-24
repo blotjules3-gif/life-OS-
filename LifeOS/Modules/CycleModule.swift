@@ -73,7 +73,7 @@ struct CycleTrackerView: View {
                             HStack(alignment: .top) {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Jour \(cycle.dayOfCycle)")
-                                        .font(.system(size: 32, weight: .black, design: .rounded).monospacedDigit())
+                                        .font(.system(size: 32, weight: .black, design: .monospaced))
                                         .foregroundStyle(.primary)
                                     Text(cycle.currentPhase.label)
                                         .font(.system(size: 14, weight: .semibold))

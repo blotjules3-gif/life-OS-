@@ -114,7 +114,7 @@ struct GoalEditorSheet: View {
 
                 VStack(alignment: .trailing, spacing: 6) {
                     Text(valueText(for: goal.id))
-                        .font(.system(size: 15, weight: .bold, design: .rounded).monospacedDigit())
+                        .font(.system(size: 15, weight: .bold, design: .monospaced))
                         .foregroundStyle(expired ? Color(hex: 0xF1746C) : color)
                         .contentTransition(.numericText())
                         .animation(.spring(duration: 0.25, bounce: 0.1), value: valueText(for: goal.id))

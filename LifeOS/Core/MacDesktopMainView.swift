@@ -138,7 +138,7 @@ struct MacDesktopMainView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("LifeOS")
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(.primary)
                     Text("Système Personnel")
                         .font(.system(size: 11, weight: .medium))
@@ -463,7 +463,7 @@ struct MacDesktopDashboardView: View {
                         .font(.system(size: 15))
                         .foregroundStyle(.yellow)
                     Text("Modules Prioritaires")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .font(.system(size: 18, weight: .bold))
                 }
                 Spacer()
                 Text("Classés selon vos préférences")
@@ -526,7 +526,7 @@ struct MacDesktopDashboardView: View {
                     .kerning(1)
 
                 Text("Bonjour, \(displayName)")
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .font(.system(size: 34, weight: .bold))
                     .foregroundStyle(.primary)
 
                 Text("Tu as complété \(doneHabitsCount) sur \(activeHabits.count) habitudes prévues aujourd'hui.")
@@ -549,7 +549,7 @@ struct MacDesktopDashboardView: View {
                         .rotationEffect(.degrees(-90))
 
                     Text("\(energyScore)")
-                        .font(.system(size: 18, weight: .black, design: .rounded))
+                        .font(AppFont.sans(size: 18, weight: .bold))
                         .foregroundStyle(Color.accentColor)
                 }
 
@@ -558,7 +558,7 @@ struct MacDesktopDashboardView: View {
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                     Text(energyLabel.isEmpty ? "Excellente forme" : energyLabel)
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(.primary)
                 }
             }
@@ -580,7 +580,7 @@ struct MacDesktopDashboardView: View {
                         .font(.system(size: 18))
                         .foregroundStyle(Color(hex: 0x4CC38A))
                     Text("Habitudes du jour")
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .font(.system(size: 20, weight: .bold))
                 }
 
                 Spacer()
@@ -745,7 +745,7 @@ struct MacDesktopDashboardView: View {
                         .font(.system(size: 18))
                         .foregroundStyle(Color(hex: 0x3CB2E0))
                     Text("Objectifs & Tâches")
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .font(.system(size: 20, weight: .bold))
                 }
                 Spacer()
                 Text("\(todos.filter { !$0.done }.count) restantes")
@@ -833,7 +833,7 @@ struct MacDesktopDashboardView: View {
     private var metricsPanel: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Métriques du Jour")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(.system(size: 18, weight: .bold))
 
             // Eau
             VStack(alignment: .leading, spacing: 8) {
@@ -916,7 +916,7 @@ struct MacDesktopDashboardView: View {
     private var quickToolsGrid: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Outils Rapides")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(.system(size: 18, weight: .bold))
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 toolTile(title: "HIIT / Tabata", icon: "timer", color: Color(hex: 0xF1746C), action: onOpenTabata)
@@ -962,7 +962,7 @@ struct MacDesktopDashboardView: View {
                 Image(systemName: "sparkles")
                     .foregroundStyle(Color(hex: 0x9B6CF1))
                 Text("Conseil Coach LifeOS")
-                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(Color(hex: 0x9B6CF1))
             }
 
@@ -1117,7 +1117,7 @@ struct MacDesktopCategoriesOverview: View {
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Catégories & Modules")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .font(.system(size: 28, weight: .bold))
                             .foregroundStyle(.primary)
                         Text("Tous vos modules LifeOS organisés selon vos priorités")
                             .font(.system(size: 14))
@@ -1204,7 +1204,7 @@ struct MacDesktopCategoriesOverview: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(cat.title)
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(.primary)
 
                 Text(cat.subtitle)

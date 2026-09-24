@@ -28,7 +28,7 @@ struct PortfolioView: View {
                 VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Valeur du portefeuille").font(.caption).foregroundStyle(Theme.textSecondary)
-                        Text(total, format: .currency(code: "EUR")).font(.system(size: 34, weight: .bold, design: .rounded)).foregroundStyle(Theme.textPrimary)
+                        Text(total, format: .currency(code: "EUR")).font(.system(size: 34, weight: .bold)).foregroundStyle(Theme.textPrimary)
                         Text("\(totalPnL >= 0 ? "+" : "")\(totalPnL, format: .currency(code: "EUR")) (\(total-totalPnL == 0 ? 0 : totalPnL/(total-totalPnL)*100, specifier: "%.1f")%)")
                             .font(.subheadline.bold()).foregroundStyle(totalPnL >= 0 ? .green : .red)
                     }.frame(maxWidth: .infinity, alignment: .leading).card()
@@ -197,7 +197,7 @@ struct NetWorthView: View {
                 VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Patrimoine net").font(.caption).foregroundStyle(Theme.textSecondary)
-                        Text(netWorth, format: .currency(code: "EUR")).font(.system(size: 34, weight: .bold, design: .rounded)).foregroundStyle(netWorth >= 0 ? Theme.textPrimary : .red)
+                        Text(netWorth, format: .currency(code: "EUR")).font(.system(size: 34, weight: .bold)).foregroundStyle(netWorth >= 0 ? Theme.textPrimary : .red)
                         HStack {
                             Label("\(Int(assets))€ actifs", systemImage: "arrow.up").font(.caption).foregroundStyle(.green)
                             Label("\(Int(liabilities))€ passifs", systemImage: "arrow.down").font(.caption).foregroundStyle(.red)

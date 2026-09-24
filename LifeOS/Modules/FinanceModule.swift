@@ -26,7 +26,7 @@ struct AccountsView: View {
                 VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Patrimoine liquide").font(.caption).foregroundStyle(Theme.textSecondary)
-                        Text(total, format: .currency(code: "EUR")).font(.system(size: 36, weight: .bold, design: .rounded)).foregroundStyle(Theme.textPrimary)
+                        Text(total, format: .currency(code: "EUR")).font(.system(size: 36, weight: .bold)).foregroundStyle(Theme.textPrimary)
                         Text("Dépensé ce mois : \(monthSpend, format: .currency(code: "EUR"))").font(.caption).foregroundStyle(.orange)
                     }.frame(maxWidth: .infinity, alignment: .leading).card()
 
@@ -234,7 +234,7 @@ struct SubscriptionsView: View {
                 VStack(spacing: 14) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Coût mensuel des abonnements").font(.caption).foregroundStyle(Theme.textSecondary)
-                        Text(monthlyTotal, format: .currency(code: "EUR")).font(.system(size: 32, weight: .bold, design: .rounded)).foregroundStyle(Theme.textPrimary)
+                        Text(monthlyTotal, format: .currency(code: "EUR")).font(.system(size: 32, weight: .bold)).foregroundStyle(Theme.textPrimary)
                         Text("Soit \(monthlyTotal*12, format: .currency(code: "EUR")) / an").font(.caption).foregroundStyle(.orange)
                     }.frame(maxWidth: .infinity, alignment: .leading).card()
 
@@ -493,7 +493,7 @@ struct BankOverviewView: View {
                     VStack(spacing: 6) {
                         Text("Solde global").font(.subheadline).foregroundStyle(.secondary)
                         Text(total, format: .currency(code: "EUR"))
-                            .font(.system(size: 40, weight: .bold, design: .rounded))
+                            .font(.system(size: 40, weight: .bold))
                             .foregroundStyle(total < 0 ? .red : Theme.textPrimary)
                         Text("\(accounts.count) compte\(accounts.count > 1 ? "s" : "") agrégé\(accounts.count > 1 ? "s" : "")")
                             .font(.caption).foregroundStyle(.secondary)

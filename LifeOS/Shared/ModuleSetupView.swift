@@ -339,7 +339,7 @@ struct ModuleSetupView: View {
         case .intStep(let min, let max, let step):
             VStack(spacing: 12) {
                 Text("\(intStepVal)")
-                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                    .font(.system(size: 48, weight: .bold))
                     .foregroundStyle(module.tint)
                     .contentTransition(.numericText())
 

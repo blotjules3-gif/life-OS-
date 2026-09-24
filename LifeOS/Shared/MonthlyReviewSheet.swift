@@ -15,7 +15,7 @@ struct MonthlyReviewSheet: View {
         NavigationStack {
             ScrollView {
                 Text(summary.isEmpty ? "Chargement…" : summary)
-                    .font(.system(.body, design: .rounded))
+                    .font(.system(.body))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .textSelection(.enabled)
                     .padding()

@@ -1,6 +1,45 @@
 import SwiftUI
 import UIKit
 
+// MARK: - Deux Polices Uniques pour Toute l'App : Avenir Next & Monospace
+
+enum AppFont {
+    /// Police 1 : Avenir Next (élégante, géométrique, moderne) pour tous les textes, boutons & titres
+    static func sans(size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        let fontName: String
+        switch weight {
+        case .ultraLight, .thin, .light:
+            fontName = "AvenirNext-Regular"
+        case .medium:
+            fontName = "AvenirNext-Medium"
+        case .semibold:
+            fontName = "AvenirNext-DemiBold"
+        case .bold:
+            fontName = "AvenirNext-Bold"
+        case .heavy, .black:
+            fontName = "AvenirNext-Heavy"
+        default:
+            fontName = "AvenirNext-Regular"
+        }
+        return Font.custom(fontName, size: size)
+    }
+
+    /// Police 2 : Monospace (SF Mono / Monospaced) pour tous les chiffres, chronos, scores, badges & métriques
+    static func mono(size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        Font.system(size: size, weight: weight, design: .monospaced)
+    }
+}
+
+extension View {
+    func fontSans(_ size: CGFloat, weight: Font.Weight = .regular) -> some View {
+        self.font(AppFont.sans(size: size, weight: weight))
+    }
+
+    func fontMono(_ size: CGFloat, weight: Font.Weight = .regular) -> some View {
+        self.font(AppFont.mono(size: size, weight: weight))
+    }
+}
+
 /// Design system de LifeOS — langage NIKE : noir & blanc haute intensité, accent VOLT,
 /// coins nets, typographie grasse/majuscule, labels techniques monospace, grilles.
 enum Theme {
@@ -17,19 +56,19 @@ enum Theme {
 
     static let padWide: CGFloat = 28   // onboarding / large content areas
 
-    // MARK: - Système typographique (Dynamic Type — scales avec les préférences d'accessibilité)
-    static let fontDisplay   = Font.system(size: 46, weight: .bold, design: .rounded)
-    static let fontHero      = Font.system(size: 36, weight: .semibold, design: .rounded)
-    static let fontTitle     = Font.title.bold()
-    static let fontTitle2    = Font.title2.bold()
-    static let fontTitle3    = Font.title3.bold()
-    static let fontHeadline  = Font.headline
-    static let fontBody      = Font.body
-    static let fontCallout   = Font.callout
-    static let fontSub       = Font.subheadline
-    static let fontFootnote  = Font.footnote
-    static let fontCaption   = Font.caption
-    static let fontCaption2  = Font.caption2
+    // MARK: - Système typographique Pro (Avenir Next + Monospace)
+    static let fontDisplay   = AppFont.sans(size: 44, weight: .bold)
+    static let fontHero      = AppFont.sans(size: 36, weight: .bold)
+    static let fontTitle     = AppFont.sans(size: 28, weight: .bold)
+    static let fontTitle2    = AppFont.sans(size: 22, weight: .bold)
+    static let fontTitle3    = AppFont.sans(size: 18, weight: .semibold)
+    static let fontHeadline  = AppFont.sans(size: 16, weight: .semibold)
+    static let fontBody      = AppFont.sans(size: 15, weight: .regular)
+    static let fontCallout   = AppFont.sans(size: 14, weight: .regular)
+    static let fontSub       = AppFont.sans(size: 14, weight: .regular)
+    static let fontFootnote  = AppFont.sans(size: 12, weight: .regular)
+    static let fontCaption   = AppFont.sans(size: 11, weight: .medium)
+    static let fontCaption2  = AppFont.sans(size: 10, weight: .medium)
 
     // MARK: - Palette sémantique (remplace les Color(hex:) éparpillés)
 

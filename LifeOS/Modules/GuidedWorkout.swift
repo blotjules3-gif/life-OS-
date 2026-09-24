@@ -248,7 +248,7 @@ struct GuidedWorkoutView: View {
             HStack {
                 TextField("0", text: text)
                     .keyboardType(decimal ? .decimalPad : .numberPad)
-                    .font(.system(size: 34, weight: .black, design: .rounded)).monospacedDigit()
+                    .font(AppFont.sans(size: 34, weight: .bold)).monospacedDigit()
                     .multilineTextAlignment(.center).foregroundStyle(Theme.textPrimary)
                 if !unit.isEmpty { Text(unit).font(.system(size: 15, weight: .bold)).foregroundStyle(Theme.textSecondary) }
             }
@@ -276,7 +276,7 @@ struct GuidedWorkoutView: View {
             VStack(spacing: 24) {
                 Text("REPOS").font(.system(size: 16, weight: .heavy)).kerning(3).foregroundStyle(.white.opacity(0.7))
                 Text(formatHMS(restRemaining))
-                    .font(.system(size: 88, weight: .black, design: .rounded)).monospacedDigit().foregroundStyle(.white)
+                    .font(AppFont.sans(size: 88, weight: .bold)).monospacedDigit().foregroundStyle(.white)
                 if lastWasPR {
                     Label("Nouveau record", systemImage: "trophy.fill")
                         .font(.headline.bold()).foregroundStyle(Color.accentColor)
@@ -340,7 +340,7 @@ struct GuidedWorkoutView: View {
 
     private func summaryStat(_ value: String, _ label: String) -> some View {
         VStack(spacing: 4) {
-            Text(value).font(.system(size: 30, weight: .black, design: .rounded)).foregroundStyle(Theme.textPrimary)
+            Text(value).font(AppFont.sans(size: 30, weight: .bold)).foregroundStyle(Theme.textPrimary)
             Text(label).font(.system(size: 10, weight: .heavy)).foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 16)

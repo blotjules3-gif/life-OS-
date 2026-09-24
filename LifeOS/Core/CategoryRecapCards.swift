@@ -209,7 +209,7 @@ struct CategoryRecapCard: View {
                     .foregroundStyle(.secondary)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(value)
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundStyle(Theme.textPrimary)
                     Text(unit)
                         .font(.caption2)

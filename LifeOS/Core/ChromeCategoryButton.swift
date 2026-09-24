@@ -111,7 +111,7 @@ private struct StableIconAndLabelOverlay: View {
                 if showLabel && !title.isEmpty {
                     Text(title)
                         .font(.system(size: size * (longLabel ? 0.105 : 0.118),
-                                      weight: .bold, design: .rounded))
+                                      weight: .bold))
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(0.45), radius: 8)
                         .shadow(color: .black.opacity(0.6), radius: 2)

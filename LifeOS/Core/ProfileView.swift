@@ -221,7 +221,7 @@ struct ProfileView: View {
                     } label: {
                         HStack(spacing: 6) {
                             Text(userInitial)
-                                .font(.system(size: 13, weight: .black, design: .rounded))
+                                .font(AppFont.sans(size: 13, weight: .bold))
                                 .foregroundStyle(Color.accentColor)
                                 .frame(width: 32, height: 32)
                                 .background(Color.accentColor.opacity(0.18), in: Circle())
@@ -547,7 +547,7 @@ struct ProfileView: View {
                             .foregroundStyle(.secondary)
                     }
                     Text("\(score)/100")
-                        .font(.system(size: 13, weight: .black, design: .rounded).monospacedDigit())
+                        .font(.system(size: 13, weight: .black, design: .monospaced))
                         .foregroundStyle(energyColor(score))
                 }
             }
@@ -767,7 +767,7 @@ struct ProfileView: View {
                                 .foregroundStyle(.secondary)
                             HStack(alignment: .lastTextBaseline, spacing: 5) {
                                 Text(String(format: "%02d:%02d", wakeupHour, wakeupMinute))
-                                    .font(.system(size: 24, weight: .black, design: .rounded).monospacedDigit())
+                                    .font(.system(size: 24, weight: .black, design: .monospaced))
                                     .foregroundStyle(wakeupEnabled ? .primary : .secondary)
                                     .contentTransition(.numericText())
                                     .animation(.spring(duration: 0.38, bounce: 0.1), value: wakeupHour)
@@ -1278,7 +1278,7 @@ struct ProfileView: View {
                         .fill(Color.accentColor.opacity(0.18))
                         .frame(width: 56, height: 56)
                     Text(userInitial)
-                        .font(.system(size: 24, weight: .black, design: .rounded))
+                        .font(AppFont.sans(size: 24, weight: .bold))
                         .foregroundStyle(Color.accentColor)
 
                     // Provider badge in bottom-right corner
@@ -1404,7 +1404,7 @@ struct AccountDetailSheet: View {
                             .fill(Color.accentColor.opacity(0.15))
                             .frame(width: 80, height: 80)
                         Text(initial)
-                            .font(.system(size: 36, weight: .black, design: .rounded))
+                            .font(AppFont.sans(size: 36, weight: .bold))
                             .foregroundStyle(Color.accentColor)
 
                         ZStack {

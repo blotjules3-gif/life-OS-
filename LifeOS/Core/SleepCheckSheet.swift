@@ -123,7 +123,7 @@ struct SleepCheckSheet: View {
                         .foregroundStyle(.primary)
                         .buttonStyle(LifeOSPressStyle())
                         Text("\(hours)h")
-                            .font(.system(size: 28, weight: .bold, design: .rounded).monospacedDigit())
+                            .font(.system(size: 28, weight: .bold, design: .monospaced))
                             .frame(maxWidth: .infinity)
                             .contentTransition(.numericText())
                             .animation(.spring(duration: 0.38, bounce: 0.1), value: hours)
@@ -295,7 +295,7 @@ struct SleepCheckSheet: View {
                         .animation(.spring(duration: 1.2, bounce: 0.0), value: displayScore)
                     VStack(spacing: 2) {
                         Text("\(displayScore)")
-                            .font(.system(size: 64, weight: .black, design: .rounded))
+                            .font(AppFont.sans(size: 64, weight: .bold))
                             .foregroundStyle(sc)
                             .contentTransition(.numericText())
                             .animation(.spring(duration: 1.2, bounce: 0.0), value: displayScore)

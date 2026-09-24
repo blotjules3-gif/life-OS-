@@ -88,7 +88,7 @@ struct WeeklyBilanView: View {
                     // Score global
                     VStack(spacing: 6) {
                         Text("\(Int(weeklyScore * 100))%")
-                            .font(.system(size: 72, weight: .black, design: .rounded))
+                            .font(AppFont.sans(size: 72, weight: .bold))
                             .foregroundStyle(scoreColor)
                             .contentTransition(.numericText())
                         Text(message)
@@ -359,7 +359,7 @@ struct WeeklyBilanView: View {
                 }
             }
             Text("\(count)/7")
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(count >= 5 ? Color(hex: 0x4CC38A) : .secondary)
                 .frame(width: 28)
         }
@@ -401,7 +401,7 @@ private struct WeeklyShareCard: View {
                     .kerning(2.5)
                     .foregroundStyle(Color.white.opacity(0.55))
                 Text(dateRange)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(Color.white.opacity(0.4))
             }
             .padding(.top, 52)
@@ -410,7 +410,7 @@ private struct WeeklyShareCard: View {
 
             VStack(spacing: 14) {
                 Text("\(score)%")
-                    .font(.system(size: 96, weight: .black, design: .rounded))
+                    .font(AppFont.sans(size: 96, weight: .bold))
                     .monospacedDigit()
                     .foregroundStyle(scoreColor)
                 Text(message)
@@ -455,7 +455,7 @@ private struct WeeklyShareCard: View {
                 Image(systemName: "infinity")
                     .font(.system(size: 13, weight: .semibold))
                 Text("LifeOS")
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .font(.system(size: 15, weight: .bold))
             }
             .foregroundStyle(Color.white.opacity(0.5))
             .padding(.bottom, 44)
@@ -475,7 +475,7 @@ private struct WeeklyShareCard: View {
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(color)
             Text(label)
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(.system(size: 13, weight: .semibold))
                 .monospacedDigit()
                 .foregroundStyle(Color.white.opacity(0.85))
         }

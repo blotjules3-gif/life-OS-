@@ -264,7 +264,7 @@ struct FaceAnalysisView: View {
         VStack(spacing: 14) {
             VStack(spacing: 6) {
                 Text("Harmonie géométrique").font(.caption).foregroundStyle(Theme.textSecondary)
-                Text("\(overall)").font(.system(size: 44, weight: .black, design: .rounded))
+                Text("\(overall)").font(AppFont.sans(size: 44, weight: .bold))
                     .foregroundStyle(.looksTint)
                 Text("indicatif — géométrie, pas un jugement").font(.caption2).foregroundStyle(Theme.textSecondary)
             }

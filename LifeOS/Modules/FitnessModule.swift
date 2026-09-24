@@ -26,7 +26,7 @@ struct StepsView: View {
                         ZStack {
                             ProgressRing(progress: Double(today)/Double(max(1,goal)), lineWidth: 16, tint: .fitTint)
                             VStack {
-                                Text("\(today)").font(.system(size: 44, weight: .bold, design: .rounded)).foregroundStyle(Theme.textPrimary)
+                                Text("\(today)").font(.system(size: 44, weight: .bold)).foregroundStyle(Theme.textPrimary)
                                 Text("/ \(goal) pas").font(.caption).foregroundStyle(Theme.textSecondary)
                             }
                         }.frame(width: 230, height: 230)
@@ -230,7 +230,7 @@ struct HIITView: View {
                     ProgressRing(progress: engine.progress, lineWidth: 16, tint: inWork ? .fitTint : .blue)
                     VStack(spacing: 4) {
                         Text(phase.uppercased()).font(.caption.bold()).foregroundStyle(inWork ? .fitTint : .blue)
-                        Text(formatHMS(engine.remaining)).font(.system(size: 46, weight: .bold, design: .rounded)).monospacedDigit().foregroundStyle(Theme.textPrimary)
+                        Text(formatHMS(engine.remaining)).font(.system(size: 46, weight: .bold)).monospacedDigit().foregroundStyle(Theme.textPrimary)
                         if running { Text("Round \(currentRound)/\(rounds)").font(.caption).foregroundStyle(Theme.textSecondary) }
                     }
                 }.frame(width: 240, height: 240)
@@ -368,7 +368,7 @@ struct StreaksView: View {
                 VStack(spacing: 16) {
                     VStack(spacing: 8) {
                         Image(systemName: "flame.fill").font(.system(size: 50)).foregroundStyle(.orange)
-                        Text("\(streak)").font(.system(size: 56, weight: .bold, design: .rounded)).foregroundStyle(Theme.textPrimary)
+                        Text("\(streak)").font(.system(size: 56, weight: .bold)).foregroundStyle(Theme.textPrimary)
                         Text("jours de série").font(.subheadline).foregroundStyle(Theme.textSecondary)
                     }.frame(maxWidth: .infinity).card()
 

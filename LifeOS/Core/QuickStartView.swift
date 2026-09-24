@@ -44,7 +44,7 @@ struct QuickStartView: View {
                 .kerning(1.5)
                 .padding(.top, 40)
             Text("En 30 secondes")
-                .font(.system(size: 40, weight: .bold, design: .rounded))
+                .font(.system(size: 40, weight: .bold))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.primary)
             Text("Choisis ta priorité — on configure LifeOS pour toi automatiquement.")

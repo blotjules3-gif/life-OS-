@@ -129,7 +129,7 @@ struct WakeUpView: View {
             } label: {
                 VStack(spacing: 10) {
                     Text(String(format: "%02d:%02d", wakeupHour, wakeupMinute))
-                        .font(.system(size: 76, weight: .black, design: .rounded).monospacedDigit())
+                        .font(.system(size: 76, weight: .black, design: .monospaced))
                         .foregroundStyle(wakeupEnabled ? .primary : .secondary)
                         .contentTransition(.numericText())
                         .animation(.spring(duration: 0.38, bounce: 0.1), value: wakeupHour)
@@ -214,7 +214,7 @@ struct WakeUpView: View {
                         if wakeupEnabled { scheduleWakeupAlarm() }
                     } label: {
                         Text(letter)
-                            .font(.system(size: 13, weight: .black, design: .rounded))
+                            .font(AppFont.sans(size: 13, weight: .bold))
                             .foregroundStyle(on ? Theme.onAccent : .secondary)
                             .frame(maxWidth: .infinity)
                             .frame(height: 40)
@@ -260,7 +260,7 @@ struct WakeUpView: View {
                 }
                 Spacer()
                 Text(suggestedBedtime)
-                    .font(.system(size: 17, weight: .black, design: .rounded).monospacedDigit())
+                    .font(.system(size: 17, weight: .black, design: .monospaced))
                     .foregroundStyle(Color(hex: 0x9B6CF1))
                     .contentTransition(.numericText())
                     .animation(.spring(duration: 0.38, bounce: 0.1), value: suggestedBedtime)
@@ -284,7 +284,7 @@ struct WakeUpView: View {
                 Stepper("", value: $snoozeMinutes, in: 5...30, step: 5)
                     .labelsHidden()
                 Text("\(snoozeMinutes) min")
-                    .font(.system(size: 14, weight: .bold, design: .rounded).monospacedDigit())
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .frame(width: 52, alignment: .trailing)
                     .contentTransition(.numericText())

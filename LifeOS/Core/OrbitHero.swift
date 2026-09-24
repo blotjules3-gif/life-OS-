@@ -51,7 +51,7 @@ struct OrbitHero: View {
                     .fill(Color.primary.opacity(0.06))
                     .frame(width: 40, height: 40)
                 Text(initial)
-                    .font(.system(size: 16, weight: .black, design: .rounded))
+                    .font(AppFont.sans(size: 16, weight: .bold))
                     .foregroundStyle(.primary)
             }
             VStack(alignment: .leading, spacing: 2) {
@@ -59,7 +59,7 @@ struct OrbitHero: View {
                     .monoLabel(10)
                     .foregroundStyle(.secondary)
                 Text(displayName)
-                    .font(.system(size: 22, weight: .black, design: .rounded))
+                    .font(AppFont.sans(size: 22, weight: .bold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
@@ -71,7 +71,7 @@ struct OrbitHero: View {
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(Color(hex: 0xE0A23C))
                     Text("\(streak)")
-                        .font(.system(size: 14, weight: .black, design: .rounded).monospacedDigit())
+                        .font(.system(size: 14, weight: .black, design: .monospaced))
                         .foregroundStyle(.primary)
                         .contentTransition(.numericText())
                 }
@@ -170,7 +170,7 @@ struct OrbitHero: View {
 
             VStack(spacing: 2) {
                 Text("\(score)")
-                    .font(.system(size: 40, weight: .black, design: .rounded).monospacedDigit())
+                    .font(.system(size: 40, weight: .black, design: .monospaced))
                     .foregroundStyle(.primary)
                     .contentTransition(.numericText())
                     .animation(.spring(duration: 0.5), value: score)
@@ -255,7 +255,7 @@ struct OrbitHero: View {
     private func heroStat(_ value: String, _ label: String) -> some View {
         VStack(spacing: 2) {
             Text(value)
-                .font(.system(size: 17, weight: .black, design: .rounded).monospacedDigit())
+                .font(.system(size: 17, weight: .black, design: .monospaced))
                 .foregroundStyle(.primary)
                 .contentTransition(.numericText())
             Text(label)

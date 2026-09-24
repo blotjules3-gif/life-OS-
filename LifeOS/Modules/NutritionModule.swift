@@ -33,7 +33,7 @@ struct FastingView: View {
                     ZStack {
                         ProgressRing(progress: goal == 0 ? 0 : Double(elapsed) / Double(goal), lineWidth: 16, tint: .nutriTint)
                         VStack(spacing: 4) {
-                            Text(formatHMS(elapsed)).font(.system(size: 40, weight: .bold, design: .rounded))
+                            Text(formatHMS(elapsed)).font(.system(size: 40, weight: .bold))
                                 .monospacedDigit().foregroundStyle(Theme.textPrimary)
                             Text(active.map { "Objectif \($0.targetHours)h" } ?? "Prêt à jeûner")
                                 .font(.caption).foregroundStyle(Theme.textSecondary)
@@ -420,7 +420,7 @@ struct HydrationView: View {
                     ZStack {
                         ProgressRing(progress: Double(todayML)/Double(max(1,goalML)), lineWidth: 16, tint: .nutriTint)
                         VStack {
-                            Text("\(todayML)").font(.system(size: 40, weight: .bold, design: .rounded)).foregroundStyle(Theme.textPrimary)
+                            Text("\(todayML)").font(.system(size: 40, weight: .bold)).foregroundStyle(Theme.textPrimary)
                             Text("/ \(goalML) ml").font(.caption).foregroundStyle(Theme.textSecondary)
                         }
                     }.frame(width: 220, height: 220)

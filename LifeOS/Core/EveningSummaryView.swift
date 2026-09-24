@@ -106,7 +106,7 @@ struct EveningSummaryView: View {
                     .animation(.spring(duration: 0.8, bounce: 0.3), value: overallScore)
                 VStack(spacing: 2) {
                     Text("\(Int(overallScore * 100))")
-                        .font(.system(size: 34, weight: .black, design: .rounded))
+                        .font(AppFont.sans(size: 34, weight: .bold))
                         .foregroundStyle(scoreColor)
                         .contentTransition(.numericText())
                     Text("/ 100")
@@ -174,7 +174,7 @@ struct EveningSummaryView: View {
                 }
             }
             Text(unit.isEmpty ? "\(value)" : "\(value) \(unit)")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(.primary)
             Text(label)
                 .font(.caption)
@@ -215,7 +215,7 @@ struct EveningSummaryView: View {
                 }
             }
             Text("\(habitsDone)/\(habitsTotal)")
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(.primary)
             Text("Habitudes")
                 .font(.caption)

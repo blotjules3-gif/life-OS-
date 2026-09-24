@@ -64,7 +64,7 @@ struct TimerDial: View {
             ProgressRing(progress: engine.progress, lineWidth: 14, tint: tint)
             VStack(spacing: 4) {
                 Text(formatHMS(engine.remaining))
-                    .font(.system(size: 46, weight: .bold, design: .rounded))
+                    .font(.system(size: 46, weight: .bold))
                     .monospacedDigit()
                     .foregroundStyle(Theme.textPrimary)
                 if !caption.isEmpty {

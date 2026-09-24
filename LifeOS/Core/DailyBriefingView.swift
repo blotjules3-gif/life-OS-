@@ -95,7 +95,7 @@ struct DailyBriefingView: View {
                             .padding(.top, 56)
 
                         Text("\(greeting)\(userName.isEmpty ? "" : ", \(userName.prefix(1).uppercased() + userName.dropFirst())") !")
-                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .font(.system(size: 30, weight: .bold))
                             .multilineTextAlignment(.center)
 
                         Text(Date.now.formatted(.dateTime.weekday(.wide).day().month(.wide).year().locale(Locale(identifier: "fr_FR"))))
@@ -372,7 +372,7 @@ struct DailyBriefingView: View {
         VStack(spacing: 14) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text("\(todayEnergyScore)")
-                    .font(.system(size: 56, weight: .black, design: .rounded))
+                    .font(AppFont.sans(size: 56, weight: .bold))
                     .foregroundStyle(scoreColor)
                     .contentTransition(.numericText())
                     .animation(.spring(duration: 0.6, bounce: 0.15), value: todayEnergyScore)

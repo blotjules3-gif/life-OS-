@@ -746,7 +746,7 @@ struct ShortcutsHomeView: View {
                 HStack(alignment: .center, spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("\(Int(weeklyScore * 100))%")
-                            .font(.system(size: 42, weight: .black, design: .rounded).monospacedDigit())
+                            .font(.system(size: 42, weight: .black, design: .monospaced))
                             .foregroundStyle(weeklyScoreColor)
                             .contentTransition(.numericText())
                             .animation(.spring(duration: 0.5), value: weeklyScore)
@@ -1206,7 +1206,7 @@ struct ShortcutsHomeView: View {
         }()
         return VStack(alignment: .trailing, spacing: 1) {
             Text("\(todayEnergyScore)")
-                .font(.system(size: 28, weight: .black, design: .rounded))
+                .font(AppFont.sans(size: 28, weight: .bold))
                 .foregroundStyle(scoreColor)
                 .contentTransition(.numericText())
             Text(todayEnergyLabel.isEmpty ? "Énergie" : todayEnergyLabel)

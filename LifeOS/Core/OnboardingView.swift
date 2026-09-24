@@ -349,7 +349,7 @@ struct OnboardingWelcome: View {
 
                 VStack(spacing: 12) {
                     Text("Bienvenue sur LifeOS")
-                        .font(.system(.title, design: .rounded, weight: .bold))
+                        .font(.system(.title, weight: .bold))
                         .multilineTextAlignment(.center)
                     Text("Ton système personnel pour tout\norganiser et progresser chaque jour.")
                         .font(.callout)
@@ -425,7 +425,7 @@ struct OnboardingName: View {
                 // Prénom
                 VStack(spacing: 10) {
                     Text("Comment tu t'appelles ?")
-                        .font(.system(.title2, design: .rounded, weight: .bold))
+                        .font(.system(.title2, weight: .bold))
                         .multilineTextAlignment(.center)
                     Text("Pour personnaliser ton expérience.")
                         .font(.subheadline)
@@ -445,7 +445,7 @@ struct OnboardingName: View {
                 // Genre
                 VStack(spacing: 10) {
                     Text("Tu es…")
-                        .font(.system(.headline, design: .rounded))
+                        .font(.system(.headline))
                         .foregroundStyle(.secondary)
 
                     HStack(spacing: 10) {
@@ -520,7 +520,7 @@ struct OnboardingHormonalContext: View {
             VStack(spacing: 28) {
                 VStack(spacing: 10) {
                     Text("Ton contexte hormonal")
-                        .font(.system(.title2, design: .rounded, weight: .bold))
+                        .font(.system(.title2, weight: .bold))
                         .multilineTextAlignment(.center)
                     Text("Pour adapter tes recommandations nutrition, fitness et suppléments au plus près de ta réalité.")
                         .font(.subheadline)
@@ -668,7 +668,7 @@ struct OnboardingLifeProfile: View {
             VStack(spacing: 24) {
                 VStack(spacing: 10) {
                     Text("Ton profil de vie")
-                        .font(.system(.title2, design: .rounded, weight: .bold))
+                        .font(.system(.title2, weight: .bold))
                         .multilineTextAlignment(.center)
                     Text("Ça aide à adapter les recommandations et les horaires à ta réalité.")
                         .font(.subheadline)
@@ -728,7 +728,7 @@ struct OnboardingGoalStep: View {
         VStack(spacing: 0) {
             VStack(spacing: 10) {
                 Text("Quels sont tes objectifs ?")
-                    .font(.system(.title3, design: .rounded, weight: .bold))
+                    .font(.system(.title3, weight: .bold))
                     .multilineTextAlignment(.center)
                 Text("Sélectionne tout ce qui te correspond.")
                     .font(.subheadline)
@@ -814,7 +814,7 @@ struct OnboardingInterests: View {
         VStack(spacing: 0) {
             VStack(spacing: 10) {
                 Text("Qu'est-ce qui t'intéresse ?")
-                    .font(.system(.title3, design: .rounded, weight: .bold))
+                    .font(.system(.title3, weight: .bold))
                     .multilineTextAlignment(.center)
                 Text("Sélectionne autant que tu veux.")
                     .font(.subheadline)
@@ -931,7 +931,7 @@ struct OnboardingWakeTime: View {
 
                     VStack(spacing: 10) {
                         Text("À quelle heure tu te lèves ?")
-                            .font(.system(.title3, design: .rounded, weight: .bold))
+                            .font(.system(.title3, weight: .bold))
                             .multilineTextAlignment(.center)
                         Text("On activera ton réveil malin à cette heure.\nTu pourras le changer à tout moment.")
                             .font(.subheadline)

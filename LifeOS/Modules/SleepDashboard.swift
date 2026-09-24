@@ -61,7 +61,7 @@ struct SleepDashboardView: View {
             ZStack {
                 ProgressRing(progress: frac, lineWidth: 11, tint: tint)
                 VStack(spacing: 0) {
-                    Text(fmtH(n.hours)).font(.system(size: 26, weight: .black, design: .rounded)).foregroundStyle(Theme.textPrimary)
+                    Text(fmtH(n.hours)).font(AppFont.sans(size: 26, weight: .bold)).foregroundStyle(Theme.textPrimary)
                     Text("/ \(fmtH(sleepGoal))").font(.caption2).foregroundStyle(Theme.textSecondary)
                 }
             }
@@ -102,7 +102,7 @@ struct SleepDashboardView: View {
 
     private func stat(_ label: String, _ value: String, _ color: Color) -> some View {
         VStack(spacing: 3) {
-            Text(value).font(.system(size: 19, weight: .black, design: .rounded)).foregroundStyle(color)
+            Text(value).font(AppFont.sans(size: 19, weight: .bold)).foregroundStyle(color)
                 .lineLimit(1).minimumScaleFactor(0.7)
             Text(label).font(.system(size: 10, weight: .heavy)).foregroundStyle(Theme.textSecondary)
         }.frame(maxWidth: .infinity)

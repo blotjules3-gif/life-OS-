@@ -68,7 +68,7 @@ struct CurrencyConverterView: View {
             HStack {
                 TextField("0", text: $amountRaw)
                     .keyboardType(.decimalPad)
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .font(.system(size: 34, weight: .bold))
                     .foregroundStyle(Theme.textPrimary)
                 Text(from).font(.title3.weight(.semibold)).foregroundStyle(Theme.textSecondary)
             }
@@ -111,7 +111,7 @@ struct CurrencyConverterView: View {
     private var resultCard: some View {
         VStack(spacing: 6) {
             Text(cur(to).flag + " " + fmt(converted) + " " + to)
-                .font(.system(size: 30, weight: .heavy, design: .rounded))
+                .font(.system(size: 30, weight: .heavy))
                 .foregroundStyle(.travelTint)
                 .minimumScaleFactor(0.6).lineLimit(1)
             Text("1 \(from) = \(fmt(rate)) \(to)")

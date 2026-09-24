@@ -635,7 +635,7 @@ struct TabataView: View {
                         .foregroundStyle(engine.phase.color)
 
                     Text(chosenSession?.name ?? "Intervalles libres")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
 
@@ -691,7 +691,7 @@ struct TabataView: View {
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(.white.opacity(0.6))
                     Text("TEMPS RESTANT")
-                        .font(.system(size: 11, weight: .heavy, design: .rounded))
+                        .font(.system(size: 11, weight: .heavy))
                         .kerning(0.8)
                         .foregroundStyle(.white.opacity(0.6))
                 }
@@ -699,7 +699,7 @@ struct TabataView: View {
                 Spacer()
 
                 Text(formatHMS(engine.phase == .idle ? engine.totalDuration : engine.totalRemaining))
-                    .font(.system(size: 18, weight: .black, design: .rounded))
+                    .font(AppFont.sans(size: 18, weight: .bold))
                     .monospacedDigit()
                     .foregroundStyle(.white)
             }
@@ -736,7 +736,7 @@ struct TabataView: View {
             HStack(spacing: 8) {
                 Label {
                     Text("SÉRIE \(engine.cycle)/\(engine.cfg.cycles)")
-                        .font(.system(size: 11, weight: .heavy, design: .rounded))
+                        .font(.system(size: 11, weight: .heavy))
                 } icon: {
                     Image(systemName: "repeat")
                         .font(.system(size: 10, weight: .bold))
@@ -750,7 +750,7 @@ struct TabataView: View {
 
                 Label {
                     Text("ROUND \(engine.round)/\(engine.cfg.rounds)")
-                        .font(.system(size: 11, weight: .heavy, design: .rounded))
+                        .font(.system(size: 11, weight: .heavy))
                 } icon: {
                     Image(systemName: "target")
                         .font(.system(size: 10, weight: .bold))
@@ -791,11 +791,11 @@ struct TabataView: View {
                         .foregroundStyle(Color(hex: 0x00D2FF))
 
                     Text("À SUIVRE :")
-                        .font(.system(size: 11, weight: .heavy, design: .rounded))
+                        .font(.system(size: 11, weight: .heavy))
                         .foregroundStyle(.white.opacity(0.6))
 
                     Text(next)
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
                 }
@@ -825,11 +825,11 @@ struct TabataView: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("EXERCICE EN COURS")
-                            .font(.system(size: 10, weight: .heavy, design: .rounded))
+                            .font(.system(size: 10, weight: .heavy))
                             .kerning(0.8)
                             .foregroundStyle(engine.phase.color)
                         Text(current)
-                            .font(.system(size: 20, weight: .black, design: .rounded))
+                            .font(AppFont.sans(size: 20, weight: .bold))
                             .foregroundStyle(.white)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
@@ -847,12 +847,12 @@ struct TabataView: View {
 
                     VStack(alignment: .center, spacing: 2) {
                         Text(engine.phase.title)
-                            .font(.system(size: 17, weight: .black, design: .rounded))
+                            .font(AppFont.sans(size: 17, weight: .bold))
                             .kerning(0.5)
                             .foregroundStyle(.white)
                         if let firstExo = exercise(forRound: engine.round) {
                             Text("Prochain : \(firstExo)")
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(.white.opacity(0.6))
                         }
                     }
@@ -926,7 +926,7 @@ struct TabataView: View {
                     Image(systemName: engine.phase.icon)
                         .font(.system(size: 11, weight: .heavy))
                     Text(engine.phase.shortTitle)
-                        .font(.system(size: 11, weight: .heavy, design: .rounded))
+                        .font(.system(size: 11, weight: .heavy))
                         .kerning(0.8)
                 }
                 .foregroundStyle(engine.phase.color)
@@ -935,28 +935,27 @@ struct TabataView: View {
                 .background(engine.phase.color.opacity(0.18), in: Capsule())
                 .overlay(Capsule().stroke(engine.phase.color.opacity(0.4), lineWidth: 1))
 
-                // Chronomètre en gros caractères
+                // Chronomètre en gros caractères (Monospace de précision)
                 let displayVal = engine.phase == .idle ? prepare : engine.remaining
                 Text(String(format: "%02d", displayVal))
-                    .font(.system(size: 82, weight: .black, design: .rounded))
-                    .monospacedDigit()
+                    .font(AppFont.mono(size: 84, weight: .bold))
                     .foregroundStyle(.white)
                     .shadow(color: engine.phase.color.opacity(0.35), radius: 10, x: 0, y: 0)
 
                 // Indication sous le chiffre
                 if engine.phase == .work {
                     Text("DONNE TOUT !")
-                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                        .font(.system(size: 12, weight: .heavy))
                         .kerning(1)
                         .foregroundStyle(engine.phase.color)
                 } else if engine.phase == .rest || engine.phase == .restCycle {
                     Text("RÉCUPÈRE")
-                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                        .font(.system(size: 12, weight: .heavy))
                         .kerning(1)
                         .foregroundStyle(.white.opacity(0.6))
                 } else {
                     Text("PRÉPARE-TOI")
-                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                        .font(.system(size: 12, weight: .heavy))
                         .kerning(1)
                         .foregroundStyle(Color(hex: 0xFFB800))
                 }
@@ -978,7 +977,7 @@ struct TabataView: View {
                         Image(systemName: "gobackward.5")
                             .font(.system(size: 12, weight: .bold))
                         Text("-5s")
-                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .font(.system(size: 12, weight: .bold))
                     }
                     .foregroundStyle(.white.opacity(0.75))
                     .padding(.horizontal, 12)
@@ -995,7 +994,7 @@ struct TabataView: View {
                         Image(systemName: "arrow.counterclockwise")
                             .font(.system(size: 11, weight: .bold))
                         Text("Recommencer")
-                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .font(.system(size: 11, weight: .bold))
                     }
                     .foregroundStyle(.white.opacity(0.6))
                     .padding(.horizontal, 10)
@@ -1010,7 +1009,7 @@ struct TabataView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Text("+5s")
-                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .font(.system(size: 12, weight: .bold))
                         Image(systemName: "goforward.5")
                             .font(.system(size: 12, weight: .bold))
                     }
@@ -1033,7 +1032,7 @@ struct TabataView: View {
                             .font(.system(size: 18, weight: .bold))
                             .foregroundStyle(.white)
                         Text("Préc.")
-                            .font(.system(size: 9, weight: .heavy, design: .rounded))
+                            .font(.system(size: 9, weight: .heavy))
                             .foregroundStyle(.white.opacity(0.5))
                     }
                     .frame(width: 58, height: 58)
@@ -1082,7 +1081,7 @@ struct TabataView: View {
                             .font(.system(size: 18, weight: .bold))
                             .foregroundStyle(.white)
                         Text("Suiv.")
-                            .font(.system(size: 9, weight: .heavy, design: .rounded))
+                            .font(.system(size: 9, weight: .heavy))
                             .foregroundStyle(.white.opacity(0.5))
                     }
                     .frame(width: 58, height: 58)
@@ -1113,7 +1112,7 @@ struct TabataView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Entraînements HIIT")
-                        .font(.system(size: 22, weight: .black, design: .rounded))
+                        .font(AppFont.sans(size: 22, weight: .bold))
                         .foregroundStyle(.white)
                     Text("Sélectionne un programme prêt ou personnalise tes intervalles")
                         .font(.system(size: 13, weight: .medium))
@@ -1175,7 +1174,7 @@ struct TabataView: View {
     private func cfgStepper(_ label: String, value: Binding<Int>, unit: String, step: Int, min: Int, color: UInt) -> some View {
         VStack(spacing: 6) {
             Text(label)
-                .font(.system(size: 10, weight: .heavy, design: .rounded))
+                .font(.system(size: 10, weight: .heavy))
                 .kerning(0.8)
                 .foregroundStyle(Color(hex: color))
 
@@ -1192,7 +1191,7 @@ struct TabataView: View {
                 }
 
                 Text("\(value.wrappedValue)\(unit)")
-                    .font(.system(size: 18, weight: .black, design: .rounded))
+                    .font(AppFont.sans(size: 18, weight: .bold))
                     .monospacedDigit()
                     .foregroundStyle(.white)
                     .frame(minWidth: 36)
@@ -1231,12 +1230,12 @@ struct TabataView: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Text(s.name)
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(.white)
 
                     if let tag = s.tag {
                         Text(tag)
-                            .font(.system(size: 9, weight: .heavy, design: .rounded))
+                            .font(.system(size: 9, weight: .heavy))
                             .foregroundStyle(accent)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
@@ -1286,7 +1285,7 @@ struct TabataView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("Intervalles Libres")
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(.white)
                 Text("Chrono personnalisé : \(work)s effort / \(rest)s repos")
                     .font(.system(size: 12, weight: .medium))
@@ -1345,7 +1344,7 @@ struct TabataView: View {
 
                 VStack(spacing: 6) {
                     Text("SÉANCE TERMINÉE !")
-                        .font(.system(size: 28, weight: .black, design: .rounded))
+                        .font(AppFont.sans(size: 28, weight: .bold))
                         .foregroundStyle(.white)
 
                     Text("Performance enregistrée avec succès")
@@ -1416,10 +1415,10 @@ struct TabataView: View {
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(Color(hex: 0x00F076))
             Text(value)
-                .font(.system(size: 20, weight: .black, design: .rounded))
+                .font(AppFont.sans(size: 20, weight: .bold))
                 .foregroundStyle(.white)
             Text(label)
-                .font(.system(size: 10, weight: .heavy, design: .rounded))
+                .font(.system(size: 10, weight: .heavy))
                 .foregroundStyle(.white.opacity(0.5))
         }
         .frame(maxWidth: .infinity)

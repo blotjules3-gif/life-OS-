@@ -208,7 +208,7 @@ struct SetupNumber: View {
     var body: some View {
         VStack(spacing: 18) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text("\(value)").font(.system(size: 56, weight: .black, design: .rounded))
+                Text("\(value)").font(AppFont.sans(size: 56, weight: .bold))
                     .foregroundStyle(accent).contentTransition(.numericText())
                 Text(unit).font(.title3.weight(.semibold)).foregroundStyle(Theme.textSecondary)
             }

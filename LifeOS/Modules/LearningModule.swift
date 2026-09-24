@@ -22,7 +22,7 @@ struct FlashcardsView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     VStack(spacing: 6) {
-                        Text("\(dueCount)").font(.system(size: 48, weight: .bold, design: .rounded)).foregroundStyle(.learnTint)
+                        Text("\(dueCount)").font(.system(size: 48, weight: .bold)).foregroundStyle(.learnTint)
                         Text("cartes à réviser").font(.subheadline).foregroundStyle(Theme.textSecondary)
                     }.frame(maxWidth: .infinity).card()
                     if dueCount > 0 {

@@ -78,7 +78,7 @@ struct LifeStatusTile: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .lastTextBaseline, spacing: 3) {
                     Text(value)
-                        .font(.system(.title3, design: .rounded).weight(.bold))
+                        .font(.system(.title3).weight(.bold))
                         .monospacedDigit()
                         .foregroundStyle(Theme.textPrimary)
                         .lineLimit(1)

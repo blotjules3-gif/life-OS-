@@ -90,7 +90,7 @@ struct AppLockScreen: View {
                     .foregroundStyle(Color.accentColor)
                 VStack(spacing: 6) {
                     Text("LifeOS est verrouillé")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .font(.system(size: 22, weight: .bold))
                     Text("Tes données restent privées.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)

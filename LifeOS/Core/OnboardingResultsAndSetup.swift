@@ -46,7 +46,7 @@ struct OnboardingResults: View {
 
                     VStack(spacing: 10) {
                         Text(name.isEmpty ? "Parfait !" : "Parfait, \(name) !")
-                            .font(.system(.title, design: .rounded, weight: .bold))
+                            .font(.system(.title, weight: .bold))
                             .multilineTextAlignment(.center)
                         Text("Voici tes modules pour démarrer.\nCoche ou décoche selon tes envies.")
                             .font(.subheadline)
@@ -454,7 +454,7 @@ struct OnboardingModuleSetup: View {
         VStack(spacing: 0) {
             VStack(spacing: 10) {
                 Text("Tes habitudes a creer")
-                    .font(.system(.title3, design: .rounded, weight: .bold))
+                    .font(.system(.title3, weight: .bold))
                     .multilineTextAlignment(.center)
                 Text("On les prepare pour toi, desactivees.\nTu les actives quand tu veux.")
                     .font(.subheadline)
@@ -548,7 +548,7 @@ struct OnboardingModuleSetup: View {
                 .background(m.tint, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             VStack(alignment: .leading, spacing: 2) {
                 Text(m.title)
-                    .font(.system(.title2, design: .rounded, weight: .bold))
+                    .font(.system(.title2, weight: .bold))
                 Text("Module \(currentIndex + 1) sur \(modulesWithQuestions.count)")
                     .font(.caption)
                     .foregroundStyle(.secondary)

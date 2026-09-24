@@ -359,7 +359,7 @@ struct RecoveryScoreView: View {
                         ZStack {
                             ProgressRing(progress: Double(score) / 100, lineWidth: 16, tint: scoreColor(score))
                             VStack {
-                                Text("\(score)").font(.system(size: 54, weight: .bold, design: .rounded)).foregroundStyle(Theme.textPrimary)
+                                Text("\(score)").font(.system(size: 54, weight: .bold)).foregroundStyle(Theme.textPrimary)
                                 Text("Récupération").font(.caption).foregroundStyle(Theme.textSecondary)
                             }
                         }

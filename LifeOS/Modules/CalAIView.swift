@@ -139,7 +139,7 @@ struct CalAIView: View {
         return HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(left)")
-                    .font(.system(size: 46, weight: .heavy, design: .rounded))
+                    .font(.system(size: 46, weight: .heavy))
                     .foregroundStyle(left < 0 ? .red : .primary)
                     .contentTransition(.numericText())
                 Text(left >= 0 ? "Calories restantes" : "Calories dépassées")

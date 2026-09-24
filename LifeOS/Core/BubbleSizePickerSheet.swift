@@ -164,7 +164,7 @@ private struct SizeCard: View {
             previewDisc
             VStack(spacing: 4) {
                 Text(size.label.uppercased())
-                    .font(.system(size: 14, weight: .black, design: .rounded))
+                    .font(AppFont.sans(size: 14, weight: .bold))
                     .kerning(-0.2)
                     .foregroundStyle(Theme.textPrimary)
                 Text(percentLabel)
