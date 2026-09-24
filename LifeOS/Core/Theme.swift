@@ -289,18 +289,92 @@ enum Theme {
         isGlassActive ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(card)
     }
 
-    /// Fond d'écran adaptatif : en thème Verre = wallpaper flou (les surfaces se dépolissent
-    /// par-dessus). Sinon fond noir pur OLED en dark mode ou blanc cassé en light mode.
+    /// Fond d'écran adaptatif : aura fluide tamisée se déplaçant lentement sur noir OLED,
+    /// ou wallpaper flou en thème Verre.
     @ViewBuilder static var screenBG: some View {
         if isGlassActive {
             GlassBackdrop()
         } else {
-            bg.ignoresSafeArea()
+            AmbientAuraBackdrop()
         }
     }
 
     /// Ancien nom conservé (mêmes règles que screenBG).
     @ViewBuilder static var background: some View { screenBG }
+}
+
+/// Aura ambiante fluide très tamisée et sombre se déplaçant très lentement à travers l'écran
+struct AmbientAuraBackdrop: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var phase: CGFloat = 0.0
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+
+            ZStack {
+                // Base noir pur absolu OLED en dark, ou blanc cassé en clair
+                if colorScheme == .dark {
+                    Color.black
+                } else {
+                    Color(red: 0.96, green: 0.96, blue: 0.97)
+                }
+
+                if colorScheme == .dark {
+                    // Orbe 1 : Indigo nocturne tamisé
+                    Circle()
+                        .fill(Color(hex: 0x1E1238).opacity(0.50))
+                        .frame(width: max(w * 0.65, 380), height: max(w * 0.65, 380))
+                        .blur(radius: 130)
+                        .offset(
+                            x: cos(phase) * (w * 0.22),
+                            y: sin(phase * 0.8) * (h * 0.16) - (h * 0.12)
+                        )
+
+                    // Orbe 2 : Océan / Cyan profond très sombre
+                    Circle()
+                        .fill(Color(hex: 0x082532).opacity(0.45))
+                        .frame(width: max(w * 0.58, 340), height: max(w * 0.58, 340))
+                        .blur(radius: 140)
+                        .offset(
+                            x: sin(phase * 0.7) * (w * 0.25),
+                            y: cos(phase * 0.9) * (h * 0.18) + (h * 0.08)
+                        )
+
+                    // Orbe 3 : Prune / Magenta très sombre
+                    Circle()
+                        .fill(Color(hex: 0x2A0E22).opacity(0.40))
+                        .frame(width: max(w * 0.50, 300), height: max(w * 0.50, 300))
+                        .blur(radius: 120)
+                        .offset(
+                            x: -cos(phase * 0.6) * (w * 0.20),
+                            y: -sin(phase * 0.7) * (h * 0.14)
+                        )
+                } else {
+                    // Mode clair : auras pastel très subtiles
+                    Circle()
+                        .fill(Color(hex: 0x9FD0E8).opacity(0.30))
+                        .frame(width: max(w * 0.60, 340), height: max(w * 0.60, 340))
+                        .blur(radius: 110)
+                        .offset(x: cos(phase) * (w * 0.20), y: sin(phase * 0.8) * (h * 0.15))
+
+                    Circle()
+                        .fill(Color(hex: 0xC7A6D8).opacity(0.25))
+                        .frame(width: max(w * 0.55, 300), height: max(w * 0.55, 300))
+                        .blur(radius: 115)
+                        .offset(x: sin(phase * 0.7) * (w * 0.22), y: cos(phase * 0.9) * (h * 0.16))
+                }
+            }
+            .ignoresSafeArea()
+            .onAppear {
+                withAnimation(.easeInOut(duration: 18).repeatForever(autoreverses: true)) {
+                    phase = .pi * 2
+                }
+            }
+        }
+        .ignoresSafeArea()
+    }
 }
 
 // MARK: - Système Liquid Glass iOS 27 (Surfaces translucides et bordures transparentes lumineuses)

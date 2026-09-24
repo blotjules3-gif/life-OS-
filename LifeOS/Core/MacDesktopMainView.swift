@@ -95,9 +95,12 @@ struct MacDesktopMainView: View {
         NavigationSplitView {
             sidebarContent
                 .navigationSplitViewColumnWidth(min: 240, ideal: 270, max: 320)
+                .background(AmbientAuraBackdrop())
         } detail: {
             detailContent
+                .background(AmbientAuraBackdrop())
         }
+        .background(AmbientAuraBackdrop())
         .sheet(isPresented: $showNewHabitModal) {
             NavigationStack {
                 NewHabitQuickSheet()
@@ -461,7 +464,7 @@ struct MacDesktopDashboardView: View {
             .padding(.horizontal, 32)
             .padding(.vertical, 24)
         }
-        .background(Theme.bg.ignoresSafeArea())
+        .background(AmbientAuraBackdrop())
     }
 
     // MARK: - Bandeau Modules Prioritaires Desktop
@@ -516,56 +519,86 @@ struct MacDesktopDashboardView: View {
         .liquidGlassCard(cornerRadius: 18)
     }
 
-    // MARK: - 1. Hero Header
+    // MARK: - 1. Hero Header avec DailyScoreRing
 
     private var headerHero: some View {
-        HStack(alignment: .center, spacing: 18) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(currentDateString)
-                    .font(AppFont.body(size: 13, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
-
-                Text("Bonjour, \(displayName)")
-                    .font(AppFont.heading(size: 34, weight: .black))
-                    .foregroundStyle(.primary)
-
-                Text("Tu as complété \(doneHabitsCount) sur \(activeHabits.count) habitudes prévues aujourd'hui.")
-                    .font(AppFont.body(size: 14, weight: .regular))
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            // Energy Card
-            HStack(spacing: 14) {
-                ZStack {
+        HStack(alignment: .center, spacing: 32) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 8) {
                     Circle()
-                        .stroke(Color.accentColor.opacity(0.2), lineWidth: 5)
-                        .frame(width: 54, height: 54)
-                    Circle()
-                        .trim(from: 0, to: CGFloat(min(max(energyScore, 10), 100)) / 100.0)
-                        .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 5, lineCap: .round))
-                        .frame(width: 54, height: 54)
-                        .rotationEffect(.degrees(-90))
-
-                    Text("\(energyScore)")
-                        .font(AppFont.heading(size: 19, weight: .black))
+                        .fill(Color.green)
+                        .frame(width: 8, height: 8)
+                    Text(currentDateString.uppercased())
+                        .font(AppFont.body(size: 11, weight: .bold))
                         .foregroundStyle(Color.accentColor)
+                        .kerning(1.0)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .liquidGlassPill(tint: Color.accentColor)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Bonjour, \(displayName)")
+                        .font(AppFont.heading(size: 34, weight: .black))
+                        .foregroundStyle(.primary)
+
+                    Text("Ton système personnel résumé en un seul cadran interactif. Retrouve tes habitudes et tâches à leur heure.")
+                        .font(AppFont.body(size: 13, weight: .regular))
+                        .foregroundStyle(.secondary)
+                        .lineSpacing(3)
+                        .frame(maxWidth: 380, alignment: .leading)
                 }
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Score Énergie")
-                        .font(AppFont.body(size: 11, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                    Text(energyLabel.isEmpty ? "Excellente forme" : energyLabel)
-                        .font(AppFont.heading(size: 15, weight: .bold))
-                        .foregroundStyle(.primary)
+                HStack(spacing: 12) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(Color.green)
+                        Text("\(doneHabitsCount) / \(activeHabits.count) validées")
+                            .font(AppFont.body(size: 12, weight: .semibold))
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .liquidGlassPill()
+
+                    HStack(spacing: 6) {
+                        Image(systemName: "flame.fill")
+                            .foregroundStyle(Color.orange)
+                        Text(energyLabel.isEmpty ? "Forme optimale" : energyLabel)
+                            .font(AppFont.body(size: 12, weight: .semibold))
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .liquidGlassPill()
+
+                    HStack(spacing: 6) {
+                        ZStack {
+                            Circle()
+                                .stroke(Color.accentColor.opacity(0.2), lineWidth: 3)
+                                .frame(width: 22, height: 22)
+                            Circle()
+                                .trim(from: 0, to: CGFloat(min(max(energyScore, 10), 100)) / 100.0)
+                                .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                                .frame(width: 22, height: 22)
+                                .rotationEffect(.degrees(-90))
+                        }
+                        Text("\(energyScore)")
+                            .font(AppFont.body(size: 12, weight: .bold))
+                            .foregroundStyle(Color.accentColor)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 7)
+                    .liquidGlassPill()
                 }
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 14)
-            .liquidGlassCard(cornerRadius: 16)
+
+            Spacer(minLength: 20)
+
+            // Le Cercle interactif : Score du jour + cadran 24h & habitudes
+            DailyScoreRing()
+                .frame(maxWidth: 440)
         }
+        .padding(24)
+        .liquidGlassCard(cornerRadius: 22)
     }
 
     // MARK: - Habitudes du Jour
@@ -1171,7 +1204,7 @@ struct MacDesktopCategoriesOverview: View {
             }
             .padding(32)
         }
-        .background(Theme.bg.ignoresSafeArea())
+        .background(AmbientAuraBackdrop())
     }
 
     private func categoryCard(_ cat: AppCategory, rank: Int) -> some View {
