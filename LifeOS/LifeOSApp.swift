@@ -99,7 +99,7 @@ struct LifeOSApp: App {
     private func appContent(container: ModelContainer) -> some View {
         ZStack {
             if !isAuthenticated {
-                AuthView()
+                AuthView(initialMode: .login)
                     .transition(.opacity)
                     .zIndex(0)
             } else if !onboardingDone {

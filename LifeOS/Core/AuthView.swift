@@ -1,5 +1,6 @@
 import SwiftUI
 import AuthenticationServices
+import SwiftData
 
 /// Écran d'Authentification initial : Inscription & Connexion.
 ///
@@ -8,14 +9,19 @@ import AuthenticationServices
 /// connectés via un fournisseur vérifié (Google, Apple, Facebook).
 struct AuthView: View {
     var isModal: Bool = false
+    var initialMode: AuthMode = .login
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var ctx
 
     @AppStorage(AppStorageKeys.isAuthenticated) private var isAuthenticated = false
+    @AppStorage(AppStorageKeys.onboardingDone) private var onboardingDone = false
     @AppStorage(AppStorageKeys.userEmail) private var userEmail = ""
     @AppStorage(AppStorageKeys.authProvider) private var authProvider = ""
     @AppStorage(AppStorageKeys.userId) private var userId = ""
     @AppStorage(AppStorageKeys.userName) private var userName = ""
     @AppStorage(AppStorageKeys.userDisplayName) private var userDisplayName = ""
+    @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
+    @AppStorage(AppStorageKeys.homeShortcuts) private var homeShortcuts = ""
 
     enum AuthMode: String, CaseIterable {
         case login = "Connexion"
@@ -28,7 +34,7 @@ struct AuthView: View {
     }
 
     @State private var step: AuthStep = .form
-    @State private var mode: AuthMode = .signup
+    @State private var mode: AuthMode = .login
     @State private var email = ""
     @State private var password = ""
     @State private var confirmPassword = ""
@@ -49,6 +55,14 @@ struct AuthView: View {
     @State private var showGoogleAuthSheet = false
     @State private var showFacebookAuthSheet = false
     @State private var showAppleAuthSheet = false
+    @State private var showCustomGoogleInput = false
+    @State private var customGoogleEmail = ""
+
+    init(isModal: Bool = false, initialMode: AuthMode = .login) {
+        self.isModal = isModal
+        self.initialMode = initialMode
+        self._mode = State(initialValue: initialMode)
+    }
 
     enum Field: Hashable {
         case name, email, password, confirmPassword, verificationCode
@@ -603,9 +617,9 @@ struct AuthView: View {
 
                 VStack(spacing: 12) {
                     googleAccountRow(
-                        name: userDisplayName.isEmpty ? "Utilisateur Google" : userDisplayName,
+                        name: userDisplayName.isEmpty ? "Theo" : userDisplayName,
                         email: userEmail.isEmpty ? "theo.google@gmail.com" : userEmail,
-                        initials: "G"
+                        initials: "T"
                     ) {
                         finalizeAuth(
                             email: userEmail.isEmpty ? "theo.google@gmail.com" : userEmail,
@@ -615,17 +629,44 @@ struct AuthView: View {
                         showGoogleAuthSheet = false
                     }
 
-                    googleAccountRow(
-                        name: "Nouveau compte Google",
-                        email: "Ajouter un autre compte...",
-                        initials: "+"
-                    ) {
-                        finalizeAuth(
-                            email: "nouveau.compte@gmail.com",
-                            provider: "google",
-                            name: "Compte Google"
-                        )
-                        showGoogleAuthSheet = false
+                    if showCustomGoogleInput {
+                        VStack(spacing: 8) {
+                            TextField("monadresse@gmail.com", text: $customGoogleEmail)
+                                .font(.subheadline)
+                                .padding(12)
+                                .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10))
+                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.stroke, lineWidth: 1))
+                                .autocorrectionDisabled()
+                                .textInputAutocapitalization(.never)
+                            Button {
+                                let trimmed = customGoogleEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+                                guard !trimmed.isEmpty, trimmed.contains("@") else { return }
+                                finalizeAuth(
+                                    email: trimmed,
+                                    provider: "google",
+                                    name: userDisplayName.isEmpty ? trimmed.components(separatedBy: "@").first?.capitalized : userDisplayName
+                                )
+                                showGoogleAuthSheet = false
+                            } label: {
+                                Text("Se connecter avec ce compte")
+                                    .font(.subheadline.bold())
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Color.accentColor)
+                                    .foregroundStyle(.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.top, 4)
+                    } else {
+                        googleAccountRow(
+                            name: "Ajouter un autre compte",
+                            email: "Utiliser une autre adresse Google...",
+                            initials: "+"
+                        ) {
+                            showCustomGoogleInput = true
+                        }
                     }
                 }
                 .padding(.horizontal, 20)
@@ -841,17 +882,30 @@ struct AuthView: View {
             return
         }
 
-        if mode == .signup && password != confirmPassword {
-            errorMessage = "Les mots de passe ne correspondent pas."
-            return
-        }
-
-        errorMessage = nil
-        isLoading = true
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-            isLoading = false
-            sendVerificationEmail()
+        if mode == .signup {
+            if password != confirmPassword {
+                errorMessage = "Les mots de passe ne correspondent pas."
+                return
+            }
+            errorMessage = nil
+            isLoading = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                isLoading = false
+                sendVerificationEmail()
+            }
+        } else {
+            // Mode Connexion : connexion directe pour utilisateur existant
+            errorMessage = nil
+            isLoading = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                isLoading = false
+                let inferredName = trimmedEmail.components(separatedBy: "@").first?.capitalized ?? "Theo"
+                finalizeAuth(
+                    email: trimmedEmail,
+                    provider: "email",
+                    name: userDisplayName.isEmpty ? inferredName : userDisplayName
+                )
+            }
         }
     }
 
@@ -925,10 +979,30 @@ struct AuthView: View {
             }
         }
 
+        // Pour un utilisateur qui se connecte avec son compte existant,
+        // on valide l'onboarding et on s'assure que ses données sont prêtes.
+        onboardingDone = true
+        ensureUserDataIsReady()
+
         Haptics.success()
         withAnimation(.easeInOut(duration: 0.4)) {
             isAuthenticated = true
         }
         dismiss()
+    }
+
+    private func ensureUserDataIsReady() {
+        if recommendedModulesRaw.isEmpty {
+            recommendedModulesRaw = "fitness,nutrition,sleep,productivity,finance,mind"
+        }
+        if homeShortcuts.isEmpty {
+            homeShortcuts = "tabata,calories,scan,todo,fasting,water,habits,mood"
+        }
+        let habits = (try? ctx.fetch(FetchDescriptor<Habit>())) ?? []
+        if habits.isEmpty {
+            QuickStart.apply(goal: "performance", ctx: ctx)
+        } else {
+            do { try ctx.save() } catch { }
+        }
     }
 }

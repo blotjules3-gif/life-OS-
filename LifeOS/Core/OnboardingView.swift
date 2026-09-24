@@ -53,6 +53,9 @@ struct OnboardingView: View {
     @AppStorage(AppStorageKeys.userName) private var savedName = ""
     @AppStorage(AppStorageKeys.userGender) private var savedGender = ""
     @AppStorage(AppStorageKeys.onboardingDone) private var onboardingDone = false
+    @AppStorage(AppStorageKeys.isAuthenticated) private var isAuthenticated = false
+
+    @State private var showAuthModal = false
 
     @AppStorage(AppStorageKeys.homeShortcuts) private var homeShortcuts = "tabata,calories,scan,todo,fasting,water,habits,mood"
     @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
@@ -214,7 +217,11 @@ struct OnboardingView: View {
                     case 0:
                         OnboardingWelcome(
                             onNext: { advance(to: 1) },
-                            onQuickStart: { showQuickStart = true }
+                            onQuickStart: { showQuickStart = true },
+                            onSignIn: {
+                                isAuthenticated = false
+                                showAuthModal = true
+                            }
                         )
                         .transition(stepTransition)
                     case 1:
@@ -311,6 +318,11 @@ struct OnboardingView: View {
                 }
             }
         }
+        .fullScreenCover(isPresented: $showAuthModal) {
+            NavigationStack {
+                AuthView(isModal: true, initialMode: .login)
+            }
+        }
     }
 }
 
@@ -319,6 +331,7 @@ struct OnboardingView: View {
 struct OnboardingWelcome: View {
     let onNext: () -> Void
     var onQuickStart: (() -> Void)? = nil
+    var onSignIn: (() -> Void)? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -348,7 +361,7 @@ struct OnboardingWelcome: View {
 
             Spacer()
 
-            VStack(spacing: 10) {
+            VStack(spacing: 12) {
                 if let onQuickStart {
                     Button(action: onQuickStart) {
                         HStack(spacing: 8) {
@@ -364,8 +377,23 @@ struct OnboardingWelcome: View {
                 }
                 OnboardingButton(label: onQuickStart == nil ? "Commencer" : "Configuration détaillée",
                                  enabled: true, action: onNext)
+
+                if let onSignIn {
+                    Button(action: onSignIn) {
+                        HStack(spacing: 4) {
+                            Text("Tu as déjà un compte ?")
+                                .foregroundStyle(Theme.textSecondary)
+                            Text("Se connecter")
+                                .fontWeight(.semibold)
+                                .foregroundStyle(Color.accentColor)
+                        }
+                        .font(.system(size: 14))
+                        .padding(.vertical, 6)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            .padding(.bottom, 52)
+            .padding(.bottom, 42)
         }
         .padding(.horizontal, Theme.padWide)
     }
