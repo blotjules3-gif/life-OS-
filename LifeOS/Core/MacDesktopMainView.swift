@@ -543,7 +543,7 @@ struct MacDesktopDashboardView: View {
                                 .foregroundStyle(Color.secondary.opacity(0.60))
                         }
                         .padding(12)
-                        .liquidGlassCard(cornerRadius: 12)
+                        .applePreviewInnerCard(cornerRadius: 16)
                     }
                     .buttonStyle(.plain)
                 }
@@ -718,7 +718,7 @@ struct MacDesktopDashboardView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
-        .liquidGlassCard(cornerRadius: 12)
+        .applePreviewInnerCard(cornerRadius: 16)
     }
 
     // MARK: - Habitudes du Jour (Monochrome)
@@ -871,7 +871,7 @@ struct MacDesktopDashboardView: View {
             .buttonStyle(.plain)
         }
         .padding(14)
-        .liquidGlassCard(cornerRadius: 14)
+        .applePreviewInnerCard(cornerRadius: 16)
     }
 
     private func toggleHabit(_ habit: Habit) {
@@ -1074,11 +1074,11 @@ struct MacDesktopDashboardView: View {
                         .foregroundStyle(Color.primary)
                     }
                     .buttonStyle(.plain)
-                    .liquidGlassPill()
+                    .applePreviewIsland()
                 }
             }
             .padding(14)
-            .liquidGlassCard(cornerRadius: 14)
+            .applePreviewInnerCard(cornerRadius: 16)
 
             // Calories
             VStack(alignment: .leading, spacing: 8) {
@@ -1095,7 +1095,7 @@ struct MacDesktopDashboardView: View {
                     .tint(Color.primary)
             }
             .padding(14)
-            .liquidGlassCard(cornerRadius: 14)
+            .applePreviewInnerCard(cornerRadius: 16)
 
             // Jeûne & Statut
             HStack(spacing: 12) {

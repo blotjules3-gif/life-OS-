@@ -344,7 +344,7 @@ struct FloatingTabBar: View {
                         LiquidGlass.innerCausticGradient(colorScheme: scheme),
                         lineWidth: 0.8
                     )
-                    .padding(0.8)
+                    .padding(0.9)
             )
             .clipShape(Capsule())
             .shadow(color: Color.black.opacity(scheme == .dark ? 0.42 : 0.07), radius: 18, x: 0, y: 7)
@@ -367,11 +367,16 @@ struct FloatingTabBar: View {
         #endif
     }
 
-    /// Verre translucide cristallin façon Apple iOS 27
+    /// Verre translucide cristallin avec courbure convexe façon Apple iOS 27
     @ViewBuilder private var barBackground: some View {
-        Capsule()
-            .fill(scheme == .dark ? Color.white.opacity(0.06) : Color.white.opacity(0.28))
-            .background(.ultraThinMaterial, in: Capsule())
+        ZStack {
+            Capsule()
+                .fill(scheme == .dark ? Color.white.opacity(0.06) : Color.white.opacity(0.22))
+                .background(.ultraThinMaterial, in: Capsule())
+
+            Capsule()
+                .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: scheme))
+        }
     }
 
     /// L'assistant devient le 5e onglet intégré dans l'îlot

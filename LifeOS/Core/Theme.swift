@@ -322,33 +322,33 @@ struct AmbientAuraBackdrop: View {
                 if colorScheme == .dark {
                     Color.black
                 } else {
-                    Color(red: 0.96, green: 0.96, blue: 0.97)
+                    Color(red: 0.95, green: 0.95, blue: 0.96)
                 }
 
                 if colorScheme == .dark {
-                    // Orbes monochromes lunaires / argentés subtils — aucun pixel de couleur
+                    // Lumière très très sombre, tamisée, presque noire qui se balade très lentement
                     Circle()
-                        .fill(Color.white.opacity(0.045))
-                        .frame(width: max(w * 0.65, 380), height: max(w * 0.65, 380))
+                        .fill(Color(red: 0.11, green: 0.13, blue: 0.18).opacity(0.40))
+                        .frame(width: max(w * 0.70, 420), height: max(w * 0.70, 420))
                         .blur(radius: 140)
                         .offset(
-                            x: cos(phase) * (w * 0.22),
-                            y: sin(phase * 0.8) * (h * 0.16) - (h * 0.12)
+                            x: cos(phase) * (w * 0.25),
+                            y: sin(phase * 0.8) * (h * 0.18) - (h * 0.10)
                         )
 
                     Circle()
-                        .fill(Color(white: 0.90).opacity(0.035))
-                        .frame(width: max(w * 0.58, 340), height: max(w * 0.58, 340))
+                        .fill(Color(red: 0.09, green: 0.10, blue: 0.15).opacity(0.35))
+                        .frame(width: max(w * 0.62, 360), height: max(w * 0.62, 360))
                         .blur(radius: 150)
                         .offset(
-                            x: sin(phase * 0.7) * (w * 0.25),
-                            y: cos(phase * 0.9) * (h * 0.18) + (h * 0.08)
+                            x: sin(phase * 0.7) * (w * 0.28),
+                            y: cos(phase * 0.9) * (h * 0.20) + (h * 0.10)
                         )
 
                     Circle()
-                        .fill(Color(white: 0.80).opacity(0.038))
+                        .fill(Color(white: 0.65).opacity(0.028))
                         .frame(width: max(w * 0.50, 300), height: max(w * 0.50, 300))
-                        .blur(radius: 130)
+                        .blur(radius: 120)
                         .offset(
                             x: -cos(phase * 0.6) * (w * 0.20),
                             y: -sin(phase * 0.7) * (h * 0.14)
@@ -356,13 +356,13 @@ struct AmbientAuraBackdrop: View {
                 } else {
                     // Mode clair : lueurs blanches subtiles
                     Circle()
-                        .fill(Color.white.opacity(0.60))
-                        .frame(width: max(w * 0.60, 340), height: max(w * 0.60, 340))
+                        .fill(Color.white.opacity(0.70))
+                        .frame(width: max(w * 0.65, 360), height: max(w * 0.65, 360))
                         .blur(radius: 110)
                         .offset(x: cos(phase) * (w * 0.20), y: sin(phase * 0.8) * (h * 0.15))
 
                     Circle()
-                        .fill(Color(white: 0.88).opacity(0.40))
+                        .fill(Color(white: 0.90).opacity(0.45))
                         .frame(width: max(w * 0.55, 300), height: max(w * 0.55, 300))
                         .blur(radius: 115)
                         .offset(x: sin(phase * 0.7) * (w * 0.22), y: cos(phase * 0.9) * (h * 0.16))
@@ -370,7 +370,7 @@ struct AmbientAuraBackdrop: View {
             }
             .ignoresSafeArea()
             .onAppear {
-                withAnimation(.easeInOut(duration: 18).repeatForever(autoreverses: true)) {
+                withAnimation(.easeInOut(duration: 22).repeatForever(autoreverses: true)) {
                     phase = .pi * 2
                 }
             }
@@ -383,19 +383,21 @@ struct AmbientAuraBackdrop: View {
 
 enum LiquidGlass {
     /// Arête de glace / biseau d'eau spéculaire iOS 27 (Incident lumineux top-leading -> Caustique bottom-trailing)
-    /// Reproduit fidèlement la réfraction de l'eau et de la glace sans jamais utiliser de trait gris opaque.
+    /// Modélisation optique pure : réfraction d'eau convexe et réflexion interne totale sans aucun gris.
     static func iceEdgeGradient(colorScheme: ColorScheme, opacity: Double = 1.0, tint: Color? = nil) -> LinearGradient {
         if colorScheme == .dark {
             return LinearGradient(
                 stops: [
-                    // Apex réfléchissant (angle incident supérieur gauche) : éclat blanc pur cristallin
-                    .init(color: Color.white.opacity(0.85 * opacity), location: 0.0),
-                    // Réfraction cristalline le long du contour
-                    .init(color: Color.white.opacity(0.28 * opacity), location: 0.30),
+                    // Apex réfléchissant (angle incident supérieur gauche) : éclat blanc pur cristallin spéculaire
+                    .init(color: Color.white.opacity(0.96 * opacity), location: 0.0),
+                    // Réfraction cristalline le long de l'arête supérieure et gauche
+                    .init(color: Color.white.opacity(0.55 * opacity), location: 0.16),
                     // Corps du verre translucide
-                    .init(color: (tint ?? Color.white).opacity(0.10 * opacity), location: 0.65),
-                    // Retour caustique interne au coin inférieur droit
-                    .init(color: Color.white.opacity(0.35 * opacity), location: 1.0)
+                    .init(color: (tint ?? Color.white).opacity(0.14 * opacity), location: 0.45),
+                    // Retour caustique interne au coin inférieur droit (réflexion totale interne)
+                    .init(color: Color.white.opacity(0.42 * opacity), location: 0.86),
+                    // Rentrée d'arête inférieure
+                    .init(color: Color.white.opacity(0.20 * opacity), location: 1.0)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -404,13 +406,14 @@ enum LiquidGlass {
             return LinearGradient(
                 stops: [
                     // En mode clair : éclat spéculaire blanc pur qui découpe la forme
-                    .init(color: Color.white.opacity(0.95 * opacity), location: 0.0),
+                    .init(color: Color.white.opacity(1.0 * opacity), location: 0.0),
                     // Réfraction d'arête
-                    .init(color: Color.white.opacity(0.40 * opacity), location: 0.35),
-                    // Fausse ombre d'occlusion très subtile
-                    .init(color: Color.black.opacity(0.04 * opacity), location: 0.70),
+                    .init(color: Color.white.opacity(0.60 * opacity), location: 0.20),
+                    // Corps du verre
+                    .init(color: Color.white.opacity(0.20 * opacity), location: 0.50),
                     // Caustique de contact
-                    .init(color: Color.white.opacity(0.45 * opacity), location: 1.0)
+                    .init(color: Color.white.opacity(0.50 * opacity), location: 0.88),
+                    .init(color: Color.white.opacity(0.25 * opacity), location: 1.0)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -423,10 +426,11 @@ enum LiquidGlass {
         if colorScheme == .dark {
             return LinearGradient(
                 stops: [
-                    .init(color: Color.white.opacity(0.38), location: 0.0),
-                    .init(color: Color.white.opacity(0.05), location: 0.35),
-                    .init(color: Color.clear, location: 0.65),
-                    .init(color: Color.white.opacity(0.20), location: 1.0)
+                    .init(color: Color.white.opacity(0.48), location: 0.0),
+                    .init(color: Color.white.opacity(0.16), location: 0.22),
+                    .init(color: Color.clear, location: 0.55),
+                    .init(color: Color.white.opacity(0.32), location: 0.88),
+                    .init(color: Color.white.opacity(0.12), location: 1.0)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -434,15 +438,29 @@ enum LiquidGlass {
         } else {
             return LinearGradient(
                 stops: [
-                    .init(color: Color.white.opacity(0.60), location: 0.0),
-                    .init(color: Color.white.opacity(0.12), location: 0.35),
-                    .init(color: Color.clear, location: 0.65),
-                    .init(color: Color.white.opacity(0.25), location: 1.0)
+                    .init(color: Color.white.opacity(0.70), location: 0.0),
+                    .init(color: Color.white.opacity(0.25), location: 0.22),
+                    .init(color: Color.clear, location: 0.55),
+                    .init(color: Color.white.opacity(0.40), location: 0.88),
+                    .init(color: Color.white.opacity(0.16), location: 1.0)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         }
+    }
+
+    /// Lueur de courbure convexe de surface (effet dôme d'eau / surface d'iceberg poli)
+    static func surfaceCurvatureSheen(colorScheme: ColorScheme) -> LinearGradient {
+        LinearGradient(
+            stops: [
+                .init(color: Color.white.opacity(colorScheme == .dark ? 0.09 : 0.24), location: 0.0),
+                .init(color: Color.white.opacity(colorScheme == .dark ? 0.02 : 0.06), location: 0.30),
+                .init(color: Color.clear, location: 0.65)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
     }
 
     /// Rétrocompatibilité : bordure spéculaire cristalline (sans aucun noir ou gris)
@@ -462,22 +480,17 @@ struct LiquidGlassCardModifier: ViewModifier {
         content
             .background {
                 ZStack {
-                    if colorScheme == .dark {
-                        // Translucide cristallin : très basse opacité pour laisser respirer l'aura ambiante
-                        Color.white.opacity(0.045)
-                        if let tint {
-                            tint.opacity(0.08)
-                        }
-                    } else {
-                        // Mode clair : verre dépoli translucide non-opaque
-                        Color.white.opacity(0.25)
-                        if let tint {
-                            tint.opacity(0.06)
-                        }
-                    }
+                    // Substrat en verre ultra-fin cristallin
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(colorScheme == .dark
+                              ? (tint != nil ? tint!.opacity(0.08) : Color.white.opacity(0.045))
+                              : (tint != nil ? tint!.opacity(0.06) : Color.white.opacity(0.20)))
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+
+                    // Lueur spéculaire de courbure convexe de surface
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
                 }
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             }
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             .overlay(
@@ -495,10 +508,11 @@ struct LiquidGlassCardModifier: ViewModifier {
                         LiquidGlass.innerCausticGradient(colorScheme: colorScheme),
                         lineWidth: 0.8
                     )
-                    .padding(0.8)
+                    .padding(0.9)
             )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.38 : 0.06), radius: 14, x: 0, y: 7)
-            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.22), radius: 1, x: 0, y: 1)
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.38 : 0.06), radius: 18, x: 0, y: 9)
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.20 : 0.03), radius: 4, x: 0, y: 2)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.28), radius: 1, x: 0, y: 1)
     }
 }
 
@@ -511,9 +525,14 @@ struct LiquidGlassPillModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background {
-                Capsule()
-                    .fill(colorScheme == .dark ? Color.white.opacity(0.055) : Color.white.opacity(0.25))
-                    .background(.ultraThinMaterial, in: Capsule())
+                ZStack {
+                    Capsule()
+                        .fill(colorScheme == .dark ? Color.white.opacity(0.055) : Color.white.opacity(0.22))
+                        .background(.ultraThinMaterial, in: Capsule())
+
+                    Capsule()
+                        .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                }
             }
             .overlay(
                 Capsule()
@@ -528,10 +547,10 @@ struct LiquidGlassPillModifier: ViewModifier {
                         LiquidGlass.innerCausticGradient(colorScheme: colorScheme),
                         lineWidth: 0.8
                     )
-                    .padding(0.8)
+                    .padding(0.9)
             )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.28 : 0.05), radius: 8, x: 0, y: 3)
-            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.20), radius: 1, x: 0, y: 1)
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.30 : 0.05), radius: 10, x: 0, y: 4)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.26), radius: 1, x: 0, y: 1)
     }
 }
 
@@ -546,11 +565,16 @@ struct ApplePreviewPillModifier: ViewModifier {
         content
             .frame(height: height)
             .background {
-                Capsule()
-                    .fill(colorScheme == .dark
-                          ? Color.white.opacity(0.06)
-                          : Color.white.opacity(0.28))
-                    .background(.ultraThinMaterial, in: Capsule())
+                ZStack {
+                    Capsule()
+                        .fill(colorScheme == .dark
+                              ? Color.white.opacity(0.06)
+                              : Color.white.opacity(0.22))
+                        .background(.ultraThinMaterial, in: Capsule())
+
+                    Capsule()
+                        .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                }
             }
             .overlay(
                 Capsule()
@@ -565,10 +589,10 @@ struct ApplePreviewPillModifier: ViewModifier {
                         LiquidGlass.innerCausticGradient(colorScheme: colorScheme),
                         lineWidth: 0.8
                     )
-                    .padding(0.8)
+                    .padding(0.9)
             )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.30 : 0.05), radius: 10, x: 0, y: 4)
-            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.24), radius: 1, x: 0, y: 1)
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.32 : 0.05), radius: 12, x: 0, y: 5)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.26), radius: 1, x: 0, y: 1)
     }
 }
 
@@ -581,16 +605,21 @@ struct ApplePreviewIslandModifier: ViewModifier {
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background {
-                Capsule()
-                    .fill(colorScheme == .dark
-                          ? Color.white.opacity(0.06)
-                          : Color.white.opacity(0.28))
-                    .background(.ultraThinMaterial, in: Capsule())
+                ZStack {
+                    Capsule()
+                        .fill(colorScheme == .dark
+                              ? Color.white.opacity(0.06)
+                              : Color.white.opacity(0.24))
+                        .background(.ultraThinMaterial, in: Capsule())
+
+                    Capsule()
+                        .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                }
             }
             .overlay(
                 Capsule()
                     .strokeBorder(
-                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 0.9),
+                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 0.95),
                         lineWidth: strokeWidth
                     )
             )
@@ -608,16 +637,21 @@ struct ApplePreviewCircleModifier: ViewModifier {
         content
             .frame(width: size, height: size)
             .background {
-                Circle()
-                    .fill(colorScheme == .dark
-                          ? Color.white.opacity(0.06)
-                          : Color.white.opacity(0.28))
-                    .background(.ultraThinMaterial, in: Circle())
+                ZStack {
+                    Circle()
+                        .fill(colorScheme == .dark
+                              ? Color.white.opacity(0.06)
+                              : Color.white.opacity(0.24))
+                        .background(.ultraThinMaterial, in: Circle())
+
+                    Circle()
+                        .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                }
             }
             .overlay(
                 Circle()
                     .strokeBorder(
-                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 0.9),
+                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 0.95),
                         lineWidth: strokeWidth
                     )
             )
@@ -634,11 +668,16 @@ struct ApplePreviewCardModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(colorScheme == .dark
-                          ? Color.white.opacity(0.045)
-                          : Color.white.opacity(0.26))
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                ZStack {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(colorScheme == .dark
+                              ? Color.white.opacity(0.045)
+                              : Color.white.opacity(0.20))
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
+                }
             }
             .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
             .overlay(
@@ -656,10 +695,11 @@ struct ApplePreviewCardModifier: ViewModifier {
                         LiquidGlass.innerCausticGradient(colorScheme: colorScheme),
                         lineWidth: 0.8
                     )
-                    .padding(0.8)
+                    .padding(0.9)
             )
-            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.38 : 0.06), radius: 16, x: 0, y: 7)
-            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.05 : 0.22), radius: 1, x: 0, y: 1)
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.40 : 0.06), radius: 18, x: 0, y: 9)
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.20 : 0.03), radius: 4, x: 0, y: 2)
+            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.26), radius: 1, x: 0, y: 1)
     }
 }
 
@@ -1064,25 +1104,16 @@ extension View {
     func shadowLg() -> some View { modifier(ShadowModifier(radius: 24, y: 12, opacity: 0.13)) }
 }
 
-// MARK: - Carte sobre (cellule groupée façon iOS)
+// MARK: - Carte Liquid Glass (cellule adaptative iOS 27)
 
 struct CardStyle: ViewModifier {
-    @AppStorage(AppStorageKeys.appTheme) private var themeRaw = "classic"
     var padding: CGFloat = Theme.pad
     var radius: CGFloat = Theme.radius
     var elevated: Bool = false
     func body(content: Content) -> some View {
-        let glass = themeRaw == "glass"
         content
             .padding(padding)
-            .background(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .fill(glass ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Theme.card))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .strokeBorder(glass ? Color.white.opacity(0.35) : Theme.hairline, lineWidth: glass ? 1 : 0.5)
-            )
+            .liquidGlassCard(cornerRadius: radius)
             .softElevation(elevated)
     }
 }
@@ -1093,24 +1124,18 @@ extension View {
     }
 }
 
-// MARK: - Surface (carte au contour lisible : liseré hairline + ombre douce)
+// MARK: - Surface (carte au contour lisible : verre liquide avec arête de glace)
 
 private struct SurfaceStyle: ViewModifier {
     var radius: CGFloat = 20
     func body(content: Content) -> some View {
         content
-            .background(Theme.card)
-            .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .strokeBorder(Theme.stroke, lineWidth: 1)
-            )
-            .shadowSm()
+            .liquidGlassCard(cornerRadius: radius)
     }
 }
 
 extension View {
-    /// Fond card + liseré + ombre légère — les bords restent visibles sur tout fond.
+    /// Fond card + arête de glace liquide — les bords restent nets et cristallins sur tout fond.
     func surface(radius: CGFloat = 20) -> some View { modifier(SurfaceStyle(radius: radius)) }
 }
 

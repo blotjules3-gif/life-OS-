@@ -48,13 +48,12 @@ struct ThemedBubbleBackground: View {
     var body: some View {
         let cols = theme.bubbleBG
         ZStack {
-            if theme.isNike {
-                // NIKE : aplat + grille technique fine (motif Swiss).
-                cols[0]
-                TechGrid(spacing: 46)
-            } else if theme.isGlass {
+            if theme.isGlass {
                 // VERRE : fond d'écran doux et flou, wallpaper unique de toute l'app.
                 GlassBackdrop()
+            } else if theme.isNike {
+                // Thème par défaut / Sombre / Système : Aura fluide monochrome très tamisée sur noir OLED
+                AmbientAuraBackdrop()
             } else if theme == .gothic {
                 Color(hex: 0x050506)
                 RadialGradient(colors: [.clear, Color.black.opacity(0.7)],

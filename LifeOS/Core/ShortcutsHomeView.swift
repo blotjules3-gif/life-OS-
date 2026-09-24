@@ -1254,7 +1254,10 @@ struct ShortcutsHomeView: View {
     private func homeWidget(_ w: HomeWidget) -> some View {
         switch w {
         case .score:
-            DailyScoreRing()   // score unique du jour (melange tous les objectifs)
+            DailyScoreRing()
+                .padding(.vertical, 10)
+                .padding(.horizontal, 8)
+                .applePreviewCard(cornerRadius: 28)
         case .shortcuts:
             if hasContent(w) { shortcutsSection } else { HomeWidgetPlaceholder(widget: w) }
         case .coach:

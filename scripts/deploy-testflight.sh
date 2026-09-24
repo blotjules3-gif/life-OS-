@@ -125,7 +125,7 @@ cat > "$EXPORT_PLIST" <<PLIST
 <plist version="1.0">
 <dict>
   <key>method</key><string>app-store-connect</string>
-  <key>destination</key><string>upload</string>
+  <key>destination</key><string>export</string>
   <key>uploadSymbols</key><true/>
   <key>teamID</key><string>${TEAM_ID}</string>
   <key>signingStyle</key><string>manual</string>
@@ -143,14 +143,18 @@ EXPORT_DIR="/tmp/lifeos-export"
 rm -rf "$EXPORT_DIR"
 mkdir -p "$EXPORT_DIR"
 
-echo "Envoi de l'application vers TestFlight..."
+echo "Export de l'IPA..."
 xcodebuild -exportArchive \
     -archivePath "$ARCHIVE_PATH" \
     -exportOptionsPlist "$EXPORT_PLIST" \
-    -exportPath "$EXPORT_DIR" \
-    -authenticationKeyPath "$KEY_PATH" \
-    -authenticationKeyID "$KEY_ID" \
-    -authenticationKeyIssuerID "$ISSUER_ID"
+    -exportPath "$EXPORT_DIR"
+
+echo "Envoi de l'application vers TestFlight via altool..."
+xcrun altool --upload-app \
+    -f "$EXPORT_DIR/LifeOS.ipa" \
+    -t ios \
+    --apiKey "$KEY_ID" \
+    --apiIssuer "$ISSUER_ID"
 
 echo "=================================================="
 echo "🎉 Build $BUILD_NUMBER téléversé avec succès !"
