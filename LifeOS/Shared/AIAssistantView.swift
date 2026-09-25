@@ -1099,10 +1099,17 @@ struct AIAssistantView: View {
                             Label("Reset connexion coach (DEV)", systemImage: "arrow.uturn.backward.circle")
                         }
                         Button(role: .destructive) {
-                            DevReset.resetCoach()
+                            DevReset.purgeConversation(context: ctx)
+                            vm.messages = []
+                        } label: {
+                            Label("Purger conversation (DEV)", systemImage: "bubble.left.and.exclamationmark.bubble.right")
+                        }
+                        Button(role: .destructive) {
+                            DevReset.resetCoach(context: ctx)
                             // Force fermer le chat pour retomber sur le disclaimer
                             disclaimerAccepted = false
                             coachOnboardingCompleted = false
+                            vm.messages = []
                             connectRefresh += 1
                             dismiss()
                         } label: {
