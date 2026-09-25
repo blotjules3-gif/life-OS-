@@ -32,7 +32,7 @@ enum DesktopNavSection: Hashable, Identifiable {
         case .dashboard: return "Tableau de bord"
         case .habits: return "Habitudes & Routines"
         case .wakeup: return "Réveil & Sommeil"
-        case .assistant: return "Coach Personnel IA"
+        case .assistant: return "Ton coach"
         case .tabata: return "HIIT & Tabata"
         case .category(let cat): return cat.title
         case .allCategories: return "Toutes les catégories"
@@ -355,7 +355,7 @@ struct MacDesktopMainView: View {
                 Button {
                     selection = .assistant
                 } label: {
-                    Label("Coach IA", systemImage: "sparkles")
+                    Label("Ton coach", systemImage: "sparkles")
                         .foregroundStyle(Color(hex: 0x9B6CF1))
                 }
                 .help("Discuter avec le Coach")
@@ -633,7 +633,7 @@ struct MacDesktopDashboardView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "sparkles")
                                 .font(.system(size: 13, weight: .semibold))
-                            Text("Assistant IA")
+                            Text("Ton coach")
                                 .font(AppFont.heading(size: 12, weight: .bold))
                         }
                         .foregroundStyle(Color.primary)
@@ -1174,7 +1174,7 @@ struct MacDesktopDashboardView: View {
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                 toolTile(title: "HIIT / Tabata", icon: "timer", action: onOpenTabata)
-                toolTile(title: "Coach IA", icon: "sparkles", action: onOpenAssistant)
+                toolTile(title: "Ton coach", icon: "sparkles", action: onOpenAssistant)
                 toolTile(title: "Focus Pomodoro", icon: "brain.head.profile", action: onOpenAssistant)
                 toolTile(title: "Bilan du Soir", icon: "sunset.fill", action: onOpenAssistant)
             }
