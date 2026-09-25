@@ -61,8 +61,11 @@ final class AIProviderResolverTests: XCTestCase {
         XCTAssertNotNil(AIProviderResolver.displayName(for: GeminiProvider().id))
     }
 
-    func testIconName_appleIntelligence_usesSparkles() {
-        XCTAssertEqual(AIProviderResolver.iconName(for: "apple.intelligence.on-device"), "sparkles")
+    /// La marque a remplace TOUS les sparkles par le symbole infini au commit f224f1397
+    /// ("replace all sparkles with infinity icon"). C'etait volontaire, c'est le logo de
+    /// l'app. Ce test etait reste sur l'ancienne valeur et echouait depuis.
+    func testIconName_appleIntelligence_usesInfinity() {
+        XCTAssertEqual(AIProviderResolver.iconName(for: "apple.intelligence.on-device"), "infinity")
     }
 
     func testIconName_cloudProviders_useCloudIcon() {

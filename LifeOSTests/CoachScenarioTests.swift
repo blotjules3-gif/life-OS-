@@ -25,6 +25,21 @@ final class CoachScenarioTests: XCTestCase {
         ProfileStore.shared.setContext(container.mainContext)
     }
 
+
+    /// Singleton : sans ca le context de ce container en memoire reste installe
+
+    /// apres ce fichier et la classe suivante lit ses donnees.
+
+    @MainActor
+
+    override func tearDown() {
+
+        ProfileStore.shared.clearContext()
+
+        super.tearDown()
+
+    }
+
     override func tearDown() async throws {
         for f in ProfileStore.shared.allFields() {
             container.mainContext.delete(f)

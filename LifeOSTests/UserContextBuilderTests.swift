@@ -27,12 +27,23 @@ final class UserContextBuilderTests: XCTestCase {
         // Le builder est un singleton avec cache TTL 60s — sinon un test hérite
         // du résultat du test précédent.
         UserContextBuilder.shared.invalidateCache()
+        // Ce fichier teste un profil VIDE, donc il doit garantir lui meme qu'il est vide.
+        // Nettoyer UserDefaults ne suffit pas : le contexte du profil vit aussi dans deux
+        // SINGLETONS que d'autres classes de test remplissent (CoachScenarioTests,
+        // GoalsProgressTests, CycleAwarenessTests...). Sans ca le resultat depend de
+        // l'ORDRE d'execution, ce qui rendait cet echec intermittent.
+        ProfileStore.shared.clearContext()
+        UserContextBuilder.shared.clearContext()
+        SharedModelContextProvider.shared.clearContext()
     }
 
     @MainActor
     override func tearDown() {
         for k in pollutingKeys { UserDefaults.standard.removeObject(forKey: k) }
         UserContextBuilder.shared.invalidateCache()
+        ProfileStore.shared.clearContext()
+        UserContextBuilder.shared.clearContext()
+        SharedModelContextProvider.shared.clearContext()
         super.tearDown()
     }
 

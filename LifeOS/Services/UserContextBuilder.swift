@@ -11,10 +11,19 @@ final class UserContextBuilder {
     /// Injecté au boot par LifeOSApp — permet à `buildFresh` d'appeler
     /// `MemoryRetrieval` scoré au lieu du blob App Group flat.
     private var ctx: ModelContext?
+    /// Meme raison que ProfileStore : un ModelContext ne retient pas son container,
+    /// et une lecture sur un container mort PLANTE au lieu de rendre nil.
+    private var container: ModelContainer?
 
     func setContext(_ context: ModelContext) {
+        self.container = context.container
         self.ctx = context
     }
+
+    /// Detache le builder. A appeler dans le tearDown d'un test qui a pose un
+    /// context : le singleton survit a la classe de test, sinon la suivante lit
+    /// les donnees de la precedente.
+    func clearContext() { self.ctx = nil; self.container = nil }
 
     private init() {
         // Invalider le cache quand l'app revient au premier plan — nouvelle
