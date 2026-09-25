@@ -1284,7 +1284,7 @@ struct ProfileView: View {
                     // Provider badge in bottom-right corner
                     ZStack {
                         Circle()
-                            .fill(Color(uiColor: .systemBackground))
+                            .fill(Theme.cardFill)
                             .frame(width: 22, height: 22)
                             .shadow(color: .black.opacity(0.12), radius: 2)
 
@@ -1409,7 +1409,7 @@ struct AccountDetailSheet: View {
 
                         ZStack {
                             Circle()
-                                .fill(Color(uiColor: .systemBackground))
+                                .fill(Theme.cardFill)
                                 .frame(width: 28, height: 28)
                                 .shadow(color: .black.opacity(0.12), radius: 2)
 

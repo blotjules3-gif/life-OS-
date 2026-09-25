@@ -291,30 +291,11 @@ enum Theme {
     /// À utiliser dans `.background(Theme.cardFill, in: shape)` pour que TOUTES les cartes
     /// suivent le design Liquid Glass iOS 27.
     static var cardFill: AnyShapeStyle {
-        // En clair une surface qui flotte est BLANCHE. `.ultraThinMaterial` sur un fond
-        // plat n'a rien a refracter : il rend un gris terne, c'est ce qui rendait toutes
-        // les cartes ternes.
-        //
-        // Les deux teintes sont des UIColor DYNAMIQUES, pas une lecture de
-        // `UITraitCollection.current`. Ce token est statique : lire le trait au moment de
-        // l'evaluation donne la bonne couleur la plupart du temps, mais ce n'est garanti
-        // que dans un passage de dessin UIKit, et surtout ca ne se reevalue pas au
-        // basculement clair/sombre. Un UIColor dynamique, lui, est resolu par le systeme
-        // a chaque rendu. Meme schema que Theme.bg / Theme.card juste au dessus.
-        AnyShapeStyle(
-            LinearGradient(
-                colors: [
-                    Color(UIColor { $0.userInterfaceStyle == .dark
-                        ? UIColor(white: 1.0, alpha: 0.10)
-                        : UIColor.white }),
-                    Color(UIColor { $0.userInterfaceStyle == .dark
-                        ? UIColor(white: 1.0, alpha: 0.055)
-                        : UIColor(red: 0.988, green: 0.988, blue: 0.992, alpha: 1.0) }) // #FCFCFD
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
+        // TRANSLUCIDE, pas blanc opaque. C'etait un degrade blanc plein : n'importe quelle
+        // carte posee dessus cachait entierement son arriere plan, donc le verre au dessus
+        // n'avait plus rien a laisser voir. Un materiau fin laisse l'environnement teinter
+        // la surface, c'est tout le sujet.
+        AnyShapeStyle(.ultraThinMaterial)
     }
 
     /// Fond d'écran adaptatif : aura fluide tamisée se déplaçant lentement sur noir OLED,
@@ -378,18 +359,18 @@ struct AmbientAuraBackdrop: View {
                             y: -sin(phase * 0.7) * (h * 0.14)
                         )
                 } else {
-                    // Mode clair : lueurs satinées #F5F5F7 et blanc pur subtiles
-                    Circle()
-                        .fill(Color.white.opacity(0.65))
-                        .frame(width: max(w * 0.65, 360), height: max(w * 0.65, 360))
-                        .blur(radius: 110)
-                        .offset(x: cos(phase) * (w * 0.20), y: sin(phase * 0.8) * (h * 0.15))
-
-                    Circle()
-                        .fill(Color(hex: 0xF5F5F7).opacity(0.50))
-                        .frame(width: max(w * 0.55, 300), height: max(w * 0.55, 300))
-                        .blur(radius: 115)
-                        .offset(x: sin(phase * 0.7) * (w * 0.22), y: cos(phase * 0.9) * (h * 0.16))
+                    // RIEN en clair, et c'est delibere.
+                    //
+                    // Il y avait ici des halos `Color.white.opacity(0.65)` flous. Mesure au
+                    // pixel sur une capture : ils remontaient le fond de #EEEEEF (238) a
+                    // 246-254, donc quasiment blanc. Une surface blanche posee sur un fond
+                    // blanc ne se voit plus, quelle que soit la qualite de son ombre.
+                    //
+                    // Tout le mecanisme Apple tient sur ce contraste : sol GRIS #EEEEEF,
+                    // surfaces BLANCHES posees dessus. Supprimer le sol gris, c'est
+                    // supprimer l'effet. Les halos restent en SOMBRE, ou ils donnent au
+                    // verre quelque chose a refracter.
+                    EmptyView()
                 }
             }
             .ignoresSafeArea()
@@ -420,23 +401,15 @@ enum LiquidGlass {
     // relief des années 2010, pas du verre iOS 26.
 
     /// Surface qui flotte : blanc pur qui descend d'un cheveu vers le bas.
+    /// Repli translucide uniquement (iOS < 26, ou "Reduire la transparence").
+    /// Sur iOS 26+ c'est `glassEffect` qui peint la surface, pas ceci.
     static func raisedFill(_ scheme: ColorScheme, tint: Color? = nil) -> LinearGradient {
-        if scheme == .dark {
-            return LinearGradient(
-                colors: [Color.white.opacity(0.10), Color.white.opacity(0.055)],
-                startPoint: .top, endPoint: .bottom
-            )
-        }
+        let top    = scheme == .dark ? Color.white.opacity(0.14) : Color.white.opacity(0.55)
+        let bottom = scheme == .dark ? Color.white.opacity(0.07) : Color.white.opacity(0.38)
         if let tint {
-            return LinearGradient(
-                colors: [Color.white, tint.opacity(0.05)],
-                startPoint: .top, endPoint: .bottom
-            )
+            return LinearGradient(colors: [top, tint.opacity(0.10)], startPoint: .top, endPoint: .bottom)
         }
-        return LinearGradient(
-            colors: [Color.white, Color(hex: 0xFCFCFD)],
-            startPoint: .top, endPoint: .bottom
-        )
+        return LinearGradient(colors: [top, bottom], startPoint: .top, endPoint: .bottom)
     }
 
     /// Le filet : UN seul, plat, très clair. Jamais un dégradé diagonal.
@@ -449,124 +422,121 @@ enum LiquidGlass {
         scheme == .dark ? Color.white.opacity(0.07) : Color(hex: 0xE8E8ED)
     }
 
-    /// Hauteur de vol. Décide uniquement des deux ombres.
+    /// Role de surface. Il decide du MATERIAU, pas seulement d'une ombre.
+    ///
+    /// Regle qui structure tout : on n'empile jamais deux verres. Une carte est en verre,
+    /// donc ce qui est POSE DEDANS prend un simple voile translucide, pas un second verre.
     enum Elevation {
-        case inset      // encastre : aucune ombre. Reserve a la pastille d'onglet actif.
-        case nested     // boite POSEE DANS une carte : meme matiere, ombre plus courte
-        case raised     // bouton, pilule, cercle, ilot d'outils
-        case floating   // carte, barre d'onglets, feuille
+        case inset      // pastille d'onglet actif : voile, aucune ombre
+        case nested     // boite DANS une carte : voile leger, pas de verre (pas d'empilement)
+        case raised     // bouton, pilule, cercle, ilot d'outils : VERRE natif
+        case floating   // carte, barre d'onglets, feuille : VERRE natif
 
-        var ambient: (Double, CGFloat, CGFloat) {   // opacité, rayon, y
-            switch self {
-            case .inset:    return (0,     0,  0)
-            case .nested:   return (0.035, 8,  2)
-            case .raised:   return (0.045, 14, 5)
-            case .floating: return (0.055, 24, 10)
-            }
-        }
-        var contact: (Double, CGFloat, CGFloat) {
-            switch self {
-            case .inset:    return (0,     0,   0)
-            case .nested:   return (0.035, 1,   0.5)
-            case .raised:   return (0.045, 1.5, 1)
-            case .floating: return (0.045, 1.5, 1)
-            }
-        }
-        var darkAmbient: (Double, CGFloat, CGFloat) {
-            switch self {
-            case .inset:    return (0,    0,  0)
-            case .nested:   return (0.24, 7,  2)
-            case .raised:   return (0.30, 12, 5)
-            case .floating: return (0.38, 20, 9)
-            }
-        }
-    }
-
-    // MARK: - Anciens noms conservés (MainTabView les appelle directement)
-
-    /// Filet spéculaire. Rendu plat en clair : Apple ne dessine pas de biseau diagonal.
-    static func iceEdgeGradient(colorScheme: ColorScheme, opacity: Double = 1.0, tint: Color? = nil) -> LinearGradient {
-        if colorScheme == .dark {
-            return LinearGradient(
-                stops: [
-                    .init(color: Color.white.opacity(0.30 * opacity), location: 0.0),
-                    .init(color: Color.white.opacity(0.12 * opacity), location: 0.5),
-                    .init(color: Color.white.opacity(0.08 * opacity), location: 1.0)
-                ],
-                startPoint: .top, endPoint: .bottom
-            )
-        }
-        let h = hairline(.light)
-        return LinearGradient(colors: [h.opacity(opacity), h.opacity(opacity)],
-                              startPoint: .top, endPoint: .bottom)
-    }
-
-    /// Ancien biseau interne. Neutralisé : c'est lui qui créait l'effet « bouton en relief ».
-    static func innerCausticGradient(colorScheme: ColorScheme) -> LinearGradient {
-        LinearGradient(colors: [.clear, .clear], startPoint: .top, endPoint: .bottom)
-    }
-
-    /// Reflet de courbure. Presque rien en clair : la surface Apple est plate.
-    static func surfaceCurvatureSheen(colorScheme: ColorScheme) -> LinearGradient {
-        if colorScheme == .dark {
-            return LinearGradient(
-                stops: [
-                    .init(color: Color.white.opacity(0.07), location: 0.0),
-                    .init(color: Color.clear, location: 0.55)
-                ],
-                startPoint: .top, endPoint: .bottom
-            )
-        }
-        return LinearGradient(colors: [.clear, .clear], startPoint: .top, endPoint: .bottom)
-    }
-
-    static func borderGradient(opacity: Double = 1.0, tint: Color? = nil) -> LinearGradient {
-        iceEdgeGradient(colorScheme: .dark, opacity: opacity, tint: tint)
+        var isGlass: Bool { self == .raised || self == .floating }
     }
 }
 
-/// Le seul rendu de surface de l'app. Tous les modificateurs ci-dessous passent par lui,
-/// donc ils ne peuvent plus diverger les uns des autres.
+/// Le seul rendu de surface de l'app.
+///
+/// Il utilise le VRAI verre du systeme (`glassEffect`, iOS 26+), pas une imitation.
+/// L'ancienne version peignait un degrade blanc opaque plus un filet plus deux ombres :
+/// ca donnait du plastique blanc epais, ca cachait completement ce qu'il y avait dessous,
+/// et ca ne ressemblait pas aux captures de reference.
+///
+/// Trois choses a ne pas defaire :
+/// 1. **Aucun fond opaque sous le verre.** Le verre a besoin de voir l'arriere plan. Un
+///    `.background(Color.white)` sur un ancetre suffit a tout annuler.
+/// 2. **Aucun filet ni ombre ajoutes par dessus.** `glassEffect` dessine deja son arete
+///    optique et son ombre. En rajouter donne le bord gris epais qu'on veut eviter.
+/// 3. **Le texte reste opaque.** On ne baisse jamais l'opacite de la vue entiere pour
+///    simuler un materiau : ca rend le contenu illisible.
+///
+/// Choix `.regular` plutot que `.clear` : verifie a l'ecran, cote a cote, sur fond neutre
+/// ET sur du contenu colore. `.clear` laisse trop passer et le texte devient dur a lire
+/// sur du contenu charge. `.regular` laisse voir l'arriere plan tout en gardant le
+/// premier plan net, ce qui correspond aux captures.
 struct RaisedSurface<S: Shape>: ViewModifier {
     let shape: S
     var level: LiquidGlass.Elevation = .raised
     var tint: Color? = nil
+
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     func body(content: Content) -> some View {
-        let dark = colorScheme == .dark
-        let amb = dark ? level.darkAmbient : level.ambient
-        let con = level.contact
+        if level.isGlass, !reduceTransparency, #available(iOS 26.0, macCatalyst 26.0, *) {
+            content.glassEffect(glassStyle, in: shape)
+        } else {
+            content
+                .background(fallbackFill, in: shape)
+                .overlay(shape.stroke(LiquidGlass.hairline(colorScheme), lineWidth: 0.5))
+                .shadow(color: .black.opacity(shadowOpacity), radius: shadowRadius, y: shadowY)
+        }
+    }
 
-        return content
-            .background {
-                if level == .inset {
-                    shape.fill(LiquidGlass.insetFill(colorScheme))
-                } else if dark {
-                    shape
-                        .fill(LiquidGlass.raisedFill(colorScheme, tint: tint))
-                        .background(.ultraThinMaterial, in: shape)
-                        .overlay(shape.fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme)))
-                } else {
-                    shape.fill(LiquidGlass.raisedFill(colorScheme, tint: tint))
-                }
-            }
-            .clipShape(shape)
-            .overlay {
-                if level != .inset {
-                    shape.stroke(LiquidGlass.hairline(colorScheme), lineWidth: 0.5)
-                }
-            }
-            .shadow(color: .black.opacity(amb.0), radius: amb.1, x: 0, y: amb.2)
-            .shadow(color: .black.opacity(dark ? 0 : con.0), radius: con.1, x: 0, y: con.2)
+    @available(iOS 26.0, macCatalyst 26.0, *)
+    private var glassStyle: Glass {
+        // Teinte semantique gardee, mais a l'etat de SOUPCON.
+        //
+        // A 0,18 la carte "Sport & fitness" virait franchement au rose : la teinte du
+        // module etait auparavant enterree sous un degrade blanc opaque, le verre la
+        // laisse passer telle quelle. Un bloc de couleur contredit l'environnement neutre
+        // des references. La couleur du module reste portee par son icone et son bouton
+        // d'action, la ou elle veut dire quelque chose.
+        if let tint { return .regular.tint(tint.opacity(0.05)) }
+        return .regular
+    }
+
+    /// Repli pour iOS 17 a 25, et pour "Reduire la transparence".
+    /// Volontairement sobre : un voile, pas un bloc blanc.
+    private var fallbackFill: AnyShapeStyle {
+        if reduceTransparency {
+            // L'utilisateur a demande de l'opaque : on le lui donne, franchement.
+            return AnyShapeStyle(colorScheme == .dark ? Color(white: 0.16) : Color.white)
+        }
+        return AnyShapeStyle(.ultraThinMaterial)
+    }
+
+    private var shadowOpacity: Double {
+        guard level.isGlass else { return 0 }
+        return colorScheme == .dark ? 0.28 : 0.05
+    }
+    private var shadowRadius: CGFloat { level.isGlass ? (level == .floating ? 12 : 8) : 0 }
+    private var shadowY: CGFloat { level.isGlass ? (level == .floating ? 4 : 2) : 0 }
+}
+
+/// Voile pour ce qui est POSE DANS une surface en verre. Jamais de verre ici : deux verres
+/// empiles se brouillent et alourdissent, c'est exactement ce qu'Apple interdit.
+struct NestedVeil<S: Shape>: ViewModifier {
+    let shape: S
+    var strong: Bool = false
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    func body(content: Content) -> some View {
+        content
+            .background(fill, in: shape)
+            .overlay(shape.stroke(LiquidGlass.hairline(colorScheme).opacity(0.7), lineWidth: 0.5))
+    }
+
+    private var fill: Color {
+        if colorScheme == .dark {
+            return Color.white.opacity(reduceTransparency ? 0.14 : (strong ? 0.10 : 0.06))
+        }
+        return Color.white.opacity(reduceTransparency ? 1.0 : (strong ? 0.55 : 0.38))
     }
 }
 
 extension View {
+    @ViewBuilder
     func raisedSurface<S: Shape>(_ shape: S,
-                                             _ level: LiquidGlass.Elevation = .raised,
-                                             tint: Color? = nil) -> some View {
-        modifier(RaisedSurface(shape: shape, level: level, tint: tint))
+                                 _ level: LiquidGlass.Elevation = .raised,
+                                 tint: Color? = nil) -> some View {
+        if level.isGlass {
+            modifier(RaisedSurface(shape: shape, level: level, tint: tint))
+        } else {
+            modifier(NestedVeil(shape: shape, strong: level == .inset))
+        }
     }
 }
 
@@ -675,18 +645,11 @@ struct CategoryGlassIcon: View {
                 .frame(width: size * 0.75, height: size * 0.75)
                 .blur(radius: 6)
 
-            // Squircle en verre liquide translucide avec arête de glace
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(colorScheme == .dark ? Color.white.opacity(0.06) : Color.white.opacity(0.28))
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            // Squircle en VERRE natif. L'arete est dessinee par le systeme, pas a la
+            // main : le biseau maison donnait un contour gris epais.
+            Color.clear
                 .frame(width: size, height: size)
-                .overlay(
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .strokeBorder(
-                            LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 0.9),
-                            lineWidth: 1
-                        )
-                )
+                .raisedSurface(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous), .raised)
 
             // Symbole monochrome net et contrasté
             Image(systemName: category.icon)
@@ -733,25 +696,18 @@ struct LiquidGlassBorderModifier: ViewModifier {
     var cornerRadius: CGFloat = 18
     var tint: Color? = nil
     var strokeWidth: CGFloat = 1.0
+
     @Environment(\.colorScheme) private var colorScheme
 
+    /// UN filet fin, rien d'autre.
+    ///
+    /// Avant : deux contours en degrade diagonal ("arete de glace" + "caustique interne").
+    /// Ca dessinait un biseau en relief et un trait gris epais, l'oppose du rendu vise.
     func body(content: Content) -> some View {
-        content
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(
-                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 1.0, tint: tint),
-                        lineWidth: strokeWidth
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: max(0, cornerRadius - 1), style: .continuous)
-                    .strokeBorder(
-                        LiquidGlass.innerCausticGradient(colorScheme: colorScheme),
-                        lineWidth: 0.8
-                    )
-                    .padding(0.8)
-            )
+        content.overlay(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .strokeBorder(LiquidGlass.hairline(colorScheme), lineWidth: min(strokeWidth, 0.5))
+        )
     }
 }
 

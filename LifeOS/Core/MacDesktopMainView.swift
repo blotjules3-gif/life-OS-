@@ -86,10 +86,22 @@ struct MacDesktopMainView: View {
         NavigationSplitView {
             sidebarContent
                 .navigationSplitViewColumnWidth(min: 240, ideal: 270, max: 320)
+                .scrollContentBackground(.hidden)
+                .background(Theme.bg.ignoresSafeArea())
         } detail: {
             detailContent
+                // Le fond DOIT etre pose sur le contenu de la colonne, pas sur le
+                // NavigationSplitView. Un `.background` sur le split view passe DERRIERE
+                // les colonnes, qui peignent leur propre fond opaque par dessus : mesure
+                // au pixel, le sol restait a 254 alors que Theme.bg vaut 238 (#EEEEEF).
+                //
+                // Et c'est ce gris la qui fait tout marcher : le look Apple, c'est des
+                // surfaces BLANCHES posees sur un sol GRIS. Sur un sol blanc, une carte
+                // blanche ne se voit plus, quelle que soit son ombre.
+                .scrollContentBackground(.hidden)
+                .background(Theme.bg.ignoresSafeArea())
         }
-        .background(AmbientAuraBackdrop())
+        .background(Theme.bg.ignoresSafeArea())
         .sheet(isPresented: $showNewHabitModal) {
             NavigationStack {
                 NewHabitQuickSheet()

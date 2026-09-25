@@ -61,7 +61,7 @@ struct CoachUpgradeBanner: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(uiColor: .secondarySystemBackground))
+                .fill(Theme.cardFill)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
