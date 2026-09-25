@@ -284,8 +284,8 @@ struct DailyBriefingView: View {
                                 Haptics.soft()
                             } label: {
                                 VStack(spacing: 4) {
-                                    Text(["😞", "😕", "😐", "🙂", "😄"][s - 1])
-                                        .font(.system(size: 26))
+                                    MoodBadge(score: s, size: 40)
+                                        .opacity(s == morningMood ? 1 : 0.45)
                                     Circle()
                                         .fill(s == morningMood ? Color.accentColor : Color.clear)
                                         .frame(width: 6, height: 6)
