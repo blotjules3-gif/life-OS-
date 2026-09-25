@@ -385,9 +385,20 @@ struct BubbleCategoriesView: View {
     }
 
     private func nikeTile(_ cat: BubbleCategory, index: Int) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+        let appCat = AppCategory(bubbleTitle: cat.title)
+        let hasFlow = appCat.map { CategorySetup.hasFlow($0) } ?? false
+        let done = appCat.map { CategorySetup.isDone($0) } ?? false
+        return VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top) {
-                Text(String(format: "%02d", index + 1)).monoLabel(12).foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Text(String(format: "%02d", index + 1)).monoLabel(12).foregroundStyle(.secondary)
+                    if hasFlow {
+                        Circle()
+                            .fill(done ? Color(red: 0.18, green: 0.72, blue: 0.42) : Color(red: 0.98, green: 0.55, blue: 0.20))
+                            .frame(width: 6, height: 6)
+                            .accessibilityLabel(done ? "Configuré" : "À configurer")
+                    }
+                }
                 Spacer()
                 IconBadge(icon: cat.systemImage, size: 42)
             }
