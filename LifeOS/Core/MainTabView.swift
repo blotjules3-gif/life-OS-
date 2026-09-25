@@ -328,27 +328,7 @@ struct FloatingTabBar: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 6)
             .frame(height: m.height + 4)
-            .background(barBackground)
-            .overlay(
-                // 1. Arête externe de glace spéculaire
-                Capsule()
-                    .strokeBorder(
-                        LiquidGlass.iceEdgeGradient(colorScheme: scheme, opacity: 1.0),
-                        lineWidth: 1.0
-                    )
-            )
-            .overlay(
-                // 2. Biseau caustique interne
-                Capsule()
-                    .strokeBorder(
-                        LiquidGlass.innerCausticGradient(colorScheme: scheme),
-                        lineWidth: 0.8
-                    )
-                    .padding(0.9)
-            )
-            .clipShape(Capsule())
-            .shadow(color: scheme == .dark ? Color.black.opacity(0.42) : Color(hex: 0xD4D4D5), radius: scheme == .dark ? 18 : 1, x: 0, y: scheme == .dark ? 7 : 1)
-            .shadow(color: scheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.04), radius: scheme == .dark ? 1 : 10, x: 0, y: scheme == .dark ? 1 : 5)
+            .raisedSurface(Capsule(), .floating)
             .padding(.horizontal, horizontalMargin)
             .padding(.bottom, m.margin + 4)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -365,38 +345,6 @@ struct FloatingTabBar: View {
             }
         }
         #endif
-    }
-
-    /// Verre translucide cristallin avec courbure convexe façon Apple iOS 27
-    @ViewBuilder private var barBackground: some View {
-        ZStack {
-            if scheme == .dark {
-                Capsule()
-                    .fill(Color.white.opacity(0.06))
-                    .background(.ultraThinMaterial, in: Capsule())
-
-                Capsule()
-                    .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: scheme))
-            } else {
-                Capsule()
-                    .fill(
-                        LinearGradient(
-                            stops: [
-                                .init(color: Color.white, location: 0.0),
-                                .init(color: Color(hex: 0xF8F8FA), location: 0.15),
-                                .init(color: Color(hex: 0xF5F5F7), location: 0.45),
-                                .init(color: Color(hex: 0xF5F5F7), location: 1.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .background(.ultraThinMaterial, in: Capsule())
-
-                Capsule()
-                    .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: scheme))
-            }
-        }
     }
 
     /// L'assistant devient le 5e onglet intégré dans l'îlot

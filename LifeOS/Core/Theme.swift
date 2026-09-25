@@ -291,7 +291,15 @@ enum Theme {
     /// À utiliser dans `.background(Theme.cardFill, in: shape)` pour que TOUTES les cartes
     /// suivent le design Liquid Glass iOS 27.
     static var cardFill: AnyShapeStyle {
-        AnyShapeStyle(.ultraThinMaterial)
+        // En clair une surface qui flotte est BLANCHE. `.ultraThinMaterial` sur un fond
+        // plat n'a rien a refracter : il rend un gris terne, c'est ce qui rendait toutes
+        // les cartes ternes. Le materiau reste en sombre, ou il a de la matiere dessous.
+        AnyShapeStyle(LiquidGlass.raisedFill(currentColorScheme))
+    }
+
+    /// Schema courant lu sans environnement (pour les tokens statiques).
+    static var currentColorScheme: ColorScheme {
+        UITraitCollection.current.userInterfaceStyle == .dark ? .dark : .light
     }
 
     /// Fond d'écran adaptatif : aura fluide tamisée se déplaçant lentement sur noir OLED,
@@ -383,100 +391,163 @@ struct AmbientAuraBackdrop: View {
 // MARK: - Système Liquid Glass iOS 27 (Surfaces Cristallines Translucides & Arêtes d'Eau / Glace Spéculaires)
 
 enum LiquidGlass {
-    /// Arête de glace / biseau d'eau spéculaire iOS 27 (Incident lumineux top-leading -> Caustique bottom-trailing)
-    /// Modélisation optique pure : réfraction d'eau convexe et réflexion interne totale sans aucun gris.
+
+    // MARK: - Tokens relevés sur les vraies captures Apple (Aperçu, Safari, Messages)
+    //
+    // La règle qui fait tout le look, et c'est la seule :
+    //   une surface qui FLOTTE est blanche, plate, avec UN filet clair et DEUX ombres douces.
+    //   une surface ENCASTRÉE est #E8E8ED plate, sans filet, sans ombre, sans biseau.
+    //
+    // Ce qui ne marche pas, mesuré côte à côte en simulateur : empiler un matériau
+    // translucide + trois dégradés + une ombre grise opaque de 1px. Sur un fond plat il
+    // n'y a rien à réfracter, donc le matériau rend un gris terne, les dégradés dessinent
+    // un biseau en relief, et l'ombre opaque devient un trait. Résultat : un bouton en
+    // relief des années 2010, pas du verre iOS 26.
+
+    /// Surface qui flotte : blanc pur qui descend d'un cheveu vers le bas.
+    static func raisedFill(_ scheme: ColorScheme, tint: Color? = nil) -> LinearGradient {
+        if scheme == .dark {
+            return LinearGradient(
+                colors: [Color.white.opacity(0.10), Color.white.opacity(0.055)],
+                startPoint: .top, endPoint: .bottom
+            )
+        }
+        if let tint {
+            return LinearGradient(
+                colors: [Color.white, tint.opacity(0.05)],
+                startPoint: .top, endPoint: .bottom
+            )
+        }
+        return LinearGradient(
+            colors: [Color.white, Color(hex: 0xFCFCFD)],
+            startPoint: .top, endPoint: .bottom
+        )
+    }
+
+    /// Le filet : UN seul, plat, très clair. Jamais un dégradé diagonal.
+    static func hairline(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.white.opacity(0.14) : Color(hex: 0xE6E6EC)
+    }
+
+    /// Surface encastrée (onglet actif, bouton secondaire, champ) : #E8E8ED plat.
+    static func insetFill(_ scheme: ColorScheme) -> Color {
+        scheme == .dark ? Color.white.opacity(0.07) : Color(hex: 0xE8E8ED)
+    }
+
+    /// Hauteur de vol. Décide uniquement des deux ombres.
+    enum Elevation {
+        case inset      // encastré : aucune ombre
+        case raised     // bouton, pilule, cercle, îlot d'outils
+        case floating   // carte, barre d'onglets, feuille
+
+        var ambient: (Double, CGFloat, CGFloat) {   // opacité, rayon, y
+            switch self {
+            case .inset:    return (0,     0,  0)
+            case .raised:   return (0.045, 14, 5)
+            case .floating: return (0.055, 24, 10)
+            }
+        }
+        var contact: (Double, CGFloat, CGFloat) {
+            switch self {
+            case .inset:    return (0,     0,   0)
+            case .raised:   return (0.045, 1.5, 1)
+            case .floating: return (0.045, 1.5, 1)
+            }
+        }
+        var darkAmbient: (Double, CGFloat, CGFloat) {
+            switch self {
+            case .inset:    return (0,    0,  0)
+            case .raised:   return (0.30, 12, 5)
+            case .floating: return (0.38, 20, 9)
+            }
+        }
+    }
+
+    // MARK: - Anciens noms conservés (MainTabView les appelle directement)
+
+    /// Filet spéculaire. Rendu plat en clair : Apple ne dessine pas de biseau diagonal.
     static func iceEdgeGradient(colorScheme: ColorScheme, opacity: Double = 1.0, tint: Color? = nil) -> LinearGradient {
         if colorScheme == .dark {
             return LinearGradient(
                 stops: [
-                    // Apex réfléchissant (angle incident supérieur gauche) : éclat blanc pur cristallin spéculaire
-                    .init(color: Color.white.opacity(0.96 * opacity), location: 0.0),
-                    // Réfraction cristalline le long de l'arête supérieure et gauche
-                    .init(color: Color.white.opacity(0.55 * opacity), location: 0.16),
-                    // Corps du verre translucide
-                    .init(color: (tint ?? Color.white).opacity(0.14 * opacity), location: 0.45),
-                    // Retour caustique interne au coin inférieur droit (réflexion totale interne)
-                    .init(color: Color.white.opacity(0.42 * opacity), location: 0.86),
-                    // Rentrée d'arête inférieure
-                    .init(color: Color.white.opacity(0.20 * opacity), location: 1.0)
+                    .init(color: Color.white.opacity(0.30 * opacity), location: 0.0),
+                    .init(color: Color.white.opacity(0.12 * opacity), location: 0.5),
+                    .init(color: Color.white.opacity(0.08 * opacity), location: 1.0)
                 ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        } else {
-            // Mode clair Apple Preview exact : pure white #FFFFFF au sommet/gauche, #F8F8F9, #EDEDEE, #E6E6E8
-            return LinearGradient(
-                stops: [
-                    .init(color: Color.white.opacity(1.0 * opacity), location: 0.0),             // #FFFFFF pure white on edge
-                    .init(color: Color(hex: 0xF8F8F9).opacity(0.95 * opacity), location: 0.18), // #F8F8F9
-                    .init(color: Color(hex: 0xEDEDEE).opacity(0.70 * opacity), location: 0.50), // #EDEDEE
-                    .init(color: Color(hex: 0xE6E6E8).opacity(0.85 * opacity), location: 0.85), // #E6E6E8
-                    .init(color: Color.white.opacity(0.75 * opacity), location: 1.0)              // #FFFFFF contact bounce
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
+                startPoint: .top, endPoint: .bottom
             )
         }
+        let h = hairline(.light)
+        return LinearGradient(colors: [h.opacity(opacity), h.opacity(opacity)],
+                              startPoint: .top, endPoint: .bottom)
     }
 
-    /// Deuxième biseau interne caustique (donne l'épaisseur physique 3D du bloc de glace / ménisque d'eau)
+    /// Ancien biseau interne. Neutralisé : c'est lui qui créait l'effet « bouton en relief ».
     static func innerCausticGradient(colorScheme: ColorScheme) -> LinearGradient {
-        if colorScheme == .dark {
-            return LinearGradient(
-                stops: [
-                    .init(color: Color.white.opacity(0.48), location: 0.0),
-                    .init(color: Color.white.opacity(0.16), location: 0.22),
-                    .init(color: Color.clear, location: 0.55),
-                    .init(color: Color.white.opacity(0.32), location: 0.88),
-                    .init(color: Color.white.opacity(0.12), location: 1.0)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        } else {
-            return LinearGradient(
-                stops: [
-                    .init(color: Color.white.opacity(0.90), location: 0.0),
-                    .init(color: Color(hex: 0xF8F8F9).opacity(0.30), location: 0.25),
-                    .init(color: Color.clear, location: 0.55),
-                    .init(color: Color.white.opacity(0.50), location: 0.88),
-                    .init(color: Color(hex: 0xE6E6E8).opacity(0.30), location: 1.0)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
+        LinearGradient(colors: [.clear, .clear], startPoint: .top, endPoint: .bottom)
     }
 
-    /// Lueur de courbure convexe de surface (effet dôme d'eau / surface d'iceberg poli)
+    /// Reflet de courbure. Presque rien en clair : la surface Apple est plate.
     static func surfaceCurvatureSheen(colorScheme: ColorScheme) -> LinearGradient {
         if colorScheme == .dark {
             return LinearGradient(
                 stops: [
-                    .init(color: Color.white.opacity(0.09), location: 0.0),
-                    .init(color: Color.white.opacity(0.02), location: 0.30),
-                    .init(color: Color.clear, location: 0.65)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        } else {
-            // Mode clair Apple Preview : éclat zénithal blanc pur sur le haut qui fond vers #F5F5F7
-            return LinearGradient(
-                stops: [
-                    .init(color: Color.white.opacity(0.85), location: 0.0),
-                    .init(color: Color(hex: 0xF8F8FA).opacity(0.35), location: 0.20),
+                    .init(color: Color.white.opacity(0.07), location: 0.0),
                     .init(color: Color.clear, location: 0.55)
                 ],
-                startPoint: .top,
-                endPoint: .bottom
+                startPoint: .top, endPoint: .bottom
             )
         }
+        return LinearGradient(colors: [.clear, .clear], startPoint: .top, endPoint: .bottom)
     }
 
-    /// Rétrocompatibilité : bordure spéculaire cristalline (sans aucun noir ou gris)
     static func borderGradient(opacity: Double = 1.0, tint: Color? = nil) -> LinearGradient {
         iceEdgeGradient(colorScheme: .dark, opacity: opacity, tint: tint)
+    }
+}
+
+/// Le seul rendu de surface de l'app. Tous les modificateurs ci-dessous passent par lui,
+/// donc ils ne peuvent plus diverger les uns des autres.
+struct RaisedSurface<S: Shape>: ViewModifier {
+    let shape: S
+    var level: LiquidGlass.Elevation = .raised
+    var tint: Color? = nil
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        let dark = colorScheme == .dark
+        let amb = dark ? level.darkAmbient : level.ambient
+        let con = level.contact
+
+        return content
+            .background {
+                if level == .inset {
+                    shape.fill(LiquidGlass.insetFill(colorScheme))
+                } else if dark {
+                    shape
+                        .fill(LiquidGlass.raisedFill(colorScheme, tint: tint))
+                        .background(.ultraThinMaterial, in: shape)
+                        .overlay(shape.fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme)))
+                } else {
+                    shape.fill(LiquidGlass.raisedFill(colorScheme, tint: tint))
+                }
+            }
+            .clipShape(shape)
+            .overlay {
+                if level != .inset {
+                    shape.stroke(LiquidGlass.hairline(colorScheme), lineWidth: 0.5)
+                }
+            }
+            .shadow(color: .black.opacity(amb.0), radius: amb.1, x: 0, y: amb.2)
+            .shadow(color: .black.opacity(dark ? 0 : con.0), radius: con.1, x: 0, y: con.2)
+    }
+}
+
+extension View {
+    func raisedSurface<S: Shape>(_ shape: S,
+                                             _ level: LiquidGlass.Elevation = .raised,
+                                             tint: Color? = nil) -> some View {
+        modifier(RaisedSurface(shape: shape, level: level, tint: tint))
     }
 }
 
@@ -485,63 +556,11 @@ struct LiquidGlassCardModifier: ViewModifier {
     var tint: Color? = nil
     var strokeWidth: CGFloat = 1.0
 
-    @Environment(\.colorScheme) private var colorScheme
-
     func body(content: Content) -> some View {
-        content
-            .background {
-                ZStack {
-                    if colorScheme == .dark {
-                        // Substrat en verre ultra-fin cristallin
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(tint != nil ? tint!.opacity(0.08) : Color.white.opacity(0.045))
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
-                    } else {
-                        // Substrat Apple Preview exact : blanc pur au bord qui fond vers #F5F5F7
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(
-                                LinearGradient(
-                                    stops: [
-                                        .init(color: Color.white, location: 0.0),
-                                        .init(color: Color(hex: 0xF8F8FA), location: 0.12),
-                                        .init(color: Color(hex: 0xF5F5F7), location: 0.35),
-                                        .init(color: Color(hex: 0xF5F5F7), location: 1.0)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
-                    }
-                }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .overlay(
-                // 1. Arête externe spéculaire façon glace / eau
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(
-                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 1.0, tint: tint),
-                        lineWidth: strokeWidth
-                    )
-            )
-            .overlay(
-                // 2. Biseau caustique interne (épaisseur du verre)
-                RoundedRectangle(cornerRadius: max(0, cornerRadius - 1), style: .continuous)
-                    .strokeBorder(
-                        LiquidGlass.innerCausticGradient(colorScheme: colorScheme),
-                        lineWidth: 0.8
-                    )
-                    .padding(0.9)
-            )
-            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.38) : Color(hex: 0xD4D4D5), radius: colorScheme == .dark ? 18 : 1, x: 0, y: colorScheme == .dark ? 9 : 1)
-            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.20) : Color.black.opacity(0.04), radius: colorScheme == .dark ? 4 : 8, x: 0, y: colorScheme == .dark ? 2 : 4)
-            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.60), radius: 1, x: 0, y: 0.5)
+        content.raisedSurface(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous),
+            .floating, tint: tint
+        )
     }
 }
 
@@ -549,275 +568,68 @@ struct LiquidGlassPillModifier: ViewModifier {
     var tint: Color? = nil
     var strokeWidth: CGFloat = 1.0
 
-    @Environment(\.colorScheme) private var colorScheme
-
     func body(content: Content) -> some View {
-        content
-            .background {
-                ZStack {
-                    if colorScheme == .dark {
-                        Capsule()
-                            .fill(Color.white.opacity(0.055))
-                            .background(.ultraThinMaterial, in: Capsule())
-
-                        Capsule()
-                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
-                    } else {
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    stops: [
-                                        .init(color: Color.white, location: 0.0),
-                                        .init(color: Color(hex: 0xF7F7F8), location: 0.18),
-                                        .init(color: Color(hex: 0xF5F5F7), location: 0.45),
-                                        .init(color: Color(hex: 0xF5F5F7), location: 1.0)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                        Capsule()
-                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
-                    }
-                }
-            }
-            .overlay(
-                Capsule()
-                    .strokeBorder(
-                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 1.0, tint: tint),
-                        lineWidth: strokeWidth
-                    )
-            )
-            .overlay(
-                Capsule()
-                    .strokeBorder(
-                        LiquidGlass.innerCausticGradient(colorScheme: colorScheme),
-                        lineWidth: 0.8
-                    )
-                    .padding(0.9)
-            )
-            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.30) : Color(hex: 0xD4D4D5), radius: colorScheme == .dark ? 10 : 1, x: 0, y: colorScheme == .dark ? 4 : 1)
-            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.50), radius: 1, x: 0, y: 0.5)
+        content.raisedSurface(Capsule(), .raised, tint: tint)
     }
 }
-
-// MARK: - Système Apple Aperçu (Preview iOS) : Boutons capsules translucides, îlots flottants & coins ultra-arrondis
 
 struct ApplePreviewPillModifier: ViewModifier {
     var height: CGFloat = 52
     var strokeWidth: CGFloat = 1.0
-    @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
         content
             .frame(height: height)
-            .background {
-                ZStack {
-                    if colorScheme == .dark {
-                        Capsule()
-                            .fill(Color.white.opacity(0.06))
-                            .background(.ultraThinMaterial, in: Capsule())
-
-                        Capsule()
-                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
-                    } else {
-                        Capsule()
-                            .fill(
-                                LinearGradient(
-                                    stops: [
-                                        .init(color: Color.white, location: 0.0),
-                                        .init(color: Color(hex: 0xF7F7F8), location: 0.18),
-                                        .init(color: Color(hex: 0xF5F5F7), location: 0.45),
-                                        .init(color: Color(hex: 0xF5F5F7), location: 1.0)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                        Capsule()
-                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
-                    }
-                }
-            }
-            .overlay(
-                Capsule()
-                    .strokeBorder(
-                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 1.0),
-                        lineWidth: strokeWidth
-                    )
-            )
-            .overlay(
-                Capsule()
-                    .strokeBorder(
-                        LiquidGlass.innerCausticGradient(colorScheme: colorScheme),
-                        lineWidth: 0.8
-                    )
-                    .padding(0.9)
-            )
-            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.32) : Color(hex: 0xD4D4D5), radius: colorScheme == .dark ? 12 : 1, x: 0, y: colorScheme == .dark ? 5 : 1)
-            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.15) : Color.black.opacity(0.03), radius: colorScheme == .dark ? 3 : 5, x: 0, y: colorScheme == .dark ? 1 : 2.5)
-            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.60), radius: 1, x: 0, y: 0.5)
+            .raisedSurface(Capsule(), .raised)
     }
 }
 
+/// Îlot / pilule ENCASTRÉE (#E8E8ED). Pas d'ombre, pas de filet : elle est dans la surface,
+/// pas au dessus. C'est l'onglet actif de la barre Apple.
 struct ApplePreviewIslandModifier: ViewModifier {
     var strokeWidth: CGFloat = 0.8
-    @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
         content
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background {
-                Capsule()
-                    .fill(colorScheme == .dark
-                          ? Color.white.opacity(0.06)
-                          : Color(hex: 0xE8E8ED)) // #E8E8ED pour les boutons/îlots intérieurs
-            }
-            .overlay(
-                Capsule()
-                    .strokeBorder(
-                        LinearGradient(
-                            stops: [
-                                .init(color: Color.white.opacity(colorScheme == .dark ? 0.40 : 0.90), location: 0.0),
-                                .init(color: colorScheme == .dark ? Color.white.opacity(0.12) : Color(hex: 0xDCDCE0), location: 1.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: strokeWidth
-                    )
-            )
-            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.32) : Color(hex: 0xD4D4D5).opacity(0.50), radius: colorScheme == .dark ? 10 : 1, x: 0, y: colorScheme == .dark ? 4 : 0.5)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .raisedSurface(Capsule(), .inset)
     }
 }
 
 struct ApplePreviewCircleModifier: ViewModifier {
     var size: CGFloat = 40
     var strokeWidth: CGFloat = 0.8
-    @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
         content
             .frame(width: size, height: size)
-            .background {
-                Circle()
-                    .fill(colorScheme == .dark
-                          ? Color.white.opacity(0.06)
-                          : Color(hex: 0xE8E8ED))
-            }
-            .overlay(
-                Circle()
-                    .strokeBorder(
-                        LinearGradient(
-                            stops: [
-                                .init(color: Color.white.opacity(colorScheme == .dark ? 0.40 : 0.90), location: 0.0),
-                                .init(color: colorScheme == .dark ? Color.white.opacity(0.12) : Color(hex: 0xDCDCE0), location: 1.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: strokeWidth
-                    )
-            )
-            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.28) : Color(hex: 0xD4D4D5).opacity(0.40), radius: colorScheme == .dark ? 8 : 1, x: 0, y: colorScheme == .dark ? 3 : 0.5)
+            .raisedSurface(Circle(), .raised)
     }
 }
 
 struct ApplePreviewCardModifier: ViewModifier {
     var cornerRadius: CGFloat = 28
     var strokeWidth: CGFloat = 1.0
-    @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
-        content
-            .background {
-                ZStack {
-                    if colorScheme == .dark {
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(Color.white.opacity(0.045))
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
-                    } else {
-                        // Substrat Apple Preview exact : blanc pur au bord qui fond vers #F5F5F7
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(
-                                LinearGradient(
-                                    stops: [
-                                        .init(color: Color.white, location: 0.0),
-                                        .init(color: Color(hex: 0xF8F8FA), location: 0.12),
-                                        .init(color: Color(hex: 0xF5F5F7), location: 0.35),
-                                        .init(color: Color(hex: 0xF5F5F7), location: 1.0)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(LiquidGlass.surfaceCurvatureSheen(colorScheme: colorScheme))
-                    }
-                }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .overlay(
-                // Arête externe de glace
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(
-                        LiquidGlass.iceEdgeGradient(colorScheme: colorScheme, opacity: 1.0),
-                        lineWidth: strokeWidth
-                    )
-            )
-            .overlay(
-                // Biseau interne caustique
-                RoundedRectangle(cornerRadius: max(0, cornerRadius - 1), style: .continuous)
-                    .strokeBorder(
-                        LiquidGlass.innerCausticGradient(colorScheme: colorScheme),
-                        lineWidth: 0.8
-                    )
-                    .padding(0.9)
-            )
-            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.40) : Color(hex: 0xD4D4D5), radius: colorScheme == .dark ? 18 : 1, x: 0, y: colorScheme == .dark ? 9 : 1)
-            .shadow(color: colorScheme == .dark ? Color.black.opacity(0.20) : Color.black.opacity(0.04), radius: colorScheme == .dark ? 4 : 10, x: 0, y: colorScheme == .dark ? 2 : 5)
-            .shadow(color: Color.white.opacity(colorScheme == .dark ? 0.06 : 0.60), radius: 1, x: 0, y: 0.5)
+        content.raisedSurface(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous),
+            .floating
+        )
     }
 }
 
-/// Règle Apple "Jamais de verre sur du verre" (No glass on glass) :
-/// Les éléments imbriqués à l'intérieur d'une carte verre utilisent des opacités subtiles et des arêtes concentriques,
-/// évitant le flou empilé énergivore et grisâtre.
+/// Boîte intérieure posée DANS une carte. Encastrée, donc jamais de verre sur du verre.
 struct ApplePreviewInnerCardModifier: ViewModifier {
     var cornerRadius: CGFloat = 16
     var strokeWidth: CGFloat = 0.8
-    @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
-        content
-            .background {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(colorScheme == .dark
-                          ? Color.white.opacity(0.035)
-                          : Color(hex: 0xE8E8ED)) // Exact #E8E8ED pour les boutons/boîtes intérieures !
-            }
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .strokeBorder(
-                        LinearGradient(
-                            stops: [
-                                .init(color: Color.white.opacity(colorScheme == .dark ? 0.35 : 0.85), location: 0.0),
-                                .init(color: colorScheme == .dark ? Color.white.opacity(0.08) : Color(hex: 0xDCDCE0), location: 0.60),
-                                .init(color: Color.white.opacity(colorScheme == .dark ? 0.20 : 0.30), location: 1.0)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: strokeWidth
-                    )
-            )
-            .shadow(color: colorScheme == .dark ? Color.clear : Color(hex: 0xD4D4D5).opacity(0.40), radius: 1, x: 0, y: 0.5)
+        content.raisedSurface(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous),
+            .inset
+        )
     }
 }
 
