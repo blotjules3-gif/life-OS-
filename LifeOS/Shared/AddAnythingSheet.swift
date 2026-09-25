@@ -92,7 +92,6 @@ struct AddAnythingSheet: View {
     @State private var weekday = 2
 
     private let weekdays = [(2, "Lun"), (3, "Mar"), (4, "Mer"), (5, "Jeu"), (6, "Ven"), (7, "Sam"), (1, "Dim")]
-    private let moods = ["😞", "😕", "😐", "🙂", "😄"]
 
     var body: some View {
         NavigationStack {
