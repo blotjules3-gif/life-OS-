@@ -158,9 +158,9 @@ struct WeeklyBilanView: View {
                                 AxisMarks(values: [1, 3, 5]) { v in
                                     AxisGridLine()
                                     AxisValueLabel {
-                                        let labels = ["😞", "😐", "😄"]
-                                        let idx = min(v.index, labels.count - 1)
-                                        Text(labels[idx]).font(.caption)
+                                        let scores = [1, 3, 5]
+                                        let idx = min(v.index, scores.count - 1)
+                                        MoodBadge(score: scores[idx], size: 18)
                                     }
                                 }
                             }
