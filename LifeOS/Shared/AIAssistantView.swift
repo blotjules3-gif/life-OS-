@@ -506,6 +506,7 @@ final class AIAssistantViewModel: ObservableObject {
     }
 
     private func triggerWelcome() {
+        guard messages.isEmpty else { return }
         let goalLabels: [String: String] = [
             "health": "Santé & forme",
             "performance": "Performance",
