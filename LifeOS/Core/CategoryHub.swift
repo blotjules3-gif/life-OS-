@@ -339,9 +339,9 @@ struct CategoryHubView: View {
             rs = rs.map { $0 * s }
         }
 
-        // 4) Placement : centre + anneaux, légèrement remonté pour l'équilibre visuel.
+        // 4) Placement : centre + anneaux, centrage vertical parfait dans la zone dispo.
         let cx = w / 2
-        let cy = availH * 0.46
+        let cy = availH * 0.50
         var result: [(CGPoint, CGFloat)] = []
         var idx = 0
         if hasCenter {
