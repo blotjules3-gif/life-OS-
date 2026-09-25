@@ -293,13 +293,28 @@ enum Theme {
     static var cardFill: AnyShapeStyle {
         // En clair une surface qui flotte est BLANCHE. `.ultraThinMaterial` sur un fond
         // plat n'a rien a refracter : il rend un gris terne, c'est ce qui rendait toutes
-        // les cartes ternes. Le materiau reste en sombre, ou il a de la matiere dessous.
-        AnyShapeStyle(LiquidGlass.raisedFill(currentColorScheme))
-    }
-
-    /// Schema courant lu sans environnement (pour les tokens statiques).
-    static var currentColorScheme: ColorScheme {
-        UITraitCollection.current.userInterfaceStyle == .dark ? .dark : .light
+        // les cartes ternes.
+        //
+        // Les deux teintes sont des UIColor DYNAMIQUES, pas une lecture de
+        // `UITraitCollection.current`. Ce token est statique : lire le trait au moment de
+        // l'evaluation donne la bonne couleur la plupart du temps, mais ce n'est garanti
+        // que dans un passage de dessin UIKit, et surtout ca ne se reevalue pas au
+        // basculement clair/sombre. Un UIColor dynamique, lui, est resolu par le systeme
+        // a chaque rendu. Meme schema que Theme.bg / Theme.card juste au dessus.
+        AnyShapeStyle(
+            LinearGradient(
+                colors: [
+                    Color(UIColor { $0.userInterfaceStyle == .dark
+                        ? UIColor(white: 1.0, alpha: 0.10)
+                        : UIColor.white }),
+                    Color(UIColor { $0.userInterfaceStyle == .dark
+                        ? UIColor(white: 1.0, alpha: 0.055)
+                        : UIColor(red: 0.988, green: 0.988, blue: 0.992, alpha: 1.0) }) // #FCFCFD
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
     }
 
     /// Fond d'écran adaptatif : aura fluide tamisée se déplaçant lentement sur noir OLED,
