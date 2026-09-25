@@ -160,7 +160,7 @@ struct AddAnythingSheet: View {
             HStack {
                 ForEach(1...5, id: \.self) { s in
                     Button { score = s } label: {
-                        Text(moods[s - 1]).font(.system(size: 30)).opacity(score == s ? 1 : 0.35)
+                        MoodBadge(score: s, size: 44).opacity(score == s ? 1 : 0.35)
                     }.buttonStyle(.plain).frame(maxWidth: .infinity)
                 }
             }
