@@ -179,8 +179,13 @@ function getToken() {
 }
 
 async function run() {
-  for (let attempt = 0; attempt < 25; attempt++) {
-    await new Promise(r => setTimeout(r, 15000));
+  // 120 x 30 s = 60 minutes. L'ancienne valeur (25 x 15 s = 6 min 15) etait la VRAIE
+  // cause des builds "perdus" : Apple a mis plus de 30 minutes a traiter le build 29,
+  // la boucle abandonnait avant, donc le rattachement au groupe TestFlight ci dessous
+  // n'etait jamais atteint. Le build existait chez Apple mais n'arrivait jamais sur le
+  // telephone, bloque en READY_FOR_BETA_TESTING au lieu de IN_BETA_TESTING.
+  for (let attempt = 0; attempt < 120; attempt++) {
+    await new Promise(r => setTimeout(r, 30000));
     try {
       const res = await fetch('https://api.appstoreconnect.apple.com/v1/builds?filter[app]=6813532133&filter[version]=$BUILD_NUMBER', {
         headers: { Authorization: 'Bearer ' + getToken() }
@@ -212,7 +217,22 @@ async function run() {
           });
           console.log('✓ Rattaché au groupe TestFlight:', grp.attributes.name);
         }
-        console.log('✨ Build $BUILD_NUMBER officiellement en ligne sur ton téléphone !');
+        // Verifier, pas annoncer. "Rattache" n'est pas "distribue" : seul
+        // internalBuildState === 'IN_BETA_TESTING' veut dire que le build est
+        // reellement proposé dans TestFlight sur le telephone.
+        let distributed = false;
+        for (let k = 0; k < 10; k++) {
+          await new Promise(r => setTimeout(r, 6000));
+          const det = await api('/v1/builds/' + buildId + '/buildBetaDetail');
+          const st = det && det.data && det.data.attributes && det.data.attributes.internalBuildState;
+          if (st === 'IN_BETA_TESTING') { distributed = true; break; }
+        }
+        if (distributed) {
+          console.log('✨ Build $BUILD_NUMBER est EN LIGNE dans TestFlight sur ton téléphone.');
+        } else {
+          console.log('⚠️  Build $BUILD_NUMBER est VALID mais PAS encore distribué (internalBuildState != IN_BETA_TESTING).');
+          console.log('    Le groupe interne n\'a pas hasAccessToAllBuilds, donc chaque build doit y être ajouté.');
+        }
         return;
       }
     } catch (e) {
