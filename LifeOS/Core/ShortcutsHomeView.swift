@@ -861,8 +861,7 @@ struct ShortcutsHomeView: View {
                 HStack(spacing: 6) {
                     ForEach(1...5, id: \.self) { s in
                         Button { logMood(s) } label: {
-                            Text(moodEmoji(s))
-                                .font(.system(size: 26))
+                            MoodBadge(score: s, size: 40)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 10)
                                 .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
