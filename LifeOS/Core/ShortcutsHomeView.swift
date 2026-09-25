@@ -903,7 +903,6 @@ struct ShortcutsHomeView: View {
         }
     }
 
-    private func moodEmoji(_ s: Int) -> String { ["😞", "😕", "😐", "🙂", "😄"][max(0, min(4, s - 1))] }
     private func logMood(_ s: Int) {
         if let m = todayMood { m.score = s } else { ctx.insert(MoodEntry(score: s)) }
         do { try ctx.save() } catch { AppLog.data.error("logMood failed: \(error.localizedDescription, privacy: .public)") }
