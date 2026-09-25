@@ -73,7 +73,21 @@ struct MainTabView: View {
     @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
     private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
 
+    #if DEBUG
+    /// Le tableau de bord bureau ne s'affiche que sur Mac, et la capture d'ecran macOS
+    /// est bloquee ici. Ce drapeau le fait rendre dans le simulateur iPad pour pouvoir
+    /// le REGARDER au lieu de le deviner. Absent des builds Release.
+    private static let forceDesktop = ProcessInfo.processInfo.arguments.contains("-desktop")
+    #endif
+
     var body: some View {
+        #if DEBUG
+        if Self.forceDesktop { return AnyView(MacDesktopMainView()) }
+        #endif
+        return AnyView(realBody)
+    }
+
+    @ViewBuilder private var realBody: some View {
 #if targetEnvironment(macCatalyst)
         ZStack {
             HabitWidgetSyncer()

@@ -451,13 +451,15 @@ enum LiquidGlass {
 
     /// Hauteur de vol. Décide uniquement des deux ombres.
     enum Elevation {
-        case inset      // encastré : aucune ombre
-        case raised     // bouton, pilule, cercle, îlot d'outils
+        case inset      // encastre : aucune ombre. Reserve a la pastille d'onglet actif.
+        case nested     // boite POSEE DANS une carte : meme matiere, ombre plus courte
+        case raised     // bouton, pilule, cercle, ilot d'outils
         case floating   // carte, barre d'onglets, feuille
 
         var ambient: (Double, CGFloat, CGFloat) {   // opacité, rayon, y
             switch self {
             case .inset:    return (0,     0,  0)
+            case .nested:   return (0.035, 8,  2)
             case .raised:   return (0.045, 14, 5)
             case .floating: return (0.055, 24, 10)
             }
@@ -465,6 +467,7 @@ enum LiquidGlass {
         var contact: (Double, CGFloat, CGFloat) {
             switch self {
             case .inset:    return (0,     0,   0)
+            case .nested:   return (0.035, 1,   0.5)
             case .raised:   return (0.045, 1.5, 1)
             case .floating: return (0.045, 1.5, 1)
             }
@@ -472,6 +475,7 @@ enum LiquidGlass {
         var darkAmbient: (Double, CGFloat, CGFloat) {
             switch self {
             case .inset:    return (0,    0,  0)
+            case .nested:   return (0.24, 7,  2)
             case .raised:   return (0.30, 12, 5)
             case .floating: return (0.38, 20, 9)
             }
@@ -599,8 +603,9 @@ struct ApplePreviewPillModifier: ViewModifier {
     }
 }
 
-/// Îlot / pilule ENCASTRÉE (#E8E8ED). Pas d'ombre, pas de filet : elle est dans la surface,
-/// pas au dessus. C'est l'onglet actif de la barre Apple.
+/// Petite pilule (statut, puce, bouton discret). Meme matiere que les gros boutons :
+/// blanche, un filet, une ombre douce. Elle etait grise et plate, ce qui la faisait
+/// disparaitre a cote des vrais boutons.
 struct ApplePreviewIslandModifier: ViewModifier {
     var strokeWidth: CGFloat = 0.8
 
@@ -608,7 +613,7 @@ struct ApplePreviewIslandModifier: ViewModifier {
         content
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .raisedSurface(Capsule(), .inset)
+            .raisedSurface(Capsule(), .raised)
     }
 }
 
@@ -635,7 +640,12 @@ struct ApplePreviewCardModifier: ViewModifier {
     }
 }
 
-/// Boîte intérieure posée DANS une carte. Encastrée, donc jamais de verre sur du verre.
+/// Boite posee DANS une carte (tuile de mesure, ligne de module).
+///
+/// Elle est de la MEME matiere que les boutons : blanche, un filet, une ombre douce.
+/// Ce n'est pas du "verre sur du verre" : la regle d'Apple interdit d'empiler deux
+/// MATERIAUX translucides, pas de poser une surface opaque sur une autre. Ce qui separe
+/// les deux ici, c'est l'ombre plus courte, pas une teinte grise.
 struct ApplePreviewInnerCardModifier: ViewModifier {
     var cornerRadius: CGFloat = 16
     var strokeWidth: CGFloat = 0.8
@@ -643,7 +653,7 @@ struct ApplePreviewInnerCardModifier: ViewModifier {
     func body(content: Content) -> some View {
         content.raisedSurface(
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous),
-            .inset
+            .nested
         )
     }
 }

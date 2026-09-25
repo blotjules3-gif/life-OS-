@@ -8,6 +8,13 @@ final class NotificationManager {
     private init() {}
 
     func requestAuthorization() async -> Bool {
+        #if DEBUG
+        // Verification visuelle : l'alerte systeme assombrit tout l'ecran et rend le
+        // rendu injugeable. Le garde est ICI et pas chez les appelants parce qu'il y en
+        // a six, et en oublier un suffit a faire revenir l'alerte. Absent en Release.
+        if ProcessInfo.processInfo.arguments.contains("-noPrompts")
+            || ProcessInfo.processInfo.arguments.contains("-desktop") { return false }
+        #endif
         do {
             return try await UNUserNotificationCenter.current()
                 .requestAuthorization(options: [.alert, .sound, .badge, .criticalAlert])

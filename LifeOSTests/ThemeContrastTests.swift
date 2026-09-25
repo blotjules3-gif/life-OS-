@@ -17,10 +17,15 @@ final class ThemeContrastTests: XCTestCase {
 
     /// (thème, hex accent, hex onAccent, description). Reflète la matrice AppTheme.accent + onAccent.
     private let cases: [(theme: AppTheme, accentHex: UInt32, onAccentHex: UInt32, label: String)] = [
+        // Doit refleter EXACTEMENT `AppTheme.selectable`. Volt et Pinky ont ete
+        // ARCHIVES (ils ne sont plus proposables), donc ils sortent d'ici : le test
+        // `test_selectableThemes_matchesFixtures` compare les deux ensembles et
+        // echouait depuis cet archivage.
+        // `.system` suit le reglage de l'appareil ; en clair il resout sur
+        // `accentHex` 0x000000 avec `onAccent` = systemBackground, donc blanc.
+        (.system,  0x000000, 0xFFFFFF, "Systeme (suit l'appareil, clair)"),
         (.classic, 0x000000, 0xFFFFFF, "Clair (noir / blanc)"),
         (.dark,    0xFFFFFF, 0x000000, "Sombre (blanc / noir)"),
-        (.volt,    0x4CF810, 0x000000, "Vert (volt / noir)"),
-        (.pinky,   0xE85D9A, 0xFFFFFF, "Rose (rose / blanc)"),
     ]
 
     // MARK: - Tests
