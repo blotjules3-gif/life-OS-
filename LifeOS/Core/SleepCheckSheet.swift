@@ -201,8 +201,8 @@ struct SleepCheckSheet: View {
                                     Haptics.soft()
                                 } label: {
                                     VStack(spacing: 6) {
-                                        Text(moodEmoji[s - 1]).font(.system(size: 32))
-                                            .scaleEffect(mood == s ? 1.25 : 0.9)
+                                        MoodBadge(score: s, size: 42)
+                                            .scaleEffect(mood == s ? 1.15 : 0.92)
                                             .opacity(mood == 0 || mood == s ? 1 : 0.35)
                                         Circle().fill(mood == s ? Color.accentColor : Color.clear)
                                             .frame(width: 5, height: 5)
