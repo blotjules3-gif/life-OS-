@@ -942,7 +942,7 @@ struct OnboardingWakeTime: View {
                 }
 
                 DatePicker("", selection: timeDate, displayedComponents: .hourAndMinute)
-                    .datePickerStyle(.wheel)
+                    .adaptiveWheelDatePicker()
                     .labelsHidden()
                     .frame(maxWidth: .infinity)
                     .environment(\.locale, Locale(identifier: "fr_FR"))

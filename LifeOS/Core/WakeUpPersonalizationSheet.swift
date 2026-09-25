@@ -39,7 +39,7 @@ struct WakeUpPersonalizationSheet: View {
             Form {
                 Section {
                     DatePicker("", selection: $alarmTime, displayedComponents: .hourAndMinute)
-                        .datePickerStyle(.wheel)
+                        .adaptiveWheelDatePicker()
                         .labelsHidden()
                         .frame(maxWidth: .infinity)
                         .onAppear {

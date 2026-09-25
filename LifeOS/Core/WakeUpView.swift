@@ -154,7 +154,7 @@ struct WakeUpView: View {
 
             if showPicker {
                 DatePicker("", selection: $alarmTime, displayedComponents: .hourAndMinute)
-                    .datePickerStyle(.wheel)
+                    .adaptiveWheelDatePicker()
                     .labelsHidden()
                     .frame(maxWidth: .infinity)
                     .onChange(of: alarmTime) { _, val in

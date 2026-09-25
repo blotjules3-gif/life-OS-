@@ -12,6 +12,9 @@ struct LifeOSApp: App {
     @State private var container: ModelContainer?
     @State private var migrationFailed = false
     @State private var storeWasReset = false
+    #if DEBUG
+    @State private var debugHabitEditor = false
+    #endif
     @AppStorage(AppStorageKeys.isAuthenticated) private var isAuthenticated = false
     @AppStorage(AppStorageKeys.onboardingDone) private var onboardingDone = false
     @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
@@ -195,6 +198,18 @@ struct LifeOSApp: App {
         .fullScreenCover(isPresented: $showBriefingFromWidget) {
             DailyBriefingView(modules: recommendedModules, speakOnAppear: false)
         }
+        #if DEBUG
+        // Crochet de verification. Le simulateur ne sait pas cliquer, donc sans ca on ne
+        // peut pas prouver qu'un ecran s'ouvre sans planter. Sert a controler le
+        // plantage Mac Catalyst de "Ajouter une habitude" (roue UIPickerView interdite).
+        // Absent des builds Release.
+        .sheet(isPresented: $debugHabitEditor) { HabitEditor() }
+        .onAppear {
+            if ProcessInfo.processInfo.arguments.contains("-openHabitEditor") {
+                debugHabitEditor = true
+            }
+        }
+        #endif
         .onOpenURL { url in
             guard url.scheme == "lifeos" else { return }
             switch url.host {

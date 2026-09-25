@@ -322,7 +322,8 @@ enum IntelligentExtractor {
     private static func parseLLMResponse(_ raw: String) -> [Extraction] {
         // Le LLM peut préfixer/suffixer — on cherche le premier `[` et le dernier `]`.
         guard let start = raw.firstIndex(of: "["),
-              let end = raw.lastIndex(of: "]") else { return [] }
+              let end = raw.lastIndex(of: "]"),
+              start < end else { return [] }   // "]" avant "[" : raw[start...end] PLANTE
         let json = String(raw[start...end])
         guard let data = json.data(using: .utf8),
               let items = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {

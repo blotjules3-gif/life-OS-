@@ -186,7 +186,7 @@ struct BookSummariesView: View {
                     } else {
                         ForEach(books) { b in
                             VStack(alignment: .leading, spacing: 6) {
-                                HStack { Text(b.title).font(.headline).foregroundStyle(Theme.textPrimary); Spacer(); Text(String(repeating: "★", count: b.rating)).foregroundStyle(.learnTint).font(.caption) }
+                                HStack { Text(b.title).font(.headline).foregroundStyle(Theme.textPrimary); Spacer(); Text(String(repeating: "★", count: max(0, b.rating))).foregroundStyle(.learnTint).font(.caption) }
                                 if !b.author.isEmpty { Text(b.author).font(.caption).foregroundStyle(Theme.textSecondary) }
                                 if !b.keyIdeas.isEmpty { Text(b.keyIdeas).font(.subheadline).foregroundStyle(Theme.textPrimary.opacity(0.9)) }
                             }.frame(maxWidth: .infinity, alignment: .leading).card()

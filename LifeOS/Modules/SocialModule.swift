@@ -151,7 +151,10 @@ struct BirthdaysView: View {
     }
 
     private func bdayID(_ c: Contact) -> String {
-        "bday.\(c.name.replacingOccurrences(of: " ", with: "_")).\(Int(c.birthday!.timeIntervalSince1970))"
+        // Jamais de `!` sur birthday : aujourd'hui tous les appels passent par
+        // `withBirthday`, mais un futur appel ailleurs ferait tomber l'app.
+        let stamp = Int(c.birthday?.timeIntervalSince1970 ?? 0)
+        return "bday.\(c.name.replacingOccurrences(of: " ", with: "_")).\(stamp)"
     }
     private func reschedule() {
         for c in withBirthday { NotificationManager.shared.cancel(id: bdayID(c)) }

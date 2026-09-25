@@ -28,7 +28,7 @@ struct BedtimeCalculatorView: View {
                     if mode == 0 {
                         VStack(spacing: 12) {
                             DatePicker("Heure de réveil", selection: $wake, displayedComponents: .hourAndMinute)
-                                .datePickerStyle(.wheel)
+                                .adaptiveWheelDatePicker()
                                 .labelsHidden()
                             Text("Couche-toi à l'une de ces heures pour te réveiller en fin de cycle :")
                                 .font(.footnote).foregroundStyle(Theme.textSecondary)
@@ -233,7 +233,7 @@ struct DreamCard: View {
                 Text(dream.title.isEmpty ? "Rêve" : dream.title)
                     .font(.headline).foregroundStyle(Theme.textPrimary)
                 Spacer()
-                Text(String(repeating: "•", count: dream.mood)).foregroundStyle(.sleepTint)
+                Text(String(repeating: "•", count: max(0, dream.mood))).foregroundStyle(.sleepTint)
             }
             Text(dream.date, style: .date).font(.caption).foregroundStyle(Theme.textSecondary)
             if !dream.text.isEmpty {

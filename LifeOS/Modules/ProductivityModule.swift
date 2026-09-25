@@ -667,7 +667,7 @@ struct HabitEditor: View {
                         Picker("Heure", selection: $scheduledHour) {
                             ForEach(0..<24, id: \.self) { Text(String(format: "%02d", $0)).tag($0) }
                         }
-                        .pickerStyle(.wheel)
+                        .adaptiveWheelPicker()
                         .frame(maxWidth: .infinity)
                         .clipped()
                         Text("h")
@@ -676,11 +676,11 @@ struct HabitEditor: View {
                         Picker("Min", selection: $scheduledMinute) {
                             ForEach(minutes, id: \.self) { Text(String(format: "%02d", $0)).tag($0) }
                         }
-                        .pickerStyle(.wheel)
+                        .adaptiveWheelPicker()
                         .frame(maxWidth: .infinity)
                         .clipped()
                     }
-                    .frame(height: 120)
+                    .wheelHeight(120)
                 }
                 Section("Icône") {
                     SmartIconPicker(selectedIcon: $icon, queryText: name, accentColor: Color(hex: UInt(color)))

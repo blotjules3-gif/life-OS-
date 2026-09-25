@@ -225,7 +225,8 @@ enum IntentExecutor {
 
     private static func parseLLMResponse(_ raw: String) -> [DetectedIntent] {
         guard let start = raw.firstIndex(of: "["),
-              let end = raw.lastIndex(of: "]") else { return [] }
+              let end = raw.lastIndex(of: "]"),
+              start < end else { return [] }   // "]" avant "[" : raw[start...end] PLANTE
         let json = String(raw[start...end])
         guard let data = json.data(using: .utf8) else { return [] }
         return (try? JSONDecoder().decode([DetectedIntent].self, from: data)) ?? []

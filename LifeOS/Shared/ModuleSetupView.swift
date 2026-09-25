@@ -309,7 +309,7 @@ struct ModuleSetupView: View {
                         Text(String(format: "%02d:00", h)).tag(h)
                     }
                 }
-                .pickerStyle(.wheel)
+                .adaptiveWheelPicker()
                 .frame(maxWidth: .infinity)
             }
             .frame(height: 140)
@@ -322,7 +322,7 @@ struct ModuleSetupView: View {
                     Text(days[i - 1]).tag(i)
                 }
             }
-            .pickerStyle(.wheel)
+            .adaptiveWheelPicker()
             .frame(height: 140)
             .padding(.horizontal, 32)
 
@@ -332,7 +332,7 @@ struct ModuleSetupView: View {
                     Text("Le \(d)").tag(d)
                 }
             }
-            .pickerStyle(.wheel)
+            .adaptiveWheelPicker()
             .frame(height: 140)
             .padding(.horizontal, 32)
 
@@ -343,7 +343,9 @@ struct ModuleSetupView: View {
                     .foregroundStyle(module.tint)
                     .contentTransition(.numericText())
 
-                Stepper("", value: $intStepVal, in: min...max, step: step)
+                // `min...max` PLANTE si min > max. Un module mal configure ne doit pas
+                // faire tomber l'app, il doit juste afficher une plage vide mais valide.
+                Stepper("", value: $intStepVal, in: min...Swift.max(min, max), step: step)
                     .labelsHidden()
             }
         }
