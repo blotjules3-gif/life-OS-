@@ -845,7 +845,7 @@ struct ShortcutsHomeView: View {
             .padding(.horizontal, 4)
             if let m = todayMood, !editingMood {
                 HStack(spacing: 12) {
-                    Text(moodEmoji(m.score)).font(.title)
+                    MoodBadge(score: m.score, size: 36, showsLabel: true)
                     Text("Noté — revote dans 24h")
                         .font(.caption)
                         .foregroundStyle(.secondary)
