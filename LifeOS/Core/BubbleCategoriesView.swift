@@ -80,12 +80,14 @@ struct BubbleView: View {
                         .shadow(color: .black.opacity(isMetal ? 0.7 : 0.35), radius: diameter * 0.025, y: diameter * 0.005)
                     if showLabel {
                         Text(title)
-                            .font(.system(size: diameter * 0.12, weight: .bold))
+                            .font(.system(size: diameter * 0.11, weight: .bold))
                             .foregroundStyle(.white)
+                            .multilineTextAlignment(.center)
                             .shadow(color: glyphGlow.opacity(0.9), radius: diameter * 0.025)
                             .shadow(color: .black.opacity(isMetal ? 0.75 : 0.4), radius: diameter * 0.025, y: diameter * 0.005)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.55)
+                            .padding(.horizontal, diameter * 0.08)
                     }
                 }
                 .offset(y: showLabel ? -diameter * 0.02 : 0)
