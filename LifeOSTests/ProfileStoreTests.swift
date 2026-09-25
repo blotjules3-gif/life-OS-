@@ -20,6 +20,21 @@ final class ProfileStoreTests: XCTestCase {
         ProfileStore.shared.setContext(context)
     }
 
+
+    /// Le store est un SINGLETON : sans ca, le context de ce container en memoire
+
+    /// reste installe apres ce fichier, et la classe de test suivante plante dessus.
+
+    @MainActor
+
+    override func tearDown() {
+
+        ProfileStore.shared.clearContext()
+
+        super.tearDown()
+
+    }
+
     override func tearDown() async throws {
         // Purge tous les fields entre tests (le store est un singleton)
         for f in ProfileStore.shared.allFields() {

@@ -21,12 +21,34 @@ final class ProfileStore {
 
     private var ctx: ModelContext?
 
+    /// On RETIENT aussi le container, et ce n'est pas decoratif.
+    ///
+    /// Un `ModelContext` ne garde pas son `ModelContainer` en vie. Si le container est
+    /// libere pendant que ce singleton pointe encore sur son context, la prochaine
+    /// lecture ne rend pas nil : SwiftData **plante** en profondeur (SIGTRAP), et le
+    /// `try?` de `field(_:)` n'y peut rien, on n'attrape pas un trap.
+    ///
+    /// Observe en vrai : la suite de tests tombait dans
+    /// `UserContextBuilderTests.testEmptyLifeProfileDoesNotEmitBlock` parce qu'une autre
+    /// classe de test avait installe le context de SON container en memoire et ne l'avait
+    /// jamais retire. Le plantage dependait donc de l'ORDRE des tests, d'ou son air
+    /// aleatoire. Retenir le container supprime la cause, pas le symptome.
+    private var container: ModelContainer?
+
     private init() {}
 
     // MARK: - Bootstrap
 
     func setContext(_ context: ModelContext) {
         self.ctx = context
+        self.container = context.container
+    }
+
+    /// Detache le store. A appeler dans le `tearDown` de tout test qui a pose un context,
+    /// sinon le test suivant lit les donnees du precedent.
+    func clearContext() {
+        self.ctx = nil
+        self.container = nil
     }
 
     // MARK: - Sources & résultats

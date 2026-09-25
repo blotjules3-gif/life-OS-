@@ -17,6 +17,21 @@ final class IntelligentExtractorTests: XCTestCase {
         ProfileStore.shared.setContext(container.mainContext)
     }
 
+
+    /// Le store est un SINGLETON : sans ca, le context de ce container en memoire
+
+    /// reste installe apres ce fichier, et la classe de test suivante plante dessus.
+
+    @MainActor
+
+    override func tearDown() {
+
+        ProfileStore.shared.clearContext()
+
+        super.tearDown()
+
+    }
+
     override func tearDown() async throws {
         for f in ProfileStore.shared.allFields() {
             container.mainContext.delete(f)
