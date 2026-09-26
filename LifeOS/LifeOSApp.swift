@@ -142,6 +142,9 @@ struct LifeOSApp: App {
             SharedModelContextProvider.shared.setContext(container.mainContext)
             // Migration one-shot des données existantes vers ProfileField.
             ProfileMigration.runIfNeeded(context: container.mainContext)
+            // Rattache les anciennes operations a un identifiant de compte stable et
+            // reconstruit les soldes d'ouverture, sans changer les soldes affiches.
+            LedgerService.migrateIfNeeded(container.mainContext)
             // Enregistrer les tools coach dans le ToolRegistry (Phase 1 branchée).
             CoachToolsBootstrap.registerAll()
             // Pas de demande de permission pendant l'onboarding : elle est faite

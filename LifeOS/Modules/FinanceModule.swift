@@ -48,7 +48,7 @@ struct AccountsView: View {
                             Spacer()
                             Text(a.balance, format: .currency(code: "EUR")).bold().foregroundStyle(a.balance < 0 ? .red : Theme.textPrimary)
                         }.card(padding: 12)
-                            .contextMenu { Button(role: .destructive) { ctx.delete(a) } label: { Label("Supprimer", systemImage: "trash") } }
+                            .contextMenu { Button(role: .destructive) { LedgerService.deleteAccount(ctx, a) } label: { Label("Supprimer", systemImage: "trash") } }
                     }
 
                     HStack {
@@ -62,7 +62,7 @@ struct AccountsView: View {
                             Spacer()
                             Text(t.amount, format: .currency(code: "EUR")).bold().foregroundStyle(t.amount < 0 ? .red : .green)
                         }.card(padding: 12)
-                            .contextMenu { Button(role: .destructive) { ctx.delete(t) } label: { Label("Supprimer", systemImage: "trash") } }
+                            .contextMenu { Button(role: .destructive) { LedgerService.deleteTransaction(ctx, t) } label: { Label("Supprimer", systemImage: "trash") } }
                     }
                 }.padding(Theme.pad)
             }
@@ -123,8 +123,12 @@ struct TxnEditor: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
                     let v = (Double(amount.replacingOccurrences(of: ",", with: ".")) ?? 0) * (isExpense ? -1 : 1)
-                    ctx.insert(Txn(amount: v, category: category, account: account, note: note))
-                    if let acc = (try? ctx.fetch(FetchDescriptor<Account>()))?.first(where: { $0.name == account }) { acc.balance += v }
+                    // Passe par LedgerService : le solde est RECALCULE depuis les
+                    // operations. L'ancien code faisait `acc.balance += v` ici, et rien
+                    // ne le defaisait a la suppression ou a la modification.
+                    if let acc = (try? ctx.fetch(FetchDescriptor<Account>()))?.first(where: { $0.name == account }) {
+                        LedgerService.addTransaction(ctx, amount: v, category: category, account: acc, note: note)
+                    }
                     dismiss()
                 }.disabled(amount.isEmpty) }
             }
@@ -324,9 +328,14 @@ struct SplitView: View {
             let parts = e.participants.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }
             let split = parts.isEmpty ? members : parts
             guard !split.isEmpty else { continue }
-            let share = e.amount / Double(split.count)
-            bal[e.payer, default: 0] += e.amount
-            for p in split { bal[p, default: 0] -= share }
+            // Parts en centimes entiers : `e.amount / count` perdait des centimes
+            // (10 € a trois donnait 3,333... et le total ne retombait pas sur 10).
+            let totalCents = Int((e.amount * 100).rounded())
+            let shares = SettlementCalculator.split(totalCents: totalCents, between: split.count)
+            bal[e.payer, default: 0] += Double(totalCents) / 100.0
+            for (idx, p) in split.enumerated() {
+                bal[p, default: 0] -= Double(shares[idx]) / 100.0
+            }
         }
         return bal
     }
@@ -366,10 +375,12 @@ struct SplitView: View {
         .navigationTitle("Split").navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showAdd) { SplitEditor(members: members) }
     }
+    /// Delegue a `SettlementCalculator` : l'ancienne version envoyait TOUTE la plus
+    /// grosse dette au plus gros crediteur (faux des qu'il y a plus de deux personnes)
+    /// et tronquait le montant avec `Int()` (99,99 € s'affichait 99 €).
     private var settlementHint: String {
-        let sorted = balances.sorted { $0.value < $1.value }
-        guard let debtor = sorted.first, let creditor = sorted.last, debtor.value < -0.5 else { return "Tout est équilibré" }
-        return "\(debtor.key) doit \(Int(-debtor.value))€ à \(creditor.key)."
+        let cents = balances.mapValues { Int(($0 * 100).rounded()) }
+        return SettlementCalculator.hint(balancesCents: cents)
     }
 }
 

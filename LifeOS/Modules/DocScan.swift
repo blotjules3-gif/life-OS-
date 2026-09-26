@@ -64,6 +64,8 @@ struct DocScanView: View {
     @State private var pickerItem: PhotosPickerItem?
     @State private var showCamera = false
     @State private var showFilePicker = false
+    /// Toutes les pages du scan en cours (la premiere sert de vignette).
+    @State private var pages: [UIImage] = []
     @State private var savedToast = false
     @State private var saveError: String?
 
@@ -106,7 +108,7 @@ struct DocScanView: View {
             }
         }
         .sheet(isPresented: $showCamera) {
-            DocumentScannerView { img in if let img { handle(img) } }
+            DocumentScannerView { pages in if !pages.isEmpty { handle(pages) } }
                 .ignoresSafeArea()
         }
         .onChange(of: pickerItem) { _, item in
@@ -218,10 +220,19 @@ struct DocScanView: View {
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
-    private func handle(_ img: UIImage) {
-        image = img; analyzed = false; busy = true
+    private func handle(_ img: UIImage) { handle([img]) }
+
+    /// Traite TOUTES les pages. Le texte reconnu est celui de l'ensemble du document,
+    /// donc une date d'expiration ou un montant en derniere page est enfin trouve.
+    private func handle(_ incoming: [UIImage]) {
+        guard !incoming.isEmpty else { return }
+        pages = incoming
+        image = incoming.first
+        analyzed = false; busy = true
         Task {
-            let recognized = await DocOCR.recognize(img)
+            var parts: [String] = []
+            for page in incoming { parts.append(await DocOCR.recognize(page)) }
+            let recognized = parts.joined(separator: "\n\n")
             await MainActor.run {
                 text = recognized
                 category = DocClassifier.categorize(recognized)
@@ -234,17 +245,21 @@ struct DocScanView: View {
     private func save() {
         saveError = nil
         var filename: String? = nil
-        if let image, let data = image.jpegData(compressionQuality: 0.8) {
-            filename = ImageStore.save(data, prefix: "doc")
-            if filename == nil {
-                // On refuse d'enregistrer une fiche qui pretend avoir une
-                // image alors que le fichier n'a pas pu etre ecrit: le texte
-                // reconnu, lui, est conserve.
-                saveError = "L'image n'a pas pu être enregistrée. Le texte reconnu est conservé."
-            }
+        var pageFiles: [String] = []
+        let toSave = pages.isEmpty ? [image].compactMap { $0 } : pages
+        for page in toSave {
+            guard let data = page.jpegData(compressionQuality: 0.8),
+                  let f = ImageStore.save(data, prefix: "doc") else { continue }
+            pageFiles.append(f)
         }
+        filename = pageFiles.first
+        if pageFiles.count < toSave.count {
+            saveError = "Certaines pages n'ont pas pu être enregistrées (\(pageFiles.count)/\(toSave.count)). Le texte reconnu est conservé."
+        }
+
         let doc = DocVault(title: title.isEmpty ? "Document" : title,
-                           category: category, filename: filename, note: text)
+                           category: category, filename: filename, note: text,
+                           pageFilenames: pageFiles)
         ctx.insert(doc)
         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
         withAnimation { savedToast = true }
@@ -257,7 +272,9 @@ struct DocScanView: View {
 // MARK: - Scanner de documents natif (VisionKit, sur appareil)
 
 struct DocumentScannerView: UIViewControllerRepresentable {
-    var onScan: (UIImage?) -> Void
+    /// Rend TOUTES les pages. La version precedente ne lisait que la page 0 et jetait
+    /// le reste en silence.
+    var onScan: ([UIImage]) -> Void
     func makeUIViewController(context: Context) -> VNDocumentCameraViewController {
         let vc = VNDocumentCameraViewController()
         vc.delegate = context.coordinator
@@ -267,17 +284,17 @@ struct DocumentScannerView: UIViewControllerRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator(onScan: onScan) }
 
     final class Coordinator: NSObject, VNDocumentCameraViewControllerDelegate {
-        let onScan: (UIImage?) -> Void
-        init(onScan: @escaping (UIImage?) -> Void) { self.onScan = onScan }
+        let onScan: ([UIImage]) -> Void
+        init(onScan: @escaping ([UIImage]) -> Void) { self.onScan = onScan }
         func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFinishWith scan: VNDocumentCameraScan) {
-            let img = scan.pageCount > 0 ? scan.imageOfPage(at: 0) : nil
-            controller.dismiss(animated: true) { self.onScan(img) }
+            let pages = (0..<scan.pageCount).map { scan.imageOfPage(at: $0) }
+            controller.dismiss(animated: true) { self.onScan(pages) }
         }
         func documentCameraViewControllerDidCancel(_ controller: VNDocumentCameraViewController) {
-            controller.dismiss(animated: true) { self.onScan(nil) }
+            controller.dismiss(animated: true) { self.onScan([]) }
         }
         func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFailWithError error: Error) {
-            controller.dismiss(animated: true) { self.onScan(nil) }
+            controller.dismiss(animated: true) { self.onScan([]) }
         }
     }
 }

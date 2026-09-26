@@ -197,11 +197,29 @@ import SwiftData
 @Model final class DocVault {
     var title: String
     var category: String      // Identité / Contrat / Garantie / Santé / Impôts
+    /// Premiere page. Conserve pour les fiches deja enregistrees et pour la vignette.
     var filename: String?
+    /// TOUTES les pages, dans l'ordre du scan.
+    ///
+    /// Le scanner ne gardait que `imageOfPage(at: 0)` : un contrat de cinq pages etait
+    /// enregistre comme une seule page et les quatre autres etaient perdues sans message.
+    var pageFilenames: [String] = []
     var expiry: Date?
     var note: String
-    init(title: String = "", category: String = "Identité", filename: String? = nil, expiry: Date? = nil, note: String = "") {
-        self.title = title; self.category = category; self.filename = filename; self.expiry = expiry; self.note = note
+
+    /// Ordre d'affichage fiable, que la fiche vienne de l'ancien format ou du nouveau.
+    var allPages: [String] {
+        if !pageFilenames.isEmpty { return pageFilenames }
+        if let filename { return [filename] }
+        return []
+    }
+    var pageCount: Int { allPages.count }
+
+    init(title: String = "", category: String = "Identité", filename: String? = nil,
+         expiry: Date? = nil, note: String = "", pageFilenames: [String] = []) {
+        self.title = title; self.category = category; self.filename = filename
+        self.expiry = expiry; self.note = note
+        self.pageFilenames = pageFilenames.isEmpty ? [filename].compactMap { $0 } : pageFilenames
     }
 }
 

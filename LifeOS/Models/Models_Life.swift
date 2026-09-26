@@ -188,22 +188,51 @@ enum MemoryRetention: String {
 // MARK: - Finances
 
 @Model final class Account {
+    /// Identite STABLE. Les operations se rattachaient au NOM du compte : renommer un
+    /// compte orphelinait tout son historique. Le nom reste pour l'affichage seulement.
+    var id: UUID = UUID()
     var name: String
     var kind: String         // Courant / Épargne / Cash
+
+    /// Solde d'OUVERTURE, figé. Ce n'est pas le solde courant.
+    var openingBalance: Double = 0
+
+    /// Solde courant, CALCULE puis mis en cache par `LedgerService`, jamais modifie a la
+    /// main. Avant, chaque ecran ajoutait/retirait lui meme : un ajout l'augmentait, une
+    /// suppression ne le remettait pas, une modification comptait deux fois. Le solde
+    /// derivait donc silencieusement des vraies operations.
     var balance: Double
+
     init(name: String = "", kind: String = "Courant", balance: Double = 0) {
-        self.name = name; self.kind = kind; self.balance = balance
+        self.name = name; self.kind = kind
+        self.openingBalance = balance
+        self.balance = balance
     }
 }
 
 @Model final class Txn {
+    var id: UUID = UUID()
     var date: Date
-    var amount: Double       // négatif = dépense
+    /// Montant en CENTIMES, entier. Un Double accumule des erreurs de virgule flottante
+    /// sur une somme d'operations, et un solde bancaire faux d'un centime est un bug.
+    /// `amount` reste exposé en euros pour les appelants existants.
+    var amountCents: Int = 0
     var category: String
+    /// Rattachement STABLE au compte. `account` (le nom) ne sert plus qu'a la reprise des
+    /// anciennes donnees et a l'affichage.
+    var accountID: UUID?
     var account: String
     var note: String
-    init(date: Date = .now, amount: Double = 0, category: String = "Divers", account: String = "Courant", note: String = "") {
-        self.date = date; self.amount = amount; self.category = category; self.account = account; self.note = note
+
+    var amount: Double {
+        get { Double(amountCents) / 100.0 }
+        set { amountCents = Int((newValue * 100).rounded()) }
+    }
+
+    init(date: Date = .now, amount: Double = 0, category: String = "Divers", account: String = "Courant", note: String = "", accountID: UUID? = nil) {
+        self.date = date; self.category = category; self.account = account; self.note = note
+        self.accountID = accountID
+        self.amountCents = Int((amount * 100).rounded())
     }
 }
 
