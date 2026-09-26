@@ -597,7 +597,8 @@
     "reference_version": "",
     "country": "",
     "tier": "",
-    "observed_at": ""
+    "observed_at": "",
+    "notes": "CountdownEngine: echeance absolue persistee, le temps reel est respecte en arriere plan et apres arret du processus (CountdownEngineTests)."
   },
   {
     "tool_id": 25,
@@ -622,7 +623,8 @@
     "reference_version": "",
     "country": "",
     "tier": "",
-    "observed_at": ""
+    "observed_at": "",
+    "notes": "CountdownEngine: echeance absolue persistee, le temps reel est respecte en arriere plan et apres arret du processus (CountdownEngineTests)."
   },
   {
     "tool_id": 26,
@@ -773,7 +775,8 @@
     "reference_version": "",
     "country": "",
     "tier": "",
-    "observed_at": ""
+    "observed_at": "",
+    "notes": "CountdownEngine: echeance absolue persistee, le temps reel est respecte en arriere plan et apres arret du processus (CountdownEngineTests)."
   },
   {
     "tool_id": 32,
@@ -848,7 +851,8 @@
     "reference_version": "",
     "country": "",
     "tier": "",
-    "observed_at": ""
+    "observed_at": "",
+    "notes": "CountdownEngine: echeance absolue persistee, le temps reel est respecte en arriere plan et apres arret du processus (CountdownEngineTests)."
   },
   {
     "tool_id": 35,

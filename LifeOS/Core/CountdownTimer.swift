@@ -2,53 +2,152 @@ import SwiftUI
 import Combine
 
 /// Moteur de compte à rebours réutilisé par : power-nap, HIIT/Tabata, focus, respiration, mewing.
+///
+/// Compte a rebours base sur l'HORLOGE, pas sur un compteur interne.
+///
+/// LE DEFAUT CORRIGE ICI
+///
+/// L'ancienne version gardait `remaining` et le decrementait dans un `Timer` en
+/// process. Un `Timer` ne tourne pas quand l'app est en arriere plan, et il n'existe
+/// plus du tout si le processus est tue. Donc une sieste de 20 minutes lancee puis
+/// telephone verrouille affichait encore 19:58 au retour : le temps reel etait ignore.
+///
+/// Maintenant l'autorite est une DATE DE FIN absolue. `remaining` se DEDUIT de
+/// `deadline - maintenant`. Le timer d'une seconde ne sert plus qu'a rafraichir
+/// l'affichage : meme s'il ne tourne pas, le compte reste juste.
+///
+/// L'etat est persiste, donc un arret complet du processus ne perd pas la session.
 @Observable
 final class CountdownEngine {
-    private(set) var remaining: Int = 0
+    /// Identifiant de session : deux timers (sieste, meditation) ne doivent pas se
+    /// marcher dessus dans le stockage.
+    private let key: String
+
     private(set) var total: Int = 1
     private(set) var isRunning = false
     var onFinish: (() -> Void)?
 
+    /// Fin absolue quand ca tourne. `nil` en pause ou a l'arret.
+    private(set) var deadline: Date?
+    /// Temps restant fige pendant la pause.
+    private var pausedRemaining: Int = 0
+    private var finished = false
+
     private var cancellable: AnyCancellable?
+
+    init(key: String = "default") {
+        self.key = key
+        restore()
+    }
+
+    /// DERIVE de l'horloge. C'est le coeur du correctif.
+    var remaining: Int {
+        if let deadline { return max(0, Int(deadline.timeIntervalSinceNow.rounded(.up))) }
+        return pausedRemaining
+    }
 
     var progress: Double { total == 0 ? 0 : Double(total - remaining) / Double(total) }
 
     func start(seconds: Int) {
         total = max(1, seconds)
-        remaining = seconds
-        resume()
+        pausedRemaining = total
+        finished = false
+        deadline = Date().addingTimeInterval(TimeInterval(total))
+        isRunning = true
+        persist(); startDisplayTimer()
     }
 
     func resume() {
-        guard !isRunning, remaining > 0 else { return }
+        guard !isRunning, pausedRemaining > 0 else { return }
+        finished = false
+        deadline = Date().addingTimeInterval(TimeInterval(pausedRemaining))
         isRunning = true
-        cancellable = Timer.publish(every: 1, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in self?.tick() }
+        persist(); startDisplayTimer()
     }
 
     func pause() {
+        pausedRemaining = remaining
+        deadline = nil
         isRunning = false
         cancellable?.cancel()
+        persist()
     }
 
     func reset() {
         pause()
-        remaining = total
+        pausedRemaining = total
+        finished = false
+        persist()
     }
 
     func stop() {
         pause()
-        remaining = 0
+        pausedRemaining = 0
+        clear()
     }
 
-    private func tick() {
-        guard remaining > 0 else { return }
-        remaining -= 1
-        if remaining == 0 {
-            pause()
-            Haptics.success()
-            onFinish?()
+    /// A appeler au retour au premier plan : rattrape le temps ecoule pendant l'absence
+    /// et declenche la fin si l'echeance est passee.
+    func refresh() {
+        guard isRunning else { return }
+        if remaining == 0 { complete() } else { startDisplayTimer() }
+    }
+
+    // MARK: - Affichage
+
+    private func startDisplayTimer() {
+        cancellable?.cancel()
+        cancellable = Timer.publish(every: 1, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self else { return }
+                // Ne decremente rien : il relit juste l'horloge.
+                if self.isRunning, self.remaining == 0 { self.complete() }
+            }
+    }
+
+    private func complete() {
+        guard !finished else { return }
+        finished = true
+        isRunning = false
+        deadline = nil
+        pausedRemaining = 0
+        cancellable?.cancel()
+        clear()
+        Haptics.success()
+        onFinish?()
+    }
+
+    // MARK: - Persistance
+
+    private var storeKey: String { "countdown.\(key)" }
+
+    private func persist() {
+        let d: [String: Any] = [
+            "total": total,
+            "isRunning": isRunning,
+            "pausedRemaining": pausedRemaining,
+            "deadline": deadline?.timeIntervalSince1970 ?? 0
+        ]
+        UserDefaults.standard.set(d, forKey: storeKey)
+    }
+
+    private func clear() { UserDefaults.standard.removeObject(forKey: storeKey) }
+
+    private func restore() {
+        guard let d = UserDefaults.standard.dictionary(forKey: storeKey) else { return }
+        total = d["total"] as? Int ?? 1
+        pausedRemaining = d["pausedRemaining"] as? Int ?? 0
+        let ts = d["deadline"] as? TimeInterval ?? 0
+        let running = d["isRunning"] as? Bool ?? false
+        if running, ts > 0 {
+            let end = Date(timeIntervalSince1970: ts)
+            if end > Date() {
+                deadline = end; isRunning = true; startDisplayTimer()
+            } else {
+                // L'echeance est passee pendant que l'app etait fermee.
+                isRunning = false; pausedRemaining = 0; deadline = nil; clear()
+            }
         }
     }
 }

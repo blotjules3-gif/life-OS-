@@ -88,7 +88,7 @@ struct BreathingView: View {
 
 struct MeditationView: View {
     @State private var minutes = 10
-    @State private var engine = CountdownEngine()
+    @State private var engine = CountdownEngine(key: "meditation")
     @State private var started = false
     var body: some View {
         ZStack {

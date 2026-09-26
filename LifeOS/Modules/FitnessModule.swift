@@ -209,7 +209,7 @@ struct HIITView: View {
     @State private var work = 20
     @State private var rest = 10
     @State private var rounds = 8
-    @State private var engine = CountdownEngine()
+    @State private var engine = CountdownEngine(key: "workout")
     @State private var phase = "Prêt"
     @State private var currentRound = 0
     @State private var inWork = true

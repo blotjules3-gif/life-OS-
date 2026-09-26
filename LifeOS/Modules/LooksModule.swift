@@ -358,7 +358,7 @@ struct ProgressPhotoGalleryView: View {
 
 struct MewingPostureView: View {
     @AppStorage(AppStorageKeys.postureReminder) private var posture = false
-    @State private var engine = CountdownEngine()
+    @State private var engine = CountdownEngine(key: "mewing")
     @State private var started = false
 
     var body: some View {

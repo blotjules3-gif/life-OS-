@@ -88,7 +88,7 @@ struct BedtimeCalculatorView: View {
 // MARK: - Power nap
 
 struct PowerNapView: View {
-    @State private var engine = CountdownEngine()
+    @State private var engine = CountdownEngine(key: "nap")
     @State private var minutes = 20
     @State private var started = false
 
