@@ -23,6 +23,14 @@ enum ImageStore {
         }
     }
 
+    /// URL sur disque d'une page stockee. Necessaire pour partager/exporter un document
+    /// sans le recharger en memoire.
+    static func url(for filename: String?) -> URL? {
+        guard let filename, !filename.isEmpty else { return nil }
+        let u = dir.appendingPathComponent(filename)
+        return FileManager.default.fileExists(atPath: u.path) ? u : nil
+    }
+
     static func load(_ filename: String?) -> UIImage? {
         guard let filename else { return nil }
         return UIImage(contentsOfFile: dir.appendingPathComponent(filename).path)

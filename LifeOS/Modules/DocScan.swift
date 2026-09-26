@@ -100,9 +100,10 @@ struct DocScanView: View {
         .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.image, .pdf]) { result in
             switch result {
             case .success(let url):
-                if let img = DesktopImageHelper.loadImage(from: url) {
-                    handle(img)
-                }
+                // Toutes les pages : un PDF de cinq pages importe depuis le bureau
+                // n'entrait dans l'app que par sa page 0, comme le scanner du telephone.
+                let pages = DesktopImageHelper.loadPages(from: url)
+                if !pages.isEmpty { handle(pages) }
             case .failure:
                 break
             }
@@ -253,8 +254,14 @@ struct DocScanView: View {
             pageFiles.append(f)
         }
         filename = pageFiles.first
-        if pageFiles.count < toSave.count {
-            saveError = "Certaines pages n'ont pas pu être enregistrées (\(pageFiles.count)/\(toSave.count)). Le texte reconnu est conservé."
+        let pagesLost = pageFiles.count < toSave.count
+        if pagesLost {
+            // On n'enregistre PAS un document ampute en affichant "enregistré".
+            // L'ecran garde ses pages pour permettre un nouvel essai : un faux succes
+            // ferait croire l'archivage fait alors que des pages manquent.
+            saveError = "Enregistrement interrompu : \(pageFiles.count) page(s) sur \(toSave.count) écrites. Rien n'a été archivé, réessaie."
+            for f in pageFiles { ImageStore.delete(f) }   // pas de fichiers orphelins
+            return
         }
 
         let doc = DocVault(title: title.isEmpty ? "Document" : title,
@@ -263,8 +270,9 @@ struct DocScanView: View {
         ctx.insert(doc)
         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
         withAnimation { savedToast = true }
-        // reset
-        image = nil; text = ""; analyzed = false; title = ""; pickerItem = nil
+        // reset : `pages` DOIT etre vide ici, sinon le scan suivant repart avec les
+        // pages du precedent et enregistre un document melange.
+        image = nil; pages = []; text = ""; analyzed = false; title = ""; pickerItem = nil
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) { withAnimation { savedToast = false } }
     }
 }

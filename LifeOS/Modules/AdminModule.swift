@@ -9,6 +9,10 @@ extension ShapeStyle where Self == Color { static var adminTint: Color { AppCate
 // MARK: - Coffre-fort documents
 
 struct DocVaultView: View {
+    /// Document ouvert dans le lecteur. Les pages etaient stockees mais rien ne
+    /// permettait de les voir : seule la vignette de la premiere s'affichait.
+    @State private var reading: DocVault?
+
     @Environment(\.modelContext) private var ctx
     @Query(sort: \DocVault.title) private var docs: [DocVault]
     @State private var showAdd = false
@@ -44,6 +48,8 @@ struct DocVaultView: View {
                                         }
                                         Spacer()
                                     }.card(padding: 12)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture { reading = d }
                                         .contextMenu { Button(role: .destructive) { NotificationManager.shared.cancel(id: ReminderIDs.document(title: d.title)); for page in d.allPages { ImageStore.delete(page) }; ctx.delete(d) } label: { Label("Supprimer", systemImage: "trash") } }
                                 }
                             }
@@ -54,6 +60,35 @@ struct DocVaultView: View {
             }
         }
         .navigationTitle("Coffre-fort").navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $reading) { DocumentReader(doc: $0) }
+        #if DEBUG
+        .onAppear {
+            // Jeu d'essai : sans document multi-pages en base, le lecteur ne peut pas
+            // etre EXERCE, seulement ouvert sur un ecran vide.
+            guard ProcessInfo.processInfo.arguments.contains("-seedDoc"),
+                  !docs.contains(where: { $0.title == "Contrat test" }) else { return }
+            var files: [String] = []
+            for i in 1...3 {
+                let colors: [UIColor] = [.systemTeal, .systemOrange, .systemIndigo]
+                let img = UIGraphicsImageRenderer(size: CGSize(width: 600, height: 840)).image { c in
+                    colors[i - 1].setFill(); c.fill(CGRect(x: 0, y: 0, width: 600, height: 840))
+                    ("PAGE \(i)" as NSString).draw(at: CGPoint(x: 180, y: 380), withAttributes: [
+                        .font: UIFont.boldSystemFont(ofSize: 64), .foregroundColor: UIColor.white])
+                }
+                if let d = img.jpegData(compressionQuality: 0.8), let f = ImageStore.save(d, prefix: "doc") {
+                    files.append(f)
+                }
+            }
+            let doc = DocVault(title: "Contrat test", category: categories.first ?? "Contrat",
+                               filename: files.first, note: "page un\n\npage deux\n\nexpire le 31/12/2027",
+                               pageFilenames: files)
+            ctx.insert(doc)
+            // Ouvre directement le lecteur : le simulateur ne sait pas taper sur une ligne.
+            if ProcessInfo.processInfo.arguments.contains("-openDoc") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { reading = doc }
+            }
+        }
+        #endif
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { DocEditor() }
     }
@@ -264,3 +299,60 @@ struct LetterDetail: View {
 
 // MARK: - Scan scaffold
 
+
+/// Lecteur multi-pages.
+///
+/// Il manquait completement : les pages etaient bien enregistrees depuis le correctif du
+/// scanner, mais l'app n'affichait que la vignette de la premiere. Un contrat de cinq
+/// pages restait donc illisible dans l'app, ce qui rendait le stockage des pages inutile.
+struct DocumentReader: View {
+    let doc: DocVault
+    @Environment(\.dismiss) private var dismiss
+    @State private var page = 0
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 12) {
+                if doc.allPages.isEmpty {
+                    ContentUnavailableView("Aucune image", systemImage: "doc",
+                                           description: Text("Ce document ne contient que du texte reconnu."))
+                } else {
+                    TabView(selection: $page) {
+                        ForEach(Array(doc.allPages.enumerated()), id: \.offset) { index, file in
+                            StoredImage(filename: file, placeholder: "doc.text")
+                                .scaledToFit()
+                                .tag(index)
+                        }
+                    }
+                    .tabViewStyle(.page(indexDisplayMode: .always))
+
+                    Text("Page \(page + 1) sur \(doc.allPages.count)")
+                        .font(.footnote).foregroundStyle(Theme.textSecondary)
+                }
+
+                if !doc.note.isEmpty {
+                    ScrollView {
+                        Text(doc.note)
+                            .font(.footnote)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .textSelection(.enabled)
+                    }
+                    .frame(maxHeight: 160)
+                    .padding(.horizontal)
+                }
+            }
+            .padding(.vertical)
+            .navigationTitle(doc.title).navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) { Button("Fermer") { dismiss() } }
+                if !doc.allPages.isEmpty {
+                    ToolbarItem(placement: .bottomBar) {
+                        ShareLink(items: doc.allPages.compactMap { ImageStore.url(for: $0) }) {
+                            Label("Exporter", systemImage: "square.and.arrow.up")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -84,6 +84,7 @@ struct MainTabView: View {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-glassGallery") { return AnyView(GlassGallery()) }
         if ProcessInfo.processInfo.arguments.contains("-powerNap") { return AnyView(NavigationStack { PowerNapView() }) }
+        if ProcessInfo.processInfo.arguments.contains("-docVault") { return AnyView(NavigationStack { DocVaultView() }) }
         if Self.forceDesktop { return AnyView(MacDesktopMainView()) }
         #endif
         return AnyView(realBody)

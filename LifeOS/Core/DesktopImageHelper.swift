@@ -6,7 +6,34 @@ import PDFKit
 // MARK: - Helper pour sélection & glisser-déposer de fichiers images sur Desktop
 
 enum DesktopImageHelper {
-    /// Charge une image ou la première page d'un document (PDF) depuis une URL de fichier (sécurisée pour macOS / Mac Catalyst).
+    /// Charge TOUTES les pages d'un document depuis une URL de fichier.
+    ///
+    /// Un PDF importe sur le bureau ne rendait que sa page 0, exactement le meme defaut
+    /// que le scanner du telephone : un contrat de cinq pages entrait dans l'app comme
+    /// une seule, sans message. Une image simple rend un tableau d'un element.
+    static func loadPages(from url: URL) -> [UIImage] {
+        let isSecurityScoped = url.startAccessingSecurityScopedResource()
+        defer { if isSecurityScoped { url.stopAccessingSecurityScopedResource() } }
+
+        if let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
+            return [image]
+        }
+        guard let pdfDoc = PDFDocument(url: url), pdfDoc.pageCount > 0 else { return [] }
+        return (0..<pdfDoc.pageCount).compactMap { index in
+            guard let page = pdfDoc.page(at: index) else { return nil }
+            let pageRect = page.bounds(for: .mediaBox)
+            return UIGraphicsImageRenderer(size: pageRect.size).image { ctx in
+                UIColor.white.set()
+                ctx.fill(pageRect)
+                ctx.cgContext.translateBy(x: 0.0, y: pageRect.size.height)
+                ctx.cgContext.scaleBy(x: 1.0, y: -1.0)
+                page.draw(with: .mediaBox, to: ctx.cgContext)
+            }
+        }
+    }
+
+    /// Premiere page seulement. Conserve pour les usages ou une vignette suffit ;
+    /// pour importer un document, utiliser `loadPages`.
     static func loadImage(from url: URL) -> UIImage? {
         let isSecurityScoped = url.startAccessingSecurityScopedResource()
         defer {
