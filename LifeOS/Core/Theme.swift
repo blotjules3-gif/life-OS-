@@ -599,6 +599,11 @@ struct LiquidGlassPillModifier: ViewModifier {
     }
 }
 
+/// Pilule INTERACTIVE. Tous ses usages actuels sont des boutons (accueil, frise des
+/// habitudes, tableau bureau), donc elle passe par `GlassControl` : le materiau reagit
+/// lui meme a l'appui et l'etat desactive est gere. Avant, `GlassControl` existait mais
+/// n'etait appele nulle part, et ces boutons n'avaient aucun retour au toucher au dela
+/// d'une animation d'echelle.
 struct ApplePreviewPillModifier: ViewModifier {
     var height: CGFloat = 52
     var strokeWidth: CGFloat = 1.0
@@ -606,7 +611,7 @@ struct ApplePreviewPillModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .frame(height: height)
-            .raisedSurface(Capsule(), .raised)
+            .glassControl(Capsule())
     }
 }
 
@@ -624,6 +629,7 @@ struct ApplePreviewIslandModifier: ViewModifier {
     }
 }
 
+/// Controle circulaire interactif (bouton rond de barre d'outils).
 struct ApplePreviewCircleModifier: ViewModifier {
     var size: CGFloat = 40
     var strokeWidth: CGFloat = 0.8
@@ -631,7 +637,7 @@ struct ApplePreviewCircleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .frame(width: size, height: size)
-            .raisedSurface(Circle(), .raised)
+            .glassControl(Circle())
     }
 }
 
