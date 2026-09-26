@@ -104,7 +104,7 @@ struct AppLockScreen: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(LifeOSGlassButtonStyle(prominent: true))
                 .padding(.horizontal, 24)
                 .padding(.bottom, 40)
             }

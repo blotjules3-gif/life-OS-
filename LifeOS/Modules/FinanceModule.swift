@@ -165,7 +165,7 @@ struct BudgetView: View {
                                     Button { e.spent = max(0, e.spent-10) } label: {
                                         Text("-10").font(.caption.bold())
                                             .padding(.horizontal, 12).padding(.vertical, 6)
-                                            .background(Theme.bg2, in: Capsule())
+                                            .raisedSurface(Capsule(), .nested)
                                             .foregroundStyle(Theme.textPrimary)
                                     }.buttonStyle(.plain)
                                     Button { e.spent += 10 } label: {

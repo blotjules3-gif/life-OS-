@@ -196,6 +196,8 @@ enum MemoryRetention: String {
 
     /// Solde d'OUVERTURE, figé. Ce n'est pas le solde courant.
     var openingBalance: Double = 0
+    /// Stored with the account, so restoring or switching stores cannot skip migration.
+    var openingBalanceMigrationVersion: Int = 0
 
     /// Solde courant, CALCULE puis mis en cache par `LedgerService`, jamais modifie a la
     /// main. Avant, chaque ecran ajoutait/retirait lui meme : un ajout l'augmentait, une
@@ -206,6 +208,7 @@ enum MemoryRetention: String {
     init(name: String = "", kind: String = "Courant", balance: Double = 0) {
         self.name = name; self.kind = kind
         self.openingBalance = balance
+        self.openingBalanceMigrationVersion = 1
         self.balance = balance
     }
 }

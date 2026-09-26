@@ -57,7 +57,7 @@ struct FlashcardEditor: View {
         NavigationStack {
             Form {
                 TextField("Paquet", text: $deck)
-                if !decks.isEmpty { ScrollView(.horizontal, showsIndicators: false) { HStack { ForEach(decks, id: \.self) { d in Button(d) { deck = d }.buttonStyle(.bordered).tint(.learnTint).font(.caption) } } } }
+                if !decks.isEmpty { ScrollView(.horizontal, showsIndicators: false) { HStack { ForEach(decks, id: \.self) { d in Button(d) { deck = d }.buttonStyle(LifeOSGlassButtonStyle()).tint(.learnTint).font(.caption) } } } }
                 Section("Recto") { TextField("Question", text: $front, axis: .vertical).lineLimit(2...5) }
                 Section("Verso") { TextField("Réponse", text: $back, axis: .vertical).lineLimit(2...5) }
             }
@@ -198,7 +198,7 @@ struct BookSummariesView: View {
                             Label("Résumer un livre avec ton coach", systemImage: "infinity")
                                 .frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(.borderedProminent).tint(.learnTint)
+                        .buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.learnTint)
                     } else {
                         // Pas de cle: on le dit une fois, sans promettre une
                         // fonctionnalite qui echouerait au premier appui.

@@ -126,7 +126,7 @@ struct CycleTrackerView: View {
                         }
                     }
                     .padding(16)
-                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                     // Conseils de la phase
                     if cycleStartDateTS > 0 {
@@ -187,9 +187,8 @@ struct CycleTrackerView: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 10)
                                         .background(
-                                            selectedFlow == i ? flowColors[i] : Theme.card,
-                                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        )
+                                            selectedFlow == i ? flowColors[i] : Color.clear,
+                                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)).raisedSurface(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                 }
                                 .buttonStyle(.plain)
                                 .scaleEffect(selectedFlow == i ? 1.03 : 1.0)
@@ -198,7 +197,7 @@ struct CycleTrackerView: View {
                         }
                     }
                     .padding(16)
-                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                     // Symptômes
                     VStack(alignment: .leading, spacing: 12) {
@@ -222,16 +221,15 @@ struct CycleTrackerView: View {
                                         .background(
                                             selectedSymptoms.contains(s)
                                                 ? Color.accentColor
-                                                : Theme.card,
-                                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        )
+                                                : Color.clear,
+                                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)).raisedSurface(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
                     }
                     .padding(16)
-                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                     // Humeur
                     VStack(alignment: .leading, spacing: 12) {
@@ -250,16 +248,15 @@ struct CycleTrackerView: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 8)
                                         .background(
-                                            selectedMood == i ? Color.accentColor : Theme.card,
-                                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        )
+                                            selectedMood == i ? Color.accentColor : Color.clear,
+                                            in: RoundedRectangle(cornerRadius: 10, style: .continuous)).raisedSurface(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
                     }
                     .padding(16)
-                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
                     // Bouton enregistrer
                     Button {
@@ -321,7 +318,7 @@ struct CycleTrackerView: View {
                             Text("Enregistré").font(.system(size: 14, weight: .semibold))
                         }
                         .padding(.horizontal, 20).padding(.vertical, 12)
-                        .background(.regularMaterial, in: Capsule())
+                        .raisedSurface(Capsule())
                         .padding(.bottom, 40)
                     }
                     .transition(.move(edge: .bottom).combined(with: .opacity))

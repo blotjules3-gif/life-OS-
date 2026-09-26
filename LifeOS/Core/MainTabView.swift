@@ -668,7 +668,7 @@ struct MetricRing: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 18)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .strokeBorder(Theme.hairline, lineWidth: 0.5)

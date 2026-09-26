@@ -141,7 +141,7 @@ struct DocScanView: View {
                     #endif
                 }
                 .frame(maxWidth: .infinity).padding(.vertical, 34)
-                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
+                .raisedSurface(RoundedRectangle(cornerRadius: 16))
                 .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [6])).foregroundStyle(Color.adminTint.opacity(0.35)))
             }
         }
@@ -155,22 +155,22 @@ struct DocScanView: View {
             } label: {
                 Label("Fichiers (Finder)...", systemImage: "folder.fill").frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent).tint(.adminTint)
+            .buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.adminTint)
 
             PhotosPicker(selection: $pickerItem, matching: .images) {
                 Label("Photothèque", systemImage: "photo").frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered).tint(.adminTint)
+            .buttonStyle(LifeOSGlassButtonStyle()).tint(.adminTint)
             #else
             if cameraAvailable {
                 Button { showCamera = true } label: {
                     Label("Scanner", systemImage: "camera.fill").frame(maxWidth: .infinity)
-                }.buttonStyle(.borderedProminent).tint(.adminTint)
+                }.buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.adminTint)
             }
             PhotosPicker(selection: $pickerItem, matching: .images) {
                 Label("Choisir une photo", systemImage: "photo").frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered).tint(.adminTint)
+            .buttonStyle(LifeOSGlassButtonStyle()).tint(.adminTint)
             #endif
         }
     }
@@ -197,16 +197,16 @@ struct DocScanView: View {
                     Text(text).font(.caption).foregroundStyle(Theme.textPrimary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(10)
-                        .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 10))
+                        .raisedSurface(RoundedRectangle(cornerRadius: 10), .nested)
                         .lineLimit(8)
                 }
             }
             Button { save() } label: {
                 Label("Ranger dans le coffre-fort", systemImage: "lock.doc.fill").frame(maxWidth: .infinity)
-            }.buttonStyle(.borderedProminent).tint(.adminTint)
+            }.buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.adminTint)
         }
         .padding()
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
+        .raisedSurface(RoundedRectangle(cornerRadius: 16))
     }
 
     private var toast: some View {

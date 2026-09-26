@@ -36,7 +36,7 @@ struct CategoryRecapCard: View {
             metricsContent
         }
         .padding(16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(category.tint.opacity(0.2), lineWidth: 1)

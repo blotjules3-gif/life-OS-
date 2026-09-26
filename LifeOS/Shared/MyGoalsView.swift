@@ -139,20 +139,20 @@ struct MyGoalsView: View {
         HStack(spacing: 8) {
             if goal.status == .active {
                 Button("Pause") { goal.status = .paused; persist() }
-                    .buttonStyle(.bordered).controlSize(.mini)
+                    .buttonStyle(LifeOSGlassButtonStyle()).controlSize(.mini)
             } else if goal.status == .paused {
                 Button("Réactiver") { goal.status = .active; persist() }
-                    .buttonStyle(.bordered).controlSize(.mini)
+                    .buttonStyle(LifeOSGlassButtonStyle()).controlSize(.mini)
             }
             Button("Atteint") { goal.status = .achieved; persist() }
-                .buttonStyle(.bordered).controlSize(.mini)
+                .buttonStyle(LifeOSGlassButtonStyle()).controlSize(.mini)
                 .tint(.blue)
             Button(role: .destructive) {
                 archive(goal)
             } label: {
                 Text("Abandonner")
             }
-            .buttonStyle(.bordered).controlSize(.mini)
+            .buttonStyle(LifeOSGlassButtonStyle()).controlSize(.mini)
         }
     }
 

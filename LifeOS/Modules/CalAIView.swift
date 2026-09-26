@@ -78,7 +78,7 @@ struct CalAIView: View {
                 }
                 .foregroundStyle(Theme.textPrimary)
                 .frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(Theme.cardFill, in: Capsule())
+                .raisedSurface(Capsule())
             }
         }
         .buttonStyle(PressableButtonStyle())
@@ -98,7 +98,7 @@ struct CalAIView: View {
                 Text("\(streak)").font(.headline.bold())
             }
             .padding(.horizontal, 12).padding(.vertical, 7)
-            .background(Theme.cardFill, in: Capsule())
+            .raisedSurface(Capsule())
         }
     }
 
@@ -181,7 +181,7 @@ struct CalAIView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     // MARK: Repas du jour
@@ -200,7 +200,7 @@ struct CalAIView: View {
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity)
-                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 }.buttonStyle(.plain)
             } else {
                 ForEach(orderedMeals, id: \.self) { m in
@@ -246,7 +246,7 @@ struct CalAIView: View {
             }
             .padding(.bottom, 4)
         }
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     // MARK: Historique 7 jours + tendance
@@ -385,7 +385,7 @@ struct BarcodeAddSheet: View {
                     }
                     .font(.subheadline.weight(.medium))
                     .padding(.horizontal, 16).padding(.vertical, 10)
-                    .background(.ultraThinMaterial, in: Capsule())
+                    .raisedSurface(Capsule())
                     .padding(.bottom, 44)
                 }
             }
@@ -433,7 +433,7 @@ struct BarcodeAddSheet: View {
                 HStack(spacing: 8) {
                     ForEach([30, 50, 100, 150, 200], id: \.self) { g in
                         Button("\(g)g") { grams = "\(g)" }
-                            .font(.caption.bold()).buttonStyle(.bordered).tint(.secondary)
+                            .font(.caption.bold()).buttonStyle(LifeOSGlassButtonStyle()).tint(.secondary)
                     }
                 }
             }
@@ -453,7 +453,7 @@ struct BarcodeAddSheet: View {
                                          fat: p.fat * factor, meal: meal))
                     Haptics.success(); dismiss()
                 } label: { Text("Ajouter au journal").frame(maxWidth: .infinity).bold() }
-                    .buttonStyle(.borderedProminent).tint(Color.accentColor)
+                    .buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(Color.accentColor)
                     .disabled(factor <= 0)
             }
         }

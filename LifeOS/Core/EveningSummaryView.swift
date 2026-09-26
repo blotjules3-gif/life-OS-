@@ -123,7 +123,7 @@ struct EveningSummaryView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 
     private var formattedDate: String {
@@ -190,7 +190,7 @@ struct EveningSummaryView: View {
             .frame(height: 5)
         }
         .padding(14)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .stroke(reached ? Color(hex: 0x4CC38A).opacity(0.3) : Color.clear, lineWidth: 1)
@@ -231,7 +231,7 @@ struct EveningSummaryView: View {
             .frame(height: 5)
         }
         .padding(14)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .stroke(reached ? Color(hex: 0x4CC38A).opacity(0.3) : Color.clear, lineWidth: 1)
@@ -265,7 +265,7 @@ struct EveningSummaryView: View {
             }
         }
         .padding(16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 
     // MARK: Mood card
@@ -293,7 +293,7 @@ struct EveningSummaryView: View {
             Spacer()
         }
         .padding(16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 
     private func moodSymbol(_ score: Int) -> String {

@@ -119,7 +119,7 @@ struct SkinTypeCard: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(10)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
             .stroke(selected ? accent : Color.clear, lineWidth: 2.5))
     }
@@ -288,7 +288,7 @@ struct FaceScanView: View {
                 PhotosPicker(selection: $pickerItem, matching: .images) {
                     Label("Photothèque", systemImage: "photo.on.rectangle")
                         .font(.subheadline.weight(.bold)).frame(maxWidth: .infinity).padding(.vertical, 13)
-                        .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                        .raisedSurface(RoundedRectangle(cornerRadius: 13, style: .continuous), .nested)
                         .foregroundStyle(Theme.textPrimary)
                 }
             }
@@ -303,7 +303,7 @@ struct FaceScanView: View {
                 PhotosPicker(selection: $pickerItem, matching: .images) {
                     Label("Galerie", systemImage: "photo.on.rectangle")
                         .font(.subheadline.weight(.bold)).frame(maxWidth: .infinity).padding(.vertical, 13)
-                        .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                        .raisedSurface(RoundedRectangle(cornerRadius: 13, style: .continuous), .nested)
                         .foregroundStyle(Theme.textPrimary)
                 }
             }
@@ -381,7 +381,7 @@ struct FaceScanView: View {
             recBlock(title: "Barbe", items: [r.shape.beard])
         }
         .padding(16)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
     }
 

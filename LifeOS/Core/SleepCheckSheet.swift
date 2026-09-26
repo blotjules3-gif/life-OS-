@@ -134,7 +134,7 @@ struct SleepCheckSheet: View {
                         .foregroundStyle(.primary)
                         .buttonStyle(LifeOSPressStyle())
                     }
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                 }
                 .padding(.horizontal, 20)
                 .opacity(appeared ? 1 : 0).animation(.spring(duration: 0.5).delay(0.22), value: appeared)
@@ -145,7 +145,7 @@ struct SleepCheckSheet: View {
                     TextField("Cauchemar, réveil nocturne, rêve…", text: $note, axis: .vertical)
                         .font(.system(size: 14)).lineLimit(3)
                         .padding(.horizontal, 14).padding(.vertical, 12)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                 }
                 .padding(.horizontal, 20)
                 .opacity(appeared ? 1 : 0).animation(.spring(duration: 0.5).delay(0.28), value: appeared)

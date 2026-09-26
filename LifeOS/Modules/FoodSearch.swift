@@ -378,7 +378,7 @@ struct ScanProductView: View {
         }
         .font(.subheadline.weight(.medium))
         .padding(.horizontal, 16).padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: Capsule())
+        .raisedSurface(Capsule())
     }
 
     private func lookup(_ code: String) {

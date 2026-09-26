@@ -35,7 +35,7 @@ struct ProviderKeyHelpView: View {
             stepsTimeline
         }
         .padding(16)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .sheet(isPresented: $showSafari) {
             if let url = slot.docsURL {
                 SafariView(url: url).ignoresSafeArea()

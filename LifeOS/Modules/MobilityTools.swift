@@ -117,7 +117,7 @@ struct TripCO2View: View {
                     Text("km").foregroundStyle(Theme.textSecondary)
                 }
                 .padding(.horizontal, 12).padding(.vertical, 10)
-                .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 10))
+                .raisedSurface(RoundedRectangle(cornerRadius: 10), .nested)
                 Button { add() } label: {
                     Image(systemName: "plus").font(.headline).foregroundStyle(.white)
                         .frame(width: 46, height: 44)
@@ -132,7 +132,7 @@ struct TripCO2View: View {
             }
         }
         .padding(16)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius))
     }
 
     private var tripList: some View {
@@ -157,7 +157,7 @@ struct TripCO2View: View {
                 Divider().padding(.leading, 50)
             }
         }
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius))
     }
 
     private func add() {
@@ -245,7 +245,7 @@ struct ParkingView: View {
                 .font(.footnote).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 34)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius))
     }
 
     private var savedCard: some View {
@@ -271,16 +271,16 @@ struct ParkingView: View {
                 }.buttonStyle(.plain)
                 Button { draftNote = note; editingNote = true } label: {
                     Image(systemName: "square.and.pencil").frame(width: 46, height: 44)
-                        .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 11)).foregroundStyle(.mobTint)
+                        .raisedSurface(RoundedRectangle(cornerRadius: 11), .nested).foregroundStyle(.mobTint)
                 }.buttonStyle(.plain)
                 Button { clear() } label: {
                     Image(systemName: "trash").frame(width: 46, height: 44)
-                        .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 11)).foregroundStyle(.red)
+                        .raisedSurface(RoundedRectangle(cornerRadius: 11), .nested).foregroundStyle(.red)
                 }.buttonStyle(.plain)
             }
         }
         .padding(16)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius))
     }
 
     private var errorCard: some View {
@@ -331,7 +331,7 @@ private struct StatCard: View {
             Text(label).font(.caption2).foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 16)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius))
     }
 }
 
@@ -344,6 +344,6 @@ private struct EmptyStateCard: View {
             Text(message).font(.footnote).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 30)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius))
     }
 }

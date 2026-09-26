@@ -137,7 +137,7 @@ struct CVBuilderView: View {
                             Label("Adapter mon CV à une offre", systemImage: "infinity")
                                 .frame(maxWidth: .infinity).padding(.vertical, 12)
                         }
-                        .buttonStyle(.bordered).tint(.careerTint)
+                        .buttonStyle(LifeOSGlassButtonStyle()).tint(.careerTint)
                         .disabled(summary.isEmpty && experience.isEmpty)
                     } else {
                         Text("Ajoute une clé dans Profil › Coach pour adapter automatiquement ton CV à une offre.")
@@ -300,7 +300,7 @@ struct SkillGapEditor: View {
             Form {
                 TextField("Poste cible (ex: Lead iOS)", text: $role)
                 if !existingRoles.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) { HStack { ForEach(existingRoles, id: \.self) { r in Button(r) { role = r }.buttonStyle(.bordered).tint(.careerTint).font(.caption) } } }
+                    ScrollView(.horizontal, showsIndicators: false) { HStack { ForEach(existingRoles, id: \.self) { r in Button(r) { role = r }.buttonStyle(LifeOSGlassButtonStyle()).tint(.careerTint).font(.caption) } } }
                 }
                 TextField("Compétence", text: $skill)
                 Toggle("Déjà acquise", isOn: $acquired)
@@ -383,7 +383,7 @@ struct MockInterviewView: View {
                     Button(showAnswer ? "Masquer le conseil" : "Voir le conseil") {
                         withAnimation { showAnswer.toggle() }
                     }
-                    .buttonStyle(.bordered).tint(.careerTint)
+                    .buttonStyle(LifeOSGlassButtonStyle()).tint(.careerTint)
 
                     answerCard
 
@@ -427,7 +427,7 @@ struct MockInterviewView: View {
                         Text(busy ? "Analyse…" : "Analyser ma réponse")
                     }.frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent).tint(.careerTint)
+                .buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.careerTint)
                 .disabled(busy || !longEnough)
 
                 if !longEnough && !myAnswer.isEmpty {
@@ -570,7 +570,7 @@ struct JobMatchView: View {
                     VStack(spacing: 10) {
                         Image(systemName: "wifi.exclamationmark").font(.largeTitle).foregroundStyle(.secondary)
                         Text(errorText).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                        Button("Réessayer") { Task { await load() } }.buttonStyle(.borderedProminent).tint(.careerTint)
+                        Button("Réessayer") { Task { await load() } }.buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.careerTint)
                     }.padding(30)
                     Spacer()
                 } else {
@@ -598,7 +598,7 @@ struct JobMatchView: View {
                     .textInputAutocapitalization(.never).autocorrectionDisabled()
                 if !query.isEmpty { Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }.buttonStyle(.plain).accessibilityLabel("Effacer la recherche") }
             }
-            .padding(10).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .padding(10).raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous))
             Toggle("Télétravail uniquement", isOn: $remoteOnly).font(.subheadline).tint(.careerTint)
             if !mySkills.isEmpty {
                 Text("★ = correspond à tes compétences suivies").font(.caption2).foregroundStyle(.secondary)
@@ -642,15 +642,15 @@ struct JobMatchView: View {
             HStack(spacing: 10) {
                 Button { if let u = URL(string: job.url) { openURL(u) } } label: {
                     Label("Voir l'offre", systemImage: "arrow.up.right.square").font(.subheadline.weight(.semibold))
-                }.buttonStyle(.borderedProminent).tint(.careerTint)
+                }.buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.careerTint)
                 Button { track(job) } label: {
                     Label("Suivre", systemImage: "tray.and.arrow.down").font(.subheadline)
-                }.buttonStyle(.bordered).tint(.careerTint)
+                }.buttonStyle(LifeOSGlassButtonStyle()).tint(.careerTint)
             }
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 
     private func track(_ job: JobPosting) {

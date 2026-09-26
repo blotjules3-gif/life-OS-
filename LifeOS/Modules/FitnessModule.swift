@@ -52,7 +52,7 @@ struct StepsView: View {
                             } label: {
                                 Label("Autoriser Apple Santé", systemImage: "heart.fill")
                             }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(LifeOSGlassButtonStyle(prominent: true))
 
                             // iOS ne redemande jamais une permission refusee:
                             // sans ce lien l'utilisateur est bloque pour de bon.
@@ -101,7 +101,7 @@ struct StrengthView: View {
                                         Button { selectedExercise = e } label: {
                                             Text(e).font(.caption.bold())
                                                 .padding(.horizontal, 12).padding(.vertical, 7)
-                                                .background((e == (selectedExercise ?? exercises.first)) ? AnyShapeStyle(Color.fitTint) : Theme.cardFill, in: Capsule())
+                                                .background((e == (selectedExercise ?? exercises.first)) ? AnyShapeStyle(Color.fitTint) : AnyShapeStyle(Color.clear), in: Capsule()).raisedSurface(Capsule())
                                                 .foregroundStyle((e == (selectedExercise ?? exercises.first)) ? .white : Theme.textSecondary)
                                         }
                                     }
@@ -181,7 +181,7 @@ struct WorkoutEditor: View {
                     if !knownExercises.isEmpty {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack { ForEach(knownExercises, id: \.self) { e in
-                                Button(e) { exercise = e }.buttonStyle(.bordered).tint(.fitTint).font(.caption)
+                                Button(e) { exercise = e }.buttonStyle(LifeOSGlassButtonStyle()).tint(.fitTint).font(.caption)
                             } }
                         }
                     }

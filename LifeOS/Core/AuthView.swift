@@ -175,8 +175,7 @@ struct AuthView: View {
                         .padding(.vertical, 10)
                         .background {
                             if mode == m {
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(Theme.cardFill)
+                                RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.clear).raisedSurface(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                     .shadow(color: Color.black.opacity(0.1), radius: 4, y: 2)
                             }
                         }
@@ -227,7 +226,7 @@ struct AuthView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
-                .background(Theme.cardFill)
+                .raisedSurface(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .stroke(Theme.stroke, lineWidth: 1)
@@ -252,7 +251,7 @@ struct AuthView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
-                .background(Theme.cardFill)
+                .raisedSurface(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .stroke(Theme.stroke, lineWidth: 1)
@@ -332,11 +331,11 @@ struct AuthView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(Theme.cardFill)
+            .raisedSurface(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(focusedField == .password ? Color.accentColor : Theme.stroke, lineWidth: focusedField == .password ? 1.5 : 1)
+                    .stroke(focusedField == .password ? Color.accentColor : Color.clear, lineWidth: focusedField == .password ? 1.5 : 1)
             )
 
             if mode == .signup {
@@ -353,11 +352,11 @@ struct AuthView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
-                .background(Theme.cardFill)
+                .raisedSurface(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(focusedField == .confirmPassword ? Color.accentColor : Theme.stroke, lineWidth: focusedField == .confirmPassword ? 1.5 : 1)
+                        .stroke(focusedField == .confirmPassword ? Color.accentColor : Color.clear, lineWidth: focusedField == .confirmPassword ? 1.5 : 1)
                 )
             }
 
@@ -399,11 +398,11 @@ struct AuthView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(Theme.cardFill)
+        .raisedSurface(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(focusedField == field ? Color.accentColor : Theme.stroke, lineWidth: focusedField == field ? 1.5 : 1)
+                .stroke(focusedField == field ? Color.accentColor : Color.clear, lineWidth: focusedField == field ? 1.5 : 1)
         )
     }
 
@@ -474,8 +473,7 @@ struct AuthView: View {
                     ForEach(0..<6, id: \.self) { index in
                         let char = characterAt(index: index)
                         ZStack {
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Theme.cardFill)
+                            RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.clear).raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                 .frame(height: 56)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)

@@ -60,8 +60,7 @@ struct CoachUpgradeBanner: View {
         }
         .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Theme.cardFill)
+            RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.clear).raisedSurface(RoundedRectangle(cornerRadius: 14, style: .continuous))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)

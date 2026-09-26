@@ -85,8 +85,8 @@ struct LanguagesView: View {
                             Text(p.name).font(.caption2.weight(.medium))
                         }
                         .frame(width: 72, height: 60)
-                        .background(lang == p.id ? Color.learnTint.opacity(0.26) : Theme.card,
-                                    in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+                        .background(lang == p.id ? Color.learnTint.opacity(0.26) : Color.clear,
+                                    in: RoundedRectangle(cornerRadius: Theme.radiusSmall)).raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall))
                         .overlay(RoundedRectangle(cornerRadius: Theme.radiusSmall)
                             .stroke(lang == p.id ? Color.learnTint : .clear, lineWidth: 2))
                         .foregroundStyle(Theme.textPrimary)
@@ -106,7 +106,7 @@ struct LanguagesView: View {
         }
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
     private func stat(_ v: String, _ l: String) -> some View {
         VStack(spacing: 2) {
@@ -127,20 +127,20 @@ struct LanguagesView: View {
                 HStack(spacing: 12) {
                     Button { grade(c, knew: false) } label: {
                         Label("À revoir", systemImage: "arrow.counterclockwise").frame(maxWidth: .infinity)
-                    }.buttonStyle(.bordered).tint(.orange)
+                    }.buttonStyle(LifeOSGlassButtonStyle()).tint(.orange)
                     Button { grade(c, knew: true) } label: {
                         Label("Je savais", systemImage: "checkmark").frame(maxWidth: .infinity)
-                    }.buttonStyle(.borderedProminent).tint(.learnTint)
+                    }.buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.learnTint)
                 }
             } else {
                 Button { withAnimation { revealed = true } } label: {
                     Text("Révéler").frame(maxWidth: .infinity)
-                }.buttonStyle(.borderedProminent).tint(.learnTint)
+                }.buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.learnTint)
             }
         }
         .padding(22)
         .frame(maxWidth: .infinity)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 20))
+        .raisedSurface(RoundedRectangle(cornerRadius: 20))
     }
 
     private var doneCard: some View {
@@ -151,7 +151,7 @@ struct LanguagesView: View {
                 .font(.caption).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
         }
         .padding(28).frame(maxWidth: .infinity)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 20))
+        .raisedSurface(RoundedRectangle(cornerRadius: 20))
     }
 
     // MARK: état (Leitner) encodé en JSON dans @AppStorage

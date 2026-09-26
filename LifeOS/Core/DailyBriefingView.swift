@@ -142,9 +142,8 @@ struct DailyBriefingView: View {
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 12)
                                 .background(
-                                    task.done ? task.color.opacity(0.08) : Theme.card,
-                                    in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
-                                )
+                                    task.done ? task.color.opacity(0.08) : Color.clear,
+                                    in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)).raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                                         .stroke(task.done ? task.color.opacity(0.25) : Color.clear, lineWidth: 1)
@@ -186,7 +185,7 @@ struct DailyBriefingView: View {
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 12)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                                    .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                                 }
                             }
                         }
@@ -354,7 +353,7 @@ struct DailyBriefingView: View {
                 .disabled(sleepQuality == 0 || morningMood == 0 || morningFatigue == 0 || checkinSubmitting)
             }
             .padding(18)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+            .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         }
     }
 
@@ -502,7 +501,7 @@ struct DailyBriefingView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
-                .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
             }
             .buttonStyle(LifeOSPressStyle())
             .transition(.opacity)
@@ -527,7 +526,7 @@ struct DailyBriefingView: View {
                 }
             }
             .padding(14)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous))
         } else if briefingFailed && aiBriefing == nil {
             HStack(spacing: 12) {
                 Image(systemName: "wifi.slash")
@@ -556,7 +555,7 @@ struct DailyBriefingView: View {
                 }
             }
             .padding(14)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous))
         } else if let text = aiBriefing {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: "infinity")
@@ -571,7 +570,7 @@ struct DailyBriefingView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             .padding(14)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .transition(.scale(scale: 0.88, anchor: .top).combined(with: .opacity))
         }
     }
@@ -616,7 +615,7 @@ struct DailyBriefingView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
     }
 
     private func quickActionBtn(icon: String, label: String, color: Color, action: @escaping () -> Void) -> some View {
@@ -627,7 +626,7 @@ struct DailyBriefingView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+            .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
         }
         .buttonStyle(LifeOSPressStyle())
     }

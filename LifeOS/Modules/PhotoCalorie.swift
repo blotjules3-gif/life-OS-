@@ -178,7 +178,7 @@ struct PhotoCalorieView: View {
                     #endif
                 }
                 .frame(maxWidth: .infinity).padding(.vertical, 40)
-                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
+                .raisedSurface(RoundedRectangle(cornerRadius: 16))
                 .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(style: StrokeStyle(lineWidth: 1.5, dash: [6])).foregroundStyle(tint.opacity(0.35)))
             }
         }
@@ -200,7 +200,7 @@ struct PhotoCalorieView: View {
             PhotosPicker(selection: $pickerItem, matching: .images) {
                 Label("Photothèque", systemImage: "photo.on.rectangle")
                     .frame(maxWidth: .infinity).padding(.vertical, 12)
-                    .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 12))
+                    .raisedSurface(RoundedRectangle(cornerRadius: 12), .nested)
                     .foregroundStyle(tint)
             }
             #else
@@ -213,7 +213,7 @@ struct PhotoCalorieView: View {
             PhotosPicker(selection: $pickerItem, matching: .images) {
                 Label(cameraAvailable ? "Galerie" : "Choisir une photo", systemImage: "photo")
                     .frame(maxWidth: .infinity).padding(.vertical, 12)
-                    .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 12)).foregroundStyle(tint)
+                    .raisedSurface(RoundedRectangle(cornerRadius: 12), .nested).foregroundStyle(tint)
             }
             #endif
         }
@@ -226,7 +226,7 @@ struct PhotoCalorieView: View {
                 .font(.footnote).foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+        .padding(16).raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
     private var errorCard: some View {
@@ -268,7 +268,7 @@ struct PhotoCalorieView: View {
                  : "Estimation locale approximative — ajuste les kcal si la portion diffère.")
                 .font(.caption2).foregroundStyle(Theme.textSecondary)
         }
-        .padding(16).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
+        .padding(16).raisedSurface(RoundedRectangle(cornerRadius: 16))
     }
 
     // MARK: - Resultat: une ligne par aliment, tout modifiable
@@ -362,7 +362,7 @@ struct PhotoCalorieView: View {
                 .font(.caption2).foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(16).background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
+        .padding(16).raisedSurface(RoundedRectangle(cornerRadius: 16))
         .sheet(isPresented: $showAddItem) {
             ManualFoodSheet { added in items.append(added) }
         }
@@ -393,7 +393,7 @@ struct PhotoCalorieView: View {
             Stepper("", value: value, in: 0...3000, step: step).labelsHidden()
         }
         .padding(.horizontal, 10).padding(.vertical, 8)
-        .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 10))
+        .raisedSurface(RoundedRectangle(cornerRadius: 10), .nested)
     }
     private func macro(_ l: String, _ v: Double) -> some View {
         VStack(spacing: 1) {

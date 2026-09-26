@@ -390,7 +390,7 @@ struct BubbleCategoriesView: View {
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.primary)
                         .padding(.horizontal, 12).padding(.vertical, 7)
-                        .background(.regularMaterial, in: Capsule())
+                        .raisedSurface(Capsule())
                     }
                 }
                 .padding(.horizontal, 4)
@@ -414,7 +414,7 @@ struct BubbleCategoriesView: View {
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(.primary)
                 .frame(width: 38, height: 38)
-                .background(.regularMaterial, in: Circle())
+                .raisedSurface(Circle())
         }
         .padding(.top, 8)
     }
@@ -430,7 +430,7 @@ struct BubbleCategoriesView: View {
             .foregroundStyle(.secondary)
             .padding(.horizontal, 14).padding(.vertical, 12)
             .frame(maxWidth: .infinity)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .raisedSurface(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.hairline, lineWidth: 0.5))
         }
         .buttonStyle(.plain)
@@ -467,7 +467,7 @@ struct BubbleCategoriesView: View {
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(.primary)
                 .frame(width: 38, height: 38)
-                .background(.regularMaterial, in: Circle())
+                .raisedSurface(Circle())
                 .contentTransition(.symbolEffect(.replace))
         }
         .accessibilityLabel("Changer la disposition")
@@ -802,7 +802,7 @@ struct BubbleCategoriesView: View {
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(Color.primary)
                     .frame(width: 36, height: 36)
-                    .background(.regularMaterial, in: Circle())
+                    .raisedSurface(Circle())
             }
             .accessibilityLabel("Trier les catégories")
 
@@ -811,7 +811,7 @@ struct BubbleCategoriesView: View {
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(Color.primary)
                     .padding(.horizontal, 14).padding(.vertical, 8)
-                    .background(.regularMaterial, in: Capsule())
+                    .raisedSurface(Capsule())
             }
         }
         .padding(.top, Theme.space8).padding(.trailing, Theme.pad)
@@ -924,7 +924,7 @@ struct BubbleCategoriesView: View {
                                 .accessibilityHidden(true)
                         }
                         .padding(.horizontal, 14).padding(.vertical, 12)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
                     .buttonStyle(.plain)
                 }

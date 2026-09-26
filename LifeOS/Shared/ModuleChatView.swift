@@ -143,8 +143,7 @@ struct ModuleChatView: View {
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Theme.cardFill)
+                            RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.clear).raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         )
                         .overlay(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -166,7 +165,7 @@ struct ModuleChatView: View {
                 .lineLimit(1...5)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .raisedSurface(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .focused($inputFocused)
                 .onSubmit { sendMessage() }
 
@@ -310,7 +309,7 @@ private struct MessageBubble: View {
                 ThinkingDots()
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous))
             } else {
                 Text(message.text)
                     .font(.subheadline)

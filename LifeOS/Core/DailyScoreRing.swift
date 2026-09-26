@@ -531,10 +531,19 @@ struct DailyScoreRing: View {
                 Haptics.tap(); withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { selected = day }
             } label: {
                 ZStack {
-                    Circle().fill(isSel ? AnyShapeStyle(Color.primary)
-                                        : AnyShapeStyle(future ? AnyShapeStyle(Color.primary.opacity(0.04)) : AnyShapeStyle(Color.primary.opacity(0.08))))
-                        .overlay(Circle().strokeBorder(today && !isSel ? Color.primary : Color.primary.opacity(0.18),
-                                                       lineWidth: today && !isSel ? 1.5 : 0.8))
+                    // Pastilles de la semaine : elles peignaient un aplat
+                    // `Color.primary.opacity(...)` avec un contour dessine a la main, donc
+                    // elles n'avaient ni l'arete optique ni la matiere du reste de l'app.
+                    // Le jour SELECTIONNE reste un aplat plein : c'est une couleur
+                    // semantique, elle doit rester franche.
+                    if isSel {
+                        Circle().fill(Color.primary)
+                    } else {
+                        Circle().fill(.clear)
+                            .glassControl(Circle())
+                            .opacity(future ? 0.55 : 1.0)
+                            .overlay(today ? Circle().strokeBorder(Color.primary, lineWidth: 1.5) : nil)
+                    }
                     if showScore {
                         Text("\(sc)").font(.system(size: 13, weight: .black)).monospacedDigit()
                             .foregroundStyle(isSel ? (scheme == .dark ? Color.black : Color.white) : Color.primary)

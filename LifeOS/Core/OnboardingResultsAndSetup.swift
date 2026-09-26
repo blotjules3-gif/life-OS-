@@ -137,7 +137,7 @@ struct OnboardingResults: View {
                                 }
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 12)
-                                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                                .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                                 .opacity(isOn ? 1 : 0.6)
                             }
                             .buttonStyle(.plain)
@@ -501,7 +501,7 @@ struct OnboardingModuleSetup: View {
                             }
                             .padding(.horizontal, 14)
                             .padding(.vertical, 12)
-                            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                            .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                             .opacity(on ? 1 : 0.6)
                         }
                         .buttonStyle(.plain)

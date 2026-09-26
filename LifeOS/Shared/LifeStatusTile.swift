@@ -110,8 +110,7 @@ struct LifeStatusTile: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
-                .fill(Theme.cardFill)
+            RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous).fill(Color.clear).raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
         )
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)

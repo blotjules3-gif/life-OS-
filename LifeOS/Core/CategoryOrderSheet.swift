@@ -15,7 +15,7 @@ struct CategoryOrderSheet: View {
                 presetsBar
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
-                    .background(Theme.cardFill)
+                    .raisedSurface(Rectangle())
 
                 Divider()
 

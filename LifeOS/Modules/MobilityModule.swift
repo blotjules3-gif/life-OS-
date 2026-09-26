@@ -75,7 +75,7 @@ struct VehicleCard: View {
             if let date {
                 Text(date, style: .date).font(.subheadline.bold()).foregroundStyle(date < .now ? .red : (date < Calendar.current.date(byAdding: .day, value: 30, to: .now)! ? .orange : Theme.textPrimary))
             } else { Text("—").foregroundStyle(Theme.textSecondary) }
-        }.frame(maxWidth: .infinity, alignment: .leading).padding(10).background(Theme.bg2, in: RoundedRectangle(cornerRadius: 10))
+        }.frame(maxWidth: .infinity, alignment: .leading).padding(10).raisedSurface(RoundedRectangle(cornerRadius: 10), .nested)
     }
 }
 

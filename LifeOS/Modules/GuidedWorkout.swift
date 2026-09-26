@@ -192,7 +192,7 @@ struct GuidedWorkoutView: View {
                     }
                 }
                 .frame(maxWidth: .infinity).padding(.vertical, 20)
-                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .raisedSurface(RoundedRectangle(cornerRadius: 24, style: .continuous))
 
                 // saisie charge + reps
                 HStack(spacing: 12) {
@@ -239,7 +239,7 @@ struct GuidedWorkoutView: View {
             Text(value).font(.system(size: 15, weight: .black)).foregroundStyle(accent ? Color.accentColor : Theme.textPrimary)
         }
         .padding(.horizontal, 14).padding(.vertical, 8)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     private func valueBox(_ label: String, unit: String, text: Binding<String>, step: Double, decimal: Bool) -> some View {
@@ -258,7 +258,7 @@ struct GuidedWorkoutView: View {
             }
         }
         .frame(maxWidth: .infinity).padding(.vertical, 16)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     private func stepBtn(_ icon: String, _ action: @escaping () -> Void) -> some View {
@@ -344,7 +344,7 @@ struct GuidedWorkoutView: View {
             Text(label).font(.system(size: 10, weight: .heavy)).foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 16)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 
     // MARK: Logique

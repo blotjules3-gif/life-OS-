@@ -49,9 +49,11 @@ struct GlassGallery: View {
                             .interactiveGlassIfAvailable()
                     }
                     group("3. composant partage de l'app") {
-                        Text("Nouvelle tâche")
-                            .frame(maxWidth: .infinity).frame(height: 52)
-                            .raisedSurface(Capsule(), .raised)
+                        Button {} label: {
+                            Text("Nouvelle tâche").frame(maxWidth: .infinity)
+                                .applePreviewPill(height: 52)
+                        }
+                        .buttonStyle(.plain)
                     }
                     group("4. panneau verre regular, sans teinte") {
                         Text("Panneau d'information")
@@ -70,7 +72,7 @@ struct GlassGallery: View {
                                 Text("Tuile interieure").font(.system(size: 12))
                                 Text("Bouton")
                                     .padding(.horizontal, 18).frame(height: 38)
-                                    .raisedSurface(Capsule(), .nested)
+                                    .glassControl(Capsule())
                             }
                             .padding(12)
                             .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous), .nested)
@@ -159,7 +161,7 @@ private struct NativeGlassButton: View {
         if #available(iOS 26.0, macCatalyst 26.0, *) {
             Button(title) {}.buttonStyle(.glass)
         } else {
-            Button(title) {}.buttonStyle(.bordered)
+            Button(title) {}.buttonStyle(LifeOSGlassButtonStyle())
         }
     }
 }

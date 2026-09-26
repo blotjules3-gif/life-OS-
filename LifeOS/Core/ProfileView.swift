@@ -437,7 +437,7 @@ struct ProfileView: View {
                     .font(.footnote)
             }
             .padding()
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 20)
@@ -1283,8 +1283,7 @@ struct ProfileView: View {
 
                     // Provider badge in bottom-right corner
                     ZStack {
-                        Circle()
-                            .fill(Theme.cardFill)
+                        Circle().fill(Color.clear).raisedSurface(Circle())
                             .frame(width: 22, height: 22)
                             .shadow(color: .black.opacity(0.12), radius: 2)
 
@@ -1408,8 +1407,7 @@ struct AccountDetailSheet: View {
                             .foregroundStyle(Color.accentColor)
 
                         ZStack {
-                            Circle()
-                                .fill(Theme.cardFill)
+                            Circle().fill(Color.clear).raisedSurface(Circle())
                                 .frame(width: 28, height: 28)
                                 .shadow(color: .black.opacity(0.12), radius: 2)
 
@@ -1494,7 +1492,7 @@ struct AccountDetailSheet: View {
                                     isEditingName = false
                                 }
                                 .font(.caption.bold())
-                                .buttonStyle(.borderedProminent)
+                                .buttonStyle(LifeOSGlassButtonStyle(prominent: true))
                             } else {
                                 Text(name.isEmpty ? userDisplayName : name)
                                     .foregroundStyle(.secondary)

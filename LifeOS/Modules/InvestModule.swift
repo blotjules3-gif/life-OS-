@@ -46,7 +46,7 @@ struct PortfolioView: View {
                         ForEach(holdings) { h in
                             HStack {
                                 VStack(alignment: .leading) {
-                                    HStack { Text(h.symbol).font(.headline).foregroundStyle(Theme.textPrimary); Text(h.kind).font(.caption2).padding(.horizontal,5).padding(.vertical,1).background(Theme.bg2, in: Capsule()).foregroundStyle(Theme.textSecondary) }
+                                    HStack { Text(h.symbol).font(.headline).foregroundStyle(Theme.textPrimary); Text(h.kind).font(.caption2).padding(.horizontal,5).padding(.vertical,1).raisedSurface(Capsule(), .nested).foregroundStyle(Theme.textSecondary) }
                                     Text("\(h.quantity, specifier: "%.4g") × \(h.currentPrice, format: .currency(code: "EUR"))").font(.caption).foregroundStyle(Theme.textSecondary)
                                 }
                                 Spacer()
@@ -321,7 +321,7 @@ struct RealEstateView: View {
                         Label("Coller une annonce", systemImage: "doc.on.clipboard")
                             .frame(maxWidth: .infinity).padding(.vertical, 12)
                     }
-                    .buttonStyle(.bordered).tint(.investTint)
+                    .buttonStyle(LifeOSGlassButtonStyle()).tint(.investTint)
                 }.padding(Theme.pad)
             }
         }

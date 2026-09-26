@@ -43,7 +43,7 @@ struct TodoView: View {
                                     Text(t.title).strikethrough(t.done).foregroundStyle(t.done ? Theme.textSecondary : Theme.textPrimary)
                                     HStack(spacing: 6) {
                                         Text(t.project).font(.caption2).padding(.horizontal,6).padding(.vertical,2)
-                                            .background(Theme.bg2, in: Capsule()).foregroundStyle(Theme.textSecondary)
+                                            .raisedSurface(Capsule(), .nested).foregroundStyle(Theme.textSecondary)
                                         if let d = t.due {
                                             if d < .now && !t.done {
                                                 HStack(spacing: 3) {
@@ -552,7 +552,7 @@ struct HabitRow: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
         .contextMenu {
             Button { duplicate() } label: { Label("Dupliquer", systemImage: "doc.on.doc") }
             Divider()
@@ -641,21 +641,21 @@ struct HabitEditor: View {
                                 selectedDays = Set(1...7)
                             }
                             .font(.system(size: 11, weight: .semibold))
-                            .buttonStyle(.bordered)
+                            .buttonStyle(LifeOSGlassButtonStyle())
                             .tint(selectedDays.count == 7 ? .accentColor : .secondary)
 
                             Button("Semaine") {
                                 selectedDays = [2, 3, 4, 5, 6]
                             }
                             .font(.system(size: 11, weight: .semibold))
-                            .buttonStyle(.bordered)
+                            .buttonStyle(LifeOSGlassButtonStyle())
                             .tint(selectedDays == [2, 3, 4, 5, 6] ? .accentColor : .secondary)
 
                             Button("Week-end") {
                                 selectedDays = [7, 1]
                             }
                             .font(.system(size: 11, weight: .semibold))
-                            .buttonStyle(.bordered)
+                            .buttonStyle(LifeOSGlassButtonStyle())
                             .tint(selectedDays == [7, 1] ? .accentColor : .secondary)
                         }
                         .frame(maxWidth: .infinity, alignment: .center)

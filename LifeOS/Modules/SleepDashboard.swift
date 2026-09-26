@@ -49,7 +49,7 @@ struct SleepDashboardView: View {
                 Image(systemName: "flame.fill").foregroundStyle(Color.accentColor)
                 Text("\(streak)").font(.headline.bold())
             }
-            .padding(.horizontal, 12).padding(.vertical, 7).background(Theme.cardFill, in: Capsule())
+            .padding(.horizontal, 12).padding(.vertical, 7).raisedSurface(Capsule())
         }
     }
 

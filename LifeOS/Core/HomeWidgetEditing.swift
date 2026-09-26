@@ -119,7 +119,7 @@ struct HomeEditBar: View {
                 Image(systemName: "plus")
                     .font(.system(size: 17, weight: .bold))
                     .frame(width: 38, height: 38)
-                    .background(.thinMaterial, in: Circle())
+                    .raisedSurface(Circle())
                     .overlay(alignment: .topTrailing) {
                         if hiddenCount > 0 {
                             Text("\(hiddenCount)")
@@ -134,7 +134,7 @@ struct HomeEditBar: View {
             Button("OK", action: onDone)
                 .font(.system(size: 16, weight: .bold))
                 .padding(.horizontal, 18).padding(.vertical, 9)
-                .background(.thinMaterial, in: Capsule())
+                .raisedSurface(Capsule())
         }
         .foregroundStyle(Theme.textPrimary)
         .transition(.move(edge: .top).combined(with: .opacity))

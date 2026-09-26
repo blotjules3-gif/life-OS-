@@ -188,7 +188,7 @@ struct WakeUpView: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 14)
         }
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .strokeBorder(Theme.hairline, lineWidth: 0.5)
@@ -231,7 +231,7 @@ struct WakeUpView: View {
             }
         }
         .padding(16)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .strokeBorder(Theme.hairline, lineWidth: 0.5)
@@ -293,7 +293,7 @@ struct WakeUpView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 13)
         }
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                 .strokeBorder(Theme.hairline, lineWidth: 0.5)
@@ -379,7 +379,7 @@ struct WakeUpView: View {
                         }
                     }
                 }
-                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
                         .strokeBorder(Theme.hairline, lineWidth: 0.5)

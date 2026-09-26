@@ -125,9 +125,8 @@ struct PrimaryButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(Color.accentColor, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
-            .foregroundStyle(Theme.onAccent)
-            .shadow(color: Color.accentColor.opacity(0.4), radius: 12, y: 5)
+            .foregroundStyle(Theme.textPrimary)
+            .glassControl(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
         }
         .buttonStyle(LifeOSPressStyle())
     }
@@ -161,8 +160,8 @@ struct EmptyState: View {
                 Button(action: action) {
                     Text(actionTitle).font(.system(size: 14, weight: .black)).textCase(.uppercase).kerning(0.5)
                         .padding(.horizontal, 22).padding(.vertical, 12)
-                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
-                        .foregroundStyle(Theme.onAccent)
+                        .glassControl(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                        .foregroundStyle(Theme.textPrimary)
                 }
                 .buttonStyle(LifeOSPressStyle())
                 .padding(.top, 2)

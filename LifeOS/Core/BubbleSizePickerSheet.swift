@@ -227,8 +227,7 @@ private struct SizeCard: View {
     // MARK: Card background & border
 
     @ViewBuilder private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-            .fill(Theme.cardFill)
+        RoundedRectangle(cornerRadius: Theme.radius, style: .continuous).fill(Color.clear).raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 
     @ViewBuilder private var borderStroke: some View {

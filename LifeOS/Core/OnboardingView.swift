@@ -437,7 +437,7 @@ struct OnboardingName: View {
                     .multilineTextAlignment(.center)
                     .padding(.vertical, 16)
                     .padding(.horizontal, 20)
-                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                     .focused($focused)
                     .onSubmit { if canContinue { onNext() } }
                     .submitLabel(.done)
@@ -469,7 +469,7 @@ struct OnboardingName: View {
                                 }
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
-                                .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                                         .stroke(gender == opt.value ? opt.color : Color.clear, lineWidth: 2)
@@ -558,7 +558,7 @@ struct OnboardingHormonalContext: View {
                             }
                             .padding(.horizontal, 14)
                             .padding(.vertical, 12)
-                            .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                            .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                             .overlay(
                                 RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                                     .stroke(hormonalContext == opt.id ? Color(hex: 0xE85D9A) : Color.clear, lineWidth: 1.5)
@@ -787,7 +787,7 @@ struct GoalCard: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 18)
-            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
@@ -881,7 +881,7 @@ struct InterestChip: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
-            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+            .raisedSurface(RoundedRectangle(cornerRadius: 13, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 13, style: .continuous)
                     .stroke(isSelected ? category.tint : Color.clear, lineWidth: 1.5)

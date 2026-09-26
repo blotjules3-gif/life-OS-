@@ -1,4 +1,5 @@
 import XCTest
+import Observation
 @testable import LifeOS
 
 /// Le compte a rebours doit survivre a l'arriere plan et a l'arret du processus.
@@ -11,6 +12,20 @@ import XCTest
 /// persiste, ce qui est justement possible parce que l'autorite est une DATE de fin.
 @MainActor
 final class CountdownEngineTests: XCTestCase {
+
+    func testRunningTimerInvalidatesObservedRemaining() async {
+        let key = "observation-" + UUID().uuidString
+        let engine = CountdownEngine(key: key)
+        engine.start(seconds: 60)
+        let changed = expectation(description: "Visible countdown refreshes")
+        withObservationTracking {
+            _ = engine.remaining
+        } onChange: {
+            changed.fulfill()
+        }
+        await fulfillment(of: [changed], timeout: 4)
+        engine.stop()
+    }
 
     private func clean(_ key: String) {
         UserDefaults.standard.removeObject(forKey: "countdown.\(key)")

@@ -287,9 +287,8 @@ enum Theme {
     /// un contraste WCAG AA (≥ 4.5:1).
     static var onAccent: Color { currentTheme.onAccent }
 
-    /// Remplissage de carte adaptatif Liquid Glass : verre dépoli ultra-fin cristallin.
-    /// À utiliser dans `.background(Theme.cardFill, in: shape)` pour que TOUTES les cartes
-    /// suivent le design Liquid Glass iOS 27.
+    /// Legacy shape fill. Containers and controls use raisedSurface/glassControl.
+    @available(*, deprecated, message: "Use raisedSurface or glassControl for shared glass rendering")
     static var cardFill: AnyShapeStyle {
         // TRANSLUCIDE, pas blanc opaque. C'etait un degrade blanc plein : n'importe quelle
         // carte posee dessus cachait entierement son arriere plan, donc le verre au dessus
@@ -432,29 +431,40 @@ enum LiquidGlass {
         case raised     // bouton, pilule, cercle, ilot d'outils : VERRE natif
         case floating   // carte, barre d'onglets, feuille : VERRE natif
 
-        var isGlass: Bool { self == .raised || self == .floating }
+        /// `.nested` est passe au VERRE lui aussi.
+        ///
+        /// Il rendait un simple voile blanc plat : les lignes de modules et les tuiles
+        /// du bureau n'avaient donc ni arete optique ni matiere, alors que les pilules
+        /// juste au dessus en avaient. C'etait visible d'un coup d'oeil sur la meme page.
+        /// Theo veut la meme matiere sur les boites imbriquees, pas seulement sur les
+        /// boutons. `.inset` reste plat : c'est la pastille d'onglet actif, qu'Apple
+        /// dessine bien en aplat.
+        var isGlass: Bool { self != .inset }
     }
 }
 
-/// Le seul rendu de surface de l'app.
-///
-/// Il utilise le VRAI verre du systeme (`glassEffect`, iOS 26+), pas une imitation.
-/// L'ancienne version peignait un degrade blanc opaque plus un filet plus deux ombres :
-/// ca donnait du plastique blanc epais, ca cachait completement ce qu'il y avait dessous,
-/// et ca ne ressemblait pas aux captures de reference.
-///
-/// Trois choses a ne pas defaire :
-/// 1. **Aucun fond opaque sous le verre.** Le verre a besoin de voir l'arriere plan. Un
-///    `.background(Color.white)` sur un ancetre suffit a tout annuler.
-/// 2. **Aucun filet ni ombre ajoutes par dessus.** `glassEffect` dessine deja son arete
-///    optique et son ombre. En rajouter donne le bord gris epais qu'on veut eviter.
-/// 3. **Le texte reste opaque.** On ne baisse jamais l'opacite de la vue entiere pour
-///    simuler un materiau : ca rend le contenu illisible.
-///
-/// Choix `.regular` plutot que `.clear` : verifie a l'ecran, cote a cote, sur fond neutre
-/// ET sur du contenu colore. `.clear` laisse trop passer et le texte devient dur a lire
-/// sur du contenu charge. `.regular` laisse voir l'arriere plan tout en gardant le
-/// premier plan net, ce qui correspond aux captures.
+/// A restrained inner reflection separates the curved edge from the clear centre.
+/// Shared by cards and controls; it never changes foreground opacity or hit testing.
+private struct GlassEdge<S: Shape>: ViewModifier {
+    let shape: S
+    @Environment(\.colorScheme) private var scheme
+    func body(content: Content) -> some View {
+        content.overlay {
+            shape.stroke(
+                LinearGradient(colors: [
+                    .white.opacity(scheme == .dark ? 0.24 : 0.85),
+                    .white.opacity(0.04),
+                    .white.opacity(scheme == .dark ? 0.10 : 0.65)
+                ], startPoint: .topLeading, endPoint: .bottomTrailing),
+                lineWidth: 0.65
+            )
+            .padding(0.75)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+    }
+}
+
 struct RaisedSurface<S: Shape>: ViewModifier {
     let shape: S
     var level: LiquidGlass.Elevation = .raised
@@ -466,6 +476,7 @@ struct RaisedSurface<S: Shape>: ViewModifier {
     func body(content: Content) -> some View {
         if level.isGlass, !reduceTransparency, #available(iOS 26.0, macCatalyst 26.0, *) {
             content.glassEffect(glassStyle, in: shape)
+                .modifier(GlassEdge(shape: shape))
         } else {
             content
                 .background(fallbackFill, in: shape)
@@ -517,6 +528,7 @@ struct RaisedSurface<S: Shape>: ViewModifier {
 /// interactive juste pour animer sa matiere.
 struct GlassControl: ViewModifier {
     var shape: AnyShape = AnyShape(Capsule())
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.isEnabled) private var isEnabled
@@ -526,12 +538,43 @@ struct GlassControl: ViewModifier {
             if !reduceTransparency, #available(iOS 26.0, macCatalyst 26.0, *) {
                 // `.interactive()` porte l'etat presse. On ne l'active pas quand
                 // l'utilisateur a demande moins d'animation.
-                content.glassEffect(reduceMotion ? .regular : .regular.interactive(), in: shape)
+                content
+                    .glassEffect(reduceMotion ? .regular : .regular.interactive(), in: shape)
+                    .overlay { interiorSheen }
+                    .modifier(GlassEdge(shape: shape))
             } else {
                 content.modifier(RaisedSurface(shape: shape, level: .raised))
             }
         }
         .opacity(isEnabled ? 1 : 0.45)
+    }
+
+    /// Degrade interieur MESURE, pas decoratif.
+    ///
+    /// Releve au pixel sur la reference Apple ("Nouveau document") contre notre bouton,
+    /// meme fond neutre, memes largeurs normalisees :
+    ///   interieur haut -> bas : reference 245 -> 248 (+3), nous 245 -> 246 (+1)
+    ///   approche du liseré    : reference 252, 253, 255 (doux), nous 247, 248, 255 (sec)
+    ///   liseré                : 210 des deux cotes, deja identique
+    ///
+    /// Le verre natif rend donc un interieur plus PLAT que la reference sur un fond sans
+    /// contenu derriere. Ce voile ajoute les ~3 niveaux manquants vers le bas et adoucit
+    /// l'arrivee sur le liseré. Il ne redessine PAS de bord : l'arete optique reste celle
+    /// du systeme, sinon on obtiendrait le double contour qu'on cherche a eviter.
+    @ViewBuilder private var interiorSheen: some View {
+        if colorScheme == .light {
+            shape.fill(
+                LinearGradient(
+                    stops: [
+                        .init(color: .white.opacity(0.0),  location: 0.0),
+                        .init(color: .white.opacity(0.05), location: 0.62),
+                        .init(color: .white.opacity(0.16), location: 1.0)
+                    ],
+                    startPoint: .top, endPoint: .bottom
+                )
+            )
+            .allowsHitTesting(false)
+        }
     }
 }
 
@@ -542,8 +585,7 @@ extension View {
     }
 }
 
-/// Voile pour ce qui est POSE DANS une surface en verre. Jamais de verre ici : deux verres
-/// empiles se brouillent et alourdissent, c'est exactement ce qu'Apple interdit.
+/// Nested containers share the edge treatment with a lighter fill to limit optical stacking.
 struct NestedVeil<S: Shape>: ViewModifier {
     let shape: S
     var strong: Bool = false
@@ -553,7 +595,8 @@ struct NestedVeil<S: Shape>: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(fill, in: shape)
-            .overlay(shape.stroke(LiquidGlass.hairline(colorScheme).opacity(0.7), lineWidth: 0.5))
+            .overlay(shape.stroke(LiquidGlass.hairline(colorScheme).opacity(0.35), lineWidth: 0.5))
+            .modifier(GlassEdge(shape: shape))
     }
 
     private var fill: Color {
@@ -572,7 +615,7 @@ extension View {
         if level.isGlass {
             modifier(RaisedSurface(shape: shape, level: level, tint: tint))
         } else {
-            modifier(NestedVeil(shape: shape, strong: level == .inset))
+            modifier(NestedVeil(shape: shape, strong: true))
         }
     }
 }
@@ -1034,7 +1077,6 @@ struct CardStyle: ViewModifier {
         content
             .padding(padding)
             .liquidGlassCard(cornerRadius: radius)
-            .softElevation(elevated)
     }
 }
 
@@ -1092,5 +1134,21 @@ extension View {
                 .opacity(phase.isIdentity ? 1 : 0.55)
                 .scaleEffect(phase.isIdentity ? 1 : 0.965)
         }
+    }
+}
+
+/// Common replacement for module-local bordered and opaque prominent buttons.
+struct LifeOSGlassButtonStyle: ButtonStyle {
+    var prominent = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    func makeBody(configuration: ButtonStyleConfiguration) -> some View {
+        configuration.label
+            .fontWeight(prominent ? .semibold : .medium)
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .glassControl(Capsule())
+            .contentShape(Capsule())
+            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
     }
 }

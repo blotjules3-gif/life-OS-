@@ -187,7 +187,7 @@ struct FlightTrackerView: View {
                     Text("Ajoute un vol pour voir le compte à rebours et son statut.")
                         .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     Button { showAdd = true } label: { Label("Ajouter un vol", systemImage: "plus") }
-                        .buttonStyle(.borderedProminent).tint(.travelTint)
+                        .buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.travelTint)
                 }.padding(30)
             } else {
                 ScrollView {
@@ -229,7 +229,7 @@ struct FlightTrackerView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+            .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
         }
         .buttonStyle(.plain)
         .contextMenu { Button(role: .destructive) { remove(f) } label: { Label("Supprimer", systemImage: "trash") } }

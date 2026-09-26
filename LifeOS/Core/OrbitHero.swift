@@ -34,7 +34,7 @@ struct OrbitHero: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .strokeBorder(Theme.hairline, lineWidth: 1)

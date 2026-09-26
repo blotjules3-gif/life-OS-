@@ -105,20 +105,12 @@ final class LedgerMigrationTests: XCTestCase {
             configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]))
     }
 
-    override func setUp() {
-        super.setUp()
-        UserDefaults.standard.removeObject(forKey: "ledger.openingBalancesRebuilt.v1")
-    }
-    override func tearDown() {
-        UserDefaults.standard.removeObject(forKey: "ledger.openingBalancesRebuilt.v1")
-        super.tearDown()
-    }
-
     /// Une operation "ancienne" : montant dans l'ancienne colonne, centimes a 0,
     /// rattachement par NOM. Elle doit survivre intacte.
     func testOldTransactionKeepsItsAmount() throws {
         let ctx = try makeContext()
         let acc = Account(name: "Courant", kind: "Courant", balance: 80)
+        acc.openingBalanceMigrationVersion = 0 // legacy stored account
         ctx.insert(acc)
 
         let old = Txn(category: "Courses", account: "Courant", note: "avant maj")
@@ -145,6 +137,7 @@ final class LedgerMigrationTests: XCTestCase {
         let ctx = try makeContext()
         let acc = Account(name: "Épargne", kind: "Épargne", balance: 500)
         acc.openingBalance = 0      // valeur par defaut apres migration de schema
+        acc.openingBalanceMigrationVersion = 0 // legacy stored account
         ctx.insert(acc)
 
         LedgerService.migrateIfNeeded(ctx)
@@ -175,6 +168,7 @@ final class LedgerMigrationTests: XCTestCase {
     func testOrphanTransactionDoesNotBreakMigration() throws {
         let ctx = try makeContext()
         let acc = Account(name: "Courant", kind: "Courant", balance: 100)
+        acc.openingBalanceMigrationVersion = 0 // legacy stored account
         ctx.insert(acc)
         let orphan = Txn(category: "X", account: "Compte supprimé", note: "")
         orphan.amount = -33; orphan.amountCents = 0; orphan.accountID = nil
@@ -192,6 +186,7 @@ final class LedgerMigrationTests: XCTestCase {
     func testMigrationIsIdempotent() throws {
         let ctx = try makeContext()
         let acc = Account(name: "Courant", kind: "Courant", balance: 80)
+        acc.openingBalanceMigrationVersion = 0 // legacy stored account
         ctx.insert(acc)
         let t = Txn(category: "X", account: "Courant", note: "")
         t.amount = -20; t.amountCents = 0; t.accountID = nil
@@ -206,4 +201,32 @@ final class LedgerMigrationTests: XCTestCase {
         XCTAssertEqual(acc.balance, 80, accuracy: 0.0001)
         XCTAssertEqual(t.amountCents, -2000, "la conversion ne doit pas etre appliquee deux fois")
     }
+    func testMigrationRunsIndependentlyForRestoredStores() throws {
+        for _ in 0..<2 {
+            let ctx = try makeContext()
+            let acc = Account(name: "Restored", balance: 80)
+            acc.openingBalance = 0
+            acc.openingBalanceMigrationVersion = 0
+            ctx.insert(acc)
+            let txn = Txn(amount: -20, category: "X", account: acc.name, note: "")
+            ctx.insert(txn)
+            LedgerService.migrateIfNeeded(ctx)
+            try ctx.save()
+            LedgerService.recompute(ctx, account: acc)
+            XCTAssertEqual(acc.balance, 80, accuracy: 0.0001)
+            XCTAssertEqual(acc.openingBalance, 100, accuracy: 0.0001)
+            XCTAssertEqual(acc.openingBalanceMigrationVersion, 1)
+        }
+    }
+
+    func testMigrationDoesNotRebaseNewAccountAfterTransaction() throws {
+        let ctx = try makeContext()
+        let acc = Account(name: "New", balance: 100)
+        ctx.insert(acc)
+        LedgerService.addTransaction(ctx, amount: -20, category: "X", account: acc, note: "")
+        LedgerService.migrateIfNeeded(ctx)
+        XCTAssertEqual(acc.openingBalance, 100, accuracy: 0.0001)
+        XCTAssertEqual(acc.balance, 80, accuracy: 0.0001)
+    }
+
 }

@@ -228,7 +228,7 @@ struct CoachAIProviderView: View {
                 Text("Actif").font(.caption.weight(.semibold)).foregroundStyle(.green)
             } else if vm.appleAvailable {
                 Button("Choisir") { vm.setPreferred(providerID: "apple.intelligence.on-device") }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(LifeOSGlassButtonStyle())
                     .controlSize(.small)
             }
         }
@@ -302,7 +302,7 @@ struct CoachAIProviderView: View {
                 Text("Actif").font(.caption.weight(.semibold)).foregroundStyle(.green)
             } else if hasKey {
                 Button("Choisir") { vm.setPreferred(providerID: slot.providerID) }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(LifeOSGlassButtonStyle())
                     .controlSize(.small)
             }
         }
@@ -334,7 +334,7 @@ struct CoachAIProviderView: View {
                     AIProviderPreference.shared.setPreferredProviderID(config.providerID)
                     vm.reload()
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(LifeOSGlassButtonStyle())
                 .controlSize(.small)
             }
         }

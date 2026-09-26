@@ -618,7 +618,7 @@ struct TabataView: View {
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 40, height: 40)
-                    .background(Color.white.opacity(0.08), in: Circle())
+                    .raisedSurface(Circle())
                     .overlay(Circle().stroke(Color.white.opacity(0.12), lineWidth: 1))
             }
 
@@ -645,7 +645,7 @@ struct TabataView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .background(Color.white.opacity(0.08), in: Capsule())
+                .raisedSurface(Capsule())
                 .overlay(Capsule().stroke(Color.white.opacity(0.12), lineWidth: 1))
             }
 
@@ -662,7 +662,7 @@ struct TabataView: View {
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(soundMuted ? .white.opacity(0.4) : engine.phase.color)
                         .frame(width: 40, height: 40)
-                        .background(Color.white.opacity(0.08), in: Circle())
+                        .raisedSurface(Circle())
                         .overlay(Circle().stroke(Color.white.opacity(0.12), lineWidth: 1))
                 }
 
@@ -674,7 +674,7 @@ struct TabataView: View {
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.white)
                         .frame(width: 40, height: 40)
-                        .background(Color.white.opacity(0.08), in: Circle())
+                        .raisedSurface(Circle())
                         .overlay(Circle().stroke(Color.white.opacity(0.12), lineWidth: 1))
                 }
             }
@@ -744,7 +744,7 @@ struct TabataView: View {
                 .foregroundStyle(.white.opacity(0.75))
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
-                .background(Color.white.opacity(0.06), in: Capsule())
+                .raisedSurface(Capsule())
 
                 Spacer()
 
@@ -766,7 +766,7 @@ struct TabataView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.white.opacity(0.08), lineWidth: 1))
     }
 
@@ -837,7 +837,7 @@ struct TabataView: View {
                 }
                 .padding(.horizontal, 18)
                 .padding(.vertical, 10)
-                .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(engine.phase.color.opacity(0.3), lineWidth: 1))
             } else {
                 HStack(spacing: 10) {
@@ -859,7 +859,7 @@ struct TabataView: View {
                 }
                 .padding(.horizontal, 18)
                 .padding(.vertical, 10)
-                .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Color.white.opacity(0.08), lineWidth: 1))
             }
         }
@@ -982,7 +982,7 @@ struct TabataView: View {
                     .foregroundStyle(.white.opacity(0.75))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color.white.opacity(0.08), in: Capsule())
+                    .raisedSurface(Capsule())
                 }
 
                 Spacer()
@@ -999,7 +999,7 @@ struct TabataView: View {
                     .foregroundStyle(.white.opacity(0.6))
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(Color.white.opacity(0.05), in: Capsule())
+                    .raisedSurface(Capsule())
                 }
 
                 Spacer()
@@ -1016,7 +1016,7 @@ struct TabataView: View {
                     .foregroundStyle(.white.opacity(0.75))
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color.white.opacity(0.08), in: Capsule())
+                    .raisedSurface(Capsule())
                 }
             }
             .padding(.horizontal, 8)
@@ -1036,7 +1036,7 @@ struct TabataView: View {
                             .foregroundStyle(.white.opacity(0.5))
                     }
                     .frame(width: 58, height: 58)
-                    .background(Color.white.opacity(0.08), in: Circle())
+                    .raisedSurface(Circle())
                     .overlay(Circle().stroke(Color.white.opacity(0.12), lineWidth: 1))
                 }
                 .buttonStyle(PressableButtonStyle())
@@ -1085,7 +1085,7 @@ struct TabataView: View {
                             .foregroundStyle(.white.opacity(0.5))
                     }
                     .frame(width: 58, height: 58)
-                    .background(Color.white.opacity(0.08), in: Circle())
+                    .raisedSurface(Circle())
                     .overlay(Circle().stroke(Color.white.opacity(0.12), lineWidth: 1))
                 }
                 .buttonStyle(PressableButtonStyle())
@@ -1126,7 +1126,7 @@ struct TabataView: View {
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(.white.opacity(0.8))
                         .frame(width: 32, height: 32)
-                        .background(Color.white.opacity(0.12), in: Circle())
+                        .raisedSurface(Circle())
                 }
             }
             .padding(.horizontal, 20)
@@ -1187,7 +1187,7 @@ struct TabataView: View {
                         .font(.system(size: 12, weight: .black))
                         .foregroundStyle(.white)
                         .frame(width: 28, height: 28)
-                        .background(Color.white.opacity(0.12), in: Circle())
+                        .raisedSurface(Circle())
                 }
 
                 Text("\(value.wrappedValue)\(unit)")
@@ -1204,13 +1204,13 @@ struct TabataView: View {
                         .font(.system(size: 12, weight: .black))
                         .foregroundStyle(.white)
                         .frame(width: 28, height: 28)
-                        .background(Color.white.opacity(0.12), in: Circle())
+                        .raisedSurface(Circle())
                 }
             }
         }
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity)
-        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.white.opacity(0.08), lineWidth: 1))
     }
 
@@ -1370,7 +1370,7 @@ struct TabataView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .background(Color.white.opacity(0.08), in: Capsule())
+                .raisedSurface(Capsule())
 
                 // Boutons d'action
                 VStack(spacing: 10) {
@@ -1423,7 +1423,7 @@ struct TabataView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
     private func exerciseSymbol(_ name: String) -> String {

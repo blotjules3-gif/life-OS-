@@ -295,11 +295,10 @@ struct MacDesktopMainView: View {
             .padding(.vertical, 8)
             .background {
                 if isSelected {
-                    Capsule()
-                        .fill(Color.primary.opacity(0.10))
-                        .overlay(
-                            Capsule().strokeBorder(Color.primary.opacity(0.18), lineWidth: 0.8)
-                        )
+                    // La ligne selectionnee de la barre laterale etait un aplat gris avec
+                    // un contour dessine a la main : la seule surface du bureau a ne pas
+                    // partager la matiere de l'app.
+                    Color.clear.glassControl(Capsule())
                 }
             }
             .contentShape(Rectangle())
@@ -871,7 +870,7 @@ struct MacDesktopDashboardView: View {
 
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(Color.primary.opacity(isDone ? 0.15 : 0.06))
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .frame(width: 44, height: 44)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)

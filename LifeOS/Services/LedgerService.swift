@@ -122,13 +122,10 @@ enum LedgerService {
         // operations a rattacher. Un compte cree avec 500 EUR et AUCUNE operation aurait
         // garde `openingBalance = 0` (la valeur par defaut), et le premier recalcul
         // aurait ramene son solde a 0. Le solde affiche aujourd'hui fait foi.
-        let flagKey = "ledger.openingBalancesRebuilt.v1"
-        if !UserDefaults.standard.bool(forKey: flagKey) {
-            for a in accounts {
-                let cents = all.filter { $0.accountID == a.id }.reduce(0) { $0 + $1.amountCents }
-                a.openingBalance = a.balance - Double(cents) / 100.0
-            }
-            UserDefaults.standard.set(true, forKey: flagKey)
+        for a in accounts where a.openingBalanceMigrationVersion < 1 {
+            let cents = all.filter { $0.accountID == a.id }.reduce(0) { $0 + $1.amountCents }
+            a.openingBalance = a.balance - Double(cents) / 100.0
+            a.openingBalanceMigrationVersion = 1
         }
 
         if orphans > 0 {

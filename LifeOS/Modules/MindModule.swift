@@ -231,9 +231,9 @@ struct ScreenDetoxView: View {
                             }
                         }.frame(width: 200, height: 200)
                         HStack {
-                            Button("-15") { todayMinutes = max(0, todayMinutes-15) }.buttonStyle(.bordered).tint(.mindTint)
-                            Button("+15 min") { todayMinutes += 15 }.buttonStyle(.borderedProminent).tint(.mindTint)
-                            Button("Reset") { todayMinutes = 0 }.buttonStyle(.bordered).tint(.gray)
+                            Button("-15") { todayMinutes = max(0, todayMinutes-15) }.buttonStyle(LifeOSGlassButtonStyle()).tint(.mindTint)
+                            Button("+15 min") { todayMinutes += 15 }.buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.mindTint)
+                            Button("Reset") { todayMinutes = 0 }.buttonStyle(LifeOSGlassButtonStyle()).tint(.gray)
                         }
                         Stepper("Objectif : \(goalHours)h / jour", value: $goalHours, in: 1...12)
                     }.card()

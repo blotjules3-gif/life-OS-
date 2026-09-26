@@ -199,7 +199,7 @@ struct CoachFirstLaunchSheet: View {
                 }
             }
             .padding(16)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .raisedSurface(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
         .disabled(disabled)
@@ -286,7 +286,7 @@ private struct ProviderQuickPicker: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(14)
             .frame(minHeight: 100, alignment: .topLeading)
-            .background(Theme.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
     }

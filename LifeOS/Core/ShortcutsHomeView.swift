@@ -380,7 +380,7 @@ struct ShortcutsHomeView: View {
                             .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.plain)
-                        .applePreviewPill(height: 52)
+                        .applePreviewPill(height: 48)
 
                         Button {
                             editingShortcuts = true
@@ -395,7 +395,7 @@ struct ShortcutsHomeView: View {
                             .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.plain)
-                        .applePreviewPill(height: 52)
+                        .applePreviewPill(height: 48)
                     }
                     .padding(.horizontal, 2)
                     .staggered(1, appeared: homeAppeared)
@@ -448,7 +448,7 @@ struct ShortcutsHomeView: View {
                             Text("Modifier l'accueil")
                                 .font(.subheadline.weight(.semibold))
                                 .padding(.horizontal, 18).padding(.vertical, 9)
-                                .background(.thinMaterial, in: Capsule())
+                                .raisedSurface(Capsule())
                         }
                         .foregroundStyle(Theme.textPrimary)
                         .frame(maxWidth: .infinity)
@@ -565,7 +565,7 @@ struct ShortcutsHomeView: View {
             .buttonStyle(.plain)
         }
         .padding(18)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .stroke(Color.accentColor.opacity(0.2), lineWidth: 1)
@@ -980,7 +980,7 @@ struct ShortcutsHomeView: View {
                     .foregroundStyle(Theme.textSecondary)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Theme.bg2, in: Capsule())
+                    .raisedSurface(Capsule(), .nested)
                 }
             }
             if !task.recurringDaysRaw.isEmpty {

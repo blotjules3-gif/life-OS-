@@ -63,7 +63,7 @@ struct NotificationSettingsSheet: View {
                                     if granted { ContextualNotifications.shared.reschedule() }
                                 }
                             }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(LifeOSGlassButtonStyle(prominent: true))
                             .controlSize(.small)
                         }
                     }

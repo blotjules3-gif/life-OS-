@@ -221,7 +221,7 @@ struct DataExportSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(LifeOSGlassButtonStyle(prominent: true))
             .padding(.horizontal, 20)
             .padding(.bottom, 16)
         }

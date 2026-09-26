@@ -32,6 +32,8 @@ final class CountdownEngine {
     /// Temps restant fige pendant la pause.
     private var pausedRemaining: Int = 0
     private var finished = false
+    // Invalidate every consumer of remaining/progress, including the HIIT screen.
+    private var displayTick = 0
 
     private var cancellable: AnyCancellable?
 
@@ -42,6 +44,7 @@ final class CountdownEngine {
 
     /// DERIVE de l'horloge. C'est le coeur du correctif.
     var remaining: Int {
+        _ = displayTick
         if let deadline { return max(0, Int(deadline.timeIntervalSinceNow.rounded(.up))) }
         return pausedRemaining
     }
@@ -101,6 +104,7 @@ final class CountdownEngine {
             .autoconnect()
             .sink { [weak self] _ in
                 guard let self else { return }
+                self.displayTick &+= 1
                 // Ne decremente rien : il relit juste l'horloge.
                 if self.isRunning, self.remaining == 0 { self.complete() }
             }

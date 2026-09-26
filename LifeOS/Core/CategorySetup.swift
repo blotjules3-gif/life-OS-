@@ -158,7 +158,7 @@ struct SetupChoice: View {
                             .foregroundStyle(selection == opt ? AnyShapeStyle(accent) : AnyShapeStyle(Color.secondary.opacity(0.4)))
                     }
                     .padding(16)
-                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                         .stroke(selection == opt ? accent : .clear, lineWidth: 2))
                 }
@@ -186,8 +186,8 @@ struct SetupMultiChoice: View {
                     Text(opt).font(.subheadline.weight(.medium))
                         .foregroundStyle(on ? .white : Theme.textPrimary)
                         .frame(maxWidth: .infinity).padding(.vertical, 11).padding(.horizontal, 6)
-                        .background(on ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Theme.card),
-                                   in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .background(on ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Color.clear),
+                                   in: RoundedRectangle(cornerRadius: 12, style: .continuous)).raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
                             .stroke(on ? .clear : Theme.stroke, lineWidth: 1))
                 }
@@ -218,7 +218,7 @@ struct SetupNumber: View {
             }
         }
         .frame(maxWidth: .infinity).padding(.vertical, 24)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18)).padding(.horizontal, 14)
+        .raisedSurface(RoundedRectangle(cornerRadius: 18)).padding(.horizontal, 14)
     }
     private func stepBtn(_ icon: String, _ action: @escaping () -> Void) -> some View {
         Button { action(); Haptics.soft() } label: {
@@ -300,7 +300,7 @@ struct ProfileCompletionCard: View {
             }
         }
         .padding(16)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 }
 
@@ -357,7 +357,7 @@ struct IntakeHubView: View {
                 .font(.caption).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity).padding(20)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radius))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius))
     }
 
     @ViewBuilder private func row(_ c: AppCategory) -> some View {
@@ -380,7 +380,7 @@ struct IntakeHubView: View {
                 }
             }
             .padding(14)
-            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+            .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall))
             .opacity(has ? 1 : 0.5)
         }
         .buttonStyle(.plain).disabled(!has)

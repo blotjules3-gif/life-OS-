@@ -1198,7 +1198,7 @@ struct AIAssistantView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 11)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous)
                 .stroke(Color.primary.opacity(0.06), lineWidth: 1)
@@ -1504,7 +1504,7 @@ struct AIAssistantView: View {
                     .lineLimit(1...5)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: 22, style: .continuous))
                     .focused($inputFocused)
                     .submitLabel(.send)
                     .onSubmit { vm.send() }
@@ -1565,7 +1565,7 @@ struct AIAssistantView: View {
         .foregroundStyle(progress >= 1 ? Color(hex: 0xF1746C) : Color.secondary)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .background(.ultraThinMaterial, in: Capsule())
+        .raisedSurface(Capsule())
         .overlay(Capsule().stroke(Color.secondary.opacity(0.15), lineWidth: 0.5))
         .opacity(1 - progress * 0.3)
     }

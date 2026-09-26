@@ -85,7 +85,7 @@ struct CurrencyConverterView: View {
             }
         }
         .padding()
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18))
+        .raisedSurface(RoundedRectangle(cornerRadius: 18))
     }
 
     private func currencyPicker(_ label: String, selection: Binding<String>) -> some View {
@@ -103,7 +103,7 @@ struct CurrencyConverterView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
-            .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 12))
+            .raisedSurface(RoundedRectangle(cornerRadius: 12), .nested)
             .foregroundStyle(Theme.textPrimary)
         }
     }
@@ -118,7 +118,7 @@ struct CurrencyConverterView: View {
                 .font(.caption).foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 22)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 18))
+        .raisedSurface(RoundedRectangle(cornerRadius: 18))
     }
 
     private var quickTable: some View {
@@ -138,7 +138,7 @@ struct CurrencyConverterView: View {
             }
         }
         .padding()
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: 16))
+        .raisedSurface(RoundedRectangle(cornerRadius: 16))
     }
 
     private func fmt(_ v: Double) -> String {
@@ -233,8 +233,8 @@ struct PhrasebookView: View {
                             Text(l.name).font(.caption2.weight(.medium))
                         }
                         .frame(width: 74, height: 60)
-                        .background(langKey == l.key ? Color.travelTint.opacity(0.26) : Theme.card,
-                                    in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+                        .background(langKey == l.key ? Color.travelTint.opacity(0.26) : Color.clear,
+                                    in: RoundedRectangle(cornerRadius: Theme.radiusSmall)).raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall))
                         .overlay(RoundedRectangle(cornerRadius: Theme.radiusSmall)
                             .stroke(langKey == l.key ? Color.travelTint : .clear, lineWidth: 2))
                         .foregroundStyle(Theme.textPrimary)
@@ -268,7 +268,7 @@ struct PhrasebookView: View {
             }
             .padding(14)
             .frame(maxWidth: .infinity)
-            .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+            .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall))
         }
         .buttonStyle(.plain)
     }

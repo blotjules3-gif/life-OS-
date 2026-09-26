@@ -128,7 +128,7 @@ private struct TranslatorScreen: View {
                 Image(systemName: "chevron.down").font(.caption2)
             }
             .frame(maxWidth: .infinity).padding(.vertical, 10)
-            .background(Theme.bg2, in: RoundedRectangle(cornerRadius: 12)).foregroundStyle(Theme.textPrimary)
+            .raisedSurface(RoundedRectangle(cornerRadius: 12), .nested).foregroundStyle(Theme.textPrimary)
         }
     }
 
@@ -142,7 +142,7 @@ private struct TranslatorScreen: View {
                 .scrollContentBackground(.hidden)
                 .padding(.horizontal, 10).padding(.vertical, 6).frame(minHeight: 120)
         }
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
     private var translateButton: some View {
@@ -173,7 +173,7 @@ private struct TranslatorScreen: View {
                 .frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
         }
         .padding(16).frame(maxWidth: .infinity)
-        .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 }
 #endif

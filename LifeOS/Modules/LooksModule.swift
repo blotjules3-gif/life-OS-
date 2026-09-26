@@ -236,8 +236,8 @@ struct SkinProfileSetupView: View {
                             }
                         }
                         .padding(14)
-                        .background(selectedType == t ? Color.looksTint.opacity(0.1) : Theme.card,
-                                    in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .background(selectedType == t ? Color.looksTint.opacity(0.1) : Color.clear,
+                                    in: RoundedRectangle(cornerRadius: 12, style: .continuous)).raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }.buttonStyle(.plain)
                 }
             }.padding(.horizontal, 24)
@@ -262,8 +262,8 @@ struct SkinProfileSetupView: View {
                         Text(c.capitalized).font(.subheadline.weight(.medium))
                             .foregroundStyle(concerns.contains(c) ? Color.looksTint : .primary)
                             .frame(maxWidth: .infinity).padding(.vertical, 12)
-                            .background(concerns.contains(c) ? Color.looksTint.opacity(0.20) : Theme.card,
-                                        in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .background(concerns.contains(c) ? Color.looksTint.opacity(0.20) : Color.clear,
+                                        in: RoundedRectangle(cornerRadius: 12, style: .continuous)).raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
                                 .stroke(concerns.contains(c) ? Color.looksTint.opacity(0.4) : Color.clear, lineWidth: 1.5))
                     }.buttonStyle(.plain)
@@ -286,11 +286,11 @@ struct SkinProfileSetupView: View {
             VStack(spacing: 10) {
                 Button { hasTreatment = false } label: {
                     HStack { Text("Non, aucun traitement"); Spacer(); if !hasTreatment { Image(systemName: "checkmark.circle.fill").foregroundStyle(.looksTint) } }
-                        .padding(14).background(!hasTreatment ? AnyShapeStyle(Color.looksTint.opacity(0.1)) : Theme.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .padding(14).background(!hasTreatment ? AnyShapeStyle(Color.looksTint.opacity(0.1)) : AnyShapeStyle(Color.clear), in: RoundedRectangle(cornerRadius: 12, style: .continuous)).raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }.buttonStyle(.plain)
                 Button { hasTreatment = true } label: {
                     HStack { Text("Oui, j'ai un traitement"); Spacer(); if hasTreatment { Image(systemName: "checkmark.circle.fill").foregroundStyle(.looksTint) } }
-                        .padding(14).background(hasTreatment ? AnyShapeStyle(Color.looksTint.opacity(0.1)) : Theme.cardFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .padding(14).background(hasTreatment ? AnyShapeStyle(Color.looksTint.opacity(0.1)) : AnyShapeStyle(Color.clear), in: RoundedRectangle(cornerRadius: 12, style: .continuous)).raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }.buttonStyle(.plain)
                 if hasTreatment {
                     TextField("Nom du traitement (ex: tretinoin 0,025%)", text: $treatmentText)

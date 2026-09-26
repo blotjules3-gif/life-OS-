@@ -72,6 +72,10 @@ struct LifeOSApp: App {
             }
             .preferredColorScheme(appTheme.scheme)
             .tint(appTheme.accent)
+            // Sans ca, la barre d'outils et le titre de fenetre sur Mac gardent
+            // l'apparence du systeme pendant que le contenu suit le theme de l'app :
+            // accent blanc du theme sombre sur une barre claire = glyphes invisibles.
+            .syncWindowAppearance(appTheme.scheme)
             .task {
                 appLock.lockIfNeeded()
                 await buildContainer()
@@ -150,6 +154,11 @@ struct LifeOSApp: App {
             // Pas de demande de permission pendant l'onboarding : elle est faite
             // en contexte (pré-prompt) juste après la création des habitudes.
             guard onboardingDone else { return }
+            #if DEBUG
+            // Visual QA must not be dimmed by a system notification permission dialog.
+            if ProcessInfo.processInfo.arguments.contains("-glassGallery") ||
+                ProcessInfo.processInfo.arguments.contains("-skipPermissionPrompts") { return }
+            #endif
             Task.detached(priority: .background) {
                 let granted = await NotificationManager.shared.requestAuthorization()
                 if granted {

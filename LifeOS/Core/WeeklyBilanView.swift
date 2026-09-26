@@ -117,7 +117,7 @@ struct WeeklyBilanView: View {
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity)
-                    .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
 
                     // Bilan IA
                     aiBilanCard
@@ -171,7 +171,7 @@ struct WeeklyBilanView: View {
                             }
                         }
                         .padding(16)
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                     }
 
                     // Habitudes détaillées
@@ -187,7 +187,7 @@ struct WeeklyBilanView: View {
                                 habitBilanRow(habit, isLast: idx == activeHabits.count - 1)
                             }
                         }
-                        .background(Theme.card, in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+                        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
                     }
 
                     if perfectDays > 0 {
@@ -334,7 +334,7 @@ struct WeeklyBilanView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity)
-        .background(Theme.card, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     private func habitBilanRow(_ habit: Habit, isLast: Bool) -> some View {
@@ -438,7 +438,7 @@ private struct WeeklyShareCard: View {
                 }
                 .padding(.vertical, 18)
                 .padding(.horizontal, 24)
-                .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .raisedSurface(RoundedRectangle(cornerRadius: 20, style: .continuous))
 
                 HStack(spacing: 10) {
                     if perfectDays > 0 {
@@ -481,6 +481,6 @@ private struct WeeklyShareCard: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 9)
-        .background(Color.white.opacity(0.07), in: Capsule())
+        .raisedSurface(Capsule())
     }
 }

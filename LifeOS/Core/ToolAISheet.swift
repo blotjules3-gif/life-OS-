@@ -35,7 +35,7 @@ struct ToolAISheet: View {
                             .padding(.horizontal, 10).padding(.vertical, 6)
                             .frame(minHeight: 110)
                     }
-                    .background(Theme.cardFill, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+                    .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall))
 
                     if let result {
                         Label(result, systemImage: "checkmark.circle.fill")

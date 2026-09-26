@@ -153,8 +153,7 @@ private struct QuickStartRow: View {
     }
 
     private var rowBackground: some View {
-        RoundedRectangle(cornerRadius: 14)
-            .fill(Theme.cardFill)
+        RoundedRectangle(cornerRadius: 14).fill(Color.clear).raisedSurface(RoundedRectangle(cornerRadius: 14))
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
                     .stroke(isSelected ? goal.color : Color.clear, lineWidth: 2)
