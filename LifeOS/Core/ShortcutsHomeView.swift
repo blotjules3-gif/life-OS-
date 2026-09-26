@@ -270,7 +270,10 @@ struct ShortcutsHomeView: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
 
-                HStack(spacing: 8) {
+                // FlowLayout et pas HStack : quatre puces forcees sur une rangee
+                // coupaient les libelles en plein mot ("Calori / es"). La ligne casse
+                // maintenant ENTRE les puces.
+                FlowLayout(spacing: 8, lineSpacing: 8) {
                     ForEach(morningModuleChips, id: \.label) { chip in
                         HStack(spacing: 5) {
                             Image(systemName: chip.icon)
@@ -279,11 +282,12 @@ struct ShortcutsHomeView: View {
                             Text(chip.label)
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
                         }
                         .padding(.horizontal, 9)
                         .padding(.vertical, 5)
-                        .background(chip.color.opacity(0.26),
-                                     in: Capsule())
+                        .background(chip.color.opacity(0.26), in: Capsule())
                     }
                 }
             }

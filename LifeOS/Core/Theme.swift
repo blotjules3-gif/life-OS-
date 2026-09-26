@@ -505,6 +505,43 @@ struct RaisedSurface<S: Shape>: ViewModifier {
     private var shadowY: CGFloat { level.isGlass ? (level == .floating ? 4 : 2) : 0 }
 }
 
+/// Bouton en verre, avec un vrai retour au toucher.
+///
+/// Pourquoi ca ne peut pas rester un `Text` + `glassEffect` : mesure au banc d'essai
+/// (`GlassGallery`, variantes 1 a 3), le style natif rend une arete plus douce que notre
+/// helper sur fond plat, et surtout il apporte l'etat presse, desactive et le focus.
+/// `.interactive()` fait reagir le MATERIAU lui meme a l'appui, ce qu'une animation
+/// d'echelle ne sait pas imiter.
+///
+/// N'appliquer QUE sur des controles. Une carte d'information ne doit pas devenir
+/// interactive juste pour animer sa matiere.
+struct GlassControl: ViewModifier {
+    var shape: AnyShape = AnyShape(Capsule())
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.isEnabled) private var isEnabled
+
+    func body(content: Content) -> some View {
+        Group {
+            if !reduceTransparency, #available(iOS 26.0, macCatalyst 26.0, *) {
+                // `.interactive()` porte l'etat presse. On ne l'active pas quand
+                // l'utilisateur a demande moins d'animation.
+                content.glassEffect(reduceMotion ? .regular : .regular.interactive(), in: shape)
+            } else {
+                content.modifier(RaisedSurface(shape: shape, level: .raised))
+            }
+        }
+        .opacity(isEnabled ? 1 : 0.45)
+    }
+}
+
+extension View {
+    /// Surface d'un controle interactif (bouton, pilule cliquable, cercle d'action).
+    func glassControl<S: Shape>(_ shape: S = Capsule()) -> some View {
+        modifier(GlassControl(shape: AnyShape(shape)))
+    }
+}
+
 /// Voile pour ce qui est POSE DANS une surface en verre. Jamais de verre ici : deux verres
 /// empiles se brouillent et alourdissent, c'est exactement ce qu'Apple interdit.
 struct NestedVeil<S: Shape>: ViewModifier {

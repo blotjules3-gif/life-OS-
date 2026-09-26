@@ -82,6 +82,7 @@ struct MainTabView: View {
 
     var body: some View {
         #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-glassGallery") { return AnyView(GlassGallery()) }
         if Self.forceDesktop { return AnyView(MacDesktopMainView()) }
         #endif
         return AnyView(realBody)
