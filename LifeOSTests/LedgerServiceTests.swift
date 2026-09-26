@@ -89,3 +89,121 @@ final class LedgerServiceTests: XCTestCase {
         XCTAssertTrue(left.isEmpty, "les operations du compte supprime doivent partir avec lui")
     }
 }
+
+/// Migration depuis un magasin d'AVANT le passage aux centimes.
+///
+/// C'est le scenario bloquant signale par la revue, et c'etait un vrai defaut de ma
+/// part : `amount` etait devenu une propriete CALCULEE, donc SwiftData supprimait la
+/// colonne et toutes les operations deja enregistrees repartaient a 0.
+@MainActor
+final class LedgerMigrationTests: XCTestCase {
+
+    private func makeContext() throws -> ModelContext {
+        let schema = Schema([Account.self, Txn.self])
+        return ModelContext(try ModelContainer(
+            for: schema,
+            configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)]))
+    }
+
+    override func setUp() {
+        super.setUp()
+        UserDefaults.standard.removeObject(forKey: "ledger.openingBalancesRebuilt.v1")
+    }
+    override func tearDown() {
+        UserDefaults.standard.removeObject(forKey: "ledger.openingBalancesRebuilt.v1")
+        super.tearDown()
+    }
+
+    /// Une operation "ancienne" : montant dans l'ancienne colonne, centimes a 0,
+    /// rattachement par NOM. Elle doit survivre intacte.
+    func testOldTransactionKeepsItsAmount() throws {
+        let ctx = try makeContext()
+        let acc = Account(name: "Courant", kind: "Courant", balance: 80)
+        ctx.insert(acc)
+
+        let old = Txn(category: "Courses", account: "Courant", note: "avant maj")
+        old.amount = -20            // ancienne colonne uniquement
+        old.amountCents = 0         // comme apres une mise a jour de schema
+        old.accountID = nil
+        ctx.insert(old)
+
+        LedgerService.migrateIfNeeded(ctx)
+
+        XCTAssertEqual(old.amountCents, -2000, "le montant doit etre converti, pas perdu")
+        XCTAssertEqual(old.accountID, acc.id, "rattachement par identifiant stable")
+        XCTAssertEqual(acc.openingBalance, 100, accuracy: 0.0001,
+                       "80 affiche - (-20) d'operations = 100 d'ouverture")
+        LedgerService.recompute(ctx, account: acc)
+        XCTAssertEqual(acc.balance, 80, accuracy: 0.0001,
+                       "le solde affiche a l'utilisateur ne doit pas changer")
+    }
+
+    /// Le cas que la revue a signale nommement : compte avec un solde et AUCUNE
+    /// operation. L'ancienne version sortait tot et laissait `openingBalance` a 0,
+    /// donc le premier recalcul ramenait le solde a zero.
+    func testAccountWithBalanceButNoTransactionsIsNotWiped() throws {
+        let ctx = try makeContext()
+        let acc = Account(name: "Épargne", kind: "Épargne", balance: 500)
+        acc.openingBalance = 0      // valeur par defaut apres migration de schema
+        ctx.insert(acc)
+
+        LedgerService.migrateIfNeeded(ctx)
+        LedgerService.recompute(ctx, account: acc)
+
+        XCTAssertEqual(acc.balance, 500, accuracy: 0.0001, "500 EUR ne doivent pas disparaitre")
+        XCTAssertEqual(acc.openingBalance, 500, accuracy: 0.0001)
+    }
+
+    /// Deux comptes portant le meme nom : le rattachement doit etre deterministe
+    /// plutot que reparti au hasard.
+    func testDuplicateAccountNamesAreDeterministic() throws {
+        let ctx = try makeContext()
+        let a1 = Account(name: "Courant", kind: "Courant", balance: 100)
+        let a2 = Account(name: "Courant", kind: "Cash", balance: 50)
+        ctx.insert(a1); ctx.insert(a2)
+        let t = Txn(category: "X", account: "Courant", note: "")
+        t.amount = -10; t.amountCents = 0; t.accountID = nil
+        ctx.insert(t)
+
+        LedgerService.migrateIfNeeded(ctx)
+        XCTAssertTrue(t.accountID == a1.id || t.accountID == a2.id)
+        XCTAssertNotNil(t.accountID, "l'operation doit etre rattachee a un seul compte")
+    }
+
+    /// Une operation dont le compte n'existe plus ne doit pas faire echouer la
+    /// migration ni corrompre les autres soldes.
+    func testOrphanTransactionDoesNotBreakMigration() throws {
+        let ctx = try makeContext()
+        let acc = Account(name: "Courant", kind: "Courant", balance: 100)
+        ctx.insert(acc)
+        let orphan = Txn(category: "X", account: "Compte supprimé", note: "")
+        orphan.amount = -33; orphan.amountCents = 0; orphan.accountID = nil
+        ctx.insert(orphan)
+
+        LedgerService.migrateIfNeeded(ctx)
+        XCTAssertNil(orphan.accountID, "aucun compte ne correspond")
+        XCTAssertEqual(orphan.amountCents, -3300, "son montant est quand meme converti")
+        LedgerService.recompute(ctx, account: acc)
+        XCTAssertEqual(acc.balance, 100, accuracy: 0.0001,
+                       "une operation orpheline ne doit pas entrer dans ce solde")
+    }
+
+    /// La migration ne doit pas etre destructrice si elle tourne deux fois.
+    func testMigrationIsIdempotent() throws {
+        let ctx = try makeContext()
+        let acc = Account(name: "Courant", kind: "Courant", balance: 80)
+        ctx.insert(acc)
+        let t = Txn(category: "X", account: "Courant", note: "")
+        t.amount = -20; t.amountCents = 0; t.accountID = nil
+        ctx.insert(t)
+
+        LedgerService.migrateIfNeeded(ctx)
+        let opening = acc.openingBalance
+        LedgerService.migrateIfNeeded(ctx)
+        LedgerService.recompute(ctx, account: acc)
+
+        XCTAssertEqual(acc.openingBalance, opening, accuracy: 0.0001, "pas de derive au second passage")
+        XCTAssertEqual(acc.balance, 80, accuracy: 0.0001)
+        XCTAssertEqual(t.amountCents, -2000, "la conversion ne doit pas etre appliquee deux fois")
+    }
+}

@@ -246,7 +246,22 @@ struct AddAnythingSheet: View {
         case .mood:
             ctx.insert(MoodEntry(score: score, note: noteBody))
         case .expense:
-            ctx.insert(Txn(amount: Double(amount) ?? 0, category: txnCategory, note: n))
+            // Passe par LedgerService comme l'ecran Finance. L'ajout rapide inserait un
+            // `Txn` directement : sans identifiant de compte et sans recalcul, la
+            // depense n'apparaissait pas dans le solde et attendait la migration du
+            // prochain demarrage pour etre rattachee.
+            let value = Double(amount.replacingOccurrences(of: ",", with: ".")) ?? 0
+            let accounts = (try? ctx.fetch(FetchDescriptor<Account>())) ?? []
+            if let target = accounts.first {
+                LedgerService.addTransaction(ctx, amount: value, category: txnCategory,
+                                             account: target, note: n)
+            } else {
+                // Aucun compte encore cree : on conserve l'operation plutot que de la
+                // perdre, elle sera rattachee des qu'un compte existe.
+                let t = Txn(category: txnCategory, note: n)
+                t.setAmount(value)
+                ctx.insert(t)
+            }
         case .subscription:
             ctx.insert(Subscription(name: n, amount: Double(amount) ?? 0, cycle: subCycle, nextDate: whenDate))
         case .event:

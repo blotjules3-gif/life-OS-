@@ -116,17 +116,39 @@ struct PowerNapView: View {
                 HStack(spacing: 14) {
                     if !started {
                         PrimaryButton(title: "Démarrer la sieste", icon: "play.fill", tint: .sleepTint) {
-                            engine.onFinish = { NotificationManager.shared.scheduleAfter(id: "nap", title: "Réveil", body: "Ta sieste est terminée, debout en douceur !", seconds: 1) }
                             engine.start(seconds: minutes * 60)
+                            // Le reveil est programme MAINTENANT, pour l'heure de fin.
+                            //
+                            // Avant, il etait programme dans `onFinish`, c'est a dire au
+                            // moment ou le compte a rebours arrivait a zero. Or ce rappel
+                            // ne s'execute que si l'app tourne encore. Telephone
+                            // verrouille ou app fermee, personne n'etait reveille. Une
+                            // app suspendue ne peut pas organiser son propre reveil a
+                            // l'instant voulu : la notification doit exister avant.
+                            NotificationManager.shared.scheduleAfter(
+                                id: "nap", title: "Réveil",
+                                body: "Ta sieste est terminée, debout en douceur !",
+                                seconds: TimeInterval(minutes * 60))
                             started = true
                         }
                     } else {
                         PrimaryButton(title: engine.isRunning ? "Pause" : "Reprendre",
                                       icon: engine.isRunning ? "pause.fill" : "play.fill", tint: .sleepTint) {
-                            engine.isRunning ? engine.pause() : engine.resume()
+                            if engine.isRunning {
+                                engine.pause()
+                                // En pause, l'heure de fin n'a plus de sens.
+                                NotificationManager.shared.cancel(id: "nap")
+                            } else {
+                                engine.resume()
+                                NotificationManager.shared.scheduleAfter(
+                                    id: "nap", title: "Réveil",
+                                    body: "Ta sieste est terminée, debout en douceur !",
+                                    seconds: TimeInterval(max(1, engine.remaining)))
+                            }
                         }
                         PrimaryButton(title: "Stop", icon: "stop.fill", tint: Theme.bg2) {
                             engine.stop(); started = false
+                            NotificationManager.shared.cancel(id: "nap")
                         }
                     }
                 }
@@ -135,6 +157,13 @@ struct PowerNapView: View {
             .padding()
         }
         .navigationTitle("Power nap").navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            // L'ecran doit REPRENDRE la session persistee. Sans ca, revenir sur l'ecran
+            // pendant une sieste en cours affichait "Demarrer la sieste" alors que le
+            // compte a rebours tournait toujours, et le bouton en relancait une seconde.
+            started = engine.isRunning || engine.remaining > 0
+            engine.refresh()
+        }
     }
 }
 

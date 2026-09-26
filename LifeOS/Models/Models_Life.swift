@@ -224,15 +224,30 @@ enum MemoryRetention: String {
     var account: String
     var note: String
 
-    var amount: Double {
-        get { Double(amountCents) / 100.0 }
-        set { amountCents = Int((newValue * 100).rounded()) }
+    /// ANCIENNE colonne, conservee VOLONTAIREMENT.
+    ///
+    /// Elle avait ete remplacee par une propriete calculee. Consequence que je n'avais
+    /// pas vue : SwiftData supprime alors la colonne, et toutes les operations deja
+    /// enregistrees repartaient a 0. C'est une perte de donnees a la mise a jour, sur de
+    /// l'argent. La colonne reste donc stockee, `amountCents` fait autorite, et
+    /// `setAmount` garde les deux d'accord. Elle ne pourra etre retiree que par une
+    /// migration versionnee, apres conversion.
+    var amount: Double = 0
+
+    /// Montant en euros, lu depuis l'autorite (les centimes).
+    var amountValue: Double { Double(amountCents) / 100.0 }
+
+    /// SEUL point d'ecriture du montant : il maintient les deux colonnes ensemble.
+    func setAmount(_ euros: Double) {
+        amountCents = Int((euros * 100).rounded())
+        amount = Double(amountCents) / 100.0
     }
 
     init(date: Date = .now, amount: Double = 0, category: String = "Divers", account: String = "Courant", note: String = "", accountID: UUID? = nil) {
         self.date = date; self.category = category; self.account = account; self.note = note
         self.accountID = accountID
         self.amountCents = Int((amount * 100).rounded())
+        self.amount = Double(self.amountCents) / 100.0
     }
 }
 

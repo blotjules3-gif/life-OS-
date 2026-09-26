@@ -159,6 +159,17 @@ struct TimerDial: View {
     var caption: String = ""
 
     var body: some View {
+        // TimelineView, et ce n'est pas decoratif.
+        //
+        // `remaining` se deduit maintenant de l'horloge, donc PLUS AUCUNE valeur
+        // observable ne change chaque seconde : sans redessin periodique les chiffres
+        // restaient figes jusqu'a ce qu'autre chose rafraichisse la vue. Le moteur est
+        // juste, c'est l'affichage qui ne suivait pas. TimelineView redessine depuis la
+        // meme horloge qui fait autorite.
+        TimelineView(.periodic(from: .now, by: 1)) { _ in dial }
+    }
+
+    private var dial: some View {
         ZStack {
             ProgressRing(progress: engine.progress, lineWidth: 14, tint: tint)
             VStack(spacing: 4) {

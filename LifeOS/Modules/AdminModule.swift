@@ -29,12 +29,22 @@ struct DocVaultView: View {
                                     HStack {
                                         StoredImage(filename: d.filename, placeholder: "doc.text").frame(width: 44, height: 44).clipShape(RoundedRectangle(cornerRadius: 8))
                                         VStack(alignment: .leading) {
-                                            Text(d.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                                            HStack(spacing: 6) {
+                                                Text(d.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                                                // Le nombre de pages est affiche : sans lui, un document
+                                                // tronque a une seule page se voyait exactement comme un
+                                                // document complet.
+                                                if d.pageCount > 1 {
+                                                    Text("\(d.pageCount) pages")
+                                                        .font(.caption2)
+                                                        .foregroundStyle(Theme.textSecondary)
+                                                }
+                                            }
                                             if let e = d.expiry { Text("Expire le \(e, style: .date)").font(.caption).foregroundStyle(e < .now ? .red : Theme.textSecondary) }
                                         }
                                         Spacer()
                                     }.card(padding: 12)
-                                        .contextMenu { Button(role: .destructive) { NotificationManager.shared.cancel(id: ReminderIDs.document(title: d.title)); ImageStore.delete(d.filename); ctx.delete(d) } label: { Label("Supprimer", systemImage: "trash") } }
+                                        .contextMenu { Button(role: .destructive) { NotificationManager.shared.cancel(id: ReminderIDs.document(title: d.title)); for page in d.allPages { ImageStore.delete(page) }; ctx.delete(d) } label: { Label("Supprimer", systemImage: "trash") } }
                                 }
                             }
                         }
