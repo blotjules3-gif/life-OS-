@@ -322,7 +322,59 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": ""
+  "observed_at": "",
+  "matrix": [
+   {
+    "feature": "Protocole 16:8 / 18:6 / 20:4 / OMAD",
+    "state": "present_untested",
+    "proof": "FastingView"
+   },
+   {
+    "feature": "Démarrer / rompre, enregistrement vérifié (erreur affichée)",
+    "state": "present_untested",
+    "proof": "FastingView.commit"
+   },
+   {
+    "feature": "Corriger l'heure de début (72 h max, pas dans le futur)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/NutritionLotTests.swift FastingStatsTests.testCorrectedStartIsNeverInTheFutureNorOlderThan72h"
+   },
+   {
+    "feature": "Notification à l'objectif atteint",
+    "state": "present_untested",
+    "proof": "NotificationManager.schedule"
+   },
+   {
+    "feature": "Historique, objectifs atteints x/y, moyenne",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/NutritionLotTests.swift FastingStatsTests.testSummaryCountsReachedAndAverage"
+   },
+   {
+    "feature": "Supprimer une entrée",
+    "state": "present_untested",
+    "proof": "appui long"
+   },
+   {
+    "feature": "Widget jeûne avec le vrai début (corrigé 30 sept. : 14,5 h inventées avant)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build49DefectTests.swift WidgetDataTests"
+   },
+   {
+    "feature": "Durée personnalisée, zones métaboliques",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Graphiques, série",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Santé",
+    "state": "missing",
+    "proof": ""
+   }
+  ]
  },
  {
   "tool_id": 14,
@@ -347,7 +399,69 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": "2026-09-28"
+  "observed_at": "2026-09-28",
+  "matrix": [
+   {
+    "feature": "Ajout d'un repas tout-ou-rien (FoodLogService)",
+    "state": "tested_auto",
+    "proof": "FoodLogServiceTests.testLogWritesEveryLine"
+   },
+   {
+    "feature": "Validation de la saisie",
+    "state": "tested_auto",
+    "proof": "FoodLogServiceTests.testInvalidDraftsAreRefusedBeforeAnyWrite"
+   },
+   {
+    "feature": "Modifier un repas, retour arrière si échec",
+    "state": "tested_auto",
+    "proof": "FoodLogServiceTests.testEditRecalculatesTheDayAndRevertsOnFailure"
+   },
+   {
+    "feature": "Supprimer un repas",
+    "state": "tested_auto",
+    "proof": "FoodLogServiceTests.testDeleteRemovesFromTheDay"
+   },
+   {
+    "feature": "Changer la date d'un repas",
+    "state": "tested_auto",
+    "proof": "FoodLogServiceTests.testHistoricalMealDoesNotCountToday"
+   },
+   {
+    "feature": "Recherche OpenFoodFacts + portion",
+    "state": "present_untested",
+    "proof": "FoodEditor"
+   },
+   {
+    "feature": "Scan code-barres → journal",
+    "state": "present_untested",
+    "proof": "CalAIView"
+   },
+   {
+    "feature": "Objectifs, restant, anneaux, historique 7 jours",
+    "state": "present_untested",
+    "proof": "CalAIView"
+   },
+   {
+    "feature": "Totaux du jour pour le coach",
+    "state": "tested_auto",
+    "proof": "CrossDomainToolsWireTests.testGetTodayNutrition_withFoodEntries_returnsAggregatedTotals"
+   },
+   {
+    "feature": "Hors ligne : écran sans message d'erreur réseau",
+    "state": "missing",
+    "proof": "FoodSearch renvoie [] (\"Aucun produit\")"
+   },
+   {
+    "feature": "Ajout direct sur un jour passé",
+    "state": "missing",
+    "proof": "FoodEditor écrit maintenant"
+   },
+   {
+    "feature": "Favoris, récents, recettes, micronutriments, Santé",
+    "state": "missing",
+    "proof": ""
+   }
+  ]
  },
  {
   "tool_id": 15,
@@ -429,7 +543,64 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": "2026-09-30"
+  "observed_at": "2026-09-30",
+  "matrix": [
+   {
+    "feature": "Scan = recherche : base universelle, codes normalisés",
+    "state": "tested_auto",
+    "proof": "ProductCatalogTests"
+   },
+   {
+    "feature": "Panne ≠ produit absent",
+    "state": "tested_auto",
+    "proof": "ProductCatalogTests (réponses mixtes)"
+   },
+   {
+    "feature": "Note 2.0 (Nutri-Score 2023 officiel, plafond 49)",
+    "state": "tested_auto",
+    "proof": "ProductScoreTests"
+   },
+   {
+    "feature": "Cosmétiques : liste de surveillance + annexes CosIng II/III",
+    "state": "tested_auto",
+    "proof": "CosmeticAnnexTests"
+   },
+   {
+    "feature": "Nourriture pour chats et chiens",
+    "state": "tested_auto",
+    "proof": "PetFoodScoreTests"
+   },
+   {
+    "feature": "Objectifs perso et compatibilité",
+    "state": "tested_auto",
+    "proof": "ProductFitTests"
+   },
+   {
+    "feature": "Alternatives avec raisons",
+    "state": "tested_auto",
+    "proof": "ProductCatalogTests"
+   },
+   {
+    "feature": "Historique des scans, favoris, enrichissement photo local",
+    "state": "tested_auto",
+    "proof": "ProductStoreTests"
+   },
+   {
+    "feature": "Scan caméra et photo d'étiquette sur iPhone",
+    "state": "dependency",
+    "proof": "appareil réel"
+   },
+   {
+    "feature": "Envoi des photos à Open Beauty / Food Facts",
+    "state": "missing",
+    "proof": "stockage local seulement"
+   },
+   {
+    "feature": "Mesure de couverture des produits introuvables",
+    "state": "missing",
+    "proof": "failed_scans.txt vide"
+   }
+  ]
  },
  {
   "tool_id": 17,
@@ -454,7 +625,59 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": ""
+  "observed_at": "",
+  "matrix": [
+   {
+    "feature": "Ajouter un article (quantité, catégorie, endroit, péremption)",
+    "state": "present_untested",
+    "proof": "PantryEditor"
+   },
+   {
+    "feature": "Badge J-n / Périmé",
+    "state": "present_untested",
+    "proof": "ExpiryBadge"
+   },
+   {
+    "feature": "Supprimer (enregistrement vérifié)",
+    "state": "present_untested",
+    "proof": "FridgeView"
+   },
+   {
+    "feature": "Envoyer vers la liste de courses sans doublon (ajouté 30 sept.)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/NutritionLotTests.swift ShoppingListOpsTests (règle) ; bouton non testé"
+   },
+   {
+    "feature": "Idées repas (8 recettes fixes)",
+    "state": "present_untested",
+    "proof": "RecipeEngine"
+   },
+   {
+    "feature": "Partagé avec NoGaspi",
+    "state": "present_untested",
+    "proof": "PantryItem"
+   },
+   {
+    "feature": "Modifier un article",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Alertes de péremption",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Ajout par code-barres / ticket",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Tri / filtre par endroit ou catégorie",
+    "state": "missing",
+    "proof": ""
+   }
+  ]
  },
  {
   "tool_id": 18,
@@ -479,7 +702,54 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": ""
+  "observed_at": "",
+  "matrix": [
+   {
+    "feature": "Ajout avec quantité, rayon deviné",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/NutritionLotTests.swift ShoppingListOpsTests.testAisleGuess"
+   },
+   {
+    "feature": "Pas de doublon d'un article à acheter",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/NutritionLotTests.swift ShoppingListOpsTests.testNoDuplicateOfAnItemStillToBuy"
+   },
+   {
+    "feature": "Cocher, supprimer (enregistrement vérifié)",
+    "state": "present_untested",
+    "proof": "ShoppingListView.save"
+   },
+   {
+    "feature": "Retirer les articles cochés (ajouté 30 sept.)",
+    "state": "present_untested",
+    "proof": ""
+   },
+   {
+    "feature": "Articles cochés → frigo (ajouté 30 sept.)",
+    "state": "present_untested",
+    "proof": "moveCheckedToFridge"
+   },
+   {
+    "feature": "Texte « génère depuis un plan repas » retiré (aucun générateur)",
+    "state": "present_untested",
+    "proof": ""
+   },
+   {
+    "feature": "Modifier un article",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Plusieurs listes, liste partagée",
+    "state": "dependency",
+    "proof": "partage = compte en ligne (non livré)"
+   },
+   {
+    "feature": "Suggestions / récents",
+    "state": "missing",
+    "proof": ""
+   }
+  ]
  },
  {
   "tool_id": 19,
@@ -504,7 +774,59 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": ""
+  "observed_at": "",
+  "matrix": [
+   {
+    "feature": "Ajout rapide 250/500/750 ml et quantité libre (1 à 3000 ml)",
+    "state": "present_untested",
+    "proof": "HydrationView.add"
+   },
+   {
+    "feature": "Objectif réglable dans l'écran (ajouté 30 sept.)",
+    "state": "present_untested",
+    "proof": "Stepper"
+   },
+   {
+    "feature": "Annuler / supprimer une prise",
+    "state": "present_untested",
+    "proof": "HydrationView.remove"
+   },
+   {
+    "feature": "Historique 7 jours (ajouté 30 sept.)",
+    "state": "present_untested",
+    "proof": "graphique"
+   },
+   {
+    "feature": "Rappels : autorisation demandée, refus affiché + Réglages (corrigé 30 sept.)",
+    "state": "present_untested",
+    "proof": "requestAuthorization"
+   },
+   {
+    "feature": "Widget avec la vraie quantité du jour (corrigé 30 sept. : clé différente et 1800 ml inventés avant)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build49DefectTests.swift WidgetDataTests"
+   },
+   {
+    "feature": "Raccourci Siri",
+    "state": "present_untested",
+    "proof": "LogWaterIntent"
+   },
+   {
+    "feature": "Types de boissons",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Santé (eau)",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Objectif selon poids / activité",
+    "state": "missing",
+    "proof": ""
+   }
+  ]
  },
  {
   "tool_id": 20,
@@ -529,7 +851,59 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": ""
+  "observed_at": "",
+  "matrix": [
+   {
+    "feature": "Ajout avec conseil de moment",
+    "state": "present_untested",
+    "proof": "SupplementAdvisor"
+   },
+   {
+    "feature": "Rappel quotidien, vérification « bien pris ? »",
+    "state": "present_untested",
+    "proof": "SupplementsView.reschedule"
+   },
+   {
+    "feature": "Série de prises confirmées",
+    "state": "present_untested",
+    "proof": "ConfirmationStore"
+   },
+   {
+    "feature": "Activer / pause, supprimer (notifications annulées)",
+    "state": "present_untested",
+    "proof": ""
+   },
+   {
+    "feature": "Refus des notifications affiché",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Modifier un complément",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Dose, stock, réassort",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Plusieurs prises / jours choisis",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Historique des prises",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Interactions avec les médicaments (source réelle)",
+    "state": "dependency",
+    "proof": "base de données médicaments"
+   }
+  ]
  },
  {
   "tool_id": 21,
@@ -554,7 +928,54 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": ""
+  "observed_at": "",
+  "matrix": [
+   {
+    "feature": "16 régimes et allergènes (dont 8 allergènes majeurs UE, ajoutés 30 sept.)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/NutritionLotTests.swift AllergenCheckerTests.testEUMajorAllergensAndAccents"
+   },
+   {
+    "feature": "Casher avec règles (corrigé 30 sept. : aucune règle avant)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/NutritionLotTests.swift AllergenCheckerTests.testKosherHasRules"
+   },
+   {
+    "feature": "Expressions sans risque ignorées (noix de coco, lait d'amande)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/NutritionLotTests.swift AllergenCheckerTests.testHarmlessPhrasesAreNotFlagged"
+   },
+   {
+    "feature": "Résultat honnête : « aucun mot à risque trouvé », pas « compatible »",
+    "state": "present_untested",
+    "proof": "DietProfileView"
+   },
+   {
+    "feature": "Profil appliqué aux produits scannés Yuko",
+    "state": "present_untested",
+    "proof": "Yuko.swift"
+   },
+   {
+    "feature": "Profil appliqué au journal Yumzio",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Allergènes perso et gravité",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Plusieurs profils (famille)",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Traces possibles / contamination croisée",
+    "state": "missing",
+    "proof": ""
+   }
+  ]
  },
  {
   "tool_id": 22,
@@ -617,11 +1038,6 @@
     "proof": "LifeOSTests/Build48DefectTests.swift testFailedFinishLeavesSessionActive, testCancelCanEraseItsSetsAndNeverCountsAsDone"
    },
    {
-    "feature": "Reprise d'une séance en cours après relance",
-    "state": "present_untested",
-    "proof": "séance stockée en base, bouton Reprendre ; pas de parcours fait"
-   },
-   {
     "feature": "Minuteur de repos réglable",
     "state": "present_untested",
     "proof": "GymSession.swift"
@@ -670,6 +1086,36 @@
     "feature": "Parcours complet sur iPhone / iPad / Mac",
     "state": "missing",
     "proof": "non fait"
+   },
+   {
+    "feature": "Séance liée au jour de programme par identifiant, pas par titre (corrigé 30 sept.)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build49DefectTests.swift GymSessionLinkTests"
+   },
+   {
+    "feature": "Liste d'exercices figée pendant la séance (corrigé 30 sept.)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build49DefectTests.swift testEditingTheProgrammeDoesNotChangeTheRunningSession"
+   },
+   {
+    "feature": "Reprise par identifiant, même le lendemain (corrigé 30 sept.)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build49DefectTests.swift testResumeTheNextDayAfterARestDay"
+   },
+   {
+    "feature": "Repos gardé dans la séance, notification de fin (corrigé 30 sept.)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build49DefectTests.swift testRestEndIsStoredInTheSession"
+   },
+   {
+    "feature": "Un seul parseur de libellé, noms historiques migrés (corrigé 30 sept.)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build49DefectTests.swift ExerciseLabelTests, testMigrationGivesHistoricalNamesOneIdentity"
+   },
+   {
+    "feature": "Suppression isolée, sans rollback global (corrigé 30 sept.)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build49DefectTests.swift testFailedDeleteKeepsOtherPendingChanges"
    }
   ]
  },
@@ -696,7 +1142,64 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": "2026-09-28"
+  "observed_at": "2026-09-28",
+  "matrix": [
+   {
+    "feature": "Pas du jour lus dans Apple Santé",
+    "state": "dependency",
+    "proof": "HealthService.stepsToday ; données réelles sur appareil"
+   },
+   {
+    "feature": "Anneau vers l'objectif, objectif réglable et gardé",
+    "state": "present_untested",
+    "proof": "FitnessModule.swift StepsView"
+   },
+   {
+    "feature": "Historique 7 jours, moyenne, objectif atteint x/7 (ajouté 30 sept.)",
+    "state": "present_untested",
+    "proof": "HealthService.stepsByDay ; sans données Santé au simulateur"
+   },
+   {
+    "feature": "Tirer pour rafraîchir (ajouté 30 sept.)",
+    "state": "present_untested",
+    "proof": ".refreshable"
+   },
+   {
+    "feature": "Refus d'accès Santé : réessayer + Réglages",
+    "state": "present_untested",
+    "proof": "StepsView EmptyState"
+   },
+   {
+    "feature": "Distance et kcal",
+    "state": "present_untested",
+    "proof": "estimations fixes, sans taille ni poids"
+   },
+   {
+    "feature": "Distance réelle, étages, calories actives de Santé",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Historique long (mois, année, records)",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Widget de pas",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Notification d'objectif atteint",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Apple Watch",
+    "state": "dependency",
+    "proof": "pas de cible watchOS"
+   }
+  ]
  },
  {
   "tool_id": 24,
@@ -800,7 +1303,84 @@
   "country": "",
   "tier": "",
   "observed_at": "2026-09-28",
-  "notes": "CountdownEngine: echeance absolue persistee, le temps reel est respecte en arriere plan et apres arret du processus (CountdownEngineTests)."
+  "notes": "CountdownEngine: echeance absolue persistee, le temps reel est respecte en arriere plan et apres arret du processus (CountdownEngineTests).",
+  "matrix": [
+   {
+    "feature": "Séquence complète préparation / effort / repos / cycles / retour au calme",
+    "state": "tested_auto",
+    "proof": "TabataSessionTests.testSequenceCoversWholeSessionInOrder"
+   },
+   {
+    "feature": "Réglages des intervalles persistants",
+    "state": "present_untested",
+    "proof": "TabataView @AppStorage"
+   },
+   {
+    "feature": "5 séances préréglées + séances du programme Sport",
+    "state": "present_untested",
+    "proof": "TabataPresets, programSessions"
+   },
+   {
+    "feature": "Pause / reprise",
+    "state": "tested_auto",
+    "proof": "TabataCatchUpTests.testPausedEngineIgnoresElapsedTime"
+   },
+   {
+    "feature": "Étape suivante / précédente, saut sans compter l'effort",
+    "state": "tested_auto",
+    "proof": "TabataSessionTests.testSkipForwardToEndDoesNotCompleteAnything"
+   },
+   {
+    "feature": "Rattrapage arrière-plan / écran verrouillé",
+    "state": "tested_auto",
+    "proof": "TabataCatchUpTests.testCatchesUpAfterBackgroundGap"
+   },
+   {
+    "feature": "Reprise après relance",
+    "state": "tested_auto",
+    "proof": "TabataSessionTests.testPausedSessionResumesWhereItStoppedAfterRelaunch"
+   },
+   {
+    "feature": "Écriture Santé une seule fois, réessai",
+    "state": "tested_auto",
+    "proof": "TabataSessionTests.testHealthWrittenOnceEvenAfterRestore"
+   },
+   {
+    "feature": "Bouton Réessayer si Santé échoue",
+    "state": "present_untested",
+    "proof": "TabataView"
+   },
+   {
+    "feature": "Bips, coupure du son, son en arrière-plan, écran allumé",
+    "state": "present_untested",
+    "proof": "TabataSound, UIBackgroundModes audio"
+   },
+   {
+    "feature": "Widget Tabata avec tes vrais réglages (corrigé 30 sept.)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build49DefectTests.swift WidgetDataTests"
+   },
+   {
+    "feature": "Préréglages perso nommés",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Historique des séances dans l'app",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Annonces vocales / Live Activity",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Écriture Santé réelle sur appareil",
+    "state": "dependency",
+    "proof": "HealthKit sur iPhone"
+   }
+  ]
  },
  {
   "tool_id": 26,
@@ -825,7 +1405,69 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": "2026-09-28"
+  "observed_at": "2026-09-28",
+  "matrix": [
+   {
+    "feature": "3 routines de mobilité intégrées",
+    "state": "present_untested",
+    "proof": "FitnessModule.swift"
+   },
+   {
+    "feature": "Séance guidée, minuteur par exercice, enchaînement",
+    "state": "present_untested",
+    "proof": "GuidedStretchView"
+   },
+   {
+    "feature": "Moteur de compte à rebours sur l'horloge",
+    "state": "tested_auto",
+    "proof": "CountdownEngineTests"
+   },
+   {
+    "feature": "Minuteur séparé du minuteur de focus (corrigé 30 sept. : même clé de sauvegarde avant)",
+    "state": "present_untested",
+    "proof": "CountdownEngine(key: \"mobility\")"
+   },
+   {
+    "feature": "Pause / reprise dans la séance",
+    "state": "missing",
+    "proof": "le moteur sait, l'écran n'a pas de bouton"
+   },
+   {
+    "feature": "Reprise après relance (exercice en cours)",
+    "state": "missing",
+    "proof": "index en @State"
+   },
+   {
+    "feature": "Sons entre exercices",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Démonstrations (vidéo / animation)",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Routines perso",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Évaluation de mobilité / programme adaptatif",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Historique et écriture Santé",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Prise en compte dans Streakz",
+    "state": "missing",
+    "proof": ""
+   }
+  ]
  },
  {
   "tool_id": 27,
@@ -850,7 +1492,54 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": ""
+  "observed_at": "",
+  "matrix": [
+   {
+    "feature": "Série de jours d'entraînement consécutifs",
+    "state": "present_untested",
+    "proof": "StreaksView"
+   },
+   {
+    "feature": "Jours actifs, séries totales, 3 objectifs fixes",
+    "state": "present_untested",
+    "proof": "StreaksView"
+   },
+   {
+    "feature": "Calculé depuis les séries muscu (SwiftData)",
+    "state": "present_untested",
+    "proof": "@Query WorkoutSet"
+   },
+   {
+    "feature": "Habitudes perso",
+    "state": "missing",
+    "proof": "Habitly existe, pas relié"
+   },
+   {
+    "feature": "Tabata, mobilité et Santé comptés",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Calendrier / heatmap",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Meilleure série",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Fréquence souple, jours de repos",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Rappels, widget de série",
+    "state": "missing",
+    "proof": ""
+   }
+  ]
  },
  {
   "tool_id": 28,

@@ -965,7 +965,7 @@ struct HabitEditor: View {
 // MARK: - Focus / Pomodoro
 
 struct FocusTimerView: View {
-    @State private var engine = CountdownEngine()
+    @State private var engine = CountdownEngine(key: "focus")
     @State private var isFocus = true
     @State private var sessions = 0
     @State private var running = false

@@ -156,6 +156,13 @@ import SwiftData
     var state: String = "active"
     var title: String = ""
     var prescriptionJSON: String = ""
+    /// Jour de programme d'origine (`GymDay.stableID`).
+    var dayUID: UUID? = nil
+    /// Liste ORDONNEE des exercices, figee au demarrage : modifier le programme pendant
+    /// la seance ne masque ni n'ajoute d'exercice a la seance en cours.
+    var exercisesJSON: String = ""
+    /// Fin du repos en cours : le compte a rebours survit a la navigation et a la relance.
+    var restEnd: Date? = nil
     init(title: String = "", start: Date = .now) {
         self.id = UUID(); self.title = title; self.start = start
     }

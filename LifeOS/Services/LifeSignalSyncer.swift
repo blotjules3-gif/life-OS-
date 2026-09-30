@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import WidgetKit
 
 /// Syncers agrégats — publient des signaux résumés dans l'App Group pour :
 ///   • Alimenter le contexte coach (UserContextBuilder.build) sans requête SwiftData
@@ -175,5 +176,78 @@ struct NutritionTodaySyncer: View {
         defaults.set(kcal, forKey: "today_kcal")
         defaults.set(protein, forKey: "today_protein_g")
         defaults.set(waterML, forKey: "today_water_ml")
+    }
+}
+
+// MARK: - Donnees reelles des widgets (eau, jeune, seance du jour, Tabata)
+
+/// Publie pour les widgets les VRAIES valeurs, sous les cles partagees `WidgetKeys`.
+/// Remplace les valeurs de demonstration ecrites au lancement (1800 ml, 14,5 h de
+/// jeune, une seance "Pectoraux & Triceps") que les widgets affichaient comme reelles.
+struct WidgetDataSyncer: View {
+    @Query(sort: \WaterEntry.date, order: .reverse) private var waters: [WaterEntry]
+    @Query(sort: \FastingSession.start, order: .reverse) private var fasts: [FastingSession]
+    @Query private var gymDays: [GymDay]
+
+    var body: some View {
+        Color.clear.frame(width: 0, height: 0)
+            .task { sync() }
+            .onChange(of: waters.map(\.amountML)) { _, _ in sync() }
+            .onChange(of: fasts.map { $0.end == nil }) { _, _ in sync() }
+            .onChange(of: gymDays.map { "\($0.weekday)|\($0.title)|\($0.focus)|\($0.isRest)" }) { _, _ in sync() }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in sync() }
+    }
+
+    private func sync() {
+        guard let group = UserDefaults(suiteName: appGroup) else { return }
+        let values = Self.snapshot(waters: waters.map { ($0.date, $0.amountML) },
+                                   activeFastStart: fasts.first { $0.end == nil }?.start,
+                                   gymDays: gymDays.map { ($0.weekday, $0.title, $0.focus, $0.isRest) },
+                                   settings: .standard)
+        var changed = false
+        for (k, v) in values where !Self.same(group.object(forKey: k), v) {
+            group.set(v, forKey: k); changed = true
+        }
+        if changed { WidgetCenter.shared.reloadAllTimelines() }
+    }
+
+    private static func same(_ a: Any?, _ b: Any) -> Bool {
+        switch (a, b) {
+        case let (x as Int, y as Int): return x == y
+        case let (x as Double, y as Double): return x == y
+        case let (x as String, y as String): return x == y
+        case let (x as Bool, y as Bool): return x == y
+        default: return false
+        }
+    }
+
+    /// Valeurs a publier, calculees sans effet de bord (testees).
+    static func snapshot(waters: [(Date, Int)], activeFastStart: Date?,
+                         gymDays: [(weekday: Int, title: String, focus: String, isRest: Bool)],
+                         settings: UserDefaults, now: Date = .now,
+                         calendar: Calendar = .current) -> [String: Any] {
+        var out: [String: Any] = [:]
+        let waterToday = waters.filter { calendar.isDate($0.0, inSameDayAs: now) }.reduce(0) { $0 + $1.1 }
+        out[WidgetKeys.waterToday] = waterToday
+        out[WidgetKeys.waterDay] = WidgetKeys.dayStamp(now, calendar: calendar)
+        let goal = settings.integer(forKey: AppStorageKeys.waterGoal)
+        out[WidgetKeys.waterGoal] = goal > 0 ? goal : 2500
+        out[WidgetKeys.fastStart] = activeFastStart?.timeIntervalSince1970 ?? 0.0
+        let target = settings.integer(forKey: AppStorageKeys.fastTarget)
+        out[WidgetKeys.fastTarget] = target > 0 ? target : 16
+        let weekday = calendar.component(.weekday, from: now)
+        let today = gymDays.first { $0.weekday == weekday }
+        out[WidgetKeys.gymDay] = WidgetKeys.dayStamp(now, calendar: calendar)
+        out[WidgetKeys.gymTitle] = today?.title ?? ""
+        out[WidgetKeys.gymFocus] = today?.focus ?? ""
+        out[WidgetKeys.gymRest] = today?.isRest ?? false
+        out[WidgetKeys.tabataName] = "Ton Tabata"
+        let work = settings.integer(forKey: AppStorageKeys.tabWork)
+        let rest = settings.integer(forKey: AppStorageKeys.tabRest)
+        let rounds = settings.integer(forKey: AppStorageKeys.tabRounds)
+        out[WidgetKeys.tabataWork] = work > 0 ? work : 30
+        out[WidgetKeys.tabataRest] = rest > 0 ? rest : 15
+        out[WidgetKeys.tabataSets] = rounds > 0 ? rounds : 8
+        return out
     }
 }

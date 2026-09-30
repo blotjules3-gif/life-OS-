@@ -34,6 +34,8 @@ final class ScreenTimeBlocker: ObservableObject {
     @Published private(set) var status: Status = .notDetermined
     @Published private(set) var sessionEnd: Date?
     @Published var lastError: String?
+    /// Erreur du planning systeme (DeviceActivity), montree sous le blocage en cours.
+    @Published private(set) var systemScheduleError: String?
 
     static let endKey = "screenBlock.end"
     private static let selectionKey = "screenBlock.selection"
@@ -146,7 +148,14 @@ final class ScreenTimeBlocker: ObservableObject {
         let parts: Set<Calendar.Component> = [.year, .month, .day, .hour, .minute, .second]
         let schedule = DeviceActivitySchedule(intervalStart: cal.dateComponents(parts, from: start),
                                               intervalEnd: cal.dateComponents(parts, from: end), repeats: false)
-        try? DeviceActivityCenter().startMonitoring(.init(Self.storeName), during: schedule)
+        do {
+            try DeviceActivityCenter().startMonitoring(.init(Self.storeName), during: schedule)
+            systemScheduleError = nil
+        } catch {
+            // Le blocage reste actif et la fin sera appliquee a l'ouverture ; on dit
+            // seulement que la fin automatique systeme n'est pas posee.
+            systemScheduleError = "Fin automatique non programmée par iOS (\(error.localizedDescription)) : le blocage sera levé à la prochaine ouverture de LifeOS."
+        }
     }
     #endif
 
@@ -225,6 +234,7 @@ struct ScreenBlockCard: View {
                 Text("Débloquer maintenant").frame(maxWidth: .infinity)
             }.buttonStyle(LifeOSGlassButtonStyle())
             Text("À l'heure de fin, une notification te prévient ; le blocage est levé dès que LifeOS s'ouvre, sur n'importe quel écran.").font(.caption2).foregroundStyle(.secondary)
+            if let e = blocker.systemScheduleError { Text(e).font(.caption2).foregroundStyle(Theme.warning) }
         } else {
             Button { showPicker = true } label: {
                 Label(blocker.hasSelection ? "Apps choisies : \(blocker.selectionSummary)" : "Choisir les apps à bloquer",

@@ -142,8 +142,19 @@ enum WeekdayMask {
     var title: String = ""     // ex: "Dos + Biceps"
     var focus: String = ""     // exercices / notes
     var isRest: Bool = false
+    /// Identifiant stable du jour de programme : une seance s'y rattache par lui, pas
+    /// par le titre (deux jours peuvent porter le meme titre, un titre se renomme).
+    /// Optionnel pour la migration des jours existants : attribue par `stableID`.
+    var uid: UUID? = nil
     init(weekday: Int = 2, title: String = "", focus: String = "", isRest: Bool = false) {
         self.weekday = weekday; self.title = title; self.focus = focus; self.isRest = isRest
+        self.uid = UUID()
+    }
+
+    /// Identifiant du jour, cree a la premiere demande pour les jours d'avant.
+    var stableID: UUID {
+        if let uid { return uid }
+        let new = UUID(); uid = new; return new
     }
 }
 

@@ -112,7 +112,6 @@ enum AppStorageKeys {
     static let gymReminderHour = "gymReminderHour"
     static let gymReminderMinute = "gymReminderMinute"
     static let gymReminderOn = "gymReminderOn"
-    static let gwRestSecs = "gwRestSecs"
 
     // MARK: - Tabata
     static let tabataWork = "tabataWork"

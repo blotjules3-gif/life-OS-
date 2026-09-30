@@ -645,6 +645,28 @@ Also in this lot:
 
 Suite: 784 tests, 0 failures, 1 skipped.
 
+## Audit du build 49 (AUDIT-LIFEOS-BUILD49.md), lot 3
+
+Defects, each reproduced by a test in `LifeOSTests/Build49DefectTests.swift`:
+
+| Defect | Fix | Proof |
+|---|---|---|
+| Session found by title | `GymDay.uid` (`stableID`), `TrainingSession.dayUID`; resume by session id from "Séance en cours", whatever the day | GymSessionLinkTests (same title on two days, rename, next day) |
+| Exercise list read from the programme during the session | `TrainingSession.exercisesJSON` frozen at start; the screen reads it | testEditingTheProgrammeDoesNotChangeTheRunningSession |
+| Two parsers (target vs name) | `ExerciseLabel.split` is the only parser; `baseName`, `repsSuffix`, `target` use it; `migrateExerciseNames` renames old "Rowing 4×10" rows (run when Fitbot opens) | ExerciseLabelTests, testMigrationGivesHistoricalNamesOneIdentity |
+| Rest lost on leaving the screen | `TrainingSession.restEnd`, set in the same save as the set; notification "Repos terminé" | testRestEndIsStoredInTheSession |
+| GuidedWorkout outside the session cycle | It was unreachable (no screen opened it): **removed**. Every set is now built by `GymSessionService` (session sets, or `logStandalone` for Hevvy, quick add and the Siri shortcut) | testOnlyTheServiceBuildsSets |
+| Global rollback on failure | Deletions run in an isolated `ModelContext`; failure leaves the shared context untouched | testFailedDeleteKeepsOtherPendingChanges |
+| Opale: `try?` on the system schedule | Error kept and shown under the running block | code; extension still outside the build |
+
+Found by the Sport/Nutrition inventory and fixed in this lot:
+- **Widgets showed invented values**: water widget read `water_today_ml` while the app wrote `today_water_ml`, and launch seeded 1800 ml; fasting widget read a key nothing wrote (14.5 h); gym widget showed a fake "Pectoraux & Triceps" day; Tabata widget a fake preset. Now one shared key list (`LifeOSShared/WidgetKeys.swift`), real values published by `WidgetDataSyncer`, honest empty states. WidgetDataTests.
+- GOMOB mobility timer and the focus timer saved under the same key: separate keys now.
+- Stepometer promised 7 days and showed today only: 7-day chart (`HealthService.stepsByDay`) and pull to refresh.
+- Zerø: editable start, end notification, stats, delete, save errors. Bringo: quantity, no duplicates, clear checked, checked → fridge. Fridgy: send to list. WaterMind: goal in screen, free amount, 7-day chart, notification permission handled. Figue: Kosher rules (none before), 8 EU major allergens, harmless phrases (coconut, almond milk), result no longer says "compatible". NutritionLotTests.
+
+Matrix: 18 tools now (all of Sport and Nutrition). Raw test log: `docs/verification/test-runs/2026-09-30-lot3.log`.
+
 ## Resume here
 
 Read the two audit lot tables above first. Next, in the audit's order:
@@ -652,6 +674,6 @@ Read the two audit lot tables above first. Next, in the audit's order:
 2. **Opale**: the day Apple grants Family Controls, add the entitlement, then build the DeviceActivity monitor extension (scheduled blocks, end of session in background).
 3. **Visual pass of the four looks** on iPhone, iPad and Mac (light/dark x colour/neutral), including Tabata and charts; widgets reading `widget_palette`.
 4. **Widgets matrix** per tool (audit point 9) and real journeys on device (point 10).
-5. Extend MATRIX.md family by family (next: rest of Sport: TabaTime, Stepometer, GOMOB, Streakz; then Nutrition), fixing gaps as found. Depth of the other tools, one by one, with the audit's method: entry, configuration, main action, result, edit, delete, relaunch, offline, permission refused, shared data, platforms.
+5. Extend MATRIX.md family by family (Sport and Nutrition done; next: Santé, Cycle, Sommeil, Mental), fixing gaps as found. Depth of the other tools, one by one, with the audit's method: entry, configuration, main action, result, edit, delete, relaunch, offline, permission refused, shared data, platforms.
 
 Test runs: use `-parallel-testing-enabled NO`. Shut simulators down between checks (disk and swap).

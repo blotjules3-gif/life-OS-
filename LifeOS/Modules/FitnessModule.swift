@@ -13,6 +13,7 @@ extension ShapeStyle where Self == Color { static var fitTint: Color { AppCatego
 
 struct StepsView: View {
     @State private var today = 0
+    @State private var week: [(day: Date, steps: Int)] = []
     @State private var loading = true
     @AppStorage(AppStorageKeys.stepGoal) private var goal = 10000
 
@@ -35,6 +36,21 @@ struct StepsView: View {
                             StatTile(value: "\(Int(Double(today)*0.04))", label: "kcal approx.", icon: "flame.fill", tint: Theme.warning)
                         }
                         Stepper("Objectif : \(goal) pas", value: $goal, in: 3000...25000, step: 1000).card()
+                        if week.count > 1 {
+                            VStack(alignment: .leading, spacing: 8) {
+                                SectionHeader(title: "7 derniers jours",
+                                              subtitle: "Moyenne \(week.map(\.steps).reduce(0, +) / week.count) pas · objectif atteint \(week.filter { $0.steps >= goal }.count)/\(week.count)")
+                                Chart(week, id: \.day) { d in
+                                    BarMark(x: .value("Jour", d.day, unit: .day), y: .value("Pas", d.steps))
+                                        .foregroundStyle(d.steps >= goal ? Color.fitTint : Color.fitTint.opacity(0.4))
+                                    RuleMark(y: .value("Objectif", goal)).lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                                        .foregroundStyle(Theme.textSecondary)
+                                }
+                                .frame(height: 150)
+                                .chartXAxis { AxisMarks(values: .stride(by: .day)) { _ in AxisValueLabel(format: .dateTime.weekday(.narrow)) } }
+                                Text("Un jour sans données Santé compte pour 0.").font(.caption2).foregroundStyle(Theme.textSecondary)
+                            }.card()
+                        }
                     }
                     if today == 0 && !loading {
                         // Ancien texte: "Active la capability HealthKit dans
@@ -48,6 +64,7 @@ struct StepsView: View {
                                 Task {
                                     _ = await HealthService.shared.requestAuthorization()
                                     today = await HealthService.shared.stepsToday()
+                                    week = await HealthService.shared.stepsByDay(days: 7)
                                 }
                             } label: {
                                 Label("Autoriser Apple Santé", systemImage: "heart.fill")
@@ -69,9 +86,14 @@ struct StepsView: View {
             }
         }
         .navigationTitle("Compteur de pas").navigationBarTitleDisplayMode(.inline)
+        .refreshable {
+            today = await HealthService.shared.stepsToday()
+            week = await HealthService.shared.stepsByDay(days: 7)
+        }
         .task {
             _ = await HealthService.shared.requestAuthorization()
             today = await HealthService.shared.cachedStepsToday()
+            week = await HealthService.shared.stepsByDay(days: 7)
             loading = false
         }
     }
@@ -278,17 +300,17 @@ struct WorkoutEditor: View {
         let name = exercise.trimmingCharacters(in: .whitespaces)
         if let e = editing {
             let old = (e.exercise, e.weightKg, e.reps, e.rpe, e.kind)
-            e.exercise = name; e.weightKg = w; e.reps = r; e.rpe = rpe; e.kind = kind.rawValue
+            e.exercise = GymExercises.baseName(name); e.weightKg = w; e.reps = r; e.rpe = rpe; e.kind = kind.rawValue
             do { try ctx.save(); dismiss() } catch {
                 (e.exercise, e.weightKg, e.reps, e.rpe, e.kind) = old
                 self.error = "Correction non enregistrée : \(error.localizedDescription)"
             }
         } else {
-            let s = WorkoutSet(exercise: name, weightKg: w, reps: r, rpe: rpe, kind: kind.rawValue)
-            ctx.insert(s)
-            do { try ctx.save(); dismiss() } catch {
-                ctx.delete(s)
-                self.error = "Série non enregistrée : \(error.localizedDescription)"
+            do {
+                try GymSessionService.logStandalone(exercise: name, weightText: weight, reps: r, rpe: rpe, kind: kind, in: ctx)
+                dismiss()
+            } catch {
+                self.error = error.localizedDescription
             }
         }
     }
@@ -408,7 +430,7 @@ struct GuidedStretchView: View {
     let title: String
     let stretches: [MobilityRoutineView.Stretch]
     @State private var index = 0
-    @State private var engine = CountdownEngine()
+    @State private var engine = CountdownEngine(key: "mobility")
     @State private var started = false
     var body: some View {
         ZStack {

@@ -52,10 +52,11 @@ enum StrengthProgression {
 
     /// "Développé couché barre 4×10" → 4 series, 8 à 10 reps; "3×8-12" → 8 à 12.
     /// Une cible de force (6 reps ou moins) garde une fourchette fixe. nil si le
-    /// libelle n'a pas de cible.
+    /// libelle n'a pas de cible. Meme decoupage que `ExerciseLabel` (un seul parseur).
     static func target(from label: String) -> Target? {
-        guard let m = label.range(of: #"(\d+)\s*[×x]\s*(\d+)(?:\s*[-–]\s*(\d+))?\s*$"#, options: .regularExpression) else { return nil }
-        let nums = label[m].split(whereSeparator: { !$0.isNumber }).compactMap { Int($0) }
+        let suffix = ExerciseLabel.split(label).suffix
+        guard !suffix.isEmpty else { return nil }
+        let nums = suffix.split(whereSeparator: { !$0.isNumber }).compactMap { Int($0) }
         guard nums.count >= 2, nums[0] > 0, nums[1] > 0 else { return nil }
         if nums.count == 3, nums[2] >= nums[1] {
             return Target(sets: nums[0], repLow: nums[1], repHigh: nums[2])
@@ -179,6 +180,22 @@ enum StrengthProgression {
     private static func round2(_ w: Double) -> Double { (w * 2).rounded() / 2 }
     static func fmt(_ v: Double) -> String {
         v.rounded() == v ? String(Int(v)) : String(format: "%.1f", v)
+    }
+}
+
+/// Parseur UNIQUE d'un libelle d'exercice : "Rowing barre 3×8-12" = nom "Rowing barre"
+/// + cible " 3×8-12". Avant, `GymExercises.baseName` ne retirait que " N×N" alors que la
+/// cible acceptait "3×8-12", "3x8-12", "4 x 10" : le meme exercice avait plusieurs
+/// identites et perdait son historique et ses records quand sa cible changeait.
+enum ExerciseLabel {
+    static let suffixPattern = #"\s*\d+\s*[×xX*]\s*\d+(?:\s*[-–]\s*\d+)?\s*$"#
+
+    static func split(_ label: String) -> (name: String, suffix: String) {
+        let t = label.trimmingCharacters(in: .whitespaces)
+        guard let r = t.range(of: suffixPattern, options: .regularExpression), r.lowerBound > t.startIndex else {
+            return (t, "")
+        }
+        return (String(t[..<r.lowerBound]).trimmingCharacters(in: .whitespaces), String(t[r]))
     }
 }
 

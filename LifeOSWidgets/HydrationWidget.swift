@@ -53,13 +53,15 @@ struct HydrationWidgetProvider: TimelineProvider {
 
     private func read() -> HydrationWidgetEntry {
         let defs = WidgetAppGroup.defaults
-        let current = defs?.integer(forKey: "water_today_ml") ?? 1800
-        let goal = defs?.integer(forKey: "water_goal_ml") ?? 2500
+        // Valeur reelle du jour ; une valeur d'un autre jour compte pour 0 (plus de valeur inventee).
+        let current = WidgetKeys.waterForToday(value: defs?.integer(forKey: WidgetKeys.waterToday) ?? 0,
+                                               day: defs?.string(forKey: WidgetKeys.waterDay))
+        let goal = defs?.integer(forKey: WidgetKeys.waterGoal) ?? 0
 
         return HydrationWidgetEntry(
             date: .now,
-            currentMl: current > 0 ? current : 1800,
-            goalMl: goal > 0 ? goal : 2500
+            currentMl: current,
+            goalMl: goal > 0 ? goal : 2500   // objectif par defaut de l'app
         )
     }
 }

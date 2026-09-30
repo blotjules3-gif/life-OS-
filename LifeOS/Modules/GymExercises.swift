@@ -82,20 +82,13 @@ enum GymExercises {
         return catalog.first { _, list in list.contains(name) }?.key
     }
 
-    /// Nom de base sans " 4×10".
-    static func baseName(_ label: String) -> String {
-        if let r = label.range(of: #" \d+×\d+$"#, options: .regularExpression) {
-            return String(label[..<r.lowerBound])
-        }
-        return label.trimmingCharacters(in: .whitespaces)
-    }
+    /// Nom de base sans la cible (" 4×10", " 3×8-12", " 4 x 10"...). Voir `ExerciseLabel`.
+    static func baseName(_ label: String) -> String { ExerciseLabel.split(label).name }
 
-    /// Suffixe reps d'un libellé (" 4×10") ou "".
+    /// Suffixe de cible d'un libellé, espace initial compris, ou "".
     static func repsSuffix(_ label: String) -> String {
-        if let r = label.range(of: #" \d+×\d+$"#, options: .regularExpression) {
-            return String(label[r])
-        }
-        return ""
+        let suffix = ExerciseLabel.split(label).suffix.trimmingCharacters(in: .whitespaces)
+        return suffix.isEmpty ? "" : " " + suffix
     }
 
     /// Propose un exercice de remplacement du même groupe, en évitant ceux déjà présents.

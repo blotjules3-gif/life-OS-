@@ -282,7 +282,16 @@ struct AddAnythingSheet: View {
         case .shopping:
             ctx.insert(ShoppingItem(name: n, quantity: quantity.isEmpty ? "1" : quantity))
         case .workout:
-            ctx.insert(WorkoutSet(exercise: n, weightKg: Double(weight) ?? 0, reps: Int(reps) ?? 0))
+            // Serie autonome validee, par le meme service que le sport : nom canonique,
+            // charge et reps verifiees, erreur visible au lieu d'un succes annonce.
+            do {
+                try GymSessionService.logStandalone(exercise: n, weightText: weight.isEmpty ? "0" : weight,
+                                                    reps: Int(reps) ?? 0, in: ctx)
+            } catch {
+                Haptics.warning()
+                saveError = error.localizedDescription
+                return
+            }
         case .mood:
             ctx.insert(MoodEntry(score: score, note: noteBody))
         case .expense:

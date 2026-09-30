@@ -164,6 +164,30 @@ final class HealthService {
         }
     }
 
+    /// Pas par jour sur les `days` derniers jours (aujourd'hui compris), du plus ancien
+    /// au plus recent. Un jour sans donnee vaut 0 : "inconnu" et "zero" ne se
+    /// distinguent pas dans HealthKit pour les pas, c'est dit a l'ecran.
+    func stepsByDay(days: Int) async -> [(day: Date, steps: Int)] {
+        guard days > 0, let type = HKQuantityType.quantityType(forIdentifier: .stepCount) else { return [] }
+        let cal = Calendar.current
+        let end = Date()
+        let start = cal.startOfDay(for: cal.date(byAdding: .day, value: -(days - 1), to: end) ?? end)
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        return await withCheckedContinuation { cont in
+            let q = HKStatisticsCollectionQuery(quantityType: type, quantitySamplePredicate: predicate,
+                                                options: .cumulativeSum, anchorDate: start,
+                                                intervalComponents: DateComponents(day: 1))
+            q.initialResultsHandler = { _, results, _ in
+                var out: [(Date, Int)] = []
+                results?.enumerateStatistics(from: start, to: end) { stat, _ in
+                    out.append((stat.startDate, Int(stat.sumQuantity()?.doubleValue(for: .count()) ?? 0)))
+                }
+                cont.resume(returning: out.map { (day: $0.0, steps: $0.1) })
+            }
+            store.execute(q)
+        }
+    }
+
     func restingHeartRate() async -> Double? {
         guard let type = HKQuantityType.quantityType(forIdentifier: .restingHeartRate) else { return nil }
         return await mostRecent(type, unit: HKUnit.count().unitDivided(by: .minute()))

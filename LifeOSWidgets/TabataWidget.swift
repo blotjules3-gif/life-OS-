@@ -55,17 +55,18 @@ struct TabataWidgetProvider: TimelineProvider {
 
     private func read() -> TabataWidgetEntry {
         let defs = WidgetAppGroup.defaults
-        let session = defs?.string(forKey: "tabata_last_preset") ?? "Cardio HIIT"
-        let work = defs?.integer(forKey: "tabata_work") ?? 30
-        let rest = defs?.integer(forKey: "tabata_rest") ?? 15
-        let sets = defs?.integer(forKey: "tabata_sets") ?? 4
+        // Reglages reels de ton Tabata (ecrits par l'app) ; a defaut, ceux de l'app.
+        let session = defs?.string(forKey: WidgetKeys.tabataName) ?? "Tabata"
+        let work = defs?.integer(forKey: WidgetKeys.tabataWork) ?? 30
+        let rest = defs?.integer(forKey: WidgetKeys.tabataRest) ?? 15
+        let sets = defs?.integer(forKey: WidgetKeys.tabataSets) ?? 8
 
         return TabataWidgetEntry(
             date: .now,
             sessionName: session,
             workSeconds: work > 0 ? work : 30,
             restSeconds: rest > 0 ? rest : 15,
-            setsCount: sets > 0 ? sets : 4,
+            setsCount: sets > 0 ? sets : 8,
             exercisesCount: 6
         )
     }

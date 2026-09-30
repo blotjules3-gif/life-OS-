@@ -34,7 +34,7 @@ struct GymFocusWidgetProvider: TimelineProvider {
         GymFocusWidgetEntry(
             date: .now,
             weekdayName: "LUNDI",
-            sessionTitle: "Pectoraux & Triceps",
+            sessionTitle: "Séance du jour",
             focus: "Développé couché · Dips · Écartés",
             isRestDay: false
         )
@@ -52,9 +52,13 @@ struct GymFocusWidgetProvider: TimelineProvider {
 
     private func read() -> GymFocusWidgetEntry {
         let defs = WidgetAppGroup.defaults
-        let title = defs?.string(forKey: "gym_today_title") ?? "Pectoraux & Triceps"
-        let focus = defs?.string(forKey: "gym_today_focus") ?? "Développé couché · Dips · Écartés"
-        let isRest = defs?.bool(forKey: "gym_today_is_rest") ?? false
+        // Seance reelle du jour, ecrite par l'app. Rien d'ecrit aujourd'hui = rien de
+        // prevu (avant : une seance inventee s'affichait comme la tienne).
+        let today = defs?.string(forKey: WidgetKeys.gymDay) == WidgetKeys.dayStamp()
+        let rawTitle = today ? (defs?.string(forKey: WidgetKeys.gymTitle) ?? "") : ""
+        let title = rawTitle.isEmpty ? "Aucune séance prévue" : rawTitle
+        let focus = rawTitle.isEmpty ? "Définis ta semaine dans Fitbot" : (defs?.string(forKey: WidgetKeys.gymFocus) ?? "")
+        let isRest = today && (defs?.bool(forKey: WidgetKeys.gymRest) ?? false)
 
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "fr_FR")

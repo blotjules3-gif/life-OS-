@@ -42,18 +42,27 @@ struct GymProgramView: View {
                 Text("Chaque jour d'entraînement, une notif motivante avec la séance du jour. Les jours de repos, rien.")
             }
 
-            if let today = day(Calendar.current.component(.weekday, from: .now)) {
+            // Une seance ouverte se reprend par son identifiant, quel que soit le jour
+            // (commencee hier, jour renomme ou devenu repos entre-temps).
+            if let open = GymSessionService.anyActive(sessions) {
+                Section("Séance en cours") {
+                    NavigationLink {
+                        GymSessionView(day: nil, sessionID: open.id)
+                    } label: {
+                        Label("Reprendre : \(open.title) (commencée \(open.start.formatted(.relative(presentation: .named))))",
+                              systemImage: "arrow.clockwise.circle.fill")
+                    }
+                }
+            } else if let today = day(Calendar.current.component(.weekday, from: .now)) {
                 Section("Aujourd'hui") {
                     if today.isRest || today.title.trimmingCharacters(in: .whitespaces).isEmpty {
                         Text(today.isRest ? "Repos. La récupération fait aussi progresser." : "Pas de séance définie aujourd'hui.")
                             .foregroundStyle(.secondary)
                     } else {
-                        let open = sessions.contains { $0.state == "active" && $0.title == today.title }
                         NavigationLink {
                             GymSessionView(day: today)
                         } label: {
-                            Label(open ? "Reprendre : \(today.title)" : "Commencer : \(today.title)",
-                                  systemImage: open ? "arrow.clockwise.circle.fill" : "play.circle.fill")
+                            Label("Commencer : \(today.title)", systemImage: "play.circle.fill")
                         }
                     }
                 }
@@ -101,6 +110,7 @@ struct GymProgramView: View {
         .navigationTitle("Programme de sport").navigationBarTitleDisplayMode(.inline)
         .task {
             seedIfNeeded()
+            _ = try? GymSessionService.migrateExerciseNames(in: ctx)
             _ = await NotificationManager.shared.requestAuthorization()
         }
         .sheet(item: $editing) { d in

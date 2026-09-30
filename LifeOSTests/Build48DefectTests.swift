@@ -35,7 +35,7 @@ final class GymSessionIsolationTests: XCTestCase {
         for _ in 0..<3 { ctx.insert(WorkoutSet(date: Date().addingTimeInterval(-3 * 86_400), exercise: "Rowing barre", weightKg: 60, reps: 10, rpe: 8, sessionID: done.id)) }
         try ctx.save()
         let history = try ctx.fetch(FetchDescriptor<WorkoutSet>()).map(\.logged)
-        let s = try GymSessionService.start(title: "Dos", exercises: ["Rowing barre 3×10"], history: history,
+        let s = try GymSessionService.start(day: nil, title: "Dos", exercises: ["Rowing barre 3×10"], history: history,
                                             doneSessions: [done.id], in: ctx)
         XCTAssertEqual(GymSessionService.prescriptions(of: s)["Rowing barre"]?.weight, 62.5)
         try GymSessionService.log(exercise: "Rowing barre 3×10", weightText: "62,5", reps: 4, rpe: 10, kind: .work, session: s, in: ctx)
@@ -122,7 +122,7 @@ final class GymSessionSaveTests: XCTestCase {
     override func tearDown() async throws { ctx = nil; container = nil }
 
     private func active() throws -> TrainingSession {
-        try GymSessionService.start(title: "Dos", exercises: ["Rowing barre 3×10"], history: [], doneSessions: [], in: ctx)
+        try GymSessionService.start(day: nil, title: "Dos", exercises: ["Rowing barre 3×10"], history: [], doneSessions: [], in: ctx)
     }
 
     /// Build 48 : `try? ctx.save()` puis vibration de succes, quoi qu'il arrive.

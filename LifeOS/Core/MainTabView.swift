@@ -183,6 +183,7 @@ struct MainTabView: View {
                         SleepWidgetSyncer()
                         NutritionTodaySyncer()
                         MemoryWidgetSyncer()
+                        WidgetDataSyncer()
 
                         MacDesktopMainView(availableWidth: w, availableHeight: h)
                     }
@@ -261,6 +262,7 @@ struct MainTabView: View {
                 SleepWidgetSyncer()
                 NutritionTodaySyncer()
                 MemoryWidgetSyncer()
+                WidgetDataSyncer()
                 ThemedBubbleBackground(theme: theme)
                     .ignoresSafeArea()
 
@@ -334,22 +336,8 @@ private struct HabitWidgetSyncer: View {
         guard let defaults = LifeOSGroup.defaults else { return }
         defaults.set(Theme.currentTheme.accentHex, forKey: "widget_accent_hex")
 
-        // Initialisation & synchronisation des nouveaux widgets
-        if defaults.string(forKey: "tabata_last_preset") == nil {
-            defaults.set("Cardio HIIT", forKey: "tabata_last_preset")
-            defaults.set(30, forKey: "tabata_work")
-            defaults.set(15, forKey: "tabata_rest")
-            defaults.set(4, forKey: "tabata_sets")
-        }
-        if defaults.object(forKey: "water_today_ml") == nil {
-            defaults.set(1800, forKey: "water_today_ml")
-            defaults.set(2500, forKey: "water_goal_ml")
-        }
-        if defaults.string(forKey: "gym_today_title") == nil {
-            defaults.set("Pectoraux & Triceps", forKey: "gym_today_title")
-            defaults.set("Développé couché · Dips · Écartés", forKey: "gym_today_focus")
-            defaults.set(false, forKey: "gym_today_is_rest")
-        }
+        // Plus aucune valeur de demonstration ecrite ici : eau, jeune, seance du jour et
+        // Tabata sont publies par WidgetDataSyncer depuis les vraies donnees.
 
         WidgetCenter.shared.reloadAllTimelines()
     }

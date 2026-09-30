@@ -59,16 +59,17 @@ struct FastingWidgetProvider: TimelineProvider {
 
     private func read() -> FastingWidgetEntry {
         let defs = WidgetAppGroup.defaults
-        let target = defs?.integer(forKey: "fastTarget") ?? 16
-        let startTs = defs?.double(forKey: "fastStart") ?? (Date().timeIntervalSince1970 - 14.5 * 3600)
-
-        let elapsed = max(0.0, Date().timeIntervalSince1970 - startTs) / 3600.0
+        let target = defs?.integer(forKey: WidgetKeys.fastTarget) ?? 0
+        let startTs = defs?.double(forKey: WidgetKeys.fastStart) ?? 0
+        // Pas de debut ecrit = pas de jeune en cours (avant : 14,5 h inventees).
+        let fasting = startTs > 0
+        let elapsed = fasting ? max(0.0, Date().timeIntervalSince1970 - startTs) / 3600.0 : 0
 
         return FastingWidgetEntry(
             date: .now,
-            elapsedHours: elapsed > 0 ? elapsed : 14.0,
+            elapsedHours: elapsed,
             targetHours: target > 0 ? target : 16,
-            isFasting: true
+            isFasting: fasting
         )
     }
 }
@@ -81,18 +82,34 @@ struct FastingWidgetView: View {
 
     var body: some View {
         Group {
-            switch family {
-            case .systemSmall:
-                smallView
-            case .accessoryCircular:
-                circularView
-            case .accessoryRectangular:
-                rectangularView
-            default:
-                smallView
+            if !entry.isFasting {
+                idleView
+            } else {
+                switch family {
+                case .systemSmall:
+                    smallView
+                case .accessoryCircular:
+                    circularView
+                case .accessoryRectangular:
+                    rectangularView
+                default:
+                    smallView
+                }
             }
         }
         .widgetURL(URL(string: "lifeos://fasting"))
+    }
+
+    /// Aucun jeune en cours : on le dit, au lieu d'un compteur invente.
+    private var idleView: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Image(systemName: "timer").font(.system(size: 14, weight: .bold))
+            Text("Pas de jeûne en cours").font(.system(size: 13, weight: .bold, design: .rounded))
+            if family == .systemSmall {
+                Text("Objectif \(entry.targetHours) h · touche pour commencer").font(.system(size: 10)).foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
     private var smallView: some View {

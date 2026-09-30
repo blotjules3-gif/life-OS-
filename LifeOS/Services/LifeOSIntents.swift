@@ -238,8 +238,7 @@ struct LogWorkoutSetIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let ctx = try LocalStore.container().mainContext
-        ctx.insert(WorkoutSet(date: .now, exercise: exercise, weightKg: weight, reps: reps, rpe: 8))
-        try ctx.save()
+        try GymSessionService.logStandalone(exercise: exercise, weightText: String(weight), reps: reps, in: ctx)
         let vol = Int(weight * Double(reps))
         return .result(dialog: "Série \(exercise) enregistrée : \(reps) reps à \(Int(weight)) kg (volume \(vol)).")
     }
