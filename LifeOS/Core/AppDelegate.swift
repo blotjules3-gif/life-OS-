@@ -8,6 +8,10 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        // Avant toute ecriture de fichier: sur un Mac sans sandbox, sortir les
+        // fichiers de LifeOS du vrai ~/Documents vers son dossier prive.
+        AppPaths.migrateIfNeeded()
+
         // Enregistrement précoce des polices personnalisées (Satoshi)
         _ = AppFont.sans(size: 14)
 
@@ -31,7 +35,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
             for scene in UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }) {
                 scene.windows.forEach { $0.backgroundColor = UIColor.systemBackground }
                 #if targetEnvironment(macCatalyst)
-                scene.sizeRestrictions?.minimumSize = CGSize(width: 1050, height: 680)
+                scene.sizeRestrictions?.minimumSize = CGSize(width: 360, height: 580)
                 scene.titlebar?.titleVisibility = .visible
                 #endif
             }
@@ -196,13 +200,11 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             let habitName = info["habitName"] as? String ?? ""
             let action = response.actionIdentifier
             if action == "HABIT_DONE" {
-                // Enqueue via WidgetToggleReconciler — rejoué au prochain foreground
-                // pour être sûr que SwiftData est disponible. Format compatible
-                // avec la file existante widget_pending_toggles.
-                if let defaults = UserDefaults(suiteName: "group.com.chifandco.lifeos") {
-                    var queue = defaults.array(forKey: "widget_pending_toggles") as? [[String: Any]] ?? []
-                    queue.append(["habitName": habitName, "timestamp": Date().timeIntervalSince1970])
-                    defaults.set(queue, forKey: "widget_pending_toggles")
+                // Ordre explicite "cocher", par identifiant stable: rejoue au prochain
+                // premier plan (HabitSync), sans effet s'il est deja coche.
+                if let habitID = info["habitID"] as? String, !habitID.isEmpty {
+                    do { try HabitOps.enqueue(HabitOp(habitID: habitID, action: .complete, source: "notification")) }
+                    catch { AppLog.general.error("habitude non enregistrée depuis la notification: \(error.localizedDescription, privacy: .public)") }
                 }
             } else if action == "HABIT_SNOOZE" {
                 NotificationManager.shared.scheduleAfter(

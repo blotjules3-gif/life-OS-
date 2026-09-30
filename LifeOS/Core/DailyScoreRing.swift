@@ -92,51 +92,51 @@ enum DailyScoreEngine {
         if kcalGoal > 0 && !hiddenGoalIDs.contains("kcal") && !hiddenGoalIDs.contains("calories") {
             let k = dayFoods.reduce(0) { $0 + $1.calories }
             out.append(.init(label: "Calories", icon: "flame.fill", value: "\(k)/\(kcalGoal)",
-                             fraction: min(1, Double(k) / Double(kcalGoal)), color: Color(hex: 0xF1746C)))
+                             fraction: min(1, Double(k) / Double(kcalGoal)), color: Theme.nutrition))
         }
         if proteinGoal > 0 && !hiddenGoalIDs.contains("protein") {
             let p = dayFoods.reduce(0.0) { $0 + $1.protein }
             out.append(.init(label: "Protéines", icon: "fork.knife", value: "\(Int(p))/\(proteinGoal) g",
-                             fraction: min(1, p / Double(proteinGoal)), color: Color(hex: 0xE0A23C)))
+                             fraction: min(1, p / Double(proteinGoal)), color: Theme.career))
         }
         if waterGoal > 0 && !hiddenGoalIDs.contains("water") && !hiddenGoalIDs.contains("glasses") {
             let w = waters.filter { here($0.date) }.reduce(0) { $0 + $1.amountML }
             out.append(.init(label: "Eau", icon: "drop.fill", value: "\(w)/\(waterGoal) ml",
-                             fraction: min(1, Double(w) / Double(waterGoal)), color: Color(hex: 0x3CB2E0)))
+                             fraction: min(1, Double(w) / Double(waterGoal)), color: Theme.hydration))
         }
         if !hiddenGoalIDs.contains("steps") && !hiddenGoalIDs.contains("activity") {
             let sc = steps.filter { here($0.day) }.reduce(0) { $0 + $1.steps }
             let didW = workouts.contains { here($0.date) }
             let af = max(min(1, Double(sc) / Double(max(1, stepGoal))), didW ? 1 : 0)
             out.append(.init(label: "Activité", icon: "figure.walk",
-                             value: didW ? "Séance" : "\(sc)/\(stepGoal) pas", fraction: af, color: Color(hex: 0x4CD07A)))
+                             value: didW ? "Séance" : "\(sc)/\(stepGoal) pas", fraction: af, color: Theme.fitness))
         }
 
         if !habits.isEmpty && !hiddenGoalIDs.contains("habits") {
             let d = habits.filter { h in h.completions.contains { here($0.date) } }.count
             out.append(.init(label: "Habitudes", icon: "checkmark.seal.fill", value: "\(d)/\(habits.count)",
-                             fraction: Double(d) / Double(habits.count), color: Color(hex: 0x9B6CF1)))
+                             fraction: Double(d) / Double(habits.count), color: Theme.mind))
         }
         if !hiddenGoalIDs.contains("todos") && !hiddenGoalIDs.contains("tasks") {
             let due = todos.filter { if let dd = $0.due { return here(dd) } else { return false } }
             if !due.isEmpty {
                 let d = due.filter { $0.done }.count
                 out.append(.init(label: "Tâches", icon: "checklist", value: "\(d)/\(due.count)",
-                                 fraction: Double(d) / Double(due.count), color: Color(hex: 0x5B8DEF)))
+                                 fraction: Double(d) / Double(due.count), color: Theme.productivity))
             }
         }
         if !hiddenGoalIDs.contains("mood"), let m = moods.first(where: { here($0.date) }) {
             out.append(.init(label: "Humeur", icon: "face.smiling", value: "\(m.score)/5",
-                             fraction: Double(m.score) / 5, color: Color(hex: 0xEC6FB0)))
+                             fraction: Double(m.score) / 5, color: Theme.social))
         }
         if !hiddenGoalIDs.contains("sleep") {
             if let n = nights.first(where: { here($0.date) }) {
                 let m = Int((n.hours * 60).rounded())
                 out.append(.init(label: "Sommeil", icon: "moon.zzz.fill", value: "\(m / 60)h\(m % 60 == 0 ? "" : String(format: "%02d", m % 60))",
-                                 fraction: min(1, n.hours / max(1, sleepGoalHours)), color: Color(hex: 0x7C93C8)))
+                                 fraction: min(1, n.hours / max(1, sleepGoalHours)), color: Theme.sleep))
             } else if let s = dreams.first(where: { here($0.date) }) {
                 out.append(.init(label: "Sommeil", icon: "moon.zzz.fill", value: "\(s.mood)/5",
-                                 fraction: Double(s.mood) / 5, color: Color(hex: 0x7C93C8)))
+                                 fraction: Double(s.mood) / 5, color: Theme.sleep))
             }
         }
         return out
@@ -239,7 +239,7 @@ struct DailyScoreRing: View {
                 id: "todo-\(todo.persistentModelID)",
                 title: todo.title,
                 icon: "checklist",
-                color: todo.priority >= 2 ? Color.red : (todo.priority == 1 ? Color.orange : Color(hex: 0x5B8DEF)),
+                color: todo.priority >= 2 ? Theme.danger : (todo.priority == 1 ? Theme.warning : Color(hex: 0x5B8DEF)),
                 hour: h,
                 minute: m,
                 isHabit: false,
@@ -349,7 +349,7 @@ struct DailyScoreRing: View {
         return Circle()
             .fill(Color.primary)
             .frame(width: 7, height: 7)
-            .shadow(color: Color.primary.opacity(0.60), radius: 4)
+            .shadow(color: Color.primary.opacity(0.12), radius: 1)
             .offset(x: x, y: y)
     }
 
@@ -378,29 +378,36 @@ struct DailyScoreRing: View {
                     .fill(item.isDone ? doneFill : undoneFill)
                     .frame(width: isSelected ? 26 : 22, height: isSelected ? 26 : 22)
                     .overlay(Circle().stroke(strokeColor, lineWidth: isSelected ? 2 : 1.2))
-                    .shadow(color: Color.primary.opacity(isSelected ? 0.35 : 0.1), radius: 3)
+                if isSelected {
+                    Circle()
+                        .stroke(Color.primary.opacity(0.15), lineWidth: 1)
+                }
 
                 Image(systemName: item.isDone ? "checkmark" : (item.isOverdue ? "exclamationmark" : item.icon))
                     .font(.system(size: isSelected ? 11 : 9, weight: .bold))
                     .foregroundStyle(iconColor)
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(LifeOSPressStyle(scale: 0.88, opacity: 0.80))
         .offset(x: x, y: y)
     }
 
     private func centerGlassDisc(s: Int, done: Int, total: Int) -> some View {
         ZStack {
-            Circle().fill(.ultraThinMaterial)
-                .overlay(Circle().strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
+            // Mesure du 27 septembre : c'etait la SEULE surface de l'accueil encore sur
+            // l'ancien materiau. `GlassProbe` la voyait avec les filtres
+            // ["luminanceCurveMap","colorSaturate","colorBrightness","gaussianBlur"],
+            // quand les 60 autres portaient "glassBackground". Le bord blanc a 0,14 et
+            // l'ombre etaient la pour compenser ce que le vrai verre fait tout seul.
+            Color.clear
                 .frame(width: 124, height: 124)
-                .shadow(color: .black.opacity(0.12), radius: 8, y: 4)
+                .raisedSurface(Circle())
 
             if let item = selectedClockItem {
                 VStack(spacing: 3) {
                     Text(item.timeFormatted)
                         .font(.system(size: 11, weight: .bold).monospacedDigit())
-                        .foregroundStyle(item.isOverdue ? .red : item.color)
+                        .foregroundStyle(item.isOverdue ? Theme.danger : item.color)
 
                     Text(item.title)
                         .font(.system(size: 12, weight: .bold))
@@ -416,15 +423,15 @@ struct DailyScoreRing: View {
                             Text(item.isDone ? "Fait" : (item.isOverdue ? "En retard" : "Valider"))
                         }
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(item.isDone ? Color.green : Theme.textPrimary)
+                        .foregroundStyle(item.isDone ? Theme.success : Theme.textPrimary)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
                         .background(
-                            item.isDone ? Color.green.opacity(0.15) : (item.isOverdue ? Color.red.opacity(0.15) : Color.primary.opacity(0.08)),
+                            item.isDone ? Theme.success.opacity(0.15) : (item.isOverdue ? Theme.danger.opacity(0.15) : Color.primary.opacity(0.08)),
                             in: Capsule()
                         )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(LifeOSPressStyle(scale: 0.92))
                     .padding(.top, 2)
                 }
                 .transition(.scale.combined(with: .opacity))
@@ -441,12 +448,13 @@ struct DailyScoreRing: View {
                             .font(.system(size: 42, weight: .black)).monospacedDigit()
                             .foregroundStyle(Theme.textPrimary)
                             .contentTransition(.numericText())
+                            .animation(.spring(response: 0.45, dampingFraction: 0.75), value: s)
                         Text(total == 0 ? "%" : "\(done)/\(total) validés")
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Theme.textSecondary)
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(LifeOSPressStyle(scale: 0.96))
                 .transition(.scale.combined(with: .opacity))
             }
         }
@@ -553,7 +561,7 @@ struct DailyScoreRing: View {
                 }
                 .frame(width: 42, height: 42)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(LifeOSPressStyle(scale: 0.90, opacity: 0.80))
             Text(letter).font(.system(size: 11, weight: .bold))
                 .foregroundStyle(isSel ? Color.primary : Color.secondary)
         }
@@ -664,14 +672,14 @@ struct MetricCustomizerSheet: View {
     }
 
     private let allTrackables: [TrackableMetricItem] = [
-        .init(id: "steps",   title: "Pas & Activité",   icon: "figure.walk", color: Color(hex: 0x4CD07A)),
-        .init(id: "water",   title: "Eau & Hydratation", icon: "drop.fill",   color: Color(hex: 0x3CB2E0)),
-        .init(id: "kcal",    title: "Calories",          icon: "flame.fill",  color: Color(hex: 0xF1746C)),
-        .init(id: "protein", title: "Protéines",         icon: "fork.knife",  color: Color(hex: 0xE0A23C)),
-        .init(id: "habits",  title: "Habitudes du jour", icon: "checkmark.seal.fill", color: Color(hex: 0x9B6CF1)),
-        .init(id: "todos",   title: "Tâches du jour",    icon: "checklist",   color: Color(hex: 0x5B8DEF)),
-        .init(id: "sleep",   title: "Sommeil",           icon: "moon.zzz.fill", color: Color(hex: 0x7C93C8)),
-        .init(id: "mood",    title: "Humeur",            icon: "face.smiling", color: Color(hex: 0xEC6FB0)),
+        .init(id: "steps",   title: "Pas & Activité",   icon: "figure.walk", color: Theme.fitness),
+        .init(id: "water",   title: "Eau & Hydratation", icon: "drop.fill",   color: Theme.hydration),
+        .init(id: "kcal",    title: "Calories",          icon: "flame.fill",  color: Theme.nutrition),
+        .init(id: "protein", title: "Protéines",         icon: "fork.knife",  color: Theme.career),
+        .init(id: "habits",  title: "Habitudes du jour", icon: "checkmark.seal.fill", color: Theme.mind),
+        .init(id: "todos",   title: "Tâches du jour",    icon: "checklist",   color: Theme.productivity),
+        .init(id: "sleep",   title: "Sommeil",           icon: "moon.zzz.fill", color: Theme.sleep),
+        .init(id: "mood",    title: "Humeur",            icon: "face.smiling", color: Theme.social),
     ]
 
     private var hiddenIDs: Set<String> {

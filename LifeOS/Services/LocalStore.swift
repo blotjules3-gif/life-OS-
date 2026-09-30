@@ -21,7 +21,10 @@ import SwiftData
 ///    Cf. `CloudKitReadiness.report()` pour la check-list runtime.
 enum LocalStore {
 
-    static let schema = Schema([
+    /// Tous les types de la base, en UN seul endroit: le schema ET l'effacement
+    /// des donnees les lisent ici. Avant, l'effacement avait sa propre liste et
+    /// en oubliait deux (`ProfileField`, `ProfileFieldRevision`).
+    static let modelTypes: [any PersistentModel.Type] = [
         // Santé
         DreamEntry.self, SleepNight.self, FoodEntry.self, FastingSession.self, WaterEntry.self,
         Supplement.self, PantryItem.self, ShoppingItem.self, WorkoutSet.self, StepEntry.self,
@@ -46,7 +49,9 @@ enum LocalStore {
         ProfileField.self, ProfileFieldRevision.self,
         // Objectifs unifiés (Loop 24 Goal-Plan-Partner)
         UserGoal.self
-    ])
+    ]
+
+    static let schema = Schema(modelTypes)
 
     @MainActor private static var current: ModelContainer?
 
@@ -58,16 +63,27 @@ enum LocalStore {
         set { UserDefaults.standard.set(newValue, forKey: "cloudKitEnabled") }
     }
 
+    /// Vrai seulement si le container EN SERVICE synchronise via iCloud.
+    /// Le reglage `cloudKitEnabled` dit ce qui est demande, pas ce qui tourne:
+    /// sans la capacite iCloud l'app retombe en local, et le profil affichait
+    /// quand meme "Synchronisation active".
+    @MainActor private(set) static var syncActive = false
+
+    static func usesCloud(_ container: ModelContainer) -> Bool {
+        container.configurations.contains { $0.cloudKitContainerIdentifier != nil }
+    }
+
     @MainActor
     static func adopt(_ container: ModelContainer) {
         current = container
+        syncActive = usesCloud(container)
     }
 
     @MainActor
     static func container() throws -> ModelContainer {
         if let current { return current }
         let c = try buildContainer()
-        current = c
+        adopt(c)
         return c
     }
 
@@ -76,6 +92,7 @@ enum LocalStore {
     /// 2. Sinon (ou si CloudKit échoue), retombe sur config locale seule
     @MainActor
     static func buildContainer() throws -> ModelContainer {
+        FullBackup.applyAtLaunch(storeURL: ModelConfiguration(schema: schema, isStoredInMemoryOnly: false).url)
         if cloudKitEnabled {
             let config = ModelConfiguration(
                 schema: schema,

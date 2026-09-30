@@ -37,7 +37,7 @@ struct TodoView: View {
                             HStack(spacing: 12) {
                                 Button { withAnimation { t.done.toggle() } } label: {
                                     Image(systemName: t.done ? "checkmark.circle.fill" : "circle")
-                                        .font(.title3).foregroundStyle(t.done ? .green : priorityColor(t.priority))
+                                        .font(.title3).foregroundStyle(t.done ? Theme.success : priorityColor(t.priority))
                                 }
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(t.title).strikethrough(t.done).foregroundStyle(t.done ? Theme.textSecondary : Theme.textPrimary)
@@ -52,7 +52,7 @@ struct TodoView: View {
                                                     Text("En retard")
                                                 }
                                                 .font(.caption2.bold())
-                                                .foregroundStyle(.red)
+                                                .foregroundStyle(Theme.danger)
                                             } else {
                                                 Text(d, format: .dateTime.day().month().hour().minute())
                                                     .font(.caption2)
@@ -100,7 +100,7 @@ struct TodoView: View {
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { TodoEditor() }
     }
-    private func priorityColor(_ p: Int) -> Color { p >= 2 ? .red : p == 1 ? .orange : Theme.textSecondary }
+    private func priorityColor(_ p: Int) -> Color { p >= 2 ? Theme.danger : p == 1 ? Theme.warning : Theme.textSecondary }
 
     private func addToCalendar(_ todo: TodoItem) {
         let store = EKEventStore()
@@ -160,55 +160,161 @@ struct TodoEditor: View {
     ]
 
     var body: some View {
-        NavigationStack {
-            Form {
-                TextField("Tâche", text: $title)
-                TextField("Projet", text: $project)
-                Picker("Priorité", selection: $priority) {
-                    Text("Normale").tag(0)
-                    Text("Importante").tag(1)
-                    Text("Urgente").tag(2)
+        VStack(spacing: 0) {
+            // Header Liquid Glass
+            HStack {
+                Button("Annuler") {
+                    dismiss()
                 }
-                Toggle("Échéance", isOn: $hasDue)
-                if hasDue {
-                    DatePicker("Pour le", selection: $due)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(.secondary)
+                .buttonStyle(LifeOSPressStyle(scale: 0.95))
+
+                Spacer()
+
+                Text("Nouvelle tâche")
+                    .font(AppFont.heading(size: 17, weight: .bold))
+                    .foregroundStyle(.primary)
+
+                Spacer()
+
+                Button {
+                    let recRaw = isRecurring ? selectedDays.sorted().map(String.init).joined(separator: ",") : ""
+                    ctx.insert(TodoItem(title: title.trimmingCharacters(in: .whitespacesAndNewlines), due: hasDue ? due : nil, priority: priority, project: project.trimmingCharacters(in: .whitespacesAndNewlines), recurringDaysRaw: recRaw))
+                    Haptics.medium()
+                    dismiss()
+                } label: {
+                    Text("Ajouter")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(Theme.onAccent)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 8)
+                        .background(Color.primary, in: Capsule())
                 }
-                Toggle("Répéter certains jours", isOn: $isRecurring)
-                if isRecurring {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Jours actifs").font(.caption).foregroundStyle(.secondary)
-                        HStack(spacing: 8) {
-                            ForEach(dayOptions, id: \.day) { opt in
-                                let isSel = selectedDays.contains(opt.day)
-                                Button {
-                                    if isSel { selectedDays.remove(opt.day) }
-                                    else { selectedDays.insert(opt.day) }
-                                } label: {
-                                    Text(opt.label)
-                                        .font(.system(size: 13, weight: .bold))
-                                        .frame(width: 36, height: 36)
-                                        .background(isSel ? Color.accentColor : Color.primary.opacity(0.08), in: Circle())
-                                        .foregroundStyle(isSel ? Theme.onAccent : Theme.textPrimary)
-                                }
-                                .buttonStyle(.plain)
-                            }
+                .buttonStyle(LifeOSPressStyle(scale: 0.95))
+                .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .opacity(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.35 : 1.0)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 16)
+
+            Divider()
+
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Section 1: Tâche
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("DÉTAILS DE LA TÂCHE")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .tracking(0.6)
+
+                        TextField("Que dois-tu accomplir ?", text: $title)
+                            .font(.system(size: 16, weight: .medium))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 14)
+                            .raisedSurface(RoundedRectangle(cornerRadius: 14, style: .continuous), .nested)
+
+                        TextField("Projet (ex: Travail, Perso, Santé)", text: $project)
+                            .font(.system(size: 14, weight: .regular))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous), .nested)
+                    }
+                    .padding(18)
+                    .liquidGlassCard(cornerRadius: Theme.radius)
+
+                    // Section 2: Priorité
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("PRIORITÉ")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .tracking(0.6)
+
+                        HStack(spacing: 10) {
+                            priorityPill("Normale", tag: 0, color: .secondary)
+                            priorityPill("Importante", tag: 1, color: Theme.warning)
+                            priorityPill("Urgente", tag: 2, color: Theme.danger)
                         }
                     }
-                    .padding(.vertical, 4)
+                    .padding(18)
+                    .liquidGlassCard(cornerRadius: Theme.radius)
+
+                    // Section 3: Échéance
+                    VStack(alignment: .leading, spacing: 14) {
+                        Toggle(isOn: $hasDue.animation(.spring(response: 0.25))) {
+                            Label("Fixer une date limite", systemImage: "calendar.badge.clock")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(Color.primary)
+                        }
+
+                        if hasDue {
+                            Divider()
+                            DatePicker("Date & Heure", selection: $due)
+                                .datePickerStyle(.compact)
+                        }
+                    }
+                    .padding(18)
+                    .liquidGlassCard(cornerRadius: Theme.radius)
+
+                    // Section 4: Récurrence
+                    VStack(alignment: .leading, spacing: 14) {
+                        Toggle(isOn: $isRecurring.animation(.spring(response: 0.25))) {
+                            Label("Répéter certains jours", systemImage: "repeat")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(Color.primary)
+                        }
+
+                        if isRecurring {
+                            Divider()
+                            HStack(spacing: 8) {
+                                ForEach(dayOptions, id: \.day) { opt in
+                                    let isSel = selectedDays.contains(opt.day)
+                                    Button {
+                                        if isSel { selectedDays.remove(opt.day) }
+                                        else { selectedDays.insert(opt.day) }
+                                        Haptics.tap()
+                                    } label: {
+                                        Text(opt.label)
+                                            .font(.system(size: 13, weight: .bold))
+                                            .frame(width: 36, height: 36)
+                                            .background(isSel ? Color.accentColor : Color.primary.opacity(0.06), in: Circle())
+                                            .foregroundStyle(isSel ? Theme.onAccent : Theme.textPrimary)
+                                    }
+                                    .buttonStyle(LifeOSPressStyle(scale: 0.94))
+                                }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .center)
+                        }
+                    }
+                    .padding(18)
+                    .liquidGlassCard(cornerRadius: Theme.radius)
                 }
-            }
-            .navigationTitle("Nouvelle tâche").navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Ajouter") {
-                        let recRaw = isRecurring ? selectedDays.sorted().map(String.init).joined(separator: ",") : ""
-                        ctx.insert(TodoItem(title: title, due: hasDue ? due : nil, priority: priority, project: project, recurringDaysRaw: recRaw))
-                        dismiss()
-                    }.disabled(title.isEmpty)
-                }
+                .padding(20)
             }
         }
+        .background(Color.white.ignoresSafeArea())
+        #if targetEnvironment(macCatalyst)
+        .frame(minWidth: 460, minHeight: 520)
+        #endif
+    }
+
+    private func priorityPill(_ label: String, tag: Int, color: Color) -> some View {
+        let isSel = priority == tag
+        return Button {
+            priority = tag
+            Haptics.tap()
+        } label: {
+            Text(label)
+                .font(.system(size: 13, weight: isSel ? .bold : .medium))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(isSel ? color.opacity(0.16) : Color.primary.opacity(0.03), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(isSel ? color : Theme.stroke, lineWidth: isSel ? 1.5 : 0.6))
+                .foregroundStyle(isSel ? color : Color.primary)
+        }
+        .buttonStyle(LifeOSPressStyle(scale: 0.95))
     }
 }
 
@@ -351,7 +457,7 @@ struct TimeBlockView: View {
         do { try ctx.save() }
         catch { AppLog.data.error("creneaux non sauvegardes: \(error.localizedDescription, privacy: .public)") }
     }
-    private func priorityColor(_ p: Int) -> Color { p >= 2 ? .red : p == 1 ? .orange : .prodTint }
+    private func priorityColor(_ p: Int) -> Color { p >= 2 ? Theme.danger : p == 1 ? Theme.warning : .prodTint }
 }
 
 // MARK: - Habit tracker
@@ -409,18 +515,10 @@ struct HabitTrackerView: View {
     }
 
     private func syncHabitsToWidget() {
-        let today = Date()
-        let entries = activeHabits.map { h -> [String: Any] in
-            let done = h.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: today) }
-            return ["name": h.name, "icon": h.icon, "colorHex": h.colorHex, "done": done, "module": h.moduleTag]
-        }
-        guard let defaults = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return }
-        defaults.set(try? JSONSerialization.data(withJSONObject: entries), forKey: "widget_habits")
-
-        // Snapshot pour l'IA
-        let doneCount = entries.filter { $0["done"] as? Bool == true }.count
-        defaults.set(doneCount, forKey: "habits_done_today")
-        defaults.set(entries.count, forKey: "habits_total_today")
+        // Un seul ecrivain de l'instantane des habitudes: HabitSync.
+        HabitSync.ensureIDs(ctx)
+        HabitSync.publish(ctx)
+        guard let defaults = LifeOSGroup.defaults else { return }
         let avgStreak = activeHabits.isEmpty ? 0 : activeHabits.map { $0.completions.count }.reduce(0, +) / max(1, activeHabits.count)
         defaults.set(avgStreak, forKey: "habits_avg_streak")
 
@@ -476,12 +574,12 @@ struct PendingHabitRow: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .background(
-            Color.orange.opacity(0.06),
+            Theme.warning.opacity(0.06),
             in: RoundedRectangle(cornerRadius: 12, style: .continuous)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Color.orange.opacity(0.2), lineWidth: 1)
+                .stroke(Theme.warning.opacity(0.2), lineWidth: 1)
         )
     }
 }
@@ -535,10 +633,10 @@ struct HabitRow: View {
 
             if streak > 0 {
                 HStack(spacing: 3) {
-                    Image(systemName: "flame.fill").font(.caption2).foregroundStyle(.orange)
+                    Image(systemName: "flame.fill").font(.caption2).foregroundStyle(Theme.warning)
                     Text("\(streak)")
                         .font(AppFont.body(size: 12, weight: .bold))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Theme.warning)
                 }
             }
 
@@ -595,25 +693,81 @@ struct HabitEditor: View {
 
     @State private var name = ""
     @State private var icon = "drop.fill"
-    @State private var color = 0x4CC38A
+    @State private var color = 0x47CC5C
     @State private var scheduledHour = 9
     @State private var scheduledMinute = 0
     @State private var selectedDays: Set<Int> = Set(1...7)
 
-    private let colors = [0x4CC38A, 0x618EF1, 0xF1746C, 0xE0A23C, 0x9B6CF1, 0x3CD0C8]
+    private let colors = [0x47CC5C, 0x2185FF, 0xFF2E33, 0xFFB83D, 0xA852F5, 0x24C7CC, 0xFF338C, 0x29BDC7]
     private let minutes = [0, 15, 30, 45]
     private let dayOptions: [(day: Int, label: String)] = [
         (2, "L"), (3, "M"), (4, "M"), (5, "J"), (6, "V"), (7, "S"), (1, "D")
     ]
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section("Habitude") {
-                    TextField("Nom", text: $name)
+        VStack(spacing: 0) {
+            // Header Liquid Glass
+            HStack {
+                Button("Annuler") {
+                    dismiss()
                 }
-                Section("Jours actifs") {
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(.secondary)
+                .buttonStyle(LifeOSPressStyle(scale: 0.95))
+
+                Spacer()
+
+                Text(editingHabit == nil ? "Nouvelle habitude" : "Modifier l'habitude")
+                    .font(AppFont.heading(size: 17, weight: .bold))
+                    .foregroundStyle(.primary)
+
+                Spacer()
+
+                Button {
+                    save()
+                } label: {
+                    Text(editingHabit == nil ? "Créer" : "Enregistrer")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(Theme.onAccent)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 8)
+                        .background(Color.primary, in: Capsule())
+                }
+                .buttonStyle(LifeOSPressStyle(scale: 0.95))
+                .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .opacity(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.35 : 1.0)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 16)
+
+            Divider()
+
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Section 1: Nom
                     VStack(alignment: .leading, spacing: 10) {
+                        Text("NOM DE L'HABITUDE")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .tracking(0.6)
+
+                        TextField("Ex: Méditation du matin, Salle de sport...", text: $name)
+                            .font(.system(size: 16, weight: .medium))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 14)
+                            .raisedSurface(RoundedRectangle(cornerRadius: 14, style: .continuous), .nested)
+                    }
+                    .padding(18)
+                    .liquidGlassCard(cornerRadius: Theme.radius)
+
+                    // Section 2: Jours actifs
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("JOURS ACTIFS")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .tracking(0.6)
+
                         HStack(spacing: 8) {
                             ForEach(dayOptions, id: \.day) { opt in
                                 let isSel = selectedDays.contains(opt.day)
@@ -623,80 +777,115 @@ struct HabitEditor: View {
                                     } else {
                                         selectedDays.insert(opt.day)
                                     }
+                                    Haptics.tap()
                                 } label: {
                                     Text(opt.label)
                                         .font(.system(size: 14, weight: .bold))
                                         .frame(width: 38, height: 38)
-                                        .background(isSel ? Color.accentColor : Color.primary.opacity(0.08), in: Circle())
+                                        .background(isSel ? Color.accentColor : Color.primary.opacity(0.06), in: Circle())
                                         .foregroundStyle(isSel ? Theme.onAccent : Theme.textPrimary)
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(LifeOSPressStyle(scale: 0.94))
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 4)
 
                         HStack(spacing: 8) {
-                            Button("Tous les jours") {
+                            presetDayButton("Tous les jours", isSelected: selectedDays.count == 7) {
                                 selectedDays = Set(1...7)
                             }
-                            .font(.system(size: 11, weight: .semibold))
-                            .buttonStyle(LifeOSGlassButtonStyle())
-                            .tint(selectedDays.count == 7 ? .accentColor : .secondary)
-
-                            Button("Semaine") {
+                            presetDayButton("Semaine", isSelected: selectedDays == [2, 3, 4, 5, 6]) {
                                 selectedDays = [2, 3, 4, 5, 6]
                             }
-                            .font(.system(size: 11, weight: .semibold))
-                            .buttonStyle(LifeOSGlassButtonStyle())
-                            .tint(selectedDays == [2, 3, 4, 5, 6] ? .accentColor : .secondary)
-
-                            Button("Week-end") {
+                            presetDayButton("Week-end", isSelected: selectedDays == [7, 1]) {
                                 selectedDays = [7, 1]
                             }
-                            .font(.system(size: 11, weight: .semibold))
-                            .buttonStyle(LifeOSGlassButtonStyle())
-                            .tint(selectedDays == [7, 1] ? .accentColor : .secondary)
                         }
                         .frame(maxWidth: .infinity, alignment: .center)
                     }
-                    .padding(.vertical, 4)
-                }
-                Section("Horaire") {
-                    HStack(spacing: 0) {
-                        Picker("Heure", selection: $scheduledHour) {
-                            ForEach(0..<24, id: \.self) { Text(String(format: "%02d", $0)).tag($0) }
-                        }
-                        .adaptiveWheelPicker()
-                        .frame(maxWidth: .infinity)
-                        .clipped()
-                        Text("h")
-                            .font(.system(size: 17, weight: .medium))
+                    .padding(18)
+                    .liquidGlassCard(cornerRadius: Theme.radius)
+
+                    // Section 3: Horaire
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("HORAIRE DU RAPPEL")
+                            .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(.secondary)
-                        Picker("Min", selection: $scheduledMinute) {
-                            ForEach(minutes, id: \.self) { Text(String(format: "%02d", $0)).tag($0) }
+                            .tracking(0.6)
+
+                        HStack {
+                            Label("Heure quotidienne", systemImage: "clock.fill")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(Color.primary)
+                            Spacer()
+                            DatePicker("", selection: Binding(
+                                get: {
+                                    var c = Calendar.current.dateComponents([.year, .month, .day], from: .now)
+                                    c.hour = scheduledHour
+                                    c.minute = scheduledMinute
+                                    return Calendar.current.date(from: c) ?? .now
+                                },
+                                set: { newDate in
+                                    let c = Calendar.current.dateComponents([.hour, .minute], from: newDate)
+                                    scheduledHour = c.hour ?? 9
+                                    scheduledMinute = c.minute ?? 0
+                                }
+                            ), displayedComponents: .hourAndMinute)
+                            .datePickerStyle(.compact)
+                            .labelsHidden()
                         }
-                        .adaptiveWheelPicker()
+                    }
+                    .padding(18)
+                    .liquidGlassCard(cornerRadius: Theme.radius)
+
+                    // Section 4: Icône
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("ICÔNE")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .tracking(0.6)
+
+                        SmartIconPicker(selectedIcon: $icon, queryText: name, accentColor: Color(hex: UInt(color)))
+                    }
+                    .padding(18)
+                    .liquidGlassCard(cornerRadius: Theme.radius)
+
+                    // Section 5: Couleur
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("COULEUR")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .tracking(0.6)
+
+                        HStack(spacing: 12) {
+                            ForEach(colors, id: \.self) { c in
+                                let isSel = color == c
+                                Button {
+                                    color = c
+                                    Haptics.tap()
+                                } label: {
+                                    Circle()
+                                        .fill(Color(hex: UInt(c)))
+                                        .frame(width: 32, height: 32)
+                                        .overlay(
+                                            Circle()
+                                                .stroke(Color.white, lineWidth: isSel ? 3 : 0)
+                                        )
+                                        .shadow(color: Color(hex: UInt(c)).opacity(isSel ? 0.45 : 0.15), radius: isSel ? 5 : 2, y: isSel ? 2 : 1)
+                                        .scaleEffect(isSel ? 1.15 : 1.0)
+                                        .animation(.spring(response: 0.25, dampingFraction: 0.65), value: isSel)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
                         .frame(maxWidth: .infinity)
-                        .clipped()
                     }
-                    .wheelHeight(120)
-                }
-                Section("Icône") {
-                    SmartIconPicker(selectedIcon: $icon, queryText: name, accentColor: Color(hex: UInt(color)))
-                }
-                Section("Couleur") {
-                    HStack {
-                        ForEach(colors, id: \.self) { c in
-                            Circle().fill(Color(hex: UInt(c))).frame(width: 32, height: 32)
-                                .overlay(color == c ? Circle().stroke(.white, lineWidth: 2.5) : nil)
-                                .shadow(color: Color(hex: UInt(c)).opacity(color == c ? 0.4 : 0), radius: 4)
-                                .onTapGesture { color = c }
-                        }
-                    }
-                }
-                if editingHabit != nil {
-                    Section {
+                    .padding(18)
+                    .liquidGlassCard(cornerRadius: Theme.radius)
+
+                    // Section 6: Supprimer (si modification)
+                    if editingHabit != nil {
                         Button(role: .destructive) {
                             if let h = editingHabit {
                                 ctx.delete(h)
@@ -707,47 +896,69 @@ struct HabitEditor: View {
                         } label: {
                             HStack {
                                 Spacer()
-                                Text("Supprimer l'habitude")
+                                Image(systemName: "trash")
+                                Text("Supprimer cette habitude")
+                                    .fontWeight(.semibold)
                                 Spacer()
                             }
+                            .foregroundStyle(Theme.danger)
+                            .padding(.vertical, 14)
                         }
+                        .padding(4)
+                        .liquidGlassCard(cornerRadius: Theme.radius)
                     }
                 }
-            }
-            .navigationTitle(editingHabit == nil ? "Nouvelle habitude" : "Modifier")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(editingHabit == nil ? "Créer" : "Enregistrer") {
-                        let daysRaw = selectedDays.sorted().map(String.init).joined(separator: ",")
-                        if let h = editingHabit {
-                            h.name = name; h.icon = icon; h.colorHex = color
-                            h.scheduledHour = scheduledHour; h.scheduledMinute = scheduledMinute
-                            h.activeDaysRaw = daysRaw
-                        } else {
-                            ctx.insert(Habit(name: name, icon: icon, colorHex: color, scheduledHour: scheduledHour, scheduledMinute: scheduledMinute, activeDaysRaw: daysRaw))
-                        }
-                        do {
-                            try ctx.save()
-                        } catch {
-                            AppLog.data.error("save habit failed: \(error.localizedDescription, privacy: .public)")
-                        }
-                        WidgetCenter.shared.reloadAllTimelines()
-                        dismiss()
-                    }.disabled(name.isEmpty)
-                }
-            }
-            .onAppear {
-                if let h = editingHabit {
-                    name = h.name; icon = h.icon; color = h.colorHex
-                    scheduledHour = h.scheduledHour; scheduledMinute = h.scheduledMinute
-                    selectedDays = h.activeDays
-                } else if let initialHour {
-                    scheduledHour = initialHour
-                }
+                .padding(20)
             }
         }
+        .background(Color.white.ignoresSafeArea())
+        #if targetEnvironment(macCatalyst)
+        .frame(minWidth: 460, minHeight: 560)
+        #endif
+        .onAppear {
+            if let h = editingHabit {
+                name = h.name; icon = h.icon; color = h.colorHex
+                scheduledHour = h.scheduledHour; scheduledMinute = h.scheduledMinute
+                selectedDays = h.activeDays
+            } else if let initialHour {
+                scheduledHour = initialHour
+            }
+        }
+    }
+
+    private func presetDayButton(_ title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
+        Button(title) {
+            action()
+            Haptics.tap()
+        }
+        .font(.system(size: 11, weight: .semibold))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(isSelected ? Color.accentColor.opacity(0.15) : Color.primary.opacity(0.04), in: Capsule())
+        .overlay(Capsule().stroke(isSelected ? Color.accentColor : Theme.stroke, lineWidth: isSelected ? 1.5 : 0.6))
+        .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+        .buttonStyle(LifeOSPressStyle(scale: 0.95))
+    }
+
+    private func save() {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let daysRaw = selectedDays.sorted().map(String.init).joined(separator: ",")
+        if let h = editingHabit {
+            h.name = trimmed; h.icon = icon; h.colorHex = color
+            h.scheduledHour = scheduledHour; h.scheduledMinute = scheduledMinute
+            h.activeDaysRaw = daysRaw
+        } else {
+            ctx.insert(Habit(name: trimmed, icon: icon, colorHex: color, scheduledHour: scheduledHour, scheduledMinute: scheduledMinute, activeDaysRaw: daysRaw))
+        }
+        do {
+            try ctx.save()
+        } catch {
+            AppLog.data.error("save habit failed: \(error.localizedDescription, privacy: .public)")
+        }
+        WidgetCenter.shared.reloadAllTimelines()
+        Haptics.medium()
+        dismiss()
     }
 }
 
@@ -770,8 +981,8 @@ struct FocusTimerView: View {
                         Stepper("Focus \(focusLen)min", value: $focusLen, in: 10...60, step: 5)
                     }.font(.footnote).card()
                 }
-                Text(isFocus ? "CONCENTRATION" : "PAUSE").font(.caption.bold()).foregroundStyle(isFocus ? .prodTint : .green)
-                TimerDial(engine: engine, tint: isFocus ? Color.accentColor : .green, caption: "Session \(sessions+1)")
+                Text(isFocus ? "CONCENTRATION" : "PAUSE").font(.caption.bold()).foregroundStyle(isFocus ? .prodTint : Theme.success)
+                TimerDial(engine: engine, tint: isFocus ? Color.accentColor : Theme.success, caption: "Session \(sessions+1)")
                 Label("\(sessions) sessions terminées", systemImage: "checkmark.seal").font(.footnote).foregroundStyle(Theme.textSecondary)
                 if !running {
                     PrimaryButton(title: "Démarrer le focus", icon: "play.fill", tint: .prodTint) { startFocus() }

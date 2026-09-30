@@ -19,6 +19,16 @@ struct CategoryRecapCard: View {
     @Query private var pets: [Pet]
     @Query private var holdings: [Holding]
     @Query private var jobs: [JobApplication]
+    @Query private var envelopes: [Envelope]
+    @Query private var medications: [Medication]
+    @Query private var deadlines: [Deadline]
+    @Query private var packing: [PackingItem]
+    @AppStorage(AppStorageKeys.waterGoal) private var waterGoal = 2500
+
+    // Regle (28 septembre): chaque chiffre de cette carte vient des donnees.
+    // Avant, sans donnees, le sommeil affichait "7.5h" et "85%" inventes, et
+    // plusieurs cartes portaient un statut ecrit en dur ("Actif", "À jour",
+    // "Sécurisé", "Prêt") qui ne mesurait rien.
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -88,7 +98,7 @@ struct CategoryRecapCard: View {
         return HStack(spacing: 16) {
             recapMetric(title: "Pas aujourd'hui", value: "\(todaySteps.formatted())", unit: "pas", icon: "figure.walk", color: category.tint)
             Divider().frame(height: 36)
-            recapMetric(title: "Séances (7j)", value: "\(weekWorkouts)", unit: "séance\(weekWorkouts > 1 ? "s" : "")", icon: "dumbbell.fill", color: .orange)
+            recapMetric(title: "Séances (7j)", value: "\(weekWorkouts)", unit: "séance\(weekWorkouts > 1 ? "s" : "")", icon: "dumbbell.fill", color: Theme.warning)
         }
     }
 
@@ -100,15 +110,18 @@ struct CategoryRecapCard: View {
         let waterLiters = Double(todayWater) / 1000.0
 
         return HStack(spacing: 16) {
-            recapMetric(title: "Calories du jour", value: "\(totalCal)", unit: "kcal", icon: "flame.fill", color: .orange)
+            recapMetric(title: "Calories du jour", value: "\(totalCal)", unit: "kcal", icon: "flame.fill", color: Theme.warning)
             Divider().frame(height: 36)
-            recapMetric(title: "Hydratation", value: String(format: "%.1f", waterLiters), unit: "L / 2L", icon: "drop.fill", color: .cyan)
+            recapMetric(title: "Hydratation", value: String(format: "%.1f", waterLiters),
+                        unit: String(format: "L / %.1f L", Double(waterGoal) / 1000), icon: "drop.fill", color: Theme.productivity)
         }
     }
 
     private var productivityRecap: some View {
         let openTasks = todos.filter { !$0.done }.count
-        let activeHabits = habits.filter { !$0.isArchived }
+        // Habitudes prevues AUJOURD'HUI seulement: "0/1" sans aucune habitude, ou
+        // une habitude du samedi comptee le mardi, disaient faux.
+        let activeHabits = habits.filter { !$0.isArchived && !$0.isPending && $0.isActive(on: .now) }
         let doneHabits = activeHabits.filter { h in
             h.completions.contains { Calendar.current.isDateInToday($0.date) }
         }.count
@@ -116,19 +129,24 @@ struct CategoryRecapCard: View {
         return HStack(spacing: 16) {
             recapMetric(title: "Tâches à faire", value: "\(openTasks)", unit: "en cours", icon: "checklist", color: category.tint)
             Divider().frame(height: 36)
-            recapMetric(title: "Habitudes faites", value: "\(doneHabits)/\(max(activeHabits.count, 1))", unit: "validées", icon: "checkmark.circle.fill", color: .green)
+            recapMetric(title: "Habitudes du jour", value: activeHabits.isEmpty ? "—" : "\(doneHabits)/\(activeHabits.count)",
+                        unit: activeHabits.isEmpty ? "aucune prévue" : "validées", icon: "checkmark.circle.fill", color: Theme.success)
         }
     }
 
     private var sleepRecap: some View {
         let lastNight = sleeps.sorted { $0.date > $1.date }.first
-        let duration = lastNight.map { String(format: "%.1fh", $0.hours) } ?? "7.5h"
-        let qualityScore = lastNight.map { "\($0.quality * 20)%" } ?? "85%"
+        let cal = Calendar.current
+        let recent = lastNight.map { cal.isDateInToday($0.date) || cal.isDateInYesterday($0.date) } ?? false
+        let title = lastNight == nil || recent ? "Dernière nuit"
+            : "Nuit du \(lastNight!.date.formatted(.dateTime.day().month(.abbreviated)))"
 
         return HStack(spacing: 16) {
-            recapMetric(title: "Dernière nuit", value: duration, unit: "durée", icon: "bed.double.fill", color: category.tint)
+            recapMetric(title: title, value: lastNight.map { String(format: "%.1fh", $0.hours) } ?? "—",
+                        unit: lastNight == nil ? "aucune nuit notée" : "durée", icon: "bed.double.fill", color: category.tint)
             Divider().frame(height: 36)
-            recapMetric(title: "Qualité estimée", value: qualityScore, unit: "score", icon: "moon.stars.fill", color: .indigo)
+            recapMetric(title: "Qualité notée", value: lastNight.map { "\($0.quality)/5" } ?? "—",
+                        unit: lastNight == nil ? "" : "ton ressenti", icon: "moon.stars.fill", color: Theme.sleep)
         }
     }
 
@@ -137,7 +155,10 @@ struct CategoryRecapCard: View {
         return HStack(spacing: 16) {
             recapMetric(title: "Actifs suivis", value: "\(count)", unit: "lignes", icon: "chart.line.uptrend.xyaxis", color: category.tint)
             Divider().frame(height: 36)
-            recapMetric(title: "Objectif budget", value: "Actif", unit: "suivi mensuel", icon: "eurosign.circle.fill", color: .green)
+            let over = envelopes.filter { $0.monthlyBudget > 0 && $0.spent > $0.monthlyBudget }.count
+            recapMetric(title: "Enveloppes", value: "\(envelopes.count)",
+                        unit: envelopes.isEmpty ? "aucune" : (over > 0 ? "\(over) dépassée\(over > 1 ? "s" : "")" : "dans le budget"),
+                        icon: "eurosign.circle.fill", color: over > 0 ? Theme.warning : Theme.success)
         }
     }
 
@@ -146,7 +167,8 @@ struct CategoryRecapCard: View {
         return HStack(spacing: 16) {
             recapMetric(title: "Rendez-vous à venir", value: "\(upcoming)", unit: "prévu\(upcoming > 1 ? "s" : "")", icon: "calendar.badge.clock", color: category.tint)
             Divider().frame(height: 36)
-            recapMetric(title: "Santé & carnet", value: "À jour", unit: "dossier médical", icon: "heart.text.square.fill", color: .red)
+            let activeMeds = medications.filter(\.active).count
+            recapMetric(title: "Médicaments actifs", value: "\(activeMeds)", unit: "traitement\(activeMeds > 1 ? "s" : "")", icon: "pills.fill", color: Theme.danger)
         }
     }
 
@@ -165,7 +187,8 @@ struct CategoryRecapCard: View {
         return HStack(spacing: 16) {
             recapMetric(title: "Documents coffre", value: "\(docCount)", unit: "numérisé\(docCount > 1 ? "s" : "")", icon: "lock.doc.fill", color: category.tint)
             Divider().frame(height: 36)
-            recapMetric(title: "Démarches", value: "Sécurisé", unit: "sauvegarde locale", icon: "checkmark.shield.fill", color: .blue)
+            let soon = deadlines.filter { $0.date >= Calendar.current.startOfDay(for: .now) }.count
+            recapMetric(title: "Échéances à venir", value: "\(soon)", unit: "à suivre", icon: "calendar.badge.exclamationmark", color: Theme.finance)
         }
     }
 
@@ -174,24 +197,25 @@ struct CategoryRecapCard: View {
         return HStack(spacing: 16) {
             recapMetric(title: "Voyages enregistrés", value: "\(count)", unit: "itinéraire\(count > 1 ? "s" : "")", icon: "airplane", color: category.tint)
             Divider().frame(height: 36)
-            recapMetric(title: "Bagages & listes", value: "Prêt", unit: "checklists", icon: "suitcase.fill", color: .cyan)
+            let packed = packing.filter(\.packed).count
+            recapMetric(title: "Bagages", value: packing.isEmpty ? "—" : "\(packed)/\(packing.count)",
+                        unit: packing.isEmpty ? "aucune liste" : "prêts", icon: "suitcase.fill", color: Theme.productivity)
         }
     }
 
     private var careerRecap: some View {
         let count = jobs.count
         return HStack(spacing: 16) {
-            recapMetric(title: "Candidatures", value: "\(count)", unit: "en cours", icon: "briefcase.fill", color: category.tint)
+            recapMetric(title: "Candidatures", value: "\(count)", unit: "suivies", icon: "briefcase.fill", color: category.tint)
             Divider().frame(height: 36)
-            recapMetric(title: "Profil & CV", value: "Actif", unit: "mise à jour", icon: "doc.text.fill", color: .purple)
+            let interviews = jobs.filter { $0.status == "Entretien" }.count
+            recapMetric(title: "Entretiens", value: "\(interviews)", unit: "en cours", icon: "person.2.fill", color: Theme.mind)
         }
     }
 
     private var genericRecap: some View {
         HStack(spacing: 16) {
-            recapMetric(title: "Statut du module", value: "Actif", unit: category.title, icon: category.icon, color: category.tint)
-            Divider().frame(height: 36)
-            recapMetric(title: "Outils connectés", value: "\(category.tools.count)", unit: "fonctionnalités", icon: "square.grid.2x2.fill", color: category.tint)
+            recapMetric(title: "Outils", value: "\(category.tools.count)", unit: "dans cette catégorie", icon: category.icon, color: category.tint)
         }
     }
 

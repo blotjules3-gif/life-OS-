@@ -66,17 +66,41 @@ final class TabataCatchUpTests: XCTestCase {
     }
 
     /// Une absence absurde ne doit ni boucler sans fin ni casser l'etat.
-    func testVeryLongGapTerminatesCleanly() {
+    /// Regle depuis le 30 septembre 2026: au-dela de 5 minutes d'absence, la
+    /// seance se met en PAUSE la ou elle en etait. Avant, elle passait a
+    /// "terminee" et une heure de telephone pose devenait une seance faite.
+    func testVeryLongGapPausesInsteadOfCrediting() {
         let start = Date(timeIntervalSince1970: 4_000_000)
         var clock = start
         let e = TabataEngine(cfg: TabataConfig(prepare: 10, work: 30, rest: 15,
                                                rounds: 2, cycles: 1, restCycle: 60, cooldown: 0))
         e.now = { clock }
         e.begin()
+        clock = clock.addingTimeInterval(4)
+        e.tick()
 
         clock = clock.addingTimeInterval(9_000) // deux heures et demie
         e.tick()
-        XCTAssertEqual(e.phase, .done, "la seance doit etre terminee, pas bloquee")
+        XCTAssertEqual(e.phase, .prepare, "la seance reste ou elle en etait")
+        XCTAssertEqual(e.remaining, 6, "rien de l'absence n'est consomme")
+        XCTAssertFalse(e.running, "elle est mise en pause")
+        XCTAssertEqual(e.interruptionGap.map { Int($0) }, 9_000)
+        XCTAssertEqual(e.activeSeconds, 4, "seules les 4 s reelles sont creditees")
+    }
+
+    /// Juste sous la limite, l'absence est rattrapee comme avant.
+    func testGapUnderLimitIsCaughtUp() {
+        let start = Date(timeIntervalSince1970: 4_500_000)
+        var clock = start
+        let e = TabataEngine(cfg: TabataConfig(prepare: 10, work: 30, rest: 15,
+                                               rounds: 2, cycles: 1, restCycle: 60, cooldown: 0))
+        e.now = { clock }
+        e.begin()
+
+        clock = clock.addingTimeInterval(TabataEngine.maxUnattendedGap) // 5 min pile
+        e.tick()
+        XCTAssertEqual(e.phase, .done, "5 min couvrent toute cette seance de 85 s")
+        XCTAssertTrue(e.interruptionGap == nil)
     }
 
     /// En pause, l'horloge qui avance ne doit rien consommer.
@@ -140,5 +164,43 @@ final class TabataCatchUpTests: XCTestCase {
         XCTAssertEqual(e.phase, .idle)
         XCTAssertEqual(e.remaining, 10)
         XCTAssertEqual(e.round, 1)
+    }
+
+    // MARK: - Fin de seance: frontiere reelle
+
+    /// Une seance de 85 s (10 + 30 + 15 + 30) qui se termine PENDANT une absence
+    /// de 200 s: la fin est datee de la 85e seconde, pas du retour a 200 s.
+    func testFinishDuringCatchUpIsDatedAtRealBoundary() {
+        let start = Date(timeIntervalSince1970: 9_000_000)
+        var clock = start
+        let e = TabataEngine(cfg: TabataConfig(prepare: 10, work: 30, rest: 15,
+                                               rounds: 2, cycles: 1, restCycle: 60, cooldown: 0))
+        e.now = { clock }
+        e.begin()
+        XCTAssertNil(e.finishedAt)
+        clock = clock.addingTimeInterval(200)
+        e.tick()
+        XCTAssertEqual(e.phase, .done)
+        XCTAssertEqual(e.finishedAt, start.addingTimeInterval(85), "la vraie frontiere")
+        XCTAssertEqual(e.activeSeconds, 85)
+
+        clock = clock.addingTimeInterval(50)
+        e.tick()
+        XCTAssertEqual(e.finishedAt, start.addingTimeInterval(85), "posee une fois, jamais recalculee")
+        e.reset()
+        XCTAssertNil(e.finishedAt, "une nouvelle seance repart sans fin")
+    }
+
+    /// Fin par le temps en marche normale: datee de l'horloge du tick.
+    func testFinishOnNormalTickIsDatedNow() {
+        let start = Date(timeIntervalSince1970: 9_500_000)
+        var clock = start
+        let e = TabataEngine(cfg: TabataConfig(prepare: 10, work: 30, rest: 15,
+                                               rounds: 2, cycles: 1, restCycle: 60, cooldown: 0))
+        e.now = { clock }
+        e.begin()
+        for _ in 0..<85 { clock = clock.addingTimeInterval(1); e.tick() }
+        XCTAssertEqual(e.phase, .done)
+        XCTAssertEqual(e.finishedAt, clock)
     }
 }

@@ -24,6 +24,20 @@ enum CategorySetup {
     static var percent: Int { Int((fraction * 100).rounded()) }
 }
 
+// MARK: - Categorie du questionnaire ouvert
+
+private struct SetupCategoryKey: EnvironmentKey {
+    static let defaultValue: AppCategory? = nil
+}
+extension EnvironmentValues {
+    /// Posee par `CategoryFlowView`: permet a la coquille commune de gerer l'etat,
+    /// le brouillon et l'annulation sans toucher aux neuf questionnaires.
+    var setupCategory: AppCategory? {
+        get { self[SetupCategoryKey.self] }
+        set { self[SetupCategoryKey.self] = newValue }
+    }
+}
+
 // MARK: - Une page du formulaire
 
 struct SetupPage {
@@ -43,10 +57,24 @@ struct SetupFlow: View {
     let pages: [SetupPage]
     let onComplete: () -> Void
 
+    /// Effets en base que la coquille ne peut pas deviner (programme regenere...).
+    var previewNotes: [String] = []
+    /// Ce que les reponses vont changer, calcule par le module a partir de ses
+    /// valeurs en cours (celles qui ne sont ecrites qu'a "Appliquer").
+    var preview: (() -> [SetupSession.Change])? = nil
+    /// Reponses a garder entre deux lancements (premier passage seulement).
+    var draft: SetupDraftIO? = nil
+
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.setupCategory) private var category
     @State private var idx = 0
+    @State private var session: SetupSession?
+    @State private var changes: [SetupSession.Change] = []
+    @State private var showPreview = false
 
     private var isLast: Bool { idx == pages.count - 1 }
+    private var editing: Bool { session?.wasCompleted ?? false }
 
     var body: some View {
         ZStack {
@@ -64,6 +92,133 @@ struct SetupFlow: View {
                 footer
             }
         }
+        .onAppear(perform: start)
+        .onChange(of: idx) { _, _ in persistDraft() }
+        // Une app tuee ne tape jamais "Plus tard": on garde tout des qu'elle
+        // passe en arriere plan.
+        .onChange(of: scenePhase) { _, phase in if phase != .active { persistDraft() } }
+        .sheet(isPresented: $showPreview) { previewSheet }
+    }
+
+    private func start() {
+        guard session == nil, let category else { return }
+        let s = SetupSession(category: category)
+        s.begin()
+        session = s
+        idx = CategorySetup.resumePage(category, pageCount: pages.count)
+        // Le brouillon doit passer APRES le chargeur du module (son onAppear lit
+        // les reglages en place). Mesure le 28 septembre: remis dans un `.task`,
+        // il etait ecrase par ce chargeur. Le tour suivant de la boucle
+        // principale vient apres tous les onAppear de cet ecran.
+        DispatchQueue.main.async { restoreDraft() }
+    }
+
+    /// "Plus tard" sur un premier passage: les reponses deja donnees restent et
+    /// l'etape est retenue. "Annuler" en modification: tout revient comme avant.
+    private func leave() {
+        if let session {
+            if editing { session.cancel() } else { persistDraft() }
+        }
+        dismiss()
+    }
+
+    /// Page ET reponses. Rien en modification: un questionnaire termine se
+    /// rouvre depuis les reglages appliques. Rien avant `ready`: le changement de
+    /// page de l'ouverture ecraserait le brouillon avec les valeurs par defaut
+    /// avant qu'il soit remis.
+    private func persistDraft() {
+        guard ready, let session, let category, !editing, !showPreview else { return }
+        let answers = draft?.save() ?? SetupDraft()
+        let touched = hadDraft || answers != baseline
+        if touched { CategorySetup.saveAnswers(category, answers) }
+        CategorySetup.saveDraft(category, page: idx, pageCount: pages.count,
+                                answered: touched || !session.pendingChanges().isEmpty)
+    }
+
+    @State private var ready = false
+    @State private var hadDraft = false
+    /// Reponses a l'ouverture: ouvrir puis quitter n'est pas "avoir repondu".
+    @State private var baseline = SetupDraft()
+
+    private func restoreDraft() {
+        guard !ready else { return }
+        if let category, let draft, let saved = CategorySetup.loadAnswers(category) {
+            draft.restore(saved)
+            hadDraft = true
+            baseline = saved
+        } else {
+            baseline = draft?.save() ?? SetupDraft()
+        }
+        ready = true
+    }
+
+    /// Montre ce qui va changer. Rien n'est encore ecrit en base.
+    private func finish() {
+        guard let session else { onComplete(); dismiss(); return }
+        changes = session.pendingChanges() + (preview?() ?? [])
+        showPreview = true
+    }
+
+    private func accept() {
+        onComplete()
+        if let category { CategorySetup.markCompleted(category); CategorySetup.clearAnswers(category) }
+        showPreview = false
+        dismiss()
+    }
+
+    private func discard() {
+        session?.cancel()
+        showPreview = false
+        dismiss()
+    }
+
+    private var previewSheet: some View {
+        NavigationStack {
+            List {
+                Section {
+                    if changes.isEmpty {
+                        Text(editing ? "Aucun réglage ne change." : "Tes réponses sont prêtes à être appliquées.")
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                    ForEach(changes) { c in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(c.label).font(.subheadline.weight(.semibold))
+                            HStack(spacing: 6) {
+                                Text(c.before).foregroundStyle(Theme.textSecondary).strikethrough(c.before != "—")
+                                Image(systemName: "arrow.right").font(.caption).foregroundStyle(Theme.textSecondary)
+                                Text(c.after).foregroundStyle(accent)
+                            }
+                            .font(.subheadline)
+                        }
+                        .padding(.vertical, 2)
+                    }
+                } header: {
+                    Text(editing ? "Ce qui change" : "Ce qui sera réglé")
+                }
+                if !previewNotes.isEmpty {
+                    Section("Aussi") {
+                        ForEach(previewNotes, id: \.self) { Text($0).font(.subheadline) }
+                    }
+                }
+                Section {
+                    Text("Tes journaux et séances déjà enregistrés ne sont pas modifiés.")
+                        .font(.caption).foregroundStyle(Theme.textSecondary)
+                }
+            }
+            .navigationTitle("Vérifie avant d'appliquer").navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Modifier") { showPreview = false }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Appliquer") { accept() }.bold()
+                }
+                ToolbarItem(placement: .bottomBar) {
+                    Button(editing ? "Annuler les changements" : "Tout annuler", role: .destructive) { discard() }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 
     private var header: some View {
@@ -77,7 +232,7 @@ struct SetupFlow: View {
                 Spacer()
                 Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textSecondary)
                 Spacer()
-                Button("Plus tard") { dismiss() }
+                Button(editing ? "Annuler" : "Plus tard") { leave() }
                     .font(.subheadline).foregroundStyle(Theme.textSecondary)
             }
             // barre de progression segmentée
@@ -94,11 +249,11 @@ struct SetupFlow: View {
 
     private var footer: some View {
         Button {
-            if isLast { onComplete(); dismiss() }
+            if isLast { finish() }
             else { withAnimation { idx += 1 } }
             Haptics.soft()
         } label: {
-            Text(isLast ? "Terminer" : "Suivant")
+            Text(isLast ? "Voir le résumé" : "Suivant")
                 .font(.headline).frame(maxWidth: .infinity).padding(.vertical, 16)
                 .background((pages[idx].canAdvance() ? AnyShapeStyle(accent.gradient) : AnyShapeStyle(Color.gray.opacity(0.3))),
                            in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -233,6 +388,7 @@ struct SetupNumber: View {
 struct CategoryFlowView: View {
     let category: AppCategory
     var body: some View {
+        Group {
         switch category {
         case .nutrition:    NutritionSetupView()
         case .fitness:      FitnessSetupView()
@@ -245,6 +401,8 @@ struct CategoryFlowView: View {
         case .mobility:     MobilitySetupView()
         default:            EmptyView()
         }
+        }
+        .environment(\.setupCategory, category)
     }
 }
 
@@ -291,9 +449,9 @@ struct ProfileCompletionCard: View {
                         Button { launch = c; Haptics.soft() } label: {
                             Label("Configurer \(c.title)", systemImage: c.icon)
                                 .font(.system(size: 12, weight: .black)).textCase(.uppercase).kerning(0.3)
-                                .foregroundStyle(Theme.onAccent)
+                                .foregroundStyle(Theme.textPrimary)
                                 .padding(.horizontal, 14).padding(.vertical, 9)
-                                .background(Color.accentColor, in: Capsule())
+                                .glassControl(Capsule())
                         }.buttonStyle(PressableButtonStyle())
                     }
                 }
@@ -371,12 +529,12 @@ struct IntakeHubView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(c.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
                     Text(has ? (done ? "Configuré" : "À configurer") : "Bientôt")
-                        .font(.caption).foregroundStyle(done ? Color.green : Theme.textSecondary)
+                        .font(.caption).foregroundStyle(done ? Theme.success : Theme.textSecondary)
                 }
                 Spacer()
                 if has {
                     Image(systemName: done ? "checkmark.circle.fill" : "chevron.right")
-                        .foregroundStyle(done ? AnyShapeStyle(Color.green) : AnyShapeStyle(Color.secondary))
+                        .foregroundStyle(done ? AnyShapeStyle(Theme.success) : AnyShapeStyle(Color.secondary))
                 }
             }
             .padding(14)

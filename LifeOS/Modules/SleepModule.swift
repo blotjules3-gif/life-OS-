@@ -275,7 +275,7 @@ struct DreamCard: View {
                 }
                 Spacer()
                 Button(role: .destructive) { ctx.delete(dream) } label: { Image(systemName: "trash") }
-                    .foregroundStyle(.red.opacity(0.8))
+                    .foregroundStyle(Theme.danger.opacity(0.8))
             }
         }
         .card()
@@ -309,9 +309,9 @@ struct DreamEditor: View {
                     } label: {
                         Label(recorder.isRecording ? "Arrêter l'enregistrement" : "Enregistrer ma voix",
                               systemImage: recorder.isRecording ? "stop.circle.fill" : "mic.circle.fill")
-                            .foregroundStyle(recorder.isRecording ? .red : .sleepTint)
+                            .foregroundStyle(recorder.isRecording ? Theme.danger : .sleepTint)
                     }
-                    if recorder.filename != nil { Text("Note vocale enregistrée").font(.caption).foregroundStyle(.green) }
+                    if recorder.filename != nil { Text("Note vocale enregistrée").font(.caption).foregroundStyle(Theme.success) }
                 }
                 Section("Ressenti") {
                     Stepper("Intensité : \(mood)/5", value: $mood, in: 1...5)
@@ -334,7 +334,7 @@ struct DreamEditor: View {
 /// Enregistreur audio minimal pour le journal de rêves.
 @Observable
 final class AudioRecorder {
-    static var docsURL: URL { FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0] }
+    static var docsURL: URL { AppPaths.documents }
     private var recorder: AVAudioRecorder?
     var isRecording = false
     var filename: String?
@@ -397,7 +397,7 @@ struct RecoveryScoreView: View {
                             .multilineTextAlignment(.center).padding(.horizontal)
                         HStack(spacing: 12) {
                             StatTile(value: hrv.map { "\(Int($0)) ms" } ?? "—", label: "HRV (SDNN)", icon: "waveform.path.ecg")
-                            StatTile(value: rhr.map { "\(Int($0))" } ?? "—", label: "FC repos", icon: "heart.fill", tint: .red)
+                            StatTile(value: rhr.map { "\(Int($0))" } ?? "—", label: "FC repos", icon: "heart.fill", tint: Theme.danger)
                         }
                     } else {
                         EmptyState(icon: "heart.slash", title: "Pas de données santé",
@@ -415,7 +415,7 @@ struct RecoveryScoreView: View {
             loading = false
         }
     }
-    private func scoreColor(_ s: Int) -> Color { s >= 66 ? .green : (s >= 40 ? .yellow : .red) }
+    private func scoreColor(_ s: Int) -> Color { s >= 66 ? Theme.success : (s >= 40 ? Theme.learning : Theme.danger) }
     private func advice(_ s: Int) -> String {
         s >= 66 ? "Bien récupéré. Tu peux pousser fort aujourd'hui"
         : s >= 40 ? "Récup moyenne. Entraînement modéré conseillé."

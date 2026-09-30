@@ -1,0 +1,18 @@
+{
+  "e52d866f001095b528079808ec19c834dda6cbc346097515c4d98d80099515ba": {
+    "event": "workspace-trust-blocked",
+    "message_id": 664
+  },
+  "02745fde4bacb6b1c7cfe0c219aa6aa1267f33a12e69285008f9be67e4e37793": {
+    "event": "resumed-after-trust",
+    "message_id": 665
+  },
+  "7830651c52bf537d6079e191e5bcdd09169f5daf15fb31869c9896856c0bd83b": {
+    "event": "terminal:blocked",
+    "message_id": 666
+  },
+  "41298e76414c9e7d8003683ac79ec3ab2aad8ccb1f300e2e478eafec1aecfe2c": {
+    "event": "resume-controller-fixed",
+    "message_id": 667
+  }
+}

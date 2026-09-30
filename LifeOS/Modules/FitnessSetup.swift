@@ -35,7 +35,10 @@ struct FitnessSetupView: View {
     private var isFemme: Bool { userGender == "femme" }
 
     var body: some View {
-        SetupFlow(title: "Sport & fitness", accent: tint, pages: pages, onComplete: commit)
+        SetupFlow(title: "Sport & fitness", accent: tint, pages: pages, onComplete: commit,
+                  previewNotes: ["Tes séances et charges déjà enregistrées ne changent pas."],
+                  preview: previewChanges, draft: draftIO)
+            .onAppear(perform: loadAnswers)
     }
 
     private var pages: [SetupPage] {
@@ -157,7 +160,51 @@ struct FitnessSetupView: View {
 
     // MARK: enregistrement
 
+    /// L'apercu montre le NOUVEAU programme jour par jour, a cote de l'ancien:
+    /// c'est ce que "Appliquer" va remplacer.
+    private func previewChanges() -> [SetupSession.Change] {
+        let names = ["", "Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"]
+        let old = Dictionary(gymDays.map { ($0.weekday, $0.isRest ? "Repos" : $0.title) }, uniquingKeysWith: { a, _ in a })
+        var out: [SetupSession.Change] = [
+            .make("Objectif principal", userGoalFit.isEmpty ? "—" : userGoalFit, primaryGoal),
+            .make("Minuteur HIIT", "\(tabataWork)s / \(tabataRest)s",
+                  "\(level == "Débutant" ? 30 : (level == "Avancé" ? 45 : 40))s / \(level == "Avancé" ? 15 : 20)s"),
+        ].compactMap { $0 }
+        for p in weekPlan {
+            let new = p.rest ? "Repos" : p.title
+            if let c = SetupSession.Change.make("Programme · \(names[p.weekday])", old[p.weekday] ?? "—", new) {
+                out.append(c)
+            }
+        }
+        return out
+    }
+
+    // Reponses gardees pour "Modifier mes reponses". Avant, seul l'objectif etait
+    // enregistre: rouvrir le questionnaire montrait les valeurs par defaut
+    // (Intermediaire, 4 jours, Salle) au lieu de ce que l'utilisateur avait choisi.
+    private enum Saved {
+        static let level = "fitnessSetup.level", freq = "fitnessSetup.freq"
+        static let place = "fitnessSetup.place", emphasis = "fitnessSetup.emphasis"
+    }
+
+    private func loadAnswers() {
+        let d = UserDefaults.standard
+        if let g = d.string(forKey: "userGoalsFit"), !g.isEmpty {
+            goals = Set(g.split(separator: ",").map(String.init))
+        }
+        if let v = d.string(forKey: Saved.level), !v.isEmpty { level = v }
+        if let v = d.string(forKey: Saved.freq), !v.isEmpty { freq = v }
+        if let v = d.string(forKey: Saved.place), !v.isEmpty { place = v }
+        if let v = d.string(forKey: Saved.emphasis) {
+            emphasis = Set(v.split(separator: ",").map(String.init))
+        }
+    }
+
     private func commit() {
+        let d = UserDefaults.standard
+        d.set(level, forKey: Saved.level); d.set(freq, forKey: Saved.freq)
+        d.set(place, forKey: Saved.place)
+        d.set(emphasis.sorted().joined(separator: ","), forKey: Saved.emphasis)
         userGoalFit = primaryGoal
         // La liste complete a part, pour ne pas casser ceux qui comparent
         // userGoalFit a une seule valeur exacte.
@@ -198,5 +245,24 @@ struct FitnessSetupView: View {
             }
         }
         return f
+    }
+
+    /// Reponses gardees entre deux lancements (voir SetupDraft).
+    private var draftIO: SetupDraftIO {
+        SetupDraftIO(save: {
+            var d = SetupDraft()
+            d.put("goals", goals)
+            d.put("level", level)
+            d.put("freq", freq)
+            d.put("place", place)
+            d.put("emphasis", emphasis)
+            return d
+        }, restore: { d in
+            if let v = d.set("goals") { goals = v }
+            if let v = d.string("level") { level = v }
+            if let v = d.string("freq") { freq = v }
+            if let v = d.string("place") { place = v }
+            if let v = d.set("emphasis") { emphasis = v }
+        })
     }
 }

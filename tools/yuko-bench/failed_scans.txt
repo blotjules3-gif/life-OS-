@@ -1,0 +1,2 @@
+# Codes scannes chez soi et NON trouves par Yuko. Un code par ligne, commentaire apres #.
+# Exemple : 3600550000000  # shampoing X, salle de bain

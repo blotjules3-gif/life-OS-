@@ -310,7 +310,7 @@ struct FaceScanView: View {
             #endif
             if failed {
                 Text("Aucun visage détecté — cadre bien ton visage de face, en lumière.")
-                    .font(.caption).foregroundStyle(.orange).multilineTextAlignment(.center)
+                    .font(.caption).foregroundStyle(Theme.warning).multilineTextAlignment(.center)
             }
             Text("Analyse 100 % sur ton appareil — aucune photo n'est envoyée.")
                 .font(.caption2).foregroundStyle(Theme.textSecondary)

@@ -11,6 +11,8 @@ struct OrbitSatellite: Identifiable {
 
 struct ProfileView: View {
     @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "system"
+    @AppStorage(AppStorageKeys.appPalette) private var appPaletteRaw = AppPalette.color.rawValue
+    @AppStorage(AppStorageKeys.secondTab) private var secondTabRaw = SecondTab.wakeup.rawValue
     @AppStorage(AppStorageKeys.userName) private var name = ""
     @AppStorage(AppStorageKeys.stepGoal) private var stepGoal = 10000
     @AppStorage(AppStorageKeys.waterGoal) private var waterGoal = 2500
@@ -65,6 +67,7 @@ struct ProfileView: View {
     @State private var showLanguagePicker = false
     @State private var appLockEnabled = AppLock.shared.isEnabled
     @State private var energyScore: EnergyScore.Result?
+    @State private var energyParts: [EnergyScore.Part] = []
     @State private var facet = 0
     @Namespace private var facetNS
     @ObservedObject private var serverStatus = ServerStatusMonitor.shared
@@ -142,10 +145,15 @@ struct ProfileView: View {
     private var accountDisplayName: String {
         effectiveName.isEmpty ? "Mon Compte" : effectiveName
     }
+    /// Etat reel du compte et du stockage (voir AccountStatus): plus aucun libelle
+    /// deduit de champs herites.
+    private var account: AccountStatus.Account {
+        AccountStatus.account(isAuthenticated: isAuthenticated, provider: authProvider, email: userEmail)
+    }
+    private var storage: AccountStatus.Storage { AccountStatus.storage(syncActive: LocalStore.syncActive) }
     private var accountEmailDisplay: String {
-        if !userEmail.isEmpty && userEmail != "invite@lifeos.local" { return userEmail }
-        if isAuthenticated && authProvider != "guest" { return "Compte \(authProvider.capitalized)" }
-        return "Non synchronisé (Session locale)"
+        if case .online = account, !userEmail.isEmpty { return userEmail }
+        return "\(AccountStatus.label(account)) · \(storage.title.lowercased())"
     }
     private var greeting: String {
         switch Calendar.current.component(.hour, from: .now) {
@@ -170,12 +178,31 @@ struct ProfileView: View {
         }
     }
 
+    // MARK: - Header
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Profil")
+                .font(.system(size: 40, weight: .black))
+                .textCase(.uppercase)
+                .kerning(-1)
+            Text(effectiveName.isEmpty ? "VOTRE ESPACE PERSONNEL" : "ESPACE PERSONNEL · \(effectiveName.uppercased())")
+                .monoLabel(11)
+                .foregroundStyle(Theme.textSecondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 4)
+    }
+
     // MARK: - Body
 
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
+                    header
+                        .staggered(0, appeared: appeared)
+
                     OrbitHero(
                         displayName: displayName,
                         initial: userInitial,
@@ -194,21 +221,21 @@ struct ProfileView: View {
                             withAnimation(.spring(duration: 0.38, bounce: 0.1)) { toggleHideGoal(cat.rawValue) }
                         }
                     )
-                    .staggered(0, appeared: appeared)
+                    .staggered(1, appeared: appeared)
 
                     if !hiddenGoals.isEmpty {
                         restoreHiddenButton
                     }
 
                     facetBar
-                        .staggered(1, appeared: appeared)
+                        .staggered(2, appeared: appeared)
 
                     facetContent
-                        .staggered(2, appeared: appeared)
+                        .staggered(3, appeared: appeared)
                         .scrollFade()
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, Theme.space8)
+                .padding(.horizontal, Theme.pad)
+                .padding(.top, 8)
                 .padding(.bottom, 80)
             }
             .navigationTitle("")
@@ -237,7 +264,9 @@ struct ProfileView: View {
                     healthConnected = true
                     steps = await HealthService.shared.cachedStepsToday()
                 }
-                energyScore = EnergyScore.today(ctx)
+                let explained = EnergyScore.todayExplained(ctx)
+                energyScore = explained?.result
+                energyParts = explained?.parts ?? []
             }
             .sheet(isPresented: $showGoalEditor) {
                 GoalEditorSheet(
@@ -550,6 +579,25 @@ struct ProfileView: View {
                         .font(.system(size: 13, weight: .black, design: .monospaced))
                         .foregroundStyle(energyColor(score))
                 }
+                // Un score affiche dit ce qu'il a lu, de quand, et ce qui manque.
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(energyParts) { part in
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Image(systemName: part.used ? "checkmark.circle.fill" : "circle.dashed")
+                                .font(.system(size: 10))
+                                .foregroundStyle(part.used ? Theme.success : Color.secondary)
+                            Text("\(part.name) : \(part.detail)")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    if let c = energyScore?.coverage {
+                        Text("Calculé sur \(Int((c * 100).rounded())) % des critères.")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .padding(16)
@@ -917,7 +965,7 @@ struct ProfileView: View {
                             .frame(width: 8, height: 8)
                         Text(serverStatus.isOnline == true ? "En ligne" : serverStatus.isOnline == false ? "Hors ligne" : "…")
                             .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(serverStatus.isOnline == true ? Color.green : serverStatus.isOnline == false ? Color.orange : Color.secondary)
+                            .foregroundStyle(serverStatus.isOnline == true ? Theme.success : serverStatus.isOnline == false ? Theme.warning : Color.secondary)
                         Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
                     }
                 } action: {
@@ -1020,7 +1068,9 @@ struct ProfileView: View {
             }
 
             HStack {
-                Text("LifeOS \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0") · Données stockées localement")
+                let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+                let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "27"
+                Text("LifeOS \(v) (Build \(b)) · Données stockées localement")
                     .font(.caption).foregroundStyle(.tertiary)
                 Spacer()
                 Text("\(AppCategory.allCases.count) modules").font(.caption).foregroundStyle(.tertiary)
@@ -1071,7 +1121,39 @@ struct ProfileView: View {
                         .buttonStyle(LifeOSPressStyle())
                     }
                 }
-                Text("Thème actif dans toute l'app — modifiable à tout moment.")
+                Divider().opacity(0.4)
+                HStack(spacing: 10) {
+                    ForEach(AppPalette.allCases) { pal in
+                        let selected = appPaletteRaw == pal.rawValue
+                        Button {
+                            appPaletteRaw = pal.rawValue
+                            UserDefaults(suiteName: "group.com.chifandco.lifeos")?
+                                .set(pal.rawValue, forKey: "widget_palette")
+                            WidgetCenter.shared.reloadAllTimelines()
+                        } label: {
+                            Label(pal.label, systemImage: pal.symbol)
+                                .font(.system(size: 13, weight: .semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .overlay(Capsule().stroke(selected ? Color.accentColor : Theme.hairline,
+                                                          lineWidth: selected ? 2 : 1))
+                                .foregroundStyle(selected ? .primary : .secondary)
+                        }
+                        .buttonStyle(LifeOSPressStyle())
+                        .accessibilityAddTraits(selected ? .isSelected : [])
+                    }
+                }
+                Text("Luminosité et couleurs se règlent séparément : quatre apparences. Neutre retire les couleurs de l'interface, pas celles de tes photos.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Divider().opacity(0.4)
+                Picker("Deuxième onglet", selection: $secondTabRaw) {
+                    ForEach(SecondTab.allCases) { t in
+                        Label(t.label, systemImage: t.icon).tag(t.rawValue)
+                    }
+                }
+                .pickerStyle(.menu)
+                Text("L'onglet entre Accueil et Catégories. Le Réveil reste dans Sommeil s'il n'est plus un onglet.")
                     .font(.caption).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -1133,7 +1215,7 @@ struct ProfileView: View {
 
                         Spacer()
 
-                        if !isAuthenticated || userEmail.isEmpty || authProvider == "guest" {
+                        if account == .local {
                             Button {
                                 Haptics.tap()
                                 showAuthModal = true
@@ -1153,10 +1235,10 @@ struct ProfileView: View {
                             } label: {
                                 Text("Déconnexion")
                                     .font(.caption.bold())
-                                    .foregroundStyle(.red)
+                                    .foregroundStyle(Theme.danger)
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 5)
-                                    .background(Color.red.opacity(0.12), in: Capsule())
+                                    .background(Theme.danger.opacity(0.12), in: Capsule())
                             }
                             .buttonStyle(.plain)
                         }
@@ -1167,46 +1249,21 @@ struct ProfileView: View {
                 Divider().opacity(0.5)
 
                 HStack(spacing: 12) {
-                    Image(systemName: "icloud.fill")
+                    Image(systemName: storage.synced ? "icloud.fill" : "iphone")
                         .font(.system(size: 22))
                         .foregroundStyle(Color.accentColor)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Synchronisation Multi-Appareils")
+                        Text("Stockage")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(.primary)
-                        Text("Chiffrement bout en bout · Temps réel")
+                        Text(storage.title)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Text("Actif")
-                        .font(.caption2.bold())
-                        .foregroundStyle(Color.green)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color.green.opacity(0.15), in: Capsule())
                 }
 
-                Divider().opacity(0.5)
-
-                #if targetEnvironment(macCatalyst)
-                let isMac = true
-                let isPhone = false
-                let isPad = false
-                #else
-                let isMac = false
-                let isPhone = UIDevice.current.userInterfaceIdiom == .phone
-                let isPad = UIDevice.current.userInterfaceIdiom == .pad
-                #endif
-
-                HStack(spacing: 16) {
-                    devicePill(icon: "iphone", name: "iPhone", status: isPhone ? "Cet appareil" : "Prêt", isCurrent: isPhone)
-                    devicePill(icon: "applewatch", name: "Watch", status: "Prêt", isCurrent: false)
-                    devicePill(icon: "ipad", name: "iPad", status: isPad ? "Cet appareil" : "Prêt", isCurrent: isPad)
-                    devicePill(icon: "laptopcomputer", name: "Mac", status: isMac ? "Cet appareil" : "Prêt", isCurrent: isMac)
-                }
-
-                Text("Vos données, habitudes et scores se synchronisent automatiquement entre votre iPhone, votre Apple Watch, votre iPad et votre Mac via votre compte personnel.")
+                Text(storage.detail)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -1214,23 +1271,6 @@ struct ProfileView: View {
             .padding(16)
             .surface()
         }
-    }
-
-    private func devicePill(icon: String, name: String, status: String, isCurrent: Bool) -> some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.system(size: 20, weight: .medium))
-                .foregroundStyle(isCurrent ? Color.accentColor : Theme.textPrimary)
-                .frame(width: 38, height: 38)
-                .background(isCurrent ? Color.accentColor.opacity(0.15) : Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            Text(name)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(.primary)
-            Text(status)
-                .font(.system(size: 9))
-                .foregroundStyle(isCurrent ? Color.accentColor : .secondary)
-        }
-        .frame(maxWidth: .infinity)
     }
 
     private func settingsRow<T: View>(icon: String, iconColor: Color, label: String,
@@ -1317,20 +1357,20 @@ struct ProfileView: View {
                             .foregroundStyle(.primary)
                             .lineLimit(1)
 
-                        if isAuthenticated && !userEmail.isEmpty && userEmail != "invite@lifeos.local" {
+                        if case .online = account {
                             Text("Connecté")
                                 .font(AppFont.body(size: 10, weight: .bold))
-                                .foregroundStyle(Color.green)
+                                .foregroundStyle(Theme.success)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(Color.green.opacity(0.15), in: Capsule())
+                                .background(Theme.success.opacity(0.15), in: Capsule())
                         } else {
                             Text("Invité")
                                 .font(AppFont.body(size: 10, weight: .bold))
-                                .foregroundStyle(Color.orange)
+                                .foregroundStyle(Theme.warning)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(Color.orange.opacity(0.15), in: Capsule())
+                                .background(Theme.warning.opacity(0.15), in: Capsule())
                         }
                     }
 
@@ -1340,10 +1380,10 @@ struct ProfileView: View {
                         .lineLimit(1)
 
                     HStack(spacing: 4) {
-                        Image(systemName: "icloud.fill")
+                        Image(systemName: storage.synced ? "icloud.fill" : "iphone")
                             .font(.system(size: 10))
                             .foregroundStyle(Color.accentColor)
-                        Text("Synchronisation active")
+                        Text(storage.synced ? "Synchronisé avec iCloud" : "Données sur cet appareil")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.secondary)
                     }
@@ -1378,12 +1418,18 @@ struct AccountDetailSheet: View {
     @State private var editedName = ""
     @State private var isEditingName = false
 
+    private var account: AccountStatus.Account {
+        AccountStatus.account(isAuthenticated: isAuthenticated, provider: authProvider, email: userEmail)
+    }
+
     private var initial: String {
         let n = name.isEmpty ? userDisplayName : name
         return n.isEmpty ? "L" : String(n.prefix(1)).uppercased()
     }
 
     private var providerLabel: String {
+        // Un fournisseur reste d'une ancienne version n'est pas une connexion.
+        guard account != .local else { return "Mode local" }
         switch authProvider.lowercased() {
         case "apple": return "Apple ID"
         case "google": return "Google"
@@ -1439,22 +1485,23 @@ struct AccountDetailSheet: View {
                         .font(.title2.bold())
                         .foregroundStyle(.primary)
 
-                    Text(userEmail.isEmpty ? "Compte non associé" : userEmail)
+                    Text(account == .local ? "Aucun compte en ligne" : userEmail)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
 
                     HStack(spacing: 6) {
+                        let online: Bool = { if case .online = account { return true } else { return false } }()
                         Circle()
-                            .fill(isAuthenticated && !userEmail.isEmpty && userEmail != "invite@lifeos.local" ? Color.green : Color.orange)
+                            .fill(online ? Theme.success : Theme.warning)
                             .frame(width: 8, height: 8)
-                        Text(isAuthenticated && !userEmail.isEmpty && userEmail != "invite@lifeos.local" ? "Compte vérifié & actif" : "Session locale")
+                        Text(AccountStatus.label(account))
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(isAuthenticated && !userEmail.isEmpty && userEmail != "invite@lifeos.local" ? Color.green : Color.orange)
+                            .foregroundStyle(online ? Theme.success : Theme.warning)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
                     .background(
-                        (isAuthenticated && !userEmail.isEmpty && userEmail != "invite@lifeos.local" ? Color.green : Color.orange).opacity(0.12),
+                        (account == .local ? Theme.warning : Theme.success).opacity(0.12),
                         in: Capsule()
                     )
                 }
@@ -1542,35 +1589,35 @@ struct AccountDetailSheet: View {
                         }
                         .padding(14)
                     }
-                    .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous), .nested)
                 }
 
-                // Section Synchronisation
+                // Section Stockage & Confidentialité
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("SYNCHRONISATION MULTI-APPAREILS")
+                    Text("STOCKAGE & CONFIDENTIALITÉ")
                         .font(.caption.bold())
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 4)
 
                     VStack(spacing: 12) {
                         HStack(spacing: 12) {
-                            Image(systemName: "arrow.triangle.2.circlepath.icloud.fill")
+                            Image(systemName: "internaldrive.fill")
                                 .font(.system(size: 24))
-                                .foregroundStyle(Color.accentColor)
+                                .foregroundStyle(Color.primary)
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("iCloud & LifeOS Cloud")
+                                Text("Stockage local (SwiftData)")
                                     .font(.subheadline.weight(.semibold))
-                                Text("Données synchronisées en continu")
+                                Text("Toutes vos données restent sur cet appareil")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Text("En ligne")
+                            Text("Local & Privé")
                                 .font(.caption2.bold())
-                                .foregroundStyle(Color.green)
+                                .foregroundStyle(Color.primary)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
-                                .background(Color.green.opacity(0.15), in: Capsule())
+                                .raisedSurface(Capsule(), .nested)
                         }
                         .padding(.bottom, 4)
 
@@ -1587,32 +1634,31 @@ struct AccountDetailSheet: View {
                         #endif
 
                         HStack(spacing: 12) {
-                            deviceItem(icon: "iphone", name: "iPhone", status: isPhone ? "Cet appareil" : "Prêt", isCurrent: isPhone)
-                            deviceItem(icon: "applewatch", name: "Watch", status: "Prêt", isCurrent: false)
-                            deviceItem(icon: "ipad", name: "iPad", status: isPad ? "Cet appareil" : "Prêt", isCurrent: isPad)
-                            deviceItem(icon: "laptopcomputer", name: "Mac", status: isMac ? "Cet appareil" : "Prêt", isCurrent: isMac)
+                            deviceItem(icon: "iphone", name: "iPhone", status: isPhone ? "Cet appareil" : "—", isCurrent: isPhone)
+                            deviceItem(icon: "applewatch", name: "Watch", status: "—", isCurrent: false)
+                            deviceItem(icon: "ipad", name: "iPad", status: isPad ? "Cet appareil" : "—", isCurrent: isPad)
+                            deviceItem(icon: "laptopcomputer", name: "Mac", status: isMac ? "Cet appareil" : "—", isCurrent: isMac)
                         }
                     }
                     .padding(16)
-                    .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous), .nested)
                 }
 
                 // Actions
                 VStack(spacing: 10) {
-                    if !isAuthenticated || userEmail.isEmpty || authProvider == "guest" {
+                    if account == .local {
                         Button {
                             onShowAuth()
                         } label: {
                             HStack {
                                 Image(systemName: "link.badge.plus")
-                                Text("Lier un compte (Apple, Google, Facebook)")
+                                Text("Gérer le profil local")
                                     .font(.body.weight(.semibold))
                             }
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
-                            .background(Color.accentColor)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .glassControl(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .foregroundStyle(Theme.textPrimary)
                         }
                         .buttonStyle(.plain)
                     } else {
@@ -1642,8 +1688,8 @@ struct AccountDetailSheet: View {
                             }
                             .frame(maxWidth: .infinity)
                             .frame(height: 48)
-                            .background(Color.red.opacity(0.12))
-                            .foregroundStyle(.red)
+                            .background(Theme.danger.opacity(0.12))
+                            .foregroundStyle(Theme.danger)
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                         }
                         .buttonStyle(.plain)

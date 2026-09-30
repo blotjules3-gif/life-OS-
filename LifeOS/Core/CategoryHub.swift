@@ -122,8 +122,9 @@ struct CategoryHubView: View {
                     }
                 }
             }
-            .fullScreenCover(isPresented: $showSetup) { setupFlow }
+            .fullScreenCover(isPresented: $showSetup, onDismiss: { setupStatus = CategorySetup.status(category) }) { setupFlow }
             .onAppear {
+                setupStatus = CategorySetup.status(category)
                 if CategorySetup.shouldAutoPrompt(category) {
                     CategorySetup.markPrompted(category)
                     showSetup = true
@@ -148,15 +149,77 @@ struct CategoryHubView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     categoryHeader
 
+                    if CategorySetup.hasFlow(category), setupStatus != .completed {
+                        setupCard
+                    }
+
                     CategoryRecapCard(category: category)
 
                     shortcutsSection
+
+                    if CategorySetup.hasFlow(category), setupStatus == .completed {
+                        editAnswersRow
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 12)
                 .padding(.bottom, 120)
             }
         }
+    }
+
+    /// Relu a chaque apparition: le questionnaire se ferme en plein ecran et
+    /// l'etat change pendant qu'on n'est pas sur le hub.
+    @State private var setupStatus: SetupStatus = .notStarted
+
+    /// Toujours visible tant que le questionnaire n'est pas fini: avant, apres
+    /// "Plus tard", seule une petite icone sans texte permettait d'y revenir.
+    private var setupCard: some View {
+        let (title, subtitle, action): (String, String, String) = {
+            switch setupStatus {
+            case .partial(let page, let total):
+                return ("Personnalisation en cours", "Étape \(page + 1) sur \(total). Tu reprends là où tu t'étais arrêté.", "Reprendre")
+            case .skipped:
+                return ("Personnalise \(category.title)", "Tu l'avais mis de côté. Deux minutes pour régler tes objectifs.", "Compléter")
+            default:
+                return ("Personnalise \(category.title)", "Quelques questions pour régler tes objectifs et tes outils.", "Commencer")
+            }
+        }()
+        return Button { showSetup = true } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(category.tint.readableInk)
+                    .frame(width: 42, height: 42)
+                    .background(category.tint.gradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                    Text(subtitle).font(.caption).foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 8)
+                Text(action).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                    .padding(.horizontal, 12).padding(.vertical, 8)
+                    .glassControl(Capsule())
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityHint(action)
+    }
+
+    private var editAnswersRow: some View {
+        Button { showSetup = true } label: {
+            Label("Modifier mes réponses et objectifs", systemImage: "slider.horizontal.3")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Theme.textPrimary)
+                .frame(maxWidth: .infinity).padding(.vertical, 14)
+                .glassControl(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 
     private var categoryHeader: some View {
@@ -584,7 +647,7 @@ extension AppCategory {
     }
 }
 
-private let medicalTools: [CategoryTool] = [
+private var medicalTools: [CategoryTool] { [
     // Pointait sur MedicalHubView: toucher "Médicaments" ouvrait un second
     // menu contenant... Médicaments, plus les trois outils deja listes juste
     // en dessous. La liste des traitements etait donc a un cran de plus que
@@ -593,23 +656,25 @@ private let medicalTools: [CategoryTool] = [
     .init("stethoscope", "Doctolink", "Agenda médical et suivi", alias: "Rendez-vous",          tint: .init(hex: 0xE84C4C)) { AppointmentsView() },
     .init("waveform.path.ecg", "Maple Health", "Poids, tension, glycémie…", alias: "Carnet de santé",        tint: .init(hex: 0xE84C4C)) { VitalsView() },
     .init("syringe.fill", "Mon Espace Vaccin", "Historique et rappels", alias: "Vaccinations",            tint: .init(hex: 0xE84C4C)) { VaccinationView() },
-]
+] }
 
-private let cycleTools: [CategoryTool] = [
+private var cycleTools: [CategoryTool] { [
     .init("calendar.badge.clock", "Floé", "Règles · durée · prédiction", alias: "Suivi du cycle", tint: .cycleTint) { CycleTrackerView() },
     .init("waveform.path.ecg", "Klue", "Crampes, humeur, énergie, peau", alias: "Symptômes", tint: .cycleTint) { CycleSymptomsView() },
     .init("chart.bar.fill", "Floé Stats", "Régularité · durée moyenne", alias: "Historique", tint: .cycleTint) { CycleHistoryView() },
-]
+] }
 
-private let sleepTools: [CategoryTool] = [
+private var sleepTools: [CategoryTool] { [
     .init("bed.double.fill", "Sleep Circle", "Cycles de 90 min · réveil léger", alias: "Heure de coucher optimale", tint: .sleepTint) { BedtimeCalculatorView() },
     .init("powersleep", "Pzazz", "Sieste calibrée 20 ou 90 min", alias: "Power nap", tint: .sleepTint) { PowerNapView() },
     .init("moon.zzz.fill", "Rize", "Rappel + lumière bleue + mode nuit", alias: "Coucher progressif", tint: .sleepTint) { WindDownView() },
     .init("cloud.moon.fill", "Awaken", "Note vocale + texte + humeur", alias: "Journal de rêves", tint: .sleepTint) { DreamJournalView() },
+    .init("waveform.badge.mic", "Nuit sonore", "Ronflements, toux, bruits : extraits et chronologie", alias: "Écoute nocturne", tint: .sleepTint) { NightSoundView() },
     .init("heart.text.square.fill", "Whoosh", "HRV + FC repos (Apple Santé)", alias: "Score de récupération", tint: .sleepTint) { RecoveryScoreView() },
-]
+    .init("alarm.fill", "Réveil", "Heure, jours, rappel et briefing du matin", alias: "Réveil", tint: .sleepTint) { WakeUpView(embedded: true) },
+] }
 
-private let nutritionTools: [CategoryTool] = [
+private var nutritionTools: [CategoryTool] { [
     .init("timer", "Zerø", "16:8, 18:6, OMAD — façon Zero", alias: "Jeûne intermittent", tint: .nutriTint) { FastingView() },
     .init("chart.pie.fill", "Yumzio", "Journal du jour + objectifs", alias: "Calories & macros", tint: .nutriTint) { CalAIView() },
     .init("refrigerator.fill", "Fridgy", "Inventaire + idées repas", alias: "Mon frigo", tint: .nutriTint) { FridgeView() },
@@ -618,106 +683,107 @@ private let nutritionTools: [CategoryTool] = [
     .init("pills.fill", "SuppSafe", "Rappels personnalisés", alias: "Compléments", tint: .nutriTint) { SupplementsView() },
     .init("allergens", "Figue", "Halal, vegan, sans gluten…", alias: "Allergènes & régimes", tint: .nutriTint) { DietProfileView() },
     .init("camera.viewfinder", "Cal Eye", "Caméra + estimation on-device", alias: "Calories par photo", tint: .nutriTint) { PhotoCalorieView() },
-    .init("barcode.viewfinder", "Yuko", "Yuka + prix + alternative", alias: "Scan code-barres santé", tint: .nutriTint) { ScanProductView() },
-]
+    .init("barcode.viewfinder", "Yuko", "Photo, note /100 expliquée, alternatives", alias: "Scan code-barres santé", tint: .nutriTint) { YukoView() },
+] }
 
-private let fitnessTools: [CategoryTool] = [
+private var fitnessTools: [CategoryTool] { [
     .init("calendar", "Fitbot", "Ta semaine + rappels muscu", alias: "Programme de sport", tint: .fitTint) { GymProgramView() },
     .init("figure.walk", "Stepometer", "Aujourd'hui + 7 jours (Santé)", alias: "Compteur de pas", tint: .fitTint) { StepsView() },
     .init("dumbbell.fill", "Hevvy", "Charges, volume, 1RM, courbe", alias: "Muscu & progression", tint: .fitTint) { StrengthView() },
     .init("timer", "TabaTime", "Minuteur sportif plein écran", alias: "HIIT / Tabata", tint: .fitTint, fullScreen: true) { TabataView() },
     .init("figure.cooldown", "GOMOB", "Routines guidées", alias: "Mobilité & stretching", tint: .fitTint) { MobilityRoutineView() },
     .init("flame.fill", "Streakz", "Régularité d'entraînement", alias: "Streaks & habitudes", tint: .fitTint) { StreaksView() },
-]
+] }
 
-private let looksTools: [CategoryTool] = [
+private var looksTools: [CategoryTool] { [
     .init("face.dashed", "Umaxx", "Symétrie, tiers, ratios — Vision", alias: "Analyse faciale", tint: .looksTint) { FaceAnalysisView() },
     .init("infinity", "TrueSkin", "Matin/soir + rappels", alias: "Routine skincare", tint: .looksTint) { SkincareView() },
     .init("camera.fill", "Progrez", "Suivi visuel daté", alias: "Photos avant / après", tint: .looksTint) { ProgressPhotoGalleryView() },
     .init("mouth.fill", "Mewing Klub", "Rappels + minuteur", alias: "Mewing & posture", tint: .looksTint) { MewingPostureView() },
     .init("tshirt.fill", "Wearing", "Suggestion selon météo", alias: "Garde-robe & outfits", tint: .looksTint) { WardrobeView() },
-]
+] }
 
-private let mindTools: [CategoryTool] = [
+private var mindTools: [CategoryTool] { [
     .init("wind", "Breathwerk", "Box breathing, 365…", alias: "Respiration & cohérence", tint: .mindTint) { BreathingView() },
     .init("leaf.fill", "Headplace", "Minuteur silencieux guidé", alias: "Méditation", tint: .mindTint) { MeditationView() },
     .init("water.waves", "Endlo", "Bruit blanc/rose/brun + minuteur", alias: "Sons relaxants", tint: .mindTint) { SoundscapeView() },
     .init("face.smiling.inverse", "Daylia", "Journal quotidien", alias: "Humeur & gratitude", tint: .mindTint) { MoodJournalView() },
     .init("hourglass", "Opale", "Usage & objectifs", alias: "Détox écran", tint: .mindTint) { ScreenDetoxView() },
     .init("sun.horizon.fill", "Fabuleux", "Motivation + ta journée", alias: "Briefing du matin", tint: .mindTint) { MorningBriefingView() },
-]
+] }
 
-private let productivityTools: [CategoryTool] = [
+private var productivityTools: [CategoryTool] { [
     .init("checklist", "Todoo", "Priorités, projets, échéances", alias: "To-do intelligente", tint: .prodTint) { TodoView() },
     .init("calendar.day.timeline.left", "Structurd", "L'app remplit ta journée", alias: "Time-blocking auto", tint: .prodTint) { TimeBlockView() },
     .init("square.grid.3x3.fill", "Habitly", "Streaks & régularité", alias: "Habit tracker", tint: .prodTint) { HabitTrackerView() },
     .init("timer", "Forêt", "25 min concentration", alias: "Focus / Pomodoro", tint: .prodTint) { FocusTimerView() },
     .init("note.text", "Notio", "Capture rapide + tags", alias: "Notes & second cerveau", tint: .prodTint) { NotesView() },
-]
+] }
 
-private let financeTools: [CategoryTool] = [
+private var financeTools: [CategoryTool] { [
     .init("building.columns.fill", "Bankino", "Solde + transactions + alertes", alias: "Comptes & dépenses", tint: .finTint) { AccountsView() },
     .init("tray.2.fill", "Ynabi", "Catégorise et plafonne", alias: "Budget par enveloppes", tint: .finTint) { BudgetView() },
     .init("repeat.circle.fill", "Pocket Money", "Détecte les oubliés + résilie", alias: "Abonnements", tint: .finTint) { SubscriptionsView() },
     .init("person.2.circle.fill", "Quadricount", "Tricount intégré", alias: "Split entre potes", tint: .finTint) { SplitView() },
     .init("target", "Kapital", "Projection temps restant", alias: "Objectifs d'épargne", tint: .finTint) { SavingsView() },
     .init("link.circle.fill", "Linxa", "Tous tes comptes agrégés", alias: "Solde global", tint: .finTint) { BankOverviewView() },
-]
+] }
 
-private let investTools: [CategoryTool] = [
+private var investTools: [CategoryTool] { [
     .init("chart.pie.fill", "Finario", "Actions + crypto en un dashboard", alias: "Portefeuille", tint: .investTint) { PortfolioView() },
     .init("chart.line.uptrend.xyaxis", "Kubero", "Patrimoine + projection", alias: "Net worth & FIRE", tint: .investTint) { NetWorthView() },
     .init("house.fill", "Horizo", "Biens, loyers, cashflow", alias: "Immobilier", tint: .investTint) { RealEstateView() },
     .init("percent", "Impôts+", "Impôt sur le revenu (FR)", alias: "Simulateur fiscalité", tint: .investTint) { TaxSimulatorView() },
-]
+] }
 
-private let careerTools: [CategoryTool] = [
+private var careerTools: [CategoryTool] { [
     .init("tray.full.fill", "Huntly", "Pipeline par statut", alias: "Suivi des candidatures", tint: .careerTint) { ApplicationsView() },
     .init("doc.text.fill", "Zetty", "Remplis → exporte", alias: "Générateur de CV", tint: .careerTint) { CVBuilderView() },
     .init("checklist.checked", "LinkedUp", "Gap + plan pour combler", alias: "Compétences manquantes", tint: .careerTint) { SkillGapView() },
     .init("mic.fill", "Yoodly", "Entraînement entretien", alias: "Mock interview", tint: .careerTint) { MockInterviewView() },
     .init("magnifyingglass", "Welcome to the Djob", "Offres réelles selon tes compétences", alias: "Matching d'offres", tint: .careerTint) { JobMatchView() },
-]
+] }
 
-private let learningTools: [CategoryTool] = [
-    .init("character.bubble.fill", "Trilingo", "Vocabulaire en répétition espacée", alias: "Langues", tint: .learnTint) { LanguagesView() },
+private var learningTools: [CategoryTool] { [
+    .init("character.bubble.fill", "Trilingo", "Cours quotidien : placement, écoute, oral, révisions", alias: "Langues", tint: .learnTint) { TrilingoView() },
     .init("rectangle.on.rectangle.angled", "Anko", "Répétition espacée (SM-2)", alias: "Flashcards", tint: .learnTint) { FlashcardsView() },
     .init("lightbulb.max.fill", "Headwave", "Une pépite par jour", alias: "Micro-learning du jour", tint: .learnTint) { MicroLearningView() },
     .init("books.vertical.fill", "Blinklist", "Tes idées clés — Blinkist", alias: "Résumés de livres", tint: .learnTint) { BookSummariesView() },
     .init("chart.bar.fill", "Coursia", "Skill → jalons", alias: "Plan de montée en compétence", tint: .learnTint) { SkillPlanView() },
-]
+] }
 
-private let homeTools: [CategoryTool] = [
+private var homeTools: [CategoryTool] { [
     .init("calendar.badge.exclamationmark", "NoGaspi", "Ce qui périme bientôt", alias: "Anti-gaspi & péremption", tint: .homeTint) { AntiWasteView() },
     .init("frying.pan.fill", "SuperCuisto", "Cuisine ce que tu as", alias: "Recettes avec les restes", tint: .homeTint) { LeftoverRecipesView() },
     .init("checklist", "Sweepo", "Réparties couple / coloc", alias: "Tâches ménagères", tint: .homeTint) { ChoresView() },
     .init("pawprint.fill", "12pets", "Gamelle, véto, vaccins", alias: "Mes animaux", tint: .homeTint) { PetsView() },
     .init("wrench.and.screwdriver.fill", "HomeZen", "Filtres, révisions, plantes", alias: "Maintenance récurrente", tint: .homeTint) { MaintenanceView() },
-]
+] }
 
-private let mobilityTools: [CategoryTool] = [
+private var mobilityTools: [CategoryTool] { [
     .init("car.fill", "Fuelo", "Assurance, révision, carburant", alias: "Ma voiture", tint: .mobTint) { VehicleListView() },
     .init("leaf.arrow.circlepath", "CityMappr", "Empreinte + budget par mode", alias: "Trajets & CO₂", tint: .mobTint) { TripCO2View() },
     .init("parkingsign.circle.fill", "Park Maps", "Mémorise la place de ta voiture", alias: "Où ai-je garé ?", tint: .mobTint) { ParkingView() },
-]
+] }
 
-private let socialTools: [CategoryTool] = [
+private var socialTools: [CategoryTool] { [
     .init("person.crop.circle.badge.clock", "Dexo", "Qui relancer", alias: "CRM personnel", tint: .socialTint) { CRMView() },
     .init("gift.fill", "Hipp", "Rappels + idées", alias: "Anniversaires & cadeaux", tint: .socialTint) { BirthdaysView() },
     .init("calendar.badge.plus", "Partyful", "Organise tes événements", alias: "Sorties & events", tint: .socialTint) { EventsView() },
-]
+] }
 
-private let adminTools: [CategoryTool] = [
+private var adminTools: [CategoryTool] { [
     .init("lock.doc.fill", "Digicoffre", "ID, contrats, garanties", alias: "Coffre-fort documents", tint: .adminTint) { DocVaultView() },
     .init("bell.badge.fill", "Papernid", "Impôts, assurance, abos", alias: "Échéances", tint: .adminTint) { DeadlinesView() },
     .init("envelope.fill", "Lettre-Public", "Résiliation, attestation…", alias: "Générateur de courriers", tint: .adminTint) { LetterGeneratorView() },
     .init("doc.viewfinder.fill", "Adobo Scan", "OCR auto · range tout seul", alias: "Scan & classement", tint: .adminTint) { DocScanView() },
-]
+] }
 
-private let travelTools: [CategoryTool] = [
+private var travelTools: [CategoryTool] { [
     .init("map.fill", "TripUp", "Itinéraire + budget + valise", alias: "Mes voyages", tint: .travelTint) { TripsView() },
-    .init("coloncurrencysign.circle.fill", "Xchange", "12 devises, hors-ligne, repères rapides", alias: "Convertisseur", tint: .travelTint) { CurrencyConverterView() },
+    .init("coloncurrencysign.circle.fill", "Xchange", "27 devises, taux BCE du jour, hors ligne", alias: "Convertisseur", tint: .travelTint) { CurrencyConverterView() },
     .init("character.bubble.fill", "iTraduis", "5 langues, prononcées à voix haute", alias: "Phrases de voyage", tint: .travelTint) { PhrasebookView() },
     .init("globe", "Goggle Traduction", "12 langues, hors-ligne (Apple Translation)", alias: "Traduction", tint: .travelTint) { TranslationView() },
+    .init("airplane.departure", "Envol", "Comparateur de vols, moteur LifeOS multi-sources", alias: "Comparateur de vols", tint: .travelTint) { FlightCompareView() },
     .init("airplane.circle.fill", "Flighto", "Compte à rebours & statut", alias: "Suivi des vols", tint: .travelTint) { FlightTrackerView() },
-]
+] }

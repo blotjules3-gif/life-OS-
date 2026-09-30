@@ -1,0 +1,16 @@
+[
+  {
+    "attempt": 1,
+    "started": 1790730242.448255,
+    "status": "failed",
+    "reason": "Builder timed out; inspect diff before next attempt",
+    "finished": 1790731143.87082
+  },
+  {
+    "attempt": 2,
+    "started": 1790731190.3956091,
+    "status": "awaiting_independent_review",
+    "exit_code": 0,
+    "finished": 1790731560.709077
+  }
+]

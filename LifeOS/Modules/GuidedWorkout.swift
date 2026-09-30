@@ -203,9 +203,9 @@ struct GuidedWorkoutView: View {
                 Button { validateSet(ex) } label: {
                     Text(setNumber < ex.sets ? "Valider la série" :
                             (exIndex < plan.exercises.count - 1 ? "Exercice suivant" : "Terminer la séance"))
-                        .font(.system(size: 17, weight: .black)).foregroundStyle(Theme.onAccent)
+                        .font(.system(size: 17, weight: .black)).foregroundStyle(Theme.textPrimary)
                         .frame(maxWidth: .infinity).padding(.vertical, 17)
-                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .glassControl(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
                 .buttonStyle(PressableButtonStyle())
                 .disabled((Double(reps) ?? 0) <= 0)
@@ -287,9 +287,9 @@ struct GuidedWorkoutView: View {
                     restBtn("+15s") { restRemaining += 15 }
                 }
                 Button { endRest() } label: {
-                    Text("Passer le repos").font(.system(size: 16, weight: .black)).foregroundStyle(.black)
+                    Text("Passer le repos").font(.system(size: 16, weight: .black)).foregroundStyle(Theme.textPrimary)
                         .frame(maxWidth: .infinity).padding(.vertical, 15)
-                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .glassControl(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .padding(.horizontal, 40).padding(.top, 6)
             }
@@ -329,9 +329,9 @@ struct GuidedWorkoutView: View {
                     Text("Aucune série loggée.").font(.subheadline).foregroundStyle(Theme.textSecondary)
                 }
                 Button { dismiss() } label: {
-                    Text("Terminer").font(.system(size: 17, weight: .black)).foregroundStyle(Theme.onAccent)
+                    Text("Terminer").font(.system(size: 17, weight: .black)).foregroundStyle(Theme.textPrimary)
                         .frame(maxWidth: .infinity).padding(.vertical, 16)
-                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .glassControl(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }.padding(.top, 8)
             }
             .padding(Theme.pad)

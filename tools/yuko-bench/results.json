@@ -1,0 +1,1814 @@
+[
+ {
+  "code": "3168930010265",
+  "kind": "aliment",
+  "name": "cruesly mélange de noix",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3168930010265",
+    200,
+    0.31
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.31
+ },
+ {
+  "code": "7613034626844",
+  "kind": "aliment",
+  "name": "Céréales Chocapic",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "7613034626844",
+    200,
+    1.01
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 1.01
+ },
+ {
+  "code": "3229820019307",
+  "kind": "aliment",
+  "name": "Flocons d'avoine",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3229820019307",
+    200,
+    1.03
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 1.03
+ },
+ {
+  "code": "20003166",
+  "kind": "aliment",
+  "name": "Haferflocken",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "20003166",
+    200,
+    1.13
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 1.13
+ },
+ {
+  "code": "5010029000016",
+  "kind": "aliment",
+  "name": "Weetabix",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "5010029000016",
+    200,
+    0.05
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.05
+ },
+ {
+  "code": "3175680011480",
+  "kind": "aliment",
+  "name": "Sésame",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3175680011480",
+    200,
+    1.46
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 1.46
+ },
+ {
+  "code": "8000500310427",
+  "kind": "aliment",
+  "name": "Biscuits croquants au coeur onctueux de Nutella®",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "8000500310427",
+    200,
+    0.58
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.58
+ },
+ {
+  "code": "7622210713780",
+  "kind": "aliment",
+  "name": "Belvita Petit Déjeuner Chocolat",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "7622210713780",
+    200,
+    0.1
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.1
+ },
+ {
+  "code": "7622201133337",
+  "kind": "aliment",
+  "name": "Figolu",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "7622201133337",
+    200,
+    0.7
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.7
+ },
+ {
+  "code": "7622210601988",
+  "kind": "aliment",
+  "name": "Granola",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "7622210601988",
+    200,
+    0.39
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.39
+ },
+ {
+  "code": "3033491588136",
+  "kind": "aliment",
+  "name": "HIPRO 15g protéines",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3033491588136",
+    200,
+    0.99
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.99
+ },
+ {
+  "code": "3023290634578",
+  "kind": "aliment",
+  "name": "Yaos le yaourt à la Grecque",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3023290634578",
+    200,
+    0.07
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.07
+ },
+ {
+  "code": "3023291122005",
+  "kind": "aliment",
+  "name": "Yaos Yaourt à la Grecque Nature 4 x 150g",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3023291122005",
+    200,
+    0.05
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.05
+ },
+ {
+  "code": "3033490004743",
+  "kind": "aliment",
+  "name": "Skyr",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3033490004743",
+    200,
+    0.07
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.07
+ },
+ {
+  "code": "3023290030585",
+  "kind": "aliment",
+  "name": "Skyr myrtille 2 x 140 g",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3023290030585",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "3154230809869",
+  "kind": "aliment",
+  "name": "Le Bon Paris à l'Étouffée",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3154230809869",
+    429,
+    0.06
+   ],
+   [
+    "3154230809869",
+    200,
+    0.05
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.11
+ },
+ {
+  "code": "3302740047367",
+  "kind": "aliment",
+  "name": "Le Supérieur - à l'Etouffée - Conservation sans Nitrite",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3302740047367",
+    200,
+    0.13
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.13
+ },
+ {
+  "code": "3302740047404",
+  "kind": "aliment",
+  "name": "Le Supérieur -25% de Sel - Conservation sans Nitrite",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3302740047404",
+    200,
+    0.05
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.05
+ },
+ {
+  "code": "3154230809302",
+  "kind": "aliment",
+  "name": "Jambon Le Bon Paris",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3154230809302",
+    200,
+    0.14
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.14
+ },
+ {
+  "code": "5060042641000",
+  "kind": "aliment",
+  "name": "Lightly sea salted crisps",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "5060042641000",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "5053990155354",
+  "kind": "aliment",
+  "name": "Sour Cream & Onion",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "5053990155354",
+    200,
+    0.34
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.34
+ },
+ {
+  "code": "3168930002987",
+  "kind": "aliment",
+  "name": "Lay's Cuites au four nature",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3168930002987",
+    200,
+    0.12
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.12
+ },
+ {
+  "code": "5053990167807",
+  "kind": "aliment",
+  "name": "Pringles Original",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "5053990167807",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "3046920022651",
+  "kind": "aliment",
+  "name": "70% Cacao noir intense",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3046920022651",
+    200,
+    0.09
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.09
+ },
+ {
+  "code": "3480341000674",
+  "kind": "aliment",
+  "name": "Fresh Square 0% - Plain",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3480341000674",
+    429,
+    0.04
+   ],
+   [
+    "3480341000674",
+    200,
+    0.15
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.19
+ },
+ {
+  "code": "3161711001971",
+  "kind": "aliment",
+  "name": "Caprice des dieux",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3161711001971",
+    200,
+    0.05
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.05
+ },
+ {
+  "code": "3412290070101",
+  "kind": "aliment",
+  "name": "Paysan Breton - Le Fromage Fouetté Madame Loïk - Nature au Sel de Guérande",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3412290070101",
+    200,
+    0.14
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.14
+ },
+ {
+  "code": "3017620425035",
+  "kind": "aliment",
+  "name": "Nutella",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3017620425035",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "3017620422003",
+  "kind": "aliment",
+  "name": "Nutella",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3017620422003",
+    200,
+    0.12
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.12
+ },
+ {
+  "code": "50184453",
+  "kind": "aliment",
+  "name": "Yeast Extract",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "50184453",
+    200,
+    0.14
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.14
+ },
+ {
+  "code": "80177173",
+  "kind": "aliment",
+  "name": "",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "80177173",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "8076800195057",
+  "kind": "aliment",
+  "name": "Spaghetti N.5",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "8076800195057",
+    200,
+    0.07
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.07
+ },
+ {
+  "code": "8076809529433",
+  "kind": "aliment",
+  "name": "Barilla Penne Rigate Fullkorn 500g",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "8076809529433",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "8076802085738",
+  "kind": "aliment",
+  "name": "Penne Rigate N°73",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "8076802085738",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "3046920029759",
+  "kind": "aliment",
+  "name": "Lindt Excellence 90% 100g",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3046920029759",
+    429,
+    0.07
+   ],
+   [
+    "3046920029759",
+    200,
+    0.07
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.14
+ },
+ {
+  "code": "3046920022606",
+  "kind": "aliment",
+  "name": "Excellence 85% Cacao Chocolat Noir Puissant",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3046920022606",
+    200,
+    0.15
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.15
+ },
+ {
+  "code": "7622210449283",
+  "kind": "aliment",
+  "name": "Galletas de Chocolate Príncipe",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "7622210449283",
+    200,
+    0.07
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.07
+ },
+ {
+  "code": "3256540000698",
+  "kind": "aliment",
+  "name": "Pains au lait x10",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3256540000698",
+    200,
+    0.2
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.2
+ },
+ {
+  "code": "5449000214911",
+  "kind": "boisson",
+  "name": "Coca-Cola",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "5449000214911",
+    200,
+    0.54
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.54
+ },
+ {
+  "code": "5449000000996",
+  "kind": "boisson",
+  "name": "Coca-Cola",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "5449000000996",
+    200,
+    0.07
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.07
+ },
+ {
+  "code": "5449000214799",
+  "kind": "boisson",
+  "name": "Coke zero",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "5449000214799",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "54491472",
+  "kind": "boisson",
+  "name": "Coca Cola 500ml",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "54491472",
+    200,
+    0.08
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.08
+ },
+ {
+  "code": "5449000000286",
+  "kind": "boisson",
+  "name": "Coca Cola 2l",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "5449000000286",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "3274080005003",
+  "kind": "boisson",
+  "name": "Eau de source",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3274080005003",
+    429,
+    0.09
+   ],
+   [
+    "3274080005003",
+    200,
+    0.07
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.16
+ },
+ {
+  "code": "3268840001008",
+  "kind": "boisson",
+  "name": "Eau de source",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3268840001008",
+    200,
+    0.27
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.27
+ },
+ {
+  "code": "8002270014901",
+  "kind": "boisson",
+  "name": "S. Pellegrino Water",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "8002270014901",
+    200,
+    0.05
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.05
+ },
+ {
+  "code": "3068320123264",
+  "kind": "boisson",
+  "name": "La salvetat",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3068320123264",
+    200,
+    0.05
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.05
+ },
+ {
+  "code": "3502110009449",
+  "kind": "boisson",
+  "name": "Orangensaft",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3502110009449",
+    200,
+    0.05
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.05
+ },
+ {
+  "code": "20019907",
+  "kind": "boisson",
+  "name": "Jus de citron à base de concentré",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "20019907",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "4056489028109",
+  "kind": "boisson",
+  "name": "",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "4056489028109",
+    200,
+    0.05
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.05
+ },
+ {
+  "code": "9002515601018",
+  "kind": "boisson",
+  "name": "Pago Ace - Orange - Carotte - Citron",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "9002515601018",
+    200,
+    0.1
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.1
+ },
+ {
+  "code": "5060362071242",
+  "kind": "boisson",
+  "name": "Organic Soya Milk unsweetened",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "5060362071242",
+    200,
+    0.05
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.05
+ },
+ {
+  "code": "8480000137388",
+  "kind": "complément",
+  "name": "Cacahuete en polvo desgrasado",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "8480000137388",
+    200,
+    0.12
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.12
+ },
+ {
+  "code": "8480000223128",
+  "kind": "complément",
+  "name": "Proteinas Limón",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "8480000223128",
+    429,
+    0.04
+   ],
+   [
+    "8480000223128",
+    200,
+    0.47
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.51
+ },
+ {
+  "code": "8718836396540",
+  "kind": "complément",
+  "name": "Vegan protein",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "8718836396540",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "8718836395833",
+  "kind": "complément",
+  "name": "Vegan protein chocolat",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "8718836395833",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "5060469988467",
+  "kind": "complément",
+  "name": "whey gold standard",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "5060469988467",
+    200,
+    0.1
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.1
+ },
+ {
+  "code": "8410076610737",
+  "kind": "complément",
+  "name": "Protein Cacahuetes🥜 & Chocolat🍫",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "8410076610737",
+    200,
+    0.05
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.05
+ },
+ {
+  "code": "4056489406679",
+  "kind": "complément",
+  "name": "High Protein Drink Chocolate Flavour",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "4056489406679",
+    200,
+    0.14
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.14
+ },
+ {
+  "code": "4056489406662",
+  "kind": "complément",
+  "name": "High Protein Drink Vanilla",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "4056489406662",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "20035525",
+  "kind": "complément",
+  "name": "Protein Bar",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "20035525",
+    200,
+    0.08
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.08
+ },
+ {
+  "code": "8410076901026",
+  "kind": "complément",
+  "name": "Barre céréales Protéines peanut& chocolat🍫",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "8410076901026",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "6111056012986",
+  "kind": "cosmétique",
+  "name": "cadum",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "6111056012986",
+    429,
+    0.07
+   ],
+   [
+    "6111056012986",
+    200,
+    0.16
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.23
+ },
+ {
+  "code": "6111056014522",
+  "kind": "cosmétique",
+  "name": "",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "6111056014522",
+    200,
+    0.1
+   ]
+  ],
+  "complete": false,
+  "image": true,
+  "scorable": false,
+  "latency": 0.1
+ },
+ {
+  "code": "3574669907842",
+  "kind": "cosmétique",
+  "name": "johnsons",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "3574669907842",
+    200,
+    0.09
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.09
+ },
+ {
+  "code": "6111250476515",
+  "kind": "cosmétique",
+  "name": "",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "6111250476515",
+    200,
+    0.09
+   ]
+  ],
+  "complete": false,
+  "image": false,
+  "scorable": false,
+  "latency": 0.09
+ },
+ {
+  "code": "3574661700557",
+  "kind": "cosmétique",
+  "name": "Gel Douche extra doux lait de vanille",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "3574661700557",
+    200,
+    0.1
+   ]
+  ],
+  "complete": false,
+  "image": false,
+  "scorable": false,
+  "latency": 0.1
+ },
+ {
+  "code": "3574661701288",
+  "kind": "cosmétique",
+  "name": "Gel Douche Peche nectarine",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "3574661701288",
+    200,
+    0.12
+   ]
+  ],
+  "complete": false,
+  "image": true,
+  "scorable": false,
+  "latency": 0.12
+ },
+ {
+  "code": "80466468",
+  "kind": "cosmétique",
+  "name": "DOVE Déodorant Femme Anti-Transpirant Stick Original 50ml",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "80466468",
+    200,
+    0.18
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.18
+ },
+ {
+  "code": "8480000467942",
+  "kind": "cosmétique",
+  "name": "Deodorant",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "8480000467942",
+    200,
+    0.09
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.09
+ },
+ {
+  "code": "3600551146065",
+  "kind": "cosmétique",
+  "name": "Déodorant invisimax",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "3600551146065",
+    200,
+    0.15
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.15
+ },
+ {
+  "code": "4005808890576",
+  "kind": "cosmétique",
+  "name": "Nivea soft",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "4005808890576",
+    200,
+    0.09
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.09
+ },
+ {
+  "code": "4005808925124",
+  "kind": "cosmétique",
+  "name": "Nivea crème",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "4005808925124",
+    429,
+    0.04
+   ],
+   [
+    "4005808925124",
+    200,
+    0.13
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.17
+ },
+ {
+  "code": "4005900890504",
+  "kind": "cosmétique",
+  "name": "",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "4005900890504",
+    200,
+    0.14
+   ]
+  ],
+  "complete": false,
+  "image": true,
+  "scorable": false,
+  "latency": 0.14
+ },
+ {
+  "code": "8710522417379",
+  "kind": "cosmétique",
+  "name": "Signal Integral 8 Dentifrice Nature Elements Charbon 75ml",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "8710522417379",
+    200,
+    0.1
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.1
+ },
+ {
+  "code": "8711568058717",
+  "kind": "cosmétique",
+  "name": "Dentifrice turmeric",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "8711568058717",
+    200,
+    0.12
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.12
+ },
+ {
+  "code": "6221048407796",
+  "kind": "cosmétique",
+  "name": "Signal",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "6221048407796",
+    200,
+    0.2
+   ]
+  ],
+  "complete": false,
+  "image": true,
+  "scorable": false,
+  "latency": 0.2
+ },
+ {
+  "code": "30070349",
+  "kind": "cosmétique",
+  "name": "Nutritic Lèvres - soin transformation lèvres desséchées",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "30070349",
+    200,
+    0.11
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.11
+ },
+ {
+  "code": "8682631441487",
+  "kind": "cosmétique",
+  "name": "",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "8682631441487",
+    200,
+    0.11
+   ]
+  ],
+  "complete": false,
+  "image": true,
+  "scorable": false,
+  "latency": 0.11
+ },
+ {
+  "code": "3574661672373",
+  "kind": "cosmétique",
+  "name": "soin lèvres 3 en 1",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "3574661672373",
+    200,
+    0.12
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.12
+ },
+ {
+  "code": "6111024004913",
+  "kind": "cosmétique",
+  "name": "Taous",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "6111024004913",
+    200,
+    0.11
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.11
+ },
+ {
+  "code": "6111024009741",
+  "kind": "cosmétique",
+  "name": "El Keef",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "6111024009741",
+    429,
+    0.05
+   ],
+   [
+    "6111024009741",
+    200,
+    0.12
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.17
+ },
+ {
+  "code": "6111263790127",
+  "kind": "cosmétique",
+  "name": "Savon Marseille",
+  "expect": "found",
+  "found": true,
+  "base": "beauty",
+  "tries": [
+   [
+    "6111263790127",
+    200,
+    0.11
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.11
+ },
+ {
+  "code": "03168930010265",
+  "kind": "variante GTIN-14",
+  "name": "cruesly mélange de noix",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3168930010265",
+    200,
+    0.09
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.09
+ },
+ {
+  "code": "07613034626844",
+  "kind": "variante GTIN-14",
+  "name": "Céréales Chocapic",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "7613034626844",
+    200,
+    0.1
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.1
+ },
+ {
+  "code": "03229820019307",
+  "kind": "variante GTIN-14",
+  "name": "Flocons d'avoine",
+  "expect": "found",
+  "found": true,
+  "base": "food",
+  "tries": [
+   [
+    "3229820019307",
+    200,
+    0.06
+   ]
+  ],
+  "complete": true,
+  "image": true,
+  "scorable": true,
+  "latency": 0.06
+ },
+ {
+  "code": "5010029000017",
+  "kind": "chiffre de contrôle faux",
+  "name": "Weetabix",
+  "expect": "absent",
+  "found": false,
+  "base": null,
+  "tries": [
+   [
+    "5010029000017",
+    404,
+    0.06
+   ]
+  ],
+  "complete": false,
+  "image": false,
+  "scorable": false,
+  "latency": 0.06
+ },
+ {
+  "code": "3175680011481",
+  "kind": "chiffre de contrôle faux",
+  "name": "Sésame",
+  "expect": "absent",
+  "found": false,
+  "base": null,
+  "tries": [
+   [
+    "3175680011481",
+    404,
+    0.06
+   ]
+  ],
+  "complete": false,
+  "image": false,
+  "scorable": false,
+  "latency": 0.06
+ },
+ {
+  "code": "9780812989786",
+  "kind": "témoin hors alimentation",
+  "name": "",
+  "expect": "absent",
+  "found": false,
+  "base": null,
+  "tries": [
+   [
+    "9780812989786",
+    404,
+    0.06
+   ]
+  ],
+  "complete": false,
+  "image": false,
+  "scorable": false,
+  "latency": 0.06
+ },
+ {
+  "code": "6941565920362",
+  "kind": "témoin hors alimentation",
+  "name": "",
+  "expect": "absent",
+  "found": false,
+  "base": null,
+  "tries": [
+   [
+    "6941565920362",
+    404,
+    0.06
+   ]
+  ],
+  "complete": false,
+  "image": false,
+  "scorable": false,
+  "latency": 0.06
+ },
+ {
+  "code": "6958265174483",
+  "kind": "témoin hors alimentation",
+  "name": "",
+  "expect": "absent",
+  "found": false,
+  "base": null,
+  "tries": [
+   [
+    "6958265174483",
+    404,
+    0.15
+   ]
+  ],
+  "complete": false,
+  "image": false,
+  "scorable": false,
+  "latency": 0.15
+ },
+ {
+  "code": "9791035102333",
+  "kind": "témoin hors alimentation",
+  "name": "",
+  "expect": "absent",
+  "found": false,
+  "base": null,
+  "tries": [
+   [
+    "9791035102333",
+    404,
+    0.16
+   ]
+  ],
+  "complete": false,
+  "image": false,
+  "scorable": false,
+  "latency": 0.16
+ },
+ {
+  "code": "3616403703607",
+  "kind": "témoin hors alimentation",
+  "name": "",
+  "expect": "absent",
+  "found": false,
+  "base": null,
+  "tries": [
+   [
+    "3616403703607",
+    429,
+    0.14
+   ],
+   [
+    "3616403703607",
+    404,
+    0.07
+   ]
+  ],
+  "complete": false,
+  "image": false,
+  "scorable": false,
+  "latency": 0.21
+ }
+]

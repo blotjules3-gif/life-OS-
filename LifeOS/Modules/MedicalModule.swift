@@ -1,3 +1,4 @@
+import UserNotifications
 import SwiftUI
 import SwiftData
 import Charts
@@ -44,7 +45,7 @@ struct MedicationView: View {
         // Remise a plat a chaque ouverture. C'est ce qui rattrape les
         // traitements enregistres avant que les rappels existent, ceux dont
         // la date de fin est passee, et une reinstallation de l'app.
-        .onAppear { meds.forEach { MedicationReminders.reschedule($0, ctx: ctx) } }
+        .onAppear { MedicationReminders.reconcileAll(ctx: ctx) }
     }
 
     private func medRow(_ med: Medication) -> some View {
@@ -60,6 +61,9 @@ struct MedicationView: View {
                     Text(med.dosage).font(.caption).foregroundStyle(.secondary)
                 }
                 Text(med.frequency).font(.caption).foregroundStyle(.secondary)
+                if let coverage = MedicationReminders.coverageText(for: med) {
+                    Text(coverage).font(.caption2).foregroundStyle(.secondary)
+                }
             }
             Spacer()
             Toggle("", isOn: Binding(get: { med.active }, set: { setActive(med, $0) }))
@@ -76,12 +80,12 @@ struct MedicationView: View {
         MedicationReminders.reschedule(med, ctx: ctx)
     }
 
-    /// Annuler AVANT de supprimer: une fois la ligne partie, son identifiant
-    /// stable n'est plus lisible et le rappel sonnerait pour un traitement
-    /// qui n'existe plus.
     private func remove(_ med: Medication) {
-        MedicationReminders.cancel(med)
         ctx.delete(med)
+        LifeOSTry(try ctx.save(), context: "suppression medicament", category: AppLog.data)
+        // La reconciliation relit la base: le medicament supprime n'y est plus,
+        // donc tous ses rappels partent.
+        MedicationReminders.reconcileAll(ctx: ctx)
     }
 }
 
@@ -176,53 +180,148 @@ struct MedicationEditor: View {
 /// Trois copies auraient derive.
 enum MedicationReminders {
 
-    /// Prefixe stable. Tous les identifiants d'un medicament en derivent,
-    /// ce qui permet de tous les annuler sans savoir combien il y en avait
-    /// quand ils ont ete poses.
+    static let identifierPrefix = "med."
+
+    /// Prefixe stable. Tous les identifiants d'un medicament en derivent.
     private static func prefix(_ med: Medication, ctx: ModelContext) -> String {
         if med.stableID.isEmpty {
             med.stableID = UUID().uuidString
             LifeOSTry(try ctx.save(), context: "stableID medicament", category: AppLog.data)
         }
-        return "med.\(med.stableID)"
+        return "\(identifierPrefix)\(med.stableID)"
     }
 
-    /// Jusqu'a trois prises par jour, plus une marge si la frequence baisse.
-    private static let maxDoses = 4
+    /// Horizon demande au planificateur: le budget commun tranche ensuite.
+    static let planningHorizonDays = 90
 
-    static func cancel(_ med: Medication) {
-        guard !med.stableID.isEmpty else { return }
-        let base = "med.\(med.stableID)"
-        for i in 0..<maxDoses { NotificationManager.shared.cancel(id: "\(base).\(i)") }
+    // Anciennes entrees: tout passe par la reconciliation globale.
+    @MainActor static func reschedule(_ med: Medication, ctx: ModelContext) { reconcileAll(ctx: ctx) }
+    @MainActor static func renewAll(ctx: ModelContext) { reconcileAll(ctx: ctx) }
+
+    /// Attend la fin du passage en cours (tache de fond qui doit finir avant d'etre coupee).
+    @MainActor static func waitForIdle() async { await chain?.value }
+
+    /// Dernier passage en cours: chaque reconciliation attend la precedente.
+    /// Avant, deux remplacements lances de suite pouvaient s'entrelacer (A retire,
+    /// B retire, A remet l'ANCIEN plan, B remet le nouveau): un rappel supprime
+    /// ressuscitait. Ici l'etat est photographie au moment de l'appel et les
+    /// passages s'executent l'un apres l'autre: le dernier gagne toujours.
+    @MainActor private static var chain: Task<Void, Never>?
+
+    /// Recalcule TOUS les rappels de medicaments d'un coup, dans le budget commun.
+    @MainActor
+    static func reconcileAll(ctx: ModelContext, now: Date = .now) {
+        let meds = (try? ctx.fetch(FetchDescriptor<Medication>())) ?? []
+        var items: [MedicationBudget.Item] = []
+        var requests: [String: UNNotificationRequest] = [:]
+        for med in meds {
+            let base = prefix(med, ctx: ctx)
+            for r in Self.requests(for: med, base: base, now: now) {
+                let date = (r.trigger as? UNCalendarNotificationTrigger).flatMap { $0.repeats ? nil : $0.nextTriggerDate() }
+                items.append(.init(medID: med.stableID, identifier: r.identifier, fireDate: date))
+                requests[r.identifier] = r
+            }
+        }
+        let previous = chain
+        chain = Task { @MainActor in
+            await previous?.value
+            await apply(items: items, requests: requests)
+        }
     }
 
-    static func reschedule(_ med: Medication, ctx: ModelContext) {
-        let base = prefix(med, ctx: ctx)
-        // Toujours tout annuler d'abord: passer de 3x/jour a 1x/jour doit
-        // retirer les deux prises en trop, pas seulement replacer la premiere.
-        for i in 0..<maxDoses { NotificationManager.shared.cancel(id: "\(base).\(i)") }
+    @MainActor
+    private static func apply(items: [MedicationBudget.Item], requests: [String: UNNotificationRequest]) async {
+        let center = UNUserNotificationCenter.current()
+        let settings = await center.notificationSettings()
+        let pending = await center.pendingNotificationRequests()
+        let ours = pending.map(\.identifier).filter { $0.hasPrefix(identifierPrefix) }
+        let others = pending.count - ours.count
+        let budget = MedicationBudget.systemLimit - MedicationBudget.reserve - others
+        let (chosen, coverage) = MedicationBudget.select(items, budget: budget)
 
-        guard MedicationSchedule.isRunning(active: med.active, endDate: med.endDate) else { return }
-        let doses = MedicationSchedule.doses(frequency: med.frequency,
-                                             hourMorning: med.hourMorning,
-                                             hourEvening: med.hourEvening)
-        guard !doses.isEmpty else { return }
+        center.removePendingNotificationRequests(withIdentifiers: ours)
+        var failed = Set<String>()
+        for item in chosen {
+            guard let r = requests[item.identifier] else { continue }
+            do { try await center.add(r) }
+            catch {
+                failed.insert(item.medID)
+                AppLog.general.error("rappel non posé \(r.identifier, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            }
+        }
+        let denied = settings.authorizationStatus == .denied
+        storeCoverage(coverage, denied: denied, failed: failed)
+    }
 
+    // MARK: Couverture affichee
+
+    private static func key(_ id: String) -> String { "med.coverage.\(id)" }
+
+    private static func storeCoverage(_ coverage: [String: MedicationBudget.Coverage], denied: Bool, failed: Set<String>) {
+        let ud = UserDefaults.standard
+        for (id, c) in coverage {
+            let value: String
+            if denied { value = "denied" }
+            else if failed.contains(id) { value = "failed" }
+            else {
+                switch c {
+                case .unlimited: value = "unlimited"
+                case .until(let d): value = "until:\(d.timeIntervalSince1970)"
+                case .none: value = "none"
+                }
+            }
+            ud.set(value, forKey: key(id))
+        }
+    }
+
+    /// Phrase montree sous le medicament: jusqu'ou les rappels sont vraiment programmes.
+    static func coverageText(for med: Medication) -> String? {
+        guard med.active, !med.stableID.isEmpty, let raw = UserDefaults.standard.string(forKey: key(med.stableID)) else { return nil }
+        switch raw {
+        case "denied": return "Notifications refusées dans Réglages : aucun rappel ne sonnera."
+        case "failed": return "Des rappels n'ont pas pu être programmés. Rouvre l'app pour réessayer."
+        case "unlimited": return "Rappels programmés sans date de fin."
+        case "none": return "Aucun rappel programmé (plus de place ou traitement terminé)."
+        default:
+            guard raw.hasPrefix("until:"), let t = Double(raw.dropFirst(6)) else { return nil }
+            let d = Date(timeIntervalSince1970: t)
+            return "Rappels programmés jusqu'au \(d.formatted(date: .abbreviated, time: .shortened)). Ouvre LifeOS avant pour prolonger."
+        }
+    }
+
+    static func requests(for med: Medication, base: String, now: Date = .now) -> [UNNotificationRequest] {
+        let plan = MedicationSchedule.plan(frequency: med.frequency, hourMorning: med.hourMorning,
+                                           hourEvening: med.hourEvening, active: med.active,
+                                           startDate: med.startDate, endDate: med.endDate, now: now,
+                                           horizonDays: planningHorizonDays, maxDates: MedicationBudget.systemLimit)
         let title = "Prendre \(med.name)"
         let detail = med.dosage.isEmpty ? med.frequency : "\(med.dosage) · \(med.frequency)"
-
-        for (i, dose) in doses.enumerated() {
-            let id = "\(base).\(i)"
-            let body = "\(detail) — \(dose.label)"
-            if MedicationSchedule.isWeekly(med.frequency) {
-                let weekday = Calendar.current.component(.weekday, from: med.startDate)
-                NotificationManager.shared.scheduleWeekly(
-                    id: id, title: title, body: body,
-                    weekday: weekday, hour: dose.hour, minute: dose.minute)
-            } else {
-                NotificationManager.shared.scheduleDaily(
-                    id: id, title: title, body: body,
-                    hour: dose.hour, minute: dose.minute)
+        func content(_ body: String) -> UNMutableNotificationContent {
+            let c = UNMutableNotificationContent()
+            c.title = title; c.body = body; c.sound = .default
+            return c
+        }
+        func repeating(_ i: Int, _ d: MedicationSchedule.Dose, weekday: Int?) -> UNNotificationRequest {
+            var comps = DateComponents(); comps.hour = d.hour; comps.minute = d.minute
+            if let weekday { comps.weekday = weekday }
+            return UNNotificationRequest(identifier: "\(base).\(i)", content: content("\(detail) — \(d.label)"),
+                                         trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: true))
+        }
+        switch plan {
+        case .none:
+            return []
+        case .repeatingDaily(let doses):
+            return doses.enumerated().map { repeating($0.offset, $0.element, weekday: nil) }
+        case .repeatingWeekly(let weekday, let doses):
+            return doses.enumerated().map { repeating($0.offset, $0.element, weekday: weekday) }
+        case .dates(let dates):
+            // Composantes SANS fuseau: 8 h reste 8 h a l'heure locale apres un
+            // voyage ou un changement d'heure.
+            let cal = Calendar.current
+            return dates.enumerated().map { i, at in
+                let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: at)
+                return UNNotificationRequest(identifier: "\(base).d\(i)", content: content(detail),
+                                             trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false))
             }
         }
     }
@@ -604,7 +703,7 @@ struct VaccinationView: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: 32, height: 32)
-                .background(highlight ? Color.orange : Color.medicalTint, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                .background(highlight ? Theme.warning : Color.medicalTint, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
             VStack(alignment: .leading, spacing: 2) {
                 Text(v.name).font(.subheadline.weight(.semibold))
                 Text("Fait le \(v.date.formatted(.dateTime.day().month(.wide).year()))").font(.caption).foregroundStyle(.secondary)
@@ -613,7 +712,7 @@ struct VaccinationView: View {
             if let next = v.nextDueDate {
                 VStack(alignment: .trailing, spacing: 0) {
                     Text("Rappel").font(.caption2).foregroundStyle(.secondary)
-                    Text(next, format: .dateTime.day().month(.abbreviated).year()).font(.caption.bold()).foregroundStyle(highlight ? .orange : .medicalTint)
+                    Text(next, format: .dateTime.day().month(.abbreviated).year()).font(.caption.bold()).foregroundStyle(highlight ? Theme.warning : .medicalTint)
                 }
             }
         }

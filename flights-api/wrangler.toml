@@ -1,0 +1,30 @@
+# Worker du comparateur de vols LifeOS. PAS DEPLOYE.
+# Avant tout deploiement (accord de Theo requis):
+#   npx wrangler kv namespace create STATE        puis coller l'id ci-dessous
+#   npx wrangler secret put APP_KEY               cle partagee avec l'app (pas une identite)
+#   npx wrangler secret put DUFFEL_TOKEN          cle Duffel (duffel_test_... d'abord)
+name = "lifeos-flights"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+DAILY_BUDGET_USD = "5"          # plafond de depense du jour, toutes recherches confondues
+CLIENT_DAILY_SEARCHES = "40"    # recherches payantes par adresse IP et par jour
+ALERTS_CRON = "off"             # passer a "on" UNIQUEMENT en meme temps que le cron ci-dessous
+
+# Compteur de budget atomique (une requete a la fois). Sans lui, aucune source
+# payante n'est appelee: le Worker refuse au lieu de depenser a l'aveugle.
+[[durable_objects.bindings]]
+name = "BUDGET"
+class_name = "BudgetGate"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["BudgetGate"]
+
+# [[kv_namespaces]]
+# binding = "STATE"
+# id = "A_CREER"
+
+[triggers]
+crons = []   # alertes: "0 */6 * * *" + ALERTS_CRON = "on". Le compte a deja ses 5 crons gratuits pris.

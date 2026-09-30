@@ -174,9 +174,9 @@ struct SleepDashboardView: View {
 
     private var logButton: some View {
         Button { showLog = true } label: {
-            Text("Enregistrer une nuit").font(.system(size: 17, weight: .black)).foregroundStyle(Theme.onAccent)
+            Text("Enregistrer une nuit").font(.system(size: 17, weight: .black)).foregroundStyle(Theme.textPrimary)
                 .frame(maxWidth: .infinity).padding(.vertical, 16)
-                .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .glassControl(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }.buttonStyle(PressableButtonStyle())
     }
 

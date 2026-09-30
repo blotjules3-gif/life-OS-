@@ -61,7 +61,7 @@ struct FastingView: View {
                                     Text(s.start, style: .date).font(.subheadline).foregroundStyle(Theme.textPrimary)
                                     Spacer()
                                     Text(formatHoursMinutes(Int(s.elapsed))).font(.subheadline.bold())
-                                        .foregroundStyle(Int(s.elapsed) >= s.targetHours*3600 ? .green : .orange)
+                                        .foregroundStyle(Int(s.elapsed) >= s.targetHours*3600 ? Theme.success : Theme.warning)
                                 }
                                 .padding(.vertical, 4)
                             }
@@ -86,6 +86,7 @@ struct FoodEditor: View {
     @State private var results: [FoodProduct] = []
     @State private var searching = false
     @State private var picked: FoodProduct?
+    @State private var saveError: String?
     @State private var grams = "100"
     @State private var searchTask: Task<Void, Never>?
 
@@ -94,6 +95,11 @@ struct FoodEditor: View {
     var body: some View {
         NavigationStack {
             Form {
+                if let saveError {
+                    Section {
+                        Label(saveError, systemImage: "exclamationmark.triangle.fill").foregroundStyle(Theme.warning)
+                    }
+                }
                 Section {
                     HStack {
                         Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
@@ -127,7 +133,7 @@ struct FoodEditor: View {
                     Section("Portion") {
                         HStack {
                             Button { picked = nil } label: { Image(systemName: "chevron.left"); Text("Changer") }
-                                .font(.caption).buttonStyle(.plain).foregroundStyle(.blue)
+                                .font(.caption).buttonStyle(.plain).foregroundStyle(Theme.finance)
                             Spacer()
                             Text(prod.name).font(.subheadline.weight(.semibold)).lineLimit(1)
                         }
@@ -172,8 +178,8 @@ struct FoodEditor: View {
     }
 
     private func nutriColor(_ g: String) -> Color {
-        switch g { case "a": return .green; case "b": return Color(hex: 0x8BC34A); case "c": return .yellow
-        case "d": return .orange; default: return .red }
+        switch g { case "a": return Theme.success; case "b": return Color(hex: 0x8BC34A); case "c": return Theme.learning
+        case "d": return Theme.warning; default: return Theme.danger }
     }
 
     private func scheduleSearch(_ q: String) {
@@ -196,17 +202,26 @@ struct FoodEditor: View {
         if grams.isEmpty { grams = "100" }
     }
 
+    /// La feuille ne se ferme que si le repas est vraiment ecrit. Avant, elle
+    /// inserait sans enregistrer puis se fermait, quoi qu'il arrive.
     private func add() {
+        let draft: FoodLogService.Draft
         if let prod = picked {
-            ctx.insert(FoodEntry(name: prod.name,
-                                 calories: Int((Double(prod.kcal) * factor).rounded()),
-                                 protein: prod.protein * factor, carbs: prod.carbs * factor,
-                                 fat: prod.fat * factor, meal: meal))
+            draft = .init(name: prod.name,
+                          calories: Int((Double(prod.kcal) * factor).rounded()),
+                          protein: prod.protein * factor, carbs: prod.carbs * factor,
+                          fat: prod.fat * factor, meal: meal)
         } else {
-            ctx.insert(FoodEntry(name: name, calories: Int(kcal) ?? 0, protein: Double(p) ?? 0,
-                                 carbs: Double(c) ?? 0, fat: Double(f) ?? 0, meal: meal))
+            draft = .init(name: name, calories: Int(kcal) ?? 0, protein: Double(p) ?? 0,
+                          carbs: Double(c) ?? 0, fat: Double(f) ?? 0, meal: meal)
         }
-        dismiss()
+        do {
+            try FoodLogService.log([draft], in: ctx)
+            dismiss()
+        } catch {
+            Haptics.warning()
+            saveError = error.localizedDescription
+        }
     }
 }
 
@@ -253,7 +268,7 @@ struct FridgeView: View {
                                     Spacer()
                                     if let e = it.expiry { ExpiryBadge(date: e) }
                                     Button(role: .destructive) { ctx.delete(it) } label: { Image(systemName: "trash").font(.caption) }
-                                        .foregroundStyle(.red.opacity(0.7))
+                                        .foregroundStyle(Theme.danger.opacity(0.7))
                                 }.card(padding: 12)
                             }
                         }
@@ -275,8 +290,8 @@ struct ExpiryBadge: View {
         Text(days < 0 ? "Périmé" : days == 0 ? "Aujourd'hui" : "J-\(days)")
             .font(.caption2.bold())
             .padding(.horizontal, 8).padding(.vertical, 4)
-            .background((days <= 1 ? Color.red : days <= 3 ? .orange : .green).opacity(0.2), in: Capsule())
-            .foregroundStyle(days <= 1 ? .red : days <= 3 ? .orange : .green)
+            .background((days <= 1 ? Theme.danger : days <= 3 ? Theme.warning : Theme.success).opacity(0.2), in: Capsule())
+            .foregroundStyle(days <= 1 ? Theme.danger : days <= 3 ? Theme.warning : Theme.success)
     }
 }
 
@@ -362,7 +377,7 @@ struct ShoppingListView: View {
                                     Button { it.checked.toggle() } label: {
                                         HStack {
                                             Image(systemName: it.checked ? "checkmark.circle.fill" : "circle")
-                                                .foregroundStyle(it.checked ? .green : Theme.textSecondary)
+                                                .foregroundStyle(it.checked ? Theme.success : Theme.textSecondary)
                                             Text(it.name).strikethrough(it.checked).foregroundStyle(it.checked ? Theme.textSecondary : Theme.textPrimary)
                                             Spacer()
                                             Text(it.quantity).font(.caption).foregroundStyle(Theme.textSecondary)
@@ -596,8 +611,8 @@ struct SupplementsView: View {
             Spacer()
             if streak > 0 {
                 HStack(spacing: 3) {
-                    Image(systemName: "flame.fill").font(.caption).foregroundStyle(.orange)
-                    Text("\(streak)").font(.caption.weight(.bold)).foregroundStyle(.orange)
+                    Image(systemName: "flame.fill").font(.caption).foregroundStyle(Theme.warning)
+                    Text("\(streak)").font(.caption.weight(.bold)).foregroundStyle(Theme.warning)
                 }
             }
             Toggle("", isOn: Binding(get: { s.active }, set: { s.active = $0; reschedule(s) }))
@@ -702,9 +717,9 @@ struct DietProfileView: View {
                         if !test.isEmpty {
                             let issues = AllergenChecker.check(test, against: flags)
                             if issues.isEmpty {
-                                Label("Compatible avec ton profil", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
+                                Label("Compatible avec ton profil", systemImage: "checkmark.seal.fill").foregroundStyle(Theme.success)
                             } else {
-                                ForEach(issues, id: \.self) { Label($0, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange) }
+                                ForEach(issues, id: \.self) { Label($0, systemImage: "exclamationmark.triangle.fill").foregroundStyle(Theme.warning) }
                             }
                         }
                     }.card()

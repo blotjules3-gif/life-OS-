@@ -194,10 +194,10 @@ struct DailyBriefingView: View {
                     Button { dismiss() } label: {
                         Text("Commencer la journée")
                             .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(Theme.onAccent)
+                            .foregroundStyle(Theme.textPrimary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .glassControl(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
                     .buttonStyle(LifeOSPressStyle())
                     .padding(.bottom, 40)
@@ -420,18 +420,12 @@ struct DailyBriefingView: View {
         if morningMood > 0 { ctx.insert(MoodEntry(score: morningMood, note: "")) }
         do { try ctx.save() } catch { AppLog.data.error("saveBriefingCheckin failed: \(error.localizedDescription, privacy: .public)") }
 
-        let manual = EnergyScore.Input(
-            sleepHours: sleepHours > 0 ? Double(sleepHours) : nil,
-            sleepQuality: sleepQuality > 0 ? sleepQuality : nil,
-            mood: morningMood > 0 ? morningMood : nil,
-            fatigue: morningFatigue > 0 ? morningFatigue : nil,
-            waterML: waterToday > 0 ? waterToday : nil,
-            habitsDone: habitsDone,
-            habitsTotal: habits.count > 0 ? habits.count : nil
-        )
-        let result = EnergyScore.compute(manual)
-        todayEnergyScore = result.score
-        todayEnergyLabel = result.label
+        // Meme calcul que partout ailleurs: sommeil date, habitudes prevues ce
+        // jour, objectifs de l'utilisateur. Avant, ce chemin avait sa propre
+        // version qui comptait toutes les habitudes.
+        let result = EnergyScore.today(ctx, fatigue: morningFatigue > 0 ? morningFatigue : nil)
+        todayEnergyScore = result?.score ?? 0
+        todayEnergyLabel = result?.label ?? ""
 
         checkinSubmitting = false
         withAnimation(.spring(duration: 0.4, bounce: 0.1)) { checkinDone = true }
@@ -533,7 +527,7 @@ struct DailyBriefingView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.secondary)
                     .frame(width: 32, height: 32)
-                    .background(Color.secondary.opacity(0.1), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: 7, style: .continuous), .nested)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Briefing indisponible")
                         .font(.system(size: 14, weight: .medium))

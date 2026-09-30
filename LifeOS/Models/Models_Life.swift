@@ -96,6 +96,10 @@ import SwiftUI
     var sourceGoalID: String = ""
     /// Jours actifs (1=Dim, 2=Lun, 3=Mar, 4=Mer, 5=Jeu, 6=Ven, 7=Sam).
     var activeDaysRaw: String = "1,2,3,4,5,6,7"
+    /// Identifiant stable, utilise par les widgets et les notifications (jamais le
+    /// nom, que deux habitudes peuvent partager). Vide sur les anciennes fiches:
+    /// `HabitSync.ensureIDs` le remplit au lancement.
+    var uid: String = ""
     @Relationship(deleteRule: .cascade) var completions: [HabitCompletion]
     init(name: String = "", icon: String = "checkmark", colorHex: Int = 0x4CC38A, createdAt: Date = .now, isPending: Bool = false, isArchived: Bool = false, moduleTag: String = "", scheduledHour: Int = 9, scheduledMinute: Int = 0, sourceGoalID: String = "", activeDaysRaw: String = "1,2,3,4,5,6,7") {
         self.name = name; self.icon = icon; self.colorHex = colorHex; self.createdAt = createdAt
@@ -103,6 +107,7 @@ import SwiftUI
         self.scheduledHour = scheduledHour; self.scheduledMinute = scheduledMinute
         self.sourceGoalID = sourceGoalID
         self.activeDaysRaw = activeDaysRaw
+        self.uid = UUID().uuidString
         self.completions = []
     }
 

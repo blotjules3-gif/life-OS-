@@ -89,7 +89,7 @@ struct SmartReminderEditor: View {
                             if windowEndHour <= windowStartHour {
                                 Label("L'heure de fin doit être après le début.",
                                       systemImage: "exclamationmark.triangle.fill")
-                                    .foregroundStyle(.orange)
+                                    .foregroundStyle(Theme.warning)
                                     .font(.caption)
                             }
                         case .multipleTimes:
@@ -109,7 +109,7 @@ struct SmartReminderEditor: View {
                     if weekdayMask == 0 {
                         Label("Aucun jour sélectionné — le rappel ne se déclenchera jamais.",
                               systemImage: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Theme.warning)
                             .font(.caption)
                     }
                 }
@@ -201,7 +201,7 @@ struct SmartReminderEditor: View {
                 .font(.caption.weight(.medium))
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(Color(uiColor: .tertiarySystemFill), in: Capsule())
+                .raisedSurface(Capsule(), .nested)
                 .foregroundStyle(.primary)
         }
         .buttonStyle(.plain)

@@ -12,6 +12,8 @@ struct LifeOSApp: App {
     @State private var container: ModelContainer?
     @State private var migrationFailed = false
     @State private var storeWasReset = false
+    /// Message de fin de restauration (reussie ou annulee), affiche une fois.
+    @State private var restoreMessage: String?
     #if DEBUG
     @State private var debugHabitEditor = false
     #endif
@@ -19,6 +21,7 @@ struct LifeOSApp: App {
     @AppStorage(AppStorageKeys.onboardingDone) private var onboardingDone = false
     @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
     @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "system"
+    @AppStorage(AppStorageKeys.appPalette) private var appPaletteRaw = AppPalette.color.rawValue
     private var appTheme: AppTheme {
         let t = AppTheme(rawValue: appThemeRaw) ?? .system
         return t.isSelectable ? t : .system   // thème archivé → Système
@@ -92,6 +95,12 @@ struct LifeOSApp: App {
             } message: {
                 Text("LifeOS n'a pas pu charger ta base de données. Tes données sont en sécurité — réessaie ou contacte le support.")
             }
+            .alert("Restauration", isPresented: Binding(get: { restoreMessage != nil },
+                                                        set: { if !$0 { restoreMessage = nil } })) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(restoreMessage ?? "")
+            }
             .alert("Données réinitialisées", isPresented: $storeWasReset) {
                 Button("OK", role: .cancel) { }
             } message: {
@@ -114,7 +123,11 @@ struct LifeOSApp: App {
                     .transition(.opacity)
                     .zIndex(1)
             } else {
+                // Les couleurs de la palette sont lues pendant le rendu de chaque vue :
+                // changer de palette reconstruit l'arbre pour que TOUT se redessine.
+                // L'onglet courant est garde (SceneStorage dans MainTabView).
                 MainTabView()
+                    .id(appPaletteRaw)
                     .tint(appTheme.accent)
                     .transition(.opacity)
                     .zIndex(2)
@@ -151,13 +164,16 @@ struct LifeOSApp: App {
             LedgerService.migrateIfNeeded(container.mainContext)
             // Enregistrer les tools coach dans le ToolRegistry (Phase 1 branchée).
             CoachToolsBootstrap.registerAll()
+            #if DEBUG
+            DemoSeed.runIfAsked(container.mainContext)
+            GlassProbe.runIfAsked()
+            #endif
             // Pas de demande de permission pendant l'onboarding : elle est faite
             // en contexte (pré-prompt) juste après la création des habitudes.
             guard onboardingDone else { return }
             #if DEBUG
             // Visual QA must not be dimmed by a system notification permission dialog.
-            if ProcessInfo.processInfo.arguments.contains("-glassGallery") ||
-                ProcessInfo.processInfo.arguments.contains("-skipPermissionPrompts") { return }
+            if DebugLaunchFlags.suppressesPermissionPrompts { return }
             #endif
             Task.detached(priority: .background) {
                 let granted = await NotificationManager.shared.requestAuthorization()
@@ -172,13 +188,16 @@ struct LifeOSApp: App {
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             resetDailyValuesIfNeeded()
             MorningReminder.checkAndArm()
+            // Les traitements bornes ou futurs n'ont que quelques jours poses
+            // d'avance: on renouvelle a chaque retour.
+            MedicationReminders.renewAll(ctx: container.mainContext)
             Task { await HealthAutoSync.syncNow(container.mainContext) }
             // Regénère les notifs cross-pôles à partir de l'état actuel.
             SmartNotifications.refreshDaily(ctx: container.mainContext)
             // Publie le score énergie du jour dans App Group pour le widget.
             EnergyScore.publishToAppGroup(EnergyScore.today(container.mainContext))
-            // Rejoue les toggles d'habitudes faits depuis le widget interactif.
-            WidgetToggleReconciler.drainAndApply(ctx: container.mainContext)
+            // Ordres d'habitudes venus des widgets et notifications, puis instantane.
+            HabitSync.refresh(container.mainContext)
             // Analytics — événement launch.
             Analytics.log("app.launch")
             // Coach proactif — piggy-back au foreground (fallback si BGTask
@@ -291,6 +310,13 @@ struct LifeOSApp: App {
         let config = LocalStore.cloudKitEnabled
             ? ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: .automatic)
             : ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        // Une restauration preparee s'applique ICI, avant que la base soit ouverte.
+        FullBackup.applyAtLaunch(storeURL: config.url)
+        if FullBackup.restoredThisLaunch != nil {
+            restoreMessage = "Ta sauvegarde a été restaurée. Les données qui étaient sur l'appareil avant ont été mises de côté, pas effacées."
+        } else if let err = FullBackup.restoreError {
+            restoreMessage = err
+        }
 
         let result = await Task.detached(priority: .userInitiated) {
             Result { try ModelContainer(for: schema, configurations: [config]) }

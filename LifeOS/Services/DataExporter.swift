@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 import SwiftUI
 
-/// Export JSON local de toutes les données importantes de l'utilisateur.
+/// Resume JSON lisible d'une PARTIE des donnees (pas une sauvegarde: voir FullBackup).
 /// Aucun réseau : le fichier est écrit dans tmp puis partagé via ShareLink.
 enum DataExporter {
 
@@ -141,89 +141,194 @@ enum DataExporter {
     }
 }
 
-/// Feuille de préparation + partage de l'export.
+/// Sauvegarde complete, restauration, et resume lisible.
+///
+/// Avant, cette feuille ne proposait que le JSON, presente comme "tes donnees".
+/// Il ne couvrait qu'une partie des types et aucune photo: pas une sauvegarde.
 struct DataExportSheet: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
 
-    @State private var result: DataExporter.Result?
-    @State private var failed = false
+    @State private var backupURL: URL?
+    @State private var backupManifest: FullBackup.Manifest?
+    @State private var working = false
+    @State private var error: String?
+
+    @State private var showImporter = false
+    @State private var candidate: (url: URL, manifest: FullBackup.Manifest)?
+    @State private var staged: FullBackup.Manifest?
+    @State private var pending = FullBackup.hasPendingRestore()
+
+    @State private var summary: DataExporter.Result?
 
     var body: some View {
         NavigationStack {
-            Group {
-                if let result {
-                    ready(result)
-                } else if failed {
-                    ContentUnavailableView(
-                        "Export impossible",
-                        systemImage: "exclamationmark.triangle",
-                        description: Text("Une erreur est survenue pendant la préparation du fichier. Réessaie.")
-                    )
-                } else {
-                    VStack(spacing: 14) {
-                        ProgressView()
-                        Text("Préparation de ton export…")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+            List {
+                backupSection
+                restoreSection
+                summarySection
+                if let error {
+                    Section { Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(Theme.warning) }
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .navigationTitle("Exporter mes données")
+            .navigationTitle("Mes données")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Fermer") { dismiss() }
+                ToolbarItem(placement: .topBarTrailing) { Button("Fermer") { dismiss() } }
+            }
+            .fileImporter(isPresented: $showImporter, allowedContentTypes: [.data, .item]) { result in
+                switch result {
+                case .success(let url): inspect(url)
+                case .failure(let e): error = "Fichier non ouvert : \(e.localizedDescription)"
+                }
+            }
+            .confirmationDialog("Remplacer les données de cet appareil ?",
+                                isPresented: Binding(get: { candidate != nil }, set: { if !$0 { candidate = nil } }),
+                                titleVisibility: .visible) {
+                Button("Restaurer au prochain lancement", role: .destructive) { stage() }
+                Button("Annuler", role: .cancel) { candidate = nil }
+            } message: {
+                if let m = candidate?.manifest {
+                    Text("Sauvegarde du \(m.createdAt.formatted(date: .long, time: .shortened)) : \(m.totalRows) entrées, \(m.fileCount) fichiers. Les données actuelles seront mises de côté sur l'appareil, pas effacées.")
                 }
             }
         }
         .presentationDetents([.medium, .large])
-        .task {
-            do { result = try DataExporter.export(ctx) }
-            catch { failed = true }
+    }
+
+    // MARK: Sauvegarde complete
+
+    private var backupSection: some View {
+        Section {
+            if let url = backupURL, let m = backupManifest {
+                VStack(alignment: .leading, spacing: 4) {
+                    Label("Sauvegarde prête", systemImage: "checkmark.seal.fill").foregroundStyle(Theme.success)
+                    Text("\(m.totalRows) entrées, \(m.fileCount) fichiers, \(sizeText(url))")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+                ShareLink(item: url) { Label("Enregistrer ou envoyer le fichier", systemImage: "square.and.arrow.up") }
+            } else {
+                Button { makeBackup() } label: {
+                    HStack {
+                        Label("Créer une sauvegarde complète", systemImage: "externaldrive.badge.checkmark")
+                        if working { Spacer(); ProgressView() }
+                    }
+                }
+                .disabled(working)
+            }
+        } header: {
+            Text("Sauvegarde complète")
+        } footer: {
+            Text("Tout LifeOS dans un fichier : la base entière, les photos, les documents scannés et les réglages. Il permet de tout restaurer, sur cet appareil ou un autre. Tes clés d'API n'y sont pas incluses.")
         }
     }
 
-    private func ready(_ result: DataExporter.Result) -> some View {
-        VStack(spacing: 0) {
-            List {
-                Section {
-                    HStack(spacing: 12) {
-                        Image(systemName: "doc.badge.arrow.up")
-                            .font(.system(size: 22, weight: .semibold))
-                            .foregroundStyle(Color.accentColor)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("\(result.total) entrées prêtes")
-                                .font(.system(size: 16, weight: .semibold))
-                            Text("Fichier JSON lisible — tes données restent sur ton appareil.")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 4)
+    // MARK: Restauration
+
+    private var restoreSection: some View {
+        Section {
+            if pending {
+                Label(staged.map { "Restauration prête : \($0.totalRows) entrées, \($0.fileCount) fichiers." }
+                      ?? "Une restauration est prête.", systemImage: "clock.arrow.circlepath")
+                Text("Ferme complètement LifeOS puis rouvre-le pour l'appliquer.")
+                    .font(.footnote).foregroundStyle(.secondary)
+                Button("Annuler la restauration", role: .destructive) {
+                    FullBackup.cancelPendingRestore(); pending = false; staged = nil
                 }
-                Section("Contenu") {
-                    ForEach(result.sections, id: \.label) { section in
-                        HStack {
-                            Text(section.label)
-                            Spacer()
-                            Text("\(section.count)")
-                                .foregroundStyle(.secondary)
-                                .monospacedDigit()
-                        }
-                    }
+            } else {
+                Button { showImporter = true } label: {
+                    Label("Restaurer une sauvegarde…", systemImage: "arrow.counterclockwise.circle")
                 }
             }
-            ShareLink(item: result.url) {
-                Label("Partager le fichier", systemImage: "square.and.arrow.up")
-                    .font(.system(size: 16, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-            }
-            .buttonStyle(LifeOSGlassButtonStyle(prominent: true))
-            .padding(.horizontal, 20)
-            .padding(.bottom, 16)
+        } header: {
+            Text("Restaurer")
+        } footer: {
+            Text("Le fichier est vérifié avant tout changement. Un fichier abîmé ou étranger est refusé.")
         }
+    }
+
+    // MARK: Resume lisible
+
+    private var summarySection: some View {
+        Section {
+            if let summary {
+                ShareLink(item: summary.url) {
+                    Label("Partager le résumé (\(summary.total) entrées)", systemImage: "doc.text")
+                }
+            } else {
+                Button { makeSummary() } label: { Label("Créer un résumé lisible (JSON)", systemImage: "doc.text") }
+            }
+        } header: {
+            Text("Résumé lisible")
+        } footer: {
+            Text("Un fichier texte pour lire ou réutiliser une partie de tes données (repas, habitudes, finances, santé). Ce n'est pas une sauvegarde : il ne contient ni photos ni documents et ne se restaure pas.")
+        }
+    }
+
+    // MARK: Actions
+
+    private func makeBackup() {
+        error = nil; working = true
+        do { try ctx.save() } catch {
+            working = false; self.error = "Enregistrement en cours impossible : \(error.localizedDescription)"; return
+        }
+        var loc = FullBackup.Locations.app
+        if let url = ctx.container.configurations.first?.url { loc.store = url }
+        let defaults = FullBackup.currentDefaults()
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let stamp = Date().formatted(.iso8601.year().month().day())
+        let out = FileManager.default.temporaryDirectory
+            .appendingPathComponent("LifeOS-\(stamp).\(FullBackup.fileExtension)")
+        Task.detached(priority: .userInitiated) {
+            let result = Result { try FullBackup.make(at: loc, defaults: defaults, appVersion: version, to: out) }
+            await MainActor.run {
+                working = false
+                switch result {
+                case .success(let m): backupURL = out; backupManifest = m
+                case .failure(let e): error = e.localizedDescription
+                }
+            }
+        }
+    }
+
+    private func inspect(_ url: URL) {
+        error = nil
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        // Copie locale: l'acces au fichier choisi ne dure pas jusqu'a la confirmation.
+        let local = FileManager.default.temporaryDirectory.appendingPathComponent("restore-\(UUID().uuidString).\(FullBackup.fileExtension)")
+        do {
+            try FileManager.default.copyItem(at: url, to: local)
+            candidate = (local, try FullBackup.readManifest(local))
+        } catch {
+            try? FileManager.default.removeItem(at: local)
+            self.error = error.localizedDescription
+        }
+    }
+
+    private func stage() {
+        guard let c = candidate else { return }
+        candidate = nil; working = true
+        Task.detached(priority: .userInitiated) {
+            let result = Result { try FullBackup.stageRestore(from: c.url, at: .app) }
+            try? FileManager.default.removeItem(at: c.url)
+            await MainActor.run {
+                working = false
+                switch result {
+                case .success(let m): staged = m; pending = true
+                case .failure(let e): error = e.localizedDescription
+                }
+            }
+        }
+    }
+
+    private func makeSummary() {
+        do { summary = try DataExporter.export(ctx) }
+        catch { self.error = "Résumé impossible : \(error.localizedDescription)" }
+    }
+
+    private func sizeText(_ url: URL) -> String {
+        let bytes = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        return ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
     }
 }

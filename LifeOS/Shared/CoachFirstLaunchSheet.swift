@@ -5,7 +5,11 @@ import SwiftUI
 /// L'utilisateur choisit comment son coach va fonctionner :
 ///   1. Ma propre clé — l'user colle une clé d'un provider (OpenRouter, OpenAI…)
 ///   2. Apple Intelligence — 100% local, gratuit, sur iPhone compatible
-///   3. LifeOS Premium — bouton grisé, "bientôt dispo"
+///   3. Continuer sans clé
+///
+/// Une troisieme carte annoncait un abonnement "LifeOS Premium, bientot". Elle est
+/// retiree : l'app n'a aucun achat integre, et annoncer un achat qui n'existe pas est
+/// un motif de refus a la revue App Store.
 ///   4. Continuer sans coach — bascule sur le coach local règles (offline)
 ///
 /// L'onboarding est "soft" : rien n'oblige à choisir un provider payant. L'user
@@ -107,7 +111,7 @@ struct CoachFirstLaunchSheet: View {
             if appleAvailable {
                 choiceCard(
                     icon: "iphone",
-                    iconColor: .green,
+                    iconColor: Theme.success,
                     title: "Apple Intelligence",
                     subtitle: "100% sur ton iPhone, gratuit, aucune donnée ne sort. Latence quasi instantanée.",
                     badge: "Gratuit",
@@ -118,17 +122,6 @@ struct CoachFirstLaunchSheet: View {
                     }
                 )
             }
-
-            // Option 3 — LifeOS Premium (bientôt)
-            choiceCard(
-                icon: "star.fill",
-                iconColor: .yellow,
-                title: "LifeOS Premium",
-                subtitle: "Bientôt : coach illimité inclus dans l'abonnement, aucune clé à gérer.",
-                badge: "Bientôt",
-                disabled: true,
-                action: { }
-            )
 
             // Option 4 — Continuer sans clé
             Button {
@@ -274,8 +267,8 @@ private struct ProviderQuickPicker: View {
                             .font(.caption2.weight(.bold))
                             .padding(.horizontal, 5)
                             .padding(.vertical, 2)
-                            .background(Color.orange.opacity(0.18), in: Capsule())
-                            .foregroundStyle(.orange)
+                            .background(Theme.warning.opacity(0.18), in: Capsule())
+                            .foregroundStyle(Theme.warning)
                     }
                 }
                 Text(shortDescription(for: slot))
@@ -339,12 +332,12 @@ private struct QuickKeyEntry: View {
                         .autocorrectionDisabled()
                     if let errorMsg {
                         Label(errorMsg, systemImage: "xmark.circle.fill")
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Theme.danger)
                             .font(.footnote)
                     }
                     if success {
                         Label("Clé validée. Ton coach est prêt.", systemImage: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
+                            .foregroundStyle(Theme.success)
                             .font(.footnote)
                     }
                 }

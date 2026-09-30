@@ -102,4 +102,45 @@ final class FoodRecognitionPipelineTests: XCTestCase {
         XCTAssertEqual(items.reduce(0) { $0 + $1.kcal }, 450)
         XCTAssertEqual(items.reduce(0.0) { $0 + $1.protein }, 20, accuracy: 0.001)
     }
+
+    // MARK: - Aliments generiques (Ciqual) et alternatives
+
+    func testCiqualFindsHomeCookedFoods() {
+        XCTAssertFalse(GenericFoods.all.isEmpty, "table Ciqual embarquée")
+        let beans = GenericFoods.best("haricots verts", cooked: true)
+        XCTAssertNotNil(beans)
+        XCTAssertTrue(beans!.name.lowercased().contains("haricot vert"), beans!.name)
+        XCTAssertLessThan(beans!.kcal, 60, "des haricots verts cuits, pas une conserve cuisinée")
+        XCTAssertNotNil(GenericFoods.best("poulet rôti"))
+    }
+
+    /// "Soupe" remplacee par "Légumes cuits" en un geste: les valeurs suivent.
+    func testChoosingAnAlternativeRecomputesFromCiqual() {
+        let soup = FoodRecognitionPipeline.DetectedFood(name: "Soupe", confidence: 0.4, grams: 200,
+                                                         kcal100: 40, protein100: 1, carbs100: 5, fat100: 1,
+                                                         source: .estimate, alternatives: ["Haricots verts", "Ragoût"])
+        let fixed = FoodRecognitionPipeline.renamed(soup, to: "Haricots verts")
+        XCTAssertEqual(fixed.name, "Haricots verts")
+        XCTAssertEqual(fixed.source, .ciqual)
+        XCTAssertEqual(fixed.grams, 200, "la portion choisie est gardée")
+        XCTAssertTrue(fixed.alternatives.contains("Soupe"), "on peut revenir en arrière")
+        XCTAssertFalse(fixed.alternatives.contains("Haricots verts"))
+    }
+
+    func testSoupAlwaysOffersVegetableAlternatives() {
+        XCTAssertTrue(FoodRecognitionPipeline.confusions["Soupe"]?.contains("Légumes cuits") == true)
+    }
+
+    /// Vrais labels Apple Vision releves le 29 sept (tools/calai-bench, sur Mac).
+    /// Avant, "stir_fry" et "vegetable" n'avaient aucune correspondance: la poêlée
+    /// devenait "Carottes 120 g" et seule une "soup" de Vision passait.
+    func testRealVisionLabelsForVegetableDishes() {
+        let ratatouille = [("utensil", 0.78), ("cookware", 0.78), ("pan", 0.78), ("food", 0.58), ("stir_fry", 0.55), ("vegetable", 0.39), ("tomato", 0.39)]
+        XCTAssertEqual(FoodRecognitionPipeline.keys(from: ratatouille).map(\.0.fr), ["Poêlée de légumes", "Légumes", "Tomate"])
+        let poelee = [("food", 0.54), ("stir_fry", 0.54), ("utensil", 0.53), ("spatula", 0.48), ("vegetable", 0.24), ("carrot", 0.21)]
+        XCTAssertEqual(FoodRecognitionPipeline.keys(from: poelee).first?.0.fr, "Poêlée de légumes")
+        let soup = [("tableware", 0.97), ("spoon", 0.91), ("food", 0.73), ("soup", 0.73)]
+        XCTAssertEqual(FoodRecognitionPipeline.keys(from: soup).first?.0.fr, "Soupe", "une vraie soupe reste une soupe")
+        XCTAssertTrue(FoodRecognitionPipeline.keys(from: [("tableware", 0.9), ("plate", 0.9)]).isEmpty, "de la vaisselle n'est pas un aliment")
+    }
 }

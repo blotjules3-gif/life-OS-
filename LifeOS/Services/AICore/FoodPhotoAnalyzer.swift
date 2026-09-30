@@ -17,14 +17,29 @@ import UIKit
 enum FoodPhotoAnalyzer {
 
     struct Analysis {
-        let name: String
-        let kcal: Int
-        let protein: Double
-        let carbs: Double
-        let fat: Double
+        /// Un element par aliment visible (plus un nom de plat global: "soupe"
+        /// pour une assiette de legumes ne se corrigeait pas).
+        struct Item: Equatable {
+            let name: String
+            let grams: Double
+            let preparation: String?
+            let confidence: Double
+            let alternatives: [String]
+            /// Valeurs du modele pour la portion, utilisees seulement si Ciqual ne
+            /// connait pas l'aliment.
+            let kcal: Double
+            let protein: Double
+            let carbs: Double
+            let fat: Double
+        }
+        let items: [Item]
+        /// Question courte quand un detail change beaucoup les calories.
+        let question: String?
         /// Ce que le modèle dit avoir vu, montré à l'utilisateur pour qu'il
         /// puisse juger si l'estimation est crédible.
         let note: String
+
+        var name: String { items.map(\.name).joined(separator: ", ") }
     }
 
     enum Failure: Error {
@@ -135,21 +150,26 @@ enum FoodPhotoAnalyzer {
     texte autour et sans balises de code.
 
     Format exact :
-    {"name": "...", "kcal": 0, "protein": 0, "carbs": 0, "fat": 0, "note": "..."}
+    {"items":[{"name":"...","grams":0,"preparation":"...","confidence":0.0,"alternatives":["..."],"kcal":0,"protein":0,"carbs":0,"fat":0}],"question":null,"note":"..."}
 
     Règles :
-    - name : le plat en français, court (ex: "Poulet riz brocolis").
-    - kcal, protein, carbs, fat : pour LA PORTION VISIBLE sur la photo, pas \
-    pour 100 g. Protéines, glucides et lipides en grammes, nombres entiers.
-    - Sers-toi de la taille de l'assiette et des couverts pour juger la portion.
-    - note : une phrase courte sur ce que tu vois et ton degré de certitude.
-    - Si ce n'est pas de la nourriture, renvoie name "Aucun plat détecté" et 0 partout.
+    - Un élément par aliment VISIBLE, pas un nom de plat global (des légumes \
+    sautés dans une poêle ne sont pas une soupe). N'invente pas d'aliment caché.
+    - name : en français, court (ex: "Haricots verts"). grams : portion visible \
+    estimée, en t'aidant de l'assiette et des couverts.
+    - preparation : cru, cuit à l'eau, rôti, frit, sauté, en sauce, en soupe...
+    - confidence entre 0 et 1. alternatives : 1 à 3 autres identités plausibles.
+    - kcal, protein, carbs, fat : pour la portion de CET élément, nombres entiers.
+    - question : une question courte si un détail change beaucoup les calories \
+    (huile, sauce, fromage), sinon null.
+    - note : une phrase sur ce que tu vois et ton degré de certitude.
+    - Si ce n'est pas de la nourriture, renvoie "items": [].
     """
 
     private static func openAIRequest(url: String, model: String, key: String, imageB64: String) -> URLRequest {
         let payload: [String: Any] = [
             "model": model,
-            "max_tokens": 400,
+            "max_tokens": 900,
             "temperature": 0.2,   // une estimation chiffrée n'a pas à être créative
             "messages": [[
                 "role": "user",
@@ -174,7 +194,7 @@ enum FoodPhotoAnalyzer {
     private static func anthropicRequest(model: String, key: String, imageB64: String) -> URLRequest {
         let payload: [String: Any] = [
             "model": model,
-            "max_tokens": 400,
+            "max_tokens": 900,
             "temperature": 0.2,
             "messages": [[
                 "role": "user",
@@ -221,22 +241,35 @@ enum FoodPhotoAnalyzer {
               let o = try? JSONSerialization.jsonObject(with: d) as? [String: Any] else { return nil }
 
         // Certains modèles renvoient "285", d'autres 285, d'autres 285.0.
-        func num(_ k: String) -> Double {
+        func num(_ o: [String: Any], _ k: String) -> Double {
             if let v = o[k] as? Double { return v }
             if let v = o[k] as? Int { return Double(v) }
             if let s = o[k] as? String { return Double(s.filter { "0123456789.".contains($0) }) ?? 0 }
             return 0
         }
-        let name = (o["name"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        guard !name.isEmpty else { return nil }
+        func item(_ i: [String: Any]) -> Analysis.Item? {
+            let name = (i["name"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !name.isEmpty, name != "Aucun plat détecté" else { return nil }
+            let grams = num(i, "grams")
+            return Analysis.Item(name: name, grams: grams > 0 ? grams : 150,
+                                 preparation: (i["preparation"] as? String).flatMap { $0.isEmpty ? nil : $0 },
+                                 confidence: min(1, max(0, i["confidence"] == nil ? 0.7 : num(i, "confidence"))),
+                                 alternatives: (i["alternatives"] as? [String] ?? []).filter { !$0.isEmpty && $0 != name },
+                                 kcal: max(0, num(i, "kcal")), protein: max(0, num(i, "protein")),
+                                 carbs: max(0, num(i, "carbs")), fat: max(0, num(i, "fat")))
+        }
+        let note = (o["note"] as? String) ?? ""
+        let question = (o["question"] as? String).flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 }
+        if let list = o["items"] as? [[String: Any]] {
+            return Analysis(items: list.compactMap(item), question: question, note: note)
+        }
+        // Ancien format (un seul plat): garde lisible, un seul element.
+        guard let single = item(o) else { return nil }
+        return Analysis(items: [single], question: question, note: note)
+    }
 
-        return Analysis(
-            name: name,
-            kcal: max(0, Int(num("kcal").rounded())),
-            protein: max(0, num("protein")),
-            carbs: max(0, num("carbs")),
-            fat: max(0, num("fat")),
-            note: (o["note"] as? String) ?? ""
-        )
+    /// Nom du moteur qui a repondu, affiche a cote du resultat.
+    @MainActor static var engineName: String? {
+        routes.first { AIProviderCredentials.shared.hasKey(for: $0.slot) }.map { "\($0.slot.displayName) (\($0.model))" }
     }
 }

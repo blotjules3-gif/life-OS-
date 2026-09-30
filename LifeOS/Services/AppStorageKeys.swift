@@ -48,6 +48,10 @@ enum AppStorageKeys {
 
     // MARK: - Thème & UI
     static let appTheme = "appTheme"
+    /// "color" (defaut) ou "neutral" : second axe de l'apparence, independant du clair/sombre.
+    static let appPalette = "appPalette"
+    /// Destination du deuxieme onglet (voir `SecondTab`).
+    static let secondTab = "secondTab"
     static let homeShortcuts = "homeShortcuts"
     static let homeMetrics = "homeMetrics"
     static let hiddenCats = "hiddenCats"
@@ -121,6 +125,10 @@ enum AppStorageKeys {
     static let tabRounds = "tabRounds"
     static let tabSets = "tabSets"
     static let tabWork = "tabWork"
+    /// Snapshot JSON de la seance Tabata en cours (reprise apres fermeture / relance).
+    static let tabataSessionSnapshot = "tabataSessionSnapshot"
+    /// File des seances finies pas encore acceptees par Apple Sante.
+    static let tabataHealthQueue = "tabataHealthQueue"
 
     // MARK: - Productivité / focus
     static let focusMinGoal = "focusMinGoal"
@@ -160,6 +168,9 @@ enum AppStorageKeys {
     static let fireMonthly = "fireMonthly"
     static let fireReturn = "fireReturn"
     static let fireYears = "fireYears"
+    static let fireFees = "fireFees"
+    static let fireInflation = "fireInflation"
+    static let fireIncludeOther = "fireIncludeOther"
     static let fxAmount = "fxAmount"
     static let fxFrom = "fxFrom"
     static let fxTo = "fxTo"

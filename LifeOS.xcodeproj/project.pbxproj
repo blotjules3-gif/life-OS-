@@ -73,6 +73,7 @@
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		992A11912FECC22700B312FE /* LifeOSWidgets */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (992A11A52FECC22700B312FE /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = LifeOSWidgets; sourceTree = "<group>"; };
+		BB00000000000000000A0001 /* LifeOSShared */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = LifeOSShared; sourceTree = "<group>"; };
 		992A1A0B2FF612F500B312FE /* LifeOSTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = LifeOSTests; sourceTree = "<group>"; };
 		AA00000000000000000A0001 /* LifeOS */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (AA00000000000000000A00EX /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = LifeOS; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -118,6 +119,7 @@
 			children = (
 				AA00000000000000000A0001 /* LifeOS */,
 				992A11912FECC22700B312FE /* LifeOSWidgets */,
+				BB00000000000000000A0001 /* LifeOSShared */,
 				992A1A0B2FF612F500B312FE /* LifeOSTests */,
 				992A118C2FECC22700B312FE /* Frameworks */,
 				AA00000000000000000A000B /* Products */,
@@ -151,6 +153,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				992A11912FECC22700B312FE /* LifeOSWidgets */,
+				BB00000000000000000A0001 /* LifeOSShared */,
 			);
 			name = LifeOSWidgetsExtension;
 			packageProductDependencies = (
@@ -198,6 +201,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				AA00000000000000000A0001 /* LifeOS */,
+				BB00000000000000000A0001 /* LifeOSShared */,
 			);
 			name = LifeOS;
 			productName = LifeOS;

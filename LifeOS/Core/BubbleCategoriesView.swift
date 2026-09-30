@@ -119,28 +119,29 @@ enum BubbleLayout {
     // des 3 classes appartient la catégorie par défaut. L'ordre forme 5 rangées de 3
     // (grande + moyenne + petite, décalées) — voir packOrganic() qui calcule le placement
     // serré (bulles qui se touchent, sans chevauchement) tenant sur UN seul écran.
-    static let categories: [BubbleCategory] = [
+    // Calculees a chaque lecture : la palette (couleurs / neutre) peut changer.
+    static var categories: [BubbleCategory] { [
         // Rangée 1 : Modules phares (Sport, Nutrition, Tâches prioritaires)
-        .init(title: "Sport",        systemImage: "figure.run",                tint: Color(red: 1.00, green: 0.18, blue: 0.20), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
-        .init(title: "Alimentation", systemImage: "fork.knife",                tint: Color(red: 0.28, green: 0.80, blue: 0.36), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
-        .init(title: "Tâches",       systemImage: "checklist",                 tint: Color(red: 0.14, green: 0.78, blue: 0.80), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
+        .init(title: "Sport",        systemImage: "figure.run",                tint: Theme.tone(1.00, 0.18, 0.20), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
+        .init(title: "Alimentation", systemImage: "fork.knife",                tint: Theme.tone(0.28, 0.80, 0.36), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
+        .init(title: "Tâches",       systemImage: "checklist",                 tint: Theme.tone(0.14, 0.78, 0.80), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
         // Rangée 2 : Focus mental, Finances & Sommeil
-        .init(title: "Mental",       systemImage: "brain.head.profile",        tint: Color(red: 0.66, green: 0.32, blue: 0.96), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
-        .init(title: "Finance",      systemImage: "creditcard.fill",           tint: Color(red: 0.13, green: 0.52, blue: 1.00), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
-        .init(title: "Sommeil",      systemImage: "moon.stars.fill",           tint: Color(red: 0.42, green: 0.40, blue: 0.95), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
+        .init(title: "Mental",       systemImage: "brain.head.profile",        tint: Theme.tone(0.66, 0.32, 0.96), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.5),
+        .init(title: "Finance",      systemImage: "creditcard.fill",           tint: Theme.tone(0.13, 0.52, 1.00), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
+        .init(title: "Sommeil",      systemImage: "moon.stars.fill",           tint: Theme.tone(0.42, 0.40, 0.95), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
         // Rangée 3 : Bourse/Invest, Documents coffre-fort & Travail
-        .init(title: "Bourse",       systemImage: "chart.line.uptrend.xyaxis", tint: Color(red: 0.16, green: 0.80, blue: 0.62), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.8),
-        .init(title: "Documents",    systemImage: "folder.fill",               tint: Color(red: 0.74, green: 0.84, blue: 0.97), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
-        .init(title: "Travail",      systemImage: "briefcase.fill",            tint: Color(red: 1.00, green: 0.72, blue: 0.24), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
+        .init(title: "Bourse",       systemImage: "chart.line.uptrend.xyaxis", tint: Theme.tone(0.16, 0.80, 0.62), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.8),
+        .init(title: "Documents",    systemImage: "folder.fill",               tint: Theme.tone(0.74, 0.84, 0.97), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
+        .init(title: "Travail",      systemImage: "briefcase.fill",            tint: Theme.tone(1.00, 0.72, 0.24), anchor: .init(x: 0.0, y: 0.0), sizeMul: 1.0),
         // Rangée 4 : Éducation, Bien-être & Maison
-        .init(title: "Éducation",    systemImage: "graduationcap.fill",        tint: Color(red: 1.00, green: 0.80, blue: 0.18), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
-        .init(title: "Bien-être",    systemImage: "face.smiling",              tint: Color(red: 1.00, green: 0.54, blue: 0.10), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.8),
-        .init(title: "Maison",       systemImage: "house.fill",                tint: Color(red: 0.24, green: 0.56, blue: 0.96), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
+        .init(title: "Éducation",    systemImage: "graduationcap.fill",        tint: Theme.tone(1.00, 0.80, 0.18), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
+        .init(title: "Bien-être",    systemImage: "face.smiling",              tint: Theme.tone(1.00, 0.54, 0.10), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.8),
+        .init(title: "Maison",       systemImage: "house.fill",                tint: Theme.tone(0.24, 0.56, 0.96), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
         // Rangée 5 : Transports, Voyage & Social (en bas)
-        .init(title: "Transports",   systemImage: "tram.fill",                 tint: Color(red: 0.16, green: 0.74, blue: 0.78), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
-        .init(title: "Voyage",       systemImage: "airplane",                  tint: Color(red: 0.20, green: 0.50, blue: 1.00), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.8),
-        .init(title: "Social",       systemImage: "person.2.fill",             tint: Color(red: 1.00, green: 0.20, blue: 0.55), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
-    ]
+        .init(title: "Transports",   systemImage: "tram.fill",                 tint: Theme.tone(0.16, 0.74, 0.78), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
+        .init(title: "Voyage",       systemImage: "airplane",                  tint: Theme.tone(0.20, 0.50, 1.00), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.8),
+        .init(title: "Social",       systemImage: "person.2.fill",             tint: Theme.tone(1.00, 0.20, 0.55), anchor: .init(x: 0.0, y: 0.0), sizeMul: 0.7),
+    ] }
 }
 
 // MARK: - The screen (+ features LifeOS : édition, drag, compteur d'usage)
@@ -369,31 +370,44 @@ struct BubbleCategoriesView: View {
         }
     }
 
+    private var header: some View {
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Catégories")
+                    .font(.system(size: 40, weight: .black))
+                    .textCase(.uppercase)
+                    .kerning(-1)
+                    .foregroundStyle(.primary)
+
+                Text("\(mains.count) PÔLES D'ACTIVITÉ")
+                    .monoLabel(11)
+                    .foregroundStyle(Theme.textSecondary)
+            }
+
+            Spacer()
+
+            Button {
+                showOrderSheet = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.up.arrow.down")
+                    Text("Trier")
+                }
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 12).padding(.vertical, 7)
+                .raisedSurface(Capsule())
+            }
+            .buttonStyle(LifeOSPressStyle(scale: 0.94))
+        }
+        .padding(.horizontal, 4)
+    }
+
     // MARK: - Grille NIKE (thèmes modernes) : tuiles noir & blanc, index mono, volt
     private var nikeGrid: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .center) {
-                    Text("Catégories")
-                        .font(.system(size: 34, weight: .black)).textCase(.uppercase).kerning(-1)
-                        .foregroundStyle(.primary)
-
-                    Spacer()
-
-                    Button {
-                        showOrderSheet = true
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.up.arrow.down")
-                            Text("Trier")
-                        }
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.primary)
-                        .padding(.horizontal, 12).padding(.vertical, 7)
-                        .raisedSurface(Capsule())
-                    }
-                }
-                .padding(.horizontal, 4)
+                header
                 searchPill
                 if CategorySetup.fraction < 1.0 { catProgressHeader }
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
@@ -403,7 +417,7 @@ struct BubbleCategoriesView: View {
                     }
                 }
             }
-            .padding(.horizontal, 16).padding(.top, 66).padding(.bottom, 120)
+            .padding(.horizontal, Theme.pad).padding(.top, 8).padding(.bottom, 120)
         }
     }
 
@@ -673,7 +687,7 @@ struct BubbleCategoriesView: View {
                     Image(systemName: "minus.circle.fill")
                         .font(.system(size: max(20, d * 0.16)))
                         .symbolRenderingMode(.palette)
-                        .foregroundStyle(.white, .red)
+                        .foregroundStyle(.white, Theme.danger)
                 }
                 .accessibilityLabel("Retirer \(cat.title)")
                 .buttonStyle(.plain)
@@ -819,10 +833,9 @@ struct BubbleCategoriesView: View {
 
     private var addButton: some View {
         Button { showAdd = true } label: {
-            Image(systemName: "plus").font(.title2.weight(.bold)).foregroundStyle(Theme.onAccent)
+            Image(systemName: "plus").font(.title2.weight(.bold)).foregroundStyle(Theme.textPrimary)
                 .frame(width: 54, height: 54)
-                .background(Color.accentColor, in: Circle())
-                .shadow(color: .black.opacity(0.2), radius: 8, y: 4)
+                .glassControl(Circle())
         }
         .accessibilityLabel("Ajouter une catégorie")
         .padding(.trailing, Theme.space24).padding(.bottom, 110)
@@ -844,7 +857,7 @@ struct BubbleCategoriesView: View {
                                 .accessibilityHidden(true)
                             Text(cat.title).foregroundStyle(.primary)
                             Spacer()
-                            Image(systemName: "plus.circle.fill").foregroundStyle(.green)
+                            Image(systemName: "plus.circle.fill").foregroundStyle(Theme.success)
                         }
                     }
                 }
@@ -899,7 +912,7 @@ struct BubbleCategoriesView: View {
                                 .lineLimit(1).minimumScaleFactor(0.8)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(LifeOSPressStyle(scale: 0.94))
                 }
             }
             .padding(.horizontal, Theme.space20).padding(.top, Theme.space48 + Theme.space8 + Theme.space4).padding(.bottom, 110)
@@ -926,7 +939,7 @@ struct BubbleCategoriesView: View {
                         .padding(.horizontal, 14).padding(.vertical, 12)
                         .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(LifeOSPressStyle(scale: 0.97))
                 }
             }
             .padding(.horizontal, Theme.pad).padding(.top, Theme.space48 + Theme.space8 + Theme.space4).padding(.bottom, 110)

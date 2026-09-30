@@ -1,184 +1,152 @@
 import Foundation
 import SwiftData
+import UserNotifications
 
-/// Suppression complète des données utilisateur — requis App Store depuis 2022
-/// (guideline 5.1.1(v) : les apps qui créent un compte doivent offrir la
-/// suppression). Même sans compte serveur, LifeOS stocke localement des
-/// données personnelles (photos, sommeil, humeur, finances) → droit à l'oubli.
+/// Suppression complete des donnees utilisateur (guideline 5.1.1(v), droit a l'oubli).
 ///
-/// Trois niveaux :
-///   • `eraseAllData()` — reset SwiftData + UserDefaults + fichiers + App Group
-///   • `exportBackup()` — export JSON avant suppression (offre de sauvegarde)
-///   • `eraseAndKeepOnboarding()` — même chose mais garde le flag onboarding
-///     pour éviter de refaire tout le flow après reset
+/// Audit du 28 septembre: l'ancienne version supprimait 52 types sur 54 (oubliait
+/// `ProfileField` et `ProfileFieldRevision`), laissait `Documents/Yuko`, le cache
+/// produits et les listes en memoire, cherchait les copies de securite dans le
+/// mauvais dossier, n'annulait pas une restauration en attente (les donnees
+/// revenaient au lancement suivant), et annoncait "efface" meme quand une etape
+/// echouait. Ici tout part d'UN inventaire (`StorageInventory`), chaque etape rend
+/// son echec, et l'ecran n'annonce le succes que si le rapport est vide.
 enum DataEraser {
 
-    /// Efface tout : modèles SwiftData, UserDefaults, images, App Group, backups.
-    /// L'app retourne en état "premier lancement" (onboarding relancé).
-    @MainActor
-    static func eraseAllData(container: ModelContainer) {
-        eraseSwiftData(container: container)
-        eraseUserDefaults(keepKeys: [])
-        eraseImageStore()
-        eraseAppGroup()
-        eraseBackups()
-        eraseAIArtifacts()
-        AppLog.data.info("DataEraser: full erase completed")
+    /// Tous les endroits ou LifeOS range quelque chose.
+    struct StorageInventory {
+        var documents: URL          // photos, pages, audio, journaux, Yuko
+        var support: URL            // copies de securite, restauration en attente
+        var caches: URL             // cache produits
+        var defaults: UserDefaults
+        var groupDefaults: UserDefaults?
+        var defaultsDomain: String?
+
+        static var app: StorageInventory {
+            StorageInventory(documents: AppPaths.documents, support: AppPaths.support, caches: AppPaths.caches,
+                             defaults: .standard, groupDefaults: UserDefaults(suiteName: FullBackup.groupSuite),
+                             defaultsDomain: Bundle.main.bundleIdentifier)
+        }
     }
 
-    /// Supprime les artefacts IA locaux (feedback coach, sessions activity logger,
-    /// coach reports). Séparé pour être appelable indépendamment.
+    struct Report {
+        var failures: [String] = []
+        var succeeded: Bool { failures.isEmpty }
+    }
+
+    /// Cles gardees par "recommencer a zero" (prenom, theme, onboarding).
+    static let onboardingKeys: Set<String> = [
+        AppStorageKeys.onboardingDone, AppStorageKeys.appTheme, AppStorageKeys.userName,
+        AppStorageKeys.userGender, AppStorageKeys.lifeProfile, AppStorageKeys.recommendedModules,
+    ]
+
+    @MainActor @discardableResult
+    static func eraseAllData(container: ModelContainer, inventory: StorageInventory = .app) -> Report {
+        erase(container: container, keepKeys: [], inventory: inventory)
+    }
+
+    @MainActor @discardableResult
+    static func eraseAndKeepOnboarding(container: ModelContainer, inventory: StorageInventory = .app) -> Report {
+        erase(container: container, keepKeys: onboardingKeys, inventory: inventory)
+    }
+
+    @MainActor
+    static func erase(container: ModelContainer, keepKeys: Set<String>, inventory inv: StorageInventory) -> Report {
+        var report = Report()
+        func step(_ name: String, _ body: () throws -> Void) {
+            do { try body() } catch { report.failures.append("\(name) : \(error.localizedDescription)") }
+        }
+
+        // 1. Une restauration en attente ferait revenir les donnees au lancement suivant.
+        step("restauration en attente") {
+            let pending = inv.support.appendingPathComponent("LifeOSPendingRestore", isDirectory: true)
+            if FileManager.default.fileExists(atPath: pending.path) { try FileManager.default.removeItem(at: pending) }
+        }
+        // 2. Base: TOUS les types du schema, puis verification qu'il n'en reste rien.
+        step("base de données") { try eraseModels(container.mainContext) }
+        // 3. Fichiers internes (photos, pages, audio, Yuko...). Le dossier est celui
+        //    de LifeOS (AppPaths), jamais le ~/Documents d'un Mac sans sandbox.
+        step("fichiers") { try FullBackup.checkRoot(inv.documents); try emptyDirectory(inv.documents) }
+        step("copies de sécurité") { try removeChildren(of: inv.support, prefix: "LifeOSBackup-") }
+        step("cache produits") {
+            let yuko = inv.caches.appendingPathComponent("Yuko", isDirectory: true)
+            if FileManager.default.fileExists(atPath: yuko.path) { try FileManager.default.removeItem(at: yuko) }
+        }
+        URLCache.shared.removeAllCachedResponses()
+        step("listes Yuko en mémoire") { try ProductStore.shared.eraseAll() }
+        step("cours Trilingo et progression") { try TrilingoStore.shared.eraseAll() }
+        step("nuits et extraits sonores") { try NightStore.shared.eraseAll() }
+        // 4. Reglages (sauf ceux a garder) et groupe des widgets.
+        eraseDefaults(inv.defaults, domain: inv.defaultsDomain, keep: keepKeys)
+        if let group = inv.groupDefaults {
+            for key in group.dictionaryRepresentation().keys { group.removeObject(forKey: key) }
+        }
+        // 5. Rappels programmes et deja affiches.
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        center.removeAllDeliveredNotifications()
+        // 6. Artefacts IA et caches en memoire.
+        eraseAIArtifacts()
+        AppLog.data.info("DataEraser: \(report.succeeded ? "effacement complet" : "effacement INCOMPLET: \(report.failures.count) échec(s)")")
+        return report
+    }
+
+    /// Supprime chaque type du schema, enregistre, puis recompte.
+    @MainActor
+    static func eraseModels(_ ctx: ModelContext) throws {
+        for type in LocalStore.modelTypes { try deleteAll(type, ctx) }
+        try ctx.save()
+        let left = try LocalStore.modelTypes.map { try count($0, ctx) }.reduce(0, +)
+        guard left == 0 else { throw CocoaError(.fileWriteUnknown, userInfo: [NSLocalizedDescriptionKey: "\(left) élément(s) encore présents"]) }
+    }
+
+    private static func deleteAll<T: PersistentModel>(_ type: T.Type, _ ctx: ModelContext) throws {
+        try ctx.delete(model: type)
+    }
+
+    static func count<T: PersistentModel>(_ type: T.Type, _ ctx: ModelContext) throws -> Int {
+        try ctx.fetchCount(FetchDescriptor<T>())
+    }
+
+    /// Vide un dossier. Un dossier illisible est une erreur, pas un succes.
+    static func emptyDirectory(_ dir: URL) throws {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: dir.path) else { return }
+        for item in try fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) {
+            try fm.removeItem(at: item)
+        }
+    }
+
+    private static func removeChildren(of dir: URL, prefix: String) throws {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: dir.path) else { return }
+        for item in try fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)
+        where item.lastPathComponent.hasPrefix(prefix) {
+            try fm.removeItem(at: item)
+        }
+    }
+
+    /// Supprime les reglages de l'app. Avec un domaine (cas reel), c'est le domaine
+    /// de l'app qui est vide, donc aucune cle systeme n'est touchee.
+    private static func eraseDefaults(_ ud: UserDefaults, domain: String?, keep: Set<String>) {
+        let keys: [String]
+        if let domain, let dict = ud.persistentDomain(forName: domain) { keys = Array(dict.keys) }
+        else { keys = Array(ud.dictionaryRepresentation().keys).filter { !$0.hasPrefix("com.apple.") && !$0.hasPrefix("NS") && !$0.hasPrefix("Apple") } }
+        for key in keys where !keep.contains(key) { ud.removeObject(forKey: key) }
+    }
+
+    /// Artefacts IA locaux (feedback coach, rapports, compteurs).
     @MainActor
     static func eraseAIArtifacts() {
-        // Feedback store (JSONL)
         CoachFeedbackStore.reset()
-        // Coach reports (JSONL)
-        if let dir = try? FileManager.default.url(
-            for: .documentDirectory, in: .userDomainMask,
-            appropriateFor: nil, create: false
-        ) {
-            let reportsURL = dir.appendingPathComponent("coach_reports.jsonl")
-            try? FileManager.default.removeItem(at: reportsURL)
-        }
-        // Activity logger (in-memory, cleared au reset)
+        try? FileManager.default.removeItem(at: AppPaths.documents.appendingPathComponent("coach_reports.jsonl"))
         AIActivityLogger.shared.clear()
-        // Usage tracker cloud (UserDefaults, compteurs jour + coûts)
         AIProviderUsageTracker.shared.resetAll()
-        // Cost guard preference (plafond quotidien + jour de notif)
         AICostGuardPreference.shared.reset()
-        // Suggestion d'upgrade coach (snooze bannière)
         CoachUpgradeSuggestion.shared.reset()
-        // Mode vocal (Loop 16)
         CoachVoiceMode.shared.reset()
-        // Bilan mensuel (Loop 20)
         MonthlyReviewScheduler.cancel()
-        // Cache UserContextBuilder
         UserContextBuilder.shared.invalidateCache()
-        AppLog.data.info("DataEraser: AI artifacts erased")
-    }
-
-    /// Idem mais préserve les clés d'onboarding + thème pour éviter de refaire
-    /// le tunnel après reset. Utilisé quand l'user veut "recommencer à zéro"
-    /// sans perdre son thème préféré.
-    @MainActor
-    static func eraseAndKeepOnboarding(container: ModelContainer) {
-        eraseSwiftData(container: container)
-        eraseUserDefaults(keepKeys: [
-            AppStorageKeys.onboardingDone,
-            AppStorageKeys.appTheme,
-            AppStorageKeys.userName,
-            AppStorageKeys.userGender,
-            AppStorageKeys.lifeProfile,
-            AppStorageKeys.recommendedModules
-        ])
-        eraseImageStore()
-        eraseAppGroup()
-        eraseBackups()
-        AppLog.data.info("DataEraser: erase (kept onboarding) completed")
-    }
-
-    // MARK: - Composants privés
-
-    @MainActor
-    private static func eraseSwiftData(container: ModelContainer) {
-        let ctx = container.mainContext
-        do {
-            try ctx.delete(model: DreamEntry.self)
-            try ctx.delete(model: SleepNight.self)
-            try ctx.delete(model: FoodEntry.self)
-            try ctx.delete(model: FastingSession.self)
-            try ctx.delete(model: WaterEntry.self)
-            try ctx.delete(model: Supplement.self)
-            try ctx.delete(model: PantryItem.self)
-            try ctx.delete(model: ShoppingItem.self)
-            try ctx.delete(model: WorkoutSet.self)
-            try ctx.delete(model: StepEntry.self)
-            try ctx.delete(model: ProgressPhoto.self)
-            try ctx.delete(model: WardrobeItem.self)
-            try ctx.delete(model: MoodEntry.self)
-            try ctx.delete(model: TodoItem.self)
-            try ctx.delete(model: Habit.self)
-            try ctx.delete(model: HabitCompletion.self)
-            try ctx.delete(model: Note.self)
-            try ctx.delete(model: MemoryEntry.self)
-            try ctx.delete(model: Account.self)
-            try ctx.delete(model: Txn.self)
-            try ctx.delete(model: Envelope.self)
-            try ctx.delete(model: Subscription.self)
-            try ctx.delete(model: SavingsGoal.self)
-            try ctx.delete(model: UserGoal.self)
-            try ctx.delete(model: SplitExpense.self)
-            try ctx.delete(model: Holding.self)
-            try ctx.delete(model: NetWorthItem.self)
-            try ctx.delete(model: Property.self)
-            try ctx.delete(model: JobApplication.self)
-            try ctx.delete(model: SkillGap.self)
-            try ctx.delete(model: Flashcard.self)
-            try ctx.delete(model: BookSummary.self)
-            try ctx.delete(model: Chore.self)
-            try ctx.delete(model: Pet.self)
-            try ctx.delete(model: PetCare.self)
-            try ctx.delete(model: Maintenance.self)
-            try ctx.delete(model: Vehicle.self)
-            try ctx.delete(model: FuelLog.self)
-            try ctx.delete(model: Contact.self)
-            try ctx.delete(model: SocialEvent.self)
-            try ctx.delete(model: DocVault.self)
-            try ctx.delete(model: Deadline.self)
-            try ctx.delete(model: Trip.self)
-            try ctx.delete(model: PackingItem.self)
-            try ctx.delete(model: CycleEntry.self)
-            try ctx.delete(model: AIMessage.self)
-            try ctx.delete(model: Medication.self)
-            try ctx.delete(model: MedicalAppointment.self)
-            try ctx.delete(model: VitalRecord.self)
-            try ctx.delete(model: Vaccination.self)
-            try ctx.delete(model: CustomReminder.self)
-            try ctx.delete(model: GymDay.self)
-            try ctx.save()
-        } catch {
-            AppLog.data.error("DataEraser SwiftData wipe failed: \(error.localizedDescription, privacy: .public)")
-        }
-    }
-
-    private static func eraseUserDefaults(keepKeys: Set<String>) {
-        let ud = UserDefaults.standard
-        let all = ud.dictionaryRepresentation()
-        for key in all.keys where !keepKeys.contains(key) {
-            // Skip clés système Apple (com.apple.*, NSAllowsArbitraryLoads…) pour
-            // ne pas casser le runtime iOS.
-            if key.hasPrefix("com.apple.") || key.hasPrefix("NS") || key.hasPrefix("Apple") {
-                continue
-            }
-            ud.removeObject(forKey: key)
-        }
-    }
-
-    private static func eraseImageStore() {
-        let fm = FileManager.default
-        let dir = ImageStore.dir
-        guard let files = try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else { return }
-        for f in files {
-            try? fm.removeItem(at: f)
-        }
-    }
-
-    private static func eraseAppGroup() {
-        guard let defaults = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return }
-        let all = defaults.dictionaryRepresentation()
-        for key in all.keys {
-            defaults.removeObject(forKey: key)
-        }
-    }
-
-    private static func eraseBackups() {
-        let fm = FileManager.default
-        guard let docs = fm.urls(for: .documentDirectory, in: .userDomainMask).first,
-              let contents = try? fm.contentsOfDirectory(at: docs.deletingLastPathComponent(), includingPropertiesForKeys: nil)
-        else { return }
-        for url in contents where url.lastPathComponent.hasPrefix("LifeOSBackup-") {
-            try? fm.removeItem(at: url)
-        }
     }
 
     // MARK: - Export JSON

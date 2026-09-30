@@ -56,7 +56,7 @@ struct VehicleCard: View {
                     NotificationManager.shared.cancel(id: ReminderIDs.vehicleInsurance(name: vehicle.name))
                     NotificationManager.shared.cancel(id: ReminderIDs.vehicleService(name: vehicle.name))
                     ctx.delete(vehicle)
-                } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(.red.opacity(0.6))
+                } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(Theme.danger.opacity(0.6))
             }
             HStack(spacing: 10) {
                 deadlineTile("Assurance", vehicle.insuranceRenewal)
@@ -73,7 +73,7 @@ struct VehicleCard: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label).font(.caption).foregroundStyle(Theme.textSecondary)
             if let date {
-                Text(date, style: .date).font(.subheadline.bold()).foregroundStyle(date < .now ? .red : (date < Calendar.current.date(byAdding: .day, value: 30, to: .now)! ? .orange : Theme.textPrimary))
+                Text(date, style: .date).font(.subheadline.bold()).foregroundStyle(date < .now ? Theme.danger : (date < Calendar.current.date(byAdding: .day, value: 30, to: .now)! ? Theme.warning : Theme.textPrimary))
             } else { Text("—").foregroundStyle(Theme.textSecondary) }
         }.frame(maxWidth: .infinity, alignment: .leading).padding(10).raisedSurface(RoundedRectangle(cornerRadius: 10), .nested)
     }
@@ -113,19 +113,26 @@ struct FuelEditor: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var vehicle: Vehicle
     @State private var liters = ""; @State private var price = ""; @State private var odometer = ""
+    private var l: AmountInput.Parsed { AmountInput.parse(liters) }
+    private var p: AmountInput.Parsed { AmountInput.parse(price) }
+    private var odo: Int? { odometer.isEmpty ? 0 : Int(odometer.filter { !$0.isWhitespace }) }
     var body: some View {
         NavigationStack {
             Form {
                 HStack { Text("Litres"); Spacer(); TextField("0", text: $liters).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
+                if !liters.isEmpty, let m = l.message { Text(m).font(.caption).foregroundStyle(Theme.warning) }
                 HStack { Text("Prix / litre"); Spacer(); TextField("0", text: $price).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
+                if !price.isEmpty, let m = p.message { Text(m).font(.caption).foregroundStyle(Theme.warning) }
                 HStack { Text("Kilométrage"); Spacer(); TextField("0", text: $odometer).keyboardType(.numberPad).multilineTextAlignment(.trailing) }
+                if odo == nil { Text("Kilométrage : chiffres seulement.").font(.caption).foregroundStyle(Theme.warning) }
             }
             .navigationTitle("Plein de carburant").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
-                    vehicle.fuelLogs.append(FuelLog(liters: Double(liters.replacingOccurrences(of: ",", with: ".")) ?? 0, pricePerL: Double(price.replacingOccurrences(of: ",", with: ".")) ?? 0, odometer: Int(odometer) ?? 0)); dismiss()
-                }.disabled(liters.isEmpty) }
+                    guard let lv = l.value, let pv = p.value, let o = odo else { return }
+                    vehicle.fuelLogs.append(FuelLog(liters: lv, pricePerL: pv, odometer: o)); dismiss()
+                }.disabled(l.value == nil || p.value == nil || odo == nil) }
             }
         }
     }

@@ -840,13 +840,9 @@ final class AIAssistantViewModel: ObservableObject {
 
         Task {
             let result = await ImageIntel.analyze(image)
-            // Effet concret : si c'est un aliment, on le journalise directement.
-            if case let .food(guess) = result.route, let ctx = modelContext {
-                ctx.insert(FoodEntry(name: guess.name, calories: guess.kcal,
-                                     protein: guess.protein, carbs: guess.carbs, fat: guess.fat,
-                                     meal: currentMeal()))
-                do { try ctx.save() } catch { AppLog.data.error("food entry save failed: \(error.localizedDescription, privacy: .public)") }
-            }
+            // Plus d'ecriture automatique: une photo classee "pizza" ne dit ni la
+            // portion ni la recette. Le coach propose, l'ecran Nutrition enregistre
+            // apres que l'utilisateur a vu et regle l'estimation.
             removeThinking()
             appendAssistantMessage(result.reply, actions: result.actions)
             isLoading = false
@@ -951,7 +947,7 @@ struct AIAssistantView: View {
         let ud = UserDefaults.standard
         let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos")
 
-        let sleepH = ud.integer(forKey: "lastSleepHours")
+        let sleepH = ud.double(forKey: "lastSleepHours")
         let energyScore = ud.integer(forKey: "todayEnergyScore")
         let avgStreak = grp?.integer(forKey: "habits_avg_streak") ?? 0
         let fitSummary = grp?.string(forKey: "fitness_summary_7d") ?? ""
@@ -1409,9 +1405,9 @@ struct AIAssistantView: View {
                     Spacer()
                     Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold)).opacity(0.6)
                 }
-                .foregroundStyle(Theme.onAccent)
+                .foregroundStyle(Theme.textPrimary)
                 .padding(.horizontal, 16).padding(.vertical, 14)
-                .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .glassControl(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(PressScaleButtonStyle())
             .padding(.horizontal, 16)
@@ -1428,8 +1424,7 @@ struct AIAssistantView: View {
                             .foregroundStyle(.primary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(Color(uiColor: .secondarySystemBackground),
-                                        in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous), .nested)
                             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .stroke(Color(uiColor: .separator).opacity(0.4), lineWidth: 1))
                     }
@@ -1863,7 +1858,7 @@ struct AIAssistantView: View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
                 Circle()
-                    .fill(Color.orange)
+                    .fill(Theme.warning)
                     .frame(width: 6, height: 6)
                 Text("Serveur inaccessible")
                     .font(.system(size: 13, weight: .medium))
@@ -1900,7 +1895,7 @@ struct AIAssistantView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 7)
         }
-        .background(Color.orange.opacity(0.1))
+        .background(Theme.warning.opacity(0.1))
     }
 
     // MARK: - Clear

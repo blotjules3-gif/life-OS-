@@ -72,6 +72,7 @@ struct AddAnythingSheet: View {
     // champs spécifiques
     @State private var meal = "Déjeuner"
     @State private var kcal = ""
+    @State private var saveError: String?
     @State private var quantity = "1"
     @State private var noteBody = ""
     @State private var moment = "matin"
@@ -97,6 +98,11 @@ struct AddAnythingSheet: View {
     var body: some View {
         NavigationStack {
             Form {
+                if let saveError {
+                    Section {
+                        Label(saveError, systemImage: "exclamationmark.triangle.fill").foregroundStyle(Theme.warning)
+                    }
+                }
                 Section("Quoi ajouter ?") {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 78), spacing: 8)], spacing: 8) {
                         ForEach(Kind.allCases) { k in typeChip(k) }
@@ -123,11 +129,29 @@ struct AddAnythingSheet: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Color.white.ignoresSafeArea())
             .navigationTitle("Ajouter").navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Annuler") { dismiss() }
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Ajouter") { add() }.fontWeight(.bold).disabled(!canAdd)
+                    Button {
+                        add()
+                    } label: {
+                        Text("Ajouter")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(Theme.onAccent)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 6)
+                            .background(Color.primary, in: Capsule())
+                    }
+                    .buttonStyle(LifeOSPressStyle(scale: 0.95))
+                    .disabled(!canAdd)
+                    .opacity(canAdd ? 1.0 : 0.35)
                 }
             }
             .onAppear { kind = initialKind; name = prefillName; remind = initialKind.reminderByDefault }
@@ -188,11 +212,17 @@ struct AddAnythingSheet: View {
     }
 
     private func numberField(_ label: String, _ text: Binding<String>, unit: String, decimal: Bool = false) -> some View {
-        HStack {
-            Text(label); Spacer()
-            TextField("0", text: text).keyboardType(decimal ? .decimalPad : .numberPad)
-                .multilineTextAlignment(.trailing).frame(width: 90)
-            Text(unit).foregroundStyle(.secondary).font(.caption)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(label); Spacer()
+                TextField("0", text: text).keyboardType(decimal ? .decimalPad : .numberPad)
+                    .multilineTextAlignment(.trailing).frame(width: 90)
+                Text(unit).foregroundStyle(.secondary).font(.caption)
+            }
+            // Avant, "12,5" ou "abc" devenait 0 et s'enregistrait sans rien dire.
+            if decimal, !text.wrappedValue.isEmpty, let m = AmountInput.parse(text.wrappedValue).message {
+                Text(m).font(.caption).foregroundStyle(Theme.warning)
+            }
         }
     }
 
@@ -218,7 +248,9 @@ struct AddAnythingSheet: View {
         switch kind {
         case .water:  return (Double(amount) ?? 0) > 0
         case .mood:   return true
-        case .fuel:   return (Double(liters) ?? 0) > 0
+        case .fuel:   return AmountInput.parse(liters).value != nil && AmountInput.parse(pricePerL).value != nil
+        case .expense, .subscription:
+            return !name.trimmingCharacters(in: .whitespaces).isEmpty && AmountInput.parse(amount).value != nil
         default:      return !name.trimmingCharacters(in: .whitespaces).isEmpty
         }
     }
@@ -234,7 +266,15 @@ struct AddAnythingSheet: View {
         case .note:
             ctx.insert(Note(title: n, body: noteBody))
         case .food:
-            ctx.insert(FoodEntry(name: n, calories: Int(kcal) ?? 0, meal: meal))
+            // Meme chemin que les ecrans Nutrition: si l'ecriture echoue, la feuille
+            // reste ouverte avec la saisie au lieu d'annoncer un succes.
+            do {
+                try FoodLogService.log([.init(name: n, calories: Int(kcal) ?? 0, meal: meal)], in: ctx)
+            } catch {
+                Haptics.warning()
+                saveError = error.localizedDescription
+                return
+            }
         case .water:
             ctx.insert(WaterEntry(amountML: Int(amount) ?? 0))
         case .supplement:
@@ -250,7 +290,10 @@ struct AddAnythingSheet: View {
             // `Txn` directement : sans identifiant de compte et sans recalcul, la
             // depense n'apparaissait pas dans le solde et attendait la migration du
             // prochain demarrage pour etre rattachee.
-            let value = Double(amount.replacingOccurrences(of: ",", with: ".")) ?? 0
+            // Une depense SORT de l'argent: montant negatif, comme l'ecran Finance.
+            // L'ajout rapide l'enregistrait en positif, donc le solde MONTAIT.
+            guard let entered = AmountInput.parse(amount).value else { return }
+            let value = -abs(entered)
             let accounts = (try? ctx.fetch(FetchDescriptor<Account>())) ?? []
             if let target = accounts.first {
                 LedgerService.addTransaction(ctx, amount: value, category: txnCategory,
@@ -263,7 +306,8 @@ struct AddAnythingSheet: View {
                 ctx.insert(t)
             }
         case .subscription:
-            ctx.insert(Subscription(name: n, amount: Double(amount) ?? 0, cycle: subCycle, nextDate: whenDate))
+            guard let a = AmountInput.parse(amount).value else { return }
+            ctx.insert(Subscription(name: n, amount: a, cycle: subCycle, nextDate: whenDate))
         case .event:
             ctx.insert(SocialEvent(title: n, date: whenDate))
         case .deadline:
@@ -271,8 +315,21 @@ struct AddAnythingSheet: View {
         case .chore:
             ctx.insert(Chore(name: n))
         case .fuel:
-            ctx.insert(FuelLog(liters: Double(liters) ?? 0, pricePerL: Double(pricePerL) ?? 0))
+            guard let l = AmountInput.parse(liters).value, let pl = AmountInput.parse(pricePerL).value else { return }
+            ctx.insert(FuelLog(liters: l, pricePerL: pl))
         }
+        // Enregistrer AVANT d'annoncer un succes. Avant, la feuille se fermait sur
+        // une insertion jamais enregistree: une panne de stockage perdait la saisie
+        // en silence et l'objet restait en attente dans le contexte.
+        do {
+            try ctx.save()
+        } catch {
+            ctx.rollback()
+            Haptics.warning()
+            saveError = "L'ajout n'a pas pu être enregistré. Ta saisie est conservée, réessaie."
+            return
+        }
+        saveError = nil
         if remind { scheduleReminder(for: n.isEmpty ? kind.label : n) }
         Haptics.success()
         dismiss()

@@ -87,11 +87,15 @@ try {
   });
   const data = await res.json();
   const v = data.data?.[0]?.attributes?.version;
-  console.log(v || '10');
+  if (!res.ok || !/^\\d+$/.test(v || '')) throw new Error('reponse ' + res.status);
+  console.log(v);
 } catch(e) {
-  console.log('10');
+  // Jamais de numero devine: un numero plus bas que le dernier est refuse par
+  // Apple, mais seulement a la fin, apres toute la compilation.
+  console.error('Numero de build illisible chez Apple (' + e.message + ')');
+  process.exit(1);
 }
-")
+") || { echo "❌ Dernier numero de build introuvable chez Apple. Rien n'est envoye."; exit 1; }
     BUILD_NUMBER=$((LAST_BUILD + 1))
 fi
 

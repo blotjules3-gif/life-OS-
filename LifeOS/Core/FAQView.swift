@@ -142,22 +142,22 @@ private let sections: [FAQSection] = [
         ),
         FAQItem(
             q: "Puis-je synchroniser entre mes appareils ?",
-            a: "Le sync iCloud est disponible en opt-in (Profil → Synchronisation). Il utilise ton compte Apple, sans compte LifeOS. Actuellement en beta — teste sur données non-critiques."
+            a: "Pas dans cette version : tes données restent sur l'appareil où tu les saisis. Pour changer d'appareil ou garder une copie, utilise l'export de tes données (Profil → Mes données)."
         ),
         FAQItem(
             q: "Comment sauvegarder mes données ?",
-            a: "Profil → Mes données → Exporter. Un fichier JSON récapitulatif est généré avec ShareLink pour l'envoyer sur ton Mac ou dans Fichiers."
+            a: "Profil → Mes données → Créer une sauvegarde complète. Le fichier contient toute la base, tes photos, tes documents et tes réglages (sans tes clés d'API). Range le dans Fichiers ou sur ton Mac ; « Restaurer une sauvegarde » le remet en place."
         )
     ]),
 
     FAQSection(title: "Achat et abonnement", items: [
         FAQItem(
             q: "LifeOS est-il gratuit ?",
-            a: "La version 1.0 est entièrement gratuite. Une version premium avec des fonctions avancées de coaching pourrait arriver dans une prochaine version — les fonctions actuelles resteront gratuites."
+            a: "Oui. LifeOS est gratuit, sans achat intégré et sans abonnement. Toutes les fonctions de l'app sont disponibles."
         ),
         FAQItem(
             q: "Comment restaurer un achat ?",
-            a: "Pas d'achat in-app dans la v1. Si tu vois cette question mise à jour dans une prochaine version, l'App Store gère automatiquement la restauration via ton compte Apple."
+            a: "Il n'y a aucun achat intégré dans LifeOS, donc il n'y a rien à restaurer."
         ),
         FAQItem(
             q: "Comment demander un remboursement ?",

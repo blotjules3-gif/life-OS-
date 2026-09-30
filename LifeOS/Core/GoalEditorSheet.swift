@@ -27,15 +27,15 @@ struct GoalEditorSheet: View {
     }
 
     private let catalog: [GoalDef] = [
-        GoalDef(id: "steps",   title: "Pas quotidiens",     icon: "figure.run",          colorHex: 0x4CC38A, section: "Activité"),
-        GoalDef(id: "glasses", title: "Verres d'eau",        icon: "cup.and.saucer.fill", colorHex: 0x3CB2E0, section: "Nutrition"),
-        GoalDef(id: "water",   title: "Volume eau",           icon: "drop.fill",           colorHex: 0x3CB2E0, section: "Nutrition"),
-        GoalDef(id: "kcal",    title: "Calories",             icon: "flame.fill",          colorHex: 0xF1746C, section: "Nutrition"),
-        GoalDef(id: "protein", title: "Protéines",            icon: "fork.knife",          colorHex: 0xE0A23C, section: "Nutrition"),
-        GoalDef(id: "fast",    title: "Jeûne intermittent",   icon: "clock",               colorHex: 0x5DCFA8, section: "Nutrition"),
-        GoalDef(id: "focus",   title: "Temps de focus",       icon: "brain.head.profile",  colorHex: 0x9B6CF1, section: "Focus"),
-        GoalDef(id: "social",  title: "Réseaux sociaux max",  icon: "iphone.slash",        colorHex: 0xE05A7A, section: "Focus"),
-        GoalDef(id: "budget",  title: "Budget mensuel",       icon: "creditcard.fill",     colorHex: 0x618EF1, section: "Finances"),
+        GoalDef(id: "steps",   title: "Pas quotidiens",     icon: "figure.run",          colorHex: 0xFF2E33, section: "Activité"),
+        GoalDef(id: "glasses", title: "Verres d'eau",        icon: "cup.and.saucer.fill", colorHex: 0x2185FF, section: "Nutrition"),
+        GoalDef(id: "water",   title: "Volume eau",           icon: "drop.fill",           colorHex: 0x2185FF, section: "Nutrition"),
+        GoalDef(id: "kcal",    title: "Calories",             icon: "flame.fill",          colorHex: 0x47CC5C, section: "Nutrition"),
+        GoalDef(id: "protein", title: "Protéines",            icon: "fork.knife",          colorHex: 0xFF8A1A, section: "Nutrition"),
+        GoalDef(id: "fast",    title: "Jeûne intermittent",   icon: "clock",               colorHex: 0xA852F5, section: "Nutrition"),
+        GoalDef(id: "focus",   title: "Temps de focus",       icon: "brain.head.profile",  colorHex: 0x24C7CC, section: "Focus"),
+        GoalDef(id: "social",  title: "Réseaux sociaux max",  icon: "iphone.slash",        colorHex: 0xFF338C, section: "Focus"),
+        GoalDef(id: "budget",  title: "Budget mensuel",       icon: "creditcard.fill",     colorHex: 0x2185FF, section: "Finances"),
     ]
 
     private var hiddenIDs: Set<String> {
@@ -260,7 +260,7 @@ struct GoalEditorSheet: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(value.wrappedValue - step >= min ? .primary : .tertiary)
                     .frame(width: 44, height: 44)
-                    .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: 10, style: .continuous), .nested)
             }
             .buttonStyle(LifeOSPressStyle())
 
@@ -274,7 +274,7 @@ struct GoalEditorSheet: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(value.wrappedValue + step <= max ? .primary : .tertiary)
                     .frame(width: 44, height: 44)
-                    .background(Color.primary.opacity(0.07), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .raisedSurface(RoundedRectangle(cornerRadius: 10, style: .continuous), .nested)
             }
             .buttonStyle(LifeOSPressStyle())
         }

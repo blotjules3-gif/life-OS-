@@ -128,15 +128,13 @@ final class UserContextBuilder {
             lines.append("Eau aujourd'hui: \(progress(waterToday, waterGoal, "ml"))")
         }
 
-        // ── Habitudes aujourd'hui (nommées, depuis widget_habits) ────────────
-        if let data = grp.data(forKey: "widget_habits"),
-           let entries = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]],
-           !entries.isEmpty {
-            let done = entries.filter { $0["done"] as? Bool == true }
-            let todo = entries.filter { ($0["done"] as? Bool) != true }
-            lines.append("Habitudes: \(done.count)/\(entries.count) faites aujourd'hui")
-            let doneNames = done.compactMap { $0["name"] as? String }.prefix(6)
-            let todoNames = todo.compactMap { $0["name"] as? String }.prefix(6)
+        // ── Habitudes aujourd'hui (instantane publie par HabitSync) ──────────
+        if let snap = HabitSnapshot.read(from: grp)?.current(), !snap.habits.isEmpty {
+            let done = snap.habits.filter(\.done)
+            let todo = snap.habits.filter { !$0.done }
+            lines.append("Habitudes: \(done.count)/\(snap.habits.count) faites aujourd'hui")
+            let doneNames = done.map(\.name).prefix(6)
+            let todoNames = todo.map(\.name).prefix(6)
             if !doneNames.isEmpty { lines.append("Habitudes faites: \(doneNames.joined(separator: ", "))") }
             if !todoNames.isEmpty { lines.append("Habitudes restantes: \(todoNames.joined(separator: ", "))") }
         }
@@ -144,12 +142,13 @@ final class UserContextBuilder {
         if avgStreak > 0 { lines.append("Streak moyen habitudes: \(avgStreak) jours") }
 
         // ── Sommeil & énergie (clés réellement écrites par SleepCheckSheet) ──
-        let sleepH = ud.integer(forKey: "lastSleepHours")
+        let sleepH = ud.double(forKey: "lastSleepHours")
         let sleepQ = ud.integer(forKey: "lastSleepQuality")
         if sleepH > 0 {
+            let sleepStr = sleepH.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(sleepH))h" : String(format: "%.1fh", sleepH)
             lines.append(sleepQ > 0
-                ? "Sommeil nuit dernière: \(sleepH)h (qualité \(sleepQ)/5)"
-                : "Sommeil nuit dernière: \(sleepH)h")
+                ? "Sommeil nuit dernière: \(sleepStr) (qualité \(sleepQ)/5)"
+                : "Sommeil nuit dernière: \(sleepStr)")
         }
         let energyScore = ud.integer(forKey: "todayEnergyScore")
         let energyLabel = ud.string(forKey: "todayEnergyLabel") ?? ""
@@ -429,7 +428,7 @@ final class UserContextBuilder {
     /// - Neutre et descriptif (le coach fait la reco lui-même)
     /// - Max ~5 insights pour ne pas noyer le prompt
     private static func crossModuleInsights(
-        sleepH: Int, sleepQ: Int, energyScore: Int,
+        sleepH: Double, sleepQ: Int, energyScore: Int,
         kcalToday: Int, kcalGoal: Int,
         proteinToday: Int, proteinGoal: Int,
         waterToday: Int, waterGoal: Int,
@@ -439,7 +438,8 @@ final class UserContextBuilder {
 
         // Sommeil insuffisant + entraînement récent = récup compromise
         if sleepH > 0, sleepH < 6, fitSummary.contains("séries") {
-            out.append("Nuit courte (\(sleepH)h) avec entraînement récent — récup limitée.")
+            let sleepStr = sleepH.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(sleepH))h" : String(format: "%.1fh", sleepH)
+            out.append("Nuit courte (\(sleepStr)) avec entraînement récent — récup limitée.")
         }
         // Bon sommeil + faible énergie = ailleurs (nutrition ? hydratation ?)
         if sleepH >= 7, sleepQ >= 4, energyScore > 0, energyScore < 60 {

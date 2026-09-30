@@ -73,17 +73,10 @@ struct IconBadge: View {
             .font(.system(size: size * 0.42, weight: .bold))
             .foregroundStyle(glass ? Color.white : tint.readableInk)
             .frame(width: size, height: size)
-            .background(
-                RoundedRectangle(cornerRadius: size * 0.30, style: .continuous)
-                    .fill(glass ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(tint))
-            )
-            .shadow(color: glass ? .clear : tint.opacity(0.35), radius: 6, y: 3)
-            .overlay {
-                if glass {
-                    RoundedRectangle(cornerRadius: size * 0.30, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.45), lineWidth: 1)
-                }
-            }
+            // En verre, on laisse `raisedSurface` poser le materiau d'Apple : il apporte
+            // deja son liseré (`CASDFKeyFillHighlightEffect`). Le trait blanc a 0,45 et
+            // l'ombre qui etaient ici doublaient ce liseré et l'ecrasaient.
+            .modifier(GlassIconBackground(glass: glass, tint: tint, radius: size * 0.30))
     }
 }
 
@@ -179,7 +172,7 @@ struct IntegrationNotice: View {
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "bolt.badge.clock")
-                .foregroundStyle(.orange)
+                .foregroundStyle(Theme.warning)
             Text(text)
                 .font(.footnote)
                 .foregroundStyle(Theme.textSecondary)
@@ -187,7 +180,7 @@ struct IntegrationNotice: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .background(Color.orange.opacity(0.26), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+        .background(Theme.warning.opacity(0.26), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 }
 
@@ -199,7 +192,7 @@ struct ProgressRing: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Theme.stroke, lineWidth: lineWidth)
+                .stroke(tint.opacity(0.14), lineWidth: lineWidth)
             Circle()
                 .trim(from: 0, to: max(0.001, min(1, progress)))
                 .stroke(tint, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
@@ -220,4 +213,23 @@ func formatHMS(_ seconds: Int) -> String {
 func formatHoursMinutes(_ seconds: Int) -> String {
     let h = seconds / 3600, m = (seconds % 3600) / 60
     return "\(h)h\(String(format: "%02d", m))"
+}
+
+
+/// Fond d'une tuile d'icone : verre natif, ou aplat teinte avec son ombre.
+private struct GlassIconBackground: ViewModifier {
+    let glass: Bool
+    let tint: Color
+    let radius: CGFloat
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        if glass {
+            content.raisedSurface(shape)
+        } else {
+            content
+                .background(shape.fill(tint))
+                .shadow(color: tint.opacity(0.35), radius: 6, y: 3)
+        }
+    }
 }

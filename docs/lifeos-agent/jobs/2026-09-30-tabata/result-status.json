@@ -1,0 +1,35 @@
+{
+  "status": "ready_for_review",
+  "job": "2026-09-30-tabata",
+  "finished_at": "2026-09-30T04:45:00+01:00",
+  "build": {
+    "command": "xcodebuild test -project LifeOS.xcodeproj -scheme LifeOS -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -parallel-testing-enabled NO -only-testing:LifeOSTests/TabataSessionTests -only-testing:LifeOSTests/TabataCatchUpTests -derivedDataPath /tmp/lifeos-dd-tabata",
+    "exit_code": 0,
+    "result": "TEST SUCCEEDED",
+    "tests_executed": 32,
+    "tests_failed": 0,
+    "warnings_in_touched_files": 0,
+    "correction_passes_used": 0
+  },
+  "evidence": [
+    "docs/lifeos-agent/jobs/2026-09-30-tabata/test-run-1.log",
+    "docs/lifeos-agent/jobs/2026-09-30-tabata/test-run-1.exit.txt",
+    "docs/lifeos-agent/jobs/2026-09-30-tabata/diff-tabata.patch",
+    "docs/lifeos-agent/jobs/2026-09-30-tabata/HANDOFF.md"
+  ],
+  "files_changed": [
+    "LifeOS/Services/TabataSessionStore.swift",
+    "LifeOS/Modules/TabataView.swift",
+    "LifeOS/Core/HealthService.swift",
+    "LifeOSTests/TabataSessionTests.swift",
+    "LifeOSTests/TabataCatchUpTests.swift"
+  ],
+  "screenshots": [],
+  "device_required_flows": [
+    "real HealthKit write and syncIdentifier replacement check in the Health app",
+    "Réessayer button tap after a real Health refusal",
+    "real background/lock behaviour, sounds and notifications",
+    "Mac Catalyst and iPad rendering, four visual variants"
+  ],
+  "blocked_reason": null
+}

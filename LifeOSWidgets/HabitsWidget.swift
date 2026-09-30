@@ -14,7 +14,8 @@ private extension Color {
 // MARK: - Data model
 
 struct WidgetHabit: Identifiable {
-    let id = UUID()
+    /// Identifiant stable de l'habitude (`Habit.uid`), celui que l'action envoie.
+    let id: String
     let name: String
     let icon: String
     let colorHex: Int
@@ -38,25 +39,18 @@ struct WidgetHabitsData {
         }
     }
 
-    static func load() -> WidgetHabitsData {
-        guard let defaults = UserDefaults(suiteName: "group.com.chifandco.lifeos") else {
+    /// Instantane v2 publie par l'app, ramene au jour demande (apres minuit, plus
+    /// rien de coche: les coches sont par jour).
+    static func load(at date: Date = .now) -> WidgetHabitsData {
+        guard let defaults = LifeOSGroup.defaults else {
             return WidgetHabitsData(habits: [], appGroupWorking: false, lastSync: nil, accentHex: 0)
         }
         let accentHex = defaults.object(forKey: "widget_accent_hex") as? Int ?? 0
-        let lastSync = defaults.object(forKey: "widget_habits_sync_date") as? Date
-        guard let data = defaults.data(forKey: "widget_habits"),
-              let raw = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
-        else {
-            return WidgetHabitsData(habits: [], appGroupWorking: true, lastSync: lastSync, accentHex: accentHex)
+        guard let snap = HabitSnapshot.read(from: defaults)?.current(now: date) else {
+            return WidgetHabitsData(habits: [], appGroupWorking: true, lastSync: nil, accentHex: accentHex)
         }
-        let habits = raw.compactMap { d -> WidgetHabit? in
-            guard let name = d["name"] as? String,
-                  let icon = d["icon"] as? String,
-                  let colorHex = d["colorHex"] as? Int
-            else { return nil }
-            return WidgetHabit(name: name, icon: icon, colorHex: colorHex, isDoneToday: d["done"] as? Bool ?? false)
-        }
-        return WidgetHabitsData(habits: habits, appGroupWorking: true, lastSync: lastSync, accentHex: accentHex)
+        let habits = snap.habits.map { WidgetHabit(id: $0.id, name: $0.name, icon: $0.icon, colorHex: $0.colorHex, isDoneToday: $0.done) }
+        return WidgetHabitsData(habits: habits, appGroupWorking: true, lastSync: snap.generatedAt, accentHex: accentHex)
     }
 }
 
@@ -85,10 +79,10 @@ struct HabitsProvider: TimelineProvider {
             date: .now,
             data: WidgetHabitsData(
                 habits: [
-                    WidgetHabit(name: "Méditation", icon: "brain.head.profile", colorHex: 0x4CC38A, isDoneToday: true),
-                    WidgetHabit(name: "Sport", icon: "dumbbell.fill", colorHex: 0x618EF1, isDoneToday: true),
-                    WidgetHabit(name: "Lecture", icon: "book.fill", colorHex: 0xE0A23C, isDoneToday: false),
-                    WidgetHabit(name: "Boire de l'eau", icon: "drop.fill", colorHex: 0x3CD0C8, isDoneToday: false),
+                    WidgetHabit(id: "demo-brain.head.profile", name: "Méditation", icon: "brain.head.profile", colorHex: 0x4CC38A, isDoneToday: true),
+                    WidgetHabit(id: "demo-dumbbell.fill", name: "Sport", icon: "dumbbell.fill", colorHex: 0x618EF1, isDoneToday: true),
+                    WidgetHabit(id: "demo-book.fill", name: "Lecture", icon: "book.fill", colorHex: 0xE0A23C, isDoneToday: false),
+                    WidgetHabit(id: "demo-drop.fill", name: "Boire de l'eau", icon: "drop.fill", colorHex: 0x3CD0C8, isDoneToday: false),
                 ],
                 appGroupWorking: true,
                 lastSync: .now,
@@ -109,7 +103,9 @@ struct HabitsProvider: TimelineProvider {
         let entry = HabitsEntry(date: .now, data: WidgetHabitsData.load())
         let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: .now) ?? .now.addingTimeInterval(86_400)
         let midnight = Calendar.current.startOfDay(for: tomorrow)
-        completion(Timeline(entries: [entry], policy: .after(midnight)))
+        // A minuit, la journee repart a zero meme si l'app n'a pas ete ouverte.
+        let nextDay = HabitsEntry(date: midnight, data: WidgetHabitsData.load(at: midnight))
+        completion(Timeline(entries: [entry, nextDay], policy: .after(midnight)))
     }
 }
 

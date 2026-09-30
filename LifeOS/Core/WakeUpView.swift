@@ -16,6 +16,9 @@ struct WakeUpView: View {
     @State private var appeared = false
 
     private let dayLetters = ["L", "M", "M", "J", "V", "S", "D"]
+    /// Vrai quand l'ecran est pousse dans la pile d'une categorie (Sommeil) : il ne doit
+    /// pas ouvrir sa propre pile, sinon SwiftUI plante au retour (NavigationNestingTests).
+    var embedded = false
 
     private var recommendedModules: [AppCategory] {
         recommendedModulesRaw.split(separator: ",").compactMap { AppCategory(rawValue: String($0)) }
@@ -60,7 +63,14 @@ struct WakeUpView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        if embedded {
+            screen
+        } else {
+            NavigationStack { screen }
+        }
+    }
+
+    private var screen: some View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: Theme.sectionGap) {
                     header
@@ -96,7 +106,6 @@ struct WakeUpView: View {
             .fullScreenCover(isPresented: $showBriefing) {
                 DailyBriefingView(modules: recommendedModules)
             }
-        }
     }
 
     // MARK: - Header
@@ -188,12 +197,7 @@ struct WakeUpView: View {
             .padding(.horizontal, 18)
             .padding(.vertical, 14)
         }
-        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                .strokeBorder(Theme.hairline, lineWidth: 0.5)
-        )
-        .softElevation()
+        .liquidGlassCard(cornerRadius: Theme.radius)
     }
 
     // MARK: - Jours actifs
@@ -231,12 +235,7 @@ struct WakeUpView: View {
             }
         }
         .padding(16)
-        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                .strokeBorder(Theme.hairline, lineWidth: 0.5)
-        )
-        .softElevation()
+        .liquidGlassCard(cornerRadius: Theme.radius)
     }
 
     // MARK: - Sommeil + snooze
@@ -293,12 +292,7 @@ struct WakeUpView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 13)
         }
-        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                .strokeBorder(Theme.hairline, lineWidth: 0.5)
-        )
-        .softElevation()
+        .liquidGlassCard(cornerRadius: Theme.radius)
     }
 
     // MARK: - CTA
@@ -313,10 +307,10 @@ struct WakeUpView: View {
                     .textCase(.uppercase)
                     .kerning(0.5)
             }
-            .foregroundStyle(Theme.onAccent)
+            .foregroundStyle(Theme.textPrimary)
             .frame(maxWidth: .infinity)
             .frame(height: 54)
-            .background(Color.accentColor, in: RoundedRectangle(cornerRadius: Theme.radiusSmall + 2, style: .continuous))
+            .glassControl(RoundedRectangle(cornerRadius: Theme.radiusSmall + 2, style: .continuous))
         }
         .buttonStyle(LifeOSPressStyle())
     }
@@ -379,12 +373,7 @@ struct WakeUpView: View {
                         }
                     }
                 }
-                .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                        .strokeBorder(Theme.hairline, lineWidth: 0.5)
-                )
-                .softElevation()
+                .liquidGlassCard(cornerRadius: Theme.radius)
             }
         }
     }

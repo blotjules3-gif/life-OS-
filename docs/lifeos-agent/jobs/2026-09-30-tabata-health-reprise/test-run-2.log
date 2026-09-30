@@ -1,0 +1,256 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild test -project LifeOS.xcodeproj -scheme LifeOS -destination "platform=iOS Simulator,name=iPhone 17 Pro" -parallel-testing-enabled NO "-only-testing:LifeOSTests/TabataSessionTests" "-only-testing:LifeOSTests/TabataCatchUpTests" -derivedDataPath /tmp/lifeos-dd-tabata2
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (3 targets)
+    Target 'LifeOSTests' in project 'LifeOS'
+        ➜ Explicit dependency on target 'LifeOS' in project 'LifeOS'
+    Target 'LifeOS' in project 'LifeOS'
+        ➜ Explicit dependency on target 'LifeOSWidgetsExtension' in project 'LifeOS'
+    Target 'LifeOSWidgetsExtension' in project 'LifeOS' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk /tmp/lifeos-dd-tabata2/SDKStatCaches.noindex/iphonesimulator27.0-24A430-e829b21a6f8c9b70876ba0858053c0448dc58220667be655e1bcc261a7455254.sdkstatcache
+    cd /Users/Shared/Claude/apps/lifeos/LifeOS.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator27.0.sdk -o /tmp/lifeos-dd-tabata2/SDKStatCaches.noindex/iphonesimulator27.0-24A430-e829b21a6f8c9b70876ba0858053c0448dc58220667be655e1bcc261a7455254.sdkstatcache
+
+Copy /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/PlugIns/LifeOSWidgetsExtension.appex /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOSWidgetsExtension.appex (in target 'LifeOS' from project 'LifeOS')
+    cd /Users/Shared/Claude/apps/lifeos
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks -remove-static-executable /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOSWidgetsExtension.appex /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/PlugIns
+
+ProcessInfoPlistFile /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/Info.plist /Users/Shared/Claude/apps/lifeos/LifeOS/Info.plist (in target 'LifeOS' from project 'LifeOS')
+    cd /Users/Shared/Claude/apps/lifeos
+    builtin-infoPlistUtility /Users/Shared/Claude/apps/lifeos/LifeOS/Info.plist -producttype com.apple.product-type.application -genpkginfo /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/PkgInfo -expandbuildsettings -format binary -platform iphonesimulator -additionalcontentfile /tmp/lifeos-dd-tabata2/Build/Intermediates.noindex/LifeOS.build/Debug-iphonesimulator/LifeOS.build/assetcatalog_generated_info.plist -scanforprivacyfile /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/PlugIns/LifeOSWidgetsExtension.appex -o /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/Info.plist
+
+CopySwiftLibs /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app (in target 'LifeOS' from project 'LifeOS')
+    cd /Users/Shared/Claude/apps/lifeos
+    builtin-swiftStdLibTool --copy --verbose --sign - --scan-executable /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/LifeOS.debug.dylib --scan-folder /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/Frameworks --scan-folder /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/PlugIns --scan-folder /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/SystemExtensions --scan-folder /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/Extensions --platform iphonesimulator --toolchain /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v27.1.266.1.Op4WZ4/Metal.xctoolchain --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/lifeos-dd-tabata2/Build/Intermediates.noindex/LifeOS.build/Debug-iphonesimulator/LifeOS.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os
+
+CodeSign /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/LifeOS.debug.dylib (in target 'LifeOS' from project 'LifeOS')
+    cd /Users/Shared/Claude/apps/lifeos
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/LifeOS.debug.dylib
+/tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/LifeOS.debug.dylib: replacing existing signature
+
+CodeSign /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/__preview.dylib (in target 'LifeOS' from project 'LifeOS')
+    cd /Users/Shared/Claude/apps/lifeos
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --timestamp\=none --generate-entitlement-der /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/__preview.dylib
+/tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/__preview.dylib: replacing existing signature
+
+CodeSign /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app (in target 'LifeOS' from project 'LifeOS')
+    cd /Users/Shared/Claude/apps/lifeos
+    
+    Signing Identity:     "Sign to Run Locally"
+    
+    /usr/bin/codesign --force --sign - --entitlements /tmp/lifeos-dd-tabata2/Build/Intermediates.noindex/LifeOS.build/Debug-iphonesimulator/LifeOS.build/LifeOS.app.xcent --timestamp\=none --generate-entitlement-der /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app
+/tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app: replacing existing signature
+
+Validate /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app (in target 'LifeOS' from project 'LifeOS')
+    cd /Users/Shared/Claude/apps/lifeos
+    builtin-validationUtility /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app -shallow-bundle -infoplist-subpath Info.plist
+
+ValidateEmbeddedBinary /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/PlugIns/LifeOSWidgetsExtension.appex (in target 'LifeOS' from project 'LifeOS')
+    cd /Users/Shared/Claude/apps/lifeos
+    /Applications/Xcode.app/Contents/Developer/usr/bin/embeddedBinaryValidationUtility /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/PlugIns/LifeOSWidgetsExtension.appex -signing-cert - -info-plist-path /tmp/lifeos-dd-tabata2/Build/Products/Debug-iphonesimulator/LifeOS.app/Info.plist
+
+PruneExplicitPrecompiledModules /tmp/lifeos-dd-tabata2/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/lifeos-dd-tabata2/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/lifeos-dd-tabata2/SDKExplicitPrecompiledModules
+
+2026-09-30 05:37:31.298739+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Satoshi-Black.otf"
+2026-09-30 05:37:31.309798+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Satoshi-Bold.otf"
+2026-09-30 05:37:31.310213+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Satoshi-Medium.otf"
+2026-09-30 05:37:31.310557+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Satoshi-Regular.otf"
+2026-09-30 05:37:31.310896+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Satoshi-Italic.otf"
+2026-09-30 05:37:31.315564+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Satoshi-BoldItalic.otf"
+2026-09-30 05:37:31.316240+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Inter-Regular.otf"
+2026-09-30 05:37:31.316695+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Inter-Medium.otf"
+2026-09-30 05:37:31.317037+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Inter-SemiBold.otf"
+2026-09-30 05:37:31.317377+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Inter-Bold.otf"
+2026-09-30 05:37:31.322995+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Inter-Bold.otf"
+2026-09-30 05:37:31.323658+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Satoshi-Bold.otf"
+2026-09-30 05:37:31.324292+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Inter-Regular.otf"
+2026-09-30 05:37:31.324720+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Satoshi-Italic.otf"
+2026-09-30 05:37:31.325084+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Satoshi-Black.otf"
+2026-09-30 05:37:31.325421+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Inter-Medium.otf"
+2026-09-30 05:37:31.325710+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Satoshi-Regular.otf"
+2026-09-30 05:37:31.326042+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Inter-SemiBold.otf"
+2026-09-30 05:37:31.326345+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Satoshi-BoldItalic.otf"
+2026-09-30 05:37:31.331511+0200 LifeOS[10623:129372] GSFont: file already registered - "file:///Users/theo/Library/Developer/CoreSimulator/Devices/70376BCF-0BAF-4961-B59F-0DB755BB6748/data/Containers/Bundle/Application/C7D22E18-EA0C-4465-9D59-27F9BE651661/LifeOS.app/Satoshi-Medium.otf"
+2026-09-30 05:37:32.286762+0200 LifeOS[10623:129372] [notifications] APNs registration failed: no valid “aps-environment” entitlement string found for application
+2026-09-30 05:37:32.295730+0200 LifeOS[10623:131555] [connection] nw_connection_copy_connected_local_endpoint_block_invoke [C1] Connection has no local endpoint
+2026-09-30 05:37:32.295883+0200 LifeOS[10623:131555] [connection] nw_connection_copy_connected_local_endpoint_block_invoke [C1] Connection has no local endpoint
+2026-09-30 05:37:32.819993+0200 LifeOS[10623:129372] [XPCErrors] non-launching port is incompatible with service identifier "com.apple.PointerUI.pointeruid.default-service"
+Test Suite 'Selected tests' started at 2026-09-30 05:37:32.982.
+Test Suite 'LifeOSTests.xctest' started at 2026-09-30 05:37:32.982.
+Test Suite 'TabataCatchUpTests' started at 2026-09-30 05:37:32.982.
+Test Case '-[LifeOSTests.TabataCatchUpTests testBeginRecordsStartFromInjectedClock]' started.
+2026-09-30 05:37:33.060773+0200 LifeOS[10623:129372] [plugin] AddInstanceForFactory: No factory registered for id <CFUUID 0x109141a20> F8BB1C28-BAE8-11D6-9C31-00039315CD46
+2026-09-30 05:37:33.090977+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+2026-09-30 05:37:33.148174+0200 LifeOS[10623:131600] [carc] Invalidation handler: Connection cannot be formed.
+2026-09-30 05:37:33.149716+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+2026-09-30 05:37:33.248394+0200 LifeOS[10623:131598] [EnhanceDialogueProcessor] EnhanceDialogueProcessor.cpp:658   EnhanceDialogueProcessor has no tuning for unrecognized device type
+2026-09-30 05:37:33.248479+0200 LifeOS[10623:131598] [EnhanceDialogueProcessor] EnhanceDialogueProcessor.cpp:268   EnhanceDialogueProcessor() - Product does not have valid tuning at ''
+2026-09-30 05:37:33.248540+0200 LifeOS[10623:131598] [EnhanceDialogueProcessor] EnhanceDialogueProcessor.cpp:658   EnhanceDialogueProcessor has no tuning for unrecognized device type
+2026-09-30 05:37:33.248569+0200 LifeOS[10623:131598] [EnhanceDialogueProcessor] EnhanceDialogueProcessor.cpp:268   EnhanceDialogueProcessor() - Product does not have valid tuning at ''
+2026-09-30 05:37:33.295933+0200 LifeOS[10623:129372] [AQ]        LoudnessManager.mm:1767  ReadPListFile: unable to open stream for LoudnessManager plist
+2026-09-30 05:37:33.296003+0200 LifeOS[10623:129372] [AQ]        LoudnessManager.mm:1268  GetHardwarePlatformKey: cannot get acoustic ID
+2026-09-30 05:37:33.296048+0200 LifeOS[10623:129372] [AQ]        LoudnessManager.mm:1222  IsHardwareSupported: no plist loaded, returning false
+2026-09-30 05:37:33.296095+0200 LifeOS[10623:129372] [AQ]        LoudnessManager.mm:1222  IsHardwareSupported: no plist loaded, returning false
+2026-09-30 05:37:33.346435+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+2026-09-30 05:37:33.347707+0200 LifeOS[10623:129372] [AQ]        LoudnessManager.mm:1222  IsHardwareSupported: no plist loaded, returning false
+2026-09-30 05:37:33.347781+0200 LifeOS[10623:129372] [AQ]        LoudnessManager.mm:1222  IsHardwareSupported: no plist loaded, returning false
+2026-09-30 05:37:33.366213+0200 LifeOS[10623:131696] [AMCP]          HALC_ProxyIOContext.cpp:1676  HALC_ProxyIOContext::IOWorkLoop: skipping cycle due to overload
+2026-09-30 05:37:33.392892+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+2026-09-30 05:37:33.394303+0200 LifeOS[10623:129372] [AQ]        LoudnessManager.mm:1222  IsHardwareSupported: no plist loaded, returning false
+2026-09-30 05:37:33.394488+0200 LifeOS[10623:129372] [AQ]        LoudnessManager.mm:1222  IsHardwareSupported: no plist loaded, returning false
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataCatchUpTests.swift:133: warning: -[LifeOSTests.TabataCatchUpTests testBeginRecordsStartFromInjectedClock] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataCatchUpTests testBeginRecordsStartFromInjectedClock]' passed (0.727 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testCatchesUpAfterBackgroundGap]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testCatchesUpAfterBackgroundGap]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testCatchUpCrossesPhaseBoundary]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testCatchUpCrossesPhaseBoundary]' passed (0.013 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testFinishDuringCatchUpIsDatedAtRealBoundary]' started.
+2026-09-30 05:37:33.779872+0200 LifeOS[10623:129372] [aqme]                AQMEIO.cpp:201   timed out after 0.011s (42 43); suspension count=0 (IOSuspensions: , , , , , , , , , , , , ) (maybe stale)
+2026-09-30 05:37:33.788987+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataCatchUpTests.swift:190: warning: -[LifeOSTests.TabataCatchUpTests testFinishDuringCatchUpIsDatedAtRealBoundary] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataCatchUpTests testFinishDuringCatchUpIsDatedAtRealBoundary]' passed (0.065 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testFinishOnNormalTickIsDatedNow]' started.
+2026-09-30 05:37:33.791145+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+2026-09-30 05:37:33.792655+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+2026-09-30 05:37:33.793284+0200 LifeOS[10623:129372] [AQ]        LoudnessManager.mm:1222  IsHardwareSupported: no plist loaded, returning false
+2026-09-30 05:37:33.793341+0200 LifeOS[10623:129372] [AQ]        LoudnessManager.mm:1222  IsHardwareSupported: no plist loaded, returning false
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataCatchUpTests.swift:201: warning: -[LifeOSTests.TabataCatchUpTests testFinishOnNormalTickIsDatedNow] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataCatchUpTests testFinishOnNormalTickIsDatedNow]' passed (0.319 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testGapUnderLimitIsCaughtUp]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testGapUnderLimitIsCaughtUp]' passed (0.063 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testOneTickRemovesOneSecond]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testOneTickRemovesOneSecond]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testPausedEngineIgnoresElapsedTime]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testPausedEngineIgnoresElapsedTime]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testResetClearsStart]' started.
+2026-09-30 05:37:34.184050+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataCatchUpTests.swift:149: warning: -[LifeOSTests.TabataCatchUpTests testResetClearsStart] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataCatchUpTests testResetClearsStart]' passed (0.010 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testResetReturnsToIdle]' started.
+2026-09-30 05:37:34.186099+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+2026-09-30 05:37:34.186605+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataCatchUpTests.swift:159: warning: -[LifeOSTests.TabataCatchUpTests testResetReturnsToIdle] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataCatchUpTests testResetReturnsToIdle]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testVeryLongGapPausesInsteadOfCrediting]' started.
+2026-09-30 05:37:34.188481+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataCatchUpTests.swift:78: warning: -[LifeOSTests.TabataCatchUpTests testVeryLongGapPausesInsteadOfCrediting] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataCatchUpTests testVeryLongGapPausesInsteadOfCrediting]' passed (0.002 seconds).
+Test Suite 'TabataCatchUpTests' passed at 2026-09-30 05:37:34.190.
+	 Executed 11 tests, with 0 failures (0 unexpected) in 1.203 (1.208) seconds
+Test Suite 'TabataSessionTests' started at 2026-09-30 05:37:34.192.
+Test Case '-[LifeOSTests.TabataSessionTests testConcurrentDoneCallbacksWriteOnce]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testConcurrentDoneCallbacksWriteOnce]' passed (0.075 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testDelayedFailureThenRelaunchKeepsOriginalFinishTime]' started.
+2026-09-30 05:37:34.290381+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+2026-09-30 05:37:34.292691+0200 LifeOS[10623:129372] [AQ]        LoudnessManager.mm:1222  IsHardwareSupported: no plist loaded, returning false
+2026-09-30 05:37:34.292866+0200 LifeOS[10623:129372] [AQ]        LoudnessManager.mm:1222  IsHardwareSupported: no plist loaded, returning false
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataSessionTests.swift:594: warning: -[LifeOSTests.TabataSessionTests testDelayedFailureThenRelaunchKeepsOriginalFinishTime] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataSessionTests testDelayedFailureThenRelaunchKeepsOriginalFinishTime]' passed (0.084 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testDiscardAfterFailedWriteKeepsQueue]' started.
+2026-09-30 05:37:34.430428+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataSessionTests.swift:754: warning: -[LifeOSTests.TabataSessionTests testDiscardAfterFailedWriteKeepsQueue] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataSessionTests testDiscardAfterFailedWriteKeepsQueue]' passed (0.081 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testFailedHealthWriteIsNotMarkedSavedAndCanBeRetried]' started.
+2026-09-30 05:37:34.433775+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataSessionTests.swift:374: warning: -[LifeOSTests.TabataSessionTests testFailedHealthWriteIsNotMarkedSavedAndCanBeRetried] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataSessionTests testFailedHealthWriteIsNotMarkedSavedAndCanBeRetried]' passed (0.086 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testFailedWorkoutSurvivesNewSessionAndRelaunch]' started.
+2026-09-30 05:37:34.601623+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+2026-09-30 05:37:34.602454+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataSessionTests.swift:644: warning: -[LifeOSTests.TabataSessionTests testFailedWorkoutSurvivesNewSessionAndRelaunch] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataSessionTests testFailedWorkoutSurvivesNewSessionAndRelaunch]' passed (0.087 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testFinishDuringRestoreCatchUpWritesHealth]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testFinishDuringRestoreCatchUpWritesHealth]' passed (0.082 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testHealthNotWrittenWhenActiveTimeUnderOneMinute]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testHealthNotWrittenWhenActiveTimeUnderOneMinute]' passed (0.114 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testHealthWindowExcludesHourLongPause]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testHealthWindowExcludesHourLongPause]' passed (0.101 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testHealthWrittenOnceEvenAfterRestore]' started.
+2026-09-30 05:37:34.987185+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+2026-09-30 05:37:34.988320+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataSessionTests.swift:356: warning: -[LifeOSTests.TabataSessionTests testHealthWrittenOnceEvenAfterRestore] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataSessionTests testHealthWrittenOnceEvenAfterRestore]' passed (0.086 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testInFlightWriteSurvivesSessionReplacementAndTermination]' started.
+2026-09-30 05:37:35.070910+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+2026-09-30 05:37:35.072135+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataSessionTests.swift:689: warning: -[LifeOSTests.TabataSessionTests testInFlightWriteSurvivesSessionReplacementAndTermination] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataSessionTests testInFlightWriteSurvivesSessionReplacementAndTermination]' passed (0.085 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testJumpingThroughWholeSessionIsNotAWorkout]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testJumpingThroughWholeSessionIsNotAWorkout]' passed (0.102 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testKeeperPersistsOnEveryStateChangeAndClearsOnDiscard]' started.
+2026-09-30 05:37:35.181652+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataSessionTests.swift:304: warning: -[LifeOSTests.TabataSessionTests testKeeperPersistsOnEveryStateChangeAndClearsOnDiscard] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataSessionTests testKeeperPersistsOnEveryStateChangeAndClearsOnDiscard]' passed (0.007 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testKeeperRestoresFromStoreBeforeDefaults]' started.
+2026-09-30 05:37:35.184745+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataSessionTests.swift:273: warning: -[LifeOSTests.TabataSessionTests testKeeperRestoresFromStoreBeforeDefaults] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataSessionTests testKeeperRestoresFromStoreBeforeDefaults]' passed (0.017 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testPausedSessionResumesWhereItStoppedAfterRelaunch]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testPausedSessionResumesWhereItStoppedAfterRelaunch]' passed (0.039 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testRelaunchRetriesUnsavedFinishedSession]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testRelaunchRetriesUnsavedFinishedSession]' passed (0.088 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testRestartAfterLongGapPausesWithoutCrediting]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testRestartAfterLongGapPausesWithoutCrediting]' passed (0.018 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testRestartWhileRunningCatchesUpShortGap]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testRestartWhileRunningCatchesUpShortGap]' passed (0.021 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testRestoreDoneSnapshotStaysDone]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testRestoreDoneSnapshotStaysDone]' passed (0.106 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testRetryCoversQueuedSessionNotOnlyLiveOne]' started.
+2026-09-30 05:37:35.561218+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+2026-09-30 05:37:35.562142+0200 LifeOS[10623:129372] [AVAudioSession Hang Risk]     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+/Users/Shared/Claude/apps/lifeos/LifeOSTests/TabataSessionTests.swift:727: warning: -[LifeOSTests.TabataSessionTests testRetryCoversQueuedSessionNotOnlyLiveOne] :     AVAudioSession_iOS.mm:978   This method can lead to UI unresponsiveness if called on the main thread. Consider using the asynchronous activate/deactivate API instead for calls from the main thread.
+Test Case '-[LifeOSTests.TabataSessionTests testRetryCoversQueuedSessionNotOnlyLiveOne]' passed (0.090 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testSelectingFutureStepIsNotCompletedWork]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testSelectingFutureStepIsNotCompletedWork]' passed (0.017 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testSelectingPastStepMakesItCurrentAgain]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testSelectingPastStepMakesItCurrentAgain]' passed (0.063 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testSelectWhilePausedStaysPaused]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testSelectWhilePausedStaysPaused]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testSequenceCoversWholeSessionInOrder]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testSequenceCoversWholeSessionInOrder]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testSkipBackwardGoesToPreviousWorkRound]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testSkipBackwardGoesToPreviousWorkRound]' passed (0.062 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testSkipForwardToEndDoesNotCompleteAnything]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testSkipForwardToEndDoesNotCompleteAnything]' passed (0.107 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testSnapshotRoundTripKeepsEverything]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testSnapshotRoundTripKeepsEverything]' passed (0.084 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testStatusesPastCurrentFutureAcrossPhases]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testStatusesPastCurrentFutureAcrossPhases]' passed (0.194 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testStoreIgnoresUnreadableSnapshot]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testStoreIgnoresUnreadableSnapshot]' passed (0.087 seconds).
+Test Suite 'TabataSessionTests' passed at 2026-09-30 05:37:36.182.
+	 Executed 28 tests, with 0 failures (0 unexpected) in 1.982 (1.990) seconds
+Test Suite 'LifeOSTests.xctest' passed at 2026-09-30 05:37:36.182.
+	 Executed 39 tests, with 0 failures (0 unexpected) in 3.185 (3.200) seconds
+Test Suite 'Selected tests' passed at 2026-09-30 05:37:36.184.
+	 Executed 39 tests, with 0 failures (0 unexpected) in 3.185 (3.202) seconds
+2026-09-30 05:46:48.969 xcodebuild[10374:126411] [MT] IDETestOperationsObserverDebug: 596.128 elapsed -- Testing started completed.
+2026-09-30 05:46:48.969 xcodebuild[10374:126411] [MT] IDETestOperationsObserverDebug: 0.000 sec, +0.000 sec -- start
+2026-09-30 05:46:48.969 xcodebuild[10374:126411] [MT] IDETestOperationsObserverDebug: 596.129 sec, +596.129 sec -- end

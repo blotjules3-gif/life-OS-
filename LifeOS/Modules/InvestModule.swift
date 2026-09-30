@@ -30,7 +30,7 @@ struct PortfolioView: View {
                         Text("Valeur du portefeuille").font(.caption).foregroundStyle(Theme.textSecondary)
                         Text(total, format: .currency(code: "EUR")).font(.system(size: 34, weight: .bold)).foregroundStyle(Theme.textPrimary)
                         Text("\(totalPnL >= 0 ? "+" : "")\(totalPnL, format: .currency(code: "EUR")) (\(total-totalPnL == 0 ? 0 : totalPnL/(total-totalPnL)*100, specifier: "%.1f")%)")
-                            .font(.subheadline.bold()).foregroundStyle(totalPnL >= 0 ? .green : .red)
+                            .font(.subheadline.bold()).foregroundStyle(totalPnL >= 0 ? Theme.success : Theme.danger)
                     }.frame(maxWidth: .infinity, alignment: .leading).card()
 
                     if !holdings.isEmpty {
@@ -52,7 +52,7 @@ struct PortfolioView: View {
                                 Spacer()
                                 VStack(alignment: .trailing) {
                                     Text(h.value, format: .currency(code: "EUR")).bold().foregroundStyle(Theme.textPrimary)
-                                    Text("\(h.pnlPct >= 0 ? "+" : "")\(h.pnlPct, specifier: "%.1f")%").font(.caption).foregroundStyle(h.pnl >= 0 ? .green : .red)
+                                    Text("\(h.pnlPct >= 0 ? "+" : "")\(h.pnlPct, specifier: "%.1f")%").font(.caption).foregroundStyle(h.pnl >= 0 ? Theme.success : Theme.danger)
                                 }
                             }.card(padding: 12)
                                 .contextMenu { Button(role: .destructive) { ctx.delete(h) } label: { Label("Supprimer", systemImage: "trash") } }
@@ -85,10 +85,10 @@ struct PortfolioView: View {
         VStack(alignment: .leading, spacing: 6) {
             if let priceError {
                 Label(priceError, systemImage: "exclamationmark.triangle.fill")
-                    .font(.caption).foregroundStyle(.orange)
+                    .font(.caption).foregroundStyle(Theme.warning)
             } else if let lastRefresh {
                 Label("Cours à jour · \(lastRefresh, style: .time)", systemImage: "checkmark.circle.fill")
-                    .font(.caption).foregroundStyle(.green)
+                    .font(.caption).foregroundStyle(Theme.success)
             }
             // On ne pretend pas suivre les actions: aucune API boursiere n'est
             // gratuite sans cle. Le dire vaut mieux qu'un chiffre faux.
@@ -154,23 +154,38 @@ struct HoldingEditor: View {
     @Environment(\.dismiss) private var dismiss
     @State private var symbol = ""; @State private var kind = "Action"
     @State private var qty = ""; @State private var buy = ""; @State private var current = ""
+    // Quantite ou prix illisible: refuse avec explication. Avant, "abc" ou
+    // "1 234,5" devenait 0 et creait une position a 0.
+    private var q: AmountInput.Parsed { AmountInput.parse(qty) }
+    private var b: AmountInput.Parsed { AmountInput.parse(buy) }
+    private var c: AmountInput.Parsed { AmountInput.parse(current, rules: .init(required: false)) }
+    private var canSave: Bool {
+        !symbol.trimmingCharacters(in: .whitespaces).isEmpty && q.value != nil && b.value != nil && c.message == nil
+    }
     var body: some View {
         NavigationStack {
             Form {
                 TextField("Symbole (AAPL, BTC…)", text: $symbol).textInputAutocapitalization(.characters)
                 Picker("Type", selection: $kind) { ForEach(["Action","ETF","Crypto"], id: \.self) { Text($0) } }
-                HStack { Text("Quantité"); Spacer(); TextField("0", text: $qty).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
-                HStack { Text("Prix d'achat"); Spacer(); TextField("0", text: $buy).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
-                HStack { Text("Prix actuel"); Spacer(); TextField("0", text: $current).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
+                field("Quantité", $qty, q)
+                field("Prix d'achat", $buy, b)
+                field("Prix actuel (sinon prix d'achat)", $current, c)
             }
             .navigationTitle("Nouvelle position").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
-                    let b = Double(buy.replacingOccurrences(of: ",", with: ".")) ?? 0
-                    ctx.insert(Holding(symbol: symbol, kind: kind, quantity: Double(qty.replacingOccurrences(of: ",", with: ".")) ?? 0, buyPrice: b, currentPrice: Double(current.replacingOccurrences(of: ",", with: ".")) ?? b)); dismiss()
-                }.disabled(symbol.isEmpty) }
+                    guard let qv = q.value, let bv = b.value else { return }
+                    ctx.insert(Holding(symbol: symbol, kind: kind, quantity: qv, buyPrice: bv, currentPrice: c.value ?? bv)); dismiss()
+                }.disabled(!canSave) }
             }
+        }
+    }
+
+    private func field(_ title: String, _ text: Binding<String>, _ parsed: AmountInput.Parsed) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack { Text(title); Spacer(); TextField("0", text: text).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
+            if !text.wrappedValue.isEmpty, let m = parsed.message { Text(m).font(.caption).foregroundStyle(Theme.warning) }
         }
     }
 }
@@ -185,6 +200,9 @@ struct NetWorthView: View {
     @AppStorage(AppStorageKeys.fireMonthly) private var monthly = 500.0
     @AppStorage(AppStorageKeys.fireReturn) private var annualReturn = 7.0
     @AppStorage(AppStorageKeys.fireYears) private var years = 20.0
+    @AppStorage(AppStorageKeys.fireFees) private var fees = 0.5
+    @AppStorage(AppStorageKeys.fireInflation) private var inflation = 2.0
+    @AppStorage(AppStorageKeys.fireIncludeOther) private var includeOtherAssets = false
 
     private var assets: Double { items.filter { $0.kind == "Actif" }.reduce(0) { $0 + $1.value } + holdings.reduce(0) { $0 + $1.value } }
     private var liabilities: Double { items.filter { $0.kind == "Passif" }.reduce(0) { $0 + $1.value } }
@@ -197,34 +215,67 @@ struct NetWorthView: View {
                 VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Patrimoine net").font(.caption).foregroundStyle(Theme.textSecondary)
-                        Text(netWorth, format: .currency(code: "EUR")).font(.system(size: 34, weight: .bold)).foregroundStyle(netWorth >= 0 ? Theme.textPrimary : .red)
+                        Text(netWorth, format: .currency(code: "EUR")).font(.system(size: 34, weight: .bold)).foregroundStyle(netWorth >= 0 ? Theme.textPrimary : Theme.danger)
                         HStack {
-                            Label("\(Int(assets))€ actifs", systemImage: "arrow.up").font(.caption).foregroundStyle(.green)
-                            Label("\(Int(liabilities))€ passifs", systemImage: "arrow.down").font(.caption).foregroundStyle(.red)
+                            Label("\(Int(assets))€ actifs", systemImage: "arrow.up").font(.caption).foregroundStyle(Theme.success)
+                            Label("\(Int(liabilities))€ passifs", systemImage: "arrow.down").font(.caption).foregroundStyle(Theme.danger)
                         }
                     }.frame(maxWidth: .infinity, alignment: .leading).card()
 
                     VStack(alignment: .leading, spacing: 12) {
-                        SectionHeader(title: "Projection FIRE", subtitle: "Intérêts composés")
+                        SectionHeader(title: "Projection FIRE", subtitle: "Trois scénarios, frais et inflation compris")
                         sliderRow("Investi / mois", value: $monthly, range: 0...5000, step: 50, format: "%.0f €")
-                        sliderRow("Rendement annuel", value: $annualReturn, range: 1...12, step: 0.5, format: "%.1f %%")
+                        sliderRow("Rendement annuel central", value: $annualReturn, range: -5...12, step: 0.5, format: "%.1f %%")
+                        sliderRow("Frais annuels", value: $fees, range: 0...3, step: 0.1, format: "%.1f %%")
+                        sliderRow("Inflation", value: $inflation, range: 0...8, step: 0.5, format: "%.1f %%")
                         sliderRow("Horizon", value: $years, range: 1...40, step: 1, format: "%.0f ans")
-                        let proj = fireProjection()
-                        Chart(proj, id: \.0) { p in
-                            AreaMark(x: .value("Année", p.0), y: .value("Capital", p.1)).foregroundStyle(Color.investTint.opacity(0.3))
-                            LineMark(x: .value("Année", p.0), y: .value("Capital", p.1)).foregroundStyle(Color.investTint)
-                        }.frame(height: 160)
+                        Toggle("Compter aussi les autres actifs", isOn: $includeOtherAssets)
+                            .font(.subheadline).tint(.investTint)
+                        Text(includeOtherAssets
+                             ? "Départ : \(Int(startCapital)) € (placements + autres actifs, moins les dettes). Un logement ou une voiture ne rapportent pas ce rendement : le résultat est optimiste."
+                             : "Départ : \(Int(startCapital)) € de placements. L'immobilier et les biens restent à part : ils ne rapportent pas le rendement d'un portefeuille.")
+                            .font(.caption).foregroundStyle(Theme.textSecondary)
+                        let scen = FireProjection.scenarios(start: startCapital, monthly: monthly, annualReturn: annualReturn,
+                                                            fees: fees, inflation: inflation, years: Int(years))
+                        Chart {
+                            ForEach(scen) { s in
+                                ForEach(s.points, id: \.year) { p in
+                                    LineMark(x: .value("Année", p.year), y: .value("€ d'aujourd'hui", p.real))
+                                        .foregroundStyle(by: .value("Scénario", s.label))
+                                        .lineStyle(StrokeStyle(lineWidth: s.id == "central" ? 3 : 1.5, dash: s.id == "central" ? [] : [4, 3]))
+                                }
+                            }
+                        }
+                        .chartForegroundStyleScale(["Pessimiste": Theme.danger, "Central": Color.investTint, "Optimiste": Theme.success])
+                        .frame(height: 180)
                         .chartYAxis { AxisMarks { _ in AxisGridLine().foregroundStyle(Theme.stroke); AxisValueLabel().foregroundStyle(Theme.textSecondary) } }
                         .chartXAxis { AxisMarks { _ in AxisValueLabel().foregroundStyle(Theme.textSecondary) } }
-                        let final = proj.last?.1 ?? 0
-                        Text("Dans \(Int(years)) ans : \(final, format: .currency(code: "EUR"))").font(.headline).foregroundStyle(.investTint)
-                        Text("Revenu passif à 4% : \(final*0.04/12, format: .currency(code: "EUR"))/mois").font(.caption).foregroundStyle(Theme.textSecondary)
+                        ForEach(scen) { s in
+                            let f = s.final
+                            HStack(alignment: .firstTextBaseline) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("\(s.label) · \(s.annualReturn, specifier: "%.1f") %/an brut").font(.subheadline.weight(.semibold))
+                                    Text("Versé \(Int(f.invested)) € · gain \(Int(f.nominal - f.invested)) €").font(.caption).foregroundStyle(Theme.textSecondary)
+                                }
+                                Spacer()
+                                VStack(alignment: .trailing, spacing: 2) {
+                                    Text(f.real, format: .currency(code: "EUR").precision(.fractionLength(0))).font(.subheadline.bold())
+                                    Text("\(f.nominal, format: .currency(code: "EUR").precision(.fractionLength(0))) nominal").font(.caption2).foregroundStyle(Theme.textSecondary)
+                                }
+                            }
+                        }
+                        if let c = scen.first(where: { $0.id == "central" }) {
+                            Text("Revenu passif à 4 %, central : \(FireProjection.safeMonthlyIncome(c.final), format: .currency(code: "EUR").precision(.fractionLength(0)))/mois en euros d'aujourd'hui.")
+                                .font(.caption).foregroundStyle(Theme.textSecondary)
+                        }
+                        Text("Montants en euros d'aujourd'hui (inflation retirée). Simulation, pas un conseil : les marchés peuvent faire pire que le scénario pessimiste.")
+                            .font(.caption2).foregroundStyle(Theme.textSecondary)
                     }.card()
 
                     HStack { SectionHeader(title: "Actifs & passifs"); Button { showAdd = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.investTint) }.accessibilityLabel("Ajouter") }
                     ForEach(items) { it in
                         HStack {
-                            Image(systemName: it.kind == "Actif" ? "plus.circle" : "minus.circle").foregroundStyle(it.kind == "Actif" ? .green : .red)
+                            Image(systemName: it.kind == "Actif" ? "plus.circle" : "minus.circle").foregroundStyle(it.kind == "Actif" ? Theme.success : Theme.danger)
                             Text(it.name).foregroundStyle(Theme.textPrimary); Spacer()
                             Text(it.value, format: .currency(code: "EUR")).bold().foregroundStyle(Theme.textPrimary)
                         }.card(padding: 12)
@@ -242,15 +293,11 @@ struct NetWorthView: View {
             Slider(value: value, in: range, step: step).tint(.investTint)
         }
     }
-    private func fireProjection() -> [(Int, Double)] {
-        let r = annualReturn / 100 / 12
-        var capital = netWorth > 0 ? netWorth : 0
-        var result: [(Int, Double)] = [(0, capital)]
-        for year in 1...Int(years) {
-            for _ in 0..<12 { capital = capital * (1 + r) + monthly }
-            result.append((year, capital))
-        }
-        return result
+    /// Capital qui travaille vraiment : les placements, et les autres actifs seulement
+    /// si l'utilisateur le demande (dettes deduites dans ce cas).
+    private var startCapital: Double {
+        let invested = holdings.reduce(0) { $0 + $1.value }
+        return max(0, includeOtherAssets ? netWorth : invested)
     }
 }
 
@@ -292,7 +339,7 @@ struct RealEstateView: View {
             ScrollView {
                 VStack(spacing: 14) {
                     HStack(spacing: 12) {
-                        StatTile(value: "\(Int(totalCashflow))€", label: "Cashflow/mois", icon: "arrow.left.arrow.right", tint: totalCashflow >= 0 ? .green : .red)
+                        StatTile(value: "\(Int(totalCashflow))€", label: "Cashflow/mois", icon: "arrow.left.arrow.right", tint: totalCashflow >= 0 ? Theme.success : Theme.danger)
                         StatTile(value: "\(Int(totalEquity/1000))k€", label: "Equity nette", icon: "house")
                     }
                     if props.isEmpty {
@@ -302,15 +349,15 @@ struct RealEstateView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack { Text(p.name).font(.headline).foregroundStyle(Theme.textPrimary); Spacer(); Text(p.value, format: .currency(code: "EUR")).bold().foregroundStyle(.investTint) }
                                 HStack {
-                                    metric("Loyer", p.monthlyRent, .green)
-                                    metric("Charges", -p.monthlyCharges, .orange)
-                                    metric("Crédit", -p.loanPayment, .red)
+                                    metric("Loyer", p.monthlyRent, Theme.success)
+                                    metric("Charges", -p.monthlyCharges, Theme.warning)
+                                    metric("Crédit", -p.loanPayment, Theme.danger)
                                 }
                                 Divider().overlay(Theme.stroke)
                                 HStack {
                                     Text("Cashflow net").font(.subheadline).foregroundStyle(Theme.textPrimary)
                                     Spacer()
-                                    Text("\(p.monthlyCashflow >= 0 ? "+" : "")\(p.monthlyCashflow, format: .currency(code: "EUR"))/mois").bold().foregroundStyle(p.monthlyCashflow >= 0 ? .green : .red)
+                                    Text("\(p.monthlyCashflow >= 0 ? "+" : "")\(p.monthlyCashflow, format: .currency(code: "EUR"))/mois").bold().foregroundStyle(p.monthlyCashflow >= 0 ? Theme.success : Theme.danger)
                                 }
                                 Text("Rendement brut : \(p.value > 0 ? p.monthlyRent*12/p.value*100 : 0, specifier: "%.1f")%").font(.caption).foregroundStyle(Theme.textSecondary)
                             }.card()
@@ -436,7 +483,7 @@ struct ListingImportSheet: View {
                 if let error {
                     Section {
                         Label(error, systemImage: "exclamationmark.triangle.fill")
-                            .font(.footnote).foregroundStyle(.orange)
+                            .font(.footnote).foregroundStyle(Theme.warning)
                     }
                 }
             }
@@ -527,12 +574,12 @@ struct TaxSimulatorView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             SectionHeader(title: "Le détail")
                             if r.capLoss > 0 {
-                                row("Avantage refusé (plafond des demi-parts)", r.capLoss, .orange)
+                                row("Avantage refusé (plafond des demi-parts)", r.capLoss, Theme.warning)
                                 Text("Chaque demi-part rapporte au maximum \(Int(FrenchTax.halfPartCap)) € d'impôt en moins. Au-delà, l'avantage est plafonné.")
                                     .font(.caption2).foregroundStyle(Theme.textSecondary)
                             }
                             if r.decote > 0 {
-                                row("Décote (revenus modestes)", -r.decote, .green)
+                                row("Décote (revenus modestes)", -r.decote, Theme.success)
                             }
                         }.card()
                     }

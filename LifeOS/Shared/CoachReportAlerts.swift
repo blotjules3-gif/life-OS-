@@ -59,10 +59,7 @@ private struct CoachReportAlerts<M: Identifiable>: ViewModifier {
             "reason": reason,
             "content": String(content.prefix(4000))
         ]
-        guard let dir = try? FileManager.default.url(
-            for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true
-        ) else { return }
-        let file = dir.appendingPathComponent("coach_reports.jsonl")
+        let file = AppPaths.documents.appendingPathComponent("coach_reports.jsonl")
         var line = (try? JSONSerialization.data(withJSONObject: entry)) ?? Data()
         line.append(0x0A) // newline
         if let handle = try? FileHandle(forWritingTo: file) {

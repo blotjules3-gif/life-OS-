@@ -23,7 +23,9 @@ enum ImageIntel {
         if let hit = labels.first(where: { FoodCalorieDB.match($0.label) != nil }),
            let m = FoodCalorieDB.match(hit.label) {
             let g = FoodGuess(name: m.0, kcal: m.1, protein: m.2, carbs: m.3, fat: m.4, confidence: Double(hit.confidence))
-            let reply = "On dirait : \(g.name) (~\(g.kcal) kcal). Je l'ai ajouté à ton journal du jour — tu peux l'ajuster dans Nutrition."
+            // Proposer, pas ecrire: une etiquette de classification et une valeur de table
+            // ne sont pas une pesee. L'ajout se fait dans Nutrition, portion modifiable.
+            let reply = "On dirait : \(g.name), environ \(g.kcal) kcal pour une portion type. C'est une estimation, rien n'a été ajouté. Ouvre Nutrition pour régler la portion et l'enregistrer."
             return (.food(g), reply, [AIAction(type: .openModule, title: "Nutrition", module: "nutrition")])
         }
 

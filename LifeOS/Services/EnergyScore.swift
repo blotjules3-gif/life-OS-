@@ -49,7 +49,15 @@ enum EnergyScore {
     ///
     /// Le score est donc rapporte aux criteres REELLEMENT renseignes, et la
     /// couverture est rendue avec lui.
-    static func compute(_ input: Input) -> Result {
+    /// Objectifs de l'utilisateur. Avant, 2 500 ml et 8 h etaient ecrits en dur
+    /// alors que ses propres objectifs existaient dans les reglages.
+    struct Goals: Equatable {
+        var waterML: Int = 2500
+        var sleepHours: Double = 8
+        static let standard = Goals()
+    }
+
+    static func compute(_ input: Input, goals: Goals = .standard) -> Result {
         var earned = 0.0
         var available = 0.0
 
@@ -59,8 +67,8 @@ enum EnergyScore {
         }
 
         if let q = input.sleepQuality { add(Double(q) / 5.0, weight: 30) }
-        if let h = input.sleepHours   { add(h / 8.0, weight: 10) }
-        if let ml = input.waterML     { add(Double(ml) / 2500.0, weight: 20) }
+        if let h = input.sleepHours   { add(h / max(goals.sleepHours, 1), weight: 10) }
+        if let ml = input.waterML     { add(Double(ml) / Double(max(goals.waterML, 1)), weight: 20) }
         if let total = input.habitsTotal, total > 0, let done = input.habitsDone {
             add(Double(done) / Double(total), weight: 20)
         }

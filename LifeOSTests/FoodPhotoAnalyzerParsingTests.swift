@@ -15,8 +15,8 @@ final class FoodPhotoAnalyzerParsingTests: XCTestCase {
             #"{"name":"Poulet riz","kcal":620,"protein":45,"carbs":70,"fat":12,"note":"assiette moyenne"}"#
         )
         XCTAssertEqual(a?.name, "Poulet riz")
-        XCTAssertEqual(a?.kcal, 620)
-        XCTAssertEqual(a?.protein, 45)
+        XCTAssertEqual(a?.items.first?.kcal, 620)
+        XCTAssertEqual(a?.items.first?.protein, 45)
         XCTAssertEqual(a?.note, "assiette moyenne")
     }
 
@@ -30,7 +30,7 @@ final class FoodPhotoAnalyzerParsingTests: XCTestCase {
         """
         let a = FoodPhotoAnalyzer.parse(raw)
         XCTAssertEqual(a?.name, "Salade César")
-        XCTAssertEqual(a?.kcal, 430)
+        XCTAssertEqual(a?.items.first?.kcal, 430)
     }
 
     /// Certains modeles rendent "620" ou "620 kcal" au lieu de 620.
@@ -38,17 +38,17 @@ final class FoodPhotoAnalyzerParsingTests: XCTestCase {
         let a = FoodPhotoAnalyzer.parse(
             #"{"name":"Pâtes","kcal":"540 kcal","protein":"18","carbs":"80","fat":"12","note":""}"#
         )
-        XCTAssertEqual(a?.kcal, 540)
-        XCTAssertEqual(a?.protein, 18)
-        XCTAssertEqual(a?.carbs, 80)
+        XCTAssertEqual(a?.items.first?.kcal, 540)
+        XCTAssertEqual(a?.items.first?.protein, 18)
+        XCTAssertEqual(a?.items.first?.carbs, 80)
     }
 
     func testParsesFloatsAndRoundsCalories() {
         let a = FoodPhotoAnalyzer.parse(
             #"{"name":"Yaourt","kcal":118.6,"protein":10.2,"carbs":12.0,"fat":3.5,"note":""}"#
         )
-        XCTAssertEqual(a?.kcal, 119)          // arrondi, pas tronque
-        XCTAssertEqual(a?.protein ?? 0, 10.2, accuracy: 0.001)
+        XCTAssertEqual(a?.items.first?.kcal ?? 0, 118.6, accuracy: 0.001)
+        XCTAssertEqual(a?.items.first?.protein ?? 0, 10.2, accuracy: 0.001)
     }
 
     /// Un nom vide ne vaut rien: mieux vaut retomber sur l'estimation locale
@@ -69,16 +69,40 @@ final class FoodPhotoAnalyzerParsingTests: XCTestCase {
         let a = FoodPhotoAnalyzer.parse(
             #"{"name":"Eau","kcal":-50,"protein":-2,"carbs":0,"fat":0,"note":""}"#
         )
-        XCTAssertEqual(a?.kcal, 0)
-        XCTAssertEqual(a?.protein, 0)
+        XCTAssertEqual(a?.items.first?.kcal, 0)
+        XCTAssertEqual(a?.items.first?.protein, 0)
     }
 
     /// Champs manquants: on ne veut pas de crash, juste des zeros.
     func testMissingFieldsBecomeZero() {
         let a = FoodPhotoAnalyzer.parse(#"{"name":"Pomme"}"#)
         XCTAssertEqual(a?.name, "Pomme")
-        XCTAssertEqual(a?.kcal, 0)
-        XCTAssertEqual(a?.fat, 0)
+        XCTAssertEqual(a?.items.first?.kcal, 0)
+        XCTAssertEqual(a?.items.first?.fat, 0)
         XCTAssertEqual(a?.note, "")
+    }
+
+    // MARK: - Format par aliment (29 sept)
+
+    /// Une assiette de legumes sautes rendue en aliments separes, avec alternatives:
+    /// plus de "Soupe" globale impossible a corriger.
+    func testParsesItemsWithAlternativesAndQuestion() {
+        let a = FoodPhotoAnalyzer.parse(#"""
+        {"items":[{"name":"Haricots verts","grams":150,"preparation":"sauté","confidence":0.8,"alternatives":["Pois gourmands"],"kcal":60,"protein":3,"carbs":8,"fat":2},
+                  {"name":"Carottes","grams":80,"preparation":"sauté","confidence":0.7,"alternatives":[],"kcal":30,"protein":1,"carbs":6,"fat":1}],
+         "question":"Combien d'huile pour la cuisson ?","note":"poêlée de légumes"}
+        """#)
+        XCTAssertEqual(a?.items.map(\.name), ["Haricots verts", "Carottes"])
+        XCTAssertEqual(a?.items.first?.alternatives, ["Pois gourmands"])
+        XCTAssertEqual(a?.items.first?.preparation, "sauté")
+        XCTAssertEqual(a?.question, "Combien d'huile pour la cuisson ?")
+    }
+
+    func testEmptyItemsMeansNoFood() {
+        XCTAssertEqual(FoodPhotoAnalyzer.parse(#"{"items":[],"question":null,"note":"un chat"}"#)?.items, [])
+    }
+
+    func testMissingGramsGetsAVisibleDefault() {
+        XCTAssertEqual(FoodPhotoAnalyzer.parse(#"{"items":[{"name":"Riz"}]}"#)?.items.first?.grams, 150)
     }
 }

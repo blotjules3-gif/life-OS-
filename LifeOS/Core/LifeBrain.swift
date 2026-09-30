@@ -252,8 +252,8 @@ struct LifeBrainCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "brain.head.profile").font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Theme.onAccent).frame(width: 30, height: 30)
-                    .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    .foregroundStyle(Theme.textPrimary).frame(width: 30, height: 30)
+                    .glassControl(RoundedRectangle(cornerRadius: 9, style: .continuous))
                 Text("Pour toi aujourd'hui")
                     .font(.system(size: 20, weight: .black)).textCase(.uppercase).kerning(-0.3)
                     .foregroundStyle(Theme.textPrimary)

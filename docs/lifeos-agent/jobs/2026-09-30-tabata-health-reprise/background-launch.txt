@@ -1,0 +1,8 @@
+backgrounded · a745d447
+  claude agents             list sessions
+  claude attach a745d447    open in this terminal
+  claude logs a745d447      show recent output
+  claude stop a745d447      stop this session
+
+Starting background service…
+note: background session 5dcb20d5 keeps its own saved options, so the flags you passed started a copy as a745d447. Without flags, the same command continues 5dcb20d5 itself.

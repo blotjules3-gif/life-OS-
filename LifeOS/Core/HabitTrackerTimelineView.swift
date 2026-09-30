@@ -222,7 +222,7 @@ struct HabitTrackerTimelineView: View {
                     // En-tête Apple Preview supérieur avec statistiques et actions rapides
                     headerToolbar
                         .padding(.horizontal, 20)
-                        .padding(.top, 10)
+                        .padding(.top, 8)
                         .padding(.bottom, 12)
                 }
 
@@ -321,28 +321,16 @@ struct HabitTrackerTimelineView: View {
 
     private var headerToolbar: some View {
         HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 8) {
-                    Image(systemName: "clock.arrow.circlepath")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(Color.primary)
-                    Text("Habit Tracker 24h")
-                        .font(AppFont.sans(size: 20, weight: .black))
-                        .foregroundStyle(Color.primary)
-                }
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Habit Tracker")
+                    .font(.system(size: 28, weight: .black))
+                    .textCase(.uppercase)
+                    .kerning(-1)
+                    .foregroundStyle(Color.primary)
 
-                HStack(spacing: 6) {
-                    Text("\(validatedCount) sur \(totalItemsCount) validés")
-                        .font(AppFont.body(size: 11, weight: .bold))
-                        .foregroundStyle(Color.primary.opacity(0.85))
-
-                    Text("·")
-                        .foregroundStyle(Color.secondary)
-
-                    Text("Minuit à 24h · Vue continue")
-                        .font(AppFont.body(size: 11, weight: .medium))
-                        .foregroundStyle(Color.secondary)
-                }
+                Text("\(validatedCount) SUR \(totalItemsCount) VALIDÉS · VUE 24H")
+                    .monoLabel(11)
+                    .foregroundStyle(Theme.textSecondary)
             }
 
             Spacer()

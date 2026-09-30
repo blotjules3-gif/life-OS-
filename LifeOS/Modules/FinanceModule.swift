@@ -4,6 +4,45 @@ import Charts
 
 extension ShapeStyle where Self == Color { static var finTint: Color { AppCategory.finance.tint } }
 
+/// Champ de montant avec son erreur sous le champ (voir `AmountInput`).
+/// L'erreur n'apparait qu'une fois quelque chose tape: un formulaire neuf ne
+/// s'ouvre pas en rouge.
+private struct AmountRow: View {
+    let title: String
+    @Binding var text: String
+    var rules: AmountInput.Rules = .positive
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(title); Spacer()
+                TextField("0", text: $text)
+                    .keyboardType(rules.allowNegative ? .numbersAndPunctuation : .decimalPad)
+                    .multilineTextAlignment(.trailing)
+            }
+            if !text.isEmpty, let m = AmountInput.parse(text, rules: rules).message {
+                Text(m).font(.caption).foregroundStyle(Theme.warning)
+            }
+        }
+    }
+}
+
+/// Enregistre et ne ferme le formulaire que si la base a bien ecrit.
+@MainActor
+private func commitForm(_ ctx: ModelContext, error message: Binding<String?>, dismiss: DismissAction) {
+    do { try ctx.save(); dismiss() }
+    catch { ctx.rollback(); message.wrappedValue = "Enregistrement impossible, réessaie. (\(error.localizedDescription))" }
+}
+
+private struct FormError: View {
+    let message: String?
+    var body: some View {
+        if let message {
+            Section { Label(message, systemImage: "exclamationmark.triangle.fill").foregroundStyle(Theme.warning) }
+        }
+    }
+}
+
 // MARK: - Hub Finances
 
 
@@ -27,14 +66,14 @@ struct AccountsView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Patrimoine liquide").font(.caption).foregroundStyle(Theme.textSecondary)
                         Text(total, format: .currency(code: "EUR")).font(.system(size: 36, weight: .bold)).foregroundStyle(Theme.textPrimary)
-                        Text("Dépensé ce mois : \(monthSpend, format: .currency(code: "EUR"))").font(.caption).foregroundStyle(.orange)
+                        Text("Dépensé ce mois : \(monthSpend, format: .currency(code: "EUR"))").font(.caption).foregroundStyle(Theme.warning)
                     }.frame(maxWidth: .infinity, alignment: .leading).card()
 
                     // Alerte dépense anormale / risque découvert
                     if let alert = anomalyAlert() {
-                        HStack { Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.red); Text(alert).font(.footnote).foregroundStyle(Theme.textPrimary) }
+                        HStack { Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Theme.danger); Text(alert).font(.footnote).foregroundStyle(Theme.textPrimary) }
                             .frame(maxWidth: .infinity, alignment: .leading).padding(12)
-                            .background(Color.red.opacity(0.20), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+                            .background(Theme.danger.opacity(0.20), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
                     }
 
                     HStack {
@@ -46,7 +85,7 @@ struct AccountsView: View {
                             Image(systemName: a.kind == "Épargne" ? "banknote" : a.kind == "Cash" ? "eurosign.circle" : "creditcard").foregroundStyle(.finTint)
                             VStack(alignment: .leading) { Text(a.name).foregroundStyle(Theme.textPrimary); Text(a.kind).font(.caption).foregroundStyle(Theme.textSecondary) }
                             Spacer()
-                            Text(a.balance, format: .currency(code: "EUR")).bold().foregroundStyle(a.balance < 0 ? .red : Theme.textPrimary)
+                            Text(a.balance, format: .currency(code: "EUR")).bold().foregroundStyle(a.balance < 0 ? Theme.danger : Theme.textPrimary)
                         }.card(padding: 12)
                             .contextMenu { Button(role: .destructive) { LedgerService.deleteAccount(ctx, a) } label: { Label("Supprimer", systemImage: "trash") } }
                     }
@@ -60,7 +99,7 @@ struct AccountsView: View {
                         HStack {
                             VStack(alignment: .leading) { Text(t.note.isEmpty ? t.category : t.note).foregroundStyle(Theme.textPrimary); Text(t.date, style: .date).font(.caption).foregroundStyle(Theme.textSecondary) }
                             Spacer()
-                            Text(t.amount, format: .currency(code: "EUR")).bold().foregroundStyle(t.amount < 0 ? .red : .green)
+                            Text(t.amount, format: .currency(code: "EUR")).bold().foregroundStyle(t.amount < 0 ? Theme.danger : Theme.success)
                         }.card(padding: 12)
                             .contextMenu { Button(role: .destructive) { LedgerService.deleteTransaction(ctx, t) } label: { Label("Supprimer", systemImage: "trash") } }
                     }
@@ -85,17 +124,21 @@ struct AccountEditor: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""; @State private var kind = "Courant"; @State private var balance = ""
+    @State private var error: String?
+    private var parsed: AmountInput.Parsed { AmountInput.parse(balance, rules: .init(required: false, allowNegative: true, allowZero: true)) }
+    private var canSave: Bool { !name.trimmingCharacters(in: .whitespaces).isEmpty && parsed.message == nil }
     var body: some View {
         NavigationStack {
             Form {
                 TextField("Nom du compte", text: $name)
                 Picker("Type", selection: $kind) { ForEach(["Courant","Épargne","Cash"], id: \.self) { Text($0) } }
-                HStack { Text("Solde"); Spacer(); TextField("0", text: $balance).keyboardType(.numbersAndPunctuation).multilineTextAlignment(.trailing) }
+                AmountRow(title: "Solde", text: $balance, rules: .init(required: false, allowNegative: true, allowZero: true))
+                FormError(message: error)
             }
             .navigationTitle("Nouveau compte").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Ajouter") { ctx.insert(Account(name: name, kind: kind, balance: Double(balance.replacingOccurrences(of: ",", with: ".")) ?? 0)); dismiss() }.disabled(name.isEmpty) }
+                ToolbarItem(placement: .confirmationAction) { Button("Ajouter") { ctx.insert(Account(name: name, kind: kind, balance: parsed.value ?? 0)); commitForm(ctx, error: $error, dismiss: dismiss) }.disabled(!canSave) }
             }
         }
     }
@@ -107,30 +150,41 @@ struct TxnEditor: View {
     let accounts: [String]
     @State private var amount = ""; @State private var isExpense = true
     @State private var category = "Courses"; @State private var note = ""; @State private var account = ""
+    @State private var error: String?
     private let cats = ["Courses","Restau","Transport","Logement","Loisirs","Santé","Shopping","Salaire","Divers"]
+    private var parsed: AmountInput.Parsed { AmountInput.parse(amount) }
     var body: some View {
         NavigationStack {
             Form {
+                // Sans compte, l'operation n'avait nulle part ou aller: le formulaire
+                // se fermait et rien n'etait enregistre, sans un mot.
+                if accounts.isEmpty {
+                    Section { Label("Crée d'abord un compte : une opération doit appartenir à un compte.", systemImage: "info.circle") }
+                }
                 Picker("Type", selection: $isExpense) { Text("Dépense").tag(true); Text("Revenu").tag(false) }.pickerStyle(.segmented)
-                HStack { Text("Montant"); Spacer(); TextField("0", text: $amount).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
+                AmountRow(title: "Montant", text: $amount)
                 Picker("Catégorie", selection: $category) { ForEach(cats, id: \.self) { Text($0) } }
                 if !accounts.isEmpty { Picker("Compte", selection: $account) { ForEach(accounts, id: \.self) { Text($0) } } }
                 TextField("Note", text: $note)
+                FormError(message: error)
             }
             .navigationTitle("Nouvelle opération").navigationBarTitleDisplayMode(.inline)
             .onAppear { account = accounts.first ?? "Courant" }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
-                    let v = (Double(amount.replacingOccurrences(of: ",", with: ".")) ?? 0) * (isExpense ? -1 : 1)
+                    guard let base = parsed.value else { return }
+                    let v = base * (isExpense ? -1 : 1)
                     // Passe par LedgerService : le solde est RECALCULE depuis les
                     // operations. L'ancien code faisait `acc.balance += v` ici, et rien
                     // ne le defaisait a la suppression ou a la modification.
-                    if let acc = (try? ctx.fetch(FetchDescriptor<Account>()))?.first(where: { $0.name == account }) {
-                        LedgerService.addTransaction(ctx, amount: v, category: category, account: acc, note: note)
+                    guard let acc = (try? ctx.fetch(FetchDescriptor<Account>()))?.first(where: { $0.name == account }) else {
+                        error = "Compte « \(account) » introuvable. Choisis un compte existant."
+                        return
                     }
-                    dismiss()
-                }.disabled(amount.isEmpty) }
+                    _ = LedgerService.addTransaction(ctx, amount: v, category: category, account: acc, note: note)
+                    commitForm(ctx, error: $error, dismiss: dismiss)
+                }.disabled(parsed.value == nil || accounts.isEmpty) }
             }
         }
     }
@@ -156,11 +210,11 @@ struct BudgetView: View {
                                     Circle().fill(Color(hex: UInt(e.colorHex))).frame(width: 12, height: 12)
                                     Text(e.name).font(.headline).foregroundStyle(Theme.textPrimary)
                                     Spacer()
-                                    Text("\(Int(e.spent)) / \(Int(e.monthlyBudget)) €").font(.subheadline.bold()).foregroundStyle(e.remaining < 0 ? .red : Theme.textPrimary)
+                                    Text("\(Int(e.spent)) / \(Int(e.monthlyBudget)) €").font(.subheadline.bold()).foregroundStyle(e.remaining < 0 ? Theme.danger : Theme.textPrimary)
                                 }
-                                ProgressView(value: e.progress).tint(e.remaining < 0 ? .red : Color(hex: UInt(e.colorHex)))
+                                ProgressView(value: e.progress).tint(e.remaining < 0 ? Theme.danger : Color(hex: UInt(e.colorHex)))
                                 HStack {
-                                    Text(e.remaining >= 0 ? "Reste \(Int(e.remaining))€" : "Dépassé de \(Int(-e.remaining))€").font(.caption).foregroundStyle(e.remaining < 0 ? .red : Theme.textSecondary)
+                                    Text(e.remaining >= 0 ? "Reste \(Int(e.remaining))€" : "Dépassé de \(Int(-e.remaining))€").font(.caption).foregroundStyle(e.remaining < 0 ? Theme.danger : Theme.textSecondary)
                                     Spacer()
                                     Button { e.spent = max(0, e.spent-10) } label: {
                                         Text("-10").font(.caption.bold())
@@ -171,8 +225,8 @@ struct BudgetView: View {
                                     Button { e.spent += 10 } label: {
                                         Text("+10€").font(.caption.bold())
                                             .padding(.horizontal, 12).padding(.vertical, 6)
-                                            .background(Color.accentColor, in: Capsule())
-                                            .foregroundStyle(Theme.onAccent)
+                                            .glassControl(Capsule())
+                                            .foregroundStyle(Theme.textPrimary)
                                     }.buttonStyle(.plain)
                                 }
                             }.card()
@@ -205,19 +259,25 @@ struct BudgetView: View {
 struct EnvelopeEditor: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
-    @State private var name = ""; @State private var budget = ""; @State private var color = 0x618EF1
-    private let colors = [0x618EF1, 0x4CC38A, 0xF1746C, 0xE0A23C, 0x9B6CF1, 0x3CD0C8]
+    @State private var name = ""; @State private var budget = ""; @State private var color = 0x2185FF
+    @State private var error: String?
+    private let colors = [0x2185FF, 0x47CC5C, 0xFF2E33, 0xFFB83D, 0xA852F5, 0x24C7CC]
+    private var parsed: AmountInput.Parsed { AmountInput.parse(budget) }
     var body: some View {
         NavigationStack {
             Form {
                 TextField("Nom (ex: Courses)", text: $name)
-                HStack { Text("Plafond mensuel"); Spacer(); TextField("0", text: $budget).keyboardType(.numberPad).multilineTextAlignment(.trailing) }
+                AmountRow(title: "Plafond mensuel", text: $budget)
                 HStack { ForEach(colors, id: \.self) { c in Circle().fill(Color(hex: UInt(c))).frame(width: 28, height: 28).overlay(color == c ? Circle().stroke(.white, lineWidth: 2) : nil).onTapGesture { color = c } } }
+                FormError(message: error)
             }
             .navigationTitle("Nouvelle enveloppe").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Créer") { ctx.insert(Envelope(name: name, monthlyBudget: Double(budget) ?? 0, colorHex: color)); dismiss() }.disabled(name.isEmpty) }
+                ToolbarItem(placement: .confirmationAction) { Button("Créer") {
+                    guard let b = parsed.value else { return }
+                    ctx.insert(Envelope(name: name, monthlyBudget: b, colorHex: color)); commitForm(ctx, error: $error, dismiss: dismiss)
+                }.disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || parsed.value == nil) }
             }
         }
     }
@@ -239,14 +299,14 @@ struct SubscriptionsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Coût mensuel des abonnements").font(.caption).foregroundStyle(Theme.textSecondary)
                         Text(monthlyTotal, format: .currency(code: "EUR")).font(.system(size: 32, weight: .bold)).foregroundStyle(Theme.textPrimary)
-                        Text("Soit \(monthlyTotal*12, format: .currency(code: "EUR")) / an").font(.caption).foregroundStyle(.orange)
+                        Text("Soit \(monthlyTotal*12, format: .currency(code: "EUR")) / an").font(.caption).foregroundStyle(Theme.warning)
                     }.frame(maxWidth: .infinity, alignment: .leading).card()
 
                     ForEach(subs) { s in
                         VStack(alignment: .leading, spacing: 6) {
                             HStack {
                                 Text(s.name).font(.headline).foregroundStyle(s.active ? Theme.textPrimary : Theme.textSecondary)
-                                if forgotten(s) { Text("Oublié ?").font(.caption2.bold()).padding(.horizontal,6).padding(.vertical,2).background(Color.orange.opacity(0.2), in: Capsule()).foregroundStyle(.orange) }
+                                if forgotten(s) { Text("Oublié ?").font(.caption2.bold()).padding(.horizontal,6).padding(.vertical,2).background(Theme.warning.opacity(0.2), in: Capsule()).foregroundStyle(Theme.warning) }
                                 Spacer()
                                 Text("\(s.amount, format: .currency(code: "EUR"))/\(s.cycle == "Annuel" ? "an" : "mois")").bold().foregroundStyle(.finTint)
                             }
@@ -254,7 +314,7 @@ struct SubscriptionsView: View {
                                 Text("Prochain : \(s.nextDate, style: .date)").font(.caption).foregroundStyle(Theme.textSecondary)
                                 Spacer()
                                 Toggle("Actif", isOn: Binding(get: { s.active }, set: { s.active = $0 })).labelsHidden().tint(.finTint)
-                                Link(destination: cancelURL(s.name)) { Text("Résilier").font(.caption.bold()).foregroundStyle(.red) }
+                                Link(destination: cancelURL(s.name)) { Text("Résilier").font(.caption.bold()).foregroundStyle(Theme.danger) }
                             }
                         }.card()
                             .contextMenu { Button(role: .destructive) { ctx.delete(s) } label: { Label("Supprimer", systemImage: "trash") } }
@@ -293,18 +353,24 @@ struct SubscriptionEditor: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""; @State private var amount = ""; @State private var cycle = "Mensuel"; @State private var next = Date()
+    @State private var error: String?
+    private var parsed: AmountInput.Parsed { AmountInput.parse(amount) }
     var body: some View {
         NavigationStack {
             Form {
                 TextField("Nom (Netflix, Spotify…)", text: $name)
-                HStack { Text("Montant"); Spacer(); TextField("0", text: $amount).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
+                AmountRow(title: "Montant", text: $amount)
                 Picker("Cycle", selection: $cycle) { Text("Mensuel").tag("Mensuel"); Text("Annuel").tag("Annuel") }
                 DatePicker("Prochain prélèvement", selection: $next, displayedComponents: .date)
+                FormError(message: error)
             }
             .navigationTitle("Nouvel abonnement").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Ajouter") { ctx.insert(Subscription(name: name, amount: Double(amount.replacingOccurrences(of: ",", with: ".")) ?? 0, cycle: cycle, nextDate: next)); dismiss() }.disabled(name.isEmpty) }
+                ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
+                    guard let a = parsed.value else { return }
+                    ctx.insert(Subscription(name: name, amount: a, cycle: cycle, nextDate: next)); commitForm(ctx, error: $error, dismiss: dismiss)
+                }.disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || parsed.value == nil) }
             }
         }
     }
@@ -353,7 +419,7 @@ struct SplitView: View {
                                 Text(m).foregroundStyle(Theme.textPrimary)
                                 Spacer()
                                 Text(b >= 0 ? "+\(b, format: .currency(code: "EUR"))" : "\(b, format: .currency(code: "EUR"))")
-                                    .bold().foregroundStyle(b >= 0 ? .green : .red)
+                                    .bold().foregroundStyle(b >= 0 ? Theme.success : Theme.danger)
                             }
                         }
                         Text(settlementHint).font(.caption).foregroundStyle(Theme.textSecondary).padding(.top, 4)
@@ -390,11 +456,13 @@ struct SplitEditor: View {
     let members: [String]
     @State private var desc = ""; @State private var amount = ""; @State private var payer = ""
     @State private var selected: Set<String> = []
+    @State private var error: String?
+    private var parsed: AmountInput.Parsed { AmountInput.parse(amount) }
     var body: some View {
         NavigationStack {
             Form {
                 TextField("Description", text: $desc)
-                HStack { Text("Montant"); Spacer(); TextField("0", text: $amount).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
+                AmountRow(title: "Montant", text: $amount)
                 Picker("Payé par", selection: $payer) { ForEach(members, id: \.self) { Text($0) } }
                 Section("Partagé entre") {
                     ForEach(members, id: \.self) { m in
@@ -402,15 +470,19 @@ struct SplitEditor: View {
                             HStack { Text(m).foregroundStyle(Theme.textPrimary); Spacer(); if selected.contains(m) { Image(systemName: "checkmark").foregroundStyle(.finTint) } }
                         }
                     }
+                    if selected.isEmpty { Text("Choisis au moins une personne.").font(.caption).foregroundStyle(Theme.warning) }
                 }
+                FormError(message: error)
             }
             .navigationTitle("Nouvelle dépense").navigationBarTitleDisplayMode(.inline)
             .onAppear { payer = members.first ?? "Moi"; selected = Set(members) }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
-                    ctx.insert(SplitExpense(payer: payer, amount: Double(amount.replacingOccurrences(of: ",", with: ".")) ?? 0, desc: desc, participants: selected.joined(separator: ","))); dismiss()
-                }.disabled(amount.isEmpty) }
+                    guard let a = parsed.value, !selected.isEmpty else { return }
+                    ctx.insert(SplitExpense(payer: payer, amount: a, desc: desc, participants: selected.sorted().joined(separator: ",")))
+                    commitForm(ctx, error: $error, dismiss: dismiss)
+                }.disabled(parsed.value == nil || selected.isEmpty) }
             }
         }
     }
@@ -440,8 +512,8 @@ struct SavingsView: View {
                                     Button { g.current += g.monthly } label: {
                                         Text("+\(Int(g.monthly))€").font(.caption.bold())
                                             .padding(.horizontal, 12).padding(.vertical, 6)
-                                            .background(Color.accentColor, in: Capsule())
-                                            .foregroundStyle(Theme.onAccent)
+                                            .glassControl(Capsule())
+                                            .foregroundStyle(Theme.textPrimary)
                                     }.buttonStyle(.plain)
                                 }
                             }.card()
@@ -461,18 +533,30 @@ struct SavingsEditor: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""; @State private var target = ""; @State private var current = ""; @State private var monthly = ""
+    @State private var error: String?
+    private var t: AmountInput.Parsed { AmountInput.parse(target) }
+    private var c: AmountInput.Parsed { AmountInput.parse(current, rules: .optional) }
+    private var m: AmountInput.Parsed { AmountInput.parse(monthly, rules: .optional) }
+    private var canSave: Bool {
+        !name.trimmingCharacters(in: .whitespaces).isEmpty && t.value != nil && c.message == nil && m.message == nil
+    }
     var body: some View {
         NavigationStack {
             Form {
                 TextField("Objectif (ex: Apport immo)", text: $name)
-                HStack { Text("Montant cible"); Spacer(); TextField("0", text: $target).keyboardType(.numberPad).multilineTextAlignment(.trailing) }
-                HStack { Text("Déjà épargné"); Spacer(); TextField("0", text: $current).keyboardType(.numberPad).multilineTextAlignment(.trailing) }
-                HStack { Text("Effort mensuel"); Spacer(); TextField("0", text: $monthly).keyboardType(.numberPad).multilineTextAlignment(.trailing) }
+                AmountRow(title: "Montant cible", text: $target)
+                AmountRow(title: "Déjà épargné", text: $current, rules: .optional)
+                AmountRow(title: "Effort mensuel", text: $monthly, rules: .optional)
+                FormError(message: error)
             }
             .navigationTitle("Nouvel objectif").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Créer") { ctx.insert(SavingsGoal(name: name, target: Double(target) ?? 0, current: Double(current) ?? 0, monthly: Double(monthly) ?? 0)); dismiss() }.disabled(name.isEmpty) }
+                ToolbarItem(placement: .confirmationAction) { Button("Créer") {
+                    guard let tv = t.value else { return }
+                    ctx.insert(SavingsGoal(name: name, target: tv, current: c.value ?? 0, monthly: m.value ?? 0))
+                    commitForm(ctx, error: $error, dismiss: dismiss)
+                }.disabled(!canSave) }
             }
         }
     }
@@ -505,7 +589,7 @@ struct BankOverviewView: View {
                         Text("Solde global").font(.subheadline).foregroundStyle(.secondary)
                         Text(total, format: .currency(code: "EUR"))
                             .font(.system(size: 40, weight: .bold))
-                            .foregroundStyle(total < 0 ? .red : Theme.textPrimary)
+                            .foregroundStyle(total < 0 ? Theme.danger : Theme.textPrimary)
                         Text("\(accounts.count) compte\(accounts.count > 1 ? "s" : "") agrégé\(accounts.count > 1 ? "s" : "")")
                             .font(.caption).foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity).padding(.vertical, 22).card()
@@ -518,10 +602,10 @@ struct BankOverviewView: View {
 
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Ce mois-ci").font(.headline).foregroundStyle(Theme.textPrimary)
-                        cashRow("Entrées", income, .green)
-                        cashRow("Sorties", expense, .red)
+                        cashRow("Entrées", income, Theme.success)
+                        cashRow("Sorties", expense, Theme.danger)
                         Divider()
-                        cashRow("Net", income + expense, (income + expense) >= 0 ? .green : .red)
+                        cashRow("Net", income + expense, (income + expense) >= 0 ? Theme.success : Theme.danger)
                     }.card()
 
                     if accounts.isEmpty {
@@ -540,7 +624,7 @@ struct BankOverviewView: View {
                                     }
                                     Spacer()
                                     Text(a.balance, format: .currency(code: "EUR")).bold()
-                                        .foregroundStyle(a.balance < 0 ? .red : Theme.textPrimary)
+                                        .foregroundStyle(a.balance < 0 ? Theme.danger : Theme.textPrimary)
                                 }.padding(.vertical, 11)
                                 Divider().opacity(a.persistentModelID == accounts.last?.persistentModelID ? 0 : 1)
                             }

@@ -177,7 +177,7 @@ struct MoodJournalView: View {
                                         if !e.gratitude.isEmpty { Label(e.gratitude, systemImage: "infinity").font(.caption).foregroundStyle(.mindTint) }
                                     }
                                     Spacer()
-                                    Button(role: .destructive) { ctx.delete(e) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(.red.opacity(0.6))
+                                    Button(role: .destructive) { ctx.delete(e) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(Theme.danger.opacity(0.6))
                                 }.padding(.vertical, 4)
                             }
                         }.card()
@@ -221,10 +221,13 @@ struct ScreenDetoxView: View {
             Theme.background
             ScrollView {
                 VStack(spacing: 16) {
-                    IntegrationNotice(text: "Le temps d'écran système d'iOS (Screen Time) n'est pas lisible par une app tierce pour des raisons de confidentialité Apple. Deux options réelles : (1) la saisie manuelle ci-dessous, ou (2) une extension « Screen Time API » (DeviceActivity) qui demande une autorisation spéciale et permet de poser des limites/bloqueurs façon Forest.")
+                    ScreenBlockCard()
                     VStack(spacing: 12) {
+                        Text("Suivi manuel").font(.headline).frame(maxWidth: .infinity, alignment: .leading)
+                        Text("iOS ne laisse pas une app lire ton temps d'écran : note-le toi-même depuis Réglages > Temps d'écran.")
+                            .font(.caption).foregroundStyle(Theme.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
                         ZStack {
-                            ProgressRing(progress: Double(todayMinutes)/Double(max(1,goalHours*60)), lineWidth: 14, tint: todayMinutes > goalHours*60 ? .red : .mindTint)
+                            ProgressRing(progress: Double(todayMinutes)/Double(max(1,goalHours*60)), lineWidth: 14, tint: todayMinutes > goalHours*60 ? Theme.danger : .mindTint)
                             VStack {
                                 Text("\(todayMinutes/60)h\(String(format: "%02d", todayMinutes%60))").font(.title.bold()).foregroundStyle(Theme.textPrimary)
                                 Text("/ \(goalHours)h objectif").font(.caption).foregroundStyle(Theme.textSecondary)

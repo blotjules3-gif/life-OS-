@@ -1,0 +1,7 @@
+backgrounded · 5dcb20d5
+  claude agents             list sessions
+  claude attach 5dcb20d5    open in this terminal
+  claude logs 5dcb20d5      show recent output
+  claude stop 5dcb20d5      stop this session
+
+Starting background service…

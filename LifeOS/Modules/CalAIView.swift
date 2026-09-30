@@ -15,6 +15,8 @@ struct CalAIView: View {
     @State private var selectedDay = Calendar.current.startOfDay(for: .now)
     @State private var showAdd = false
     @State private var showScan = false
+    /// Ligne ouverte en modification. Taper un repas l'ouvre.
+    @State private var editing: FoodEntry?
 
     private let cal = Calendar.current
 
@@ -48,6 +50,7 @@ struct CalAIView: View {
         } }
         .sheet(isPresented: $showAdd) { FoodEditor() }
         .sheet(isPresented: $showScan) { BarcodeAddSheet(defaultMeal: currentMeal) }
+        .sheet(item: $editing) { FoodEntryEditor(entry: $0) }
         .task { syncNutritionToContext() }
         .onChange(of: foods.count) { _, _ in syncNutritionToContext() }
     }
@@ -67,9 +70,9 @@ struct CalAIView: View {
                     Image(systemName: "barcode.viewfinder").font(.system(size: 17, weight: .bold))
                     Text("Scanner").font(.system(size: 15, weight: .bold))
                 }
-                .foregroundStyle(Theme.onAccent)
+                .foregroundStyle(Theme.textPrimary)
                 .frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(Color.accentColor, in: Capsule())
+                .glassControl(Capsule())
             }
             Button { showAdd = true } label: {
                 HStack(spacing: 8) {
@@ -140,7 +143,7 @@ struct CalAIView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text("\(left)")
                     .font(.system(size: 46, weight: .heavy))
-                    .foregroundStyle(left < 0 ? .red : .primary)
+                    .foregroundStyle(left < 0 ? Theme.danger : .primary)
                     .contentTransition(.numericText())
                 Text(left >= 0 ? "Calories restantes" : "Calories dépassées")
                     .font(.subheadline).foregroundStyle(.secondary)
@@ -239,7 +242,17 @@ struct CalAIView: View {
                 }
                 .padding(.horizontal, 14).padding(.vertical, 10)
                 .contentShape(Rectangle())
-                .contextMenu { Button(role: .destructive) { ctx.delete(f); Haptics.tap() } label: { Label("Supprimer", systemImage: "trash") } }
+                .onTapGesture { editing = f }
+                .accessibilityAddTraits(.isButton)
+                .accessibilityHint("Modifier ce repas")
+                .contextMenu {
+                    Button { editing = f } label: { Label("Modifier", systemImage: "pencil") }
+                    Button(role: .destructive) {
+                        // Via le service: un echec remet la ligne au lieu de la perdre
+                        // en silence.
+                        try? FoodLogService.delete(f, in: ctx); Haptics.tap()
+                    } label: { Label("Supprimer", systemImage: "trash") }
+                }
                 if f.id != items.sorted(by: { $0.date < $1.date }).last?.id {
                     Divider().overlay(Theme.hairline).padding(.leading, 14)
                 }
@@ -336,6 +349,7 @@ struct BarcodeAddSheet: View {
     @State private var product: FoodProduct?
     @State private var grams = "100"
     @State private var meal = "Déjeuner"
+    @State private var saveError: String?
     @State private var loadingCode: String?
     @State private var notFound = false
     @State private var manual = ""
@@ -447,11 +461,21 @@ struct BarcodeAddSheet: View {
                 Picker("Repas", selection: $meal) { ForEach(meals, id: \.self) { Text($0) } }
             }
             Section {
+                if let saveError {
+                    Label(saveError, systemImage: "exclamationmark.triangle.fill").foregroundStyle(Theme.warning)
+                }
                 Button {
-                    ctx.insert(FoodEntry(date: .now, name: p.name, calories: kcal,
-                                         protein: p.protein * factor, carbs: p.carbs * factor,
-                                         fat: p.fat * factor, meal: meal))
-                    Haptics.success(); dismiss()
+                    // Avant: insertion sans enregistrement, puis fermeture. La feuille se
+                    // ferme maintenant SEULEMENT si le repas est vraiment ecrit.
+                    do {
+                        try FoodLogService.log([.init(name: p.name, calories: kcal,
+                                                      protein: p.protein * factor, carbs: p.carbs * factor,
+                                                      fat: p.fat * factor, meal: meal)], in: ctx)
+                        Haptics.success(); dismiss()
+                    } catch {
+                        Haptics.warning()
+                        saveError = error.localizedDescription
+                    }
                 } label: { Text("Ajouter au journal").frame(maxWidth: .infinity).bold() }
                     .buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(Color.accentColor)
                     .disabled(factor <= 0)

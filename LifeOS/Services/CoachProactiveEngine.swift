@@ -104,18 +104,17 @@ enum CoachProactiveEngine {
         return out
     }
 
-    /// Sommeil qui chute 5 jours consécutifs (via App Group `mood_recent_7d`
-    /// et clé `lastSleepHours` — approximation locale sans HealthKit direct).
+    /// The latest recorded duration is a single observation, not a multi-day trend.
     private static func scanSleepDeclining() -> [ProactiveNudge] {
         let ud = UserDefaults.standard
-        let currentSleep = ud.integer(forKey: "lastSleepHours")
+        let currentSleep = ud.double(forKey: "lastSleepHours")
         guard currentSleep > 0, currentSleep < 6 else { return [] }
-        // TODO Phase P1.8 : brancher HealthKit pour tendance réelle
+        let duration = currentSleep.formatted(.number.precision(.fractionLength(0...1)))
         return [ProactiveNudge(
             category: "sleep",
-            title: "Ton sommeil chute",
-            body: "Cette nuit : \(currentSleep)h. On regarde ce qui bloque ?",
-            prefilledMessage: "Mon sommeil est descendu à \(currentSleep)h. Qu'est-ce que je peux ajuster ce soir pour mieux dormir demain ?",
+            title: "Une durée de sommeil courte",
+            body: "Durée enregistrée : \(duration) h. On fait le point ?",
+            prefilledMessage: "Ma dernière durée de sommeil enregistrée est de \(duration) h. Qu'est-ce que je peux ajuster ce soir ?",
             urgency: .medium,
             signal: .sleepDeclining
         )]

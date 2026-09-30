@@ -1,0 +1,560 @@
+[
+ {
+  "code": "3168930010265",
+  "kind": "aliment",
+  "name": "cruesly mélange de noix",
+  "expect": "found"
+ },
+ {
+  "code": "7613034626844",
+  "kind": "aliment",
+  "name": "Céréales Chocapic",
+  "expect": "found"
+ },
+ {
+  "code": "3229820019307",
+  "kind": "aliment",
+  "name": "Flocons d'avoine",
+  "expect": "found"
+ },
+ {
+  "code": "20003166",
+  "kind": "aliment",
+  "name": "Haferflocken",
+  "expect": "found"
+ },
+ {
+  "code": "5010029000016",
+  "kind": "aliment",
+  "name": "Weetabix",
+  "expect": "found"
+ },
+ {
+  "code": "3175680011480",
+  "kind": "aliment",
+  "name": "Sésame",
+  "expect": "found"
+ },
+ {
+  "code": "8000500310427",
+  "kind": "aliment",
+  "name": "Biscuits croquants au coeur onctueux de Nutella®",
+  "expect": "found"
+ },
+ {
+  "code": "7622210713780",
+  "kind": "aliment",
+  "name": "Belvita Petit Déjeuner Chocolat",
+  "expect": "found"
+ },
+ {
+  "code": "7622201133337",
+  "kind": "aliment",
+  "name": "Figolu",
+  "expect": "found"
+ },
+ {
+  "code": "7622210601988",
+  "kind": "aliment",
+  "name": "Granola",
+  "expect": "found"
+ },
+ {
+  "code": "3033491588136",
+  "kind": "aliment",
+  "name": "HIPRO 15g protéines",
+  "expect": "found"
+ },
+ {
+  "code": "3023290634578",
+  "kind": "aliment",
+  "name": "Yaos le yaourt à la Grecque",
+  "expect": "found"
+ },
+ {
+  "code": "3023291122005",
+  "kind": "aliment",
+  "name": "Yaos Yaourt à la Grecque Nature 4 x 150g",
+  "expect": "found"
+ },
+ {
+  "code": "3033490004743",
+  "kind": "aliment",
+  "name": "Skyr",
+  "expect": "found"
+ },
+ {
+  "code": "3023290030585",
+  "kind": "aliment",
+  "name": "Skyr myrtille 2 x 140 g",
+  "expect": "found"
+ },
+ {
+  "code": "3154230809869",
+  "kind": "aliment",
+  "name": "Le Bon Paris à l'Étouffée",
+  "expect": "found"
+ },
+ {
+  "code": "3302740047367",
+  "kind": "aliment",
+  "name": "Le Supérieur - à l'Etouffée - Conservation sans Nitrite",
+  "expect": "found"
+ },
+ {
+  "code": "3302740047404",
+  "kind": "aliment",
+  "name": "Le Supérieur -25% de Sel - Conservation sans Nitrite",
+  "expect": "found"
+ },
+ {
+  "code": "3154230809302",
+  "kind": "aliment",
+  "name": "Jambon Le Bon Paris",
+  "expect": "found"
+ },
+ {
+  "code": "5060042641000",
+  "kind": "aliment",
+  "name": "Lightly sea salted crisps",
+  "expect": "found"
+ },
+ {
+  "code": "5053990155354",
+  "kind": "aliment",
+  "name": "Sour Cream & Onion",
+  "expect": "found"
+ },
+ {
+  "code": "3168930002987",
+  "kind": "aliment",
+  "name": "Lay's Cuites au four nature",
+  "expect": "found"
+ },
+ {
+  "code": "5053990167807",
+  "kind": "aliment",
+  "name": "Pringles Original",
+  "expect": "found"
+ },
+ {
+  "code": "3046920022651",
+  "kind": "aliment",
+  "name": "70% Cacao noir intense",
+  "expect": "found"
+ },
+ {
+  "code": "3480341000674",
+  "kind": "aliment",
+  "name": "Fresh Square 0% - Plain",
+  "expect": "found"
+ },
+ {
+  "code": "3161711001971",
+  "kind": "aliment",
+  "name": "Caprice des dieux",
+  "expect": "found"
+ },
+ {
+  "code": "3412290070101",
+  "kind": "aliment",
+  "name": "Paysan Breton - Le Fromage Fouetté Madame Loïk - Nature au Sel de Guérande",
+  "expect": "found"
+ },
+ {
+  "code": "3017620425035",
+  "kind": "aliment",
+  "name": "Nutella",
+  "expect": "found"
+ },
+ {
+  "code": "3017620422003",
+  "kind": "aliment",
+  "name": "Nutella",
+  "expect": "found"
+ },
+ {
+  "code": "50184453",
+  "kind": "aliment",
+  "name": "Yeast Extract",
+  "expect": "found"
+ },
+ {
+  "code": "80177173",
+  "kind": "aliment",
+  "name": "",
+  "expect": "found"
+ },
+ {
+  "code": "8076800195057",
+  "kind": "aliment",
+  "name": "Spaghetti N.5",
+  "expect": "found"
+ },
+ {
+  "code": "8076809529433",
+  "kind": "aliment",
+  "name": "Barilla Penne Rigate Fullkorn 500g",
+  "expect": "found"
+ },
+ {
+  "code": "8076802085738",
+  "kind": "aliment",
+  "name": "Penne Rigate N°73",
+  "expect": "found"
+ },
+ {
+  "code": "3046920029759",
+  "kind": "aliment",
+  "name": "Lindt Excellence 90% 100g",
+  "expect": "found"
+ },
+ {
+  "code": "3046920022606",
+  "kind": "aliment",
+  "name": "Excellence 85% Cacao Chocolat Noir Puissant",
+  "expect": "found"
+ },
+ {
+  "code": "7622210449283",
+  "kind": "aliment",
+  "name": "Galletas de Chocolate Príncipe",
+  "expect": "found"
+ },
+ {
+  "code": "3256540000698",
+  "kind": "aliment",
+  "name": "Pains au lait x10",
+  "expect": "found"
+ },
+ {
+  "code": "5449000214911",
+  "kind": "boisson",
+  "name": "Coca-Cola",
+  "expect": "found"
+ },
+ {
+  "code": "5449000000996",
+  "kind": "boisson",
+  "name": "Coca-Cola",
+  "expect": "found"
+ },
+ {
+  "code": "5449000214799",
+  "kind": "boisson",
+  "name": "Coke zero",
+  "expect": "found"
+ },
+ {
+  "code": "54491472",
+  "kind": "boisson",
+  "name": "Coca Cola 500ml",
+  "expect": "found"
+ },
+ {
+  "code": "5449000000286",
+  "kind": "boisson",
+  "name": "Coca Cola 2l",
+  "expect": "found"
+ },
+ {
+  "code": "3274080005003",
+  "kind": "boisson",
+  "name": "Eau de source",
+  "expect": "found"
+ },
+ {
+  "code": "3268840001008",
+  "kind": "boisson",
+  "name": "Eau de source",
+  "expect": "found"
+ },
+ {
+  "code": "8002270014901",
+  "kind": "boisson",
+  "name": "S. Pellegrino Water",
+  "expect": "found"
+ },
+ {
+  "code": "3068320123264",
+  "kind": "boisson",
+  "name": "La salvetat",
+  "expect": "found"
+ },
+ {
+  "code": "3502110009449",
+  "kind": "boisson",
+  "name": "Orangensaft",
+  "expect": "found"
+ },
+ {
+  "code": "20019907",
+  "kind": "boisson",
+  "name": "Jus de citron à base de concentré",
+  "expect": "found"
+ },
+ {
+  "code": "4056489028109",
+  "kind": "boisson",
+  "name": "",
+  "expect": "found"
+ },
+ {
+  "code": "9002515601018",
+  "kind": "boisson",
+  "name": "Pago Ace - Orange - Carotte - Citron",
+  "expect": "found"
+ },
+ {
+  "code": "5060362071242",
+  "kind": "boisson",
+  "name": "Organic Soya Milk unsweetened",
+  "expect": "found"
+ },
+ {
+  "code": "8480000137388",
+  "kind": "complément",
+  "name": "Cacahuete en polvo desgrasado",
+  "expect": "found"
+ },
+ {
+  "code": "8480000223128",
+  "kind": "complément",
+  "name": "Proteinas Limón",
+  "expect": "found"
+ },
+ {
+  "code": "8718836396540",
+  "kind": "complément",
+  "name": "Vegan protein",
+  "expect": "found"
+ },
+ {
+  "code": "8718836395833",
+  "kind": "complément",
+  "name": "Vegan protein chocolat",
+  "expect": "found"
+ },
+ {
+  "code": "5060469988467",
+  "kind": "complément",
+  "name": "whey gold standard",
+  "expect": "found"
+ },
+ {
+  "code": "8410076610737",
+  "kind": "complément",
+  "name": "Protein Cacahuetes🥜 & Chocolat🍫",
+  "expect": "found"
+ },
+ {
+  "code": "4056489406679",
+  "kind": "complément",
+  "name": "High Protein Drink Chocolate Flavour",
+  "expect": "found"
+ },
+ {
+  "code": "4056489406662",
+  "kind": "complément",
+  "name": "High Protein Drink Vanilla",
+  "expect": "found"
+ },
+ {
+  "code": "20035525",
+  "kind": "complément",
+  "name": "Protein Bar",
+  "expect": "found"
+ },
+ {
+  "code": "8410076901026",
+  "kind": "complément",
+  "name": "Barre céréales Protéines peanut& chocolat🍫",
+  "expect": "found"
+ },
+ {
+  "code": "6111056012986",
+  "kind": "cosmétique",
+  "name": "cadum",
+  "expect": "found"
+ },
+ {
+  "code": "6111056014522",
+  "kind": "cosmétique",
+  "name": "",
+  "expect": "found"
+ },
+ {
+  "code": "3574669907842",
+  "kind": "cosmétique",
+  "name": "johnsons",
+  "expect": "found"
+ },
+ {
+  "code": "6111250476515",
+  "kind": "cosmétique",
+  "name": "",
+  "expect": "found"
+ },
+ {
+  "code": "3574661700557",
+  "kind": "cosmétique",
+  "name": "Gel Douche extra doux lait de vanille",
+  "expect": "found"
+ },
+ {
+  "code": "3574661701288",
+  "kind": "cosmétique",
+  "name": "Gel Douche Peche nectarine",
+  "expect": "found"
+ },
+ {
+  "code": "80466468",
+  "kind": "cosmétique",
+  "name": "DOVE Déodorant Femme Anti-Transpirant Stick Original 50ml",
+  "expect": "found"
+ },
+ {
+  "code": "8480000467942",
+  "kind": "cosmétique",
+  "name": "Deodorant",
+  "expect": "found"
+ },
+ {
+  "code": "3600551146065",
+  "kind": "cosmétique",
+  "name": "Déodorant invisimax",
+  "expect": "found"
+ },
+ {
+  "code": "4005808890576",
+  "kind": "cosmétique",
+  "name": "Nivea soft",
+  "expect": "found"
+ },
+ {
+  "code": "4005808925124",
+  "kind": "cosmétique",
+  "name": "Nivea crème",
+  "expect": "found"
+ },
+ {
+  "code": "4005900890504",
+  "kind": "cosmétique",
+  "name": "",
+  "expect": "found"
+ },
+ {
+  "code": "8710522417379",
+  "kind": "cosmétique",
+  "name": "Signal Integral 8 Dentifrice Nature Elements Charbon 75ml",
+  "expect": "found"
+ },
+ {
+  "code": "8711568058717",
+  "kind": "cosmétique",
+  "name": "Dentifrice turmeric",
+  "expect": "found"
+ },
+ {
+  "code": "6221048407796",
+  "kind": "cosmétique",
+  "name": "Signal",
+  "expect": "found"
+ },
+ {
+  "code": "30070349",
+  "kind": "cosmétique",
+  "name": "Nutritic Lèvres - soin transformation lèvres desséchées",
+  "expect": "found"
+ },
+ {
+  "code": "8682631441487",
+  "kind": "cosmétique",
+  "name": "",
+  "expect": "found"
+ },
+ {
+  "code": "3574661672373",
+  "kind": "cosmétique",
+  "name": "soin lèvres 3 en 1",
+  "expect": "found"
+ },
+ {
+  "code": "6111024004913",
+  "kind": "cosmétique",
+  "name": "Taous",
+  "expect": "found"
+ },
+ {
+  "code": "6111024009741",
+  "kind": "cosmétique",
+  "name": "El Keef",
+  "expect": "found"
+ },
+ {
+  "code": "6111263790127",
+  "kind": "cosmétique",
+  "name": "Savon Marseille",
+  "expect": "found"
+ },
+ {
+  "code": "03168930010265",
+  "kind": "variante GTIN-14",
+  "name": "cruesly mélange de noix",
+  "expect": "found"
+ },
+ {
+  "code": "07613034626844",
+  "kind": "variante GTIN-14",
+  "name": "Céréales Chocapic",
+  "expect": "found"
+ },
+ {
+  "code": "03229820019307",
+  "kind": "variante GTIN-14",
+  "name": "Flocons d'avoine",
+  "expect": "found"
+ },
+ {
+  "code": "5010029000017",
+  "kind": "chiffre de contrôle faux",
+  "name": "Weetabix",
+  "expect": "absent"
+ },
+ {
+  "code": "3175680011481",
+  "kind": "chiffre de contrôle faux",
+  "name": "Sésame",
+  "expect": "absent"
+ },
+ {
+  "code": "9780812989786",
+  "kind": "témoin hors alimentation",
+  "name": "",
+  "expect": "absent"
+ },
+ {
+  "code": "6941565920362",
+  "kind": "témoin hors alimentation",
+  "name": "",
+  "expect": "absent"
+ },
+ {
+  "code": "6958265174483",
+  "kind": "témoin hors alimentation",
+  "name": "",
+  "expect": "absent"
+ },
+ {
+  "code": "9791035102333",
+  "kind": "témoin hors alimentation",
+  "name": "",
+  "expect": "absent"
+ },
+ {
+  "code": "3616403703607",
+  "kind": "témoin hors alimentation",
+  "name": "",
+  "expect": "absent"
+ }
+]

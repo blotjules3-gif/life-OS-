@@ -11,7 +11,6 @@ struct NotificationsSettingsView: View {
     @AppStorage(AppStorageKeys.morningReminderText) private var morningText = MorningReminder.defaultText
     @AppStorage(AppStorageKeys.notifMasterMute)     private var muted = false
     @AppStorage(AppStorageKeys.smartNotifsEnabled)  private var smartNotifsOn = false
-    @AppStorage(AppStorageKeys.cloudKitEnabled)     private var cloudKitOn = false
 
     @State private var editing: CustomReminder?
     @State private var creatingNew = false
@@ -64,20 +63,24 @@ struct NotificationsSettingsView: View {
                 Text("3 notifs / jour générées à partir de ton état réel (sommeil × cycle × sport × humeur).")
             }
 
-            // ---- Sync iCloud ----
+            // ---- Stockage ----
+            // Il y avait ici un interrupteur "Synchroniser via iCloud". L'app n'a pas
+            // la capacite iCloud: le container retombait en local au lancement
+            // suivant et l'interrupteur se remettait seul sur non. On affiche l'etat
+            // reel a la place.
             Section {
-                Toggle("Synchroniser via iCloud", isOn: $cloudKitOn)
-                    .tint(.accentColor)
+                let storage = AccountStatus.storage(syncActive: LocalStore.syncActive)
+                LabeledContent("Stockage", value: storage.title)
             } header: {
                 Text("Sauvegarde")
             } footer: {
-                Text("Tes données restent chiffrées de bout en bout par Apple, jamais visibles par LifeOS. Retrouve-les sur iPhone + iPad avec le même Apple ID.")
+                Text(AccountStatus.storage(syncActive: LocalStore.syncActive).detail)
             }
 
             // ---- Pause générale ----
             Section {
                 Toggle("Tout mettre en pause", isOn: $muted)
-                    .tint(.red)
+                    .tint(Theme.danger)
                     .onChange(of: muted) { _, v in
                         if v {
                             NotificationManager.shared.cancelAll()

@@ -16,10 +16,14 @@ struct ProductivitySetupView: View {
     private let tint = AppCategory.productivity.tint
 
     var body: some View {
-        SetupFlow(title: "Productivité", accent: tint, pages: pages) {
+        SetupFlow(title: "Productivité", accent: tint, pages: pages, onComplete: {
             focusGoal = goal; focusLen = pomo; socialMax = screen
             CategorySetup.markDone(.productivity); Haptics.success()
-        }
+        }, preview: {
+            [.make("Minutes de focus par jour", "\(focusGoal) min", "\(goal) min"),
+             .make("Durée d'un Pomodoro", "\(focusLen) min", "\(pomo) min"),
+             .make("Réseaux sociaux max", "\(socialMax) min", "\(screen) min")].compactMap { $0 }
+        }, draft: draftIO)
         .onAppear { goal = focusGoal; pomo = focusLen; screen = socialMax }
     }
     private var pages: [SetupPage] {
@@ -37,6 +41,21 @@ struct ProductivitySetupView: View {
                 SetupNumber(value: $screen, unit: "min", range: 15...480, step: 15, accent: tint) } },
         ]
     }
+
+    /// Reponses gardees entre deux lancements (voir SetupDraft).
+    private var draftIO: SetupDraftIO {
+        SetupDraftIO(save: {
+            var d = SetupDraft()
+            d.put("goal", goal)
+            d.put("pomo", pomo)
+            d.put("screen", screen)
+            return d
+        }, restore: { d in
+            if let v = d.int("goal") { goal = v }
+            if let v = d.int("pomo") { pomo = v }
+            if let v = d.int("screen") { screen = v }
+        })
+    }
 }
 
 // ---- Mental & focus -------------------------------------------------------
@@ -51,10 +70,13 @@ struct MentalSetupView: View {
     private let tint = AppCategory.mind.tint
 
     var body: some View {
-        SetupFlow(title: "Mental & focus", accent: tint, pages: pages) {
+        SetupFlow(title: "Mental & focus", accent: tint, pages: pages, onComplete: {
             meditGoal = medit; socialMax = screen
             CategorySetup.markDone(.mind); Haptics.success()
-        }
+        }, preview: {
+            [.make("Méditation par jour", "\(meditGoal) min", "\(medit) min"),
+             .make("Réseaux sociaux max", "\(socialMax) min", "\(screen) min")].compactMap { $0 }
+        }, draft: draftIO)
         .onAppear { medit = meditGoal; screen = socialMax }
     }
     private var pages: [SetupPage] {
@@ -71,6 +93,21 @@ struct MentalSetupView: View {
                 SetupHeader(icon: "hourglass", title: "Limite d'écran (détox)", accent: tint)
                 SetupNumber(value: $screen, unit: "min", range: 15...480, step: 15, accent: tint) } },
         ]
+    }
+
+    /// Reponses gardees entre deux lancements (voir SetupDraft).
+    private var draftIO: SetupDraftIO {
+        SetupDraftIO(save: {
+            var d = SetupDraft()
+            d.put("medit", medit)
+            d.put("screen", screen)
+            d.put("stress", stress)
+            return d
+        }, restore: { d in
+            if let v = d.int("medit") { medit = v }
+            if let v = d.int("screen") { screen = v }
+            if let v = d.string("stress") { stress = v }
+        })
     }
 }
 
@@ -109,7 +146,7 @@ struct LooksSetupView: View {
     ]
 
     var body: some View {
-        SetupFlow(title: "Looksmaxx", accent: tint, pages: pages) {
+        SetupFlow(title: "Looksmaxx", accent: tint, pages: pages, onComplete: {
             skinType = type
             concernsRaw = concerns.sorted().joined(separator: ",")
             skincareLevelStore = skincareLevel
@@ -121,7 +158,14 @@ struct LooksSetupView: View {
             groomingRaw = grooming.sorted().joined(separator: ",")
             reminders = (remind == "Oui")
             CategorySetup.markDone(.looks); Haptics.success()
-        }
+        }, preview: {
+            let list: (Set<String>) -> String = { $0.isEmpty ? "—" : $0.sorted().joined(separator: ", ") }
+            let stored: (String) -> Set<String> = { Set($0.split(separator: ",").map(String.init)) }
+            return [.make("Type de peau", skinType.isEmpty ? "—" : skinType, type),
+                    .make("Préoccupations", list(stored(concernsRaw)), list(concerns)),
+                    .make("Routine skincare", skincareLevelStore.isEmpty ? "—" : skincareLevelStore, skincareLevel),
+                    .make("Rappels skincare", reminders ? "Oui" : "Non", remind)].compactMap { $0 }
+        }, draft: draftIO)
         .onAppear {
             if !skinType.isEmpty { type = skinType }
             concerns = Set(concernsRaw.split(separator: ",").map(String.init))
@@ -222,6 +266,35 @@ struct LooksSetupView: View {
                             icons: ["checkmark.circle", "xmark.circle"]) } },
         ]
     }
+
+    /// Reponses gardees entre deux lancements (voir SetupDraft).
+    private var draftIO: SetupDraftIO {
+        SetupDraftIO(save: {
+            var d = SetupDraft()
+            d.put("type", type)
+            d.put("concerns", concerns)
+            d.put("skincareLevel", skincareLevel)
+            d.put("faceShape", faceShape)
+            d.put("hairColor", hairColor)
+            d.put("hairGoals", hairGoals)
+            d.put("browGoals", browGoals)
+            d.put("smileGoals", smileGoals)
+            d.put("grooming", grooming)
+            d.put("remind", remind)
+            return d
+        }, restore: { d in
+            if let v = d.string("type") { type = v }
+            if let v = d.set("concerns") { concerns = v }
+            if let v = d.string("skincareLevel") { skincareLevel = v }
+            if let v = d.string("faceShape") { faceShape = v }
+            if let v = d.string("hairColor") { hairColor = v }
+            if let v = d.set("hairGoals") { hairGoals = v }
+            if let v = d.set("browGoals") { browGoals = v }
+            if let v = d.set("smileGoals") { smileGoals = v }
+            if let v = d.set("grooming") { grooming = v }
+            if let v = d.string("remind") { remind = v }
+        })
+    }
 }
 
 /// Petit encart conseil illustré, réutilisable dans les questionnaires.
@@ -256,11 +329,15 @@ struct CycleSetupView: View {
     private let tint = AppCategory.cycle.tint
 
     var body: some View {
-        SetupFlow(title: "Cycle menstruel", accent: tint, pages: pages) {
+        SetupFlow(title: "Cycle menstruel", accent: tint, pages: pages, onComplete: {
             startTS = start.timeIntervalSince1970
             length = len
             CategorySetup.markDone(.cycle); Haptics.success()
-        }
+        }, preview: {
+            let f: (Date) -> String = { $0.formatted(date: .abbreviated, time: .omitted) }
+            return [.make("Début des dernières règles", startTS > 0 ? f(Date(timeIntervalSince1970: startTS)) : "—", f(start)),
+                    .make("Durée du cycle", "\(length) jours", "\(len) jours")].compactMap { $0 }
+        }, draft: draftIO)
         .onAppear { if startTS > 0 { start = Date(timeIntervalSince1970: startTS) }; len = length }
     }
     private var pages: [SetupPage] {
@@ -278,6 +355,19 @@ struct CycleSetupView: View {
                 SetupNumber(value: $len, unit: "jours", range: 20...40, accent: tint) } },
         ]
     }
+
+    /// Reponses gardees entre deux lancements (voir SetupDraft).
+    private var draftIO: SetupDraftIO {
+        SetupDraftIO(save: {
+            var d = SetupDraft()
+            d.put("start", start)
+            d.put("len", len)
+            return d
+        }, restore: { d in
+            if let v = d.date("start") { start = v }
+            if let v = d.int("len") { len = v }
+        })
+    }
 }
 
 // ---- Mobilité (crée un véhicule réel, idempotent) -------------------------
@@ -293,7 +383,13 @@ struct MobilitySetupView: View {
     private let tint = AppCategory.mobility.tint
 
     var body: some View {
-        SetupFlow(title: "Mobilité", accent: tint, pages: pages, onComplete: commit)
+        SetupFlow(title: "Mobilité", accent: tint, pages: pages, onComplete: commit, preview: {
+            let f: (Date?) -> String = { $0?.formatted(date: .abbreviated, time: .omitted) ?? "—" }
+            let v = vehicles.first
+            guard hasCar == "Oui" else { return [] }
+            return [.make("Véhicule", v?.name ?? "—", name.isEmpty ? "—" : name),
+                    .make("Renouvellement assurance", f(v?.insuranceRenewal), setInsurance ? f(insurance) : "—")].compactMap { $0 }
+        }, draft: draftIO)
             .onAppear {
                 if let v = vehicles.first { name = v.name; if let i = v.insuranceRenewal { insurance = i; setInsurance = true } }
             }
@@ -331,5 +427,22 @@ struct MobilitySetupView: View {
             do { try ctx.save() } catch { AppLog.data.error("MobilitySetup save failed: \(error.localizedDescription, privacy: .public)") }
         }
         CategorySetup.markDone(.mobility); Haptics.success()
+    }
+
+    /// Reponses gardees entre deux lancements (voir SetupDraft).
+    private var draftIO: SetupDraftIO {
+        SetupDraftIO(save: {
+            var d = SetupDraft()
+            d.put("hasCar", hasCar)
+            d.put("name", name)
+            d.put("insurance", insurance)
+            d.put("setInsurance", setInsurance)
+            return d
+        }, restore: { d in
+            if let v = d.string("hasCar") { hasCar = v }
+            if let v = d.string("name") { name = v }
+            if let v = d.date("insurance") { insurance = v }
+            if let v = d.bool("setInsurance") { setInsurance = v }
+        })
     }
 }

@@ -22,7 +22,7 @@ final class ServerStatusMonitor: ObservableObject {
     /// Toujours vrai : le coach on-device peut répondre sans réseau.
     var canSendChatMessages: Bool { true }
 
-    var dotColor: Color { .green }
+    var dotColor: Color { Theme.success }
 
     var statusLabel: String { "Coach on-device" }
 

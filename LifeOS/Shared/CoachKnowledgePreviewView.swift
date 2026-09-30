@@ -141,7 +141,7 @@ struct CoachKnowledgePreviewView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(msg.role == "user" ? "Toi" : "Coach")
                 .font(.caption2.weight(.semibold))
-                .foregroundStyle(msg.role == "user" ? .blue : .green)
+                .foregroundStyle(msg.role == "user" ? Theme.finance : Theme.success)
             Text(msg.text.prefix(180) + (msg.text.count > 180 ? "…" : ""))
                 .font(.footnote)
                 .fixedSize(horizontal: false, vertical: true)
@@ -156,7 +156,7 @@ struct CoachKnowledgePreviewView: View {
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)
                 if mem.isPinned {
-                    Image(systemName: "pin.fill").font(.caption2).foregroundStyle(.orange)
+                    Image(systemName: "pin.fill").font(.caption2).foregroundStyle(Theme.warning)
                 }
                 Spacer()
                 Text(mem.created, format: .relative(presentation: .named))
@@ -173,8 +173,8 @@ struct CoachKnowledgePreviewView: View {
     private func confidenceBadge(_ confidence: Double) -> some View {
         // Loop 12 fix m2 — remplace "70 %" par label lisible
         let (label, color): (String, Color) = {
-            if confidence >= 0.85 { return ("fiable", .green) }
-            if confidence >= 0.6  { return ("modéré", .orange) }
+            if confidence >= 0.85 { return ("fiable", Theme.success) }
+            if confidence >= 0.6  { return ("modéré", Theme.warning) }
             return ("faible", .secondary)
         }()
         Text(label)

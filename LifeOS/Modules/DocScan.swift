@@ -68,6 +68,7 @@ struct DocScanView: View {
     @State private var pages: [UIImage] = []
     @State private var savedToast = false
     @State private var saveError: String?
+    @State private var showAddPhoto = false
 
     private var cameraAvailable: Bool { VNDocumentCameraViewController.isSupported }
 
@@ -77,13 +78,13 @@ struct DocScanView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     preview
-                    sourceButtons
+                    if pages.isEmpty { sourceButtons } else { pageStrip }
                     if busy { ProgressView("Lecture du texte…").padding() }
                     if let saveError {
                         // Etat d'erreur visible: sans lui, l'utilisateur croit
                         // son document range alors que l'image est perdue.
                         Label(saveError, systemImage: "exclamationmark.triangle.fill")
-                            .font(.footnote).foregroundStyle(.orange)
+                            .font(.footnote).foregroundStyle(Theme.warning)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 4)
                     }
@@ -103,9 +104,10 @@ struct DocScanView: View {
                 // Toutes les pages : un PDF de cinq pages importe depuis le bureau
                 // n'entrait dans l'app que par sa page 0, comme le scanner du telephone.
                 let pages = DesktopImageHelper.loadPages(from: url)
-                if !pages.isEmpty { handle(pages) }
-            case .failure:
-                break
+                if pages.isEmpty { saveError = "Ce fichier n'a pas pu être lu comme image ou PDF." }
+                else { saveError = nil; handle(pages) }
+            case .failure(let error):
+                saveError = "Import impossible : \(error.localizedDescription)"
             }
         }
         .sheet(isPresented: $showCamera) {
@@ -117,7 +119,11 @@ struct DocScanView: View {
             Task {
                 if let data = try? await item.loadTransferable(type: Data.self), let img = UIImage(data: data) {
                     handle(img)
+                } else {
+                    saveError = "Cette photo n'a pas pu être chargée."
                 }
+                // Sinon choisir deux fois la meme photo ne declencherait rien.
+                pickerItem = nil
             }
         }
     }
@@ -204,6 +210,7 @@ struct DocScanView: View {
             Button { save() } label: {
                 Label("Ranger dans le coffre-fort", systemImage: "lock.doc.fill").frame(maxWidth: .infinity)
             }.buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.adminTint)
+            .disabled(busy)
         }
         .padding()
         .raisedSurface(RoundedRectangle(cornerRadius: 16))
@@ -215,7 +222,7 @@ struct DocScanView: View {
             Label("Rangé dans le coffre-fort", systemImage: "checkmark.circle.fill")
                 .font(.subheadline.weight(.semibold)).foregroundStyle(.white)
                 .padding(.horizontal, 18).padding(.vertical, 12)
-                .background(Color.green, in: Capsule())
+                .background(Theme.success, in: Capsule())
                 .padding(.bottom, 30)
         }
         .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -227,17 +234,118 @@ struct DocScanView: View {
     /// donc une date d'expiration ou un montant en derniere page est enfin trouve.
     private func handle(_ incoming: [UIImage]) {
         guard !incoming.isEmpty else { return }
-        pages = incoming
-        image = incoming.first
+        // Un document en cours s'enrichit: une nouvelle capture AJOUTE des pages,
+        // elle n'efface jamais celles deja prises.
+        let wasEmpty = pages.isEmpty
+        pages += incoming
+        // Un titre deja la (peut etre tape a la main) survit a l'ajout d'une page.
+        reanalyze(keepTitle: !wasEmpty)
+    }
+
+    // MARK: - Pages avant rangement: ordre, rotation, retrait, ajout
+
+    private var pageStrip: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("\(pages.count) page\(pages.count > 1 ? "s" : "")")
+                    .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                Spacer()
+                Menu {
+                    if cameraAvailable {
+                        Button { showCamera = true } label: {
+                            Label("Scanner", systemImage: "camera.fill")
+                        }
+                    }
+                    Button { showAddPhoto = true } label: {
+                        Label("Photo", systemImage: "photo")
+                    }
+                    Button { showFilePicker = true } label: {
+                        Label("Fichier", systemImage: "folder")
+                    }
+                    Divider()
+                    Button(role: .destructive) { reset() } label: {
+                        Label("Recommencer", systemImage: "arrow.counterclockwise")
+                    }
+                } label: { Label("Ajouter des pages", systemImage: "plus") }
+                .font(.subheadline.weight(.semibold))
+                .disabled(busy)
+            }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(Array(pages.enumerated()), id: \.offset) { i, pg in
+                        VStack(spacing: 6) {
+                            Image(uiImage: pg).resizable().scaledToFit()
+                                .frame(width: 84, height: 110)
+                                .background(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .overlay(alignment: .topLeading) {
+                                    Text("\(i + 1)").font(.caption2.bold()).padding(4)
+                                        .glassControl(Capsule()).padding(4)
+                                }
+                            HStack(spacing: 8) {
+                                pageButton("chevron.left", "Déplacer à gauche", disabled: i == 0) { move(i, by: -1) }
+                                pageButton("rotate.right", "Tourner") { rotate(i) }
+                                pageButton("chevron.right", "Déplacer à droite", disabled: i == pages.count - 1) { move(i, by: 1) }
+                                pageButton("trash", "Retirer la page") { remove(i) }
+                            }
+                        }
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+        }
+        .padding(12)
+        .raisedSurface(RoundedRectangle(cornerRadius: 16))
+        .photosPicker(isPresented: $showAddPhoto, selection: $pickerItem, matching: .images)
+    }
+
+    private func pageButton(_ icon: String, _ label: String, disabled: Bool = false,
+                            _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon).font(.caption.weight(.semibold)).frame(width: 18, height: 18)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(disabled ? Theme.textSecondary.opacity(0.4) : Theme.textPrimary)
+        .disabled(disabled || busy)
+        .accessibilityLabel(label)
+    }
+
+    private func move(_ i: Int, by delta: Int) {
+        let j = i + delta
+        guard pages.indices.contains(i), pages.indices.contains(j) else { return }
+        pages.swapAt(i, j)
+        reanalyze(keepTitle: true)
+    }
+
+    private func rotate(_ i: Int) {
+        guard pages.indices.contains(i) else { return }
+        pages[i] = pages[i].rotatedClockwise()
+        reanalyze(keepTitle: true)
+    }
+
+    private func remove(_ i: Int) {
+        guard pages.indices.contains(i) else { return }
+        pages.remove(at: i)
+        if pages.isEmpty { image = nil; text = ""; analyzed = false; return }
+        reanalyze(keepTitle: true)
+    }
+
+    /// Relit le texte de toutes les pages, dans leur ordre actuel: une page
+    /// tournee ou deplacee change ce que l'OCR lit et l'ordre du texte.
+    private func reanalyze(keepTitle: Bool) {
+        let current = pages
+        image = current.first
         analyzed = false; busy = true
         Task {
             var parts: [String] = []
-            for page in incoming { parts.append(await DocOCR.recognize(page)) }
+            for page in current { parts.append(await DocOCR.recognize(page)) }
             let recognized = parts.joined(separator: "\n\n")
             await MainActor.run {
                 text = recognized
-                category = DocClassifier.categorize(recognized)
-                title = DocClassifier.suggestedTitle(recognized, category: category)
+                if !keepTitle || title.isEmpty {
+                    category = DocClassifier.categorize(recognized)
+                    title = DocClassifier.suggestedTitle(recognized, category: category)
+                }
                 busy = false; analyzed = true
             }
         }
@@ -268,12 +376,26 @@ struct DocScanView: View {
                            category: category, filename: filename, note: text,
                            pageFilenames: pageFiles)
         ctx.insert(doc)
+        // "Range" seulement si la base l'a vraiment ecrit. Avant, le succes
+        // s'affichait et la saisie s'effacait apres un simple insert.
+        do {
+            try ctx.save()
+        } catch {
+            ctx.delete(doc)
+            for f in pageFiles { ImageStore.delete(f) }
+            saveError = "Le document n'a pas pu être rangé. Tes pages sont conservées, réessaie."
+            return
+        }
         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
         withAnimation { savedToast = true }
         // reset : `pages` DOIT etre vide ici, sinon le scan suivant repart avec les
         // pages du precedent et enregistre un document melange.
-        image = nil; pages = []; text = ""; analyzed = false; title = ""; pickerItem = nil
+        reset()
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) { withAnimation { savedToast = false } }
+    }
+
+    private func reset() {
+        image = nil; pages = []; text = ""; analyzed = false; title = ""; pickerItem = nil; saveError = nil
     }
 }
 

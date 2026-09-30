@@ -24,7 +24,9 @@ struct FinanceSetupView: View {
     ]
 
     var body: some View {
-        SetupFlow(title: "Finances perso", accent: tint, pages: pages, onComplete: commit)
+        SetupFlow(title: "Finances perso", accent: tint, pages: pages, onComplete: commit,
+                  previewNotes: ["Tes opérations déjà saisies ne changent pas."],
+                  preview: previewChanges, draft: draftIO)
             .onAppear {
                 budget = budgetGoal
                 if let main = accounts.first(where: { $0.kind == "Courant" }) { balance = Int(main.balance) }
@@ -90,11 +92,26 @@ struct FinanceSetupView: View {
         .padding(14).raisedSurface(RoundedRectangle(cornerRadius: 12)).padding(.horizontal, 14)
     }
 
+    private func previewChanges() -> [SetupSession.Change] {
+        let main = accounts.first(where: { $0.kind == "Courant" })
+        let euros: (Double) -> String = { $0.formatted(.currency(code: "EUR").precision(.fractionLength(0))) }
+        let existing = Set(subs.map(\.name))
+        let added = subOptions.map(\.0).filter { chosenSubs.contains($0) && !existing.contains($0) }
+        let removed = subs.map(\.name).filter { n in subOptions.contains { $0.0 == n } && !chosenSubs.contains(n) }
+        return [
+            .make("Budget mensuel", euros(Double(budgetGoal)), euros(Double(budget))),
+            .make(main == nil ? "Compte courant (créé)" : "Solde du compte courant",
+                  main.map { euros($0.balance) } ?? "—", euros(Double(balance))),
+            added.isEmpty ? nil : .make("Abonnements ajoutés", "—", added.joined(separator: ", ")),
+            removed.isEmpty ? nil : .make("Abonnements retirés", removed.joined(separator: ", "), "—"),
+        ].compactMap { $0 }
+    }
+
     private func commit() {
         budgetGoal = budget
         // Compte courant — mise à jour si déjà présent (idempotent).
         if let main = accounts.first(where: { $0.kind == "Courant" }) {
-            main.balance = Double(balance)
+            LedgerService.setCurrentBalance(ctx, account: main, to: Double(balance))
         } else {
             ctx.insert(Account(name: "Compte courant", kind: "Courant", balance: Double(balance)))
         }
@@ -109,5 +126,20 @@ struct FinanceSetupView: View {
         do { try ctx.save() } catch { AppLog.data.error("FinanceSetup save failed: \(error.localizedDescription, privacy: .public)") }
         CategorySetup.markDone(.finance)
         Haptics.success()
+    }
+
+    /// Reponses gardees entre deux lancements (voir SetupDraft).
+    private var draftIO: SetupDraftIO {
+        SetupDraftIO(save: {
+            var d = SetupDraft()
+            d.put("budget", budget)
+            d.put("balance", balance)
+            d.put("chosenSubs", chosenSubs)
+            return d
+        }, restore: { d in
+            if let v = d.int("budget") { budget = v }
+            if let v = d.int("balance") { balance = v }
+            if let v = d.set("chosenSubs") { chosenSubs = v }
+        })
     }
 }

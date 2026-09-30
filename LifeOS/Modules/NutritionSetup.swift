@@ -46,7 +46,8 @@ struct NutritionSetupView: View {
     }
 
     var body: some View {
-        SetupFlow(title: "Alimentation", accent: tint, pages: pages, onComplete: commit)
+        SetupFlow(title: "Alimentation", accent: tint, pages: pages, onComplete: commit,
+                  previewNotes: ["Les courses et compléments choisis sont ajoutés s'ils n'y sont pas déjà, avec leurs rappels."], draft: draftIO)
     }
 
     private var pages: [SetupPage] {
@@ -219,12 +220,16 @@ struct NutritionSetupView: View {
         waterGoal = computedWater
         proteinGoal = computedProtein
 
-        for name in shopping {
+        // Refaire le questionnaire ne doit pas doubler la liste: on n'ajoute que ce
+        // qui n'y est pas deja.
+        let onList = Set(((try? ctx.fetch(FetchDescriptor<ShoppingItem>())) ?? []).map { $0.name.lowercased() })
+        for name in shopping where !onList.contains(name.lowercased()) {
             ctx.insert(ShoppingItem(name: name, aisle: "Maison & épicerie"))
         }
+        let existingSupps = Set(((try? ctx.fetch(FetchDescriptor<Supplement>())) ?? []).map { $0.name.lowercased() })
         // Compléments recommandés (avec dosage en conseil) + ajouts.
         let recoByName = Dictionary(uniqueKeysWithValues: recommended.map { ($0.name, $0) })
-        for name in chosenSupps.union(extraSupps) {
+        for name in chosenSupps.union(extraSupps) where !existingSupps.contains(name.lowercased()) {
             let r = SupplementAdvisor.reco(for: name)
             let dose = recoByName[name]?.dosage
             let advice = dose != nil ? "\(dose!) · \(r.advice)" : r.advice
@@ -239,5 +244,22 @@ struct NutritionSetupView: View {
         do { try ctx.save() } catch { AppLog.data.error("NutritionSetup save failed: \(error.localizedDescription, privacy: .public)") }
         CategorySetup.markDone(.nutrition)
         Haptics.success()
+    }
+
+    /// Reponses gardees entre deux lancements (voir SetupDraft).
+    private var draftIO: SetupDraftIO {
+        SetupDraftIO(save: {
+            var d = SetupDraft()
+            d.put("goal", goal)
+            d.put("shopping", shopping)
+            d.put("chosenSupps", chosenSupps)
+            d.put("extraSupps", extraSupps)
+            return d
+        }, restore: { d in
+            if let v = d.string("goal") { goal = v }
+            if let v = d.set("shopping") { shopping = v }
+            if let v = d.set("chosenSupps") { chosenSupps = v }
+            if let v = d.set("extraSupps") { extraSupps = v }
+        })
     }
 }

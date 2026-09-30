@@ -97,7 +97,7 @@ struct TripDetailView: View {
                             Text(cat).font(.caption.bold()).foregroundStyle(.travelTint)
                             ForEach(trip.packing.filter { $0.category == cat }) { item in
                                 Button { item.packed.toggle(); Haptics.tap() } label: {
-                                    HStack { Image(systemName: item.packed ? "checkmark.circle.fill" : "circle").foregroundStyle(item.packed ? .green : Theme.textSecondary); Text(item.name).strikethrough(item.packed).foregroundStyle(item.packed ? Theme.textSecondary : Theme.textPrimary); Spacer() }
+                                    HStack { Image(systemName: item.packed ? "checkmark.circle.fill" : "circle").foregroundStyle(item.packed ? Theme.success : Theme.textSecondary); Text(item.name).strikethrough(item.packed).foregroundStyle(item.packed ? Theme.textSecondary : Theme.textPrimary); Spacer() }
                                 }
                             }
                         }
@@ -160,10 +160,10 @@ struct TrackedFlight: Identifiable, Codable, Equatable {
     static let statuses = ["À l'heure", "Embarquement", "Retardé", "Décollé", "Atterri", "Annulé"]
     var statusColor: Color {
         switch status {
-        case "Retardé":  return .orange
-        case "Annulé":   return .red
-        case "Atterri":  return .green
-        case "Décollé", "Embarquement": return .blue
+        case "Retardé":  return Theme.warning
+        case "Annulé":   return Theme.danger
+        case "Atterri":  return Theme.success
+        case "Décollé", "Embarquement": return Theme.finance
         default:         return Color.travelTint
         }
     }

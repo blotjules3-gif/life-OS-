@@ -1,0 +1,14 @@
+{
+ "couscous": {"items": ["légumes verts sautés", "couscous de maïs"], "soup": false},
+ "legumes-rotis": {"items": ["poulet rôti", "légumes rôtis", "riz blanc"], "soup": false},
+ "omelette": {"items": ["omelette"], "soup": false},
+ "pizza": {"items": ["pizza margherita"], "soup": false},
+ "poelee-legumes": {"items": ["haricots verts", "carottes", "chou"], "soup": false},
+ "poke-bowl": {"items": ["bœuf", "tomates cerises", "chips de maïs", "salade", "canette de soda"], "soup": false},
+ "ratatouille": {"items": ["courgettes", "tomates", "poivrons", "oignons"], "soup": false},
+ "riz-poulet-brocoli": {"items": ["cuisse de poulet", "brocoli", "chou-fleur", "pommes de terre", "salade"], "soup": false},
+ "salade-nicoise": {"items": ["œufs", "tomates cerises", "épinards", "thon", "olives"], "soup": false},
+ "soupe-legumes": {"items": ["soupe de légumes"], "soup": true},
+ "spaghetti-bolognaise": {"items": ["spaghetti", "sauce bolognaise", "petits pois", "brocoli"], "soup": false},
+ "steak-frites": {"items": ["steak", "sauce", "frites"], "soup": false}
+}

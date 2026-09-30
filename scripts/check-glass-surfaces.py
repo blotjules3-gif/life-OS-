@@ -10,7 +10,9 @@ for path in (root / "LifeOS").rglob("*.swift"):
     for line_number, line in enumerate(path.read_text().splitlines(), 1):
         if line.lstrip().startswith("//"):
             continue
-        if "Theme.cardFill" in line or re.search(r"\.background\(Theme\.card\s*,", line):
+        if ("Theme.cardFill" in line
+            or re.search(r"\.background\(Theme\.card\s*,", line)
+            or re.search(r"\.background\(Color\.(primary|secondary)\.opacity\([^)]*\),\s*in:", line)):
             failures.append(f"{path.relative_to(root)}:{line_number}: use raisedSurface/glassControl")
 if failures:
     raise SystemExit("\n".join(failures))

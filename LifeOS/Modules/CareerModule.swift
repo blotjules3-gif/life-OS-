@@ -92,6 +92,12 @@ struct CVBuilderView: View {
     @AppStorage(AppStorageKeys.cvSkills) private var skills = ""
     @State private var showOptimiser = false
     @State private var aiReady = false
+    @State private var showPreview = false
+
+    private var fields: CVDocument.Fields {
+        .init(name: name, title: title, contact: contact, summary: summary,
+              experience: experience, education: education, skills: skills)
+    }
 
     private var generated: String {
         """
@@ -128,10 +134,16 @@ struct CVBuilderView: View {
                     group("Formation") { editor($education, "Diplôme · École · Année…") }
                     group("Compétences") { editor($skills, "Swift, gestion de projet, anglais…") }
 
-                    ShareLink(item: generated) {
-                        Label("Exporter / Partager le CV", systemImage: "square.and.arrow.up").frame(maxWidth: .infinity).padding(.vertical, 14)
-                            .background(Color.careerTint, in: RoundedRectangle(cornerRadius: Theme.radiusSmall)).foregroundStyle(.white)
+                    // Vrai document mis en page (avant: une chaine de texte brute).
+                    Button { showPreview = true } label: {
+                        Label("Aperçu et export PDF", systemImage: "doc.richtext").frame(maxWidth: .infinity).padding(.vertical, 4)
                     }
+                    .buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.careerTint)
+                    .disabled(fields.isEmpty)
+                    ShareLink(item: generated) {
+                        Label("Partager en texte", systemImage: "text.alignleft").frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(LifeOSGlassButtonStyle()).tint(.careerTint)
                     if aiReady {
                         Button { showOptimiser = true } label: {
                             Label("Adapter mon CV à une offre", systemImage: "infinity")
@@ -147,6 +159,7 @@ struct CVBuilderView: View {
             }
         }
         .navigationTitle("Générateur de CV").navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showPreview) { CVPreviewSheet(fields: fields) }
         .sheet(isPresented: $showOptimiser) {
             CVOptimiserSheet(summary: $summary, experience: $experience, skills: $skills)
         }
@@ -199,7 +212,7 @@ struct CVOptimiserSheet: View {
                 }
                 if let error {
                     Section { Label(error, systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange).font(.footnote) }
+                        .foregroundStyle(Theme.warning).font(.footnote) }
                 }
                 if !result.isEmpty {
                     Section("Proposition") {
@@ -268,7 +281,7 @@ struct SkillGapView: View {
                                 ForEach(group) { g in
                                     Button { g.acquired.toggle() } label: {
                                         HStack(alignment: .top) {
-                                            Image(systemName: g.acquired ? "checkmark.circle.fill" : "circle").foregroundStyle(g.acquired ? .green : Theme.textSecondary)
+                                            Image(systemName: g.acquired ? "checkmark.circle.fill" : "circle").foregroundStyle(g.acquired ? Theme.success : Theme.textSecondary)
                                             VStack(alignment: .leading) {
                                                 Text(g.skill).foregroundStyle(Theme.textPrimary)
                                                 if !g.acquired && !g.plan.isEmpty { Text("Plan : \(g.plan)").font(.caption).foregroundStyle(.careerTint) }
@@ -441,7 +454,7 @@ struct MockInterviewView: View {
 
             if let error {
                 Label(error, systemImage: "exclamationmark.triangle.fill")
-                    .font(.footnote).foregroundStyle(.orange)
+                    .font(.footnote).foregroundStyle(Theme.warning)
             }
             if !feedback.isEmpty {
                 Divider()
@@ -664,5 +677,54 @@ struct JobMatchView: View {
         do { all = try await JobSearchService.fetch() }
         catch { errorText = "Impossible de charger les offres (vérifie ta connexion)." }
         loading = false
+    }
+}
+
+
+// MARK: - Apercu du CV en PDF
+
+import PDFKit
+
+struct CVPreviewSheet: View {
+    let fields: CVDocument.Fields
+    @Environment(\.dismiss) private var dismiss
+    @State private var url: URL?
+    @State private var error: String?
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if let url { PDFPreview(url: url) }
+                else if let error { ContentUnavailableView("Export impossible", systemImage: "exclamationmark.triangle", description: Text(error)) }
+                else { ProgressView("Mise en page…") }
+            }
+            .navigationTitle("Aperçu du CV").navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } }
+                if let url {
+                    ToolbarItem(placement: .confirmationAction) {
+                        ShareLink(item: url) { Label("Exporter", systemImage: "square.and.arrow.up") }
+                    }
+                }
+            }
+        }
+        .task {
+            do { url = try CVDocument.write(fields) } catch { self.error = error.localizedDescription }
+        }
+    }
+}
+
+private struct PDFPreview: UIViewRepresentable {
+    let url: URL
+    func makeUIView(context: Context) -> PDFView {
+        let v = PDFView()
+        v.autoScales = true
+        v.displayMode = .singlePageContinuous
+        v.backgroundColor = .secondarySystemBackground
+        v.document = PDFDocument(url: url)
+        return v
+    }
+    func updateUIView(_ v: PDFView, context: Context) {
+        if v.document?.documentURL != url { v.document = PDFDocument(url: url) }
     }
 }

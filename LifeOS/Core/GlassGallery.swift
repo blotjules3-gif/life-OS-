@@ -102,7 +102,7 @@ struct GlassGallery: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.yellow.opacity(0.22), in: RoundedRectangle(cornerRadius: 10))
+        .background(Theme.learning.opacity(0.22), in: RoundedRectangle(cornerRadius: 10))
     }
 
     static var osLine: String {
@@ -127,7 +127,7 @@ struct GlassGallery: View {
                     ForEach(0..<30, id: \.self) { i in
                         HStack(spacing: 10) {
                             RoundedRectangle(cornerRadius: 6)
-                                .fill([Color.red, .blue, .green, .orange, .purple][i % 5])
+                                .fill([Theme.danger, Theme.finance, Theme.success, Theme.warning, Theme.mind][i % 5])
                                 .frame(width: 60, height: 30)
                             Text("Contenu \(i) sous le materiau").font(.system(size: 16))
                         }

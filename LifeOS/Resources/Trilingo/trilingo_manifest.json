@@ -1,0 +1,174 @@
+{
+ "source": "fra",
+ "courses": {
+  "eng": {
+   "target": "eng",
+   "status": "complet",
+   "days": 240,
+   "pairs": 303575,
+   "knownWords": 2401,
+   "withAudio": 1544
+  },
+  "spa": {
+   "target": "spa",
+   "status": "complet",
+   "days": 240,
+   "pairs": 50508,
+   "knownWords": 2420,
+   "withAudio": 1650
+  },
+  "deu": {
+   "target": "deu",
+   "status": "complet",
+   "days": 240,
+   "pairs": 123611,
+   "knownWords": 2394,
+   "withAudio": 774
+  },
+  "ita": {
+   "target": "ita",
+   "status": "complet",
+   "days": 240,
+   "pairs": 74986,
+   "knownWords": 2386,
+   "withAudio": 72
+  },
+  "por": {
+   "target": "por",
+   "status": "complet",
+   "days": 240,
+   "pairs": 29969,
+   "knownWords": 2405,
+   "withAudio": 338
+  },
+  "nld": {
+   "target": "nld",
+   "status": "complet",
+   "days": 240,
+   "pairs": 46738,
+   "knownWords": 2397,
+   "withAudio": 425
+  },
+  "rus": {
+   "target": "rus",
+   "status": "complet",
+   "days": 240,
+   "pairs": 376840,
+   "knownWords": 2385,
+   "withAudio": 137
+  },
+  "jpn": {
+   "target": "jpn",
+   "status": "partiel",
+   "days": 168,
+   "pairs": 35477,
+   "knownWords": 2244,
+   "withAudio": 48
+  },
+  "cmn": {
+   "target": "cmn",
+   "status": "complet",
+   "days": 190,
+   "pairs": 14393,
+   "knownWords": 2597,
+   "withAudio": 194
+  },
+  "tur": {
+   "target": "tur",
+   "status": "complet",
+   "days": 240,
+   "pairs": 11733,
+   "knownWords": 2794,
+   "withAudio": 44
+  },
+  "ukr": {
+   "target": "ukr",
+   "status": "complet",
+   "days": 240,
+   "pairs": 27734,
+   "knownWords": 2369,
+   "withAudio": 4
+  },
+  "hun": {
+   "target": "hun",
+   "status": "complet",
+   "days": 240,
+   "pairs": 12608,
+   "knownWords": 2375,
+   "withAudio": 186
+  },
+  "epo": {
+   "target": "epo",
+   "status": "complet",
+   "days": 240,
+   "pairs": 273294,
+   "knownWords": 2386,
+   "withAudio": 190
+  },
+  "ber": {
+   "target": "ber",
+   "status": "complet",
+   "days": 240,
+   "pairs": 48111,
+   "knownWords": 2381,
+   "withAudio": 76
+  },
+  "kab": {
+   "target": "kab",
+   "status": "complet",
+   "days": 240,
+   "pairs": 196283,
+   "knownWords": 2421,
+   "withAudio": 570
+  },
+  "heb": {
+   "target": "heb",
+   "status": "partiel",
+   "days": 240,
+   "pairs": 5223,
+   "knownWords": 3801,
+   "withAudio": 56
+  },
+  "pol": {
+   "target": "pol",
+   "status": "partiel",
+   "days": 240,
+   "pairs": 4908,
+   "knownWords": 4291,
+   "withAudio": 242
+  },
+  "ara": {
+   "target": "ara",
+   "status": "partiel",
+   "days": 222,
+   "pairs": 2782,
+   "knownWords": 4556,
+   "withAudio": 14
+  },
+  "ron": {
+   "target": "ron",
+   "status": "partiel",
+   "days": 240,
+   "pairs": 5971,
+   "knownWords": 3148,
+   "withAudio": 22
+  },
+  "swe": {
+   "target": "swe",
+   "status": "partiel",
+   "days": 240,
+   "pairs": 3961,
+   "knownWords": 3163,
+   "withAudio": 29
+  },
+  "fin": {
+   "target": "fin",
+   "status": "partiel",
+   "days": 240,
+   "pairs": 4486,
+   "knownWords": 3806,
+   "withAudio": 54
+  }
+ },
+ "builtAt": "2026-09-29"
+}

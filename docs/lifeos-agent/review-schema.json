@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "verdict": {"type": "string", "enum": ["accepted", "changes_required", "blocked"]},
+    "summary": {"type": "string"},
+    "correction_prompt": {"type": "string"},
+    "unverified": {"type": "array", "items": {"type": "string"}}
+  },
+  "required": ["verdict", "summary", "correction_prompt", "unverified"]
+}

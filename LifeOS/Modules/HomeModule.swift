@@ -26,7 +26,7 @@ struct AntiWasteView: View {
                                 VStack(alignment: .leading) { Text(it.name).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary); Text("\(it.quantity) · \(it.location)").font(.caption).foregroundStyle(Theme.textSecondary) }
                                 Spacer()
                                 if let e = it.expiry { ExpiryBadge(date: e) }
-                                Button(role: .destructive) { ctx.delete(it) } label: { Image(systemName: "checkmark.circle").font(.title3) }.foregroundStyle(.green)
+                                Button(role: .destructive) { ctx.delete(it) } label: { Image(systemName: "checkmark.circle").font(.title3) }.foregroundStyle(Theme.success)
                             }.card(padding: 12)
                         }
                         Text("Coche pour marquer comme consommé. Astuce : cuisine d'abord ce qui est en haut.").font(.caption).foregroundStyle(Theme.textSecondary)
@@ -83,12 +83,12 @@ struct ChoresView: View {
                                     Text(c.name).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
                                     HStack(spacing: 6) {
                                         Text(c.assignee).font(.caption2).padding(.horizontal,6).padding(.vertical,2).background(Color.homeTint.opacity(0.2), in: Capsule()).foregroundStyle(.homeTint)
-                                        if let due = c.nextDue { Text(dueLabel(due)).font(.caption).foregroundStyle(due < .now ? .red : Theme.textSecondary) }
-                                        else { Text("Jamais faite").font(.caption).foregroundStyle(.orange) }
+                                        if let due = c.nextDue { Text(dueLabel(due)).font(.caption).foregroundStyle(due < .now ? Theme.danger : Theme.textSecondary) }
+                                        else { Text("Jamais faite").font(.caption).foregroundStyle(Theme.warning) }
                                     }
                                 }
                                 Spacer()
-                                Button { c.lastDone = Date(); Haptics.tap() } label: { Image(systemName: "checkmark.circle.fill").font(.title2).foregroundStyle(.green) }.accessibilityLabel("Marquer fait")
+                                Button { c.lastDone = Date(); Haptics.tap() } label: { Image(systemName: "checkmark.circle.fill").font(.title2).foregroundStyle(Theme.success) }.accessibilityLabel("Marquer fait")
                             }.card(padding: 12)
                                 .contextMenu { Button(role: .destructive) { ctx.delete(c) } label: { Label("Supprimer", systemImage: "trash") } }
                         }
@@ -159,7 +159,7 @@ struct PetCard: View {
                 Text(pet.name).font(.headline).foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Button { showAddEvent = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.homeTint) }.accessibilityLabel("Ajouter un événement")
-                Button(role: .destructive) { remove(pet) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(.red.opacity(0.6))
+                Button(role: .destructive) { remove(pet) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(Theme.danger.opacity(0.6))
             }
             if pet.events.isEmpty { Text("Aucun événement.").font(.caption).foregroundStyle(Theme.textSecondary) }
             ForEach(pet.events.sorted { $0.date < $1.date }) { e in
@@ -167,7 +167,7 @@ struct PetCard: View {
                     Image(systemName: iconFor(e.type)).foregroundStyle(.homeTint).frame(width: 22)
                     VStack(alignment: .leading) { Text(e.type).font(.subheadline).foregroundStyle(Theme.textPrimary); if !e.note.isEmpty { Text(e.note).font(.caption).foregroundStyle(Theme.textSecondary) } }
                     Spacer()
-                    Text(e.date, style: .date).font(.caption).foregroundStyle(e.date < .now ? .red : Theme.textSecondary)
+                    Text(e.date, style: .date).font(.caption).foregroundStyle(e.date < .now ? Theme.danger : Theme.textSecondary)
                 }
             }
         }.card()
@@ -249,11 +249,11 @@ struct MaintenanceView: View {
                             HStack {
                                 VStack(alignment: .leading) {
                                     Text(m.name).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
-                                    if let due = m.nextDue { Text("Prochaine : \(due, style: .date)").font(.caption).foregroundStyle(due < .now ? .red : Theme.textSecondary) }
-                                    else { Text("Jamais faite").font(.caption).foregroundStyle(.orange) }
+                                    if let due = m.nextDue { Text("Prochaine : \(due, style: .date)").font(.caption).foregroundStyle(due < .now ? Theme.danger : Theme.textSecondary) }
+                                    else { Text("Jamais faite").font(.caption).foregroundStyle(Theme.warning) }
                                 }
                                 Spacer()
-                                Button { m.lastDone = Date(); Haptics.tap() } label: { Image(systemName: "checkmark.circle.fill").font(.title2).foregroundStyle(.green) }.accessibilityLabel("Marquer fait")
+                                Button { m.lastDone = Date(); Haptics.tap() } label: { Image(systemName: "checkmark.circle.fill").font(.title2).foregroundStyle(Theme.success) }.accessibilityLabel("Marquer fait")
                             }.card(padding: 12)
                                 .contextMenu { Button(role: .destructive) { ctx.delete(m) } label: { Label("Supprimer", systemImage: "trash") } }
                         }

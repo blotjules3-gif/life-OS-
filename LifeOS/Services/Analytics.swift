@@ -98,9 +98,7 @@ enum Analytics {
     // MARK: - Storage
 
     private static var fileURL: URL? {
-        try? FileManager.default.url(
-            for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true
-        ).appendingPathComponent("analytics.jsonl")
+        AppPaths.documents.appendingPathComponent("analytics.jsonl")
     }
 
     private static func append(_ event: Event) async {

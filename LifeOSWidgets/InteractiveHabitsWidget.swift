@@ -3,7 +3,7 @@ import SwiftUI
 import WidgetKit
 
 /// Version iOS 17+ du widget habitudes — chaque ligne est un bouton qui
-/// toggle l'habitude sans ouvrir l'app (via `ToggleHabitIntent`).
+/// coche ou decoche l'habitude sans ouvrir l'app (via `SetHabitIntent`).
 ///
 /// Coexiste avec l'ancien `HabitsWidget` (non-interactif) qui reste dispo
 /// pour les iPhones < iOS 17. L'user choisit lequel poser sur son écran.
@@ -73,7 +73,9 @@ private struct InteractiveHabitsView: View {
     private var list: some View {
         VStack(spacing: 0) {
             ForEach(visibleHabits) { habit in
-                Button(intent: ToggleHabitIntent(habitName: habit.name)) {
+                // Ordre explicite selon l'etat affiche: un double appui avant le
+                // rafraichissement redonne le meme ordre, jamais l'inverse.
+                Button(intent: SetHabitIntent(habitID: habit.id, complete: !habit.isDoneToday)) {
                     HStack(spacing: 10) {
                         ZStack {
                             Circle()

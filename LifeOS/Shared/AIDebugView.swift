@@ -35,7 +35,7 @@ struct AIDebugView: View {
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button("Vider") { logger.clear() }
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Theme.danger)
                 }
             }
         }
@@ -104,23 +104,23 @@ struct AIDebugView: View {
                     .foregroundStyle(.secondary)
                 Spacer()
                 if session.hasError {
-                    Text("erreur").font(.caption2).foregroundStyle(.red)
+                    Text("erreur").font(.caption2).foregroundStyle(Theme.danger)
                 } else if session.isCompleted {
                     Text("\(session.durationMs ?? 0) ms")
                         .font(.caption2.monospacedDigit())
-                        .foregroundStyle(.green)
+                        .foregroundStyle(Theme.success)
                 } else {
-                    Text("en cours").font(.caption2).foregroundStyle(.orange)
+                    Text("en cours").font(.caption2).foregroundStyle(Theme.warning)
                 }
             }
 
             if let c = session.classification {
                 HStack(spacing: 6) {
-                    chip(c.intentType, tint: .blue)
+                    chip(c.intentType, tint: Theme.finance)
                     chip(c.sentiment, tint: sentimentColor(c.sentiment))
                     chip(c.complexity, tint: .gray)
                     if c.topicsCount > 0 {
-                        chip("\(c.topicsCount) cat.", tint: .purple)
+                        chip("\(c.topicsCount) cat.", tint: Theme.mind)
                     }
                 }
             }
@@ -128,7 +128,7 @@ struct AIDebugView: View {
             if let providerID = session.providerID {
                 HStack(spacing: 6) {
                     Image(systemName: session.wasFallback ? "arrow.uturn.backward.circle" : "infinity")
-                        .font(.caption2).foregroundStyle(session.wasFallback ? .orange : .accentColor)
+                        .font(.caption2).foregroundStyle(session.wasFallback ? Theme.warning : .accentColor)
                     Text(providerID).font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
                 }
             }
@@ -137,11 +137,11 @@ struct AIDebugView: View {
                 HStack(spacing: 6) {
                     Text("Ctx: \(ctx)/\(budget) tokens")
                         .font(.caption2.monospacedDigit())
-                        .foregroundStyle(ctx > budget * 90 / 100 ? .orange : .secondary)
+                        .foregroundStyle(ctx > budget * 90 / 100 ? Theme.warning : .secondary)
                     if !session.truncations.isEmpty {
                         Text("tronq: \(session.truncations.joined(separator: ", "))")
                             .font(.caption2)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Theme.warning)
                     }
                 }
             }
@@ -160,13 +160,13 @@ struct AIDebugView: View {
             if !session.postProcessingIssues.isEmpty {
                 Text("PostProc : \(session.postProcessingIssues.joined(separator: ", "))")
                     .font(.caption2)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.warning)
             }
 
             if let err = session.error {
                 Text(err)
                     .font(.caption2)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Theme.danger)
                     .lineLimit(2)
             }
         }
@@ -187,8 +187,8 @@ struct AIDebugView: View {
     private func availabilityBadge(_ avail: AIAvailability) -> some View {
         let (label, color): (String, Color) = {
             switch avail {
-            case .available: return ("actif", .green)
-            case .unavailable(let reason): return (reason.rawValue, .red)
+            case .available: return ("actif", Theme.success)
+            case .unavailable(let reason): return (reason.rawValue, Theme.danger)
             }
         }()
         return Text(label)
@@ -211,10 +211,10 @@ struct AIDebugView: View {
 
     private func sentimentColor(_ sentiment: String) -> Color {
         switch sentiment {
-        case "positive": return .green
-        case "frustrated": return .red
-        case "discouraged": return .orange
-        case "anxious": return .yellow
+        case "positive": return Theme.success
+        case "frustrated": return Theme.danger
+        case "discouraged": return Theme.warning
+        case "anxious": return Theme.learning
         default: return .gray
         }
     }

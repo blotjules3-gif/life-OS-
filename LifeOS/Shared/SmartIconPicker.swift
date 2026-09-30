@@ -50,7 +50,7 @@ public struct SmartIconPicker: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .raisedSurface(RoundedRectangle(cornerRadius: 10, style: .continuous), .nested)
             }
             .buttonStyle(.plain)
             .padding(.top, 4)

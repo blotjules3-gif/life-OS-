@@ -32,8 +32,8 @@ struct CoachUpgradeBanner: View {
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 14)
                             .padding(.vertical, 7)
-                            .background(Color.accentColor, in: Capsule())
-                            .foregroundStyle(.white)
+                            .glassControl(Capsule())
+                            .foregroundStyle(Theme.textPrimary)
                     }
                     .buttonStyle(.plain)
 

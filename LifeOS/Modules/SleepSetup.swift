@@ -16,7 +16,8 @@ struct SleepSetupView: View {
     private let tint = AppCategory.sleep.tint
 
     var body: some View {
-        SetupFlow(title: "Sommeil & réveil", accent: tint, pages: pages, onComplete: commit)
+        SetupFlow(title: "Sommeil & réveil", accent: tint, pages: pages, onComplete: commit,
+                  preview: previewChanges, draft: draftIO)
             .onAppear { wake = wakeupHour; duration = sleepTargetHours; enable = wakeupEnabled ? "Oui" : "Non" }
     }
     private var sleepTargetHours: Int { sleepTarget }
@@ -70,6 +71,14 @@ struct SleepSetupView: View {
         .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
+    private func previewChanges() -> [SetupSession.Change] {
+        [
+            .make("Heure de réveil", String(format: "%02d:%02d", wakeupHour, wakeupMinute), String(format: "%02d:00", wake)),
+            .make("Durée de sommeil visée", "\(sleepTarget) h", "\(duration) h"),
+            .make("Réveil quotidien", wakeupEnabled ? "Activé" : "Désactivé", enable == "Oui" ? "Activé" : "Désactivé"),
+        ].compactMap { $0 }
+    }
+
     private func commit() {
         wakeupHour = wake
         wakeupMinute = 0
@@ -82,5 +91,20 @@ struct SleepSetupView: View {
         }
         CategorySetup.markDone(.sleep)
         Haptics.success()
+    }
+
+    /// Reponses gardees entre deux lancements (voir SetupDraft).
+    private var draftIO: SetupDraftIO {
+        SetupDraftIO(save: {
+            var d = SetupDraft()
+            d.put("wake", wake)
+            d.put("duration", duration)
+            d.put("enable", enable)
+            return d
+        }, restore: { d in
+            if let v = d.int("wake") { wake = v }
+            if let v = d.int("duration") { duration = v }
+            if let v = d.string("enable") { enable = v }
+        })
     }
 }

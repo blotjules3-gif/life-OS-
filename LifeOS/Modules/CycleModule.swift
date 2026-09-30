@@ -54,7 +54,10 @@ struct CycleTrackerView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        Group { // pas de NavigationStack: ces ecrans sont POUSSES dans celui de la categorie.
+            // Un second NavigationStack imbrique faisait retomber sur la liste des
+            // categories au toucher (telephone) et plantait au retour (SwiftUI,
+            // NavigationColumnState.boundPathChange). Mesure le 28 septembre.
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 18) {
 
@@ -105,10 +108,10 @@ struct CycleTrackerView: View {
                                 } label: {
                                     Text("Mes règles ont commencé aujourd'hui")
                                         .font(.system(size: 14, weight: .semibold))
-                                        .foregroundStyle(Theme.onAccent)
+                                        .foregroundStyle(Theme.textPrimary)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 14)
-                                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                                        .glassControl(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                                 }
                                 .buttonStyle(.plain)
                                 Button {
@@ -264,10 +267,10 @@ struct CycleTrackerView: View {
                     } label: {
                         Text("Enregistrer")
                             .font(.system(size: 15, weight: .black)).textCase(.uppercase).kerning(0.5)
-                            .foregroundStyle(Theme.onAccent)
+                            .foregroundStyle(Theme.textPrimary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
-                            .background(Color.accentColor, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                            .glassControl(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                     }
                     .buttonStyle(.plain)
                 }
@@ -314,7 +317,7 @@ struct CycleTrackerView: View {
                     VStack {
                         Spacer()
                         HStack(spacing: 10) {
-                            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                            Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.success)
                             Text("Enregistré").font(.system(size: 14, weight: .semibold))
                         }
                         .padding(.horizontal, 20).padding(.vertical, 12)
@@ -373,7 +376,10 @@ struct CycleSymptomsView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        Group { // pas de NavigationStack: ces ecrans sont POUSSES dans celui de la categorie.
+            // Un second NavigationStack imbrique faisait retomber sur la liste des
+            // categories au toucher (telephone) et plantait au retour (SwiftUI,
+            // NavigationColumnState.boundPathChange). Mesure le 28 septembre.
             List {
                 if recentSymptoms.isEmpty {
                     Text("Aucun symptôme enregistré récemment.")
@@ -410,7 +416,10 @@ struct CycleHistoryView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        Group { // pas de NavigationStack: ces ecrans sont POUSSES dans celui de la categorie.
+            // Un second NavigationStack imbrique faisait retomber sur la liste des
+            // categories au toucher (telephone) et plantait au retour (SwiftUI,
+            // NavigationColumnState.boundPathChange). Mesure le 28 septembre.
             List {
                 if let stats {
                     Section {
@@ -428,7 +437,7 @@ struct CycleHistoryView: View {
                             Text("Régularité")
                             Spacer()
                             Text(stats.isRegular ? "Régulier" : "Irrégulier")
-                                .foregroundStyle(stats.isRegular ? Color.green : Color.orange)
+                                .foregroundStyle(stats.isRegular ? Theme.success : Theme.warning)
                         }
                     } header: {
                         Text("Stats")

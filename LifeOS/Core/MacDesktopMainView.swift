@@ -61,7 +61,12 @@ enum DesktopNavSection: Hashable, Identifiable {
 // MARK: - Conteneur Principal macOS Desktop
 
 struct MacDesktopMainView: View {
+    var availableWidth: CGFloat? = nil
+    var availableHeight: CGFloat? = nil
+
+    @State private var sidebarCollapsed = false
     @State private var selection: DesktopNavSection? = .dashboard
+    @Namespace private var sidebarNamespace
     @State private var showNewHabitModal = false
     @State private var showAssistantSheet = false
     @State private var showTabataFullScreen = false
@@ -83,22 +88,21 @@ struct MacDesktopMainView: View {
     }
 
     var body: some View {
-        NavigationSplitView {
-            sidebarContent
-                .navigationSplitViewColumnWidth(min: 240, ideal: 270, max: 320)
-                .scrollContentBackground(.hidden)
-                .background(Theme.bg.ignoresSafeArea())
-        } detail: {
+        HStack(spacing: 0) {
+            if !sidebarCollapsed {
+                sidebarContent
+                    .frame(width: 260)
+                    .background(Theme.bg.ignoresSafeArea())
+                    .transition(.move(edge: .leading).combined(with: .opacity))
+
+                Rectangle()
+                    .fill(Color.primary.opacity(0.08))
+                    .frame(width: 1)
+                    .ignoresSafeArea()
+            }
+
             detailContent
-                // Le fond DOIT etre pose sur le contenu de la colonne, pas sur le
-                // NavigationSplitView. Un `.background` sur le split view passe DERRIERE
-                // les colonnes, qui peignent leur propre fond opaque par dessus : mesure
-                // au pixel, le sol restait a 254 alors que Theme.bg vaut 238 (#EEEEEF).
-                //
-                // Et c'est ce gris la qui fait tout marcher : le look Apple, c'est des
-                // surfaces BLANCHES posees sur un sol GRIS. Sur un sol blanc, une carte
-                // blanche ne se voit plus, quelle que soit son ombre.
-                .scrollContentBackground(.hidden)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Theme.bg.ignoresSafeArea())
         }
         .background(Theme.bg.ignoresSafeArea())
@@ -133,9 +137,9 @@ struct MacDesktopMainView: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(Color.primary.opacity(0.08))
+                        .fill(Color.clear)
                         .frame(width: 38, height: 38)
-                        .overlay(Circle().strokeBorder(Color.primary.opacity(0.18), lineWidth: 1))
+                        .raisedSurface(Circle(), .nested)
                     Image(systemName: "infinity")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(Color.primary)
@@ -151,6 +155,20 @@ struct MacDesktopMainView: View {
                 }
 
                 Spacer()
+
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        sidebarCollapsed = true
+                    }
+                } label: {
+                    Image(systemName: "sidebar.left")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.secondary)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("Masquer la barre latérale")
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
@@ -227,13 +245,15 @@ struct MacDesktopMainView: View {
 
             // Profil & Réglages en bas de la barre latérale
             Button {
-                selection = .profile
+                withAnimation(.spring(response: 0.32, dampingFraction: 0.78)) {
+                    selection = .profile
+                }
             } label: {
                 HStack(spacing: 12) {
                     Circle()
-                        .fill(Color.primary.opacity(0.08))
+                        .fill(Color.clear)
                         .frame(width: 34, height: 34)
-                        .overlay(Circle().strokeBorder(Color.primary.opacity(0.18), lineWidth: 1))
+                        .raisedSurface(Circle(), .nested)
                         .overlay(
                             Text(String(displayName.prefix(1)).uppercased())
                                 .font(AppFont.heading(size: 14, weight: .black))
@@ -276,7 +296,9 @@ struct MacDesktopMainView: View {
     private func sidebarButton(_ section: DesktopNavSection) -> some View {
         let isSelected = selection == section
         return Button {
-            selection = section
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.78)) {
+                selection = section
+            }
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: section.icon)
@@ -295,15 +317,13 @@ struct MacDesktopMainView: View {
             .padding(.vertical, 8)
             .background {
                 if isSelected {
-                    // La ligne selectionnee de la barre laterale etait un aplat gris avec
-                    // un contour dessine a la main : la seule surface du bureau a ne pas
-                    // partager la matiere de l'app.
                     Color.clear.glassControl(Capsule())
+                        .matchedGeometryEffect(id: "sidebarSelectionPill", in: sidebarNamespace)
                 }
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(LifeOSPressStyle(scale: 0.98, opacity: 0.92))
     }
 
     // MARK: - Contenu de Détail Desktop
@@ -316,8 +336,16 @@ struct MacDesktopMainView: View {
                 MacDesktopDashboardView(
                     onOpenTabata: { showTabataFullScreen = true },
                     onOpenHabitCreator: { showNewHabitModal = true },
-                    onOpenAssistant: { selection = .assistant },
-                    onSelectCategory: { cat in selection = .category(cat) }
+                    onOpenAssistant: {
+                        withAnimation(.spring(response: 0.32, dampingFraction: 0.78)) {
+                            selection = .assistant
+                        }
+                    },
+                    onSelectCategory: { cat in
+                        withAnimation(.spring(response: 0.32, dampingFraction: 0.78)) {
+                            selection = .category(cat)
+                        }
+                    }
                 )
             case .habits:
                 HabitTrackerView()
@@ -328,12 +356,19 @@ struct MacDesktopMainView: View {
             case .tabata:
                 TabataView()
             case .category(let cat):
-                cat.destination
+                // Sans conteneur de navigation, chaque NavigationLink du hub est MORT:
+                // Stepometer, Fitbot, Hevvy, GOMOB, Yuko ne s'ouvraient pas, seul
+                // TabaTime marchait parce qu'il passe par un fullScreenCover. Mesure au
+                // simulateur le 28 septembre, en tapant chaque tuile. Le telephone, lui,
+                // enveloppe deja les categories dans NavigationStack(path:).
+                NavigationStack { cat.destination }
             case .allCategories:
                 MacDesktopCategoriesOverview(
                     categories: categoryOrderManager.order,
                     onSelectCategory: { cat in
-                        selection = .category(cat)
+                        withAnimation(.spring(response: 0.32, dampingFraction: 0.78)) {
+                            selection = .category(cat)
+                        }
                     },
                     onOpenSort: {
                         showOrderSheet = true
@@ -343,7 +378,26 @@ struct MacDesktopMainView: View {
                 ProfileView()
             }
         }
+        .id(selection?.id ?? "dashboard")
+        .transition(.asymmetric(
+            insertion: .opacity.combined(with: .offset(y: 8)),
+            removal: .opacity
+        ))
+        .animation(.spring(response: 0.35, dampingFraction: 0.82), value: selection)
         .toolbar {
+            ToolbarItem(placement: .navigation) {
+                if sidebarCollapsed {
+                    Button {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            sidebarCollapsed = false
+                        }
+                    } label: {
+                        Image(systemName: "sidebar.left")
+                    }
+                    .help("Afficher la barre latérale")
+                }
+            }
+
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     showNewHabitModal = true
@@ -480,42 +534,62 @@ struct MacDesktopDashboardView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                // MARK: 1. Hero Header Panoramique Desktop (Remplit l'espace sans vide)
-                headerHero
+        GeometryReader { proxy in
+            let availableWidth = proxy.size.width
+            let isWide = availableWidth >= 960
 
-                // MARK: 2. Modules prioritaires (Sport, Nutrition, Tâches...)
-                topPriorityCategoriesStrip
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    // MARK: 1. Hero Header Panoramique Desktop Adaptatif
+                    headerHero(availableWidth: availableWidth)
 
-                // MARK: 3. Grille Desktop 2 Colonnes Pleine Largeur
-                HStack(alignment: .top, spacing: 24) {
-                    // Colonne de Gauche (Flexible) : Tâches quotidiennes & Habitudes
-                    VStack(alignment: .leading, spacing: 24) {
-                        todosSection
-                        habitsSection
+                    // MARK: 2. Modules prioritaires (Sport, Nutrition, Tâches...)
+                    topPriorityCategoriesStrip(availableWidth: availableWidth)
+
+                    // MARK: 3. Grille Desktop Adaptative
+                    if isWide {
+                        HStack(alignment: .top, spacing: 24) {
+                            // Colonne de Gauche (Flexible) : Tâches quotidiennes & Habitudes
+                            VStack(alignment: .leading, spacing: 24) {
+                                todosSection
+                                habitsSection
+                            }
+                            .frame(maxWidth: .infinity)
+
+                            // Colonne de Droite (Largeur adaptative) : Métriques, Outils rapides, Coach
+                            VStack(alignment: .leading, spacing: 24) {
+                                metricsPanel
+                                quickToolsGrid
+                                coachInsightCard
+                            }
+                            .frame(width: min(max(availableWidth * 0.36, 320), 400))
+                        }
+                    } else {
+                        // Disposition 1 colonne fluide lorsque la largeur disponible < 960
+                        VStack(alignment: .leading, spacing: 24) {
+                            todosSection
+                            habitsSection
+                            metricsPanel
+                            quickToolsGrid
+                            coachInsightCard
+                        }
+                        .frame(maxWidth: .infinity)
                     }
-                    .frame(maxWidth: .infinity)
-
-                    // Colonne de Droite (Largeur généreuse 400pt) : Métriques, Outils rapides, Coach
-                    VStack(alignment: .leading, spacing: 24) {
-                        metricsPanel
-                        quickToolsGrid
-                        coachInsightCard
-                    }
-                    .frame(width: 400)
                 }
+                .padding(.horizontal, availableWidth > 640 ? 32 : 16)
+                .padding(.vertical, 24)
             }
-            .padding(.horizontal, 32)
-            .padding(.vertical, 24)
         }
         .background(Color.clear)
     }
 
     // MARK: - Bandeau Modules Prioritaires Desktop (Monochrome)
 
-    private var topPriorityCategoriesStrip: some View {
-        VStack(alignment: .leading, spacing: 14) {
+    private func topPriorityCategoriesStrip(availableWidth: CGFloat) -> some View {
+        let columnsCount = availableWidth >= 1100 ? 3 : (availableWidth >= 640 ? 2 : 1)
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 14), count: columnsCount)
+
+        return VStack(alignment: .leading, spacing: 14) {
             HStack {
                 HStack(spacing: 8) {
                     Image(systemName: "star.fill")
@@ -531,7 +605,7 @@ struct MacDesktopDashboardView: View {
                     .foregroundStyle(Color.secondary)
             }
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 3), spacing: 14) {
+            LazyVGrid(columns: columns, spacing: 14) {
                 ForEach(CategoryOrderManager.shared.order.prefix(6)) { cat in
                     Button {
                         onSelectCategory(cat)
@@ -543,13 +617,15 @@ struct MacDesktopDashboardView: View {
                                 Text(cat.title)
                                     .font(AppFont.heading(size: 13, weight: .bold))
                                     .foregroundStyle(Color.primary)
-                                    .lineLimit(1)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.9)
                                 Text(cat.subtitle)
                                     .font(AppFont.body(size: 11, weight: .regular))
                                     .foregroundStyle(Color.secondary)
-                                    .lineLimit(1)
+                                    .lineLimit(2)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
-                            Spacer()
+                            Spacer(minLength: 4)
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 11, weight: .semibold))
                                 .foregroundStyle(Color.secondary.opacity(0.60))
@@ -567,147 +643,169 @@ struct MacDesktopDashboardView: View {
 
     // MARK: - 1. Hero Header Panoramique avec DailyScoreRing (Monochrome & Équilibré)
 
-    private var headerHero: some View {
-        HStack(alignment: .center, spacing: 24) {
-            // Segment 1 (Gauche) : Identité, Salutation & Statuts
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(spacing: 8) {
-                    Circle()
-                        .fill(Color.primary)
-                        .frame(width: 7, height: 7)
-                        .shadow(color: Color.primary.opacity(0.40), radius: 3)
-                    Text(currentDateString.uppercased())
-                        .font(AppFont.body(size: 10, weight: .bold))
-                        .foregroundStyle(Color.primary)
-                        .kerning(1.2)
+    private func headerHero(availableWidth: CGFloat) -> some View {
+        let isHeroWide = availableWidth >= 1060
+        return Group {
+            if isHeroWide {
+                HStack(alignment: .center, spacing: 24) {
+                    heroWelcomeSegment
+                        .frame(minWidth: 260, maxWidth: 350, alignment: .leading)
+
+                    Spacer(minLength: 8)
+
+                    heroVitalsGrid
+                        .frame(maxWidth: .infinity)
+
+                    Spacer(minLength: 8)
+
+                    DailyScoreRing()
+                        .frame(width: 320)
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .applePreviewIsland()
+            } else {
+                VStack(alignment: .leading, spacing: 18) {
+                    HStack(alignment: .top, spacing: 20) {
+                        heroWelcomeSegment
+                            .frame(maxWidth: .infinity, alignment: .leading)
 
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Bonjour, \(displayName)")
-                        .font(AppFont.heading(size: 30, weight: .black))
-                        .foregroundStyle(Color.primary)
-
-                    Text("Ton système personnel résumé en un seul cadran interactif. Retrouve tes habitudes et tâches à leur heure.")
-                        .font(AppFont.body(size: 12, weight: .regular))
-                        .foregroundStyle(Color.secondary)
-                        .lineSpacing(3)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                HStack(spacing: 8) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundStyle(Color.primary)
-                        Text("\(doneHabitsCount) / \(activeHabits.count) validées")
-                            .font(AppFont.body(size: 11, weight: .semibold))
-                            .foregroundStyle(Color.primary)
+                        DailyScoreRing()
+                            .frame(width: min(availableWidth * 0.45, 300))
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .applePreviewIsland()
 
-                    HStack(spacing: 6) {
-                        Image(systemName: "flame.fill")
-                            .foregroundStyle(Color.primary)
-                        Text(energyLabel.isEmpty ? "Forme optimale" : energyLabel)
-                            .font(AppFont.body(size: 11, weight: .semibold))
-                            .foregroundStyle(Color.primary)
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .applePreviewIsland()
-                }
-
-                // Boutons d'actions rapides Apple Preview
-                HStack(spacing: 10) {
-                    Button {
-                        onOpenHabitCreator()
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 13, weight: .bold))
-                            Text("Nouvelle habitude")
-                                .font(AppFont.heading(size: 12, weight: .bold))
-                        }
-                        .foregroundStyle(Color.primary)
-                        .padding(.horizontal, 14)
-                    }
-                    .buttonStyle(.plain)
-                    .applePreviewPill(height: 38)
-
-                    Button {
-                        onOpenAssistant()
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 13, weight: .semibold))
-                            Text("Ton coach")
-                                .font(AppFont.heading(size: 12, weight: .bold))
-                        }
-                        .foregroundStyle(Color.primary)
-                        .padding(.horizontal, 14)
-                    }
-                    .buttonStyle(.plain)
-                    .applePreviewPill(height: 38)
+                    heroVitalsGrid
+                        .frame(maxWidth: .infinity)
                 }
             }
-            .frame(minWidth: 260, maxWidth: 350, alignment: .leading)
-
-            Spacer(minLength: 8)
-
-            // Segment 2 (Centre) : 4 Tuiles Métriques Haute Résolution (Comble le vide desktop)
-            VStack(spacing: 10) {
-                HStack(spacing: 10) {
-                    heroVitalTile(
-                        icon: "checklist",
-                        title: "Tâches à faire",
-                        value: "\(todos.filter { !$0.done }.count) restantes",
-                        detail: "\(todos.filter { $0.done }.count) terminées"
-                    )
-                    heroVitalTile(
-                        icon: "drop.fill",
-                        title: "Hydratation",
-                        value: "\(waterToday) ml",
-                        detail: "Objectif \(waterGoal) ml"
-                    )
-                }
-                HStack(spacing: 10) {
-                    heroVitalTile(
-                        icon: "flame.fill",
-                        title: "Calories",
-                        value: "\(kcalToday) kcal",
-                        detail: "Objectif \(kcalGoal) kcal"
-                    )
-                    heroVitalTile(
-                        icon: "bolt.fill",
-                        title: "Score Énergie",
-                        value: "\(energyScore) / 100",
-                        detail: energyLabel.isEmpty ? "Optimal" : energyLabel
-                    )
-                }
-            }
-            .frame(maxWidth: .infinity)
-
-            Spacer(minLength: 8)
-
-            // Segment 3 (Droite) : Le Cadran 24h interactif monochrome & score
-            DailyScoreRing()
-                .frame(width: 320)
         }
         .padding(24)
         .applePreviewCard(cornerRadius: 28)
+    }
+
+    private var heroWelcomeSegment: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(Color.primary)
+                    .frame(width: 7, height: 7)
+                Text(currentDateString.uppercased())
+                    .font(AppFont.body(size: 10, weight: .bold))
+                    .foregroundStyle(Color.primary)
+                    .kerning(1.2)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .applePreviewIsland()
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Bonjour, \(displayName)")
+                    .font(.system(size: 38, weight: .black))
+                    .textCase(.uppercase)
+                    .kerning(-1)
+                    .foregroundStyle(Color.primary)
+
+                Text("TON SYSTÈME PERSONNEL EN UN CADRAN · HABITUDES & TÂCHES")
+                    .monoLabel(11)
+                    .foregroundStyle(Theme.textSecondary)
+            }
+
+            HStack(spacing: 8) {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Color.primary)
+                    Text("\(doneHabitsCount) / \(activeHabits.count) validées")
+                        .font(AppFont.body(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.primary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .applePreviewIsland()
+
+                HStack(spacing: 6) {
+                    Image(systemName: "flame.fill")
+                        .foregroundStyle(Color.primary)
+                    Text(energyLabel.isEmpty ? "Forme optimale" : energyLabel)
+                        .font(AppFont.body(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.primary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .applePreviewIsland()
+            }
+
+            // Boutons d'actions rapides Apple Preview
+            HStack(spacing: 10) {
+                Button {
+                    onOpenHabitCreator()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 13, weight: .bold))
+                        Text("Nouvelle habitude")
+                            .font(AppFont.heading(size: 12, weight: .bold))
+                    }
+                    .foregroundStyle(Color.primary)
+                    .padding(.horizontal, 14)
+                    .applePreviewPill(height: 38)
+                }
+                .buttonStyle(LifeOSPressStyle(scale: 0.96))
+
+                Button {
+                    onOpenAssistant()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 13, weight: .semibold))
+                        Text("Ton coach")
+                            .font(AppFont.heading(size: 12, weight: .bold))
+                    }
+                    .foregroundStyle(Color.primary)
+                    .padding(.horizontal, 14)
+                    .applePreviewPill(height: 38)
+                }
+                .buttonStyle(LifeOSPressStyle(scale: 0.96))
+            }
+        }
+    }
+
+    private var heroVitalsGrid: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 10) {
+                heroVitalTile(
+                    icon: "checklist",
+                    title: "Tâches à faire",
+                    value: "\(todos.filter { !$0.done }.count) restantes",
+                    detail: "\(todos.filter { $0.done }.count) terminées"
+                )
+                heroVitalTile(
+                    icon: "drop.fill",
+                    title: "Hydratation",
+                    value: "\(waterToday) ml",
+                    detail: "Objectif \(waterGoal) ml"
+                )
+            }
+            HStack(spacing: 10) {
+                heroVitalTile(
+                    icon: "flame.fill",
+                    title: "Calories",
+                    value: "\(kcalToday) kcal",
+                    detail: "Objectif \(kcalGoal) kcal"
+                )
+                heroVitalTile(
+                    icon: "bolt.fill",
+                    title: "Score Énergie",
+                    value: "\(energyScore) / 100",
+                    detail: energyLabel.isEmpty ? "Optimal" : energyLabel
+                )
+            }
+        }
     }
 
     private func heroVitalTile(icon: String, title: String, value: String, detail: String) -> some View {
         HStack(spacing: 10) {
             ZStack {
                 Circle()
-                    .fill(Color.primary.opacity(0.08))
+                    .fill(Color.clear)
                     .frame(width: 32, height: 32)
-                    .overlay(Circle().strokeBorder(Color.primary.opacity(0.18), lineWidth: 1))
+                    .raisedSurface(Circle(), .nested)
                 Image(systemName: icon)
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(Color.primary)
@@ -843,9 +941,9 @@ struct MacDesktopDashboardView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 32)
-                    .applePreviewCard(cornerRadius: 18)
+                    .applePreviewInnerCard(cornerRadius: 18)
                 } else {
-                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 14) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 180, maximum: 360), spacing: 14)], spacing: 14) {
                         ForEach(filteredHabits) { habit in
                             desktopHabitCard(habit)
                         }
@@ -861,20 +959,14 @@ struct MacDesktopDashboardView: View {
         let isDone = habit.completions.contains { Calendar.current.isDateInToday($0.date) }
 
         return HStack(spacing: 14) {
-            // Icon squircle en verre liquide monochrome
+            // Icon squircle épuré monochrome
             ZStack {
-                Circle()
-                    .fill(Color.primary.opacity(isDone ? 0.12 : 0.05))
-                    .frame(width: 32, height: 32)
-                    .blur(radius: 6)
-
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.primary.opacity(isDone ? 0.15 : 0.06))
-                    .raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .fill(Color.primary.opacity(isDone ? 0.10 : 0.04))
                     .frame(width: 44, height: 44)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .strokeBorder(Color.primary.opacity(isDone ? 0.35 : 0.15), lineWidth: 1)
+                            .strokeBorder(Color.primary.opacity(isDone ? 0.25 : 0.08), lineWidth: 0.8)
                     )
                 Image(systemName: habit.icon)
                     .font(.system(size: 19, weight: .semibold))
@@ -886,7 +978,7 @@ struct MacDesktopDashboardView: View {
                     .font(AppFont.sans(size: 14, weight: .bold))
                     .foregroundStyle(isDone ? Color.secondary : Color.primary)
                     .strikethrough(isDone, color: Color.secondary.opacity(0.50))
-                    .lineLimit(1)
+                    .lineLimit(2)
 
                 HStack(spacing: 6) {
                     Text(String(format: "%02dh%02d", habit.scheduledHour, habit.scheduledMinute))
@@ -1008,7 +1100,7 @@ struct MacDesktopDashboardView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 18)
-                .applePreviewCard(cornerRadius: 18)
+                .applePreviewInnerCard(cornerRadius: 18)
             } else {
                 VStack(spacing: 8) {
                     ForEach(pending.prefix(6)) { todo in
@@ -1199,9 +1291,9 @@ struct MacDesktopDashboardView: View {
             VStack(spacing: 8) {
                 ZStack {
                     Circle()
-                        .fill(Color.primary.opacity(0.08))
+                        .fill(Color.clear)
                         .frame(width: 40, height: 40)
-                        .overlay(Circle().strokeBorder(Color.primary.opacity(0.18), lineWidth: 1))
+                        .raisedSurface(Circle(), .nested)
                     Image(systemName: icon)
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundStyle(Color.primary)
@@ -1259,86 +1351,187 @@ struct NewHabitQuickSheet: View {
 
     @State private var name = ""
     @State private var selectedIcon = "figure.run"
-    @State private var selectedColorHex = 0x4CC38A
+    @State private var selectedColorHex = 0x47CC5C
     @State private var hour = 9
     @State private var minute = 0
 
-    let icons = ["figure.run", "fork.knife", "moon.stars.fill", "brain.head.profile", "book.fill", "drop.fill", "dumbbell.fill", "bed.double.fill", "checklist"]
-    let colors = [0x4CC38A, 0xF1746C, 0x6C7BF1, 0x9B6CF1, 0xE0A23C, 0x3CB2E0, 0xF97316]
+    let icons = ["figure.run", "fork.knife", "moon.stars.fill", "brain.head.profile", "book.fill", "drop.fill", "dumbbell.fill", "bed.double.fill", "checklist", "heart.fill"]
+    let colors = [0x47CC5C, 0xFF2E33, 0x2185FF, 0xA852F5, 0xFFB83D, 0x24C7CC, 0xFF338C]
+
+    private var isValid: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
     var body: some View {
-        Form {
-            Section("Nom de l'habitude") {
-                TextField("Ex: Méditation du matin, Salle de sport...", text: $name)
-            }
-
-            Section("Icône & Couleur") {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(icons, id: \.self) { icon in
-                            Button {
-                                selectedIcon = icon
-                            } label: {
-                                Image(systemName: icon)
-                                    .font(.title3)
-                                    .frame(width: 40, height: 40)
-                                    .background(selectedIcon == icon ? Color.accentColor.opacity(0.2) : Color(uiColor: .tertiarySystemFill))
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                                    .overlay(selectedIcon == icon ? RoundedRectangle(cornerRadius: 8).stroke(Color.accentColor, lineWidth: 2) : nil)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
-
-                HStack(spacing: 12) {
-                    ForEach(colors, id: \.self) { c in
-                        Button {
-                            selectedColorHex = c
-                        } label: {
-                            Circle()
-                                .fill(Color(hex: UInt(c)))
-                                .frame(width: 30, height: 30)
-                                .overlay(selectedColorHex == c ? Circle().stroke(Color.primary, lineWidth: 2) : nil)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(.vertical, 4)
-            }
-
-            Section("Heure de rappel") {
-                HStack {
-                    Stepper("Heure : \(hour)h", value: $hour, in: 0...23)
-                    Stepper("Minute : \(minute)", value: $minute, in: 0...55, step: 5)
-                }
-            }
-        }
-        .navigationTitle("Nouvelle habitude")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Annuler") { dismiss() }
-            }
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Enregistrer") {
-                    let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                    guard !trimmed.isEmpty else { return }
-                    let h = Habit(
-                        name: trimmed,
-                        icon: selectedIcon,
-                        colorHex: selectedColorHex,
-                        scheduledHour: hour,
-                        scheduledMinute: minute
-                    )
-                    ctx.insert(h)
-                    try? ctx.save()
+        VStack(spacing: 0) {
+            // Header Liquid Glass
+            HStack {
+                Button("Annuler") {
                     dismiss()
                 }
-                .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(.secondary)
+                .buttonStyle(LifeOSPressStyle(scale: 0.95))
+
+                Spacer()
+
+                Text("Nouvelle habitude")
+                    .font(AppFont.heading(size: 17, weight: .bold))
+                    .foregroundStyle(.primary)
+
+                Spacer()
+
+                Button {
+                    save()
+                } label: {
+                    Text("Créer")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(Theme.onAccent)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 8)
+                        .background(Color.primary, in: Capsule())
+                }
+                .buttonStyle(LifeOSPressStyle(scale: 0.95))
+                .disabled(!isValid)
+                .opacity(isValid ? 1.0 : 0.35)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 16)
+
+            Divider()
+
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Section 1: Nom
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("NOM DE L'HABITUDE")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .tracking(0.6)
+
+                        TextField("Ex: Méditation du matin, Salle de sport...", text: $name)
+                            .font(.system(size: 16, weight: .medium))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 14)
+                            .raisedSurface(RoundedRectangle(cornerRadius: 14, style: .continuous), .nested)
+                    }
+                    .padding(18)
+                    .liquidGlassCard(cornerRadius: Theme.radius)
+
+                    // Section 2: Icône & Couleur
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("ICÔNE & COULEUR")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .tracking(0.6)
+
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 5), spacing: 10) {
+                            ForEach(icons, id: \.self) { icon in
+                                let isSel = selectedIcon == icon
+                                Button {
+                                    selectedIcon = icon
+                                    Haptics.tap()
+                                } label: {
+                                    Image(systemName: icon)
+                                        .font(.system(size: 17, weight: isSel ? .bold : .medium))
+                                        .frame(maxWidth: .infinity)
+                                        .frame(height: 46)
+                                        .background(isSel ? Color(hex: UInt(selectedColorHex)).opacity(0.18) : Color.primary.opacity(0.03))
+                                        .foregroundStyle(isSel ? Color(hex: UInt(selectedColorHex)) : Color.primary)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                .stroke(isSel ? Color(hex: UInt(selectedColorHex)) : Theme.stroke, lineWidth: isSel ? 2 : 0.6)
+                                        )
+                                }
+                                .buttonStyle(LifeOSPressStyle(scale: 0.94))
+                            }
+                        }
+
+                        Divider().padding(.vertical, 4)
+
+                        HStack(spacing: 14) {
+                            ForEach(colors, id: \.self) { c in
+                                let isSel = selectedColorHex == c
+                                Button {
+                                    selectedColorHex = c
+                                    Haptics.tap()
+                                } label: {
+                                    Circle()
+                                        .fill(Color(hex: UInt(c)))
+                                        .frame(width: 32, height: 32)
+                                        .overlay(
+                                            Circle()
+                                                .stroke(Color.white, lineWidth: isSel ? 3 : 0)
+                                        )
+                                        .shadow(color: Color(hex: UInt(c)).opacity(isSel ? 0.45 : 0.15), radius: isSel ? 5 : 2, y: isSel ? 2 : 1)
+                                        .scaleEffect(isSel ? 1.15 : 1.0)
+                                        .animation(.spring(response: 0.25, dampingFraction: 0.65), value: isSel)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .padding(18)
+                    .liquidGlassCard(cornerRadius: Theme.radius)
+
+                    // Section 3: Heure de rappel
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("HEURE DE RAPPEL")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.secondary)
+                            .tracking(0.6)
+
+                        HStack {
+                            Label("Rappel quotidien", systemImage: "bell.badge.fill")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(Color.primary)
+                            Spacer()
+                            DatePicker("", selection: Binding(
+                                get: {
+                                    var c = Calendar.current.dateComponents([.year, .month, .day], from: .now)
+                                    c.hour = hour
+                                    c.minute = minute
+                                    return Calendar.current.date(from: c) ?? .now
+                                },
+                                set: { newDate in
+                                    let c = Calendar.current.dateComponents([.hour, .minute], from: newDate)
+                                    hour = c.hour ?? 9
+                                    minute = c.minute ?? 0
+                                }
+                            ), displayedComponents: .hourAndMinute)
+                            .datePickerStyle(.compact)
+                            .labelsHidden()
+                        }
+                    }
+                    .padding(18)
+                    .liquidGlassCard(cornerRadius: Theme.radius)
+                }
+                .padding(20)
             }
         }
+        .background(Color.white.ignoresSafeArea())
+        #if targetEnvironment(macCatalyst)
+        .frame(minWidth: 460, minHeight: 560)
+        #endif
+    }
+
+    private func save() {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let h = Habit(
+            name: trimmed,
+            icon: selectedIcon,
+            colorHex: selectedColorHex,
+            scheduledHour: hour,
+            scheduledMinute: minute
+        )
+        ctx.insert(h)
+        try? ctx.save()
+        Haptics.medium()
+        dismiss()
     }
 }
 
@@ -1427,7 +1620,7 @@ struct MacDesktopCategoriesOverview: View {
                         } label: {
                             categoryCard(cat, rank: index + 1)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(LifeOSPressStyle(scale: 0.96))
                     }
                 }
             }

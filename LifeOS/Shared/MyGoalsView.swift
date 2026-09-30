@@ -106,7 +106,7 @@ struct MyGoalsView: View {
 
             if let progress {
                 ProgressView(value: progress.ratio)
-                    .tint(progress.ratio >= 1 ? .green : Color.accentColor)
+                    .tint(progress.ratio >= 1 ? Theme.success : Color.accentColor)
                 Text(progress.label)
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(.secondary)
@@ -122,9 +122,9 @@ struct MyGoalsView: View {
     private func statusBadge(_ status: GoalStatus) -> some View {
         let (label, color): (String, Color) = {
             switch status {
-            case .active:    return ("Actif", .green)
-            case .paused:    return ("En pause", .orange)
-            case .achieved:  return ("Atteint", .blue)
+            case .active:    return ("Actif", Theme.success)
+            case .paused:    return ("En pause", Theme.warning)
+            case .achieved:  return ("Atteint", Theme.finance)
             case .abandoned: return ("Abandonné", .secondary)
             }
         }()
@@ -146,7 +146,7 @@ struct MyGoalsView: View {
             }
             Button("Atteint") { goal.status = .achieved; persist() }
                 .buttonStyle(LifeOSGlassButtonStyle()).controlSize(.mini)
-                .tint(.blue)
+                .tint(Theme.finance)
             Button(role: .destructive) {
                 archive(goal)
             } label: {

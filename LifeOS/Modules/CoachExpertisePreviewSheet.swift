@@ -97,7 +97,7 @@ struct CoachExpertisePreviewSheet: View {
                 .lineLimit(2...5)
                 .font(.subheadline)
                 .padding(12)
-                .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous), .nested)
                 .focused($messageFocused)
             HStack(spacing: 6) {
                 sampleChip("je dors mal après le sport")
@@ -114,7 +114,7 @@ struct CoachExpertisePreviewSheet: View {
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(Color.secondary.opacity(0.12), in: Capsule())
+                .raisedSurface(Capsule(), .nested)
         }
         .buttonStyle(.plain)
     }
@@ -172,7 +172,7 @@ struct CoachExpertisePreviewSheet: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
-        .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous), .nested)
     }
 
     private var contextCard: some View {
@@ -198,7 +198,7 @@ struct CoachExpertisePreviewSheet: View {
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(12)
-                .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .raisedSurface(RoundedRectangle(cornerRadius: 10, style: .continuous), .nested)
         }
     }
 }

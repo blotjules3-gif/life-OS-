@@ -12,6 +12,7 @@ func gymWeekdayName(_ w: Int) -> String {
 struct GymProgramView: View {
     @Environment(\.modelContext) private var ctx
     @Query private var days: [GymDay]
+    @Query(sort: \WorkoutSet.date, order: .reverse) private var sets: [WorkoutSet]
 
     @AppStorage(AppStorageKeys.gymReminderOn)     private var on = true
     @AppStorage(AppStorageKeys.gymReminderHour)   private var hour = 7
@@ -36,6 +37,29 @@ struct GymProgramView: View {
                 Text("Rappel salle")
             } footer: {
                 Text("Chaque jour d'entraînement, une notif motivante avec la séance du jour. Les jours de repos, rien.")
+            }
+
+            if let today = day(Calendar.current.component(.weekday, from: .now)) {
+                Section("Aujourd'hui") {
+                    if today.isRest || today.title.trimmingCharacters(in: .whitespaces).isEmpty {
+                        Text(today.isRest ? "Repos. La récupération fait aussi progresser." : "Pas de séance définie aujourd'hui.")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        NavigationLink {
+                            GymSessionView(day: today)
+                        } label: {
+                            Label("Commencer : \(today.title)", systemImage: "play.circle.fill")
+                        }
+                    }
+                }
+            }
+
+            Section {
+                GymWeeklyVolumeView(sets: sets)
+            } header: {
+                Text("Volume sur 7 jours")
+            } footer: {
+                Text("Séries avec un effort d'au moins 7/10, par muscle. Repère courant pour progresser : 10 à 20 par semaine.")
             }
 
             Section("Ma semaine") {

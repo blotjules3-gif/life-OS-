@@ -145,7 +145,7 @@ struct ProfileFieldsView: View {
 
     private func confidenceBadge(_ confidence: Double) -> some View {
         let pct = Int(confidence * 100)
-        let color: Color = confidence >= 0.9 ? .green : (confidence >= 0.7 ? .orange : .red)
+        let color: Color = confidence >= 0.9 ? Theme.success : (confidence >= 0.7 ? Theme.warning : Theme.danger)
         return Text("\(pct)%")
             .font(.caption2.monospacedDigit())
             .foregroundStyle(color)

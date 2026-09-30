@@ -3,7 +3,7 @@ import PhotosUI
 
 /// Sauvegarde/chargement d'images dans le dossier Documents (garde-robe, photos avant/après, docs).
 enum ImageStore {
-    static var dir: URL { FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0] }
+    static var dir: URL { AppPaths.documents }
 
     /// Ecrit l'image et rend son nom de fichier, ou nil si l'ecriture a rate.
     ///

@@ -2,24 +2,24 @@ import SwiftData
 
 enum HabitDefaults {
     private static let catalog: [String: (name: String, icon: String, colorHex: Int)] = [
-        "fitness":      ("Seance de sport",             "figure.run",                0xF1746C),
-        "nutrition":    ("Objectif calories du jour",   "fork.knife",                0x4CC38A),
-        "sleep":        ("Coucher a l'heure cible",     "moon.stars.fill",           0x6C7BF1),
-        "productivity": ("Valider mes habitudes",        "checklist",                 0x3CB2E0),
-        "mind":         ("5 min de meditation",          "brain.head.profile",        0x9B6CF1),
-        "looks":        ("Routine soin du soir",         "face.smiling",              0xE0A23C),
-        "learning":     ("15 min d'apprentissage",       "book.fill",                 0xF97316),
-        "social":       ("Contacter quelqu'un",          "person.2.fill",             0xF16CB0),
-        "finance":      ("Verifier mon budget",          "creditcard.fill",           0x4CC38A),
-        "career":       ("Avancer sur mes objectifs",    "briefcase.fill",            0xE07B3C),
-        "invest":       ("Suivre mon portefeuille",      "chart.line.uptrend.xyaxis", 0x46C9A8),
-        "home":         ("Tache maison du jour",         "house.fill",                0x6CA0F1),
-        "medical":      ("Prendre mes medicaments",      "pills.fill",                0xE84C4C),
+        "fitness":      ("Seance de sport",             "figure.run",                0xFF2E33),
+        "nutrition":    ("Objectif calories du jour",   "fork.knife",                0x47CC5C),
+        "sleep":        ("Coucher a l'heure cible",     "moon.stars.fill",           0x6B66F2),
+        "productivity": ("Valider mes habitudes",        "checklist",                 0x24C7CC),
+        "mind":         ("5 min de meditation",          "brain.head.profile",        0xA852F5),
+        "looks":        ("Routine soin du soir",         "face.smiling",              0xFF8A1A),
+        "learning":     ("15 min d'apprentissage",       "book.fill",                 0xFFCC2E),
+        "social":       ("Contacter quelqu'un",          "person.2.fill",             0xFF338C),
+        "finance":      ("Verifier mon budget",          "creditcard.fill",           0x2185FF),
+        "career":       ("Avancer sur mes objectifs",    "briefcase.fill",            0xFFB83D),
+        "invest":       ("Suivre mon portefeuille",      "chart.line.uptrend.xyaxis", 0x29CC9E),
+        "home":         ("Tache maison du jour",         "house.fill",                0x3D8FF5),
+        "medical":      ("Prendre mes medicaments",      "pills.fill",                0xFF2E33),
     ]
 
     /// Returns the icon name and colorHex for a given module key.
     static func iconAndColor(for module: String) -> (icon: String, colorHex: Int) {
-        guard let d = catalog[module] else { return ("checkmark.circle", 0x4CC38A) }
+        guard let d = catalog[module] else { return ("checkmark.circle", 0x47CC5C) }
         return (d.icon, d.colorHex)
     }
 

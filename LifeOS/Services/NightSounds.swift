@@ -1,0 +1,345 @@
+import Foundation
+import AVFoundation
+import SoundAnalysis
+
+// MARK: - Ecoute nocturne
+//
+// Une session de nuit explicite (distincte du journal de reves): le micro ecoute
+// sur l'appareil, le classifieur sonore d'Apple (SoundAnalysis) repere ronflements,
+// toux, paroles, pleurs, aboiements, et un seuil de volume repere les bruits forts.
+// Chaque evenement garde un court extrait (quelques secondes avant et apres), range
+// dans Documents/Nuits. Rien ne quitte l'appareil. Ce sont des evenements ESTIMES:
+// ni un diagnostic, ni une mesure des phases du sommeil.
+
+struct NightEvent: Codable, Identifiable, Equatable {
+    var id = UUID()
+    /// Categorie affichee: ronflement, toux, parole, pleurs, animal, bruit fort...
+    let kind: String
+    let start: Date
+    var end: Date
+    /// Confiance maximale du classifieur pendant l'evenement (0 a 1).
+    var confidence: Double
+    /// Nom du fichier de l'extrait dans le dossier de la nuit, nil si non garde.
+    var clip: String?
+    var duration: TimeInterval { end.timeIntervalSince(start) }
+}
+
+struct NightSession: Codable, Identifiable, Equatable {
+    var id = UUID()
+    let start: Date
+    var end: Date?
+    var events: [NightEvent] = []
+    /// Coupures (appel, autre app audio): l'ecoute n'a pas couvert ces moments.
+    var gaps: [DateInterval] = []
+    var stoppedReason: String?
+    var folder: String { "night-" + NightSounds.stamp(start) }
+}
+
+enum NightSounds {
+    /// Etiquettes du classifieur Apple -> categorie affichee.
+    static let kinds: [String: String] = [
+        "snoring": "ronflement", "cough": "toux", "sneeze": "éternuement", "speech": "parole",
+        "whispering": "parole", "shout": "parole", "laughter": "rire", "baby_crying": "pleurs",
+        "crying_sobbing": "pleurs", "dog_bark": "animal", "dog": "animal", "cat_meow": "animal", "cat": "animal",
+        "door_slam": "porte", "knock": "porte", "alarm_clock": "alarme", "siren": "sirène", "car_horn": "klaxon",
+        "breathing": "respiration", "gasp": "respiration",
+    ]
+    static let loudKind = "bruit fort"
+
+    static func stamp(_ d: Date) -> String {
+        let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd'_'HH-mm"
+        return f.string(from: d)
+    }
+
+    /// Detection brute: un instant, une etiquette, une confiance.
+    struct Detection: Equatable { let time: Date; let kind: String; let confidence: Double }
+
+    /// Regroupe les detections en evenements: meme categorie, ecart de moins de
+    /// `merge` secondes = un seul evenement. Un evenement de moins de `minDuration`
+    /// n'est garde que s'il est tres sur (bruit ponctuel: toux, porte).
+    static func events(from detections: [Detection], merge: TimeInterval = 4, minDuration: TimeInterval = 1,
+                       minConfidence: Double = 0.6) -> [NightEvent] {
+        var out: [NightEvent] = []
+        var open: [String: NightEvent] = [:]
+        for d in detections.sorted(by: { $0.time < $1.time }) where d.confidence >= minConfidence {
+            if var e = open[d.kind], d.time.timeIntervalSince(e.end) <= merge {
+                e.end = d.time; e.confidence = max(e.confidence, d.confidence); open[d.kind] = e
+            } else {
+                if let e = open[d.kind] { out.append(e) }
+                open[d.kind] = NightEvent(kind: d.kind, start: d.time, end: d.time, confidence: d.confidence)
+            }
+        }
+        out += open.values
+        return out.filter { $0.duration >= minDuration || $0.confidence >= 0.85 }.sorted { $0.start < $1.start }
+    }
+
+    /// Resume du matin: nombre et duree par categorie.
+    static func summary(_ s: NightSession) -> [(kind: String, count: Int, minutes: Double)] {
+        Dictionary(grouping: s.events, by: \.kind)
+            .map { ($0.key, $0.value.count, $0.value.reduce(0) { $0 + $1.duration } / 60) }
+            // Ordre stable: le plus frequent, puis le plus long, puis le nom (un
+            // tri sur le seul nombre changeait l'ordre a chaque affichage en cas d'egalite).
+            .sorted { ($0.1, $0.2, $1.0) > ($1.1, $1.2, $0.0) }
+    }
+
+    /// Nuits plus vieilles que la duree de conservation: a effacer.
+    static func expired(_ sessions: [NightSession], keepDays: Int, now: Date = Date()) -> [NightSession] {
+        guard keepDays > 0 else { return [] }
+        let limit = now.addingTimeInterval(-Double(keepDays) * 86_400)
+        return sessions.filter { ($0.end ?? $0.start) < limit }
+    }
+
+    /// Espace libre minimal pour lancer une nuit (extraits compresses, ~1 Mo / minute
+    /// d'evenement au pire).
+    static let minimumFreeBytes: Int64 = 300 * 1_024 * 1_024
+}
+
+// MARK: - Magasin des nuits
+
+@MainActor
+final class NightStore: ObservableObject {
+    static let shared = NightStore()
+    @Published private(set) var sessions: [NightSession] = []
+    let directory: URL
+    static let keepDaysKey = "night.keepDays"
+
+    init(directory: URL? = nil) {
+        self.directory = directory ?? AppPaths.documents.appendingPathComponent("Nuits", isDirectory: true)
+        try? FileManager.default.createDirectory(at: self.directory, withIntermediateDirectories: true)
+        if let d = try? Data(contentsOf: self.directory.appendingPathComponent("nights.json")),
+           let s = try? JSONDecoder().decode([NightSession].self, from: d) { sessions = s }
+    }
+
+    var keepDays: Int {
+        get { let v = UserDefaults.standard.integer(forKey: Self.keepDaysKey); return v == 0 ? 14 : v }
+        set { UserDefaults.standard.set(newValue, forKey: Self.keepDaysKey); purge() }
+    }
+
+    func folder(_ s: NightSession) -> URL { directory.appendingPathComponent(s.folder, isDirectory: true) }
+
+    func save(_ s: NightSession) throws {
+        var all = sessions.filter { $0.id != s.id }
+        all.insert(s, at: 0)
+        try write(all)
+        sessions = all
+    }
+
+    func delete(_ s: NightSession) throws {
+        try? FileManager.default.removeItem(at: folder(s))
+        let all = sessions.filter { $0.id != s.id }
+        try write(all); sessions = all
+    }
+
+    func deleteEvent(_ e: NightEvent, in s: NightSession) throws {
+        if let c = e.clip { try? FileManager.default.removeItem(at: folder(s).appendingPathComponent(c)) }
+        var copy = s; copy.events.removeAll { $0.id == e.id }
+        try save(copy)
+    }
+
+    /// Efface les nuits trop anciennes (fichiers compris).
+    func purge(now: Date = Date()) {
+        for s in NightSounds.expired(sessions, keepDays: keepDays, now: now) { try? delete(s) }
+    }
+
+    func eraseAll() throws {
+        if FileManager.default.fileExists(atPath: directory.path) { try FileManager.default.removeItem(at: directory) }
+        sessions = []
+    }
+
+    private func write(_ all: [NightSession]) throws {
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try JSONEncoder().encode(all).write(to: directory.appendingPathComponent("nights.json"), options: .atomic)
+    }
+}
+
+// MARK: - Ecoute (micro, classifieur, extraits)
+
+@MainActor
+final class NightListener: NSObject, ObservableObject {
+    static let shared = NightListener()
+    @Published private(set) var session: NightSession?
+    @Published private(set) var lastSound = ""
+    @Published var error: String?
+
+    private let engine = AVAudioEngine()
+    private var analyzer: SNAudioStreamAnalyzer?
+    private let queue = DispatchQueue(label: "night.analysis")
+    private var detections: [NightSounds.Detection] = []
+    private var recorder: ClipRecorder?
+    private var observer: ResultsObserver?
+    private var interruptionStart: Date?
+
+    var isRunning: Bool { session != nil }
+
+    func requestPermission() async -> Bool { await AVAudioApplication.requestRecordPermission() }
+
+    /// Le micro peut-il etre ouvert ici? Dans le simulateur, ouvrir l'entree audio
+    /// fait avorter l'app (serveur audio de l'hote sans reponse, mesure le 29 sept):
+    /// on refuse proprement au lieu de planter.
+    static var microphoneUsable: (ok: Bool, reason: String?) {
+        #if targetEnvironment(simulator)
+        return (false, "L'écoute nocturne ne fonctionne que sur un vrai iPhone (le simulateur n'a pas de micro fiable).")
+        #else
+        return AVAudioSession.sharedInstance().isInputAvailable ? (true, nil) : (false, "Aucun micro disponible.")
+        #endif
+    }
+
+    func start() throws {
+        guard session == nil else { return }
+        let mic = Self.microphoneUsable
+        guard mic.ok else { throw NSError(domain: "Nuit", code: 2, userInfo: [NSLocalizedDescriptionKey: mic.reason ?? "Micro indisponible."]) }
+        if let free = try? URL(fileURLWithPath: NSHomeDirectory()).resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage,
+           free < NightSounds.minimumFreeBytes {
+            throw NSError(domain: "Nuit", code: 1, userInfo: [NSLocalizedDescriptionKey: "Stockage presque plein : libère au moins 300 Mo avant de lancer l'écoute."])
+        }
+        let s = NightSession(start: Date())
+        let folder = NightStore.shared.folder(s)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+
+        let audio = AVAudioSession.sharedInstance()
+        try audio.setCategory(.record, mode: .measurement, options: [.mixWithOthers])
+        try audio.setActive(true)
+        let input = engine.inputNode
+        let format = input.outputFormat(forBus: 0)
+        let analyzer = SNAudioStreamAnalyzer(format: format)
+        let request = try SNClassifySoundRequest(classifierIdentifier: .version1)
+        request.windowDuration = CMTime(seconds: 1.5, preferredTimescale: 48_000)
+        let obs = ResultsObserver { [weak self] label, conf in
+            Task { @MainActor in self?.handle(label: label, confidence: conf) }
+        }
+        try analyzer.add(request, withObserver: obs)
+        self.analyzer = analyzer; self.observer = obs
+        let rec = ClipRecorder(format: format, folder: folder)
+        self.recorder = rec
+        input.installTap(onBus: 0, bufferSize: 8_192, format: format) { [weak self] buf, when in
+            rec.append(buf)
+            self?.queue.async { analyzer.analyze(buf, atAudioFramePosition: when.sampleTime) }
+            // Volume: bruit fort au dessus de -20 dBFS.
+            if let ch = buf.floatChannelData?[0] {
+                let n = Int(buf.frameLength); var sum: Float = 0
+                for i in 0..<n { sum += ch[i] * ch[i] }
+                let rms = sqrt(sum / Float(max(n, 1)))
+                let db = 20 * log10(max(rms, 1e-7))
+                if db > -20 { Task { @MainActor in self?.handle(label: NightSounds.loudKind, confidence: 0.9) } }
+            }
+        }
+        engine.prepare()
+        try engine.start()
+        session = s
+        detections = []
+        NotificationCenter.default.addObserver(self, selector: #selector(interrupted(_:)), name: AVAudioSession.interruptionNotification, object: nil)
+        try NightStore.shared.save(s)
+    }
+
+    private func handle(label: String, confidence: Double) {
+        let kind = label == NightSounds.loudKind ? label : (NightSounds.kinds[label] ?? "")
+        guard !kind.isEmpty, confidence >= 0.6, session != nil else { return }
+        lastSound = kind
+        detections.append(.init(time: Date(), kind: kind, confidence: confidence))
+        recorder?.mark(kind: kind)
+    }
+
+    @objc private func interrupted(_ n: Notification) {
+        guard let raw = n.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: raw) else { return }
+        Task { @MainActor in
+            if type == .began { interruptionStart = Date() }
+            else if let s = interruptionStart {
+                session?.gaps.append(DateInterval(start: s, end: Date()))
+                interruptionStart = nil
+                try? AVAudioSession.sharedInstance().setActive(true)
+                try? engine.start()
+            }
+        }
+    }
+
+    /// Fin de nuit: regroupe les detections en evenements et rattache les extraits.
+    func stop(reason: String? = nil) {
+        guard var s = session else { return }
+        engine.inputNode.removeTap(onBus: 0)
+        engine.stop()
+        analyzer?.removeAllRequests()
+        let clips = recorder?.finish() ?? []
+        NotificationCenter.default.removeObserver(self, name: AVAudioSession.interruptionNotification, object: nil)
+        s.end = Date()
+        s.stoppedReason = reason
+        var events = NightSounds.events(from: detections)
+        for i in events.indices {
+            events[i].clip = clips.first { $0.kind == events[i].kind && abs($0.start.timeIntervalSince(events[i].start)) < 12 }?.file
+        }
+        s.events = events
+        try? NightStore.shared.save(s)
+        NightStore.shared.purge()
+        session = nil; recorder = nil; analyzer = nil; observer = nil
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+}
+
+/// Recoit les resultats du classifieur (hors fil principal).
+final class ResultsObserver: NSObject, SNResultsObserving {
+    let onResult: (String, Double) -> Void
+    init(onResult: @escaping (String, Double) -> Void) { self.onResult = onResult }
+    func request(_ request: SNRequest, didProduce result: SNResult) {
+        guard let r = result as? SNClassificationResult, let top = r.classifications.first else { return }
+        onResult(top.identifier, top.confidence)
+    }
+}
+
+/// Garde les ~5 dernieres secondes en memoire; a chaque evenement, ecrit un extrait
+/// (5 s avant, jusqu'a 8 s apres la derniere detection, 30 s au plus) en AAC.
+final class ClipRecorder: @unchecked Sendable {
+    struct Clip { let kind: String; let start: Date; let file: String }
+    private let format: AVAudioFormat
+    private let folder: URL
+    private var ring: [AVAudioPCMBuffer] = []
+    private var ringFrames: AVAudioFrameCount = 0
+    private var file: AVAudioFile?
+    private var current: (kind: String, start: Date, last: Date, name: String)?
+    private var clips: [Clip] = []
+    private let lock = NSLock()
+
+    init(format: AVAudioFormat, folder: URL) { self.format = format; self.folder = folder }
+
+    func append(_ buf: AVAudioPCMBuffer) {
+        lock.lock(); defer { lock.unlock() }
+        guard let copy = AVAudioPCMBuffer(pcmFormat: buf.format, frameCapacity: buf.frameLength) else { return }
+        copy.frameLength = buf.frameLength
+        if let src = buf.floatChannelData, let dst = copy.floatChannelData {
+            for c in 0..<Int(buf.format.channelCount) { dst[c].update(from: src[c], count: Int(buf.frameLength)) }
+        }
+        if let f = file, let cur = current {
+            try? f.write(from: copy)
+            if Date().timeIntervalSince(cur.last) > 8 || Date().timeIntervalSince(cur.start) > 30 { close() }
+            return
+        }
+        ring.append(copy); ringFrames += copy.frameLength
+        while ringFrames > AVAudioFrameCount(format.sampleRate * 5), let first = ring.first {
+            ringFrames -= first.frameLength; ring.removeFirst()
+        }
+    }
+
+    func mark(kind: String) {
+        lock.lock(); defer { lock.unlock() }
+        if var cur = current { cur.last = Date(); current = cur; return }
+        let name = "\(kind.replacingOccurrences(of: " ", with: "-"))-\(Int(Date().timeIntervalSince1970)).m4a"
+        let settings: [String: Any] = [AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: format.sampleRate,
+                                       AVNumberOfChannelsKey: format.channelCount, AVEncoderBitRateKey: 32_000]
+        guard let f = try? AVAudioFile(forWriting: folder.appendingPathComponent(name), settings: settings,
+                                       commonFormat: .pcmFormatFloat32, interleaved: false) else { return }
+        for b in ring { try? f.write(from: b) }
+        ring = []; ringFrames = 0
+        file = f
+        current = (kind, Date(), Date(), name)
+    }
+
+    private func close() {
+        if let cur = current { clips.append(Clip(kind: cur.kind, start: cur.start, file: cur.name)) }
+        file = nil; current = nil
+    }
+
+    func finish() -> [Clip] {
+        lock.lock(); defer { lock.unlock() }
+        close()
+        return clips
+    }
+}

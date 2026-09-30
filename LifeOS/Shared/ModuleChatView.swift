@@ -194,7 +194,7 @@ struct ModuleChatView: View {
     private var moduleChatOfflineBanner: some View {
         HStack(spacing: 8) {
             Circle()
-                .fill(Color.orange)
+                .fill(Theme.warning)
                 .frame(width: 6, height: 6)
             Text("Serveur inaccessible")
                 .font(.system(size: 13, weight: .medium))
@@ -212,7 +212,7 @@ struct ModuleChatView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 9)
-        .background(Color.orange.opacity(0.1))
+        .background(Theme.warning.opacity(0.1))
     }
 
     // MARK: - Send Logic

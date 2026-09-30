@@ -1,0 +1,72 @@
+{
+  "status": "ready_for_review",
+  "job": "2026-09-30-tabata-health-reprise",
+  "finished_at": "2026-09-30T06:10:00+01:00",
+  "defects": {
+    "1_immutable_finishedAt": "fixed, verified present before fix",
+    "2_durable_health_queue": "fixed, verified present before fix"
+  },
+  "build": {
+    "command": "xcodebuild test -project LifeOS.xcodeproj -scheme LifeOS -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -parallel-testing-enabled NO -only-testing:LifeOSTests/TabataSessionTests -only-testing:LifeOSTests/TabataCatchUpTests -derivedDataPath /tmp/lifeos-dd-tabata2",
+    "runs": [
+      {
+        "log": "test-run-1.log",
+        "tests": 39,
+        "failures": 0,
+        "exit_code": null,
+        "note": "killed by the tool at 600 s during xcodebuild teardown, tests already finished"
+      },
+      {
+        "log": "test-run-2.log",
+        "tests": 39,
+        "failures": 0,
+        "exit_code": null,
+        "note": "same"
+      },
+      {
+        "log": "test-run-3.log",
+        "tests": 39,
+        "failures": 0,
+        "exit_code": 0,
+        "result": "TEST SUCCEEDED",
+        "note": "detached run, exit code appended to the log"
+      }
+    ],
+    "warnings_in_touched_files": 0,
+    "correction_passes_used": 0
+  },
+  "tests_added": [
+    "testFinishDuringCatchUpIsDatedAtRealBoundary",
+    "testFinishOnNormalTickIsDatedNow",
+    "testDelayedFailureThenRelaunchKeepsOriginalFinishTime",
+    "testFailedWorkoutSurvivesNewSessionAndRelaunch",
+    "testInFlightWriteSurvivesSessionReplacementAndTermination",
+    "testRetryCoversQueuedSessionNotOnlyLiveOne",
+    "testDiscardAfterFailedWriteKeepsQueue"
+  ],
+  "tests_modified": [
+    "testFinishDuringRestoreCatchUpWritesHealth"
+  ],
+  "evidence": [
+    "docs/lifeos-agent/jobs/2026-09-30-tabata-health-reprise/test-run-3.log",
+    "docs/lifeos-agent/jobs/2026-09-30-tabata-health-reprise/test-run-1.log",
+    "docs/lifeos-agent/jobs/2026-09-30-tabata-health-reprise/test-run-2.log",
+    "docs/lifeos-agent/jobs/2026-09-30-tabata-health-reprise/diff-tabata-health.patch",
+    "docs/lifeos-agent/jobs/2026-09-30-tabata-health-reprise/REVIEW-EVIDENCE.md",
+    "docs/lifeos-agent/jobs/2026-09-30-tabata-health-reprise/HANDOFF.md"
+  ],
+  "files_changed": [
+    "LifeOS/Modules/TabataView.swift",
+    "LifeOS/Services/TabataSessionStore.swift",
+    "LifeOS/Services/AppStorageKeys.swift",
+    "LifeOSTests/TabataSessionTests.swift",
+    "LifeOSTests/TabataCatchUpTests.swift"
+  ],
+  "screenshots": [],
+  "untested_real_health": [
+    "real HealthKit write and syncIdentifier replacement",
+    "Réessayer button after a real refusal",
+    "real background/lock, iPad, Mac"
+  ],
+  "blocked_reason": null
+}

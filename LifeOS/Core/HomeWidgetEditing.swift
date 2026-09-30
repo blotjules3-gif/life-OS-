@@ -124,7 +124,7 @@ struct HomeEditBar: View {
                         if hiddenCount > 0 {
                             Text("\(hiddenCount)")
                                 .font(.caption2.bold()).foregroundStyle(.white)
-                                .padding(4).background(Color.red, in: Circle())
+                                .padding(4).background(Theme.danger, in: Circle())
                                 .offset(x: 6, y: -6)
                         }
                     }
@@ -171,7 +171,7 @@ struct HomeWidgetGallery: View {
                                                     in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                                     Text(w.label).foregroundStyle(.primary)
                                     Spacer()
-                                    Image(systemName: "plus.circle.fill").font(.title3).foregroundStyle(.green)
+                                    Image(systemName: "plus.circle.fill").font(.title3).foregroundStyle(Theme.success)
                                 }
                             }
                         }
@@ -212,6 +212,6 @@ struct HomeWidgetPlaceholder: View {
         .foregroundStyle(Theme.textPrimary)
         .padding(16)
         .frame(maxWidth: .infinity)
-        .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous), .nested)
     }
 }

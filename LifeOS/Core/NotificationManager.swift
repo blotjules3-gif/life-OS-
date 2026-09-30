@@ -12,8 +12,8 @@ final class NotificationManager {
         // Verification visuelle : l'alerte systeme assombrit tout l'ecran et rend le
         // rendu injugeable. Le garde est ICI et pas chez les appelants parce qu'il y en
         // a six, et en oublier un suffit a faire revenir l'alerte. Absent en Release.
-        if ProcessInfo.processInfo.arguments.contains("-noPrompts")
-            || ProcessInfo.processInfo.arguments.contains("-desktop") { return false }
+        // Les noms de drapeaux vivent dans DebugLaunchFlags, un seul endroit.
+        if DebugLaunchFlags.suppressesPermissionPrompts { return false }
         #endif
         do {
             return try await UNUserNotificationCenter.current()
@@ -165,8 +165,54 @@ final class NotificationManager {
         UNUserNotificationCenter.current().add(request)
     }
 
+    /// Planifie des rappels quotidiens bornés dans le temps jusqu'à une date de fin précise.
+    func scheduleBoundedDaily(idPrefix: String, title: String, body: String, hour: Int, minute: Int, startDate: Date = Date(), endDate: Date, maxDays: Int = 30) {
+        let cal = Calendar.current
+        var current = max(cal.startOfDay(for: startDate), cal.startOfDay(for: Date()))
+        let limit = min(cal.startOfDay(for: endDate), cal.date(byAdding: .day, value: maxDays, to: Date()) ?? endDate)
+        var dayIndex = 0
+        while current <= limit && dayIndex < maxDays {
+            var comps = cal.dateComponents([.year, .month, .day], from: current)
+            comps.hour = hour
+            comps.minute = minute
+            if let scheduledDate = cal.date(from: comps), scheduledDate > Date() {
+                schedule(id: "\(idPrefix).d\(dayIndex)", title: title, body: body, at: scheduledDate)
+            }
+            guard let next = cal.date(byAdding: .day, value: 1, to: current) else { break }
+            current = next
+            dayIndex += 1
+        }
+    }
+
     func cancel(id: String) {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [id])
+    }
+
+    /// Annule toutes les notifications en attente dont l'identifiant commence par un préfixe donné.
+    func cancelWithPrefix(_ prefix: String) {
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            let idsToRemove = requests.filter { $0.identifier.hasPrefix(prefix) }.map(\.identifier)
+            if !idsToRemove.isEmpty {
+                UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: idsToRemove)
+            }
+        }
+    }
+
+    /// Remplace, dans l'ORDRE, toutes les notifications d'un prefixe.
+    ///
+    /// Avant: `cancelWithPrefix` (asynchrone) puis creation immediate avec les
+    /// memes identifiants. Le rappel de suppression pouvait passer APRES la
+    /// creation et effacer les nouveaux rappels. Ici on attend la liste, on
+    /// retire, puis on ajoute.
+    func replacePending(prefix: String, with requests: [UNNotificationRequest]) async {
+        let center = UNUserNotificationCenter.current()
+        let pending = await center.pendingNotificationRequests()
+        let stale = pending.map(\.identifier).filter { $0.hasPrefix(prefix) }
+        if !stale.isEmpty { center.removePendingNotificationRequests(withIdentifiers: stale) }
+        for r in requests {
+            do { try await center.add(r) }
+            catch { AppLog.general.error("rappel non pose \(r.identifier, privacy: .public): \(error.localizedDescription, privacy: .public)") }
+        }
     }
 
     func cancelAll() {

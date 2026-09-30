@@ -58,8 +58,8 @@ struct CRMView: View {
                 .overlay(Text(String(c.name.prefix(1)).uppercased()).bold().foregroundStyle(.socialTint))
             VStack(alignment: .leading) {
                 Text(c.name).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
-                if let last = c.lastSeen { Text("Vu \(last, style: .relative)").font(.caption).foregroundStyle(highlight ? .orange : Theme.textSecondary) }
-                else { Text("Jamais marqué").font(.caption).foregroundStyle(.orange) }
+                if let last = c.lastSeen { Text("Vu \(last, style: .relative)").font(.caption).foregroundStyle(highlight ? Theme.warning : Theme.textSecondary) }
+                else { Text("Jamais marqué").font(.caption).foregroundStyle(Theme.warning) }
             }
             Spacer()
             Button { c.lastSeen = Date(); Haptics.tap() } label: { Image(systemName: "checkmark.message.fill").foregroundStyle(.socialTint) }.accessibilityLabel("Marquer contacté")
@@ -118,7 +118,7 @@ struct BirthdaysView: View {
                                     Text(c.name).font(.headline).foregroundStyle(Theme.textPrimary)
                                     Spacer()
                                     let d = daysUntil(c.birthday!)
-                                    Text(d == 0 ? "Aujourd'hui" : "Dans \(d) j").font(.subheadline.bold()).foregroundStyle(d <= 7 ? .orange : .socialTint)
+                                    Text(d == 0 ? "Aujourd'hui" : "Dans \(d) j").font(.subheadline.bold()).foregroundStyle(d <= 7 ? Theme.warning : .socialTint)
                                 }
                                 Text(c.birthday!, format: .dateTime.day().month(.wide)).font(.caption).foregroundStyle(Theme.textSecondary)
                                 if !c.giftIdeas.isEmpty { Label(c.giftIdeas, systemImage: "lightbulb.fill").font(.caption).foregroundStyle(.socialTint) }

@@ -95,7 +95,7 @@ struct SkincareView: View {
         Button { showProfile = true } label: {
             HStack(spacing: 12) {
                 Image(systemName: "checkmark.shield.fill")
-                    .font(.system(size: 18)).foregroundStyle(.green)
+                    .font(.system(size: 18)).foregroundStyle(Theme.success)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Profil peau : \(skinType.capitalized)")
                         .font(.subheadline.weight(.semibold))
@@ -108,7 +108,7 @@ struct SkincareView: View {
                 Text("Modifier").font(.caption).foregroundStyle(.secondary)
             }
             .padding(12)
-            .background(Color.green.opacity(0.22), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(Theme.success.opacity(0.22), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         }.buttonStyle(.plain)
     }
 
@@ -119,7 +119,7 @@ struct SkincareView: View {
                 Spacer()
                 Button(action: toggle) {
                     Image(systemName: done ? "checkmark.circle.fill" : "circle")
-                        .font(.title3).foregroundStyle(done ? .green : Theme.textSecondary)
+                        .font(.title3).foregroundStyle(done ? Theme.success : Theme.textSecondary)
                 }
             }
             ForEach(Array(steps.enumerated()), id: \.offset) { i, step in
@@ -485,7 +485,7 @@ struct WardrobeEditor: View {
                 Picker("Chaleur", selection: $warmth) { Text("Léger").tag(1); Text("Moyen").tag(2); Text("Chaud").tag(3) }
                 Section("Photo") {
                     PhotoPickerButton(label: "Choisir une photo", prefix: "wardrobe") { filename = $0 }
-                    if filename != nil { Text("Photo ajoutée").foregroundStyle(.green).font(.caption) }
+                    if filename != nil { Text("Photo ajoutée").foregroundStyle(Theme.success).font(.caption) }
                 }
             }
             .navigationTitle("Ajouter une pièce").navigationBarTitleDisplayMode(.inline)

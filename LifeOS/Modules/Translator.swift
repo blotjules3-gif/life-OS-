@@ -27,17 +27,22 @@ private let transLangs: [TransLang] = [
 ]
 
 struct TranslationView: View {
+    // Le framework Translation existe aussi sur Mac (Catalyst 26+). Avant, la
+    // branche Mac etait exclue par un #if et affichait "iOS 18 requis" sur un
+    // Mac a jour: un traducteur absent, avec un faux motif.
     var body: some View {
-        #if !targetEnvironment(macCatalyst)
-        if #available(iOS 18.0, *) {
+        if #available(iOS 18.0, macCatalyst 26.0, *) {
             TranslatorScreen()
         } else {
             fallbackView
         }
-        #else
-        fallbackView
-        #endif
     }
+
+    #if targetEnvironment(macCatalyst)
+    private static let requirement = "La traduction hors ligne d'Apple demande macOS 26 ou plus récent sur Mac."
+    #else
+    private static let requirement = "La traduction hors ligne d'Apple demande iOS 18 ou plus récent."
+    #endif
 
     private var fallbackView: some View {
         ZStack {
@@ -45,7 +50,7 @@ struct TranslationView: View {
             VStack(spacing: 12) {
                 Image(systemName: "character.bubble").font(.system(size: 48)).foregroundStyle(.travelTint)
                 Text("Traduction").font(.title3.bold())
-                Text("La traduction hors-ligne nécessite iOS 18 ou plus récent.")
+                Text(Self.requirement)
                     .font(.subheadline).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
             }.padding()
         }
@@ -53,8 +58,7 @@ struct TranslationView: View {
     }
 }
 
-#if !targetEnvironment(macCatalyst)
-@available(iOS 18.0, *)
+@available(iOS 18.0, macCatalyst 26.0, *)
 private struct TranslatorScreen: View {
     @State private var source = "fr"
     @State private var target = "en"
@@ -78,30 +82,56 @@ private struct TranslatorScreen: View {
                     if busy { ProgressView("Traduction…").padding(.top, 4) }
                     if let errorMsg {
                         Label(errorMsg, systemImage: "exclamationmark.triangle.fill")
-                            .font(.subheadline).foregroundStyle(.orange)
+                            .font(.subheadline).foregroundStyle(Theme.warning)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(12).background(Color.orange.opacity(0.20), in: RoundedRectangle(cornerRadius: 12))
+                            .padding(12).background(Theme.warning.opacity(0.20), in: RoundedRectangle(cornerRadius: 12))
                     }
                     if !output.isEmpty { outputCard }
-                    Text("100% sur l'appareil. Télécharge une langue pour l'utiliser hors connexion.")
+                    Text("Traduction faite sur l'appareil par Apple. La première fois, le système peut demander de télécharger la langue.")
                         .font(.caption2).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
                 }
                 .padding()
             }
         }
         .navigationTitle("Traduction").navigationBarTitleDisplayMode(.inline)
+        #if DEBUG
+        .onAppear {
+            if let text = DebugLaunchFlags.value("-translateProbe") {
+                input = text
+                config = .init(source: lang("fr").language, target: lang("en").language)
+            }
+        }
+        #endif
         .translationTask(config) { session in
             do {
                 busy = true; errorMsg = nil
                 try await session.prepareTranslation()
                 let response = try await session.translate(input)
                 output = response.targetText
+                #if DEBUG
+                Self.writeProbe("OK \(input) -> \(output)")
+                #endif
             } catch {
-                errorMsg = "Langue indisponible. Touche « Télécharger » puis réessaie."
+                #if DEBUG
+                Self.writeProbe("ERREUR \(error)")
+                #endif
+                // Il n'y a pas de bouton "Telecharger" dans cet ecran: le systeme
+                // propose lui meme le telechargement au premier essai.
+                errorMsg = "Traduction impossible pour cette paire de langues. Si le système a proposé de télécharger la langue, accepte puis réessaie. (\(error.localizedDescription))"
             }
             busy = false
         }
     }
+
+    #if DEBUG
+    /// `-translateProbe "<texte>"`: traduit fr -> en au lancement et ecrit le
+    /// resultat dans Documents/translateprobe.txt. Sert a PROUVER la traduction
+    /// sur Mac, ou la capture d'ecran est bloquee sur ce poste.
+    static func writeProbe(_ line: String) {
+        guard DebugLaunchFlags.value("-translateProbe") != nil else { return }
+        try? line.write(to: AppPaths.documents.appendingPathComponent("translateprobe.txt"), atomically: true, encoding: .utf8)
+    }
+    #endif
 
     private var langBar: some View {
         HStack(spacing: 10) {
@@ -176,4 +206,3 @@ private struct TranslatorScreen: View {
         .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 }
-#endif

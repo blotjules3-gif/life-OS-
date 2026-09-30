@@ -29,7 +29,7 @@ struct ProviderKeyHelpView: View {
             if let pasteError {
                 Label(pasteError, systemImage: "exclamationmark.triangle.fill")
                     .font(.caption)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.warning)
                     .transition(.opacity)
             }
             stepsTimeline
@@ -57,10 +57,10 @@ struct ProviderKeyHelpView: View {
                         .padding(.horizontal, 7)
                         .padding(.vertical, 3)
                         .background(
-                            (slot.hasFreeTier ? Color.green : Color.orange).opacity(0.15),
+                            (slot.hasFreeTier ? Theme.success : Theme.warning).opacity(0.15),
                             in: Capsule()
                         )
-                        .foregroundStyle(slot.hasFreeTier ? .green : .orange)
+                        .foregroundStyle(slot.hasFreeTier ? Theme.success : Theme.warning)
                     Text("environ \(slot.estimatedSetupMinutes) min")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
@@ -90,7 +90,7 @@ struct ProviderKeyHelpView: View {
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
             .frame(minHeight: 44)
-            .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .glassControl(RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .buttonStyle(.plain)
         .disabled(slot.docsURL == nil)

@@ -63,6 +63,11 @@ final class HealthService {
 
     func requestAuthorization() async -> Bool {
         guard isAvailable else { return false }
+        #if DEBUG
+        // Meme raison que pour les notifications : la feuille Sante couvre l'ecran.
+        // Le garde est ici parce que dix endroits demandent l'autorisation.
+        if DebugLaunchFlags.suppressesPermissionPrompts { return false }
+        #endif
         do {
             try await store.requestAuthorization(toShare: writeTypes, read: readTypes)
             authorized = true
@@ -100,8 +105,14 @@ final class HealthService {
     /// combien quelqu'un a brule. Sante enregistre alors la duree seule, ce
     /// qui alimente quand meme les minutes d'exercice. Mieux vaut une donnee
     /// manquante qu'une donnee inventee dans un dossier de sante.
+    ///
+    /// `syncIdentifier` rend l'ecriture rejouable sans doublon: Sante remplace
+    /// un workout qui porte le meme identifiant au lieu d'en ajouter un second.
+    /// C'est ce qui protege contre une app tuee entre "ecrit" et "note comme
+    /// ecrit". Sans identifiant, chaque appel cree un workout de plus.
     @discardableResult
-    func saveWorkout(kind: WorkoutKind, start: Date, end: Date, kcal: Double) async -> Bool {
+    func saveWorkout(kind: WorkoutKind, start: Date, end: Date, kcal: Double,
+                     syncIdentifier: String? = nil) async -> Bool {
         guard isAvailable, end > start else { return false }
         let config = HKWorkoutConfiguration()
         config.activityType = kind.activityType
@@ -109,6 +120,10 @@ final class HealthService {
         let builder = HKWorkoutBuilder(healthStore: store, configuration: config, device: .local())
         do {
             try await builder.beginCollection(at: start)
+            if let syncIdentifier {
+                try await builder.addMetadata([HKMetadataKeySyncIdentifier: syncIdentifier,
+                                               HKMetadataKeySyncVersion: 1])
+            }
             if kcal > 0, let type = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned) {
                 let sample = HKQuantitySample(
                     type: type,

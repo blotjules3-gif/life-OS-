@@ -81,7 +81,7 @@ struct ReviewSession: View {
             Theme.background
             if index >= cards.count {
                 VStack(spacing: 16) {
-                    Image(systemName: "checkmark.seal.fill").font(.system(size: 60)).foregroundStyle(.green)
+                    Image(systemName: "checkmark.seal.fill").font(.system(size: 60)).foregroundStyle(Theme.success)
                     Text("Révision terminée").font(.title2.bold()).foregroundStyle(Theme.textPrimary)
                     PrimaryButton(title: "Fermer", tint: .learnTint) { dismiss() }.padding(.horizontal, 40)
                 }
@@ -99,9 +99,9 @@ struct ReviewSession: View {
                         PrimaryButton(title: "Voir la réponse", icon: "eye.fill", tint: .learnTint) { withAnimation { flipped = true } }
                     } else {
                         HStack(spacing: 10) {
-                            gradeButton("À revoir", .red, 2)
-                            gradeButton("Correct", .orange, 4)
-                            gradeButton("Facile", .green, 5)
+                            gradeButton("À revoir", Theme.danger, 2)
+                            gradeButton("Correct", Theme.warning, 4)
+                            gradeButton("Facile", Theme.success, 5)
                         }
                     }
                 }.padding()
@@ -250,7 +250,7 @@ struct BookAISheet: View {
                     .disabled(busy || title.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
                 if let error {
-                    Section { Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange).font(.footnote) }
+                    Section { Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(Theme.warning).font(.footnote) }
                 }
                 if !ideas.isEmpty {
                     Section("Idées clés") {
@@ -343,7 +343,7 @@ struct SkillPlanView: View {
                         if !steps.isEmpty { ProgressView(value: Double(done.count), total: Double(max(1, steps.count))).tint(.learnTint) }
                         ForEach(steps, id: \.self) { s in
                             Button { toggle(s) } label: {
-                                HStack { Image(systemName: done.contains(s) ? "checkmark.circle.fill" : "circle").foregroundStyle(done.contains(s) ? .green : Theme.textSecondary); Text(s).strikethrough(done.contains(s)).foregroundStyle(Theme.textPrimary); Spacer() }
+                                HStack { Image(systemName: done.contains(s) ? "checkmark.circle.fill" : "circle").foregroundStyle(done.contains(s) ? Theme.success : Theme.textSecondary); Text(s).strikethrough(done.contains(s)).foregroundStyle(Theme.textPrimary); Spacer() }
                             }
                         }
                         HStack {

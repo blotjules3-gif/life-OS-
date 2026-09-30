@@ -137,13 +137,7 @@ enum CoachFeedbackStore {
     // MARK: - Persistance JSONL
 
     private static func fileURL() -> URL? {
-        guard let dir = try? FileManager.default.url(
-            for: .documentDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        ) else { return nil }
-        return dir.appendingPathComponent(filename)
+        AppPaths.documents.appendingPathComponent(filename)
     }
 
     private static func load() -> [Entry] {

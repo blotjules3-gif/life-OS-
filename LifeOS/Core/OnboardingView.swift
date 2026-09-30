@@ -922,11 +922,11 @@ struct OnboardingWakeTime: View {
                 VStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .fill(Color.orange.opacity(0.1))
+                            .fill(Theme.warning.opacity(0.1))
                             .frame(width: 80, height: 80)
                         Image(systemName: "sunrise.fill")
                             .font(.system(size: 36, weight: .semibold))
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Theme.warning)
                     }
 
                     VStack(spacing: 10) {

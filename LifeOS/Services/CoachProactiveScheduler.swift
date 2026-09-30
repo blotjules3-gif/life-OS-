@@ -51,6 +51,14 @@ enum CoachProactiveScheduler {
 
         let workItem = Task { @MainActor in
             defer { task.setTaskCompleted(success: true) }
+            // Meme reveil, deuxieme usage: prolonger les rappels de medicaments
+            // sans attendre que l'utilisateur rouvre l'app. iOS decide QUAND ce
+            // reveil a lieu, donc ce n'est qu'un plus: l'ecran montre toujours
+            // jusqu'ou les rappels sont reellement programmes.
+            if let ctx = try? LocalStore.container().mainContext {
+                MedicationReminders.reconcileAll(ctx: ctx)
+                await MedicationReminders.waitForIdle()
+            }
             await runProactiveScan()
         }
 

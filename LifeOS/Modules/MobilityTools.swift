@@ -275,7 +275,7 @@ struct ParkingView: View {
                 }.buttonStyle(.plain)
                 Button { clear() } label: {
                     Image(systemName: "trash").frame(width: 46, height: 44)
-                        .raisedSurface(RoundedRectangle(cornerRadius: 11), .nested).foregroundStyle(.red)
+                        .raisedSurface(RoundedRectangle(cornerRadius: 11), .nested).foregroundStyle(Theme.danger)
                 }.buttonStyle(.plain)
             }
         }
@@ -286,9 +286,9 @@ struct ParkingView: View {
     private var errorCard: some View {
         Label("Localisation indisponible. Active-la dans Réglages › Confidentialité › Localisation.",
               systemImage: "location.slash.fill")
-            .font(.subheadline).foregroundStyle(.orange)
+            .font(.subheadline).foregroundStyle(Theme.warning)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14).background(Color.orange.opacity(0.20), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+            .padding(14).background(Theme.warning.opacity(0.20), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
     private var saveButton: some View {

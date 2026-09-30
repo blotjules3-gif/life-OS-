@@ -6,36 +6,25 @@
 	<string>$(API_BASE_URL)</string>
 	<key>API_KEY</key>
 	<string>$(API_KEY)</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>UIAppFonts</key>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>Satoshi-Black.otf</string>
-		<string>Satoshi-Bold.otf</string>
-		<string>Satoshi-Medium.otf</string>
-		<string>Satoshi-Regular.otf</string>
-		<string>Satoshi-Italic.otf</string>
-		<string>Satoshi-BoldItalic.otf</string>
-		<string>Inter-Regular.otf</string>
-		<string>Inter-Medium.otf</string>
-		<string>Inter-SemiBold.otf</string>
-		<string>Inter-Bold.otf</string>
+		<string>com.blotjules.lifeos.coach.proactive</string>
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>fr</string>
-	<key>CFBundleLocalizations</key>
-	<array>
-		<string>fr</string>
-		<string>en</string>
-	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>fr</string>
+		<string>en</string>
+	</array>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
@@ -55,6 +44,12 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>FLIGHTS_API_URL</key>
+	<string>$(FLIGHTS_API_URL)</string>
+	<key>FLIGHTS_APP_KEY</key>
+	<string>$(FLIGHTS_APP_KEY)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MinimumOSVersion</key>
@@ -66,8 +61,12 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 	</dict>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>LifeOS ajoute a ton calendrier les taches et les vols que tu choisis. Il ne lit pas tes evenements.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>LifeOS utilise l'appareil photo pour scanner les codes-barres, les documents et tes photos avant/après.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>LifeOS importe tes contacts pour alimenter ton CRM personnel et ne rater aucun anniversaire.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>LifeOS utilise Face ID pour verrouiller l'accès à tes données personnelles.</string>
 	<key>NSHealthShareUsageDescription</key>
@@ -77,19 +76,30 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>LifeOS utilise ta position pour le suivi running GPS et le partage de localisation.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>LifeOS utilise le micro pour tes messages vocaux au coach et ton journal de rêves vocal.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>LifeOS transcrit ta voix en texte pour envoyer tes messages au coach.</string>
-	<key>NSContactsUsageDescription</key>
-	<string>LifeOS importe tes contacts pour alimenter ton CRM personnel et ne rater aucun anniversaire.</string>
+	<string>LifeOS utilise le micro pour tes messages vocaux au coach, ton journal de rêves, tes exercices d'oral Trilingo et l'écoute nocturne (sur ton appareil, rien n'est envoyé).</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>LifeOS importe tes photos pour la garde-robe et le suivi looksmaxx.</string>
 	<key>NSPrivacyPolicyURL</key>
 	<string>https://blotjules.github.io/lifeos/privacy.html</string>
-	<key>NSTermsOfServiceURL</key>
-	<string>https://blotjules.github.io/lifeos/terms.html</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>LifeOS transcrit ta voix en texte pour tes messages au coach et pour vérifier tes exercices d'oral Trilingo.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSTermsOfServiceURL</key>
+	<string>https://blotjules.github.io/lifeos/terms.html</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Satoshi-Black.otf</string>
+		<string>Satoshi-Bold.otf</string>
+		<string>Satoshi-Medium.otf</string>
+		<string>Satoshi-Regular.otf</string>
+		<string>Satoshi-Italic.otf</string>
+		<string>Satoshi-BoldItalic.otf</string>
+		<string>Inter-Regular.otf</string>
+		<string>Inter-Medium.otf</string>
+		<string>Inter-SemiBold.otf</string>
+		<string>Inter-Bold.otf</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -103,10 +113,6 @@
 	<array>
 		<string>audio</string>
 		<string>fetch</string>
-	</array>
-	<key>BGTaskSchedulerPermittedIdentifiers</key>
-	<array>
-		<string>com.blotjules.lifeos.coach.proactive</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict>

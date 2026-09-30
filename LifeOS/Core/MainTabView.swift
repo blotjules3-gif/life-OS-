@@ -10,7 +10,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .wakeup:     return "Réveil"
+        case .wakeup:     return SecondTab.current.label
         case .home:       return "Accueil"
         case .categories: return "Catégories"
         case .profile:    return "Profil"
@@ -18,7 +18,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     }
     var icon: String {
         switch self {
-        case .wakeup:     return "alarm"
+        case .wakeup:     return SecondTab.current.icon
         case .home:       return "house"
         case .categories: return "square.grid.2x2"
         case .profile:    return "person.crop.circle"
@@ -26,7 +26,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     }
     var iconFill: String {
         switch self {
-        case .wakeup:     return "alarm.fill"
+        case .wakeup:     return SecondTab.current.iconFill
         case .home:       return "house.fill"
         case .categories: return "square.grid.2x2.fill"
         case .profile:    return "person.crop.circle.fill"
@@ -61,16 +61,70 @@ extension View {
     }
 }
 
+// MARK: - Deuxieme onglet personnalisable
+
+/// Ce que montre le 2e onglet de la barre du bas. Le Reveil par defaut; sinon le hub
+/// d'une categorie. Une valeur inconnue (ancienne version, reglage abime) retombe sur
+/// le Reveil, jamais sur un onglet vide.
+enum SecondTab: String, CaseIterable, Identifiable {
+    case wakeup, nutrition, fitness, productivity, sleep, finance
+
+    var id: String { rawValue }
+    var category: AppCategory? { self == .wakeup ? nil : AppCategory(rawValue: rawValue) }
+    var label: String {
+        switch self {
+        case .wakeup: return "Réveil"
+        case .nutrition: return "Nutrition"
+        case .fitness: return "Sport"
+        case .productivity: return "Tâches"
+        case .sleep: return "Sommeil"
+        case .finance: return "Argent"
+        }
+    }
+    var icon: String {
+        switch self {
+        case .wakeup: return "alarm"
+        case .nutrition: return "fork.knife"
+        case .fitness: return "figure.run"
+        case .productivity: return "checklist"
+        case .sleep: return "moon.stars"
+        case .finance: return "creditcard"
+        }
+    }
+    var iconFill: String {
+        switch self {
+        case .wakeup: return "alarm.fill"
+        case .nutrition: return "fork.knife"
+        case .fitness: return "figure.run"
+        case .productivity: return "checklist.checked"
+        case .sleep: return "moon.stars.fill"
+        case .finance: return "creditcard.fill"
+        }
+    }
+    static var current: SecondTab {
+        SecondTab(rawValue: UserDefaults.standard.string(forKey: AppStorageKeys.secondTab) ?? "") ?? .wakeup
+    }
+}
+
 // MARK: - Conteneur principal
 
 struct MainTabView: View {
-    @State private var tab: AppTab = .home
+    // L'onglet survit a la reconstruction de la fenetre (changement de palette,
+    // voir LifeOSApp) : sinon choisir "Neutre" dans le Profil renvoyait a l'Accueil.
+    @SceneStorage("mainTab") private var tab: AppTab = .home
+    #if DEBUG
+    @State private var catPath: [AppCategory] = MainTabView.shotModule.map { [$0] } ?? []
+    #else
     @State private var catPath: [AppCategory] = []
+    #endif
+    @AppStorage(AppStorageKeys.secondTab) private var secondTabRaw = SecondTab.wakeup.rawValue
     @State private var showAIAssistant = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var aiPrefill: String?
 
     @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
+    /// Ouvrir l'assistant, c'est avoir compris le bandeau qui le presente.
+    @AppStorage(AppStorageKeys.tutorialDone) private var tutorialDone = false
     private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
 
     #if DEBUG
@@ -78,31 +132,66 @@ struct MainTabView: View {
     /// est bloquee ici. Ce drapeau le fait rendre dans le simulateur iPad pour pouvoir
     /// le REGARDER au lieu de le deviner. Absent des builds Release.
     private static let forceDesktop = ProcessInfo.processInfo.arguments.contains("-desktop")
+
+    /// `-shotTab <onglet>` et `-shotModule <categorie>` ouvrent l'app directement sur
+    /// un ecran, pour les captures de la fiche App Store. Le simulateur ne sait pas
+    /// cliquer, d'ou ce crochet. Absent des builds Release.
+    private static var shotTab: AppTab? {
+        DebugLaunchFlags.value("-shotTab").flatMap(AppTab.init(rawValue:))
+    }
+    private static var shotModule: AppCategory? {
+        DebugLaunchFlags.value("-shotModule").flatMap(AppCategory.init(rawValue:))
+    }
     #endif
 
     var body: some View {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("-glassGallery") { return AnyView(GlassGallery()) }
         if ProcessInfo.processInfo.arguments.contains("-powerNap") { return AnyView(NavigationStack { PowerNapView() }) }
-        if ProcessInfo.processInfo.arguments.contains("-docVault") { return AnyView(NavigationStack { DocVaultView() }) }
-        if Self.forceDesktop { return AnyView(MacDesktopMainView()) }
+        if DebugLaunchFlags.has("-routeSmoke") { return AnyView(RouteSmokeView()) }
+        // `-shotTool <titre>` ouvre un outil precis, dans sa categorie, pour le
+        // regarder sans taper le chemin a chaque passe.
+        if let name = DebugLaunchFlags.value("-shotTool"),
+           let tool = AppCategory.allCases.lazy.flatMap(\.tools).first(where: { $0.title == name }) {
+            return AnyView(NavigationStack { tool.dest() })
+        }
         #endif
         return AnyView(realBody)
     }
 
     @ViewBuilder private var realBody: some View {
-#if targetEnvironment(macCatalyst)
-        ZStack {
-            HabitWidgetSyncer()
-            FitnessWidgetSyncer()
-            MoodWidgetSyncer()
-            SleepWidgetSyncer()
-            NutritionTodaySyncer()
-            MemoryWidgetSyncer()
+        GeometryReader { proxy in
+            let w = proxy.size.width
+            let h = proxy.size.height
+            #if DEBUG
+            // `-desktop` force la mise en page bureau dans le simulateur iPad, meme en
+            // portrait. Sans lui le drapeau existait mais n'etait plus lu nulle part.
+            let isMobile = !Self.forceDesktop && (w < 720 || (w / max(h, 1) < 0.85))
+            #else
+            let isMobile = w < 720 || (w / max(h, 1) < 0.85)
+            #endif
 
-            MacDesktopMainView()
+            Group {
+                if isMobile {
+                    phoneLayout
+                } else {
+                    ZStack {
+                        HabitWidgetSyncer()
+                        FitnessWidgetSyncer()
+                        MoodWidgetSyncer()
+                        SleepWidgetSyncer()
+                        NutritionTodaySyncer()
+                        MemoryWidgetSyncer()
+
+                        MacDesktopMainView(availableWidth: w, availableHeight: h)
+                    }
+                }
+            }
+            .animation(.easeInOut(duration: 0.25), value: isMobile)
         }
-#else
+    }
+
+    @ViewBuilder private var phoneLayout: some View {
         ZStack(alignment: .bottom) {
             content
                 .safeAreaInset(edge: .bottom) {
@@ -117,6 +206,13 @@ struct MainTabView: View {
         .fullScreenCover(isPresented: $showAIAssistant) {
             AIAssistantView(prefill: aiPrefill)
         }
+        #if DEBUG
+        .onAppear {
+            if let t = Self.shotTab { tab = t }
+            // `-shotCoach` ouvre le coach pour la capture de la fiche App Store.
+            if DebugLaunchFlags.has("-shotCoach") { showAIAssistant = true }
+        }
+        #endif
         .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenAIChat)) { note in
             aiPrefill = note.userInfo?["prefill"] as? String
             openAIAssistant()
@@ -135,53 +231,85 @@ struct MainTabView: View {
                 }
             }
         }
-#endif
     }
 
     private func openAIAssistant() {
+        tutorialDone = true
         // L'historique du chat est local : on ouvre toujours, l'état offline
         // est géré à l'intérieur de la vue (bandeau), pas en barrage à l'entrée.
         showAIAssistant = true
     }
 
-    @ViewBuilder private var content: some View {
-        ZStack {
-            HabitWidgetSyncer()
-            FitnessWidgetSyncer()
-            MoodWidgetSyncer()
-            SleepWidgetSyncer()
-            NutritionTodaySyncer()
-            MemoryWidgetSyncer()
-            ThemedBubbleBackground(theme: theme)
-                .ignoresSafeArea()
-            tabPane(ShortcutsHomeView(), .home)
-            tabPane(WakeUpView(), .wakeup)
-            tabPane(
-                NavigationStack(path: $catPath) {
-                    BubbleCategoriesView(onSelect: { title in
-                        if let cat = AppCategory(bubbleTitle: title) { catPath.append(cat) }
-                    })
-                    .toolbar(.hidden, for: .navigationBar)
-                    .navigationDestination(for: AppCategory.self) { $0.destination }
-                },
-                .categories
-            )
-            tabPane(ProfileView(), .profile)
+    private var currentTabIndex: Int {
+        switch tab {
+        case .home: return 0
+        case .wakeup: return 1
+        case .categories: return 2
+        case .profile: return 3
         }
     }
 
-    /// Onglet vivant : fondu + léger zoom au changement (piloté par le spring du tabBtn).
-    private func tabPane(_ view: some View, _ t: AppTab) -> some View {
-        view
-            .opacity(tab == t ? 1 : 0)
-            .scaleEffect(tab == t ? 1 : (reduceMotion ? 1 : 0.97))
-            .allowsHitTesting(tab == t)
+    @ViewBuilder private var content: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+
+            ZStack {
+                HabitWidgetSyncer()
+                FitnessWidgetSyncer()
+                MoodWidgetSyncer()
+                SleepWidgetSyncer()
+                NutritionTodaySyncer()
+                MemoryWidgetSyncer()
+                ThemedBubbleBackground(theme: theme)
+                    .ignoresSafeArea()
+
+                tabPane(ShortcutsHomeView(), index: 0, screenWidth: w)
+                tabPane(secondPane, index: 1, screenWidth: w)
+                tabPane(
+                    NavigationStack(path: $catPath) {
+                        BubbleCategoriesView(onSelect: { title in
+                            if let cat = AppCategory(bubbleTitle: title) { catPath.append(cat) }
+                        })
+                        .toolbar(.hidden, for: .navigationBar)
+                        .navigationDestination(for: AppCategory.self) { $0.destination }
+                    },
+                    index: 2,
+                    screenWidth: w
+                )
+                tabPane(ProfileView(), index: 3, screenWidth: w)
+            }
+            .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.82), value: tab)
+        }
+    }
+
+    /// Deuxieme onglet choisi dans le Profil : le Reveil ou le hub d'une categorie.
+    /// Le Reveil reste ouvrable depuis Sommeil quand il n'est plus un onglet.
+    @ViewBuilder private var secondPane: some View {
+        if let cat = (SecondTab(rawValue: secondTabRaw) ?? .wakeup).category {
+            NavigationStack { cat.destination }
+        } else {
+            WakeUpView()
+        }
+    }
+
+    /// Onglet vivant : glisse horizontalement vers la section choisie avec animation fluide
+    private func tabPane(_ view: some View, index: Int, screenWidth: CGFloat) -> some View {
+        let isCurrent = currentTabIndex == index
+        let isAdjacent = abs(currentTabIndex - index) <= 1
+        let offset = CGFloat(index - currentTabIndex) * screenWidth
+
+        return view
+            .offset(x: offset)
+            .scaleEffect(isCurrent ? 1.0 : (isAdjacent ? 0.95 : 0.90))
+            .opacity(isCurrent ? 1 : (isAdjacent ? 0.4 : 0))
+            .allowsHitTesting(isCurrent)
     }
 }
 
 // MARK: - Syncer invisible habitudes → widget
 
 private struct HabitWidgetSyncer: View {
+    @Environment(\.modelContext) private var ctx
     @Query(sort: \Habit.createdAt) private var allHabits: [Habit]
     @Query(sort: \HabitCompletion.date) private var completions: [HabitCompletion]
 
@@ -199,18 +327,10 @@ private struct HabitWidgetSyncer: View {
     }
 
     private func sync() {
-        guard !allHabits.isEmpty || completions.isEmpty else { return }
-        let today = Date()
-        // Toutes les habitudes (pending ou non) — l'utilisateur les voit toutes dans le widget
-        let entries: [[String: Any]] = allHabits.map { h in
-            let done = h.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: today) }
-            return ["name": h.name, "icon": h.icon, "colorHex": h.colorHex, "done": done]
-        }
-        guard let defaults = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return }
-        defaults.set(try? JSONSerialization.data(withJSONObject: entries), forKey: "widget_habits")
-        defaults.set(Date(), forKey: "widget_habits_sync_date")
-        defaults.set(entries.filter { $0["done"] as? Bool == true }.count, forKey: "habits_done_today")
-        defaults.set(entries.count, forKey: "habits_total_today")
+        // Un seul ecrivain de l'instantane des habitudes: HabitSync.
+        HabitSync.ensureIDs(ctx)
+        HabitSync.publish(ctx)
+        guard let defaults = LifeOSGroup.defaults else { return }
         defaults.set(Theme.currentTheme.accentHex, forKey: "widget_accent_hex")
 
         // Initialisation & synchronisation des nouveaux widgets
@@ -328,6 +448,8 @@ struct FloatingTabBar: View {
     @Namespace private var ns
     @Environment(\.colorScheme) private var scheme
     @AppStorage(AppStorageKeys.appTheme) private var themeRaw = "classic"
+    /// Lu ici pour redessiner le libelle et l'icone du 2e onglet quand il change.
+    @AppStorage(AppStorageKeys.secondTab) private var secondTabRaw = SecondTab.wakeup.rawValue
 
     private let tabs: [AppTab] = [.home, .wakeup, .categories, .profile]
 
@@ -335,6 +457,7 @@ struct FloatingTabBar: View {
         GeometryReader { geo in
             let m = TabBarMetrics.forWidth(geo.size.width)
             let horizontalMargin = max(24, m.margin + 16)
+            let barWidth = geo.size.width - (horizontalMargin * 2)
 
             HStack(spacing: 4) {
                 ForEach(tabs) { t in
@@ -351,6 +474,39 @@ struct FloatingTabBar: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             .animation(.spring(response: 0.32, dampingFraction: 0.76), value: selected)
             .animation(.easeInOut(duration: 0.3), value: serverStatus.isOnline)
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 4, coordinateSpace: .local)
+                    .onChanged { value in
+                        let usefulWidth = barWidth - 16
+                        guard usefulWidth > 0 else { return }
+                        let x = value.location.x - 8
+                        let segW = usefulWidth / 5.0
+                        let rawIndex = Int(x / segW)
+                        let idx = max(0, min(rawIndex, 4))
+                        if idx < tabs.count {
+                            let target = tabs[idx]
+                            if selected != target {
+                                Haptics.soft()
+                                withAnimation(reduceMotion ? nil : .spring(duration: 0.28, bounce: 0.28)) {
+                                    selected = target
+                                }
+                            }
+                        }
+                    }
+                    .onEnded { value in
+                        let usefulWidth = barWidth - 16
+                        guard usefulWidth > 0 else { return }
+                        let x = value.location.x - 8
+                        let segW = usefulWidth / 5.0
+                        let rawIndex = Int(x / segW)
+                        let idx = max(0, min(rawIndex, 4))
+                        if idx == 4 {
+                            Haptics.tap()
+                            serverStatus.pingNow()
+                            onOpenAssistant()
+                        }
+                    }
+            )
         }
         .frame(height: TabBarMetrics.forWidth(UIScreen.main.bounds.width).height
                      + TabBarMetrics.forWidth(UIScreen.main.bounds.width).margin + 12)
@@ -393,7 +549,7 @@ struct FloatingTabBar: View {
             .frame(maxHeight: .infinity)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(LifeOSPressStyle(scale: 0.92, opacity: 0.82))
         .accessibilityLabel("Assistant")
     }
 
@@ -416,6 +572,7 @@ struct FloatingTabBar: View {
                     Image(systemName: isOn ? t.iconFill : t.icon)
                         .font(.system(size: m.icon, weight: isOn ? .bold : .medium))
                         .symbolRenderingMode(.hierarchical)
+                        .symbolEffect(.bounce, value: isOn)
                     Text(t.label)
                         .font(AppFont.body(size: m.label, weight: isOn ? .bold : .medium))
                         .lineLimit(1).minimumScaleFactor(0.85)
@@ -427,7 +584,7 @@ struct FloatingTabBar: View {
             .frame(maxHeight: .infinity)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(LifeOSPressStyle(scale: 0.92, opacity: 0.82))
         .accessibilityLabel(t.label)
         .accessibilityAddTraits(isOn ? [.isSelected, .isButton] : .isButton)
     }
@@ -668,12 +825,7 @@ struct MetricRing: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 18)
-        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.radius, style: .continuous)
-                .strokeBorder(Theme.hairline, lineWidth: 0.5)
-        )
-        .softElevation()
+        .liquidGlassCard(cornerRadius: Theme.radius)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilitySummary)
     }

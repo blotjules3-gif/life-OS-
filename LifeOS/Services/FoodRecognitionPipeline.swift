@@ -20,8 +20,13 @@ enum FoodRecognitionPipeline {
 
     /// D'ou vient la valeur nutritionnelle, pour pouvoir le dire a l'ecran.
     enum Source: String {
+        case ciqual          // aliment generique, table Ciqual (ANSES), embarquee
         case openFoodFacts   // valeurs reelles, base publique
         case estimate        // repli hors ligne, ordre de grandeur
+
+        var label: String {
+            switch self { case .ciqual: "Ciqual"; case .openFoodFacts: "OpenFoodFacts"; case .estimate: "estimation" }
+        }
     }
 
     struct DetectedFood: Identifiable, Equatable {
@@ -34,6 +39,9 @@ enum FoodRecognitionPipeline {
         var carbs100: Double
         var fat100: Double
         var source: Source
+        /// Autres identites plausibles, pour corriger d'un geste ("Soupe" -> "Légumes").
+        var alternatives: [String] = []
+        var preparation: String? = nil
 
         var kcal: Int      { Int((kcal100    * grams / 100).rounded()) }
         var protein: Double { (protein100 * grams / 100 * 10).rounded() / 10 }
@@ -95,6 +103,12 @@ enum FoodRecognitionPipeline {
         .init(match: "burrito",     fr: "Burrito",          query: "burrito",          grams: 250),
         .init(match: "sandwich",    fr: "Sandwich",         query: "sandwich",         grams: 200),
         .init(match: "soup",        fr: "Soupe",            query: "soupe",            grams: 300),
+        .init(match: "stir_fry",    fr: "Poêlée de légumes", query: "poelee de legumes", grams: 250),
+        .init(match: "stew",        fr: "Ragoût",           query: "ragout",           grams: 300),
+        .init(match: "curry",       fr: "Curry",            query: "curry",            grams: 300),
+        .init(match: "omelet",      fr: "Omelette",         query: "omelette",         grams: 150),
+        .init(match: "fries",       fr: "Frites",           query: "frites",           grams: 150),
+        .init(match: "vegetable",   fr: "Légumes",          query: "legumes cuits",    grams: 200),
         .init(match: "steak",       fr: "Steak",            query: "steak boeuf",      grams: 150),
         .init(match: "chicken",     fr: "Poulet",           query: "poulet",           grams: 150),
         .init(match: "fish",        fr: "Poisson",          query: "poisson",          grams: 150),
@@ -145,10 +159,16 @@ enum FoodRecognitionPipeline {
                 cont.resume(returning: request.results ?? [])
             }
         }
+        return keys(from: observations.map { ($0.identifier, Double($0.confidence)) }, maxItems: maxItems)
+    }
+
+    /// Labels Vision -> aliments connus. Fonction pure, testee sur les vrais labels
+    /// releves sur les photos du banc d'essai (Vision ne classe rien en simulateur).
+    static func keys(from observations: [(String, Double)], maxItems: Int = 3) -> [(FoodKey, Double)] {
         var out: [(FoodKey, Double)] = []
         var seen = Set<String>()
-        for o in observations where o.confidence > 0.03 {
-            let label = o.identifier.lowercased()
+        for (identifier, confidence) in observations where confidence > 0.03 {
+            let label = identifier.lowercased()
             // Le mot cle le PLUS LONG gagne. En prenant la premiere
             // correspondance, "cake" (declare avant) captait "pancake": une
             // photo de pancakes etait enregistree comme un gateau, avec la
@@ -159,7 +179,7 @@ enum FoodRecognitionPipeline {
             else { continue }
             guard !seen.contains(k.fr) else { continue }
             seen.insert(k.fr)
-            out.append((k, Double(o.confidence)))
+            out.append((k, confidence))
             if out.count >= maxItems { break }
         }
         return out
@@ -167,22 +187,59 @@ enum FoodRecognitionPipeline {
 
     // MARK: - Etape 2 et 3: vraies valeurs + portion
 
+    /// Confusions frequentes de la reconnaissance sur l'appareil: proposees comme
+    /// alternatives d'un geste. Mesure du 29 sept: une assiette de legumes pouvait
+    /// sortir en "Soupe".
+    static let confusions: [String: [String]] = [
+        "Soupe": ["Légumes cuits", "Ragoût", "Curry"],
+        "Poêlée de légumes": ["Légumes sautés", "Ratatouille", "Haricots verts"],
+        "Légumes": ["Poêlée de légumes", "Ratatouille", "Salade"],
+        "Ragoût": ["Soupe", "Curry", "Légumes cuits"],
+        "Salade": ["Légumes", "Salade composée"],
+        "Pâtes": ["Spaghetti bolognaise", "Nouilles"],
+        "Riz": ["Riz cantonais", "Semoule"],
+    ]
+
     /// Reconnait puis chiffre. Rend une liste vide si rien d'alimentaire n'est vu.
     static func analyse(_ image: UIImage) async -> [DetectedFood] {
         let found = await recognise(image)
         var items: [DetectedFood] = []
         for (key, confidence) in found {
             let nutrition = await lookup(key)
+            // Les autres labels vus sur la photo sont aussi des alternatives.
+            let others = found.map(\.0.fr).filter { $0 != key.fr }
             items.append(DetectedFood(
                 name: key.fr,
                 confidence: confidence,
                 grams: key.grams,
                 kcal100: nutrition.0, protein100: nutrition.1,
                 carbs100: nutrition.2, fat100: nutrition.3,
-                source: nutrition.4
+                source: nutrition.4,
+                alternatives: Array(NSOrderedSet(array: (confusions[key.fr] ?? []) + others).compactMap { $0 as? String }.prefix(4))
             ))
         }
         return items
+    }
+
+    /// Valeurs pour 100 g d'un aliment nomme (par l'IA ou par l'utilisateur):
+    /// Ciqual d'abord. nil si rien de sur.
+    static func generic(_ name: String, preparation: String? = nil) -> (Double, Double, Double, Double)? {
+        let cooked = (preparation ?? "").lowercased().contains("cru") == false
+        guard let f = GenericFoods.best([name, preparation].compactMap { $0 }.joined(separator: " "), cooked: cooked)
+                ?? GenericFoods.best(name, cooked: cooked) else { return nil }
+        return (f.kcal, f.protein ?? 0, f.carbs ?? 0, f.fat ?? 0)
+    }
+
+    /// Renommer un element (alternative choisie, ou nom corrige) recalcule ses
+    /// valeurs depuis Ciqual quand l'aliment y est; sinon les valeurs restent.
+    static func renamed(_ item: DetectedFood, to name: String) -> DetectedFood {
+        var i = item
+        i.name = name
+        if let g = generic(name) {
+            i.kcal100 = g.0; i.protein100 = g.1; i.carbs100 = g.2; i.fat100 = g.3; i.source = .ciqual
+        }
+        i.alternatives = ([item.name] + item.alternatives).filter { $0 != name }
+        return i
     }
 
     /// Valeurs pour 100 g: OpenFoodFacts d'abord, repli local sinon.
@@ -191,6 +248,9 @@ enum FoodRecognitionPipeline {
     /// base est collaborative et le premier produit peut etre une aberration
     /// (une pizza a 900 kcal/100 g saisie de travers).
     static func lookup(_ key: FoodKey) async -> (Double, Double, Double, Double, Source) {
+        // Aliment generique d'abord: une "Poêlée de légumes" faite maison n'est pas
+        // la mediane des plats prepares emballes.
+        if let g = generic(key.query) ?? generic(key.fr) { return (g.0, g.1, g.2, g.3, .ciqual) }
         let products = await FoodSearchService.search(key.query)
         let usable = products.filter { $0.kcal > 0 && $0.kcal < 900 }.prefix(9)
         if usable.count >= 3 {

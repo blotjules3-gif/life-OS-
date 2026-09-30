@@ -1,0 +1,22 @@
+{
+  "phase": "correction_limit",
+  "builder_calls": 3,
+  "reviews": 1,
+  "background_id": "5dcb20d5",
+  "claude_session": "5dcb20d5-8d6f-478f-9936-9d20f405f64e",
+  "wait_deadline": 1790741788.026487,
+  "note": "Includes original call and two corrections already launched; no fourth builder call for this batch.",
+  "pid": 99908,
+  "last_review": {
+    "verdict": "changes_required",
+    "summary": "Two significant HealthKit reliability defects remain: workout completion timestamps are not durable, and unsaved completed workouts are lost when a new session replaces the snapshot. The supplied code improves restoration and asynchronous save handling, but does not establish the full scoped result.",
+    "correction_prompt": "Claude: (1) Persist an immutable completion timestamp with the session/workout payload. finishedAt currently exists only in memory; restoration substitutes snap.savedAt, which persist() updates after writer responses and later saves. A delayed failure followed by relaunch therefore shifts the workout to the wrong time. Catch-up completion also uses now() rather than the actual completion boundary. Preserve the same start/end across retries and relaunches, and test delayed failure plus catch-up that extends beyond completion. (2) Durably retain eligible pending/failed workout payloads independently of the live session snapshot until successfully saved. begin(), reset(), or choosing another session currently replaces/clears the only durable record, while retryHealthWrite() only addresses the live engine. Test failed completion followed by starting another session and relaunch, and termination during an in-flight write after session replacement. Reuse each original session sync identifier.",
+    "unverified": [
+      "The Tabata diff and test file are explicitly truncated; complete sequence UI, accessibility, exit/reset confirmation wiring, configuration restoration, and routing cannot be fully assessed.",
+      "HealthService implementation is absent, so actual HealthKit sync metadata and crash-safe deduplication are unverified.",
+      "Claude reports 32 passing focused tests and xcodebuild exit code 0; these were not independently executed, and the full logs and later tests were not supplied.",
+      "Real HealthKit writes/retries, background suspension, lock-screen sound behavior, immersive navigation, and light/dark iPhone, iPad, and Mac Catalyst rendering remain physically or visually unverified."
+    ]
+  },
+  "updated_at": 1790736857.829768
+}

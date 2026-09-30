@@ -6,7 +6,7 @@ This change edits the application itself. It preserves the pre-existing WindowAp
 
 - Use `glassControl` for custom buttons and `LifeOSGlassButtonStyle` for ordinary module buttons.
 - Use `raisedSurface`, `card`, `liquidGlassCard`, or the Apple Preview helpers for container surfaces. These are shared by iPhone, iPad and Mac Catalyst.
-- Outer surfaces retain native glass, with a restrained inner reflection. Nested surfaces share the edge treatment with a lighter fill.
+- Outer surfaces retain native glass, with a restrained inner reflection. Nested surfaces use native glass as well; only selected insets retain a flat fill.
 - Keep foreground labels opaque. Keep selected-state colors and progress/chart colors meaningful.
 - Do not add a second card shadow over native glass. Do not reintroduce Theme.card/cardFill as container backgrounds.
 - Accessibility Reduce Transparency retains an opaque fallback. Glass interaction honors Reduce Motion.
@@ -27,3 +27,13 @@ Run `bash scripts/run-logic-tests.sh` and the LifeOS Xcode test scheme.
 Use the DEBUG `-glassGallery` launch argument for the actual shared button, panels, nested controls and white/grey/content backgrounds. `-skipPermissionPrompts` suppresses the app's launch-time notification request for visual QA only; it does not grant permissions.
 
 Passing a build or these tests does not establish feature parity with every reference app. Hardware-dependent integrations, provider-backed operations and all 87 module workflows still require their own end-to-end evidence. Visual approval must use the actual OS/device/build; static screenshots cannot certify touch/refraction behavior.
+
+## Follow-up after e56390f26
+
+Preserved the 48-point home buttons, native nested glass, sidebar selection and day-circle changes. Migrated remaining neutral local fills in coach previews, authentication, profile, home editing, goals, reminder/icon pickers and assistant cards. Desktop avatar, metric and tool badges now use the same surface. Selected-state colors and full-page backgrounds remain intentional.
+
+The proactive sleep message now describes a single recorded duration rather than inventing a declining trend, and preserves decimal hours.
+
+## Account access correction
+
+Source review found that email login accepted any six-character password without verification; social sheets fabricated identities; signup checked a client-generated code while ignoring delivery failure. These are not working identity integrations. The fake flows were removed. AuthView now offers explicit local access using the existing guest profile state and explains that online accounts are unavailable. Local data is preserved. Real account creation, login, recovery and cross-device identity remain blocked on implementing and configuring verified provider/backend authentication; this is not completed by the UI correction.

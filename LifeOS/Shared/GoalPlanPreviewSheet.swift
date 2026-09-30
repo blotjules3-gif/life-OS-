@@ -37,7 +37,7 @@ struct GoalPlanPreviewSheet: View {
                                 .font(.subheadline)
                         } icon: {
                             Image(systemName: result.success ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                .foregroundStyle(result.success ? .green : .red)
+                                .foregroundStyle(result.success ? Theme.success : Theme.danger)
                         }
                     }
                 }
@@ -69,7 +69,7 @@ struct GoalPlanPreviewSheet: View {
                     Text(c.message).font(.caption).fixedSize(horizontal: false, vertical: true)
                 } icon: {
                     Image(systemName: c.severity == .hard ? "xmark.octagon.fill" : "exclamationmark.triangle.fill")
-                        .foregroundStyle(c.severity == .hard ? .red : .orange)
+                        .foregroundStyle(c.severity == .hard ? Theme.danger : Theme.warning)
                 }
             }
         }
@@ -183,7 +183,7 @@ struct GoalPlanPreviewSheet: View {
                         Text("Recommandation neutre").font(.caption2).foregroundStyle(.tertiary)
                     } else {
                         Text("Offre partenaire — \(rec.partnerID ?? "")")
-                            .font(.caption2).foregroundStyle(.orange)
+                            .font(.caption2).foregroundStyle(Theme.warning)
                     }
                 }
             }
@@ -192,11 +192,11 @@ struct GoalPlanPreviewSheet: View {
 
     private func kindColor(_ kind: Recommendation.RecommendationKind) -> Color {
         switch kind {
-        case .information:    return .blue
-        case .recommendation: return .green
-        case .preparation:    return .orange
-        case .validation:     return .red
-        case .execution:      return .purple
+        case .information:    return Theme.finance
+        case .recommendation: return Theme.success
+        case .preparation:    return Theme.warning
+        case .validation:     return Theme.danger
+        case .execution:      return Theme.mind
         }
     }
 

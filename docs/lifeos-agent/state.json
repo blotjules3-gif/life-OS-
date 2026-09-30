@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "activation": "idle",
+  "reviewer_model": "gpt-6-astra",
+  "max_builder_calls_per_pass": 3,
+  "cadence": "on_demand",
+  "current_batch": "2026-09-30-tabata-health-reprise",
+  "last_verified_snapshot": null,
+  "next_priorities": [
+    "Accounts: needs Theo's choice (Apple + iCloud, or a server)",
+    "Opale: add Family Controls entitlement once Apple grants it, then DeviceActivity extension",
+    "Visual pass of the four looks on iPhone, iPad, Mac; widgets follow the palette",
+    "Widgets matrix per tool and real device journeys",
+    "Depth of the remaining tools with the audit method"
+  ],
+  "evidence": [
+    {
+      "date": "2026-09-30",
+      "what": "Audit lot 1 (looks, second tab, FIRE, gym progression, CosIng annexes, Cal Eye no-key path, Opale code)",
+      "tests": "768 passed, 0 failed",
+      "log": "docs/feature-parity/CHECKPOINT.md"
+    }
+  ],
+  "open_dependencies": [
+    "Physical device and visual interaction access must be verified",
+    "External provider credentials and distribution entitlements remain per-feature dependencies",
+    "First real automated Astra handoff pending Claude completion"
+  ],
+  "current_batch_status": "Tabata reprise: review blocked only because the evidence was truncated. Complete methods, test list and a full-suite run (768 tests, 0 failures; 39 Tabata tests passed) are in jobs/2026-09-30-tabata-health-reprise/REVIEW-EVIDENCE-2.md. Not re-reviewed yet. Device checks (real termination, HealthKit write, dedup) still open.",
+  "workflow_preference": "On demand: local process waits at no model cost; Claude builds/tests; Astra reviews supplied evidence once per completed attempt; maximum initial build plus two corrections.",
+  "background_session": "a745d447"
+}

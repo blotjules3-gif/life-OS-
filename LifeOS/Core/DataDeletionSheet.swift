@@ -15,6 +15,7 @@ struct DataDeletionSheet: View {
     @State private var confirmingFull = false
     @State private var confirmingReset = false
     @State private var didErase = false
+    @State private var eraseFailures: [String] = []
     @State private var exportURL: URL?
     @State private var exporting = false
     /// Pourquoi la sauvegarde a echoue. Sans ca, le bouton ne faisait
@@ -51,7 +52,7 @@ struct DataDeletionSheet: View {
                     if let exportError {
                         Label(exportError, systemImage: "exclamationmark.triangle.fill")
                             .font(.footnote)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Theme.warning)
                     }
                 }
 
@@ -79,6 +80,13 @@ struct DataDeletionSheet: View {
                             .foregroundStyle(Theme.success)
                     }
                 }
+                if !eraseFailures.isEmpty {
+                    Section("Effacement incomplet") {
+                        ForEach(eraseFailures, id: \.self) { Label($0, systemImage: "exclamationmark.triangle.fill").foregroundStyle(Theme.warning) }
+                        Text("Ces éléments n'ont pas été supprimés. Réessaie ; si ça persiste, supprime l'app.")
+                            .font(.footnote).foregroundStyle(.secondary)
+                    }
+                }
             }
             .navigationTitle("Mes données")
             .navigationBarTitleDisplayMode(.inline)
@@ -102,15 +110,21 @@ struct DataDeletionSheet: View {
         }
     }
 
+    /// "Efface" n'apparait que si CHAQUE etape a reussi. Sinon l'ecran liste ce
+    /// qui n'a pas pu etre supprime.
     private func doErase(keepOnboarding: Bool) {
         let container = ctx.container
-        if keepOnboarding {
-            DataEraser.eraseAndKeepOnboarding(container: container)
+        let report = keepOnboarding
+            ? DataEraser.eraseAndKeepOnboarding(container: container)
+            : DataEraser.eraseAllData(container: container)
+        if report.succeeded {
+            eraseFailures = []
+            didErase = true
+            Haptics.success()
         } else {
-            DataEraser.eraseAllData(container: container)
+            eraseFailures = report.failures
+            Haptics.warning()
         }
-        didErase = true
-        Haptics.success()
     }
 
     /// Prepare le fichier de sauvegarde.

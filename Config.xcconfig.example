@@ -11,3 +11,8 @@ API_BASE_URL = https://VOTRE_DOMAINE_ICI
 
 // Clé API interne (INTERNAL_API_KEY dans backend/.env)
 API_KEY = VOTRE_CLE_API_ICI
+
+// Comparateur de vols (apps/lifeos/flights-api). Vide = l'ecran dit "pas branche".
+// Les slashes se protegent ainsi dans un xcconfig: https:/$()/...
+FLIGHTS_API_URL =
+FLIGHTS_APP_KEY =

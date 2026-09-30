@@ -26,7 +26,7 @@ enum HealthAutoSync {
         let lastCheck = Date(timeIntervalSince1970: ud.double(forKey: "lastSleepCheckDate"))
         guard !Calendar.current.isDateInToday(lastCheck) else { return }
         guard let hours = await HealthService.shared.sleepHoursLastNight(), hours > 0.5 else { return }
-        ud.set(Int(hours.rounded()), forKey: "lastSleepHours")
+        ud.set((hours * 10).rounded() / 10, forKey: "lastSleepHours")
 
         // Loop 8 — publier le breakdown détaillé (deep/REM/awakenings/bedtime)
         // dans App Group pour lecture par UserContextBuilder au prochain send().

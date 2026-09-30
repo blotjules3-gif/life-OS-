@@ -44,7 +44,7 @@ struct DocVaultView: View {
                                                         .foregroundStyle(Theme.textSecondary)
                                                 }
                                             }
-                                            if let e = d.expiry { Text("Expire le \(e, style: .date)").font(.caption).foregroundStyle(e < .now ? .red : Theme.textSecondary) }
+                                            if let e = d.expiry { Text("Expire le \(e, style: .date)").font(.caption).foregroundStyle(e < .now ? Theme.danger : Theme.textSecondary) }
                                         }
                                         Spacer()
                                     }.card(padding: 12)
@@ -109,7 +109,7 @@ struct DocEditor: View {
                 if hasExpiry { DatePicker("Expire le", selection: $expiry, displayedComponents: .date) }
                 Section("Photo du document") {
                     PhotoPickerButton(label: "Prendre / choisir", prefix: "doc") { filename = $0 }
-                    if filename != nil { Text("Document ajouté").foregroundStyle(.green).font(.caption) }
+                    if filename != nil { Text("Document ajouté").foregroundStyle(Theme.success).font(.caption) }
                 }
             }
             .navigationTitle("Nouveau document").navigationBarTitleDisplayMode(.inline)
@@ -146,7 +146,7 @@ struct DeadlinesView: View {
                                 VStack(alignment: .leading) { Text(d.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary); Text(d.kind).font(.caption).foregroundStyle(Theme.textSecondary) }
                                 Spacer()
                                 let days = Calendar.current.dateComponents([.day], from: .now, to: d.date).day ?? 0
-                                Text(days == 0 ? "Aujourd'hui" : "J-\(days)").font(.subheadline.bold()).foregroundStyle(days <= 7 ? .orange : Theme.textSecondary)
+                                Text(days == 0 ? "Aujourd'hui" : "J-\(days)").font(.subheadline.bold()).foregroundStyle(days <= 7 ? Theme.warning : Theme.textSecondary)
                             }.card(padding: 12)
                                 .contextMenu { Button(role: .destructive) { NotificationManager.shared.cancel(id: ReminderIDs.deadline(title: d.title)); ctx.delete(d) } label: { Label("Supprimer", systemImage: "trash") } }
                         }
@@ -309,6 +309,10 @@ struct DocumentReader: View {
     let doc: DocVault
     @Environment(\.dismiss) private var dismiss
     @State private var page = 0
+    /// Le PDF d'export, fabrique a l'ouverture. Avant, "Exporter" partageait les
+    /// pages en images separees: pas un document qu'on peut envoyer tel quel.
+    @State private var pdfURL: URL?
+    @State private var pdfError: String?
 
     var body: some View {
         NavigationStack {
@@ -347,12 +351,35 @@ struct DocumentReader: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Fermer") { dismiss() } }
                 if !doc.allPages.isEmpty {
                     ToolbarItem(placement: .bottomBar) {
-                        ShareLink(items: doc.allPages.compactMap { ImageStore.url(for: $0) }) {
-                            Label("Exporter", systemImage: "square.and.arrow.up")
+                        if let pdfURL {
+                            ShareLink(item: pdfURL) {
+                                Label("Exporter en PDF", systemImage: "square.and.arrow.up")
+                            }
+                        } else if let pdfError {
+                            Label(pdfError, systemImage: "exclamationmark.triangle")
+                                .font(.footnote).foregroundStyle(Theme.warning)
+                        } else {
+                            ProgressView()
                         }
                     }
                 }
             }
+            .task { await makePDF() }
         }
+    }
+
+    private func makePDF() async {
+        guard !doc.allPages.isEmpty, pdfURL == nil else { return }
+        var images: [UIImage] = []
+        for file in doc.allPages {
+            if let img = await ImageStore.loadAsync(file) { images.append(img) }
+        }
+        // Une page illisible ne doit pas produire un PDF incomplet en silence.
+        guard images.count == doc.allPages.count else {
+            pdfError = "\(doc.allPages.count - images.count) page(s) introuvable(s): export impossible."
+            return
+        }
+        do { pdfURL = try DocumentPDF.write(pages: images, title: doc.title) }
+        catch { pdfError = error.localizedDescription }
     }
 }

@@ -58,16 +58,23 @@ enum ShortcutTool: String, CaseIterable, Identifiable {
     }
     var tint: Color {
         switch self {
-        case .dashboard: return Color(hex: 0x618EF1)
-        case .tabata, .habits, .nap: return AppCategory.fitness.tint
-        case .calories, .scan, .fasting, .water: return AppCategory.nutrition.tint
-        case .todo, .focus: return AppCategory.productivity.tint
-        case .mood, .breathing: return AppCategory.mind.tint
-        case .bedtime, .bilanSoir: return AppCategory.sleep.tint
-        case .budget: return AppCategory.finance.tint
-        case .portfolio: return AppCategory.invest.tint
-        case .flashcards: return AppCategory.learning.tint
-        case .progressPhotos: return AppCategory.looks.tint
+        case .dashboard: return Theme.finance
+        case .tabata:    return Theme.fitness
+        case .calories:  return Theme.nutrition
+        case .scan:      return Theme.invest
+        case .todo:      return Theme.productivity
+        case .fasting:   return Theme.mind
+        case .water:     return Theme.hydration
+        case .habits:    return Theme.career
+        case .focus:     return Theme.productivity
+        case .mood:      return Theme.social
+        case .breathing: return Theme.sleep
+        case .bedtime, .bilanSoir: return Theme.sleep
+        case .budget:    return Theme.finance
+        case .portfolio: return Theme.invest
+        case .flashcards: return Theme.learning
+        case .nap:       return Theme.sleep
+        case .progressPhotos: return Theme.looks
         }
     }
     var isFullScreen: Bool { self == .tabata }
@@ -77,7 +84,7 @@ enum ShortcutTool: String, CaseIterable, Identifiable {
         case .dashboard: HomeDashboardContent()
         case .tabata: TabataView()
         case .calories: CalAIView()
-        case .scan: ScanProductView()
+        case .scan: YukoView()
         case .todo: TodoView()
         case .fasting: FastingView()
         case .water: HydrationView()
@@ -131,11 +138,11 @@ enum HomeMetric: String, CaseIterable, Identifiable {
     }
     var color: Color {
         switch self {
-        case .steps:    return Color(hex: 0xF1746C)
-        case .water:    return Color(hex: 0x3CB2E0)
-        case .calories: return Color(hex: 0x4CC38A)
-        case .fasting:  return Color(hex: 0x9B6CF1)
-        case .habits:   return Color(hex: 0xF1A33C)
+        case .steps:    return Theme.fitness
+        case .water:    return Theme.hydration
+        case .calories: return Theme.nutrition
+        case .fasting:  return Theme.mind
+        case .habits:   return Theme.career
         }
     }
 }
@@ -233,70 +240,6 @@ struct ShortcutsHomeView: View {
 
     private var todayMood: MoodEntry? { moods.first { Calendar.current.isDateInToday($0.date) } }
 
-    private var isMorningEmpty: Bool {
-        let hour = Calendar.current.component(.hour, from: Date())
-        return hour < 10 && kcalToday == 0 && waterToday == 0 && steps < 200 && habitsDone == 0
-    }
-
-    private var morningModuleChips: [(icon: String, label: String, color: Color)] {
-        let active = Set(recommendedModulesRaw.split(separator: ",").map(String.init))
-        var chips: [(String, String, Color)] = []
-        if active.contains("nutrition") { chips.append(("flame.fill", "Calories", Color(hex: 0xF1746C))) }
-        if active.contains("fitness")   { chips.append(("figure.run", "Activité", Color(hex: 0x4CC38A))) }
-        if active.contains("sleep")     { chips.append(("moon.stars.fill", "Sommeil", Color(hex: 0x6C7BF1))) }
-        if active.contains("mind")      { chips.append(("brain.head.profile", "Focus", Color(hex: 0x9B6CF1))) }
-        if chips.isEmpty {
-            chips = [("sun.horizon.fill", "Journée", Color(hex: 0xFF9F0A)),
-                     ("figure.run", "Activité", Color(hex: 0x4CC38A)),
-                     ("drop.fill", "Hydratation", Color(hex: 0x3CB2E0))]
-        }
-        return Array(chips.prefix(4))
-    }
-
-    private var morningContextCard: some View {
-        HStack(alignment: .top, spacing: 14) {
-            Image(systemName: "sun.horizon.fill")
-                .font(.system(size: 28, weight: .semibold))
-                .foregroundStyle(Color(hex: 0xFF9F0A))
-                .frame(width: 44, height: 44)
-                .background(Color(hex: 0xFF9F0A).opacity(0.20),
-                             in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Ta journée commence")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.primary)
-                Text("Voilà ce qui t'attend aujourd'hui.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-
-                // FlowLayout et pas HStack : quatre puces forcees sur une rangee
-                // coupaient les libelles en plein mot ("Calori / es"). La ligne casse
-                // maintenant ENTRE les puces.
-                FlowLayout(spacing: 8, lineSpacing: 8) {
-                    ForEach(morningModuleChips, id: \.label) { chip in
-                        HStack(spacing: 5) {
-                            Image(systemName: chip.icon)
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(chip.color)
-                            Text(chip.label)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                                .fixedSize(horizontal: true, vertical: false)
-                        }
-                        .padding(.horizontal, 9)
-                        .padding(.vertical, 5)
-                        .background(chip.color.opacity(0.26), in: Capsule())
-                    }
-                }
-            }
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .liquidGlassCard(cornerRadius: Theme.radius, tint: Color(hex: 0xFF9F0A))
-    }
-
     // MARK: données hebdo
     private var activeHabits: [Habit] { habits.filter { !$0.isPending } }
     private var weekDays: [Date] {
@@ -345,16 +288,16 @@ struct ShortcutsHomeView: View {
                     }
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(alignment: .bottom) {
-                            VStack(alignment: .leading, spacing: 4) {
+                            VStack(alignment: .leading, spacing: 6) {
                                 Text(userName.isEmpty ? greeting : "\(greeting), \(userName)")
-                                    .font(AppFont.sans(size: 34, weight: .black))
+                                    .font(.system(size: 40, weight: .black))
                                     .textCase(.uppercase)
-                                    .kerning(-0.8)
+                                    .kerning(-1)
                                     .lineLimit(2)
                                     .minimumScaleFactor(0.7)
                                 Text("Gérez votre journée, vos habitudes et vos objectifs.")
-                                    .font(AppFont.body(size: 14, weight: .regular))
-                                    .foregroundStyle(Color.secondary)
+                                    .monoLabel(11)
+                                    .foregroundStyle(Theme.textSecondary)
                             }
                             Spacer()
                             if todayEnergyScore > 0 {
@@ -378,9 +321,9 @@ struct ShortcutsHomeView: View {
                             }
                             .foregroundStyle(Color.primary)
                             .frame(maxWidth: .infinity)
+                            .applePreviewPill(height: 48)
                         }
-                        .buttonStyle(.plain)
-                        .applePreviewPill(height: 48)
+                        .buttonStyle(LifeOSPressStyle(scale: 0.96))
 
                         Button {
                             editingShortcuts = true
@@ -393,9 +336,9 @@ struct ShortcutsHomeView: View {
                             }
                             .foregroundStyle(Color.primary)
                             .frame(maxWidth: .infinity)
+                            .applePreviewPill(height: 48)
                         }
-                        .buttonStyle(.plain)
-                        .applePreviewPill(height: 48)
+                        .buttonStyle(LifeOSPressStyle(scale: 0.96))
                     }
                     .padding(.horizontal, 2)
                     .staggered(1, appeared: homeAppeared)
@@ -408,10 +351,6 @@ struct ShortcutsHomeView: View {
                     }
                     if let module = weeklyModuleSuggestion {
                         weeklyModuleCard(module)
-                    }
-                    if isMorningEmpty {
-                        morningContextCard
-                            .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
                     // Les blocs, dans l'ordre choisi par l'utilisateur.
@@ -450,11 +389,14 @@ struct ShortcutsHomeView: View {
                                 .padding(.horizontal, 18).padding(.vertical, 9)
                                 .raisedSurface(Capsule())
                         }
+                        .buttonStyle(LifeOSPressStyle(scale: 0.96))
                         .foregroundStyle(Theme.textPrimary)
                         .frame(maxWidth: .infinity)
                     }
                 }
-                .padding(Theme.pad)
+                .padding(.horizontal, Theme.pad)
+                .padding(.top, 8)
+                .padding(.bottom, 40)
                 .onDrop(of: [.text], delegate: HomeDropCleanup(dragged: $draggedWidget))
             }
             .floatingBarClearance()       // le dernier bloc ne passe pas sous la barre flottante
@@ -514,7 +456,7 @@ struct ShortcutsHomeView: View {
                 tool.destination
             }
             .overlay(alignment: .bottom) {
-                if showTutorial {
+                if showTutorial && !tutorialDone {
                     tutorialOverlay
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
@@ -536,6 +478,8 @@ struct ShortcutsHomeView: View {
         }
     }
 
+    /// Bandeau d'accueil du coach. Il doit TOUJOURS pouvoir partir: bouton, toucher
+    /// n'importe ou sur la carte, glisser vers le bas, ou ouvrir l'assistant.
     private var tutorialOverlay: some View {
         VStack(spacing: 14) {
             HStack(spacing: 12) {
@@ -545,34 +489,43 @@ struct ShortcutsHomeView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Ton coach est en bas")
                         .font(.system(size: 15, weight: .semibold))
-                    Text("Appuie sur le champ \"Ton assistant…\" pour poser une question, créer une habitude ou naviguer vers un module.")
+                    Text("Touche « Assistant », en bas à droite, pour poser une question, créer une habitude ou ouvrir un module.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            Button {
-                withAnimation(.easeOut(duration: 0.3)) { showTutorial = false }
-                tutorialDone = true
-            } label: {
+            Button(action: dismissTutorial) {
                 Text("Compris")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Theme.onAccent)
+                    .foregroundStyle(Theme.textPrimary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 11)
-                    .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .glassControl(RoundedRectangle(cornerRadius: 12, style: .continuous), interactive: false)
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("coachTutorialDismiss")
         }
         .padding(18)
         .raisedSurface(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .stroke(Color.accentColor.opacity(0.2), lineWidth: 1)
+                .allowsHitTesting(false)
         )
         .shadow(color: .black.opacity(0.18), radius: 24, x: 0, y: 8)
+        .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .onTapGesture(perform: dismissTutorial)
+        .gesture(DragGesture(minimumDistance: 12).onEnded { v in if v.translation.height > 30 { dismissTutorial() } })
+        .accessibilityAction(named: "Fermer", dismissTutorial)
         .padding(.horizontal, 16)
         .padding(.bottom, 120)
+    }
+
+    private func dismissTutorial() {
+        tutorialDone = true
+        withAnimation(.easeOut(duration: 0.3)) { showTutorial = false }
     }
 
     // MARK: Section 0 — Raccourcis personnalisés
@@ -591,13 +544,13 @@ struct ShortcutsHomeView: View {
                 ForEach(activeShortcuts) { tool in
                     if tool.isFullScreen {
                         Button { fullScreenTool = tool } label: { shortcutTile(tool) }
-                            .buttonStyle(.plain)
+                            .buttonStyle(LifeOSPressStyle(scale: 0.94, opacity: 0.86))
                             .accessibilityLabel(tool.label)
                     } else {
                         NavigationLink(destination: tool.destination) {
                             shortcutTile(tool)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(LifeOSPressStyle(scale: 0.94, opacity: 0.86))
                         .accessibilityLabel(tool.label)
                     }
                 }
@@ -825,7 +778,7 @@ struct ShortcutsHomeView: View {
                             .foregroundStyle(weeklyScoreColor.opacity(0.6))
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(LifeOSPressStyle(scale: 0.98))
             }
             .padding(16)
             .liquidGlassCard(cornerRadius: Theme.radius, tint: weeklyScoreColor)
@@ -929,11 +882,12 @@ struct ShortcutsHomeView: View {
             } label: {
                 Image(systemName: task.done ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 22))
-                    .foregroundStyle(task.done ? Color.green : (task.priority >= 2 ? Color(hex: 0xF1746C)
+                    .symbolEffect(.bounce, value: task.done)
+                    .foregroundStyle(task.done ? Theme.success : (task.priority >= 2 ? Color(hex: 0xF1746C)
                                    : task.priority == 1 ? Color(hex: 0xF1A33C)
                                    : Theme.textSecondary))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(LifeOSPressStyle(scale: 0.88, opacity: 0.80))
             .accessibilityLabel("Terminer \(task.title)")
 
             VStack(alignment: .leading, spacing: 2) {
@@ -969,7 +923,7 @@ struct ShortcutsHomeView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 7)
                     .padding(.vertical, 3)
-                    .background(Color.red, in: Capsule())
+                    .background(Theme.danger, in: Capsule())
                 } else {
                     HStack(spacing: 3) {
                         Image(systemName: "clock")
@@ -1031,14 +985,14 @@ struct ShortcutsHomeView: View {
                         NavigationLink { metricDestination(m).floatingBarClearance() } label: {
                             MetricRing(value: v.value, goal: v.goal, label: m.label, unit: m.unit, color: m.color, icon: m.icon,
                                        delta: metricDelta(m))
-                        }.buttonStyle(.plain)
+                        }.buttonStyle(LifeOSPressStyle(scale: 0.96))
                     }
                 }
             }
             VStack(spacing: 4) {
                 ForEach(Array(objectives.enumerated()), id: \.element.title) { i, o in
                     NavigationLink { objectiveDestination(o.title).floatingBarClearance() } label: { objectiveRow(o) }
-                        .buttonStyle(.plain)
+                        .buttonStyle(LifeOSPressStyle(scale: 0.97))
                     if i < objectives.count - 1 { Divider().padding(.leading, 47) }
                 }
             }
@@ -1093,9 +1047,9 @@ struct ShortcutsHomeView: View {
         let wp = min(1.0, Double(waterToday) / Double(max(1, waterGoal)))
         let hp = habits.isEmpty ? 0 : min(1.0, Double(habitsDone) / Double(habits.count))
         return [
-            Objective(icon: "figure.walk", title: "Bouger", sub: "\(steps) / \(stepGoal) pas", color: Color(hex: 0xF1746C), progress: sp, done: sp >= 1),
-            Objective(icon: "drop.fill", title: "S'hydrater", sub: "\(waterToday) / \(waterGoal) ml", color: Color(hex: 0x3CB2E0), progress: wp, done: wp >= 1),
-            Objective(icon: "checklist", title: "Habitudes", sub: habits.isEmpty ? "Aucune habitude" : "\(habitsDone) / \(habits.count) faites", color: Color(hex: 0x9B6CF1), progress: hp, done: hp >= 1 && !habits.isEmpty)
+            Objective(icon: "figure.walk", title: "Bouger", sub: "\(steps) / \(stepGoal) pas", color: Theme.fitness, progress: sp, done: sp >= 1),
+            Objective(icon: "drop.fill", title: "S'hydrater", sub: "\(waterToday) / \(waterGoal) ml", color: Theme.hydration, progress: wp, done: wp >= 1),
+            Objective(icon: "checklist", title: "Habitudes", sub: habits.isEmpty ? "Aucune habitude" : "\(habitsDone) / \(habits.count) faites", color: Theme.mind, progress: hp, done: hp >= 1 && !habits.isEmpty)
         ]
     }
 
@@ -1112,8 +1066,18 @@ struct ShortcutsHomeView: View {
                         .contentTransition(.numericText())
                         .animation(.spring(duration: 0.4), value: o.sub)
                 }
-                ProgressView(value: o.progress).tint(Color.accentColor).scaleEffect(x: 1, y: 1.1, anchor: .center)
-                    .animation(.spring(duration: 0.6, bounce: 0.1), value: o.progress)
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(Color.primary.opacity(0.06))
+                            .frame(height: 5)
+                        Capsule()
+                            .fill(o.color)
+                            .frame(width: max(0, geo.size.width * CGFloat(min(1.0, max(0.0, o.progress)))), height: 5)
+                    }
+                }
+                .frame(height: 5)
+                .animation(.spring(duration: 0.6, bounce: 0.1), value: o.progress)
             }
             Image(systemName: o.done ? "checkmark.circle.fill" : "circle")
                 .font(.system(size: 18)).foregroundStyle(o.done ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(Color.secondary.opacity(0.4)))
@@ -1146,10 +1110,10 @@ struct ShortcutsHomeView: View {
                 } label: {
                     Text("Ajouter")
                         .font(.system(size: 14, weight: .black)).textCase(.uppercase).kerning(0.5)
-                        .foregroundStyle(Theme.onAccent)
+                        .foregroundStyle(Theme.textPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 11)
-                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+                        .glassControl(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 Button {
@@ -1161,7 +1125,7 @@ struct ShortcutsHomeView: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(Color.secondary.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .raisedSurface(RoundedRectangle(cornerRadius: 10, style: .continuous), .nested)
                 }
                 .buttonStyle(.plain)
             }
@@ -1186,7 +1150,7 @@ struct ShortcutsHomeView: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.secondary)
                         .frame(width: 24, height: 24)
-                        .background(Color.secondary.opacity(0.1), in: Circle())
+                        .raisedSurface(Circle(), .nested)
                 }
                 .accessibilityLabel("Fermer")
                 .buttonStyle(.plain)
@@ -1244,9 +1208,9 @@ struct ShortcutsHomeView: View {
                             .font(.system(size: 9, weight: .bold))
                     }
                     .foregroundStyle(Color.primary)
+                    .applePreviewIsland()
                 }
-                .buttonStyle(.plain)
-                .applePreviewIsland()
+                .buttonStyle(LifeOSPressStyle(scale: 0.92, opacity: 0.85))
             }
         }
         .padding(.horizontal, 4)
@@ -1385,7 +1349,7 @@ struct HomeOrderEditor: View {
                                 row(o)
                                 Button { add(o) } label: {
                                     Image(systemName: "plus.circle.fill")
-                                        .font(.title3).foregroundStyle(.green)
+                                        .font(.title3).foregroundStyle(Theme.success)
                                 }
                                 .buttonStyle(.borderless)
                                 .accessibilityLabel("Ajouter \(o.label)")
@@ -1396,11 +1360,28 @@ struct HomeOrderEditor: View {
                     }
                 }
             }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(Color.white.ignoresSafeArea())
             // Mode edition permanent: les poignees et les boutons de retrait
             // sont visibles tout de suite, sans chercher un bouton Modifier.
             .environment(\.editMode, .constant(.active))
             .navigationTitle(title).navigationBarTitleDisplayMode(.inline)
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("OK") { dismiss() } } }
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text("OK")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(Theme.onAccent)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 6)
+                            .background(Color.primary, in: Capsule())
+                    }
+                    .buttonStyle(LifeOSPressStyle(scale: 0.95))
+                }
+            }
         }
     }
 

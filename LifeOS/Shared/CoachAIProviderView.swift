@@ -75,7 +75,7 @@ struct CoachAIProviderView: View {
                             Text(UsageFormatter.costEUR(usd: vm.todayCumulativeCostUSD))
                                 .font(.caption.monospacedDigit())
                                 .foregroundStyle(
-                                    vm.isCapReached ? .red : .secondary
+                                    vm.isCapReached ? Theme.danger : .secondary
                                 )
                         }
                     }
@@ -225,7 +225,7 @@ struct CoachAIProviderView: View {
             }
             Spacer()
             if vm.currentPreference == "apple.intelligence.on-device" {
-                Text("Actif").font(.caption.weight(.semibold)).foregroundStyle(.green)
+                Text("Actif").font(.caption.weight(.semibold)).foregroundStyle(Theme.success)
             } else if vm.appleAvailable {
                 Button("Choisir") { vm.setPreferred(providerID: "apple.intelligence.on-device") }
                     .buttonStyle(LifeOSGlassButtonStyle())
@@ -290,7 +290,7 @@ struct CoachAIProviderView: View {
         let isPreferred = vm.currentPreference == slot.providerID
         HStack {
             Image(systemName: hasKey ? "checkmark.seal.fill" : "key")
-                .foregroundStyle(hasKey ? .green : .secondary)
+                .foregroundStyle(hasKey ? Theme.success : .secondary)
             VStack(alignment: .leading, spacing: 2) {
                 Text(slot.displayName)
                 Text(hasKey ? "Clé configurée" : "Aucune clé — tape pour ajouter")
@@ -299,7 +299,7 @@ struct CoachAIProviderView: View {
             }
             Spacer()
             if isPreferred {
-                Text("Actif").font(.caption.weight(.semibold)).foregroundStyle(.green)
+                Text("Actif").font(.caption.weight(.semibold)).foregroundStyle(Theme.success)
             } else if hasKey {
                 Button("Choisir") { vm.setPreferred(providerID: slot.providerID) }
                     .buttonStyle(LifeOSGlassButtonStyle())
@@ -317,7 +317,7 @@ struct CoachAIProviderView: View {
         let isPreferred = vm.currentPreference == config.providerID
         HStack {
             Image(systemName: hasKey ? "server.rack" : "server.rack")
-                .foregroundStyle(hasKey ? .green : .secondary)
+                .foregroundStyle(hasKey ? Theme.success : .secondary)
             VStack(alignment: .leading, spacing: 2) {
                 Text(config.name)
                     .font(.subheadline.weight(.medium))
@@ -328,7 +328,7 @@ struct CoachAIProviderView: View {
             }
             Spacer()
             if isPreferred {
-                Text("Actif").font(.caption.weight(.semibold)).foregroundStyle(.green)
+                Text("Actif").font(.caption.weight(.semibold)).foregroundStyle(Theme.success)
             } else {
                 Button("Choisir") {
                     AIProviderPreference.shared.setPreferredProviderID(config.providerID)
@@ -407,7 +407,7 @@ private struct ProviderKeyEditor: View {
                 if let masked = existingKeyMasked {
                     Section {
                         HStack {
-                            Image(systemName: "checkmark.seal.fill").foregroundStyle(.green)
+                            Image(systemName: "checkmark.seal.fill").foregroundStyle(Theme.success)
                             Text("Clé enregistrée : \(masked)")
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
@@ -423,7 +423,7 @@ private struct ProviderKeyEditor: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                     if let err = validationError {
-                        Text(err).foregroundStyle(.red).font(.caption)
+                        Text(err).foregroundStyle(Theme.danger).font(.caption)
                     }
                 } footer: {
                     if let url = slot.credentialSlot.docsURL {
@@ -449,9 +449,9 @@ private struct ProviderKeyEditor: View {
 
                     switch testStatus {
                     case .ok(let msg):
-                        Label(msg, systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                        Label(msg, systemImage: "checkmark.circle.fill").foregroundStyle(Theme.success)
                     case .failed(let msg):
-                        Label(msg, systemImage: "xmark.circle.fill").foregroundStyle(.red).font(.footnote)
+                        Label(msg, systemImage: "xmark.circle.fill").foregroundStyle(Theme.danger).font(.footnote)
                     default:
                         EmptyView()
                     }

@@ -78,6 +78,15 @@ enum LedgerService {
         recompute(ctx, account: acc)
     }
 
+    /// "Mon solde actuel est X": ajuste le solde d'OUVERTURE pour que le solde
+    /// derive tombe sur X, sans toucher aux operations. Ecrire `balance` a la main
+    /// ne tenait pas: le prochain recalcul l'ecrasait.
+    static func setCurrentBalance(_ ctx: ModelContext, account: Account, to value: Double) {
+        let cents = transactions(ctx, accountID: account.id).reduce(0) { $0 + $1.amountCents }
+        account.openingBalance = value - Double(cents) / 100.0
+        recompute(ctx, account: account)
+    }
+
     static func recomputeAll(_ ctx: ModelContext) {
         for a in (try? ctx.fetch(FetchDescriptor<Account>())) ?? [] { recompute(ctx, account: a) }
     }

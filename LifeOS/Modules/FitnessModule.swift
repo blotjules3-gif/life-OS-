@@ -32,7 +32,7 @@ struct StepsView: View {
                         }.frame(width: 230, height: 230)
                         HStack(spacing: 12) {
                             StatTile(value: String(format: "%.1f", Double(today)*0.0007), label: "km approx.", icon: "map")
-                            StatTile(value: "\(Int(Double(today)*0.04))", label: "kcal approx.", icon: "flame.fill", tint: .orange)
+                            StatTile(value: "\(Int(Double(today)*0.04))", label: "kcal approx.", icon: "flame.fill", tint: Theme.warning)
                         }
                         Stepper("Objectif : \(goal) pas", value: $goal, in: 3000...25000, step: 1000).card()
                     }
@@ -110,11 +110,20 @@ struct StrengthView: View {
                         }
                         // Suggestion de progression adaptative
                         if let last = sets.filter({ $0.exercise == ex }).first {
-                            HStack {
+                            // Meme moteur que la seance du programme : la cible est la derniere
+                            // serie (reps faites), la decision vient de l'historique complet.
+                            let p = StrengthProgression.next(
+                                exercise: ex,
+                                target: .init(sets: 3, repLow: max(1, last.reps - 2), repHigh: max(1, last.reps)),
+                                history: sets.map(\.logged))
+                            HStack(alignment: .top) {
                                 Image(systemName: "wand.and.stars").foregroundStyle(.fitTint)
-                                Text("Prochaine séance : vise \(String(format: "%.1f", last.weightKg + suggestIncrement(last)))kg × \(last.reps) si tu as fini tes reps facilement.")
-                                    .font(.footnote).foregroundStyle(Theme.textSecondary)
-                            }.card(padding: 12)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Prochaine séance : \(p.weight.map { StrengthProgression.fmt($0) + " kg" } ?? "même charge") × \(p.reps)")
+                                        .font(.footnote.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                                    Text(p.reason).font(.caption).foregroundStyle(Theme.textSecondary)
+                                }
+                            }.frame(maxWidth: .infinity, alignment: .leading).card(padding: 12)
                         }
                     }
 
@@ -131,7 +140,7 @@ struct StrengthView: View {
                                     }
                                     Spacer()
                                     Text("\(String(format: "%.1f", s.weightKg))kg × \(s.reps)").font(.subheadline.bold()).foregroundStyle(.fitTint)
-                                    Button(role: .destructive) { ctx.delete(s) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(.red.opacity(0.7))
+                                    Button(role: .destructive) { ctx.delete(s) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(Theme.danger.opacity(0.7))
                                 }.card(padding: 12)
                             }
                         }
@@ -144,7 +153,6 @@ struct StrengthView: View {
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { WorkoutEditor(knownExercises: exercises) }
     }
-    private func suggestIncrement(_ s: WorkoutSet) -> Double { s.weightKg < 40 ? 2.5 : 5 }
 }
 
 struct ProgressChartCard: View {
@@ -227,9 +235,9 @@ struct HIITView: View {
                     }.card()
                 }
                 ZStack {
-                    ProgressRing(progress: engine.progress, lineWidth: 16, tint: inWork ? .fitTint : .blue)
+                    ProgressRing(progress: engine.progress, lineWidth: 16, tint: inWork ? .fitTint : Theme.finance)
                     VStack(spacing: 4) {
-                        Text(phase.uppercased()).font(.caption.bold()).foregroundStyle(inWork ? .fitTint : .blue)
+                        Text(phase.uppercased()).font(.caption.bold()).foregroundStyle(inWork ? .fitTint : Theme.finance)
                         Text(formatHMS(engine.remaining)).font(.system(size: 46, weight: .bold)).monospacedDigit().foregroundStyle(Theme.textPrimary)
                         if running { Text("Round \(currentRound)/\(rounds)").font(.caption).foregroundStyle(Theme.textSecondary) }
                     }
@@ -367,7 +375,7 @@ struct StreaksView: View {
             ScrollView {
                 VStack(spacing: 16) {
                     VStack(spacing: 8) {
-                        Image(systemName: "flame.fill").font(.system(size: 50)).foregroundStyle(.orange)
+                        Image(systemName: "flame.fill").font(.system(size: 50)).foregroundStyle(Theme.warning)
                         Text("\(streak)").font(.system(size: 56, weight: .bold)).foregroundStyle(Theme.textPrimary)
                         Text("jours de série").font(.subheadline).foregroundStyle(Theme.textSecondary)
                     }.frame(maxWidth: .infinity).card()
@@ -394,8 +402,8 @@ struct StreaksView: View {
     }
     private func habitProgressRow(_ name: String, _ value: Int, _ goal: Int) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack { Text(name).font(.subheadline).foregroundStyle(Theme.textPrimary); Spacer(); Text("\(value)/\(goal)").font(.caption.bold()).foregroundStyle(value >= goal ? .green : Theme.textSecondary) }
-            ProgressView(value: Double(min(value, goal)), total: Double(goal)).tint(value >= goal ? .green : .fitTint)
+            HStack { Text(name).font(.subheadline).foregroundStyle(Theme.textPrimary); Spacer(); Text("\(value)/\(goal)").font(.caption.bold()).foregroundStyle(value >= goal ? Theme.success : Theme.textSecondary) }
+            ProgressView(value: Double(min(value, goal)), total: Double(goal)).tint(value >= goal ? Theme.success : .fitTint)
         }
     }
 }

@@ -1,0 +1,628 @@
+{
+ "@cf/mistralai/mistral-small-3.1-24b-instruct": {
+  "json_ok": 12,
+  "recall": 0.73,
+  "false_soup": 0,
+  "missed_soup": 0,
+  "median_latency": 8.3,
+  "rows": [
+   {
+    "photo": "couscous",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "Chou",
+     "Poulet",
+     "Riz"
+    ],
+    "recall": "0/2",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 6.9
+   },
+   {
+    "photo": "legumes-rotis",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "Poulet",
+     "Riz",
+     "Brocoli",
+     "Chou-fleur",
+     "Champignons",
+     "Carottes",
+     "Pruneaux"
+    ],
+    "recall": "3/3",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 12.6
+   },
+   {
+    "photo": "omelette",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "Omelette"
+    ],
+    "recall": "1/1",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 3.1
+   },
+   {
+    "photo": "pizza",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "Pâte à pizza",
+     "Tomate cerise",
+     "Fromage râpé",
+     "Épinard"
+    ],
+    "recall": "1/1",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 7.0
+   },
+   {
+    "photo": "poelee-legumes",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "Poivron vert",
+     "Carotte",
+     "Oignon",
+     "Œuf",
+     "Ail"
+    ],
+    "recall": "1/3",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 8.3
+   },
+   {
+    "photo": "poke-bowl",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "Coca-Cola",
+     "Tomate cerise",
+     "Fraise",
+     "Chips tortilla",
+     "Concombre",
+     "Oignon vert",
+     "Viande hachée",
+     "Fromage",
+     "Poivron rouge",
+     "Maïs"
+    ],
+    "recall": "4/5",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 11.2
+   },
+   {
+    "photo": "ratatouille",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "Poivron",
+     "Tomate",
+     "Courgette",
+     "Aubergine",
+     "Oignon",
+     "Fromage",
+     "Herbes"
+    ],
+    "recall": "3/4",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 8.4
+   },
+   {
+    "photo": "riz-poulet-brocoli",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "Brocoli",
+     "Poulet",
+     "Riz",
+     "Pomme de terre",
+     "Chou-fleur",
+     "Salade"
+    ],
+    "recall": "5/5",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 10.6
+   },
+   {
+    "photo": "salade-nicoise",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "Rocket",
+     "Oeuf",
+     "Tomate séchée",
+     "Anchois",
+     "Oignon",
+     "Pois chiche",
+     "Carotte"
+    ],
+    "recall": "1/5",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 9.7
+   },
+   {
+    "photo": "soupe-legumes",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "carotte",
+     "pomme de terre",
+     "pain"
+    ],
+    "recall": "1/1",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 5.8
+   },
+   {
+    "photo": "spaghetti-bolognaise",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "spaghetti",
+     "brocoli",
+     "pois",
+     "sauce tomate"
+    ],
+    "recall": "4/4",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 7.8
+   },
+   {
+    "photo": "steak-frites",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "frites",
+     "steak",
+     "pain"
+    ],
+    "recall": "3/3",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 6.8
+   }
+  ]
+ },
+ "@cf/meta/llama-3.2-11b-vision-instruct": {
+  "json_ok": 0,
+  "recall": 0.0,
+  "false_soup": 0,
+  "missed_soup": 1,
+  "median_latency": 0.3,
+  "rows": [
+   {
+    "photo": "couscous",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model Agreement: Prior to using this model, you must submit the prompt \\'agree\\'. By submitting \\xe2\\x80\\x98agree\\xe2\\x80\\x99, you  hereby agree to the llama-3.2-11b-vision-instruct Commun'",
+    "items": [],
+    "recall": "0/2",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.3
+   },
+   {
+    "photo": "legumes-rotis",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model Agreement: Prior to using this model, you must submit the prompt \\'agree\\'. By submitting \\xe2\\x80\\x98agree\\xe2\\x80\\x99, you  hereby agree to the llama-3.2-11b-vision-instruct Commun'",
+    "items": [],
+    "recall": "0/3",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.3
+   },
+   {
+    "photo": "omelette",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model Agreement: Prior to using this model, you must submit the prompt \\'agree\\'. By submitting \\xe2\\x80\\x98agree\\xe2\\x80\\x99, you  hereby agree to the llama-3.2-11b-vision-instruct Commun'",
+    "items": [],
+    "recall": "0/1",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.2
+   },
+   {
+    "photo": "pizza",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model Agreement: Prior to using this model, you must submit the prompt \\'agree\\'. By submitting \\xe2\\x80\\x98agree\\xe2\\x80\\x99, you  hereby agree to the llama-3.2-11b-vision-instruct Commun'",
+    "items": [],
+    "recall": "0/1",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.3
+   },
+   {
+    "photo": "poelee-legumes",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model Agreement: Prior to using this model, you must submit the prompt \\'agree\\'. By submitting \\xe2\\x80\\x98agree\\xe2\\x80\\x99, you  hereby agree to the llama-3.2-11b-vision-instruct Commun'",
+    "items": [],
+    "recall": "0/3",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 1.1
+   },
+   {
+    "photo": "poke-bowl",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model Agreement: Prior to using this model, you must submit the prompt \\'agree\\'. By submitting \\xe2\\x80\\x98agree\\xe2\\x80\\x99, you  hereby agree to the llama-3.2-11b-vision-instruct Commun'",
+    "items": [],
+    "recall": "0/5",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.3
+   },
+   {
+    "photo": "ratatouille",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model Agreement: Prior to using this model, you must submit the prompt \\'agree\\'. By submitting \\xe2\\x80\\x98agree\\xe2\\x80\\x99, you  hereby agree to the llama-3.2-11b-vision-instruct Commun'",
+    "items": [],
+    "recall": "0/4",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.3
+   },
+   {
+    "photo": "riz-poulet-brocoli",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model Agreement: Prior to using this model, you must submit the prompt \\'agree\\'. By submitting \\xe2\\x80\\x98agree\\xe2\\x80\\x99, you  hereby agree to the llama-3.2-11b-vision-instruct Commun'",
+    "items": [],
+    "recall": "0/5",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.4
+   },
+   {
+    "photo": "salade-nicoise",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model Agreement: Prior to using this model, you must submit the prompt \\'agree\\'. By submitting \\xe2\\x80\\x98agree\\xe2\\x80\\x99, you  hereby agree to the llama-3.2-11b-vision-instruct Commun'",
+    "items": [],
+    "recall": "0/5",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.4
+   },
+   {
+    "photo": "soupe-legumes",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model Agreement: Prior to using this model, you must submit the prompt \\'agree\\'. By submitting \\xe2\\x80\\x98agree\\xe2\\x80\\x99, you  hereby agree to the llama-3.2-11b-vision-instruct Commun'",
+    "items": [],
+    "recall": "0/1",
+    "false_soup": false,
+    "missed_soup": true,
+    "latency": 0.3
+   },
+   {
+    "photo": "spaghetti-bolognaise",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model Agreement: Prior to using this model, you must submit the prompt \\'agree\\'. By submitting \\xe2\\x80\\x98agree\\xe2\\x80\\x99, you  hereby agree to the llama-3.2-11b-vision-instruct Commun'",
+    "items": [],
+    "recall": "0/4",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.2
+   },
+   {
+    "photo": "steak-frites",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model Agreement: Prior to using this model, you must submit the prompt \\'agree\\'. By submitting \\xe2\\x80\\x98agree\\xe2\\x80\\x99, you  hereby agree to the llama-3.2-11b-vision-instruct Commun'",
+    "items": [],
+    "recall": "0/3",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.3
+   }
+  ]
+ },
+ "@cf/moonshotai/kimi-k2.6": {
+  "json_ok": 0,
+  "recall": 0.0,
+  "false_soup": 0,
+  "missed_soup": 1,
+  "median_latency": 0.3,
+  "rows": [
+   {
+    "photo": "couscous",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan. Upgrade to access th'",
+    "items": [],
+    "recall": "0/2",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 1.8
+   },
+   {
+    "photo": "legumes-rotis",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan. Upgrade to access th'",
+    "items": [],
+    "recall": "0/3",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.7
+   },
+   {
+    "photo": "omelette",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan. Upgrade to access th'",
+    "items": [],
+    "recall": "0/1",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.4
+   },
+   {
+    "photo": "pizza",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan. Upgrade to access th'",
+    "items": [],
+    "recall": "0/1",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.5
+   },
+   {
+    "photo": "poelee-legumes",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan. Upgrade to access th'",
+    "items": [],
+    "recall": "0/3",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.4
+   },
+   {
+    "photo": "poke-bowl",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan. Upgrade to access th'",
+    "items": [],
+    "recall": "0/5",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.3
+   },
+   {
+    "photo": "ratatouille",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan. Upgrade to access th'",
+    "items": [],
+    "recall": "0/4",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.2
+   },
+   {
+    "photo": "riz-poulet-brocoli",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan. Upgrade to access th'",
+    "items": [],
+    "recall": "0/5",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.3
+   },
+   {
+    "photo": "salade-nicoise",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan. Upgrade to access th'",
+    "items": [],
+    "recall": "0/5",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.2
+   },
+   {
+    "photo": "soupe-legumes",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan. Upgrade to access th'",
+    "items": [],
+    "recall": "0/1",
+    "false_soup": false,
+    "missed_soup": true,
+    "latency": 0.3
+   },
+   {
+    "photo": "spaghetti-bolognaise",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan. Upgrade to access th'",
+    "items": [],
+    "recall": "0/4",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.2
+   },
+   {
+    "photo": "steak-frites",
+    "ok_json": false,
+    "error": "HTTP 403 b'{\"errors\":[{\"message\":\"AiError: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan: Model @cf/moonshotai/kimi-k2.6 is not available on the Workers Free plan. Upgrade to access th'",
+    "items": [],
+    "recall": "0/3",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 0.3
+   }
+  ]
+ },
+ "@cf/qwen/qwen3.8-27b": {
+  "json_ok": 8,
+  "recall": 0.35,
+  "false_soup": 0,
+  "missed_soup": 0,
+  "median_latency": 13.8,
+  "rows": [
+   {
+    "photo": "couscous",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "Légumes verts hachés",
+     "Poisson blanc",
+     "Rouleau de farine"
+    ],
+    "recall": "1/2",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 10.9
+   },
+   {
+    "photo": "legumes-rotis",
+    "ok_json": false,
+    "error": null,
+    "items": [],
+    "recall": "0/3",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 15.6
+   },
+   {
+    "photo": "omelette",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "œuf"
+    ],
+    "recall": "0/1",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 9.4
+   },
+   {
+    "photo": "pizza",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "Pâte à pizza",
+     "Sauce tomate",
+     "Fromage fondu",
+     "Tomates cerises",
+     "Épinards"
+    ],
+    "recall": "1/1",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 14.2
+   },
+   {
+    "photo": "poelee-legumes",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "okra",
+     "carotte",
+     "oignon",
+     "œuf"
+    ],
+    "recall": "1/3",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 10.3
+   },
+   {
+    "photo": "poke-bowl",
+    "ok_json": false,
+    "error": null,
+    "items": [],
+    "recall": "0/5",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 18.4
+   },
+   {
+    "photo": "ratatouille",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "Courgette",
+     "Tomate",
+     "Poivron",
+     "Ail",
+     "Oignon",
+     "Herbes"
+    ],
+    "recall": "3/4",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 13.8
+   },
+   {
+    "photo": "riz-poulet-brocoli",
+    "ok_json": false,
+    "error": null,
+    "items": [],
+    "recall": "0/5",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 17.5
+   },
+   {
+    "photo": "salade-nicoise",
+    "ok_json": false,
+    "error": null,
+    "items": [],
+    "recall": "0/5",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 19.7
+   },
+   {
+    "photo": "soupe-legumes",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "carottes",
+     "tomates",
+     "oignons",
+     "bouillon de légumes"
+    ],
+    "recall": "1/1",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 8.7
+   },
+   {
+    "photo": "spaghetti-bolognaise",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "Spaghetti",
+     "Viande hachée en sauce",
+     "Brocoli",
+     "Petits pois"
+    ],
+    "recall": "4/4",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 9.1
+   },
+   {
+    "photo": "steak-frites",
+    "ok_json": true,
+    "error": null,
+    "items": [
+     "bœuf",
+     "pommes de terre",
+     "sauce"
+    ],
+    "recall": "2/3",
+    "false_soup": false,
+    "missed_soup": false,
+    "latency": 9.9
+   }
+  ]
+ }
+}

@@ -101,7 +101,16 @@ struct PhotoCalorieView: View {
     @State private var pickerItem: PhotosPickerItem?
     @State private var meal = "Déjeuner"
     @State private var savedToast = false
+    /// Jour du repas. Aujourd'hui par defaut, modifiable pour un repas oublie.
+    @State private var mealDay = Date()
+    /// Garde contre le double appui : un seul enregistrement a la fois.
+    @State private var saving = false
+    /// Message quand l'enregistrement echoue. La saisie reste a l'ecran.
+    @State private var saveError: String?
     @State private var aiNote = ""
+    @State private var aiQuestion: String?
+    /// Quel moteur a repondu, et avec quelle confiance: affiche avec le resultat.
+    @State private var engineLine = ""
     @State private var usedAI = false
 
     private let tint = AppCategory.nutrition.tint
@@ -116,6 +125,7 @@ struct PhotoCalorieView: View {
                     sourceButtons
                     if busy { ProgressView("Analyse du plat…").padding() }
                     if failed { errorCard }
+                    if let saveError { saveErrorCard(saveError) }
                     if !items.isEmpty, !busy { itemsCard }
                     if image == nil && !busy { intro }
                 }
@@ -127,6 +137,9 @@ struct PhotoCalorieView: View {
             if savedToast { toast }
         }
         .navigationTitle("Calories par photo").navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showAddItem) {
+            ManualFoodSheet { added in items.append(added); failed = false }
+        }
         .fullScreenCover(isPresented: $showCamera) {
             CameraPicker { img in if let img { handle(img) } }.ignoresSafeArea()
         }
@@ -147,6 +160,13 @@ struct PhotoCalorieView: View {
             }
         }
         .onAppear {
+            #if DEBUG
+            // `-calaiImage /chemin/photo.jpg`: analyse une photo annotee du banc
+            // d'essai (tools/calai-bench) sans camera, pour verifier l'ecran reel.
+            if image == nil, let path = DebugLaunchFlags.value("-calaiImage"), let img = UIImage(contentsOfFile: path) {
+                handle(img); return
+            }
+            #endif
             if autoOpenCamera && cameraAvailable && image == nil {
                 // Léger délai pour laisser la vue apparaître avant d'empiler
                 // le fullScreenCover — sinon l'animation est saccadée.
@@ -229,11 +249,19 @@ struct PhotoCalorieView: View {
         .padding(16).raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
+    /// Sans cle et sans reconnaissance, l'ecran ne doit pas s'arreter la : on propose
+    /// tout de suite la recherche (Ciqual + OpenFoodFacts), qui ecrit dans le meme journal.
     private var errorCard: some View {
-        Label("Plat non reconnu. Reprends la photo de plus près, ou ajoute manuellement.", systemImage: "exclamationmark.triangle.fill")
-            .font(.subheadline).foregroundStyle(.orange)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14).background(Color.orange.opacity(0.20), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Plat non reconnu. Reprends la photo de plus près, ou cherche l'aliment.", systemImage: "exclamationmark.triangle.fill")
+                .font(.subheadline).foregroundStyle(Theme.warning)
+            Button { showAddItem = true } label: {
+                Label("Chercher un aliment", systemImage: "magnifyingglass").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(LifeOSGlassButtonStyle(prominent: true))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14).background(Theme.warning.opacity(0.20), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
     private func resultCard(_ g: FoodGuess) -> some View {
@@ -251,10 +279,11 @@ struct PhotoCalorieView: View {
             Picker("Repas", selection: $meal) {
                 ForEach(["Petit-déj", "Déjeuner", "Dîner", "Collation"], id: \.self) { Text($0).tag($0) }
             }.pickerStyle(.segmented)
+            mealDayPicker
             Button { save(g) } label: {
-                Label("Ajouter au journal", systemImage: "plus.circle.fill").frame(maxWidth: .infinity).padding(.vertical, 12)
+                saveLabel.frame(maxWidth: .infinity).padding(.vertical, 12)
                     .background(tint.gradient, in: RoundedRectangle(cornerRadius: 12)).foregroundStyle(.white)
-            }.buttonStyle(.plain)
+            }.buttonStyle(.plain).disabled(saving)
             if usedAI {
                 if !aiNote.isEmpty {
                     Text(aiNote).font(.caption).foregroundStyle(Theme.textSecondary)
@@ -310,19 +339,31 @@ struct PhotoCalorieView: View {
                         } label: { Image(systemName: "trash") }
                         .accessibilityLabel("Retirer \(item.name)")
                     }
+                    if !item.alternatives.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 6) {
+                                Text("Plutôt :").font(.caption2).foregroundStyle(Theme.textSecondary)
+                                ForEach(item.alternatives, id: \.self) { alt in
+                                    Button(alt) {
+                                        if let i = items.firstIndex(where: { $0.id == item.id }) {
+                                            items[i] = FoodRecognitionPipeline.renamed(items[i], to: alt)
+                                        }
+                                    }
+                                    .font(.caption2).buttonStyle(.bordered).controlSize(.mini)
+                                }
+                            }
+                        }
+                    }
                     HStack(spacing: 12) {
                         Text("P \(item.protein, specifier: "%.1f")").font(.caption2)
                         Text("G \(item.carbs, specifier: "%.1f")").font(.caption2)
                         Text("L \(item.fat, specifier: "%.1f")").font(.caption2)
                         Spacer()
-                        Label(item.source == .openFoodFacts ? "OpenFoodFacts" : "estimation",
-                              systemImage: item.source == .openFoodFacts ? "checkmark.seal" : "questionmark.circle")
+                        Label(item.source.label, systemImage: item.source == .estimate ? "questionmark.circle" : "checkmark.seal")
                             .font(.caption2)
-                            .foregroundStyle(item.source == .openFoodFacts ? .green : .orange)
-                        if !usedAI {
-                            Text("\(Int(item.confidence * 100))%")
-                                .font(.caption2).foregroundStyle(Theme.textSecondary)
-                        }
+                            .foregroundStyle(item.source == .estimate ? Theme.warning : Theme.success)
+                        Text("\(Int(item.confidence * 100))%")
+                            .font(.caption2).foregroundStyle(Theme.textSecondary)
                     }
                 }
                 .padding(.vertical, 8)
@@ -342,46 +383,98 @@ struct PhotoCalorieView: View {
                 ForEach(["Petit-déj", "Déjeuner", "Dîner", "Collation"], id: \.self) { Text($0).tag($0) }
             }.pickerStyle(.segmented)
 
+            mealDayPicker
+
             Button { saveItems() } label: {
-                Label("Ajouter au journal", systemImage: "plus.circle.fill")
+                saveLabel
                     .frame(maxWidth: .infinity).padding(.vertical, 12)
                     .background(tint.gradient, in: RoundedRectangle(cornerRadius: 12))
                     .foregroundStyle(.white)
             }
             .buttonStyle(.plain)
-            .disabled(items.isEmpty)
+            .disabled(items.isEmpty || saving)
 
+            if let q = aiQuestion {
+                Label(q, systemImage: "questionmark.bubble").font(.caption).foregroundStyle(tint)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if usedAI, !aiNote.isEmpty {
                 Text(aiNote).font(.caption).foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            if !engineLine.isEmpty {
+                Text(engineLine).font(.caption2).foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             // On annonce l'hypothese au lieu de faire croire a une mesure.
-            Text(usedAI
-                 ? "Estimation d'après la portion visible. Ajuste les grammes si besoin."
-                 : "Les portions sont des hypothèses, pas une pesée. Les valeurs viennent d'OpenFoodFacts (produits emballés). Ajuste avec le curseur.")
+            Text("Les portions sont des hypothèses, pas une pesée : ajuste avec le curseur. Aliments génériques : table Ciqual (ANSES) ; produits emballés : OpenFoodFacts.")
                 .font(.caption2).foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(16).raisedSurface(RoundedRectangle(cornerRadius: 16))
-        .sheet(isPresented: $showAddItem) {
-            ManualFoodSheet { added in items.append(added) }
-        }
     }
 
     /// Enregistre UNE ligne de journal par aliment, pas un total anonyme:
     /// autrement on ne peut plus corriger un seul element plus tard.
+    ///
+    /// Tout ou rien, via `FoodLogService`. En cas d'echec la photo et les lignes
+    /// restent a l'ecran avec un message et un bouton pour reessayer: avant, un
+    /// echec affichait "Ajoute au journal" et effacait la saisie.
     private func saveItems() {
-        for i in items {
-            ctx.insert(FoodEntry(name: i.name, calories: i.kcal, protein: i.protein,
-                                 carbs: i.carbs, fat: i.fat, meal: meal))
+        guard !saving, !items.isEmpty else { return }
+        let when = FoodLogService.mealDate(day: mealDay)
+        let drafts = items.map {
+            FoodLogService.Draft(name: $0.name, calories: $0.kcal, protein: $0.protein,
+                                 carbs: $0.carbs, fat: $0.fat, meal: meal, date: when)
         }
-        do { try ctx.save() } catch {
-            AppLog.data.error("repas non enregistre: \(error.localizedDescription, privacy: .public)")
+        commit(drafts) { items = [] }
+    }
+
+    private func commit(_ drafts: [FoodLogService.Draft], clear: () -> Void) {
+        saving = true
+        defer { saving = false }
+        do {
+            try FoodLogService.log(drafts, in: ctx)
+        } catch {
+            Haptics.warning()
+            withAnimation { saveError = error.localizedDescription }
+            return
         }
+        saveError = nil
         Haptics.success()
         withAnimation { savedToast = true }
-        image = nil; guess = nil; items = []; pickerItem = nil
+        clear()
+        image = nil; guess = nil; pickerItem = nil; mealDay = Date()
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) { withAnimation { savedToast = false } }
+    }
+
+    private var saveLabel: some View {
+        HStack(spacing: 8) {
+            if saving { ProgressView().tint(.white) }
+            else { Image(systemName: "plus.circle.fill") }
+            Text(saving ? "Enregistrement…" : "Ajouter au journal")
+        }
+    }
+
+    private var mealDayPicker: some View {
+        DatePicker("Jour du repas", selection: $mealDay, in: ...Date(), displayedComponents: .date)
+            .font(.subheadline)
+            .foregroundStyle(Theme.textPrimary)
+    }
+
+    private func saveErrorCard(_ message: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Theme.warning)
+            Text(message).font(.subheadline).foregroundStyle(Theme.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button("Réessayer") {
+                if let g = guess { save(g) } else { saveItems() }
+            }
+            .font(.subheadline.weight(.semibold))
+            .disabled(saving)
+        }
+        .padding(14)
+        .background(Theme.warning.opacity(0.14), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
     private func stepperBox(_ label: String, value: Binding<Int>, step: Int) -> some View {
@@ -407,30 +500,42 @@ struct PhotoCalorieView: View {
             Label("Ajouté au journal", systemImage: "checkmark.circle.fill")
                 .font(.subheadline.weight(.semibold)).foregroundStyle(.white)
                 .padding(.horizontal, 18).padding(.vertical, 12)
-                .background(Color.green, in: Capsule()).padding(.bottom, 30)
+                .background(Theme.success, in: Capsule()).padding(.bottom, 30)
         }.transition(.move(edge: .bottom).combined(with: .opacity))
     }
 
     private func handle(_ img: UIImage) {
         image = img; guess = nil; items = []; failed = false; busy = true; aiNote = ""; usedAI = false
+        aiQuestion = nil; engineLine = ""
         Task {
             // 1. Vrai modele de vision s'il y a une cle. Il REGARDE l'assiette
             //    et juge la portion, au lieu de reconnaitre un mot et de lire
             //    une table ou une pizza vaut toujours le meme nombre.
             if await FoodPhotoAnalyzer.isAvailable {
                 switch await FoodPhotoAnalyzer.analyze(img) {
-                case .success(let a):
+                case .success(let a) where !a.items.isEmpty:
+                    let engine = await FoodPhotoAnalyzer.engineName ?? "ton fournisseur"
                     await MainActor.run {
-                        // Une seule UI de resultat, quelle que soit la source:
-                        // le coach remplit la meme liste modifiable.
-                        items = [FoodRecognitionPipeline.DetectedFood(
-                            name: a.name, confidence: 0.9, grams: 100,
-                            kcal100: Double(a.kcal), protein100: a.protein,
-                            carbs100: a.carbs, fat100: a.fat, source: .estimate)]
-                        aiNote = a.note; usedAI = true; busy = false
+                        // Un element par aliment vu, valeurs Ciqual quand l'aliment y
+                        // est (plat fait maison), sinon celles du modele pour la portion.
+                        items = a.items.map { i in
+                            if let g = FoodRecognitionPipeline.generic(i.name, preparation: i.preparation) {
+                                return .init(name: i.name, confidence: i.confidence, grams: i.grams,
+                                             kcal100: g.0, protein100: g.1, carbs100: g.2, fat100: g.3,
+                                             source: .ciqual, alternatives: i.alternatives, preparation: i.preparation)
+                            }
+                            let f = 100 / max(i.grams, 1)
+                            return .init(name: i.name, confidence: i.confidence, grams: i.grams,
+                                         kcal100: i.kcal * f, protein100: i.protein * f, carbs100: i.carbs * f, fat100: i.fat * f,
+                                         source: .estimate, alternatives: i.alternatives, preparation: i.preparation)
+                        }
+                        aiNote = a.note; aiQuestion = a.question; usedAI = true; busy = false
+                        engineLine = "Analysé par ton coach avec \(engine). La photo est envoyée à ce service, LifeOS ne la garde pas."
                         Haptics.medium()
                     }
                     return
+                case .success:
+                    AppLog.data.info("analyse du plat: aucun aliment vu par le coach, repli sur l'appareil")
                 case .failure(let e):
                     // On n'abandonne pas: l'estimation locale vaut mieux que
                     // rien. Mais la raison est tracee, sinon une cle morte
@@ -443,6 +548,10 @@ struct PhotoCalorieView: View {
             let detected = await FoodRecognitionPipeline.analyse(img)
             await MainActor.run {
                 busy = false
+                let best = detected.map(\.confidence).max() ?? 0
+                engineLine = "Reconnaissance sur l'appareil (Apple Vision), confiance \(Int(best * 100)) % : "
+                    + (best < 0.5 ? "incertaine, vérifie chaque aliment. " : "")
+                    + "Elle reconnaît des catégories, pas le détail d'une assiette ; portions supposées."
                 if detected.isEmpty {
                     failed = true
                 } else {
@@ -454,13 +563,11 @@ struct PhotoCalorieView: View {
         }
     }
     private func save(_ g: FoodGuess) {
-        let e = FoodEntry(name: g.name, calories: guess?.kcal ?? g.kcal, protein: g.protein, carbs: g.carbs, fat: g.fat, meal: meal)
-        ctx.insert(e)
-        do { try ctx.save() } catch { AppLog.data.error("PhotoCalorie save failed: \(error.localizedDescription, privacy: .public)") }
-        Haptics.success()
-        withAnimation { savedToast = true }
-        image = nil; guess = nil; pickerItem = nil
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) { withAnimation { savedToast = false } }
+        guard !saving else { return }
+        let draft = FoodLogService.Draft(name: g.name, calories: guess?.kcal ?? g.kcal,
+                                         protein: g.protein, carbs: g.carbs, fat: g.fat,
+                                         meal: meal, date: FoodLogService.mealDate(day: mealDay))
+        commit([draft]) {}
     }
 }
 

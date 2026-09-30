@@ -30,16 +30,26 @@ struct CategoryOrderSheet: View {
                     }
                 }
                 .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .background(Color.white.ignoresSafeArea())
                 .environment(\.editMode, $editMode)
             }
+            .background(Color.white.ignoresSafeArea())
             .navigationTitle("Trier les catégories")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Terminer") {
+                    Button {
                         dismiss()
+                    } label: {
+                        Text("Terminer")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(Theme.onAccent)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 7)
+                            .background(Color.primary, in: Capsule())
                     }
-                    .font(.headline)
+                    .buttonStyle(LifeOSPressStyle(scale: 0.95))
                 }
             }
         }
@@ -56,7 +66,7 @@ struct CategoryOrderSheet: View {
                 presetChip(
                     title: "Sport & Nutrition",
                     icon: "figure.run",
-                    tint: .red
+                    tint: Theme.danger
                 ) {
                     manager.setFitnessFirst()
                 }
@@ -64,7 +74,7 @@ struct CategoryOrderSheet: View {
                 presetChip(
                     title: "Optimisé Bureau (Mac)",
                     icon: "macbook",
-                    tint: .blue
+                    tint: Theme.finance
                 ) {
                     manager.setDesktopOptimized()
                 }
@@ -72,7 +82,7 @@ struct CategoryOrderSheet: View {
                 presetChip(
                     title: "Inverser l'ordre",
                     icon: "arrow.up.arrow.down",
-                    tint: .purple
+                    tint: Theme.mind
                 ) {
                     manager.reverseOrder()
                 }
@@ -152,7 +162,7 @@ struct CategoryOrderSheet: View {
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(index == 0 ? Color.secondary.opacity(0.3) : Color.accentColor)
                         .frame(width: 28, height: 28)
-                        .background(Color.secondary.opacity(0.08), in: Circle())
+                        .raisedSurface(Circle(), .nested)
                 }
                 .buttonStyle(.plain)
                 .disabled(index == 0)
@@ -167,7 +177,7 @@ struct CategoryOrderSheet: View {
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(index == manager.order.count - 1 ? Color.secondary.opacity(0.3) : Color.accentColor)
                         .frame(width: 28, height: 28)
-                        .background(Color.secondary.opacity(0.08), in: Circle())
+                        .raisedSurface(Circle(), .nested)
                 }
                 .buttonStyle(.plain)
                 .disabled(index == manager.order.count - 1)

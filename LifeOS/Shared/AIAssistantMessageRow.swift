@@ -214,10 +214,10 @@ struct AIAssistantMessageRow: View {
                 } label: {
                     Text(reason.label)
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Theme.warning)
                         .padding(.horizontal, 9)
                         .padding(.vertical, 4)
-                        .background(Color.orange.opacity(0.20), in: Capsule())
+                        .background(Theme.warning.opacity(0.20), in: Capsule())
                 }
                 .buttonStyle(.plain)
             }

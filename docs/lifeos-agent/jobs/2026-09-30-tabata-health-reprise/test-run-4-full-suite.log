@@ -1,0 +1,79 @@
+Test Case '-[LifeOSTests.TabataCatchUpTests testBeginRecordsStartFromInjectedClock]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testBeginRecordsStartFromInjectedClock]' passed (0.323 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testCatchesUpAfterBackgroundGap]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testCatchesUpAfterBackgroundGap]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testCatchUpCrossesPhaseBoundary]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testCatchUpCrossesPhaseBoundary]' passed (0.017 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testFinishDuringCatchUpIsDatedAtRealBoundary]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testFinishDuringCatchUpIsDatedAtRealBoundary]' passed (0.085 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testFinishOnNormalTickIsDatedNow]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testFinishOnNormalTickIsDatedNow]' passed (0.341 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testGapUnderLimitIsCaughtUp]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testGapUnderLimitIsCaughtUp]' passed (0.096 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testOneTickRemovesOneSecond]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testOneTickRemovesOneSecond]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testPausedEngineIgnoresElapsedTime]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testPausedEngineIgnoresElapsedTime]' passed (0.002 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testResetClearsStart]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testResetClearsStart]' passed (0.017 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testResetReturnsToIdle]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testResetReturnsToIdle]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.TabataCatchUpTests testVeryLongGapPausesInsteadOfCrediting]' started.
+Test Case '-[LifeOSTests.TabataCatchUpTests testVeryLongGapPausesInsteadOfCrediting]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testConcurrentDoneCallbacksWriteOnce]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testConcurrentDoneCallbacksWriteOnce]' passed (0.100 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testDelayedFailureThenRelaunchKeepsOriginalFinishTime]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testDelayedFailureThenRelaunchKeepsOriginalFinishTime]' passed (0.096 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testDiscardAfterFailedWriteKeepsQueue]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testDiscardAfterFailedWriteKeepsQueue]' passed (0.193 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testFailedHealthWriteIsNotMarkedSavedAndCanBeRetried]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testFailedHealthWriteIsNotMarkedSavedAndCanBeRetried]' passed (0.190 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testFailedWorkoutSurvivesNewSessionAndRelaunch]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testFailedWorkoutSurvivesNewSessionAndRelaunch]' passed (0.195 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testFinishDuringRestoreCatchUpWritesHealth]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testFinishDuringRestoreCatchUpWritesHealth]' passed (0.299 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testHealthNotWrittenWhenActiveTimeUnderOneMinute]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testHealthNotWrittenWhenActiveTimeUnderOneMinute]' passed (0.105 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testHealthWindowExcludesHourLongPause]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testHealthWindowExcludesHourLongPause]' passed (0.304 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testHealthWrittenOnceEvenAfterRestore]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testHealthWrittenOnceEvenAfterRestore]' passed (0.293 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testInFlightWriteSurvivesSessionReplacementAndTermination]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testInFlightWriteSurvivesSessionReplacementAndTermination]' passed (0.297 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testJumpingThroughWholeSessionIsNotAWorkout]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testJumpingThroughWholeSessionIsNotAWorkout]' passed (0.106 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testKeeperPersistsOnEveryStateChangeAndClearsOnDiscard]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testKeeperPersistsOnEveryStateChangeAndClearsOnDiscard]' passed (0.004 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testKeeperRestoresFromStoreBeforeDefaults]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testKeeperRestoresFromStoreBeforeDefaults]' passed (0.017 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testPausedSessionResumesWhereItStoppedAfterRelaunch]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testPausedSessionResumesWhereItStoppedAfterRelaunch]' passed (0.041 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testRelaunchRetriesUnsavedFinishedSession]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testRelaunchRetriesUnsavedFinishedSession]' passed (0.402 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testRestartAfterLongGapPausesWithoutCrediting]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testRestartAfterLongGapPausesWithoutCrediting]' passed (0.014 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testRestartWhileRunningCatchesUpShortGap]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testRestartWhileRunningCatchesUpShortGap]' passed (0.021 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testRestoreDoneSnapshotStaysDone]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testRestoreDoneSnapshotStaysDone]' passed (0.117 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testRetryCoversQueuedSessionNotOnlyLiveOne]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testRetryCoversQueuedSessionNotOnlyLiveOne]' passed (0.401 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testSelectingFutureStepIsNotCompletedWork]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testSelectingFutureStepIsNotCompletedWork]' passed (0.014 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testSelectingPastStepMakesItCurrentAgain]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testSelectingPastStepMakesItCurrentAgain]' passed (0.064 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testSelectWhilePausedStaysPaused]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testSelectWhilePausedStaysPaused]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testSequenceCoversWholeSessionInOrder]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testSequenceCoversWholeSessionInOrder]' passed (0.001 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testSkipBackwardGoesToPreviousWorkRound]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testSkipBackwardGoesToPreviousWorkRound]' passed (0.060 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testSkipForwardToEndDoesNotCompleteAnything]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testSkipForwardToEndDoesNotCompleteAnything]' passed (0.106 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testSnapshotRoundTripKeepsEverything]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testSnapshotRoundTripKeepsEverything]' passed (0.069 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testStatusesPastCurrentFutureAcrossPhases]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testStatusesPastCurrentFutureAcrossPhases]' passed (0.186 seconds).
+Test Case '-[LifeOSTests.TabataSessionTests testStoreIgnoresUnreadableSnapshot]' started.
+Test Case '-[LifeOSTests.TabataSessionTests testStoreIgnoresUnreadableSnapshot]' passed (0.005 seconds).
+	 Executed 768 tests, with 1 test skipped and 0 failures (0 unexpected) in 56.416 (56.796) seconds

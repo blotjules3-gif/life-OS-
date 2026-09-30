@@ -170,10 +170,10 @@ struct SoundscapeView: View {
 
     private var errorCard: some View {
         Label("Lecture audio indisponible sur cet appareil.", systemImage: "exclamationmark.triangle.fill")
-            .font(.subheadline).foregroundStyle(.orange)
+            .font(.subheadline).foregroundStyle(Theme.warning)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(14)
-            .background(Color.orange.opacity(0.20), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
+            .background(Theme.warning.opacity(0.20), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
     private var soundGrid: some View {
@@ -271,7 +271,7 @@ struct SoundscapeView: View {
             Label(noise.isPlaying ? "Arrêter" : "Lancer \(selected.label)",
                   systemImage: noise.isPlaying ? "stop.fill" : "play.fill")
                 .font(.headline).frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(noise.isPlaying ? AnyShapeStyle(Color.red.gradient) : AnyShapeStyle(Color.mindTint.gradient),
+                .background(noise.isPlaying ? AnyShapeStyle(Theme.danger.gradient) : AnyShapeStyle(Color.mindTint.gradient),
                            in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .foregroundStyle(.white)
         }

@@ -20,7 +20,7 @@ struct ProfileCustomizerSheet: View {
     private let sections: [(id: String, label: String, sub: String, icon: String, color: Color)] = [
         ("hero",     "Score",          "Carte principale",   "star.fill",           Color(hex: 0x00D4B4)),
         ("tasks",    "Tâches",         "Ce qu'il te reste",  "checklist",           Color.accentColor),
-        ("briefing", "Briefing",       "Rappel du matin",    "sunrise.fill",        Color.orange),
+        ("briefing", "Briefing",       "Rappel du matin",    "sunrise.fill",        Theme.warning),
         ("memories", "Mémoire",        "Ce que je retiens",  "brain",               Color.accentColor),
         ("stats",    "Stats",          "Pas · eau · kcal",   "chart.bar.fill",      Color(hex: 0xF1746C)),
         ("habits",   "Habitudes",      "Suivi & protéines",  "checkmark.seal.fill", Color.accentColor),

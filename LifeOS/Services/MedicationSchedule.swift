@@ -80,9 +80,114 @@ enum MedicationSchedule {
         return 1
     }
 
+    // MARK: - Plan de rappels
+
+    /// Ce qu'il faut poser comme notifications pour un traitement.
+    enum Plan: Equatable {
+        case none
+        /// Tous les jours, sans fin: un declencheur qui se repete.
+        case repeatingDaily([Dose])
+        /// Chaque semaine le meme jour (1 = dimanche ... 7 = samedi), sans fin.
+        case repeatingWeekly(weekday: Int, doses: [Dose])
+        /// Dates precises: traitement borne OU qui commence plus tard. Renouvele
+        /// a chaque retour dans l'app (`MedicationReminders.renewAll`).
+        case dates([Date])
+    }
+
+    /// iOS garde au plus 64 notifications en attente pour TOUTE l'app. Un
+    /// traitement borne ne doit pas les consommer seul.
+    static let maxDatedPerMedication = 24
+    /// Jours couverts d'avance pour un traitement borne ou futur.
+    static let horizonDays = 14
+
+    /// Regle unique, testable. Avant, une date de fin envoyait TOUJOURS vers la
+    /// branche quotidienne: un traitement hebdomadaire avec une fin sonnait donc
+    /// tous les jours. Ici la frequence ET les bornes sont respectees ensemble.
+    static func plan(frequency: String, hourMorning: Int?, hourEvening: Int?,
+                     active: Bool, startDate: Date, endDate: Date?,
+                     now: Date = .now, calendar cal: Calendar = .current,
+                     horizonDays: Int = horizonDays, maxDates: Int = maxDatedPerMedication) -> Plan {
+        guard isRunning(active: active, endDate: endDate, now: now, calendar: cal) else { return .none }
+        let ds = doses(frequency: frequency, hourMorning: hourMorning, hourEvening: hourEvening)
+        guard !ds.isEmpty else { return .none }
+        let weekly = isWeekly(frequency)
+        let startDay = cal.startOfDay(for: startDate)
+        let today = cal.startOfDay(for: now)
+
+        if endDate == nil && startDay <= today {
+            return weekly
+                ? .repeatingWeekly(weekday: cal.component(.weekday, from: startDate), doses: ds)
+                : .repeatingDaily(ds)
+        }
+
+        let startWeekday = cal.component(.weekday, from: startDate)
+        var day = max(startDay, today)
+        let horizonEnd = cal.date(byAdding: .day, value: horizonDays, to: today) ?? today
+        let lastDay = min(endDate.map { cal.startOfDay(for: $0) } ?? horizonEnd, horizonEnd)
+        var out: [Date] = []
+        while day <= lastDay && out.count < maxDates {
+            if !weekly || cal.component(.weekday, from: day) == startWeekday {
+                for d in ds {
+                    if let at = cal.date(bySettingHour: d.hour, minute: d.minute, second: 0, of: day),
+                       at > now, out.count < maxDates {
+                        out.append(at)
+                    }
+                }
+            }
+            guard let next = cal.date(byAdding: .day, value: 1, to: day) else { break }
+            day = next
+        }
+        return .dates(out)
+    }
+
     private static func normalised(_ s: String) -> String {
         s.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "fr_FR"))
     }
 
     private static func clampHour(_ h: Int) -> Int { min(23, max(0, h)) }
+}
+
+// MARK: - Budget commun des rappels
+
+/// iOS garde au plus 64 notifications programmees PAR APP, tous usages confondus
+/// (medicaments, habitudes, complements, bilans...). Avant (audit du 28 sept.),
+/// chaque medicament avait son propre plafond de 24: un traitement de 60 jours a
+/// trois prises s'arretait au jour 7, et plusieurs traitements se disputaient
+/// les 64 places sans le savoir. Ici la selection est COMMUNE: les rappels
+/// repetitifs d'abord (une place chacun, ils couvrent sans fin), puis les rappels
+/// dates les plus proches, tous traitements melanges, jusqu'a la place restante.
+enum MedicationBudget {
+
+    /// Limite d'iOS pour les notifications locales programmees.
+    static let systemLimit = 64
+    /// Places laissees aux autres fonctions qui programment plus tard.
+    static let reserve = 8
+
+    struct Item: Equatable {
+        let medID: String
+        let identifier: String
+        /// nil: rappel repetitif (sans date de fin).
+        let fireDate: Date?
+    }
+
+    enum Coverage: Equatable {
+        case unlimited              // repetitif: sonne tant que le traitement existe
+        case until(Date)            // dernier rappel programme
+        case none                   // rien n'a pu etre programme
+    }
+
+    static func select(_ items: [Item], budget: Int) -> (chosen: [Item], coverage: [String: Coverage]) {
+        let room = max(0, budget)
+        let repeating = items.filter { $0.fireDate == nil }
+        let dated = items.filter { $0.fireDate != nil }.sorted { $0.fireDate! < $1.fireDate! }
+        let chosen = Array((repeating + dated).prefix(room))
+        var coverage: [String: Coverage] = [:]
+        for id in Set(items.map(\.medID)) {
+            let mine = chosen.filter { $0.medID == id }
+            if mine.contains(where: { $0.fireDate == nil }) { coverage[id] = .unlimited }
+            else if let last = mine.compactMap(\.fireDate).max() { coverage[id] = .until(last) }
+            else { coverage[id] = Coverage.none }
+        }
+        return (chosen, coverage)
+    }
 }
