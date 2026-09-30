@@ -394,7 +394,9 @@ struct ScoreChip: View {
 
 /// Nombre a la francaise: "6,3", "58".
 func frNumber(_ v: Double) -> String {
-    v.formatted(.number.precision(.fractionLength(v < 10 && v != v.rounded() ? 1 : 0)).locale(Locale(identifier: "fr_FR")))
+    // Sous 1 : jusqu'a deux decimales (taurine 0,15 %, sel 0,25 g), sinon "0,2".
+    if abs(v) < 1 { return v.formatted(.number.precision(.fractionLength(0...2)).locale(Locale(identifier: "fr_FR"))) }
+    return v.formatted(.number.precision(.fractionLength(v < 10 && v != v.rounded() ? 1 : 0)).locale(Locale(identifier: "fr_FR")))
 }
 
 func scoreColor(_ v: Int) -> Color {
@@ -483,10 +485,14 @@ struct YukoDetailView: View {
     @Environment(\.modelContext) private var ctx
     @StateObject private var store = ProductStore.shared
     /// La fiche affichee: la base, completee par ce que l'utilisateur a ajoute.
-    private var product: CatalogProduct { store.enriched(original) }
+    private var product: CatalogProduct { store.enriched(refreshed ?? original) }
     @State private var completing = false
-    /// Force le recalcul apres le choix de l'espece.
-    @State private var speciesTick = 0
+    /// Lecture de la photo d'etiquette de la base (aliments animaux sans composition).
+    @State private var labelState: LabelState = .idle
+    @State private var editingLabel = false
+    /// Fiche relue sur la base quand celle du cache n'a pas les liens des photos.
+    @State private var refreshed: CatalogProduct?
+    enum LabelState: Equatable { case idle, reading, failed(String) }
 
     init(product: CatalogProduct) { original = product }
     @AppStorage(AppStorageKeys.dietFlags) private var dietFlagsRaw = ""
@@ -510,12 +516,12 @@ struct YukoDetailView: View {
                 }
                 header
                 scoreCard
-                if product.isPetFood && ProductScore.species(product) == nil { speciesPicker }
+                if product.isPetFood { petIdentityCard; petLabelCard }
                 if !product.isPetFood && product.source != .product { personalCard }
                 if product.isPetFood { petAnalysisCard }
                 else if !product.isCosmetic && product.source != .product { nutritionCard }
                 ingredientsCard
-                if original.ingredientsText == nil && original.source != .local { completeCard }
+                if original.ingredientsText == nil && original.source != .local && !original.isPetFood { completeCard }
                 if !score.flags.isEmpty { flagsCard }
                 if product.source != .local { alternativesCard }
                 // Jamais la gamelle du chat dans TON journal alimentaire.
@@ -525,6 +531,9 @@ struct YukoDetailView: View {
             }
             .padding(Theme.pad)
         }
+        // La barre d'onglets flotte par-dessus : sans cette reserve, les derniers
+        // boutons (Chat / Chien) passaient dessous (capture du 1er oct.).
+        .floatingBarClearance()
         .background(Theme.background)
         .navigationTitle("Produit").navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -544,7 +553,17 @@ struct YukoDetailView: View {
         .sheet(isPresented: $comparing) { ComparePicker(current: product, candidates: candidates) }
         .sheet(isPresented: $completing) { NavigationStack { IngredientPhotoSheet(product: original) } }
         .sheet(isPresented: $showGoals, onDismiss: { goals = ProductGoals.load() }) { NavigationStack { YukoGoalsEditor() } }
-        .task { if product.source != .local && alternatives == nil { alternatives = await ProductCatalog.alternatives(to: product) } }
+        .sheet(isPresented: $editingLabel) { NavigationStack { PetLabelEditor(product: refreshed ?? original, code: original.barcode) } }
+        .task {
+            await readLabelIfNeeded()
+            #if DEBUG
+            // `-yukoEditLabel` : ouvre l'editeur d'etiquette (captures, le simulateur ne tape pas bien).
+            if DebugLaunchFlags.has("-yukoEditLabel"), original.isPetFood { editingLabel = true }
+            #endif
+        }
+        // Relance quand la note change (etiquette lue, espece choisie) : sinon la carte
+        // restait sur "pas de note" calcule avant la lecture.
+        .task(id: score.value) { if product.source != .local { alternatives = await ProductCatalog.alternatives(to: product) } }
     }
 
     private var candidates: [CatalogProduct] {
@@ -646,24 +665,111 @@ struct YukoDetailView: View {
         }
     }
 
-    /// La base ne dit pas si c'est pour un chat ou un chien: l'utilisateur le dit, et
-    /// c'est retenu pour ce produit.
-    private var speciesPicker: some View {
-        VStack(alignment: .leading, spacing: 10) {
+    // MARK: Aliments animaux
+
+    /// Espece, stade de vie, type : detectes sur plusieurs indices, et toujours
+    /// modifiables. Le choix est retenu pour le produit (GTIN canonique) et la note se
+    /// recalcule tout de suite.
+    private var petIdentityCard: some View {
+        let id = ProductScore.petIdentity(product)
+        let profile = store.petProfile(for: original.barcode)
+        return VStack(alignment: .leading, spacing: 10) {
             Text("C'est pour qui ?").font(.headline)
-            Text("La fiche ne dit pas l'espèce. Choisis-la pour obtenir la note : les besoins d'un chat et d'un chien ne sont pas les mêmes.")
+            Text(id.species == nil
+                 ? (id.ambiguous ? "La fiche parle de chat et de chien. Choisis l'espèce : les besoins ne sont pas les mêmes."
+                                 : "La fiche ne dit pas l'espèce. Choisis-la pour obtenir la note.")
+                 : "Reconnu : " + (ProductScore.identityComponent(id).details.first ?? ""))
                 .font(.callout).foregroundStyle(.secondary)
-            HStack {
-                ForEach([ProductScore.Species.cat, .dog], id: \.rawValue) { sp in
-                    Button { ProductScore.setSpecies(sp, for: product.barcode); speciesTick += 1 } label: {
-                        Label(sp == .cat ? "Chat" : "Chien", systemImage: "pawprint").frame(maxWidth: .infinity)
-                    }.buttonStyle(LifeOSGlassButtonStyle(prominent: true))
+            Picker("Espèce", selection: Binding(get: { id.species }, set: { v in try? store.setPetSpecies(v, for: original.barcode) })) {
+                Text("Chat").tag(Optional(PetLabel.Species.cat))
+                Text("Chien").tag(Optional(PetLabel.Species.dog))
+            }
+            .pickerStyle(.segmented)
+            .accessibilityLabel("Espèce")
+            Picker("Âge", selection: Binding(get: { id.lifeStage }, set: { v in try? store.setPetLifeStage(v, for: original.barcode) })) {
+                Text(id.species == .dog ? "Chiot" : "Chaton").tag(Optional(PetLabel.LifeStage.young))
+                Text("Adulte").tag(Optional(PetLabel.LifeStage.adult))
+                Text("Senior").tag(Optional(PetLabel.LifeStage.senior))
+            }
+            .pickerStyle(.segmented)
+            .accessibilityLabel("Âge de l'animal")
+            if !id.evidence.isEmpty {
+                Text("Indices : " + id.evidence.prefix(4).joined(separator: ", ")).font(.caption2).foregroundStyle(.secondary)
+            }
+            if profile?.species != nil || profile?.lifeStage != nil {
+                Button("Revenir à la détection automatique") {
+                    try? store.setPetSpecies(nil, for: original.barcode)
+                    try? store.setPetLifeStage(nil, for: original.barcode)
                 }
+                .font(.caption)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16).raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
-        .id(speciesTick)
+    }
+
+    /// Composition et constituants lus sur la photo de l'etiquette (base ou toi),
+    /// avec leur provenance, et les etats de lecture.
+    @ViewBuilder private var petLabelCard: some View {
+        let label = store.petProfile(for: original.barcode)?.label
+        let needsData = (refreshed ?? original).ingredientsText == nil || (refreshed ?? original).petAnalysis == nil
+        if label != nil || needsData {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Étiquette").font(.headline)
+                switch labelState {
+                case .reading:
+                    HStack(spacing: 8) { ProgressView(); Text("Recherche de la composition sur la photo de l'étiquette…").font(.callout) }
+                case .failed(let why):
+                    Label(why, systemImage: "exclamationmark.triangle.fill").font(.callout).foregroundStyle(Theme.warning)
+                    Button("Réessayer") { labelState = .idle; Task { await readLabelIfNeeded(force: true) } }
+                        .buttonStyle(LifeOSGlassButtonStyle())
+                case .idle:
+                    if let label {
+                        Text("Source : \(label.fromUserPhoto ? "ta photo" : label.source). Lue le \(label.readAt.formatted(date: .abbreviated, time: .omitted)). "
+                             + (label.validated ? "Relue par toi." : "Lecture automatique : vérifie-la."))
+                            .font(.callout).foregroundStyle(.secondary)
+                        if let d = label.declaration { Text(d).font(.caption).italic() }
+                    } else if (refreshed ?? original).labelPhotos?.isEmpty ?? true {
+                        Text("La base n'a ni la composition ni une photo de l'étiquette. Photographie-la au dos du paquet : LifeOS la lit, tu vérifies.")
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
+                }
+                HStack {
+                    Button { editingLabel = true } label: {
+                        Label(label == nil ? "Photographier l'étiquette" : "Relire et corriger", systemImage: "text.viewfinder")
+                    }
+                    .buttonStyle(LifeOSGlassButtonStyle(prominent: label == nil))
+                    if label != nil {
+                        Button(role: .destructive) { try? store.removeLabel(for: original.barcode) } label: { Text("Retirer") }
+                    }
+                }
+                ForEach(product.petFacts?.provenance ?? [], id: \.self) { Text($0).font(.caption2).foregroundStyle(.secondary) }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16).raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+        }
+    }
+
+    /// Fiche animale sans composition ou sans valeurs : on lit les photos d'etiquette
+    /// CHOISIES par la base, sur l'appareil. Rien n'est envoye nulle part.
+    private func readLabelIfNeeded(force: Bool = false) async {
+        guard original.isPetFood, original.source != .local, labelState != .reading else { return }
+        guard force || store.petProfile(for: original.barcode)?.label == nil else { return }
+        var base = refreshed ?? original
+        guard base.ingredientsText == nil || base.petAnalysis == nil else { return }
+        if base.labelPhotos == nil {
+            // Fiche du cache d'avant : relue pour avoir les liens des photos.
+            if case .found(let fresh) = await ProductCatalog.complete(base).0 { refreshed = fresh; base = fresh }
+        }
+        guard !(base.labelPhotos ?? []).isEmpty, base.ingredientsText == nil || base.petAnalysis == nil else { return }
+        labelState = .reading
+        switch await PetLabelReader.read(base, database: "Open Pet Food Facts") {
+        case .success(let reading):
+            do { try store.saveLabel(reading, for: original.barcode); labelState = .idle }
+            catch { labelState = .failed(error.localizedDescription) }
+        case .failure(let e):
+            labelState = e == .noPhoto ? .idle : .failed(e.localizedDescription)
+        }
     }
 
     // Preferences et objectifs: A PART de la note (brief: preference != qualite).
@@ -738,7 +844,10 @@ struct YukoDetailView: View {
             Text("Constituants analytiques (tel quel)").font(.headline)
             petRow("Protéines brutes", a?.protein); petRow("Matières grasses", a?.fat)
             petRow("Cellulose brute", a?.fibre); petRow("Cendres brutes", a?.ash); petRow("Humidité", a?.moisture)
-            Text("« — » : la fiche ne donne pas cette valeur. Photographie l'étiquette pour la compléter.")
+            if let t = a?.taurine { petRow("Taurine (déclarée)", t) }
+            if let c = a?.calcium { petRow("Calcium (déclaré)", c) }
+            if let ph = a?.phosphorus { petRow("Phosphore (déclaré)", ph) }
+            Text("Valeurs pour 100 g tel quel, comme sur le paquet. « — » : non déclarée ou non trouvée. Une humidité absente n'est jamais remplacée par une valeur inventée.")
                 .font(.caption2).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -780,10 +889,14 @@ struct YukoDetailView: View {
 
     private var ingredientsCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Ingrédients").font(.headline)
+            Text(product.isPetFood ? "Composition" : "Ingrédients").font(.headline)
             Text(product.ingredientsText ?? "Non renseignés dans la base.")
                 .font(.subheadline).foregroundStyle(product.ingredientsText == nil ? .secondary : .primary)
                 .textSelection(.enabled)
+            if product.isPetFood, let add = product.petFacts?.additivesText {
+                Text("Additifs").font(.subheadline.weight(.semibold))
+                Text(add).font(.caption).textSelection(.enabled)
+            }
             if !product.allergens.isEmpty {
                 Text("Allergènes : " + product.allergens.map(CatalogProduct.french).joined(separator: ", "))
                     .font(.subheadline.weight(.semibold))
@@ -1296,6 +1409,154 @@ struct IngredientPhotoSheet: View {
         let t = await DocOCR.recognize(img)
         if t.isEmpty { error = "Aucun texte lu. Essaie une photo plus nette, bien à plat." } else { error = nil; text = t }
     }
+}
+
+// MARK: - Etiquette d'aliment animal : lire, corriger, valider
+
+/// Photo de l'etiquette (ou relecture de celle de la base), texte corrigeable champ par
+/// champ, note recalculee en direct. Enregistre sur l'appareil pour CE produit.
+struct PetLabelEditor: View {
+    let product: CatalogProduct
+    let code: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var pickerItem: PhotosPickerItem?
+    @State private var showCamera = false
+    @State private var reading = false
+    @State private var error: String?
+    @State private var composition = ""
+    @State private var additives = ""
+    @State private var declaration = ""
+    @State private var values: [String: String] = [:]
+    @State private var fromUserPhoto = false
+    @State private var sourceText = ""
+    @State private var rawText = ""
+    @State private var loaded = false
+    /// Valeurs lues qui n'ont pas de champ ici (omega 3 et 6, DHA) : gardees telles quelles.
+    @State private var otherValues = PetLabel.Analytics()
+
+    private let fields: [(String, WritableKeyPath<PetLabel.Analytics, Double?>)] = [
+        ("Protéines", \.protein), ("Matières grasses", \.fat), ("Cendres brutes", \.ash),
+        ("Cellulose brute", \.fibre), ("Humidité", \.moisture), ("Taurine", \.taurine),
+        ("Calcium", \.calcium), ("Phosphore", \.phosphorus)
+    ]
+
+    var body: some View {
+        Form {
+            Section {
+                Text("Photographie l'étiquette au dos (composition et constituants analytiques), bien à plat. Corrige ensuite ce qui a été mal lu.")
+                    .font(.callout)
+                #if !targetEnvironment(macCatalyst)
+                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                    Button { showCamera = true } label: { Label("Photographier l'étiquette", systemImage: "camera") }
+                }
+                #endif
+                PhotosPicker(selection: $pickerItem, matching: .images) { Label("Choisir une photo", systemImage: "photo.on.rectangle") }
+                if reading { HStack { ProgressView(); Text("Lecture de l'étiquette…").foregroundStyle(.secondary) } }
+                if !sourceText.isEmpty { Text("Source : \(sourceText)").font(.caption).foregroundStyle(.secondary) }
+            }
+            Section("Mention (aliment complet pour…)") { TextField("Aliment complet pour chatons…", text: $declaration, axis: .vertical) }
+            Section("Composition") { TextEditor(text: $composition).frame(minHeight: 120) }
+            Section("Additifs") { TextEditor(text: $additives).frame(minHeight: 60) }
+            Section {
+                ForEach(fields, id: \.0) { name, _ in
+                    HStack {
+                        Text(name)
+                        Spacer()
+                        TextField("—", text: Binding(get: { values[name] ?? "" }, set: { values[name] = $0 }))
+                            .keyboardType(.decimalPad).multilineTextAlignment(.trailing).frame(width: 80)
+                        Text("%").foregroundStyle(.secondary)
+                    }
+                }
+            } header: { Text("Constituants analytiques (tel quel)") } footer: {
+                Text("Laisse vide ce qui n'est pas écrit sur le paquet : rien n'est inventé.")
+            }
+            Section("Note obtenue") {
+                let r = ProductScore.evaluate(preview)
+                if let v = r.value { Text("\(v)/100 · \(r.method)").font(.headline) }
+                else { Text(r.missing.isEmpty ? "Pas encore de note." : "Pas de note : manque " + r.missing.joined(separator: ", ")).foregroundStyle(.secondary) }
+            }
+            if let error { Section { Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(Theme.warning) } }
+        }
+        .navigationTitle("Étiquette").navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Valider") { save() }
+                    .disabled(composition.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && analytics.isEmpty)
+            }
+        }
+        .onAppear(perform: load)
+        .onChange(of: pickerItem) { _, item in
+            guard let item else { return }
+            Task {
+                defer { pickerItem = nil }
+                guard let data = try? await item.loadTransferable(type: Data.self), let img = UIImage(data: data) else { error = "Photo illisible."; return }
+                await read(img)
+            }
+        }
+        #if !targetEnvironment(macCatalyst)
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraPicker { img in showCamera = false; if let img { Task { await read(img) } } }.ignoresSafeArea()
+        }
+        #endif
+    }
+
+    private var analytics: PetLabel.Analytics {
+        var a = otherValues
+        for (name, kp) in fields {
+            if let t = values[name], let v = Double(t.replacingOccurrences(of: ",", with: ".")), (0...100).contains(v) { a[keyPath: kp] = v }
+            else { a[keyPath: kp] = nil }
+        }
+        return a
+    }
+
+    /// La fiche telle qu'elle serait notee avec ces valeurs (la base garde la main
+    /// sur ce qu'elle a deja).
+    private var preview: CatalogProduct {
+        let reading = PetProfile.LabelReading(text: rawText, declaration: declaration.nilIfBlank, composition: composition.nilIfBlank,
+                                              additives: additives.nilIfBlank, analytics: analytics, source: sourceText,
+                                              photoDate: nil, readAt: Date(), validated: true, fromUserPhoto: fromUserPhoto)
+        // `product` est la fiche BRUTE de la base : on lui applique cette lecture seule.
+        let prof = ProductStore.shared.petProfile(for: code)
+        let p = PetProfile(gtin: PetProfile.key(code), aliases: [], species: prof?.species, lifeStage: prof?.lifeStage, label: reading, updatedAt: Date())
+        return PetMerge.apply(p, to: product)
+    }
+
+    private func load() {
+        guard !loaded else { return }
+        loaded = true
+        guard let l = ProductStore.shared.petProfile(for: code)?.label else { return }
+        fill(l)
+    }
+
+    private func fill(_ l: PetProfile.LabelReading) {
+        composition = l.composition ?? ""; additives = l.additives ?? ""; declaration = l.declaration ?? ""
+        rawText = l.text; fromUserPhoto = l.fromUserPhoto; sourceText = l.source
+        otherValues = l.analytics
+        for (name, kp) in fields { values[name] = l.analytics[keyPath: kp].map { ProductScore.fmt($0) } ?? "" }
+    }
+
+    private func read(_ img: UIImage) async {
+        reading = true; defer { reading = false }
+        switch await PetLabelReader.read(userImage: img) {
+        case .success(let l): fill(l); error = nil
+        case .failure(let e): error = e.localizedDescription
+        }
+    }
+
+    private func save() {
+        let reading = PetProfile.LabelReading(text: rawText, declaration: declaration.nilIfBlank, composition: composition.nilIfBlank,
+                                              additives: additives.nilIfBlank, analytics: analytics,
+                                              source: sourceText.isEmpty ? "ta saisie" : sourceText,
+                                              photoDate: ProductStore.shared.petProfile(for: code)?.label?.photoDate,
+                                              readAt: Date(), validated: true, fromUserPhoto: fromUserPhoto)
+        do { try ProductStore.shared.saveLabel(reading, for: code); dismiss() }
+        catch { self.error = error.localizedDescription }
+    }
+}
+
+private extension String {
+    var nilIfBlank: String? { let t = trimmingCharacters(in: .whitespacesAndNewlines); return t.isEmpty ? nil : t }
 }
 
 // MARK: - Objectifs

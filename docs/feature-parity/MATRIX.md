@@ -77,7 +77,7 @@ Résumé : présent, test auto 2, présent, non testé 3, dépendance externe 1
 | Benchmark de vrais plats | présent, non testé | tools/calai-bench (12 photos), pas relancé |
 
 ### Yuko (Yuka)
-Résumé : présent, test auto 8, manquant 2, dépendance externe 1
+Résumé : présent, test auto 11, présent, non testé 1, manquant 3, dépendance externe 1
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
@@ -85,7 +85,12 @@ Résumé : présent, test auto 8, manquant 2, dépendance externe 1
 | Panne ≠ produit absent | présent, test auto | ProductCatalogTests (réponses mixtes) |
 | Note 2.0 (Nutri-Score 2023 officiel, plafond 49) | présent, test auto | ProductScoreTests |
 | Cosmétiques : liste de surveillance + annexes CosIng II/III | présent, test auto | CosmeticAnnexTests |
-| Nourriture pour chats et chiens | présent, test auto | PetFoodScoreTests |
+| Aliments chats et chiens : méthode Animaux 2.0 (FEDIAF par stade de v… | présent, test auto | PetFoodScoreTests, PetFoodRealCaseTests |
+| Fiche animale incomplète : lecture des photos d’étiquette de la base … | présent, test auto | PetFoodRealCaseTests (OCR sur la vraie photo, timeout), simulateur 1er oct. (84… |
+| Espèce et stade : indices combinés, choix manuel rangé sous le GTIN c… | présent, test auto | PetFoodRealCaseTests (alias, relance) |
+| Relire et corriger l’étiquette (photo, OCR, validation) | présent, non testé | PetLabelEditor dans Yuko.swift ; caméra seulement sur appareil |
+| Corpus réel de 50 aliments chat, fiches non résolues avec cause | présent, test auto | PetFoodCorpusTests, tools/yuko-bench/petfood/REPORT.md |
+| Source fabricant / distributeur par GTIN | manquant | pages sans GTIN : association non prouvable |
 | Objectifs perso et compatibilité | présent, test auto | ProductFitTests |
 | Alternatives avec raisons | présent, test auto | ProductCatalogTests |
 | Historique des scans, favoris, enrichissement photo local | présent, test auto | ProductStoreTests |

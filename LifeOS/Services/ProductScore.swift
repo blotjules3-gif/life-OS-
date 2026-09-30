@@ -567,6 +567,10 @@ enum ProductScore {
     }
 
     static func fmt(_ v: Double) -> String {
-        v == v.rounded() ? String(Int(v)) : String(format: "%.1f", v).replacingOccurrences(of: ".", with: ",")
+        // "18,0" s'affiche "18" ; sous 1, deux decimales (taurine 0,15 %, pas "0,1 %").
+        var s = String(format: abs(v) < 1 ? "%.2f" : "%.1f", v)
+        while s.contains("."), s.hasSuffix("0") { s.removeLast() }
+        if s.hasSuffix(".") { s.removeLast() }
+        return s.replacingOccurrences(of: ".", with: ",")
     }
 }

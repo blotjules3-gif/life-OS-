@@ -1,15 +1,8 @@
 import XCTest
 @testable import LifeOS
 
-/// Methode "Animaux 1.0", sur de vraies fiches Open Pet Food Facts (29 sept).
+/// Methode "Animaux 2.0" (etait 1.0), sur de vraies fiches Open Pet Food Facts (29 sept).
 final class PetFoodScoreTests: XCTestCase {
-    override func setUp() { ProductScore.speciesChoice = { _ in nil } }
-    override func tearDown() {
-        ProductScore.speciesChoice = { code in
-            (UserDefaults.standard.dictionary(forKey: "yuko.petSpecies")?[code] as? String).flatMap(ProductScore.Species.init(rawValue:))
-        }
-    }
-
     private func pet(_ name: String, cats: [String] = ["en:cat-food"], ingredients: String?, analysis: CatalogProduct.PetAnalysis? = nil) -> CatalogProduct {
         var p = CatalogProduct(barcode: "1", source: .pet, name: name)
         p.categories = cats; p.ingredientsText = ingredients; p.petAnalysis = analysis
@@ -25,9 +18,9 @@ final class PetFoodScoreTests: XCTestCase {
                     analysis: .init(protein: 11, fat: 7, fibre: 0.1, ash: 3, moisture: 77))
         let r = ProductScore.evaluate(p)
         XCTAssertTrue(r.method.contains("chat"))
-        XCTAssertLessThan(r.value!, 50, "\(r.components.map(\.details))")
-        XCTAssertTrue(r.components[0].details.contains { $0.contains("minimum légal") }, "4 % = minimum légal, 0 point")
-        XCTAssertTrue(r.components[0].details.contains { $0.contains("sans espèce nommée") }, "la parenthèse « dont poulet » ne compte pas comme premier ingrédient")
+        XCTAssertLessThanOrEqual(r.value!, 50, "\(r.components.map(\.details))")
+        XCTAssertTrue(r.components.first { $0.name == "Composition" }!.details.contains { $0.contains("minimum légal") }, "4 % = minimum légal, 0 point")
+        XCTAssertTrue(r.components.first { $0.name == "Composition" }!.details.contains { $0.contains("sans espèce nommée") }, "la parenthèse « dont poulet » ne compte pas comme premier ingrédient")
         XCTAssertTrue(r.flags.contains { $0.code == "sucre" })
     }
 
@@ -92,8 +85,9 @@ final class PetFoodScoreTests: XCTestCase {
     func testUserChoiceWinsWhenTheBaseIsSilent() {
         let p = pet("Pâtée au bœuf", cats: [], ingredients: "Boeuf 40%, eau")
         XCTAssertNil(ProductScore.species(p))
-        ProductScore.speciesChoice = { _ in .dog }
-        XCTAssertEqual(ProductScore.species(p), .dog)
-        XCTAssertTrue(ProductScore.evaluate(p).method.contains("chien"))
+        var q = p
+        q.petFacts = .init(userSpecies: .dog)
+        XCTAssertEqual(ProductScore.species(q), .dog)
+        XCTAssertTrue(ProductScore.evaluate(q).method.contains("chien"))
     }
 }

@@ -667,6 +667,55 @@ Found by the Sport/Nutrition inventory and fixed in this lot:
 
 Matrix: 18 tools now (all of Sport and Nutrition). Raw test log: `docs/verification/test-runs/2026-09-30-lot3.log`.
 
+## Yuko, aliments pour chats (PROMPT-YUKO-ALIMENTS-CHAT.md), 1er oct. 2026
+
+Method doc: `docs/yuko/methode-animaux-2.0.md`. Real case: the user's "one junior" record is
+GTIN **8445290938091** in Open Pet Food Facts (no category, no brand, no composition). The
+barcode printed on its label photo matches. The recipe is **salmon**: the manufacturer page
+"junior chaton poulet" is another product and is not used.
+
+What changed:
+- `PetLabel.swift`: label split into mention / composition / additives / analytical
+  constituents; ingredients split at depth 0 only ("18,5 %", parentheses kept); values with
+  units, impossible values dropped; identity from combined evidence (category, label, name,
+  front, brand), ambiguous cat+dog asks, other animals out of scope.
+- `PetEnrichment.swift`: per-product profile under the canonical GTIN (`pets.json`, aliases
+  kept), user species/stage choice, label reading (base photos read on the device by Vision,
+  oriented and reduced to 2 400 px, best reading kept; or the user's photo, validated in
+  `PetLabelEditor`). `PetMerge` never mixes two recipe versions.
+- `PetFoodScore.swift`: "Animaux 2.0". FEDIAF thresholds per life stage (kitten 28 %, adult
+  25 %), dry matter only with declared moisture or proven kibble (declared sum >= 40 %),
+  carbs only with the four values, nutritional additives never penalised, both missing fields
+  said together, complete food without values = nutrition at half points (was scaled to 100,
+  which gave 100/100 with no values at all).
+- `Yuko.swift`: "C'est pour qui ?" card (species + stage, reset to automatic), "Étiquette"
+  card ("Recherche de la composition…", retry on error, source and date, correct/remove),
+  bottom clearance for the floating tab bar, alternatives recomputed when the score changes
+  and searched by species when the base has no category.
+- Legacy "yuko.petSpecies" choices migrated to the store once.
+
+Proof:
+- `PetFoodRealCaseTests` (26): real Vision text of the label, sections, values, nesting,
+  decimals, one junior alone (both missing), "Junior"/"Purina" alone, kitten threshold, no
+  invented moisture, additives, aliases + relaunch, no cross-GTIN merge, recipe
+  contradiction, user choice, validated correction, treats, timeout ≠ absent, and Vision on
+  the real label photo in the simulator.
+- `PetFoodCorpusTests`: 50 real records drawn systematically; report
+  `tools/yuko-bench/petfood/REPORT.md` with unresolved records and their cause.
+- Simulator (iPhone 17 Pro, clean install, test profile): 8445290938091 → label read from
+  the sharp photo, **77/100 · chat · chaton**, confidence medium, bottom of page clear.
+  Before: `/Users/theo/Downloads/IMG_0018 2.PNG` ("Espèce non reconnue"). After:
+  `docs/verification/yuko-petfood/` (score, calculation, "C'est pour qui ?" + label card,
+  label editor, iPad). Editor checked with a photo from the simulator's library: read on
+  the device, saved as "relue par toi", omega values kept. Mac Catalyst: builds; not
+  launched (screen capture of the Mac app is blocked on this Mac).
+- Full suite: **834 tests, 0 failures, 1 skipped**. Raw log:
+  `docs/verification/test-runs/2026-10-01-yuko-petfood.log`.
+- Found by the corpus and fixed: 100/100 with no values, OCR brace "(16 %}" swallowing the
+  list, "07 %" read as 7 % omega 3, 4 096 px photos read worse than 2 400 px, "pois" matching
+  "poisson", "farine" counted as cereal, 0,15 shown as 0,1, value regex backtracking (91 s
+  on the corpus, now 0,5 s).
+
 ## Resume here
 
 Read the two audit lot tables above first. Next, in the audit's order:

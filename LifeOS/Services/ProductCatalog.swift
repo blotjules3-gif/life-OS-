@@ -56,6 +56,32 @@ struct CatalogProduct: Codable, Hashable, Identifiable {
     /// Fiche abregee venue d'une recherche: le moteur ne renvoie ni ingredients ni
     /// additifs. On ne la note pas: on charge la fiche complete a l'ouverture.
     var isSummary: Bool?
+    /// Photos d'etiquette CHOISIES par la base (composition, valeurs, face avant) :
+    /// quand le texte manque, LifeOS peut les lire sur l'appareil.
+    var labelPhotos: [LabelPhoto]?
+    /// Donnees animaux ajoutees sur l'appareil (etiquette lue, espece choisie),
+    /// posees par `ProductStore.enriched`, jamais enregistrees dans la base.
+    var petFacts: PetFacts?
+
+    struct LabelPhoto: Codable, Hashable {
+        enum Kind: String, Codable { case ingredients, nutrition, front }
+        let kind: Kind
+        let lang: String
+        let url: URL
+        let uploaded: Date?
+    }
+
+    /// Ce que l'appareil sait en plus de la base pour un aliment animal.
+    struct PetFacts: Codable, Hashable {
+        var userSpecies: PetLabel.Species?
+        var userLifeStage: PetLabel.LifeStage?
+        /// "Aliment complet pour chatons..." lu sur l'etiquette.
+        var declaration: String?
+        var additivesText: String?
+        /// Provenance de la composition et des valeurs affichees, en clair.
+        var provenance: [String] = []
+        var labelDate: Date?
+    }
 
     struct PetAnalysis: Codable, Hashable {
         var protein: Double?
@@ -63,6 +89,10 @@ struct CatalogProduct: Codable, Hashable, Identifiable {
         var fibre: Double?
         var ash: Double?
         var moisture: Double?
+        /// Declares sur l'etiquette (pas des teneurs totales mesurees).
+        var taurine: Double?
+        var calcium: Double?
+        var phosphorus: Double?
         /// Valeurs saisies en fractions dans la base (0,11 pour 11 %), converties.
         var convertedFromFraction = false
     }
@@ -544,12 +574,21 @@ enum ProductCatalog {
         guard product.source != .local else { return .none("Fiche créée sur l'appareil : pas de catégorie pour chercher.") }
         let current = ProductScore.evaluate(product)
         guard let currentValue = current.value else { return .none("Pas de comparaison possible : ce produit n'a pas de note LifeOS.") }
-        let generic: Set<String> = ["en:non-food-products", "en:open-beauty-facts", "en:beverages", "en:plant-based-foods-and-beverages"]
+        let generic: Set<String> = ["en:non-food-products", "en:open-beauty-facts", "en:beverages", "en:plant-based-foods-and-beverages",
+                                    "en:open-pet-food-facts"]
         // Seulement une etiquette bien formee: la base contient aussi des etiquettes
         // mal ecrites ("en:Pâtes à tartiner" sur Nutella), qui ne trouvent rien.
-        let categories = Array(product.categories
+        var categories = Array(product.categories
             .filter { $0.range(of: #"^en:[a-z0-9-]+$"#, options: .regularExpression) != nil && !generic.contains($0) }
             .reversed())
+        // Aliment animal mal classe dans la base ("one junior") : la categorie vient de
+        // l'identite reconnue (espece, format). Les candidats doivent de toute facon avoir
+        // la meme methode, donc la meme espece et le meme stade de vie.
+        if categories.isEmpty, product.isPetFood, let sp = ProductScore.petIdentity(product).species {
+            let dry = ProductScore.petIdentity(product).format == .dry
+            categories = sp == .cat ? (dry ? ["en:dry-cat-food", "en:cat-food"] : ["en:cat-food"])
+                                    : (dry ? ["en:dry-dog-food", "en:dog-food"] : ["en:dog-food"])
+        }
         guard let category = categories.first else {
             return .none("La fiche n'a pas de catégorie précise : pas d'alternative cherchée.")
         }
@@ -702,6 +741,10 @@ struct SearchALiciousResponse: Decodable { let hits: [OFFItem]; let page_count: 
 struct OFFImageMeta: Decodable {
     let imgid: FlexNumber?
     let uploader: String?
+    /// Revision d'une photo CHOISIE (front_fr, ingredients_fr...) : fait partie du lien.
+    let rev: FlexNumber?
+    /// Date de depot d'une photo brute ("1", "2"...).
+    let uploaded_t: FlexNumber?
 }
 
 /// Carte des images, lue sans jamais faire echouer la fiche: une entree
@@ -797,6 +840,7 @@ struct OFFItem: Decodable {
         }
         let grade = nutriscore_grade?.lowercased()
         let url: (String?) -> URL? = { $0.flatMap { clean($0) }.flatMap(URL.init(string:)) }
+        let photos = labelPhotos(code: clean(code) ?? fallbackCode, source: source)
         return CatalogProduct(
             barcode: clean(code) ?? fallbackCode,
             source: source,
@@ -819,8 +863,43 @@ struct OFFItem: Decodable {
             nutriscoreScore: ["a", "b", "c", "d", "e"].contains(grade ?? "") ? nutriscore_score?.value.map { Int($0.rounded()) } : nil,
             petAnalysis: pet,
             novaGroup: nova_group?.value.map { Int($0) },
-            lastModified: last_modified_t?.value.map { Date(timeIntervalSince1970: $0) }
+            lastModified: last_modified_t?.value.map { Date(timeIntervalSince1970: $0) },
+            labelPhotos: photos.isEmpty ? nil : photos
         )
+    }
+
+    /// Liens des photos CHOISIES (ingredients_xx, nutrition_xx, front_xx), au format
+    /// public des bases Open * Facts. Francais d'abord, puis anglais, puis le reste.
+    func labelPhotos(code: String, source: CatalogProduct.Source) -> [CatalogProduct.LabelPhoto] {
+        guard let map = images?.map, !map.isEmpty else { return [] }
+        let host: String
+        switch source {
+        case .pet: host = "https://images.openpetfoodfacts.org"
+        case .beauty: host = "https://images.openbeautyfacts.org"
+        case .product: host = "https://images.openproductsfacts.org"
+        default: host = "https://images.openfoodfacts.org"
+        }
+        let digits = code.filter(\.isNumber)
+        guard !digits.isEmpty else { return [] }
+        var path = digits
+        if digits.count > 8 {
+            let padded = String(repeating: "0", count: max(0, 13 - digits.count)) + digits
+            let c = Array(padded)
+            path = [String(c[0..<3]), String(c[3..<6]), String(c[6..<9]), String(c[9...])].joined(separator: "/")
+        }
+        var out: [CatalogProduct.LabelPhoto] = []
+        for kind in [CatalogProduct.LabelPhoto.Kind.ingredients, .nutrition, .front] {
+            let keys = map.keys.filter { $0.hasPrefix(kind.rawValue + "_") }
+                .sorted { a, b in
+                    func rank(_ k: String) -> Int { k.hasSuffix("_fr") ? 0 : k.hasSuffix("_en") ? 1 : 2 }
+                    return (rank(a), a) < (rank(b), b)
+                }
+            guard let key = keys.first, let rev = map[key]?.rev?.value, let u = URL(string: "\(host)/images/products/\(path)/\(key).\(Int(rev)).full.jpg") else { continue }
+            let raw = map[key]?.imgid?.value.map { String(Int($0)) }
+            let uploaded = raw.flatMap { map[$0]?.uploaded_t?.value }.map { Date(timeIntervalSince1970: $0) }
+            out.append(.init(kind: kind, lang: String(key.split(separator: "_").last ?? ""), url: u, uploaded: uploaded))
+        }
+        return out
     }
 }
 

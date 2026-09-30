@@ -21,6 +21,8 @@ final class ProductStore: ObservableObject {
     /// d'ingredients photographiee quand la base n'en a pas). Gardes a part: la
     /// fiche d'origine n'est jamais modifiee, et la provenance reste visible.
     @Published private(set) var enrichments: [Enrichment] = []
+    /// Aliments animaux : espece / stade choisis, etiquette lue (voir PetProfile).
+    @Published private(set) var petProfiles: [PetProfile] = []
     /// Fichiers illisibles au chargement: mis de cote, jamais ecrases en silence.
     @Published private(set) var loadProblems: [String] = []
 
@@ -42,6 +44,46 @@ final class ProductStore: ObservableObject {
         localProducts = load("local.json")
         scans = load("scans.json")
         enrichments = load("enrichments.json")
+        petProfiles = load("pets.json")
+        migrateLegacySpecies()
+    }
+
+    // MARK: Aliments animaux
+
+    func petProfile(for code: String) -> PetProfile? {
+        let k = PetProfile.key(code)
+        return petProfiles.first { $0.gtin == k }
+    }
+
+    private func updatePet(_ code: String, _ change: (inout PetProfile) -> Void) throws {
+        let k = PetProfile.key(code)
+        var list = petProfiles
+        var prof = list.first { $0.gtin == k } ?? PetProfile(gtin: k, aliases: [], species: nil, lifeStage: nil, label: nil, updatedAt: Date())
+        if !prof.aliases.contains(code) && code != k { prof.aliases.append(code) }
+        change(&prof)
+        prof.updatedAt = Date()
+        list.removeAll { $0.gtin == k }
+        list.insert(prof, at: 0)
+        try commit(list, "pets.json")
+        petProfiles = list
+    }
+
+    func setPetSpecies(_ s: PetLabel.Species?, for code: String) throws { try updatePet(code) { $0.species = s } }
+    func setPetLifeStage(_ l: PetLabel.LifeStage?, for code: String) throws { try updatePet(code) { $0.lifeStage = l } }
+    func saveLabel(_ l: PetProfile.LabelReading, for code: String) throws { try updatePet(code) { $0.label = l } }
+    func removeLabel(for code: String) throws { try updatePet(code) { $0.label = nil } }
+
+    /// Anciens choix "C'est pour : chat / chien" (UserDefaults, par code brut) repris
+    /// sous le GTIN canonique, une fois.
+    private func migrateLegacySpecies() {
+        let defaults = UserDefaults.standard
+        guard directory == AppPaths.documents.appendingPathComponent("Yuko", isDirectory: true),
+              let legacy = defaults.dictionary(forKey: "yuko.petSpecies") as? [String: String], !legacy.isEmpty else { return }
+        for (code, raw) in legacy {
+            guard let sp = PetLabel.Species(rawValue: raw), petProfile(for: code)?.species == nil else { continue }
+            try? setPetSpecies(sp, for: code)
+        }
+        defaults.removeObject(forKey: "yuko.petSpecies")
     }
 
     // MARK: Complements de fiche
@@ -64,6 +106,9 @@ final class ProductStore: ObservableObject {
     /// La fiche telle qu'affichee: la base d'abord, le complement seulement pour ce
     /// qui manque (jamais par-dessus une donnee de la base).
     func enriched(_ p: CatalogProduct) -> CatalogProduct {
+        // Aliments animaux : profil de l'appareil (espece, etiquette lue) d'abord,
+        // puis la liste d'ingredients photographiee si elle manque encore.
+        let p = PetMerge.apply(p.isPetFood ? petProfile(for: p.barcode) : nil, to: p)
         guard p.ingredientsText == nil, let e = enrichments.first(where: { $0.barcode == p.barcode }) else { return p }
         var q = p
         q.ingredientsText = e.ingredientsText
@@ -140,7 +185,7 @@ final class ProductStore: ObservableObject {
     func eraseAll() throws {
         let fm = FileManager.default
         if fm.fileExists(atPath: directory.path) { try fm.removeItem(at: directory) }
-        history = []; favorites = []; localProducts = []; scans = []; enrichments = []; loadProblems = []
+        history = []; favorites = []; localProducts = []; scans = []; enrichments = []; petProfiles = []; loadProblems = []
     }
 
     // MARK: Fichiers
