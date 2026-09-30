@@ -27,7 +27,7 @@ enum LocalStore {
     static let modelTypes: [any PersistentModel.Type] = [
         // Santé
         DreamEntry.self, SleepNight.self, FoodEntry.self, FastingSession.self, WaterEntry.self,
-        Supplement.self, PantryItem.self, ShoppingItem.self, WorkoutSet.self, StepEntry.self,
+        Supplement.self, PantryItem.self, ShoppingItem.self, WorkoutSet.self, TrainingSession.self, StepEntry.self,
         // Vie
         ProgressPhoto.self, WardrobeItem.self, MoodEntry.self, TodoItem.self,
         Habit.self, HabitCompletion.self, Note.self, MemoryEntry.self,

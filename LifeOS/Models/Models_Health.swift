@@ -127,12 +127,38 @@ import SwiftData
     var weightKg: Double
     var reps: Int
     var rpe: Double
-    init(date: Date = .now, exercise: String = "", weightKg: Double = 0, reps: Int = 0, rpe: Double = 8) {
+    /// Seance a laquelle la serie appartient (nil = serie loguee a la main dans Hevvy,
+    /// regroupee par jour comme avant).
+    var sessionID: UUID? = nil
+    /// "warmup", "work" ou "drop" (`WorkoutSetKind`). Seules les series de travail
+    /// comptent pour la progression et le volume.
+    var kind: String = "work"
+    init(date: Date = .now, exercise: String = "", weightKg: Double = 0, reps: Int = 0, rpe: Double = 8,
+         sessionID: UUID? = nil, kind: String = "work") {
         self.date = date; self.exercise = exercise; self.weightKg = weightKg; self.reps = reps; self.rpe = rpe
+        self.sessionID = sessionID; self.kind = kind
     }
     var volume: Double { weightKg * Double(reps) }
     /// Charge 1RM estimée (formule d'Epley).
     var estimated1RM: Double { reps <= 1 ? weightKg : weightKg * (1 + Double(reps) / 30.0) }
+}
+
+/// Une seance d'entrainement : commencee, puis terminee ou annulee.
+///
+/// La prescription est FIGEE au demarrage (`prescriptionJSON`) : logger une serie ne
+/// doit pas changer la charge conseillee au milieu de la seance. La progression ne lit
+/// que les seances terminees.
+@Model final class TrainingSession {
+    var id: UUID = UUID()
+    var start: Date = Date()
+    var end: Date? = nil
+    /// "active", "done" ou "cancelled".
+    var state: String = "active"
+    var title: String = ""
+    var prescriptionJSON: String = ""
+    init(title: String = "", start: Date = .now) {
+        self.id = UUID(); self.title = title; self.start = start
+    }
 }
 
 @Model final class StepEntry {

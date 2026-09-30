@@ -109,7 +109,7 @@ private struct CoachAskWidgetView: View {
     private var smallSingleTap: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(red: 0.35, green: 0.55, blue: 0.95), Color(red: 0.20, green: 0.35, blue: 0.85)],
+                colors: [WidgetPalette.tone(0.35, 0.55, 0.95), WidgetPalette.tone(0.20, 0.35, 0.85)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -141,7 +141,7 @@ private struct CoachAskWidgetView: View {
     private var mediumThreeQuestions: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(red: 0.35, green: 0.55, blue: 0.95), Color(red: 0.20, green: 0.35, blue: 0.85)],
+                colors: [WidgetPalette.tone(0.35, 0.55, 0.95), WidgetPalette.tone(0.20, 0.35, 0.85)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )

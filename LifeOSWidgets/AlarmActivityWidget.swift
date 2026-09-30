@@ -5,12 +5,12 @@ import WidgetKit
 // MARK: - Palette douce par phase
 
 private enum PhaseColor {
-    static let scheduled  = Color(red: 0.52, green: 0.62, blue: 0.95)  // indigo doux
-    static let ringing    = Color(red: 0.95, green: 0.65, blue: 0.28)  // ambre chaud
-    static let speaking   = Color(red: 0.28, green: 0.78, blue: 0.88)  // cyan doux
-    static let unlock     = Color(red: 0.26, green: 0.82, blue: 0.68)  // menthe
-    static let briefing   = Color(red: 0.95, green: 0.80, blue: 0.35)  // or chaud
-    static let dismissed  = Color(red: 0.45, green: 0.80, blue: 0.56)  // sauge
+    static var scheduled: Color { WidgetPalette.tone(0.52, 0.62, 0.95) }  // indigo doux
+    static var ringing: Color { WidgetPalette.tone(0.95, 0.65, 0.28) }  // ambre chaud
+    static var speaking: Color { WidgetPalette.tone(0.28, 0.78, 0.88) }  // cyan doux
+    static var unlock: Color { WidgetPalette.tone(0.26, 0.82, 0.68) }  // menthe
+    static var briefing: Color { WidgetPalette.tone(0.95, 0.80, 0.35) }  // or chaud
+    static var dismissed: Color { WidgetPalette.tone(0.45, 0.80, 0.56) }  // sauge
 }
 
 struct AlarmActivityWidget: Widget {

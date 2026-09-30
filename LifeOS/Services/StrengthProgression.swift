@@ -23,19 +23,22 @@ enum StrengthProgression {
         let weight: Double
         let reps: Int
         let rpe: Double
+        /// Seance d'origine; nil = serie loguee hors seance (regroupee par jour).
+        var sessionID: UUID? = nil
+        var kind: WorkoutSetKind = .work
     }
 
-    struct Target: Equatable {
+    struct Target: Equatable, Codable {
         let sets: Int
         let repLow: Int
         let repHigh: Int
     }
 
-    enum Decision: String, Equatable {
+    enum Decision: String, Equatable, Codable {
         case start, increase, hold, repeatLoad, deload, addRep
     }
 
-    struct Prescription: Equatable {
+    struct Prescription: Equatable, Codable {
         let weight: Double?
         let reps: Int
         let sets: Int
@@ -43,18 +46,28 @@ enum StrengthProgression {
         let reason: String
     }
 
-    /// "Développé couché barre 4×10" → 4 series, 8 à 10 reps. Une cible de force
-    /// (6 reps ou moins) garde une fourchette fixe.
+    /// Cible quand le libelle n'en donne pas ("Rowing" tout court) : fourchette
+    /// classique d'hypertrophie, annoncee comme telle a l'ecran.
+    static let defaultTarget = Target(sets: 3, repLow: 8, repHigh: 12)
+
+    /// "Développé couché barre 4×10" → 4 series, 8 à 10 reps; "3×8-12" → 8 à 12.
+    /// Une cible de force (6 reps ou moins) garde une fourchette fixe. nil si le
+    /// libelle n'a pas de cible.
     static func target(from label: String) -> Target? {
-        guard let r = label.range(of: #"(\d+)×(\d+)$"#, options: .regularExpression) else { return nil }
-        let parts = label[r].split(separator: "×").compactMap { Int($0) }
-        guard parts.count == 2, parts[0] > 0, parts[1] > 0 else { return nil }
-        let high = parts[1]
-        return Target(sets: parts[0], repLow: high <= 6 ? high : max(1, high - 2), repHigh: high)
+        guard let m = label.range(of: #"(\d+)\s*[×x]\s*(\d+)(?:\s*[-–]\s*(\d+))?\s*$"#, options: .regularExpression) else { return nil }
+        let nums = label[m].split(whereSeparator: { !$0.isNumber }).compactMap { Int($0) }
+        guard nums.count >= 2, nums[0] > 0, nums[1] > 0 else { return nil }
+        if nums.count == 3, nums[2] >= nums[1] {
+            return Target(sets: nums[0], repLow: nums[1], repHigh: nums[2])
+        }
+        let high = nums[1]
+        return Target(sets: nums[0], repLow: high <= 6 ? high : max(1, high - 2), repHigh: high)
     }
 
-    /// Pas de charge realiste pour l'exercice.
-    static func increment(for exercise: String, weight: Double) -> Double {
+    /// Pas de charge realiste pour l'exercice. `override` > 0 = pas choisi par
+    /// l'utilisateur (Reglages du programme : plus petits disques disponibles).
+    static func increment(for exercise: String, weight: Double, override: Double = 0) -> Double {
+        if override > 0 { return override }
         let n = exercise.lowercased().folding(options: .diacriticInsensitive, locale: .current)
         let lowerCompound = ["squat", "presse", "souleve", "hip thrust", "hack", "good morning"]
         if lowerCompound.contains(where: n.contains) { return weight < 40 ? 2.5 : 5 }
@@ -62,17 +75,41 @@ enum StrengthProgression {
         return 2.5
     }
 
-    /// Seances d'un exercice : series regroupees par jour, la plus recente d'abord.
+    /// Seances d'un exercice, la plus recente d'abord. Groupees par seance quand la
+    /// serie en porte une (deux seances le meme jour restent deux seances), sinon par
+    /// jour. Seules les series de TRAVAIL comptent : echauffement et degressives non.
     static func sessions(of exercise: String, in sets: [LoggedSet],
                          calendar: Calendar = .current) -> [[LoggedSet]] {
         let key = normalized(exercise)
-        let mine = sets.filter { normalized($0.exercise) == key && $0.reps > 0 }
-        let byDay = Dictionary(grouping: mine) { calendar.startOfDay(for: $0.date) }
-        return byDay.keys.sorted(by: >).map { byDay[$0]!.sorted { $0.date < $1.date } }
+        let mine = sets.filter { normalized($0.exercise) == key && $0.reps > 0 && $0.kind == .work }
+        let groups = Dictionary(grouping: mine) { s -> String in
+            s.sessionID.map { "s:" + $0.uuidString } ?? "d:\(calendar.startOfDay(for: s.date).timeIntervalSince1970)"
+        }
+        return groups.values
+            .map { $0.sorted { $0.date < $1.date } }
+            .sorted { ($0.last?.date ?? .distantPast) > ($1.last?.date ?? .distantPast) }
     }
 
+    /// Historique utilisable pour progresser : series hors seance, et series des
+    /// seances TERMINEES. Une seance en cours, abandonnee ou annulee n'en fait pas partie.
+    static func completed(_ sets: [LoggedSet], doneSessions: Set<UUID>) -> [LoggedSet] {
+        sets.filter { s in s.sessionID.map(doneSessions.contains) ?? true }
+    }
+
+    /// Record personnel : 1RM estime au-dessus du meilleur de l'historique termine.
+    static func isPersonalRecord(_ set: LoggedSet, history: [LoggedSet]) -> Bool {
+        guard set.kind == .work, set.reps > 0, set.weight > 0 else { return false }
+        let key = normalized(set.exercise)
+        let best = history.filter { normalized($0.exercise) == key && $0.kind == .work && $0.reps > 0 }
+            .map { e1RM($0.weight, $0.reps) }.max()
+        guard let best else { return false }
+        return e1RM(set.weight, set.reps) > best + 0.01
+    }
+
+    static func e1RM(_ w: Double, _ reps: Int) -> Double { reps <= 1 ? w : w * (1 + Double(reps) / 30) }
+
     static func next(exercise: String, target: Target, history sets: [LoggedSet],
-                     profile1RM: Double? = nil) -> Prescription {
+                     profile1RM: Double? = nil, minIncrement: Double = 0) -> Prescription {
         let sessions = self.sessions(of: exercise, in: sets)
         guard let last = sessions.first else {
             if let orm = profile1RM, orm > 0 {
@@ -89,7 +126,7 @@ enum StrengthProgression {
         let avgRPE = working.map(\.rpe).reduce(0, +) / Double(max(1, working.count))
         let topHit = working.filter { $0.reps >= target.repHigh }.count >= target.sets
         let best = working.map(\.reps).max() ?? 0
-        let inc = increment(for: exercise, weight: weight)
+        let inc = increment(for: exercise, weight: weight, override: minIncrement)
 
         if topHit && avgRPE <= 8.5 {
             return Prescription(weight: round2(weight + inc), reps: target.repLow, sets: target.sets, decision: .increase,
@@ -120,15 +157,18 @@ enum StrengthProgression {
     static func weeklyHardSets(_ sets: [LoggedSet], now: Date = .now) -> [String: Int] {
         let since = now.addingTimeInterval(-7 * 86_400)
         var out: [String: Int] = [:]
-        for s in sets where s.date >= since && s.date <= now && s.rpe >= 7 && s.reps > 0 {
+        for s in sets where s.date >= since && s.date <= now && s.rpe >= 7 && s.reps > 0 && s.kind == .work {
             if let g = GymExercises.group(of: s.exercise) { out[g, default: 0] += 1 }
         }
         return out
     }
 
-    /// Heures depuis la derniere serie d'un groupe (nil si jamais travaille).
-    static func hoursSince(group: String, in sets: [LoggedSet], now: Date = .now) -> Double? {
-        sets.filter { $0.date <= now && GymExercises.group(of: $0.exercise) == group }
+    /// Heures depuis la derniere serie d'un groupe (nil si jamais travaille), sans
+    /// compter la seance en cours : une seance plus tot le MEME jour compte bien.
+    static func hoursSince(group: String, in sets: [LoggedSet], excludingSession current: UUID? = nil,
+                           now: Date = .now) -> Double? {
+        sets.filter { $0.date <= now && GymExercises.group(of: $0.exercise) == group
+                      && ($0.sessionID == nil || $0.sessionID != current) }
             .map(\.date).max().map { now.timeIntervalSince($0) / 3600 }
     }
 
@@ -142,8 +182,18 @@ enum StrengthProgression {
     }
 }
 
+/// Type d'une serie.
+enum WorkoutSetKind: String, CaseIterable, Codable, Identifiable {
+    case warmup, work, drop
+    var id: String { rawValue }
+    var label: String {
+        switch self { case .warmup: return "Échauffement"; case .work: return "Travail"; case .drop: return "Dégressive" }
+    }
+}
+
 extension WorkoutSet {
     var logged: StrengthProgression.LoggedSet {
-        .init(date: date, exercise: exercise, weight: weightKg, reps: reps, rpe: rpe)
+        .init(date: date, exercise: exercise, weight: weightKg, reps: reps, rpe: rpe,
+              sessionID: sessionID, kind: WorkoutSetKind(rawValue: kind) ?? .work)
     }
 }

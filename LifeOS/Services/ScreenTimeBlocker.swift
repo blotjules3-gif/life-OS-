@@ -2,6 +2,7 @@ import SwiftUI
 #if os(iOS) && !targetEnvironment(macCatalyst)
 import FamilyControls
 import ManagedSettings
+import DeviceActivity
 #endif
 
 /// Blocage reel d'applications (Screen Time API d'Apple).
@@ -12,9 +13,13 @@ import ManagedSettings
 /// Quand Apple l'accorde : ajouter `com.apple.developer.family-controls` a
 /// LifeOS.entitlements et regenerer le profil. Rien d'autre a changer ici.
 ///
-/// Limite assumee de cette premiere etape : sans extension DeviceActivity, la fin
-/// d'une session est appliquee a la prochaine ouverture de LifeOS (ou par le bouton
-/// Debloquer), pas a la seconde pres en arriere-plan.
+/// Fin d'un blocage, par ordre de fiabilite :
+/// 1. l'extension DeviceActivity (`Extensions/LifeOSDeviceActivity/`, preparee mais
+///    pas encore dans le build : elle demande le meme droit Apple) leve le blocage a
+///    l'heure dite, app fermee ; le planning est deja pose par `block()` ;
+/// 2. l'app elle-meme, a CHAQUE lancement et retour au premier plan, quel que soit
+///    l'ecran ouvert (`appBecameActive`, appele par LifeOSApp) ;
+/// 3. une notification a l'heure de fin invite a ouvrir LifeOS.
 @MainActor
 final class ScreenTimeBlocker: ObservableObject {
     static let shared = ScreenTimeBlocker()
@@ -30,14 +35,18 @@ final class ScreenTimeBlocker: ObservableObject {
     @Published private(set) var sessionEnd: Date?
     @Published var lastError: String?
 
-    private static let endKey = "screenBlock.end"
+    static let endKey = "screenBlock.end"
     private static let selectionKey = "screenBlock.selection"
+    static let endNotificationID = "screenBlock.end"
+    /// Nom partage avec l'extension : meme magasin de reglages, meme activite.
+    static let storeName = "lifeos.focus"
+    private let defaults: UserDefaults
 
     #if os(iOS) && !targetEnvironment(macCatalyst)
     @Published var selection = FamilyActivitySelection() {
         didSet { saveSelection() }
     }
-    private let store = ManagedSettingsStore(named: .init("lifeos.focus"))
+    private let store = ManagedSettingsStore(named: .init(ScreenTimeBlocker.storeName))
 
     var hasSelection: Bool { !selection.applicationTokens.isEmpty || !selection.categoryTokens.isEmpty }
     var selectionSummary: String {
@@ -49,11 +58,13 @@ final class ScreenTimeBlocker: ObservableObject {
     var selectionSummary: String { "" }
     #endif
 
-    private init() {
-        let t = UserDefaults.standard.double(forKey: Self.endKey)
+    /// `defaults` injectable pour les tests ; l'app utilise `shared`.
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        let t = defaults.double(forKey: Self.endKey)
         sessionEnd = t > 0 ? Date(timeIntervalSince1970: t) : nil
         #if os(iOS) && !targetEnvironment(macCatalyst)
-        if let data = UserDefaults.standard.data(forKey: Self.selectionKey),
+        if let data = defaults.data(forKey: Self.selectionKey),
            let sel = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
             selection = sel
         }
@@ -111,30 +122,63 @@ final class ScreenTimeBlocker: ObservableObject {
         guard hasSelection else { lastError = "Choisis d'abord les apps à bloquer."; return }
         store.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
         store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : .specific(selection.categoryTokens)
-        let end = Date().addingTimeInterval(TimeInterval(max(1, minutes) * 60))
-        sessionEnd = end
-        UserDefaults.standard.set(end.timeIntervalSince1970, forKey: Self.endKey)
+        let now = Date()
+        let end = now.addingTimeInterval(TimeInterval(max(1, minutes) * 60))
+        record(end: end)
+        scheduleSystemEnd(from: now, to: end)
+        NotificationManager.shared.schedule(id: Self.endNotificationID, title: "Blocage terminé",
+                                            body: "Ouvre LifeOS pour libérer tes apps.", at: end)
         lastError = nil
         #endif
     }
 
+    /// Enregistre l'heure de fin (separe pour les tests : pas de Screen Time requis).
+    func record(end: Date) {
+        sessionEnd = end
+        defaults.set(end.timeIntervalSince1970, forKey: Self.endKey)
+    }
+
+    #if os(iOS) && !targetEnvironment(macCatalyst)
+    /// Planning systeme lu par l'extension DeviceActivity. Sans extension il ne fait
+    /// rien ; Apple impose une duree d'au moins 15 minutes.
+    private func scheduleSystemEnd(from start: Date, to end: Date) {
+        let cal = Calendar.current
+        let parts: Set<Calendar.Component> = [.year, .month, .day, .hour, .minute, .second]
+        let schedule = DeviceActivitySchedule(intervalStart: cal.dateComponents(parts, from: start),
+                                              intervalEnd: cal.dateComponents(parts, from: end), repeats: false)
+        try? DeviceActivityCenter().startMonitoring(.init(Self.storeName), during: schedule)
+    }
+    #endif
+
     func unblock() {
         #if os(iOS) && !targetEnvironment(macCatalyst)
         store.clearAllSettings()
+        DeviceActivityCenter().stopMonitoring([.init(Self.storeName)])
         #endif
+        NotificationManager.shared.cancel(id: Self.endNotificationID)
         sessionEnd = nil
-        UserDefaults.standard.removeObject(forKey: Self.endKey)
+        defaults.removeObject(forKey: Self.endKey)
     }
 
-    /// A appeler a l'ouverture : leve un blocage dont l'heure de fin est passee.
+    /// Leve un blocage dont l'heure de fin est passee. Relit l'heure sur disque :
+    /// l'extension ou une autre fenetre a pu la changer.
     func expireIfNeeded(now: Date = .now) {
+        let t = defaults.double(forKey: Self.endKey)
+        sessionEnd = t > 0 ? Date(timeIntervalSince1970: t) : nil
         if let end = sessionEnd, end <= now { unblock() }
+    }
+
+    /// Appele par LifeOSApp au lancement et a chaque retour au premier plan, quel
+    /// que soit l'ecran : la fin ne depend plus de l'ouverture de la carte Opale.
+    func appBecameActive(now: Date = .now) {
+        refreshStatus()
+        expireIfNeeded(now: now)
     }
 
     #if os(iOS) && !targetEnvironment(macCatalyst)
     private func saveSelection() {
         if let data = try? JSONEncoder().encode(selection) {
-            UserDefaults.standard.set(data, forKey: Self.selectionKey)
+            defaults.set(data, forKey: Self.selectionKey)
         }
     }
     #endif
@@ -145,7 +189,6 @@ struct ScreenBlockCard: View {
     @ObservedObject private var blocker = ScreenTimeBlocker.shared
     @State private var showPicker = false
     @State private var minutes = 60
-    @Environment(\.scenePhase) private var phase
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -170,8 +213,7 @@ struct ScreenBlockCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .card()
-        .onAppear { blocker.refreshStatus(); blocker.expireIfNeeded() }
-        .onChange(of: phase) { _, p in if p == .active { blocker.expireIfNeeded() } }
+        .onAppear { blocker.appBecameActive() }
     }
 
     @ViewBuilder private var approvedControls: some View {
@@ -182,7 +224,7 @@ struct ScreenBlockCard: View {
             Button(role: .destructive) { blocker.unblock() } label: {
                 Text("Débloquer maintenant").frame(maxWidth: .infinity)
             }.buttonStyle(LifeOSGlassButtonStyle())
-            Text("La fin est appliquée à la prochaine ouverture de LifeOS.").font(.caption2).foregroundStyle(.secondary)
+            Text("À l'heure de fin, une notification te prévient ; le blocage est levé dès que LifeOS s'ouvre, sur n'importe quel écran.").font(.caption2).foregroundStyle(.secondary)
         } else {
             Button { showPicker = true } label: {
                 Label(blocker.hasSelection ? "Apps choisies : \(blocker.selectionSummary)" : "Choisir les apps à bloquer",

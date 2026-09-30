@@ -149,6 +149,7 @@ struct MainTabView: View {
         if ProcessInfo.processInfo.arguments.contains("-glassGallery") { return AnyView(GlassGallery()) }
         if ProcessInfo.processInfo.arguments.contains("-powerNap") { return AnyView(NavigationStack { PowerNapView() }) }
         if DebugLaunchFlags.has("-routeSmoke") { return AnyView(RouteSmokeView()) }
+        if DebugLaunchFlags.has("-shotGymSession") { return AnyView(GymSessionShot()) }
         // `-shotTool <titre>` ouvre un outil precis, dans sa categorie, pour le
         // regarder sans taper le chemin a chaque passe.
         if let name = DebugLaunchFlags.value("-shotTool"),

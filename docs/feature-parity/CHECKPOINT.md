@@ -625,13 +625,33 @@ Worked in the audit's priority order, skipping only what needs Theo or Apple.
 
 Not verified by hand yet: the four looks on real screens (iPhone, iPad, Mac), the second tab on iPad/Mac, the session screen. Widgets do not follow the neutral palette yet (the choice is synced to the app group as `widget_palette`, not read).
 
+## Audit du build 48 (AUDIT-LIFEOS-BUILD48.md), lot 2
+
+The audit's four defects, each reproduced by a test (`LifeOSTests/Build48DefectTests.swift`):
+
+| Defect | Fix | Proof |
+|---|---|---|
+| Sport: the running session was mixed with finished history (prescription changed mid-workout, two sessions a day merged, partial session used as a base) | New `TrainingSession` model (active / done / cancelled); `WorkoutSet.sessionID` and `kind` (warm-up / work / drop). Starting freezes the prescription (`GymSessionService.start`, JSON in the session). Engine groups by session, not by day, and progresses only from finished sessions. Recovery excludes only the current session. Target ranges ("3×8-12"), default target for free labels, smallest weight step setting. | GymSessionIsolationTests (7). Negative control: with the build 48 grouping, the same-day test fails (82.5 instead of 62.5) and the recovery test fails. |
+| Sport: save shown as a success even on failure | `GymSessionService` throws on save failure, removes the unsaved set, reverts finish/cancel; the screen shows the error and keeps the input. The button and the action use the same weight rule (`parseWeight`). | GymSessionSaveTests (4) |
+| Opale: expiry only when the Opale card appeared | `ScreenTimeBlocker.appBecameActive()` called by LifeOSApp at cold launch and every return to foreground; end notification; DeviceActivity schedule set; extension prepared in `Extensions/LifeOSDeviceActivity/` (outside the build, needs Apple's permission). | ScreenBlockExpiryTests (3) |
+| Palette switch rebuilt the tree (lost sub-screens and drafts) | Palette colours are dynamic UIColors that follow a custom trait (`NeutralPaletteTrait`, bridged with `.environment(\.neutralPalette)`), like dark mode. `.id(appPaletteRaw)` removed. | PaletteWithoutRebuildTests (3). **Seen on the simulator**: `-paletteFlipAfter 12` turned the category grid grey on the same screen, same tab; relaunch keeps neutral. |
+
+Also in this lot:
+- Session screen rebuilt: start / resume / finish / cancel (keep or erase sets), set type, rest timer (setting 1 to 4 min), personal record, error line. `-shotGymSession -shotGymStart` (DEBUG) opens it seeded. Seen on the simulator.
+- Hevvy: correct a logged set (tap), set type in the editor, records per exercise, save and delete errors shown.
+- Widgets follow the palette (`WidgetPalette`, `widget_palette` synced at launch and on change). Not seen on a real home screen.
+- Kubero scenarios have distinct line patterns, readable in neutral.
+- `docs/feature-parity/MATRIX.md`: per-tool matrix (tested automatically / present untested / missing / external dependency). 6 tools inventoried so far: Fitbot, Hevvy, Opale, Kubero, Accueil, Cal Eye.
+
+Suite: 784 tests, 0 failures, 1 skipped.
+
 ## Resume here
 
-Read the audit lot table above first. Next, in the audit's order:
+Read the two audit lot tables above first. Next, in the audit's order:
 1. **Accounts**: needs Theo's choice (Apple + iCloud without a server, or a server for Google/Facebook/email).
 2. **Opale**: the day Apple grants Family Controls, add the entitlement, then build the DeviceActivity monitor extension (scheduled blocks, end of session in background).
 3. **Visual pass of the four looks** on iPhone, iPad and Mac (light/dark x colour/neutral), including Tabata and charts; widgets reading `widget_palette`.
 4. **Widgets matrix** per tool (audit point 9) and real journeys on device (point 10).
-5. Depth of the other tools, one by one, with the audit's method: entry, configuration, main action, result, edit, delete, relaunch, offline, permission refused, shared data, platforms.
+5. Extend MATRIX.md family by family (next: rest of Sport: TabaTime, Stepometer, GOMOB, Streakz; then Nutrition), fixing gaps as found. Depth of the other tools, one by one, with the audit's method: entry, configuration, main action, result, edit, delete, relaunch, offline, permission refused, shared data, platforms.
 
 Test runs: use `-parallel-testing-enabled NO`. Shut simulators down between checks (disk and swap).

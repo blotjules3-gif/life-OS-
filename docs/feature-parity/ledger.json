@@ -372,7 +372,39 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": "2026-09-30"
+  "observed_at": "2026-09-30",
+  "matrix": [
+   {
+    "feature": "Analyse photo par le fournisseur de l'utilisateur (clé)",
+    "state": "present_untested",
+    "proof": "FoodPhotoAnalyzer"
+   },
+   {
+    "feature": "Analyse sans clé intégrée à l'app",
+    "state": "dependency",
+    "proof": "serveur à décider par Theo (confidentialité App Store)"
+   },
+   {
+    "feature": "Reconnaissance sur l'appareil + valeurs Ciqual",
+    "state": "tested_auto",
+    "proof": "FoodRecognitionPipelineTests"
+   },
+   {
+    "feature": "Échec de reconnaissance : recherche proposée",
+    "state": "present_untested",
+    "proof": "bouton Chercher un aliment"
+   },
+   {
+    "feature": "Portions corrigibles, une ligne de journal par aliment",
+    "state": "tested_auto",
+    "proof": "FoodLogService tests"
+   },
+   {
+    "feature": "Benchmark de vrais plats",
+    "state": "present_untested",
+    "proof": "tools/calai-bench (12 photos), pas relancé"
+   }
+  ]
  },
  {
   "tool_id": 16,
@@ -532,7 +564,7 @@
   "reference_product": "Fitbod",
   "source_path": "LifeOS/Modules/GymProgram.swift",
   "source_line": "12",
-  "audit_stage": "Programme linked to logged sets: today session screen, next-load engine (double progression from real sets and effort), weekly hard sets per muscle vs 10-20, recovery warning under 48 h",
+  "audit_stage": "Real training sessions: start freezes the prescription, sets tied to the session with types (warm-up/work/drop), progression from finished sessions only, finish/cancel, save errors shown, rest timer, records, recovery counting earlier sessions today",
   "requirement": "Add exercise catalogue/demonstrations, experience/equipment/goals, progression based on completed sets, recovery/volume balancing, substitutions and editable generated sessions. Support warmups, rest, supersets and programme history; share sessions with #24.",
   "dependencies": "Structured exercise IDs, workout/set domain, progression engine and content library. AI suggestions must resolve to valid exercises and loads and remain editable.",
   "acceptance": "Generate with restricted equipment, complete a workout and verify the next prescription changes from actual history. Excluded exercises never reappear; editing a plan preserves past workouts.",
@@ -547,7 +579,99 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": "2026-09-30"
+  "observed_at": "2026-09-30",
+  "matrix": [
+   {
+    "feature": "Semaine éditable (séance, exercices, remplacement)",
+    "state": "present_untested",
+    "proof": "GymProgram.swift, pas de test d'écran"
+   },
+   {
+    "feature": "Démarrer une séance, prescription figée au démarrage",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build48DefectTests.swift testPrescriptionIsFrozenWhenTheSessionStarts"
+   },
+   {
+    "feature": "Progression depuis les séances TERMINÉES seulement",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build48DefectTests.swift testUnfinishedOrCancelledSessionIsNotABase"
+   },
+   {
+    "feature": "Deux séances le même jour restent séparées",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build48DefectTests.swift testTwoSessionsTheSameDayStaySeparate (contrôle négatif fait)"
+   },
+   {
+    "feature": "Séries typées échauffement / travail / dégressive",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build48DefectTests.swift testWarmupAndDropSetsDoNotCount"
+   },
+   {
+    "feature": "Sauvegarde : erreur affichée, saisie gardée, aucune série fantôme",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build48DefectTests.swift GymSessionSaveTests"
+   },
+   {
+    "feature": "Terminer / annuler (garder ou effacer les séries)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build48DefectTests.swift testFailedFinishLeavesSessionActive, testCancelCanEraseItsSetsAndNeverCountsAsDone"
+   },
+   {
+    "feature": "Reprise d'une séance en cours après relance",
+    "state": "present_untested",
+    "proof": "séance stockée en base, bouton Reprendre ; pas de parcours fait"
+   },
+   {
+    "feature": "Minuteur de repos réglable",
+    "state": "present_untested",
+    "proof": "GymSession.swift"
+   },
+   {
+    "feature": "Record personnel signalé",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build48DefectTests.swift testPersonalRecordAgainstFinishedHistory"
+   },
+   {
+    "feature": "Alerte récupération < 48 h (séance du même jour comprise)",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build48DefectTests.swift testRecoverySeesAnEarlierSessionToday (contrôle négatif fait)"
+   },
+   {
+    "feature": "Volume hebdo par muscle (séries de travail)",
+    "state": "tested_auto",
+    "proof": "StrengthProgressionTests"
+   },
+   {
+    "feature": "Cibles en fourchette (3×8-12), cible par défaut, pas de charge réglable",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build48DefectTests.swift testTargetRangesDefaultTargetAndMinIncrement"
+   },
+   {
+    "feature": "Démonstrations d'exercices",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Filtre matériel disponible",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Supersets",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Générateur de programme selon fréquence, matériel, objectif",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Parcours complet sur iPhone / iPad / Mac",
+    "state": "missing",
+    "proof": "non fait"
+   }
+  ]
  },
  {
   "tool_id": 23,
@@ -582,7 +706,7 @@
   "reference_product": "Strong / Hevy",
   "source_path": "LifeOS/Modules/FitnessModule.swift",
   "source_line": "82",
-  "audit_stage": "Next-load suggestion now uses the shared progression engine over full history (was a fixed +2.5 kg)",
+  "audit_stage": "Edit a logged set, set types, records per exercise, save/delete errors shown; next-load hint from finished history",
   "requirement": "Add reusable routines, exercise library/custom exercises, full sessions, warmup/drop/superset types, rest timers, notes, personal records, history editing, body measurements and sharing/export. Include Hevy-style social workflows in a separate explicit backlog if pursuing the whole reference union.",
   "dependencies": "One workout schema with #22/#25/#26; community/sharing service for social features, units and evidence-based formula labels.",
   "acceptance": "Complete a superset with a paused rest timer, edit a historical set and verify volume/PR recalculation. kg/lb conversion preserves underlying values; deletion doesn't leave phantom records.",
@@ -598,7 +722,59 @@
   "country": "",
   "tier": "",
   "observed_at": "2026-09-30",
-  "notes": "CountdownEngine: echeance absolue persistee, le temps reel est respecte en arriere plan et apres arret du processus (CountdownEngineTests)."
+  "notes": "CountdownEngine: echeance absolue persistee, le temps reel est respecte en arriere plan et apres arret du processus (CountdownEngineTests).",
+  "matrix": [
+   {
+    "feature": "Logger une série (type, charge, reps, effort)",
+    "state": "present_untested",
+    "proof": "FitnessModule.swift WorkoutEditor"
+   },
+   {
+    "feature": "Corriger une série existante",
+    "state": "present_untested",
+    "proof": "toucher une ligne ; pas de test d'écran"
+   },
+   {
+    "feature": "Suppression avec erreur visible",
+    "state": "present_untested",
+    "proof": "GymSessionService.delete"
+   },
+   {
+    "feature": "Courbe 1RM par exercice",
+    "state": "present_untested",
+    "proof": "ProgressChartCard"
+   },
+   {
+    "feature": "Conseil de prochaine charge (moteur partagé, séances terminées)",
+    "state": "tested_auto",
+    "proof": "StrengthProgressionTests"
+   },
+   {
+    "feature": "Records par exercice",
+    "state": "present_untested",
+    "proof": "section Records"
+   },
+   {
+    "feature": "Routines réutilisables",
+    "state": "present_untested",
+    "proof": "via le programme Fitbot (GymDay), pas de routine propre à Hevvy"
+   },
+   {
+    "feature": "Exercices personnalisés avec groupe musculaire",
+    "state": "missing",
+    "proof": "texte libre accepté, sans groupe ni matériel"
+   },
+   {
+    "feature": "Mensurations corporelles",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Export",
+    "state": "missing",
+    "proof": ""
+   }
+  ]
  },
  {
   "tool_id": 25,
@@ -912,7 +1088,7 @@
   "reference_product": "Opal / one sec",
   "source_path": "LifeOS/Modules/MindModule.swift",
   "source_line": "199",
-  "audit_stage": "Real blocking code ready (FamilyControls + ManagedSettings, app picker, timed block, unblock, expiry on open); manual tracking labelled as manual",
+  "audit_stage": "Blocking code ready; expiry applied by the app on launch and every return to foreground (any screen); end notification; DeviceActivity extension prepared outside the build",
   "requirement": "Implement actual app/category selection, authorized usage reports, scheduled/focus blocking, limits, intervention/breathing delays, session analytics and controlled overrides. Replace manual counts with explicit manual mode until real reports are available.",
   "dependencies": "FamilyControls/DeviceActivity/ManagedSettings with distribution entitlement and extensions where supported; separate desktop capability plan. Apple authorization is an implementation dependency, not a blanket impossibility.",
   "acceptance": "On an authorized physical device block chosen apps during a session, test expiry and revoke permission. Device restart/timezone changes do not strand a shield. Reports never label manually entered minutes as measured.",
@@ -927,7 +1103,49 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": "2026-09-30"
+  "observed_at": "2026-09-30",
+  "matrix": [
+   {
+    "feature": "Autorisation Temps d'écran",
+    "state": "dependency",
+    "proof": "droit Family Controls (distribution) à demander par Theo"
+   },
+   {
+    "feature": "Choix des apps et catégories à bloquer",
+    "state": "dependency",
+    "proof": "code prêt (FamilyActivityPicker), non exécutable sans le droit"
+   },
+   {
+    "feature": "Blocage immédiat pour une durée",
+    "state": "dependency",
+    "proof": "code prêt (ManagedSettings)"
+   },
+   {
+    "feature": "Fin du blocage appliquée par l'app, quel que soit l'écran",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build48DefectTests.swift ScreenBlockExpiryTests"
+   },
+   {
+    "feature": "Notification à l'heure de fin",
+    "state": "present_untested",
+    "proof": "NotificationManager.schedule"
+   },
+   {
+    "feature": "Fin en arrière-plan, app fermée (extension DeviceActivity)",
+    "state": "dependency",
+    "proof": "Extensions/LifeOSDeviceActivity préparée, hors build"
+   },
+   {
+    "feature": "Rapports d'usage (DeviceActivityReport)",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Suivi manuel du temps d'écran",
+    "state": "present_untested",
+    "proof": "MindModule.swift"
+   }
+  ]
  },
  {
   "tool_id": 38,
@@ -1279,7 +1497,44 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": "2026-09-30"
+  "observed_at": "2026-09-30",
+  "matrix": [
+   {
+    "feature": "Actifs / passifs, patrimoine net",
+    "state": "present_untested",
+    "proof": "InvestModule.swift"
+   },
+   {
+    "feature": "Projection avec pertes, frais, inflation, 3 scénarios",
+    "state": "tested_auto",
+    "proof": "FireProjectionTests"
+   },
+   {
+    "feature": "Capital de départ = placements (option autres actifs)",
+    "state": "present_untested",
+    "proof": "startCapital"
+   },
+   {
+    "feature": "Historique du patrimoine dans le temps",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Devises",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Amortissement des dettes",
+    "state": "missing",
+    "proof": ""
+   },
+   {
+    "feature": "Analyse de risque (volatilité, séquence des rendements)",
+    "state": "missing",
+    "proof": "projection déterministe seulement"
+   }
+  ]
  },
  {
   "tool_id": 52,
@@ -2190,7 +2445,7 @@
   "reference_product": "Widgets iOS",
   "source_path": "LifeOS/Core/HomeWidgetEditing.swift",
   "source_line": "146",
-  "audit_stage": "Second tab selectable (Réveil, Nutrition, Sport, Tâches, Sommeil, Argent), persisted, invalid value falls back to Réveil; current tab survives an appearance change",
+  "audit_stage": "Second tab selectable; palette colour/neutral is now a live display trait (no tree rebuild, screens and drafts kept); widgets follow the palette",
   "requirement": "Complete add/remove/reorder/resize/configure of supported dashboard cards; phone/tablet/desktop layouts; widget families, deep links and actions; persistent preferences and synchronized data. Distinguish in-app cards from actual OS widgets and Live Activities.",
   "dependencies": "Stable widget/tool IDs, shared read models/intents, capability registry and accessibility/keyboard reorder; preserve the separate Liquid Glass design system.",
   "acceptance": "Reorder on phone, reopen desktop, invoke a widget action while the app is closed and verify exactly one domain update. Removed/archived modules never leave dead links or stale private data in snapshots.",
@@ -2205,7 +2460,44 @@
   "reference_version": "",
   "country": "",
   "tier": "",
-  "observed_at": "2026-09-30"
+  "observed_at": "2026-09-30",
+  "matrix": [
+   {
+    "feature": "Deuxième onglet au choix, persistant, repli sûr",
+    "state": "tested_auto",
+    "proof": "SecondTabTests"
+   },
+   {
+    "feature": "Réveil accessible depuis Sommeil",
+    "state": "tested_auto",
+    "proof": "SecondTabTests.testWakeUpStaysReachableFromSleep"
+   },
+   {
+    "feature": "Palette couleurs / neutre sans reconstruire les écrans",
+    "state": "tested_auto",
+    "proof": "LifeOSTests/Build48DefectTests.swift PaletteWithoutRebuildTests"
+   },
+   {
+    "feature": "Neutre = même luminance (contraste identique)",
+    "state": "tested_auto",
+    "proof": "ThemePaletteTests"
+   },
+   {
+    "feature": "Widgets suivent la palette",
+    "state": "present_untested",
+    "proof": "WidgetPalette, pas de test (cible widget)"
+   },
+   {
+    "feature": "Quatre apparences vérifiées sur iPhone / iPad / Mac",
+    "state": "missing",
+    "proof": "simulateur iPhone seulement"
+   },
+   {
+    "feature": "Ajouter / retirer / réordonner les cartes de l'accueil",
+    "state": "present_untested",
+    "proof": "HomeWidgetEditing.swift, non requalifié"
+   }
+  ]
  },
  {
   "tool_id": 89,

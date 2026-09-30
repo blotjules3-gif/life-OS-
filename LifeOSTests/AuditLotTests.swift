@@ -5,37 +5,29 @@ import SwiftUI
 /// Lot de l'audit du 30 sept. : quatre apparences, deuxieme onglet, simulateur
 /// d'investissement, progression de charge, annexes cosmetiques CosIng.
 final class ThemePaletteTests: XCTestCase {
-    override func tearDown() { UserDefaults.standard.removeObject(forKey: AppStorageKeys.appPalette); super.tearDown() }
-
-    private func luminance(_ c: Color) -> Double {
+    private func resolved(_ c: Color, neutral: Bool) -> UIColor {
+        UIColor(c).resolvedColor(with: UITraitCollection { $0.lifeOSNeutralPalette = neutral })
+    }
+    private func luminance(_ u: UIColor) -> Double {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        UIColor(c).getRed(&r, green: &g, blue: &b, alpha: &a)
+        u.getRed(&r, green: &g, blue: &b, alpha: &a)
         func lin(_ x: CGFloat) -> Double { let v = Double(x); return v <= 0.04045 ? v / 12.92 : pow((v + 0.055) / 1.055, 2.4) }
         return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
     }
-    private func chroma(_ c: Color) -> CGFloat {
+    private func chroma(_ u: UIColor) -> CGFloat {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        UIColor(c).getRed(&r, green: &g, blue: &b, alpha: &a)
+        u.getRed(&r, green: &g, blue: &b, alpha: &a)
         return max(r, g, b) - min(r, g, b)
     }
 
     func testNeutralKeepsLuminanceSoContrastIsIdentical() {
-        UserDefaults.standard.set("color", forKey: AppStorageKeys.appPalette)
-        let colored = [Theme.fitness, Theme.nutrition, Theme.energy, Theme.finance, Theme.danger, Color(hex: 0xFF5BA0)]
-        let lums = colored.map(luminance)
-        XCTAssertGreaterThan(colored.map(chroma).max() ?? 0, 0.3, "contrôle : la palette couleurs a bien des teintes")
-        UserDefaults.standard.set("neutral", forKey: AppStorageKeys.appPalette)
-        let neutral = [Theme.fitness, Theme.nutrition, Theme.energy, Theme.finance, Theme.danger, Color(hex: 0xFF5BA0)]
-        for (c, l) in zip(neutral, lums) {
-            XCTAssertLessThan(chroma(c), 0.01, "le neutre ne garde aucune teinte")
-            XCTAssertEqual(luminance(c), l, accuracy: 0.004, "même luminance, donc même contraste")
+        let tokens = [Theme.fitness, Theme.nutrition, Theme.energy, Theme.finance, Theme.danger, Color(hex: 0xFF5BA0)]
+        XCTAssertGreaterThan(tokens.map { chroma(resolved($0, neutral: false)) }.max() ?? 0, 0.3, "contrôle : la palette couleurs a bien des teintes")
+        for c in tokens {
+            let col = resolved(c, neutral: false), grey = resolved(c, neutral: true)
+            XCTAssertLessThan(chroma(grey), 0.01, "le neutre ne garde aucune teinte")
+            XCTAssertEqual(luminance(grey), luminance(col), accuracy: 0.004, "même luminance, donc même contraste")
         }
-    }
-
-    func testDefaultPaletteIsColor() {
-        UserDefaults.standard.removeObject(forKey: AppStorageKeys.appPalette)
-        XCTAssertFalse(Theme.neutralPalette)
-        XCTAssertGreaterThan(chroma(Theme.fitness), 0.5)
     }
 }
 

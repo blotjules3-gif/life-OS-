@@ -13,6 +13,9 @@ struct GymProgramView: View {
     @Environment(\.modelContext) private var ctx
     @Query private var days: [GymDay]
     @Query(sort: \WorkoutSet.date, order: .reverse) private var sets: [WorkoutSet]
+    @Query private var sessions: [TrainingSession]
+    @AppStorage(AppStorageKeys.gymMinIncrement) private var minIncrement: Double = 0
+    @AppStorage(AppStorageKeys.gymRestSeconds) private var restSeconds = 90
 
     @AppStorage(AppStorageKeys.gymReminderOn)     private var on = true
     @AppStorage(AppStorageKeys.gymReminderHour)   private var hour = 7
@@ -45,10 +48,12 @@ struct GymProgramView: View {
                         Text(today.isRest ? "Repos. La récupération fait aussi progresser." : "Pas de séance définie aujourd'hui.")
                             .foregroundStyle(.secondary)
                     } else {
+                        let open = sessions.contains { $0.state == "active" && $0.title == today.title }
                         NavigationLink {
                             GymSessionView(day: today)
                         } label: {
-                            Label("Commencer : \(today.title)", systemImage: "play.circle.fill")
+                            Label(open ? "Reprendre : \(today.title)" : "Commencer : \(today.title)",
+                                  systemImage: open ? "arrow.clockwise.circle.fill" : "play.circle.fill")
                         }
                     }
                 }
@@ -60,6 +65,20 @@ struct GymProgramView: View {
                 Text("Volume sur 7 jours")
             } footer: {
                 Text("Séries avec un effort d'au moins 7/10, par muscle. Repère courant pour progresser : 10 à 20 par semaine.")
+            }
+
+            Section {
+                Picker("Plus petit pas de charge", selection: $minIncrement) {
+                    Text("Automatique").tag(0.0)
+                    ForEach([1.0, 1.25, 2, 2.5, 5], id: \.self) { Text("\(StrengthProgression.fmt($0)) kg").tag($0) }
+                }
+                Picker("Repos entre les séries", selection: $restSeconds) {
+                    ForEach([60, 90, 120, 180, 240], id: \.self) { Text("\($0 / 60) min\($0 % 60 == 0 ? "" : " 30")").tag($0) }
+                }
+            } header: {
+                Text("Réglages de séance")
+            } footer: {
+                Text("Automatique : 5 kg sur les gros exercices de jambes, 2 kg aux haltères, 2,5 kg ailleurs. Choisis tes plus petits disques si ta salle en a d'autres.")
             }
 
             Section("Ma semaine") {

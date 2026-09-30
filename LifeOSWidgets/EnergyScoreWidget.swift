@@ -179,6 +179,6 @@ private extension Color {
         let r = Double((v >> 16) & 0xFF) / 255
         let g = Double((v >> 8) & 0xFF) / 255
         let b = Double(v & 0xFF) / 255
-        self.init(red: r, green: g, blue: b)
+        self = WidgetPalette.tone(r, g, b)
     }
 }

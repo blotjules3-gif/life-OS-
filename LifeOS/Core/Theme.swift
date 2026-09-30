@@ -230,10 +230,20 @@ enum Theme {
     /// Couleur d'interface qui suit la palette : la couleur telle quelle, ou le gris de
     /// MEME luminance relative. Le contraste WCAG ne depend que de la luminance, donc
     /// chaque rapport de contraste reste identique entre les deux palettes.
-    static func tone(_ r: Double, _ g: Double, _ b: Double) -> Color {
-        guard neutralPalette else { return Color(red: r, green: g, blue: b) }
+    ///
+    /// Couleur DYNAMIQUE, comme le mode sombre : elle se resout selon le trait
+    /// `NeutralPaletteTrait`, pose a la racine par `.environment(\.neutralPalette, …)`.
+    /// Changer de palette redessine donc sans reconstruire les vues : la navigation et
+    /// les saisies en cours restent en place.
+    static func tone(_ r: Double, _ g: Double, _ b: Double, alpha: Double = 1) -> Color {
+        Color(uiColor: paletteUIColor(r, g, b, alpha: alpha))
+    }
+
+    static func paletteUIColor(_ r: Double, _ g: Double, _ b: Double, alpha: Double = 1) -> UIColor {
+        let color = UIColor(red: r, green: g, blue: b, alpha: alpha)
         let v = neutralLevel(r, g, b)
-        return Color(red: v, green: v, blue: v)
+        let grey = UIColor(red: v, green: v, blue: v, alpha: alpha)
+        return UIColor { $0.lifeOSNeutralPalette ? grey : color }
     }
 
     /// Gris sRGB (0...1) qui a la meme luminance relative que (r, g, b).
@@ -954,14 +964,9 @@ struct TechGrid: View {
 extension Color {
     init(hex: UInt, alpha: Double = 1) {
         let saturated = Theme.saturateLegacyHex(hex)
-        var r = Double((saturated >> 16) & 0xFF) / 255
-        var g = Double((saturated >> 8) & 0xFF) / 255
-        var b = Double(saturated & 0xFF) / 255
-        if Theme.neutralPalette {
-            let v = Theme.neutralLevel(r, g, b)
-            (r, g, b) = (v, v, v)
-        }
-        self.init(.sRGB, red: r, green: g, blue: b, opacity: alpha)
+        self.init(uiColor: Theme.paletteUIColor(Double((saturated >> 16) & 0xFF) / 255,
+                                                Double((saturated >> 8) & 0xFF) / 255,
+                                                Double(saturated & 0xFF) / 255, alpha: alpha))
     }
 
     /// "RRGGBB" hex (sans #) — pour persister une couleur choisie par l'utilisateur.
@@ -972,6 +977,40 @@ extension Color {
                       Int(round(max(0, min(1, r)) * 255)),
                       Int(round(max(0, min(1, g)) * 255)),
                       Int(round(max(0, min(1, b)) * 255)))
+    }
+}
+
+// MARK: - Trait de palette (propage comme le mode sombre)
+
+/// Trait UIKit "palette neutre", relie a l'environnement SwiftUI. `affectsColorAppearance`
+/// demande a iOS de re-resoudre les couleurs dynamiques quand il change.
+struct NeutralPaletteTrait: UITraitDefinition {
+    static let defaultValue = false
+    static let affectsColorAppearance = true
+    static let name = "LifeOSNeutralPalette"
+}
+
+extension UITraitCollection {
+    var lifeOSNeutralPalette: Bool { self[NeutralPaletteTrait.self] }
+}
+
+extension UIMutableTraits {
+    var lifeOSNeutralPalette: Bool {
+        get { self[NeutralPaletteTrait.self] }
+        set { self[NeutralPaletteTrait.self] = newValue }
+    }
+}
+
+private struct NeutralPaletteKey: EnvironmentKey, UITraitBridgedEnvironmentKey {
+    static let defaultValue = false
+    static func read(from traitCollection: UITraitCollection) -> Bool { traitCollection.lifeOSNeutralPalette }
+    static func write(to mutableTraits: inout UIMutableTraits, value: Bool) { mutableTraits.lifeOSNeutralPalette = value }
+}
+
+extension EnvironmentValues {
+    var neutralPalette: Bool {
+        get { self[NeutralPaletteKey.self] }
+        set { self[NeutralPaletteKey.self] = newValue }
     }
 }
 

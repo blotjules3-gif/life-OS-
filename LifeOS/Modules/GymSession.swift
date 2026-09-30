@@ -3,46 +3,89 @@ import SwiftData
 
 // MARK: - Seance du jour : le programme, la charge conseillee, et le journal
 
-/// Ouvre la seance prevue par le programme, donne pour chaque exercice la charge de la
-/// prochaine seance (StrengthProgression), et loggue chaque serie dans le MEME journal
-/// que Hevvy. C'est ce journal qui fera avancer les charges la semaine suivante.
+/// Seance prevue par le programme. Demarrer cree une `TrainingSession` et FIGE la
+/// charge conseillee de chaque exercice : logger une serie ne la change plus en cours
+/// de route. Les series vont dans le MEME journal que Hevvy, rattachees a la seance.
+/// Seule une seance TERMINEE sert de base a la prochaine progression. Une seance en
+/// cours survit a la fermeture de l'app et se reprend ici.
 struct GymSessionView: View {
     @Bindable var day: GymDay
     @Environment(\.modelContext) private var ctx
     @Query(sort: \WorkoutSet.date, order: .reverse) private var sets: [WorkoutSet]
+    @Query(sort: \TrainingSession.start, order: .reverse) private var sessions: [TrainingSession]
     @AppStorage(AppStorageKeys.userBench1RM) private var bench1RM: Double = 0
     @AppStorage(AppStorageKeys.userSquat1RM) private var squat1RM: Double = 0
     @AppStorage(AppStorageKeys.userDeadlift1RM) private var deadlift1RM: Double = 0
+    @AppStorage(AppStorageKeys.gymMinIncrement) private var minIncrement: Double = 0
+    @AppStorage(AppStorageKeys.gymRestSeconds) private var restSeconds = 90
+    @State private var error: String?
+    @State private var confirmCancel = false
+    @State private var restEnd: Date?
+    @State private var record: String?
 
     private var exercises: [String] {
         day.focus.split(separator: "·").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
     }
+    /// Seance en cours pour ce programme (une seule a la fois).
+    private var active: TrainingSession? {
+        sessions.first { $0.state == GymSessionService.State.active.rawValue && $0.title == day.title }
+    }
     private var logged: [StrengthProgression.LoggedSet] { sets.map(\.logged) }
+    private var doneIDs: Set<UUID> { GymSessionService.doneIDs(sessions) }
 
     var body: some View {
         List {
             if exercises.isEmpty {
                 Text("Aucun exercice dans cette séance. Ajoute-les dans le programme.").foregroundStyle(.secondary)
             }
-            recoverySection
-            ForEach(exercises, id: \.self) { label in
-                ExerciseBlock(label: label,
-                              prescription: prescription(for: label),
-                              today: todaySets(for: label),
-                              onLog: { w, r, rpe in log(label, w, r, rpe) },
-                              onDelete: { ctx.delete($0) })
+            if let error {
+                Label(error, systemImage: "exclamationmark.triangle.fill").font(.footnote).foregroundStyle(Theme.warning)
+            }
+            if let session = active {
+                recoverySection(session)
+                if let end = restEnd, end > .now { restSection(end) }
+                if let record { Label(record, systemImage: "trophy.fill").font(.subheadline.weight(.semibold)) }
+                let frozen = GymSessionService.prescriptions(of: session)
+                ForEach(exercises, id: \.self) { label in
+                    ExerciseBlock(label: label,
+                                  prescription: frozen[GymExercises.baseName(label)],
+                                  usesDefaultTarget: StrengthProgression.target(from: label) == nil,
+                                  done: sessionSets(session, label),
+                                  onLog: { w, r, rpe, kind in log(label, w, r, rpe, kind, session) },
+                                  onDelete: { remove($0) })
+                }
+                Section {
+                    Button { finish(session) } label: { Label("Terminer la séance", systemImage: "checkmark.seal.fill") }
+                    Button(role: .destructive) { confirmCancel = true } label: { Label("Annuler la séance", systemImage: "xmark.circle") }
+                } footer: {
+                    Text("Commencée à \(session.start.formatted(date: .omitted, time: .shortened)). Seule une séance terminée sert à calculer les prochaines charges.")
+                }
+            } else if !exercises.isEmpty {
+                Section {
+                    Button { start() } label: { Label("Commencer la séance", systemImage: "play.circle.fill") }
+                } footer: {
+                    Text("Les charges conseillées sont calculées au démarrage, à partir de tes séances terminées, et ne bougent plus pendant la séance.")
+                }
             }
         }
         .navigationTitle(day.title.isEmpty ? "Séance" : day.title)
         .navigationBarTitleDisplayMode(.inline)
+        .confirmationDialog("Annuler la séance ?", isPresented: $confirmCancel, titleVisibility: .visible) {
+            if let s = active {
+                Button("Annuler et garder les séries dans l'historique") { cancel(s, deleteSets: false) }
+                Button("Annuler et effacer ses séries", role: .destructive) { cancel(s, deleteSets: true) }
+            }
+        } message: {
+            Text("Une séance annulée ne sert jamais de base de progression.")
+        }
     }
 
-    /// Groupes de la seance travailles il y a moins de 48 h : on le dit, sans bloquer.
-    @ViewBuilder private var recoverySection: some View {
+    /// Groupes travailles il y a moins de 48 h, seance en cours exclue (une seance
+    /// plus tot aujourd'hui compte).
+    @ViewBuilder private func recoverySection(_ session: TrainingSession) -> some View {
         let groups = Array(Set(exercises.compactMap { GymExercises.group(of: $0) })).sorted()
         let tired = groups.compactMap { g -> (String, Int)? in
-            guard let h = StrengthProgression.hoursSince(group: g, in: logged.filter { !Calendar.current.isDateInToday($0.date) }),
-                  h < 48 else { return nil }
+            guard let h = StrengthProgression.hoursSince(group: g, in: logged, excludingSession: session.id), h < 48 else { return nil }
             return (g, Int(h))
         }
         if !tired.isEmpty {
@@ -55,10 +98,20 @@ struct GymSessionView: View {
         }
     }
 
-    private func prescription(for label: String) -> StrengthProgression.Prescription? {
-        guard GymExercises.group(of: label) != "Cardio",
-              let target = StrengthProgression.target(from: label) else { return nil }
-        return StrengthProgression.next(exercise: label, target: target, history: logged, profile1RM: profile1RM(label))
+    private func restSection(_ end: Date) -> some View {
+        Section {
+            HStack {
+                Label { Text(timerInterval: Date.now...end, countsDown: true).monospacedDigit() } icon: { Image(systemName: "timer") }
+                Spacer()
+                Button("Passer") { restEnd = nil }.buttonStyle(.borderless)
+            }
+        } header: { Text("Repos") }
+    }
+
+    private func sessionSets(_ session: TrainingSession, _ label: String) -> [WorkoutSet] {
+        let key = StrengthProgression.normalized(label)
+        return sets.filter { $0.sessionID == session.id && StrengthProgression.normalized($0.exercise) == key }
+            .sorted { $0.date < $1.date }
     }
 
     private func profile1RM(_ label: String) -> Double? {
@@ -69,29 +122,63 @@ struct GymSessionView: View {
         return nil
     }
 
-    private func todaySets(for label: String) -> [WorkoutSet] {
-        let key = StrengthProgression.normalized(label)
-        return sets.filter { Calendar.current.isDateInToday($0.date) && StrengthProgression.normalized($0.exercise) == key }
-            .sorted { $0.date < $1.date }
+    private func start() {
+        do {
+            try GymSessionService.start(title: day.title, exercises: exercises, history: logged, doneSessions: doneIDs,
+                                        profile1RM: profile1RM, minIncrement: minIncrement, in: ctx)
+            error = nil; Haptics.tap()
+        } catch let e { error = e.localizedDescription; Haptics.warning() }
     }
 
-    private func log(_ label: String, _ weight: Double, _ reps: Int, _ rpe: Double) {
-        ctx.insert(WorkoutSet(exercise: GymExercises.baseName(label), weightKg: weight, reps: reps, rpe: rpe))
-        try? ctx.save()
-        Haptics.success()
+    /// Rend true seulement si la serie est vraiment enregistree : la saisie n'est
+    /// videe qu'a ce moment-la.
+    private func log(_ label: String, _ weight: String, _ reps: Int, _ rpe: Double, _ kind: WorkoutSetKind,
+                     _ session: TrainingSession) -> Bool {
+        let history = StrengthProgression.completed(logged, doneSessions: doneIDs)
+        do {
+            let set = try GymSessionService.log(exercise: label, weightText: weight, reps: reps, rpe: rpe, kind: kind,
+                                                session: session, in: ctx)
+            error = nil
+            record = StrengthProgression.isPersonalRecord(set.logged, history: history)
+                ? "Record sur \(set.exercise) : \(StrengthProgression.fmt(set.weightKg)) kg × \(set.reps)" : nil
+            if kind != .warmup { restEnd = Date().addingTimeInterval(TimeInterval(restSeconds)) }
+            Haptics.success()
+            return true
+        } catch let e {
+            error = e.localizedDescription; Haptics.warning()
+            return false
+        }
+    }
+
+    private func remove(_ set: WorkoutSet) {
+        do { try GymSessionService.delete(set, in: ctx); error = nil } catch let e { error = e.localizedDescription }
+    }
+
+    private func finish(_ s: TrainingSession) {
+        do { try GymSessionService.finish(s, in: ctx); error = nil; restEnd = nil; Haptics.success() }
+        catch let e { error = e.localizedDescription; Haptics.warning() }
+    }
+
+    private func cancel(_ s: TrainingSession, deleteSets: Bool) {
+        do { try GymSessionService.cancel(s, deleteSets: deleteSets, sets: sets, in: ctx); error = nil; restEnd = nil }
+        catch let e { error = e.localizedDescription; Haptics.warning() }
     }
 }
 
 private struct ExerciseBlock: View {
     let label: String
     let prescription: StrengthProgression.Prescription?
-    let today: [WorkoutSet]
-    let onLog: (Double, Int, Double) -> Void
+    let usesDefaultTarget: Bool
+    let done: [WorkoutSet]
+    let onLog: (String, Int, Double, WorkoutSetKind) -> Bool
     let onDelete: (WorkoutSet) -> Void
 
     @State private var weight = ""
     @State private var reps = 0
     @State private var rpe = 8.0
+    @State private var kind: WorkoutSetKind = .work
+
+    private var canLog: Bool { GymSessionService.parseWeight(weight) != nil && reps > 0 }
 
     var body: some View {
         Section {
@@ -100,38 +187,49 @@ private struct ExerciseBlock: View {
                     Text(p.weight.map { "\(p.sets) × \(p.reps) à \(StrengthProgression.fmt($0)) kg" } ?? "\(p.sets) × \(p.reps)")
                         .font(.headline)
                     Text(p.reason).font(.caption).foregroundStyle(.secondary)
+                    if usesDefaultTarget {
+                        Text("Pas de cible dans le programme : cible par défaut 3 × 8 à 12.").font(.caption2).foregroundStyle(.secondary)
+                    }
                 }
             }
-            ForEach(Array(today.enumerated()), id: \.element.id) { i, s in
+            ForEach(Array(done.enumerated()), id: \.element.id) { i, s in
                 HStack {
-                    Text("Série \(i + 1)")
+                    Text("\(i + 1). \((WorkoutSetKind(rawValue: s.kind) ?? .work).label)")
                     Spacer()
                     Text("\(StrengthProgression.fmt(s.weightKg)) kg × \(s.reps) · effort \(Int(s.rpe))").foregroundStyle(.secondary)
                 }
                 .swipeActions { Button(role: .destructive) { onDelete(s) } label: { Label("Supprimer", systemImage: "trash") } }
             }
             if prescription != nil {
+                Picker("Type", selection: $kind) {
+                    ForEach(WorkoutSetKind.allCases) { Text($0.label).tag($0) }
+                }
+                .pickerStyle(.segmented)
                 HStack(spacing: 8) {
-                    TextField("kg", text: $weight).keyboardType(.decimalPad).frame(width: 60)
+                    TextField("kg", text: $weight).keyboardType(.decimalPad).frame(width: 70)
                         .textFieldStyle(.roundedBorder)
+                        .accessibilityLabel("Charge en kilos")
                     Stepper("\(reps) reps", value: $reps, in: 0...50).fixedSize()
+                }
+                if !weight.isEmpty && GymSessionService.parseWeight(weight) == nil {
+                    Text("Charge entre 0 et 1000 kg.").font(.caption).foregroundStyle(Theme.warning)
                 }
                 Picker("Effort ressenti", selection: $rpe) {
                     ForEach([6.0, 7, 8, 9, 10], id: \.self) { Text("\(Int($0))/10").tag($0) }
                 }
                 .pickerStyle(.segmented)
                 Button {
-                    guard let w = Double(weight.replacingOccurrences(of: ",", with: ".")), w >= 0, reps > 0 else { return }
-                    onLog(w, reps, rpe)
+                    // La saisie reste en place si l'enregistrement echoue.
+                    if onLog(weight, reps, rpe, kind), kind == .warmup { kind = .work }
                 } label: { Label("Valider la série", systemImage: "checkmark.circle.fill") }
-                .disabled(Double(weight.replacingOccurrences(of: ",", with: ".")) == nil || reps == 0)
+                .disabled(!canLog)
             }
         } header: {
             Text(GymExercises.baseName(label))
         }
         .onAppear {
-            if weight.isEmpty, let w = today.last?.weightKg ?? prescription?.weight { weight = StrengthProgression.fmt(w) }
-            if reps == 0 { reps = today.last?.reps ?? prescription?.reps ?? 0 }
+            if weight.isEmpty, let w = done.last?.weightKg ?? prescription?.weight { weight = StrengthProgression.fmt(w) }
+            if reps == 0 { reps = done.last?.reps ?? prescription?.reps ?? 0 }
         }
     }
 }
@@ -142,7 +240,7 @@ private struct ExerciseBlock: View {
 struct GymWeeklyVolumeView: View {
     let sets: [WorkoutSet]
     var body: some View {
-        let vol = StrengthProgression.weeklyHardSets(sets.map(\.logged))
+        let vol = StrengthProgression.weeklyHardSets(sets.map(\.logged))  // series de travail seulement
         let groups = GymExercises.catalog.keys.filter { $0 != "Cardio" }.sorted()
         ForEach(groups, id: \.self) { g in
             let n = vol[g, default: 0]
@@ -158,3 +256,33 @@ struct GymWeeklyVolumeView: View {
         }
     }
 }
+
+#if DEBUG
+/// `-shotGymSession` : remplit la seance du jour (modele "Dos + Biceps") et, avec
+/// `-shotGymStart`, la demarre et logue une serie, pour REGARDER l'ecran sans taper.
+/// Absent des builds Release.
+struct GymSessionShot: View {
+    @Environment(\.modelContext) private var ctx
+    @Query private var days: [GymDay]
+    @State private var day: GymDay?
+
+    var body: some View {
+        NavigationStack {
+            if let day { GymSessionView(day: day) } else { ProgressView() }
+        }
+        .task {
+            let w = Calendar.current.component(.weekday, from: .now)
+            let d = days.first { $0.weekday == w } ?? { let n = GymDay(weekday: w); ctx.insert(n); return n }()
+            d.isRest = false; d.title = "Dos + Biceps"
+            d.focus = GymExercises.focus(for: "Dos + Biceps", goal: "Prise de muscle")
+            try? ctx.save()
+            if DebugLaunchFlags.has("-shotGymStart"),
+               let s = try? GymSessionService.start(title: d.title, exercises: d.focus.split(separator: "·").map { $0.trimmingCharacters(in: .whitespaces) },
+                                                    history: [], doneSessions: [], in: ctx) {
+                try? GymSessionService.log(exercise: "Tractions pronation", weightText: "0", reps: 8, rpe: 8, kind: .work, session: s, in: ctx)
+            }
+            day = d
+        }
+    }
+}
+#endif

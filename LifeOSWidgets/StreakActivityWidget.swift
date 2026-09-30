@@ -17,7 +17,7 @@ struct StreakActivityWidget: Widget {
                 DynamicIslandExpandedRegion(.leading) {
                     Image(systemName: context.attributes.iconName)
                         .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(WidgetPalette.orange)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     Text("\(context.state.streakDays)")
@@ -42,14 +42,14 @@ struct StreakActivityWidget: Widget {
                 }
             } compactLeading: {
                 Image(systemName: context.attributes.iconName)
-                    .foregroundStyle(context.state.doneToday ? .green : .orange)
+                    .foregroundStyle(context.state.doneToday ? WidgetPalette.green : WidgetPalette.orange)
             } compactTrailing: {
                 Text("\(context.state.streakDays)j")
                     .font(.system(size: 12, weight: .bold, design: .rounded).monospacedDigit())
                     .foregroundStyle(.white)
             } minimal: {
                 Image(systemName: "flame.fill")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(WidgetPalette.orange)
             }
         }
     }
@@ -63,15 +63,15 @@ private struct LockScreenStreakView: View {
     var body: some View {
         HStack(spacing: 16) {
             ZStack {
-                Circle().fill(Color.orange.opacity(0.18)).frame(width: 52, height: 52)
+                Circle().fill(WidgetPalette.orange.opacity(0.18)).frame(width: 52, height: 52)
                 Image(systemName: attrs.iconName)
                     .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(WidgetPalette.orange)
             }
             VStack(alignment: .leading, spacing: 3) {
                 Text("STREAK")
                     .font(.system(size: 10, weight: .heavy))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(WidgetPalette.orange)
                     .kerning(1.2)
                 Text(attrs.habitName)
                     .font(.system(size: 15, weight: .semibold))

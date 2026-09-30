@@ -67,7 +67,7 @@ private struct FoodScanWidgetView: View {
     private var small: some View {
         ZStack {
             LinearGradient(
-                colors: [Color(red: 0.26, green: 0.82, blue: 0.42), Color(red: 0.13, green: 0.68, blue: 0.32)],
+                colors: [WidgetPalette.tone(0.26, 0.82, 0.42), WidgetPalette.tone(0.13, 0.68, 0.32)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )

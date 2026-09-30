@@ -169,6 +169,10 @@ enum AppStorageKeys {
     static let fireReturn = "fireReturn"
     static let fireYears = "fireYears"
     static let fireFees = "fireFees"
+    /// Plus petit pas de charge disponible (kg). 0 = automatique selon l'exercice.
+    static let gymMinIncrement = "gymMinIncrement"
+    /// Repos par defaut entre deux series (secondes).
+    static let gymRestSeconds = "gymRestSeconds"
     static let fireInflation = "fireInflation"
     static let fireIncludeOther = "fireIncludeOther"
     static let fxAmount = "fxAmount"

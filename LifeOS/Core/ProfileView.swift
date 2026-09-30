@@ -1126,10 +1126,7 @@ struct ProfileView: View {
                     ForEach(AppPalette.allCases) { pal in
                         let selected = appPaletteRaw == pal.rawValue
                         Button {
-                            appPaletteRaw = pal.rawValue
-                            UserDefaults(suiteName: "group.com.chifandco.lifeos")?
-                                .set(pal.rawValue, forKey: "widget_palette")
-                            WidgetCenter.shared.reloadAllTimelines()
+                            appPaletteRaw = pal.rawValue   // widgets : synchronises par LifeOSApp
                         } label: {
                             Label(pal.label, systemImage: pal.symbol)
                                 .font(.system(size: 13, weight: .semibold))

@@ -82,10 +82,22 @@ struct StepsView: View {
 struct StrengthView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \WorkoutSet.date, order: .reverse) private var sets: [WorkoutSet]
+    @Query private var sessions: [TrainingSession]
     @State private var showAdd = false
+    @State private var editing: WorkoutSet?
     @State private var selectedExercise: String?
+    @State private var deleteError: String?
 
     private var exercises: [String] { Array(Set(sets.map { $0.exercise })).sorted() }
+    /// Meilleur 1RM estime par exercice, series de travail des seances terminees.
+    private var records: [(String, StrengthProgression.LoggedSet)] {
+        let done = StrengthProgression.completed(sets.map(\.logged), doneSessions: GymSessionService.doneIDs(sessions))
+            .filter { $0.kind == .work && $0.reps > 0 && $0.weight > 0 }
+        let best = Dictionary(grouping: done, by: \.exercise).compactMapValues { list in
+            list.max { StrengthProgression.e1RM($0.weight, $0.reps) < StrengthProgression.e1RM($1.weight, $1.reps) }
+        }
+        return best.sorted { $0.key < $1.key }
+    }
 
     var body: some View {
         ZStack {
@@ -115,7 +127,8 @@ struct StrengthView: View {
                             let p = StrengthProgression.next(
                                 exercise: ex,
                                 target: .init(sets: 3, repLow: max(1, last.reps - 2), repHigh: max(1, last.reps)),
-                                history: sets.map(\.logged))
+                                history: StrengthProgression.completed(sets.map(\.logged),
+                                                                       doneSessions: GymSessionService.doneIDs(sessions)))
                             HStack(alignment: .top) {
                                 Image(systemName: "wand.and.stars").foregroundStyle(.fitTint)
                                 VStack(alignment: .leading, spacing: 2) {
@@ -127,21 +140,48 @@ struct StrengthView: View {
                         }
                     }
 
+                    if !records.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            SectionHeader(title: "Records", subtitle: "Meilleur 1RM estimé, séances terminées")
+                            ForEach(records, id: \.0) { name, r in
+                                HStack {
+                                    Image(systemName: "trophy.fill").foregroundStyle(.fitTint)
+                                    Text(name).font(.subheadline).foregroundStyle(Theme.textPrimary)
+                                    Spacer()
+                                    Text("\(StrengthProgression.fmt(r.weight)) kg × \(r.reps) · 1RM \(Int(StrengthProgression.e1RM(r.weight, r.reps))) kg")
+                                        .font(.caption).foregroundStyle(Theme.textSecondary)
+                                }
+                            }
+                        }.card()
+                    }
+
+                    if let deleteError {
+                        Label(deleteError, systemImage: "exclamationmark.triangle.fill").font(.footnote).foregroundStyle(Theme.warning)
+                    }
                     if sets.isEmpty {
                         EmptyState(icon: "dumbbell", title: "Aucune série", message: "Logge ta première série pour suivre ta progression.")
                     } else {
                         VStack(spacing: 8) {
-                            SectionHeader(title: "Dernières séries")
+                            SectionHeader(title: "Dernières séries", subtitle: "Touche une série pour la corriger")
                             ForEach(sets.prefix(15)) { s in
                                 HStack {
                                     VStack(alignment: .leading) {
                                         Text(s.exercise).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
-                                        Text(s.date, format: .dateTime.day().month().hour().minute()).font(.caption).foregroundStyle(Theme.textSecondary)
+                                        Text("\(s.date.formatted(.dateTime.day().month().hour().minute())) · \((WorkoutSetKind(rawValue: s.kind) ?? .work).label)")
+                                            .font(.caption).foregroundStyle(Theme.textSecondary)
                                     }
                                     Spacer()
                                     Text("\(String(format: "%.1f", s.weightKg))kg × \(s.reps)").font(.subheadline.bold()).foregroundStyle(.fitTint)
-                                    Button(role: .destructive) { ctx.delete(s) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(Theme.danger.opacity(0.7))
-                                }.card(padding: 12)
+                                    Button(role: .destructive) {
+                                        do { try GymSessionService.delete(s, in: ctx); deleteError = nil }
+                                        catch { deleteError = error.localizedDescription }
+                                    } label: { Image(systemName: "trash").font(.caption) }
+                                        .foregroundStyle(Theme.danger.opacity(0.7))
+                                        .accessibilityLabel("Supprimer la série")
+                                }
+                                .contentShape(Rectangle())
+                                .onTapGesture { editing = s }
+                                .card(padding: 12)
                             }
                         }
                     }
@@ -152,6 +192,7 @@ struct StrengthView: View {
         .navigationTitle("Muscu & progression").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { WorkoutEditor(knownExercises: exercises) }
+        .sheet(item: $editing) { s in WorkoutEditor(knownExercises: exercises, editing: s) }
     }
 }
 
@@ -180,7 +221,18 @@ struct WorkoutEditor: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     let knownExercises: [String]
+    /// Serie a corriger ; nil = nouvelle serie.
+    var editing: WorkoutSet? = nil
     @State private var exercise = ""; @State private var weight = ""; @State private var reps = ""; @State private var rpe = 8.0
+    @State private var kind: WorkoutSetKind = .work
+    @State private var error: String?
+    @State private var loaded = false
+
+    private var valid: Bool {
+        !exercise.trimmingCharacters(in: .whitespaces).isEmpty
+            && GymSessionService.parseWeight(weight) != nil && (Int(reps) ?? 0) > 0
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -195,17 +247,48 @@ struct WorkoutEditor: View {
                     }
                 }
                 Section("Série") {
+                    Picker("Type", selection: $kind) { ForEach(WorkoutSetKind.allCases) { Text($0.label).tag($0) } }
+                        .pickerStyle(.segmented)
                     HStack { Text("Charge (kg)"); Spacer(); TextField("0", text: $weight).keyboardType(.decimalPad).multilineTextAlignment(.trailing) }
                     HStack { Text("Répétitions"); Spacer(); TextField("0", text: $reps).keyboardType(.numberPad).multilineTextAlignment(.trailing) }
                     VStack(alignment: .leading) { Text("RPE : \(Int(rpe))"); Slider(value: $rpe, in: 5...10, step: 1).tint(.fitTint) }
                 }
+                if let error { Text(error).foregroundStyle(Theme.warning).font(.footnote) }
             }
-            .navigationTitle("Logger une série").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(editing == nil ? "Logger une série" : "Corriger la série").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
-                    ctx.insert(WorkoutSet(exercise: exercise, weightKg: Double(weight) ?? 0, reps: Int(reps) ?? 0, rpe: rpe)); dismiss()
-                }.disabled(exercise.isEmpty) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(editing == nil ? "Ajouter" : "Enregistrer") { save() }.disabled(!valid)
+                }
+            }
+            .onAppear {
+                guard !loaded, let e = editing else { return }
+                loaded = true
+                exercise = e.exercise; weight = StrengthProgression.fmt(e.weightKg); reps = String(e.reps); rpe = e.rpe
+                kind = WorkoutSetKind(rawValue: e.kind) ?? .work
+            }
+        }
+    }
+
+    /// Ne ferme la feuille qu'apres un enregistrement reussi ; sinon l'erreur s'affiche
+    /// et la saisie reste.
+    private func save() {
+        guard let w = GymSessionService.parseWeight(weight), let r = Int(reps), r > 0 else { return }
+        let name = exercise.trimmingCharacters(in: .whitespaces)
+        if let e = editing {
+            let old = (e.exercise, e.weightKg, e.reps, e.rpe, e.kind)
+            e.exercise = name; e.weightKg = w; e.reps = r; e.rpe = rpe; e.kind = kind.rawValue
+            do { try ctx.save(); dismiss() } catch {
+                (e.exercise, e.weightKg, e.reps, e.rpe, e.kind) = old
+                self.error = "Correction non enregistrée : \(error.localizedDescription)"
+            }
+        } else {
+            let s = WorkoutSet(exercise: name, weightKg: w, reps: r, rpe: rpe, kind: kind.rawValue)
+            ctx.insert(s)
+            do { try ctx.save(); dismiss() } catch {
+                ctx.delete(s)
+                self.error = "Série non enregistrée : \(error.localizedDescription)"
             }
         }
     }

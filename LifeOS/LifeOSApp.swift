@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 import SwiftData
 
 @main
@@ -72,8 +73,30 @@ struct LifeOSApp: App {
             .animation(.easeInOut(duration: 0.25), value: appLock.isLocked)
             .onChange(of: scenePhase) { _, phase in
                 if phase == .background { appLock.lockIfNeeded() }
+                // Fin d'un blocage Opale : appliquee ici, quel que soit l'ecran ouvert.
+                if phase == .active { ScreenTimeBlocker.shared.appBecameActive() }
             }
+            // onChange ne se declenche pas pour la valeur de depart : le lancement a froid
+            // doit aussi lever un blocage expire.
+            .task {
+                ScreenTimeBlocker.shared.appBecameActive()
+                syncWidgetPalette()
+            }
+            .onChange(of: appPaletteRaw) { _, _ in syncWidgetPalette() }
+            #if DEBUG
+            // `-paletteFlipAfter <s>` inverse la palette apres s secondes, sans toucher a
+            // la navigation : sert a prouver que les couleurs suivent sans reconstruction.
+            .task {
+                if let v = DebugLaunchFlags.value("-paletteFlipAfter"), let secs = Double(v) {
+                    try? await Task.sleep(for: .seconds(secs))
+                    appPaletteRaw = appPaletteRaw == AppPalette.neutral.rawValue ? AppPalette.color.rawValue : AppPalette.neutral.rawValue
+                }
+            }
+            #endif
             .preferredColorScheme(appTheme.scheme)
+            // Palette couleurs / neutre : trait propage a toute la fenetre (feuilles
+            // comprises). Les couleurs se redessinent sans reconstruire les ecrans.
+            .environment(\.neutralPalette, appPaletteRaw == AppPalette.neutral.rawValue)
             .tint(appTheme.accent)
             // Sans ca, la barre d'outils et le titre de fenetre sur Mac gardent
             // l'apparence du systeme pendant que le contenu suit le theme de l'app :
@@ -112,6 +135,15 @@ struct LifeOSApp: App {
     // MARK: - Contenu principal
 
     @ViewBuilder
+    /// Les widgets lisent la palette dans le groupe d'apps. Ecrit au lancement aussi :
+    /// un reglage choisi avant la mise a jour doit s'appliquer sans repasser par le Profil.
+    private func syncWidgetPalette() {
+        let group = UserDefaults(suiteName: "group.com.chifandco.lifeos")
+        guard group?.string(forKey: "widget_palette") != appPaletteRaw else { return }
+        group?.set(appPaletteRaw, forKey: "widget_palette")
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
     private func appContent(container: ModelContainer) -> some View {
         ZStack {
             if !isAuthenticated {
@@ -123,11 +155,7 @@ struct LifeOSApp: App {
                     .transition(.opacity)
                     .zIndex(1)
             } else {
-                // Les couleurs de la palette sont lues pendant le rendu de chaque vue :
-                // changer de palette reconstruit l'arbre pour que TOUT se redessine.
-                // L'onglet courant est garde (SceneStorage dans MainTabView).
                 MainTabView()
-                    .id(appPaletteRaw)
                     .tint(appTheme.accent)
                     .transition(.opacity)
                     .zIndex(2)

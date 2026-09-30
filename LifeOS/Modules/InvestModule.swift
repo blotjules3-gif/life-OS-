@@ -242,7 +242,9 @@ struct NetWorthView: View {
                                 ForEach(s.points, id: \.year) { p in
                                     LineMark(x: .value("Année", p.year), y: .value("€ d'aujourd'hui", p.real))
                                         .foregroundStyle(by: .value("Scénario", s.label))
-                                        .lineStyle(StrokeStyle(lineWidth: s.id == "central" ? 3 : 1.5, dash: s.id == "central" ? [] : [4, 3]))
+                                        // Motif propre a chaque scenario : lisible aussi en palette neutre (sans couleur).
+                                        .lineStyle(StrokeStyle(lineWidth: s.id == "central" ? 3 : 1.5,
+                                                               dash: s.id == "central" ? [] : (s.id == "pessimiste" ? [1.5, 3] : [7, 3])))
                                 }
                             }
                         }
