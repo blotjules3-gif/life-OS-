@@ -254,7 +254,7 @@ enum IntentExecutor {
             )
 
         case .createTodo:
-            let todo = TodoItem(title: intent.title, priority: 1)
+            let todo = TaskInbox.makeTodo(intent.title, priority: 1)
             context.insert(todo)
             LifeOSTry(try context.save(), context: "IntentExecutor createTodo", category: AppLog.data)
             return ExecutedIntent(

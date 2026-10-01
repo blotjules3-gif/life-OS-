@@ -107,6 +107,9 @@ struct DailyBriefingView: View {
 
                     morningCheckinCard
 
+                    // Faits du jour depuis les vraies donnees (un seul chemin, partage avec Fabuleux).
+                    DayBriefingFactsCard(briefing: DayBriefingStore.fetch(ctx))
+
                     aiBriefingCard
                         .animation(.spring(duration: 0.3, bounce: 0.05), value: aiBriefing != nil)
                         .animation(.spring(duration: 0.3, bounce: 0.05), value: briefingLoading)
@@ -227,7 +230,7 @@ struct DailyBriefingView: View {
                 if let text = aiBriefing {
                     alarm.speakText(text)
                 } else {
-                    alarm.speakDailyPlan(userName: userName, modules: modules, waterGoal: waterGoal, kcalGoal: kcalGoal)
+                    alarm.speakText(DayBriefingBuilder.spokenText(DayBriefingStore.fetch(ctx)))
                 }
             }
         }
@@ -480,7 +483,7 @@ struct DailyBriefingView: View {
                 if let text = aiBriefing {
                     alarm.speakText(text)
                 } else {
-                    alarm.speakDailyPlan(userName: userName, modules: modules, waterGoal: waterGoal, kcalGoal: kcalGoal)
+                    alarm.speakText(DayBriefingBuilder.spokenText(DayBriefingStore.fetch(ctx)))
                 }
             } label: {
                 HStack(spacing: 10) {

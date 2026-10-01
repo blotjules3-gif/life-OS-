@@ -953,7 +953,7 @@ struct ShortcutsHomeView: View {
     private func addTask() {
         let t = newTask.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty else { return }
-        ctx.insert(TodoItem(title: t))
+        ctx.insert(TaskInbox.makeTodo(t))
         newTask = ""
         saveTasks("ajouter")
         Haptics.tap()

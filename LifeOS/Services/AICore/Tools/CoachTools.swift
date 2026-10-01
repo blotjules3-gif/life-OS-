@@ -223,7 +223,7 @@ struct CreateTodoTool: AITool {
         let priority = min(max(args.priority ?? 1, 0), 2)
         try await MainActor.run {
             let ctx = try LocalStore.container().mainContext
-            ctx.insert(TodoItem(title: trimmed, priority: priority))
+            ctx.insert(TaskInbox.makeTodo(trimmed, priority: priority))
             try ctx.save()
         }
         return Result(created: true, title: trimmed, priority: priority)

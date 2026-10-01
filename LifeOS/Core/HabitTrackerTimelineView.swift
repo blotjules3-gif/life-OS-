@@ -63,12 +63,16 @@ struct HabitTrackerTimelineView: View {
     @State private var showNewTodoSheet = false
     @State private var targetHourForNewItem: Int = 9
     @State private var editingHabit: Habit? = nil
+    /// Fiche de l'habitude (stats, calendrier, rattrapage, pause) ouverte depuis la frise.
+    @State private var detailHabit: Habit? = nil
     @State private var showSlotActionDialog = false
     @State private var selectedSlotHour: Int = 12
 
     // Tâches et Habitudes actives du jour
+    /// Habitudes du jour: jours actifs, ou « x fois par semaine » tant que l'objectif
+    /// n'est pas atteint; jamais une habitude sautee ou en pause aujourd'hui.
     private var activeHabits: [Habit] {
-        allHabits.filter { !$0.isPending && !$0.isArchived && $0.isActive(on: now) }
+        allHabits.filter { HabitRules.isDueToday($0, now: now) }
     }
 
     private var todayTodos: [TodoItem] {
@@ -94,11 +98,18 @@ struct HabitTrackerTimelineView: View {
             // retombe plus a 1 chaque lundi.
             let streak = ProductivityRules.habitStreak(h, now: now)
 
+            var subtitle: String?
+            if HabitRules.hasTarget(h) {
+                let p = HabitRules.progress(h, now: now)
+                subtitle = "\(p.formatted(.number.precision(.fractionLength(0...1))))/\(h.targetValue.formatted(.number.precision(.fractionLength(0...1)))) \(HabitRules.unitLabel(h))"
+            } else if h.weeklyTarget > 0 {
+                subtitle = "\(HabitRules.doneCount(inWeekOf: now, completions: HabitRules.completionDates(h)))/\(h.weeklyTarget) cette semaine"
+            }
             items.append(
                 TimelineItem(
                     id: "habit-\(h.persistentModelID)",
                     title: h.name,
-                    subtitle: nil,
+                    subtitle: subtitle,
                     icon: h.icon,
                     colorHex: h.colorHex,
                     hour: min(max(h.scheduledHour, 0), 23),
@@ -299,6 +310,12 @@ struct HabitTrackerTimelineView: View {
         }
         .sheet(item: $editingHabit) { h in
             HabitEditor(editingHabit: h)
+        }
+        .sheet(item: $detailHabit) { h in
+            NavigationStack {
+                HabitDetailView(habit: h)
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fermer") { detailHabit = nil } } }
+            }
         }
         .sheet(isPresented: $showNewTodoSheet) {
             TodoEditor(initialDue: targetDateForNewTodo)
@@ -580,6 +597,12 @@ struct HabitTrackerTimelineView: View {
                         .font(AppFont.body(size: 9, weight: .semibold))
                         .foregroundStyle(Color.secondary)
 
+                    if let sub = item.subtitle, case .habit = item.kind {
+                        Text("· \(sub)")
+                            .font(AppFont.body(size: 9, weight: .semibold))
+                            .foregroundStyle(Color.secondary)
+                            .lineLimit(1)
+                    }
                     if item.streak > 0 {
                         Text("· 🔥 \(item.streak)")
                             .font(AppFont.body(size: 9, weight: .bold))
@@ -593,7 +616,7 @@ struct HabitTrackerTimelineView: View {
             // Clic sur options / édition pour les habitudes
             if case .habit(let h) = item.kind {
                 Button {
-                    editingHabit = h
+                    detailHabit = h
                 } label: {
                     Image(systemName: "ellipsis")
                         .font(.system(size: 11, weight: .bold))
@@ -613,6 +636,16 @@ struct HabitTrackerTimelineView: View {
     private func toggleItemDone(_ item: TimelineItem) {
         Haptics.tap()
         switch item.kind {
+        case .habit(let habit) where HabitRules.hasTarget(habit):
+            // Habitude a objectif (8 verres, 20 min): chaque appui avance d'un pas,
+            // l'habitude n'est cochee qu'a l'objectif. Une fois atteint, l'appui remet a zero.
+            if HabitRules.progress(habit, now: now) >= habit.targetValue {
+                HabitRules.setDone(habit, on: now, done: false, now: now, ctx: ctx)
+            } else {
+                HabitRules.addProgress(habit, amount: HabitRules.step(habit), now: now, ctx: ctx)
+            }
+            HabitStore.commit(ctx)
+
         case .habit(let habit):
             if let idx = habit.completions.firstIndex(where: { Calendar.current.isDate($0.date, inSameDayAs: now) }) {
                 // Retirer du tableau ne supprime pas la ligne: elle restait orpheline
@@ -627,8 +660,9 @@ struct HabitTrackerTimelineView: View {
             } catch {
                 AppLog.data.error("save habit completion error: \(error.localizedDescription)")
             }
-            // Le coach lit la serie moyenne: elle suit la coche.
+            // Le coach lit la serie moyenne, les widgets l'instantane: ils suivent la coche.
             ProductivityRules.publishAverageStreak(allHabits, now: now)
+            HabitSync.publish(ctx)
 
         case .task(let todo):
             // Une tache recurrente passe a sa prochaine occurrence au lieu de
@@ -639,6 +673,8 @@ struct HabitTrackerTimelineView: View {
             } catch {
                 AppLog.data.error("save task done error: \(error.localizedDescription)")
             }
+            // Rappel: annule si terminee, repose a la prochaine occurrence sinon.
+            if todo.done { TaskReminders.cancel(todo) } else { TaskReminders.schedule(todo) }
         }
     }
 }

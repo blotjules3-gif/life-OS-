@@ -75,6 +75,7 @@ enum HealthAutoSync {
             unit: "kg",
             notes: "Apple Santé"
         )
+        record.source = VitalSource.health
         ctx.insert(record)
         do { try ctx.save() } catch { AppLog.data.error("HealthAutoSync save failed: \(error.localizedDescription, privacy: .public)") }
     }

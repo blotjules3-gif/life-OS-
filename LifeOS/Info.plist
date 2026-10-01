@@ -61,6 +61,8 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 	</dict>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>LifeOS lit tes rendez-vous pour placer tes tâches autour (Structurd) et préparer ton coucher (Rize). Rien ne quitte ton iPhone.</string>
 	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
 	<string>LifeOS ajoute a ton calendrier les taches et les vols que tu choisis. Il ne lit pas tes evenements.</string>
 	<key>NSCameraUsageDescription</key>
@@ -82,7 +84,7 @@
 	<key>NSPrivacyPolicyURL</key>
 	<string>https://blotjules.github.io/lifeos/privacy.html</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>LifeOS transcrit ta voix en texte pour tes messages au coach et pour vérifier tes exercices d'oral Trilingo.</string>
+	<string>LifeOS transcrit ta voix en texte, sur ton iPhone, pour tes messages au coach, tes exercices d'oral Trilingo et tes notes vocales de rêve.</string>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSTermsOfServiceURL</key>

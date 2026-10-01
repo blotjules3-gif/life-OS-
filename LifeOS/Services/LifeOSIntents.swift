@@ -135,7 +135,7 @@ struct AddTodoIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let ctx = try LocalStore.container().mainContext
         let priority = urgent ? 2 : 0
-        ctx.insert(TodoItem(title: title, priority: priority))
+        ctx.insert(TaskInbox.makeTodo(title, priority: priority))
         try ctx.save()
         return .result(dialog: "C'est noté : \(title).")
     }

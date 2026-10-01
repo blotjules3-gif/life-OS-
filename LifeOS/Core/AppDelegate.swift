@@ -322,6 +322,11 @@ enum ToolRoute {
         switch route {
         case "trilingo": return Target(category: .learning, tool: "Trilingo")
         case "streakz": return Target(category: .fitness, tool: "Streakz")
+        case "breathwerk": return Target(category: .mind, tool: "Breathwerk")
+        case "headplace": return Target(category: .mind, tool: "Headplace")
+        case "endlo": return Target(category: .mind, tool: "Endlo")
+        case "daylia": return Target(category: .mind, tool: "Daylia")
+        case "fabuleux": return Target(category: .mind, tool: "Fabuleux")
         default: return nil
         }
     }

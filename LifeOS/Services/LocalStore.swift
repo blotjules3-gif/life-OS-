@@ -53,7 +53,17 @@ enum LocalStore {
         FavoriteFood.self, CustomFood.self, SavedMeal.self, FoodMicros.self, SupplementDose.self,
         CustomExercise.self, BodyMeasurement.self, MobilityRoutine.self, MobilitySession.self,
         TabataPreset.self, TabataSessionLog.self, GymProgramPlan.self,
-        CardDeck.self, CardReview.self, Course.self, CourseModule.self, CourseLesson.self, BookPassage.self
+        CardDeck.self, CardReview.self, Course.self, CourseModule.self, CourseLesson.self, BookPassage.self,
+        // Lot 7 : sommeil, mental
+        NapSession.self, EveningChecklistItem.self, EveningChecklistDay.self, DreamDetails.self,
+        SleepNightDetails.self, RecoveryReading.self,
+        BreathPattern.self, BreathSessionLog.self, MeditationTimerPreset.self, MeditationAudio.self,
+        MeditationLog.self, SoundMixPreset.self, MoodActivity.self, MoodCustomMood.self, MoodEntryExtra.self,
+        RoutineStep.self, RoutineCheck.self, DailyReflection.self,
+        // Lot 7 : santé
+        DoseEvent.self, MedicalPerson.self,
+        // Lot 7 : productivité
+        FocusSession.self
     ]
 
     static let schema = Schema(modelTypes)

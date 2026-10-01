@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import AVFoundation
 import SoundAnalysis
 
@@ -139,6 +140,81 @@ enum NightSounds {
         }
     }
 
+    // MARK: Tendance sur plusieurs nuits
+
+    struct TrendPoint: Identifiable, Equatable {
+        let start: Date
+        let minutes: Double
+        /// Duree d'ecoute: une nuit courte ne doit pas passer pour une bonne nuit.
+        let hours: Double
+        var id: Date { start }
+        var minutesPerHour: Double { hours > 0 ? minutes / hours : 0 }
+    }
+
+    /// Minutes d'une categorie par nuit terminee, de la plus ancienne a la plus recente.
+    static func trend(_ sessions: [NightSession], kind: String = "ronflement", limit: Int = 30) -> [TrendPoint] {
+        sessions.filter { $0.end != nil }
+            .sorted { $0.start < $1.start }
+            .suffix(limit)
+            .map { s in
+                TrendPoint(start: s.start,
+                           minutes: s.events.filter { $0.kind == kind }.reduce(0) { $0 + $1.duration } / 60,
+                           hours: max(0, (s.end ?? s.start).timeIntervalSince(s.start)) / 3600)
+            }
+    }
+
+    // MARK: Batterie
+
+    /// Sous 10 % et pas sur secteur, l'ecoute s'arrete et le note.
+    static let lowBatteryThreshold: Float = 0.10
+
+    /// Niveau -1 = inconnu (simulateur, suivi coupe): on n'arrete rien.
+    static func shouldStopForBattery(level: Float, charging: Bool) -> Bool {
+        level >= 0 && level <= lowBatteryThreshold && !charging
+    }
+
+    static func lowBatteryReason(level: Float) -> String {
+        "Batterie faible (\(Int((max(0, level) * 100).rounded())) %) : écoute arrêtée pour garder du courant."
+    }
+
+    // MARK: Export
+
+    static let csvSummaryHeader = "nuit;debut;fin;ecoute_min;evenements;ronflement_min;toux;parole;bruit_fort;autres;coupures;arret"
+    static let csvClipsHeader = "nuit;heure;categorie;duree_s;confiance_pct;extrait"
+
+    /// Une ligne par nuit terminee.
+    static func csvSummary(_ sessions: [NightSession]) -> String {
+        let df = SleepCSV.formatter("yyyy-MM-dd"), tf = SleepCSV.formatter("HH:mm")
+        let lines = sessions.filter { $0.end != nil }.sorted { $0.start < $1.start }.map { s -> String in
+            let end = s.end ?? s.start
+            let main: Set<String> = ["ronflement", "toux", "parole", loudKind]
+            let snore = s.events.filter { $0.kind == "ronflement" }.reduce(0) { $0 + $1.duration } / 60
+            return [df.string(from: s.start), tf.string(from: s.start), tf.string(from: end),
+                    "\(Int((end.timeIntervalSince(s.start) / 60).rounded()))", "\(s.events.count)",
+                    SleepCSV.decimal(snore),
+                    "\(s.events.filter { $0.kind == "toux" }.count)",
+                    "\(s.events.filter { $0.kind == "parole" }.count)",
+                    "\(s.events.filter { $0.kind == loudKind }.count)",
+                    "\(s.events.filter { !main.contains($0.kind) }.count)",
+                    "\(s.gaps.count)", SleepCSV.field(s.stoppedReason ?? "")].joined(separator: ";")
+        }
+        return ([csvSummaryHeader] + lines).joined(separator: "\n") + "\n"
+    }
+
+    /// Liste des evenements et de leurs extraits (chemin dans Documents/Nuits).
+    static func csvClips(_ sessions: [NightSession]) -> String {
+        let df = SleepCSV.formatter("yyyy-MM-dd"), tf = SleepCSV.formatter("HH:mm:ss")
+        var lines: [String] = []
+        for s in sessions.filter({ $0.end != nil }).sorted(by: { $0.start < $1.start }) {
+            for e in s.events.sorted(by: { $0.start < $1.start }) {
+                lines.append([df.string(from: s.start), tf.string(from: e.start), SleepCSV.field(e.kind),
+                              "\(max(1, Int(e.duration.rounded())))", "\(Int((e.confidence * 100).rounded()))",
+                              e.clip.map { SleepCSV.field("\(s.folder)/\($0)") } ?? ""].joined(separator: ";"))
+            }
+        }
+        return ([csvClipsHeader] + lines).joined(separator: "\n") + "\n"
+    }
+
     /// Espace libre minimal pour lancer une nuit (extraits compresses, ~1 Mo / minute
     /// d'evenement au pire).
     static let minimumFreeBytes: Int64 = 300 * 1_024 * 1_024
@@ -265,6 +341,13 @@ final class NightListener: NSObject, ObservableObject {
         guard session == nil else { return }
         let mic = Self.microphoneUsable
         guard mic.ok else { throw NSError(domain: "Nuit", code: 2, userInfo: [NSLocalizedDescriptionKey: mic.reason ?? "Micro indisponible."]) }
+        // Batterie deja trop basse: ne pas lancer une nuit qui s'arreterait tout de suite.
+        let device = UIDevice.current
+        device.isBatteryMonitoringEnabled = true
+        if NightSounds.shouldStopForBattery(level: device.batteryLevel, charging: Self.isCharging(device)) {
+            device.isBatteryMonitoringEnabled = false
+            throw NSError(domain: "Nuit", code: 3, userInfo: [NSLocalizedDescriptionKey: "Batterie trop faible (\(Int((device.batteryLevel * 100).rounded())) %) : branche ton téléphone avant de lancer l'écoute."])
+        }
         if let free = try? URL(fileURLWithPath: NSHomeDirectory()).resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]).volumeAvailableCapacityForImportantUsage,
            free < NightSounds.minimumFreeBytes {
             throw NSError(domain: "Nuit", code: 1, userInfo: [NSLocalizedDescriptionKey: "Stockage presque plein : libère au moins 300 Mo avant de lancer l'écoute."])
@@ -305,7 +388,23 @@ final class NightListener: NSObject, ObservableObject {
         session = s
         detections = []
         NotificationCenter.default.addObserver(self, selector: #selector(interrupted(_:)), name: AVAudioSession.interruptionNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(batteryChanged(_:)), name: UIDevice.batteryLevelDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(batteryChanged(_:)), name: UIDevice.batteryStateDidChangeNotification, object: nil)
         try NightStore.shared.save(s)
+    }
+
+    static func isCharging(_ d: UIDevice) -> Bool { d.batteryState == .charging || d.batteryState == .full }
+
+    /// Avant, rien ne surveillait la batterie: une nuit debranchee pouvait vider
+    /// le telephone (et son reveil). Sous 10 %, on arrete et on note pourquoi.
+    @objc private func batteryChanged(_ n: Notification) {
+        Task { @MainActor in
+            guard self.session != nil else { return }
+            let d = UIDevice.current
+            if NightSounds.shouldStopForBattery(level: d.batteryLevel, charging: Self.isCharging(d)) {
+                self.stop(reason: NightSounds.lowBatteryReason(level: d.batteryLevel))
+            }
+        }
     }
 
     private func handle(label: String, confidence: Double) {
@@ -358,6 +457,9 @@ final class NightListener: NSObject, ObservableObject {
         analyzer?.removeAllRequests()
         let clips = recorder?.finish() ?? []
         NotificationCenter.default.removeObserver(self, name: AVAudioSession.interruptionNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIDevice.batteryLevelDidChangeNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIDevice.batteryStateDidChangeNotification, object: nil)
+        UIDevice.current.isBatteryMonitoringEnabled = false
         s.end = Date()
         s.stoppedReason = reason
         let events = NightSounds.attach(clips: clips, to: NightSounds.events(from: detections))

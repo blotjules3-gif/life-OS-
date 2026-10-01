@@ -43,7 +43,8 @@ enum DataExporter {
         // un seul jour de regles.
         add("cycle", "Cycle", try ctx.fetch(FetchDescriptor<CycleEntry>(sortBy: [SortDescriptor(\.date)])).map {
             ["date": iso($0.date), "flux": $0.flow, "symptomes": $0.symptoms,
-             "humeur": $0.mood, "note": $0.note]
+             "humeur": $0.mood, "note": $0.note, "debutRegles": $0.isPeriodStart, "finRegles": $0.isPeriodEnd,
+             "intensites": CycleIntensityCodec.decode($0.intensityCodes)]
         })
         add("pas", "Pas", try ctx.fetch(FetchDescriptor<StepEntry>()).map {
             ["jour": iso($0.day), "pas": $0.steps]

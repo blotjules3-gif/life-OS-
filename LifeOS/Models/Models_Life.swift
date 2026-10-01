@@ -49,6 +49,25 @@ import SwiftUI
     var blockStart: Date?
     var blockEnd: Date?
     var recurringDaysRaw: String = ""
+    // Lot 7 (Todoo / Structurd). Tous additifs avec valeur par defaut: les
+    // anciennes taches s'ouvrent telles quelles.
+    /// Identifiant stable des rappels et du planning. Vide sur les anciennes
+    /// taches: `TodoIDs.ensure` le remplit (jamais de valeur par defaut partagee).
+    var uid: String = ""
+    var section: String = ""
+    /// Etiquettes separees par des virgules.
+    var tagsRaw: String = ""
+    /// Sous-taches, une par ligne: « [ ] texte » ou « [x] texte ».
+    var checklistRaw: String = ""
+    /// "" = recurrence par jours de semaine (recurringDaysRaw), "monthly" = chaque mois.
+    var recurrenceRule: String = ""
+    /// -1 aucun rappel, 0 a l'heure, sinon minutes avant l'echeance.
+    var reminderMinutes: Int = -1
+    /// Duree estimee en minutes, 0 = 60 min (ancien comportement du planning).
+    var estimateMinutes: Int = 0
+    /// Creneau pose a la main: le planning automatique ne le deplace jamais.
+    var blockLocked: Bool = false
+    var completedAt: Date?
 
     init(title: String = "", notes: String = "", due: Date? = nil, done: Bool = false,
          priority: Int = 0, project: String = "Perso", blockStart: Date? = nil, blockEnd: Date? = nil,
@@ -100,6 +119,20 @@ import SwiftUI
     /// nom, que deux habitudes peuvent partager). Vide sur les anciennes fiches:
     /// `HabitSync.ensureIDs` le remplit au lancement.
     var uid: String = ""
+    // Lot 7 (Habitly). Additifs avec valeur par defaut.
+    /// 0 simple (fait / pas fait), 1 quantite, 2 duree en minutes.
+    var targetKind: Int = 0
+    var targetValue: Double = 0
+    var targetUnit: String = ""
+    /// 0 = suit les jours actifs; sinon « x fois par semaine ».
+    var weeklyTarget: Int = 0
+    /// Jours sautes ou en pause, « aaaa-mm-jj » separes par des virgules.
+    var skippedDaysRaw: String = ""
+    /// Dernier jour de pause (inclus), nil = pas en pause.
+    var pausedUntil: Date?
+    /// Progression du jour pour une habitude a objectif (jour « aaaa-mm-jj »).
+    var progressDay: String = ""
+    var progressValue: Double = 0
     @Relationship(deleteRule: .cascade) var completions: [HabitCompletion]
     init(name: String = "", icon: String = "checkmark", colorHex: Int = 0x4CC38A, createdAt: Date = .now, isPending: Bool = false, isArchived: Bool = false, moduleTag: String = "", scheduledHour: Int = 9, scheduledMinute: Int = 0, sourceGoalID: String = "", activeDaysRaw: String = "1,2,3,4,5,6,7") {
         self.name = name; self.icon = icon; self.colorHex = colorHex; self.createdAt = createdAt
@@ -130,6 +163,8 @@ import SwiftUI
 
 @Model final class HabitCompletion {
     var date: Date
+    /// Valeur atteinte (quantite ou minutes) pour une habitude a objectif, 0 sinon.
+    var value: Double = 0
     init(date: Date = .now) { self.date = date }
 }
 
@@ -138,6 +173,12 @@ import SwiftUI
     var body: String
     var tags: String
     var created: Date
+    // Lot 7 (Notio). Additifs avec valeur par defaut.
+    /// Dossier, chemin imbrique avec « / » (ex: « Travail/Clients »). Vide = racine.
+    var folder: String = ""
+    var modified: Date?
+    /// Versions precedentes (JSON, NoteHistory), les plus recentes a la fin.
+    var historyRaw: String = ""
     init(title: String = "", body: String = "", tags: String = "", created: Date = .now) {
         self.title = title; self.body = body; self.tags = tags; self.created = created
     }

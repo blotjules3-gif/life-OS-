@@ -223,6 +223,30 @@ import SwiftData
     /// rappels deja poses deviendraient impossibles a annuler.
     var stableID: String = ""
 
+    // Lot 7 (MediSûr). Tout est additif avec defaut: une fiche ancienne garde
+    // `scheduleKind` vide et reste lue depuis `frequency` + heures matin/soir.
+    /// "daily", "weekdays", "interval", "prn"; vide = ancienne fiche.
+    var scheduleKind: String = ""
+    /// Heures de prise en minutes depuis minuit, "480,1230".
+    var doseMinutes: String = ""
+    /// Jours de prise, 1 = dimanche ... 7 = samedi, "2,4,6".
+    var weekdays: String = ""
+    var intervalDays: Int = 1
+    /// Derniere modification des horaires: aucune prise manquee n'est deduite avant.
+    var scheduleSince: Date?
+    /// Moment ou le traitement a ete marque termine.
+    var inactiveSince: Date?
+    /// Proche concerne (`MedicalPerson.stableID`); vide = moi.
+    var personID: String = ""
+    var dosePerIntake: Double = 1
+    var trackStock: Bool = false
+    /// Stock compte a `stockSetAt`; le stock courant en retire les prises notees depuis.
+    var stockCount: Double = 0
+    var stockSetAt: Date?
+    var refillThreshold: Double = 0
+    /// Photos d'ordonnance (noms de fichiers ImageStore, un par ligne).
+    var attachmentFiles: String = ""
+
     init(name: String = "", dosage: String = "", frequency: String = "1x/jour",
          hourMorning: Int? = 8, hourEvening: Int? = nil, notes: String = "",
          startDate: Date = .now, endDate: Date? = nil, active: Bool = true) {
@@ -239,6 +263,13 @@ import SwiftData
     var location: String
     var notes: String
     var nextDate: Date?
+    // Lot 7 (Doctolink), additif.
+    /// Proche concerne; vide = moi.
+    var personID: String = ""
+    /// "planned", "confirmed", "cancelled"; vide = prevu. "Passé" se deduit de la date.
+    var status: String = ""
+    /// Comptes rendus, ordonnances (noms de fichiers ImageStore, un par ligne).
+    var attachmentFiles: String = ""
     init(date: Date = .now, specialty: String = "", doctorName: String = "",
          location: String = "", notes: String = "", nextDate: Date? = nil) {
         self.date = date; self.specialty = specialty; self.doctorName = doctorName
@@ -253,6 +284,8 @@ import SwiftData
     var value2: Double?        // diastolique pour tension
     var unit: String
     var notes: String
+    /// Lot 7 (Maple Health): "Apple Santé" pour une mesure importee; vide = saisie.
+    var source: String = ""
     init(date: Date = .now, type: String = "poids", value: Double = 0,
          value2: Double? = nil, unit: String = "kg", notes: String = "") {
         self.date = date; self.type = type; self.value = value
@@ -266,6 +299,14 @@ import SwiftData
     var nextDueDate: Date?
     var lot: String
     var notes: String
+    // Lot 7 (Mon Espace Vaccin), additif.
+    /// Proche concerne; vide = moi.
+    var personID: String = ""
+    /// Numero de dose; 0 = non precise.
+    var doseNumber: Int = 0
+    var practitioner: String = ""
+    /// Certificat, carnet (noms de fichiers ImageStore, un par ligne).
+    var attachmentFiles: String = ""
     init(name: String = "", date: Date = .now, nextDueDate: Date? = nil, lot: String = "", notes: String = "") {
         self.name = name; self.date = date; self.nextDueDate = nextDueDate; self.lot = lot; self.notes = notes
     }

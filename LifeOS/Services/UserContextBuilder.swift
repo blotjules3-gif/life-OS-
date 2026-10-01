@@ -100,7 +100,9 @@ final class UserContextBuilder {
         let hasCycle = ud.bool(forKey: "userHasCycle")
         if hasCycle {
             let ctx = CycleContext.shared
-            lines.append("Phase cycle: \(ctx.currentPhase.label) (J\(ctx.dayOfCycle), encore \(ctx.daysUntilPeriod)j)")
+            // Dit le retard et la base de la prevision (historique ou duree reglee).
+            let cl = ctx.coachLine
+            if !cl.isEmpty { lines.append(cl) }
             lines.append("Énergie: \(ctx.currentPhase.energyDescription)")
             if ctx.isOvulationWindow { lines.append("Fenêtre ovulation: oui") }
             if ctx.isPMSWindow       { lines.append("Fenêtre SPM: oui") }

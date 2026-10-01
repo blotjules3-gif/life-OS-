@@ -125,7 +125,9 @@ enum HabitSync {
     static func publish(_ ctx: ModelContext, now: Date = Date(), timeZone: TimeZone = .current) {
         guard let d = LifeOSGroup.defaults else { return }
         let habits = ((try? ctx.fetch(FetchDescriptor<Habit>(sortBy: [SortDescriptor(\.createdAt)]))) ?? [])
-            .filter { !$0.isArchived && !$0.uid.isEmpty && $0.isActive(on: now) }
+            // Meme liste du jour que l'app : sautees, en pause ou « x fois par semaine » deja
+            // atteintes exclues ; une habitude faite aujourd'hui reste.
+            .filter { !$0.isArchived && !$0.uid.isEmpty && HabitRules.isDueToday($0, now: now) }
         let today = HabitOps.businessDay(now, timeZone: timeZone)
         let entries = habits.map { h in
             HabitSnapshot.Entry(id: h.uid, name: h.name, icon: h.icon, colorHex: h.colorHex,

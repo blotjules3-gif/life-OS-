@@ -75,15 +75,10 @@ enum LifeBrain {
         if !recent.isEmpty { s.moodRecentAvg = Double(recent.reduce(0) { $0 + $1.score }) / Double(recent.count) }
 
         // Phase de cycle (si suivi)
-        let startTS = d.double(forKey: "cycleStartDate")
-        if startTS > 0 {
-            let len = max(20, d.integer(forKey: "cycleLengthDays").nz(28))
-            let start = Date(timeIntervalSince1970: startTS)
-            let elapsed = cal.dateComponents([.day], from: cal.startOfDay(for: start), to: cal.startOfDay(for: .now)).day ?? 0
-            let day = (elapsed % len + len) % len + 1
-            // Meme calcul que l'outil Cycle (CycleMath) : l'ovulation suit la duree du
-            // cycle. Avant, le coach la placait toujours aux jours 12 a 16.
-            switch CycleMath.phase(day: day, length: len) {
+        // Meme calcul que l'outil Cycle (CycleMath) : prevision et retard compris. Plus de
+        // modulo qui inventait un nouveau cycle quand les regles sont en retard.
+        if let snap = CycleMath.storedSnapshot(defaults: d) {
+            switch snap.phase {
             case .menstrual:  s.cyclePhase = "menstruelle"
             case .follicular: s.cyclePhase = "folliculaire"
             case .ovulatory:  s.cyclePhase = "ovulation"

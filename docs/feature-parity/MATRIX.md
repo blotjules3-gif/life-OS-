@@ -5,7 +5,7 @@ Les outils sans matrice ne sont pas encore inventoriés fonction par fonction.
 
 Inventoriés : 89 sur 89.
 
-Fonctions inventoriées : présent, test auto 294, présent, non testé 356, manquant 450, dépendance externe 109. Défauts trouvés : 106, corrigés 102, partiels 4, ouverts 0.
+Fonctions inventoriées : présent, test auto 434, présent, non testé 361, manquant 317, dépendance externe 124. Défauts trouvés : 106, corrigés 102, partiels 4, ouverts 0.
 
 
 
@@ -13,50 +13,56 @@ Fonctions inventoriées : présent, test auto 294, présent, non testé 356, man
 
 
 ### MediSûr (Medisafe)
-Résumé : présent, test auto 3, présent, non testé 5, manquant 6, dépendance externe 1
+Résumé : présent, test auto 13, présent, non testé 3, manquant 1, dépendance externe 2
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Ajout d'un traitement (nom, dosage, notes, date de fin) | présent, non testé | MedicalModule.swift:92 MedicationEditor, add() :164 |
-| Fréquences 1x/2x/3x par jour, hebdo, au besoin | présent, test auto | LifeOSTests/MedicationScheduleTests.swift testThreeTimesPerDay, testWeeklyIsDet… |
-| Plusieurs heures de prise personnalisées (minutes, jours précis, inte… | manquant | Editor offers only whole-hour Steppers matin/soir (MedicalModule.swift:118-121)… |
-| Plan de rappels borné / futur / sans fin | présent, test auto | LifeOSTests/MedicationPlanTests.swift testWeeklyWithEndDateStaysWeekly, testDai… |
-| Budget commun des 64 notifications iOS | présent, test auto | LifeOSTests/MedicationBudgetTests.swift testLongCourseUsesTheSharedBudgetNotAPe… |
-| Couverture réelle des rappels affichée (refus, échec, jusqu'au…) | présent, non testé | MedicalModule.swift:278 coverageText, shown in medRow :64 |
-| Activer / terminer / supprimer un traitement (rappels retirés) | présent, non testé | MedicalModule.swift:77 setActive, :83 remove -> reconcileAll :213 |
-| Modifier un traitement existant | présent, non testé | MedicalModule.swift:80 menu « Modifier » -> sheet :46 MedicationEditor(editing:… |
-| Journal des prises pris/sauté/reporté/manqué avec annulation | manquant | no dose event model: grep 'DoseLog/MedicationDose/DoseEvent/MedicationIntake' i… |
-| Stock / renouvellement d'ordonnance | manquant | Medication model (Models_Health.swift:179) has no stock/refill/pill count field |
-| Historique d'observance et rapport | manquant | no adherence computation; nothing records a taken dose |
-| Export des traitements | présent, non testé | DataExporter.swift:55 (export JSON global depuis ProfileView.swift:309), pas de… |
-| Profils dépendants et partage aidant | manquant | Medication has no owner/person field; no sharing code in MedicalModule.swift |
-| Pièce jointe d'ordonnance | manquant | no attachment/photo field on Medication, no picker in MedicationEditor |
-| Interactions / recherche médicament | dépendance externe | needs a real drug-data service (e.g. BDPM/RxNorm); no lookup code, name is free… |
+| Ajout d'un traitement (nom, dosage, notes, date de début et de fin, p… | présent, non testé | MedicalModule.swift:839 MedicationEditor, save() :1040 |
+| Fréquences 1x/2x/3x par jour, hebdo, au besoin | présent, test auto | LifeOSTests/MedicationScheduleTests.swift (inchangé, passe) + LifeOSTests/Lot7H… |
+| Plusieurs heures de prise personnalisées (minutes, jours précis, inte… | présent, test auto | LifeOSTests/Lot7HealthTests.swift testCustomTimesKeepTheirMinutes, testChosenWe… |
+| Au besoin (PRN): aucun rappel, prise notée à la demande | présent, test auto | LifeOSTests/Lot7HealthTests.swift testAsNeededSchedulesNothing; bouton « J'en p… |
+| Plan de rappels borné / futur / sans fin | présent, test auto | LifeOSTests/Lot7HealthTests.swift testReminderPlans, testEndDateIsInclusiveAndS… |
+| Budget commun des 64 notifications iOS | présent, test auto | LifeOSTests/MedicationBudgetTests.swift (inchangé, passe), utilisé MedicalModul… |
+| Couverture réelle des rappels affichée (refus, échec, jusqu'au…) | présent, non testé | MedicalModule.swift:1190 coverageText (plus de faux « aucun rappel » pour un tr… |
+| Activer / terminer / supprimer un traitement (rappels retirés) | présent, test auto | LifeOSTests/Lot7HealthTests.swift testTwiceDailyCourseEndToEnd (suppression: pr… |
+| Modifier un traitement existant | présent, test auto | LifeOSTests/Lot7HealthTests.swift testTwiceDailyCourseEndToEnd (heure modifiée:… |
+| Journal des prises pris/sauté/reporté/manqué avec annulation | présent, test auto | LifeOSTests/Lot7HealthTests.swift testDoseStatuses, testLatestEventWinsAndUndoR… |
+| Rappel déjà noté non répété, report qui sonne à la nouvelle heure | présent, test auto | LifeOSTests/Lot7HealthTests.swift testAlreadyLoggedDoseIsNotReminded; reports M… |
+| Stock / renouvellement d'ordonnance | présent, test auto | LifeOSTests/Lot7HealthTests.swift testStockDerivesFromTakenDosesOnly, testRefil… |
+| Historique d'observance et rapport | présent, test auto | LifeOSTests/Lot7HealthTests.swift testAdherenceCountsAndIgnoresAsNeeded (rate n… |
+| Export des traitements / observance (CSV) | présent, test auto | LifeOSTests/Lot7HealthTests.swift testCSVEscapesAndUsesSemicolons; ShareLink Me… |
+| Profils dépendants (moi + proches) | présent, non testé | Models_Medical.swift MedicalPerson, MedicalModule.swift:39 MedicalPeopleView (s… |
+| Partage aidant | dépendance externe | needs a sync/sharing backend (CloudKit share or server); nothing shared off-dev… |
+| Pièce jointe d'ordonnance | présent, test auto | LifeOSTests/Lot7HealthTests.swift testAttachmentDraftDeletesTheRightFiles, test… |
+| Boutons d'action dans la notification (Pris / Reporter) | manquant | needs a UNNotificationCategory + delegate handler outside my files (see hooks) |
+| Interactions / recherche médicament | dépendance externe | needs a real drug-data service (e.g. BDPM/RxNorm); name stays free text |
 
 Défauts trouvés en lisant le code (1 corrigés sur 1) :
 
 - [corrigé] `MedicalModule.swift:51-75` : Medication notes (side effects, instructions) are saved but never displayed anywhere in the app, and there is no edit view, so typed info is invisible.
 
 ### Doctolink (Doctolib)
-Résumé : présent, test auto 1, présent, non testé 6, manquant 3, dépendance externe 5
+Résumé : présent, test auto 4, présent, non testé 8, dépendance externe 5
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Agenda personnel de RDV (date, spécialité, médecin, lieu) | présent, non testé | MedicalModule.swift:399 AppointmentEditor, list AppointmentsView :332 |
-| Séparation à venir / passés | présent, non testé | MedicalModule.swift:337-338 |
+| Agenda personnel de RDV (date, spécialité, médecin, lieu, proche) | présent, non testé | MedicalModule.swift:1451 AppointmentEditor, list MedicalModule.swift:1286 |
+| Séparation à venir / passés / annulés | présent, test auto | LifeOSTests/Lot7HealthTests.swift testAppointmentStatusNeverClaimsAProviderBook… |
 | Rappel la veille du RDV | présent, test auto | LifeOSTests/AuditFixesHealthTests.swift testAppointmentWithin24hStillGetsARemin… |
-| Suppression qui annule le rappel | présent, non testé | MedicalModule.swift:389-394 |
-| Prochain RDV de suivi (date) | présent, non testé | MedicalModule.swift:427-429, shown :381 |
-| Notes du RDV visibles / modifier un RDV | présent, non testé | Notes affichées MedicalModule.swift:416; tap ou « Modifier » :427-429 -> Appoin… |
-| Annuaire et filtre de praticiens | dépendance externe | needs a practitioner directory API (Doctolib has no public API); specialty is a… |
-| Créneaux en direct, réservation, report, annulation chez le praticien | dépendance externe | needs a practitioner booking API; nothing calls a provider |
+| Suppression qui annule le rappel | présent, non testé | MedicalModule.swift apptRow contextMenu Supprimer (rappel + documents supprimés) |
+| Prochain RDV de suivi (date) | présent, non testé | MedicalModule.swift AppointmentEditor section Suivi, affiché dans apptRow |
+| Notes du RDV visibles / modifier un RDV | présent, non testé | MedicalModule.swift:1451 AppointmentEditor(editing:), ancien rappel annulé avan… |
+| Statut prévu / confirmé par le cabinet / passé / annulé (déclaré, pas… | présent, test auto | LifeOSTests/Lot7HealthTests.swift testAppointmentStatusNeverClaimsAProviderBook… |
+| Distinction RDV confirmé praticien vs entrée perso | présent, non testé | statut « Confirmé par le cabinet » déclaré par l'utilisateur, texte explicite q… |
+| Profils dépendants | présent, non testé | MedicalAppointment.personID, picker + filtre partagé MedicalModule.swift:105 |
+| Documents par RDV | présent, non testé | MedicalModule.swift AppointmentEditor MedicalAttachmentsSection("Documents"), l… |
+| Historique de consultation par praticien | présent, test auto | LifeOSTests/Lot7HealthTests.swift testConsultationHistoryByPractitioner; UI Med… |
+| Annuaire et filtre de praticiens | dépendance externe | needs a practitioner directory API (Doctolib has no public API) |
+| Créneaux en direct, réservation, report, annulation chez le praticien | dépendance externe | needs a practitioner booking API |
 | Confirmations de réservation | dépendance externe | needs provider booking backend |
 | Liste d'attente et notifications de créneau | dépendance externe | needs provider booking backend |
 | Messagerie sécurisée et téléconsultation | dépendance externe | needs provider platform + secure messaging service |
-| Profils dépendants | manquant | MedicalAppointment (Models_Health.swift:206) has no person field |
-| Documents et historique de consultation | manquant | no attachment field on MedicalAppointment; notes not displayed |
-| Distinction RDV confirmé praticien vs entrée perso | manquant | single MedicalAppointment type, no confirmed/status field |
-| Export des RDV | présent, non testé | DataExporter.swift:63 (export JSON global) |
+| Export des RDV | présent, non testé | DataExporter.swift:63 (export JSON global; nouveaux champs = hook) |
 
 Défauts trouvés en lisant le code (2 corrigés sur 2) :
 
@@ -64,23 +70,22 @@ Défauts trouvés en lisant le code (2 corrigés sur 2) :
 - [corrigé] `MedicalModule.swift:369-387` : Appointment notes (motif, résultats, ordonnances) are stored but never shown, and appointments cannot be edited.
 
 ### Maple Health (Apple Santé)
-Résumé : présent, test auto 1, présent, non testé 4, manquant 7, dépendance externe 1
+Résumé : présent, test auto 5, présent, non testé 5, manquant 1, dépendance externe 1
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Saisie manuelle poids, tension, glycémie, FC | présent, non testé | MedicalModule.swift:601 VitalEditor |
-| Liste filtrée par type | présent, non testé | MedicalModule.swift:471-485 |
-| Graphe de tendance 30 dernières mesures, min/max/delta | présent, non testé | MedicalModule.swift:510 trendCard |
-| Import HealthKit avec source par mesure | manquant | VitalsView never calls HealthService; VitalRecord (Models_Health.swift:220) has… |
-| Catégories de métriques Apple Santé au-delà de 4 types | manquant | types fixed to 4 strings (MedicalModule.swift:463) |
-| Unités configurables (mmol/L, lb) | manquant | unit hard-coded per type (MedicalModule.swift:611-619), glycémie always g/L |
-| Plages de référence | manquant | no range/threshold anywhere in VitalsView |
-| Exploration historique par période (jour/semaine/mois/année) | manquant | chart limited to last 30 points (MedicalModule.swift:507), no range selector |
-| Doublons de sources / inconnu vs zéro | manquant | no dedup logic; no source field |
-| Modifier une mesure | manquant | only delete via contextMenu (MedicalModule.swift:597) |
+| Saisie manuelle poids, tension, glycémie, FC, température, SpO2, somm… | présent, non testé | MedicalModule.swift:1952 VitalEditor, types VitalTypes.all |
+| Modifier une mesure | présent, non testé | MedicalModule.swift:1952 VitalEditor(editing:) (tap ou « Modifier »); mesure Sa… |
+| Liste filtrée par type | présent, non testé | MedicalModule.swift:1656 typeChips |
+| Unités configurables (mmol/L, lb), stockage canonique | présent, test auto | LifeOSTests/Lot7HealthTests.swift testUnitConversionIsReversibleAndStoredCanoni… |
+| Plages de référence (repère général, source nommée) | présent, test auto | LifeOSTests/Lot7HealthTests.swift testReferencePositions; carte MedicalModule.s… |
+| Exploration historique par période (7 j / 30 j / 1 an / tout) | présent, test auto | LifeOSTests/Lot7HealthTests.swift testPeriodFilter; Picker MedicalModule.swift:… |
+| Graphe de tendance, min/max/delta, couleur selon le sens | présent, test auto | AuditFixesHealthTests testRisingBloodPressureIsNotGood (passe) + LifeOSTests/Lo… |
+| Import Apple Santé avec source par mesure (poids, FC au repos, sommei… | présent, non testé | MedicalModule.swift:1626 VitalHealthImport (types que HealthService lit déjà), … |
+| Doublons de sources / inconnu vs zéro | présent, test auto | LifeOSTests/Lot7HealthTests.swift testSourcesAndDuplicates; aucune valeur insér… |
+| Autres catégories Apple Santé (tension, glycémie, SpO2, température i… | manquant | HealthService ne lit pas ces types: hook HealthService décrit |
 | Export / partage | présent, non testé | DataExporter.swift:51 (export JSON global), pas de partage ciblé |
 | Documents cliniques, vues médicaments/cycle Apple Santé | dépendance externe | needs HealthKit clinical records entitlement + real health data |
-| Couleur de tendance selon le sens (tension, glycémie, FC qui montent … | présent, test auto | LifeOSTests/AuditFixesHealthTests.swift testRisingBloodPressureIsNotGood (Vital… |
 
 Défauts trouvés en lisant le code (2 corrigés sur 2) :
 
@@ -88,21 +93,21 @@ Défauts trouvés en lisant le code (2 corrigés sur 2) :
 - [corrigé] `MedicalModule.swift:532-549` : Blood pressure trend plots only the systolic value; diastolic (value2) is ignored in the chart and the delta.
 
 ### Mon Espace Vaccin (Mon espace santé)
-Résumé : présent, test auto 1, présent, non testé 5, manquant 5, dépendance externe 1
+Résumé : présent, test auto 2, présent, non testé 8, dépendance externe 2
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Historique des vaccins (nom, date d'injection) | présent, non testé | MedicalModule.swift:730 VaccinationEditor, list :663 |
-| Liste de vaccins courants | présent, non testé | MedicalModule.swift:740 |
-| Date de rappel et section 'à prévoir sous 30 jours' | présent, non testé | Models_Health.swift:241 isDue, MedicalModule.swift:679-684 |
-| Notification de rappel 30 jours avant | présent, test auto | LifeOSTests/AuditFixesHealthTests.swift testVaccineDueSoonStillGetsAReminder (M… |
-| Numéro de lot | présent, non testé | saved MedicalModule.swift:752/767 but never shown in vaccRow (:700); only visib… |
-| Plusieurs personnes (famille) | manquant | Vaccination model has no person field (Models_Health.swift:234) |
-| Provenance: produit, dose n°, praticien, document | manquant | only name/date/lot/notes in Vaccination model |
-| Calendrier vaccinal officiel versionné et rattrapage | manquant | no schedule data; reminder date is manual (MedicalModule.swift:756) |
-| Modifier une vaccination | manquant | only delete (MedicalModule.swift:719-726) |
-| Export | présent, non testé | DataExporter.swift:59 (export JSON global) |
-| Coffre de documents santé et profil de soins | manquant | not in this tool (no document field) |
+| Historique des vaccins (nom, date d'injection) | présent, non testé | MedicalModule.swift:2164 VaccinationEditor, list MedicalModule.swift:2075 |
+| Liste de vaccins courants | présent, non testé | MedicalModule.swift:2164 Picker « Vaccin courant » |
+| Date de rappel et section 'à prévoir sous 30 jours' | présent, non testé | Models_Health.swift Vaccination.isDue, MedicalModule.swift:2075 |
+| Notification de rappel 30 jours avant | présent, test auto | LifeOSTests/AuditFixesHealthTests.swift testVaccineDueSoonStillGetsAReminder (p… |
+| Numéro de lot | présent, non testé | saisi section Provenance, affiché dans vaccRow |
+| Plusieurs personnes (famille) | présent, test auto | LifeOSTests/Lot7HealthTests.swift testVaccineReminderIDSeparatesPeopleButKeepsM… |
+| Provenance: dose n°, praticien, document | présent, non testé | MedicalModule.swift:2196 Stepper dose, champ praticien, MedicalAttachmentsSecti… |
+| Modifier une vaccination | présent, non testé | MedicalModule.swift:2164 VaccinationEditor(editing:), ancien rappel annulé puis… |
+| Calendrier vaccinal officiel versionné et rattrapage | dépendance externe | needs the versioned schedule data verified against the official Calendrier des … |
+| Export | présent, non testé | DataExporter.swift:59 (export JSON global; nouveaux champs = hook) |
+| Coffre de documents santé et profil de soins | présent, non testé | photos de certificat par vaccin (ImageStore); pas de coffre transversal ni prof… |
 | Messagerie sécurisée et interopérabilité DMP | dépendance externe | needs authorised access to Mon espace santé / DMP |
 
 Défauts trouvés en lisant le code (2 corrigés sur 2) :
@@ -114,25 +119,30 @@ Défauts trouvés en lisant le code (2 corrigés sur 2) :
 
 
 ### Floé (Flo)
-Résumé : présent, test auto 4, présent, non testé 5, manquant 6
+Résumé : présent, test auto 15, présent, non testé 3, dépendance externe 2
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Saisir la date des dernières règles et la durée du cycle | présent, non testé | CycleModule.swift:283-303 sheet, Stepper :290 |
-| Jour du cycle, phase, 'règles dans N jours' | présent, test auto | LifeOSTests/AuditFixesHealthTests.swift testCycleDoesNotWrapPastItsLength, test… |
-| Saisie du jour: flux, symptômes, humeur | présent, non testé | CycleModule.swift:341 saveEntry |
-| Conseils par phase (énergie, sport, nutriments) | présent, non testé | CycleModule.swift:136-172 (texte statique CyclePhase) |
-| Rappels règles J-3 / ovulation / SPM | présent, non testé | NotificationManager.swift:239 scheduleCycleNotifications, called by CycleContex… |
-| Éditer un jour passé / calendrier historique | manquant | saveEntry always creates CycleEntry dated now (CycleModule.swift:350); no date … |
-| Bornes explicites début/fin de règles | manquant | start is a single manual date; logged flow days never move it (CycleModule.swif… |
-| Prédiction cycle variable avec incertitude | manquant | prediction = elapsed % manual length (CycleContext.swift:109), no use of CycleS… |
-| Phases adaptées à la durée du cycle | présent, test auto | LifeOSTests/AuditFixesHealthTests.swift testOvulationFollowsCycleLength (CycleM… |
-| Objectifs et modes de vie (grossesse, fertilité, périménopause) | manquant | no mode/goal setting in CycleModule.swift or CycleContext.swift |
-| Contenu éducatif | manquant | only one-line phase tips; no articles |
-| Partage contrôlé par l'utilisatrice | manquant | no share code in CycleModule.swift |
-| Sauvegarde/restauration des entrées | présent, test auto | LifeOSTests/FullBackupTests.swift testBackupThenRestoreRebuildsEverything (Cycl… |
-| Export des entrées de cycle | présent, non testé | DataExporter.swift:44 section « cycle » (date, flux, symptômes, humeur, note); … |
-| Des règles saisies (>= 15 j après le début connu) déplacent le début … | présent, test auto | LifeOSTests/AuditFixesHealthTests.swift testNewPeriodMovesCycleStart, testSameP… |
+| Saisir la date des dernières règles et la durée du cycle | présent, non testé | CycleModule.swift CycleSettingsView (DatePicker date déclarée -> CycleKeys.manu… |
+| Jour du cycle, phase, 'règles dans N jours' | présent, test auto | AuditFixesHealthTests testCycleDoesNotWrapPastItsLength; Lot7CycleTests testSam… |
+| Saisie du jour: flux, symptômes, humeur | présent, test auto | CycleModule.swift CycleDayEditor; Lot7CycleTests testEditPastDayMergesDuplicate… |
+| Conseils par phase (énergie, sport, nutriments) | présent, non testé | CycleModule.swift CycleTrackerView.phaseTips (texte statique CyclePhase, tirets… |
+| Rappels règles J-3 / ovulation / SPM | présent, test auto | Lot7CycleTests testReminderPlanRespectsModeToggleAndLateness (CycleReminders.pl… |
+| Rappels activables par type, permission demandée à l'activation, refu… | présent, test auto | Lot7CycleTests testReminderTogglesRoundTrip; CycleModule.swift CycleSettingsVie… |
+| Éditer un jour passé / calendrier historique | présent, test auto | CycleModule.swift CycleMonthCalendar (mois, lundi en premier, jours futurs désa… |
+| Bornes explicites début/fin de règles | présent, test auto | CycleEntry.isPeriodStart/isPeriodEnd, CycleStats.episodes; Lot7CycleTests testE… |
+| Prédiction cycle variable avec incertitude | présent, test auto | CyclePrediction.make (CycleStats.swift): moyenne des 6 derniers cycles, fourche… |
+| Correction rétroactive: prévisions et historique bougent ensemble | présent, test auto | Lot7CycleTests testIrregularHistoryDrivesPredictionAndCorrectionUpdatesIt, test… |
+| Phases adaptées à la durée du cycle | présent, test auto | AuditFixesHealthTests testOvulationFollowsCycleLength; Lot7CycleTests testFerti… |
+| Fenêtre fertile estimée, jamais présentée comme ovulation confirmée | présent, test auto | CyclePrediction.fertileStart/End; Lot7CycleTests testFertileWindowWidensWithThe… |
+| Durée des règles suivie (moyenne notée, repli durée réglée) | présent, test auto | CycleStats.averagePeriodLength; Lot7CycleTests testAveragePeriodLengthNeedsTwoC… |
+| Modes suivi des règles / essai bébé / contraception (information seul… | présent, test auto | Models_Cycle.swift CycleMode; Lot7CycleTests testModesChangeWhatIsShownNotTheCa… |
+| Modes grossesse et périménopause | dépendance externe | pas de contenu ni de règles de suivi dédiés (semaines de grossesse, symptômes d… |
+| Contenu éducatif | dépendance externe | aucune source publique citée et relue; besoin: articles sourcés (ex. ACOG, NHS)… |
+| Partage contrôlé par l'utilisatrice | présent, non testé | CycleHistoryView menu Exporter: rapport texte ou CSV via la feuille de partage,… |
+| Sauvegarde/restauration des entrées | présent, test auto | FullBackupTests testBackupThenRestoreRebuildsEverything (CycleEntry); nouveaux … |
+| Export des entrées de cycle | présent, test auto | Lot7CycleTests testCSVHasIntensitiesBoundariesAndEscaping (CycleReport.csv); ex… |
+| Des règles saisies (>= 15 j après le début connu) déplacent le début … | présent, test auto | AuditFixesHealthTests testNewPeriodMovesCycleStart; Lot7CycleTests testResolved… |
 
 Défauts trouvés en lisant le code (3 corrigés sur 3) :
 
@@ -141,47 +151,49 @@ Défauts trouvés en lisant le code (3 corrigés sur 3) :
 - [corrigé] `DataExporter.swift:15-140` : The app's data export omits CycleEntry entirely, so cycle history is missing from the user's export.
 
 ### Klue (Clue)
-Résumé : présent, test auto 1, présent, non testé 3, manquant 8
+Résumé : présent, test auto 11, présent, non testé 2, manquant 1
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| 8 symptômes prédéfinis cochables | présent, non testé | CycleModule.swift:48 symptomsAll, toggles :210-232 |
-| Humeur 5 niveaux | présent, non testé | CycleModule.swift:49, :238-260 |
-| Flux 4 niveaux | présent, non testé | CycleModule.swift:46 |
-| Liste de fréquence des symptômes récents | présent, test auto | LifeOSTests/AuditFixesHealthTests.swift testRecentSymptomsOnlyLastThreeCalendar… |
-| Intensité / durée par symptôme | manquant | CycleEntry.symptoms is [String] (CycleModule.swift:10), no intensity |
-| Douleur, pertes, sommeil, énergie, peau (catégories Clue) | manquant | only 8 fixed strings; no discharge/pain scale; hub subtitle 'énergie, peau' not… |
-| Tags personnalisés | manquant | symptom list hard-coded, no add |
-| Note libre du jour | manquant | CycleEntry.note exists but no TextField in CycleModule.swift (grep TextField 0 … |
-| Recherche dans les entrées | manquant | no search in CycleSymptomsView/CycleHistoryView |
-| Corrélations symptômes / phase | manquant | no phase attached to entries, no correlation code |
-| Tendances et export des symptômes | manquant | no chart; CycleEntry absent from DataExporter.swift |
-| Catégories selon le stade de vie | manquant | no life-stage setting |
+| 8 symptômes prédéfinis cochables | présent, test auto | Lot7CycleTests testLegacySymptomsLandInTheirCategory (les 8 anciens libellés ra… |
+| Humeur 5 niveaux | présent, non testé | CycleDayEditor section Humeur (CycleCatalog.moods), touche à nouveau pour effac… |
+| Flux 4 niveaux | présent, non testé | CycleDayEditor section Règles (CycleCatalog.flows) |
+| Liste de fréquence des symptômes récents | présent, test auto | AuditFixesHealthTests testRecentSymptomsOnlyLastThreeCalendarDays; CycleSymptom… |
+| Intensité / durée par symptôme | présent, test auto | CycleEntry.intensityCodes (léger/moyen/fort), CycleDayEditor Picker par symptôm… |
+| Douleur, pertes, sommeil, énergie, peau, digestion, libido (catégorie… | présent, test auto | Models_Cycle.swift CycleSymptomCategory; Lot7CycleTests testExclusiveCategoryKe… |
+| Tags personnalisés | présent, test auto | CycleTagsView, CycleTags.adding; Lot7CycleTests testCustomTagRules |
+| Note libre du jour | présent, test auto | CycleDayEditor TextField axis vertical; Lot7CycleTests testEditPastDayMergesDup… |
+| Recherche dans les entrées | présent, test auto | CycleSymptomsView .searchable + CycleInsights.matches (sans accents, note, mois… |
+| Corrélations symptômes / phase (présentées comme associations) | présent, test auto | CycleInsights.phaseAssociations, CycleSymptomsView section Symptômes et phases … |
+| Tendances et export des symptômes | présent, test auto | CycleHistoryView trendSection (LineMark par mois) + export CSV avec intensités;… |
+| Catégories selon le stade de vie | présent, test auto | CycleMode.categories (pertes et libido en essai bébé, contraception en mode con… |
+| Entrée supprimée absente de tous les agrégats et de l'export | présent, test auto | Lot7CycleTests testDeletedDayLeavesEveryAggregate |
+| Pièces jointes (photo) sur une entrée | manquant | non fait: pas de stockage image dans CycleEntry |
 
 Défauts trouvés en lisant le code (1 corrigés sur 1) :
 
 - [corrigé] `CycleModule.swift:372 + :388` : Section titled '3 derniers jours' counts the last 3 entries regardless of date, so symptoms from months ago are shown as recent.
 
 ### Floé Stats (Flo / Clue)
-Résumé : présent, test auto 6, présent, non testé 2, manquant 7
+Résumé : présent, test auto 14, présent, non testé 1
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Regroupement des jours de flux en règles | présent, test auto | LifeOSTests/CycleStatsTests.swift testPeriodStartsGroupsConsecutiveDays, testOn… |
-| Durée moyenne du cycle | présent, test auto | LifeOSTests/CycleStatsTests.swift testDailyLoggingStillGivesAnAverage, testOnly… |
-| Cycle le plus court / le plus long | présent, test auto | LifeOSTests/CycleStatsTests.swift testShortestAndLongest |
-| Régularité (écart <= 7 j) | présent, test auto | LifeOSTests/CycleStatsTests.swift testRegularWhenSpreadIsSmall |
-| Données insuffisantes (pas de moyenne sur 1 cycle) | présent, test auto | LifeOSTests/CycleStatsTests.swift testSinglePeriodGivesNil, testNoDataGivesNil;… |
-| Exclusion des écarts implausibles | présent, test auto | LifeOSTests/CycleStatsTests.swift testImplausibleGapIsIgnored |
-| Liste des 30 dernières entrées | présent, non testé | CycleModule.swift:453-472 |
-| Durée des règles | manquant | CycleStats.Summary has no period length (CycleStats.swift:16-26) |
-| Distribution des durées de cycle (graphe) | manquant | no Chart in CycleHistoryView |
-| Superposition des tendances de symptômes | manquant | no symptom trend code |
-| Filtre par période | manquant | no date range control in CycleHistoryView |
-| Corriger / supprimer une entrée | manquant | no delete or edit in CycleHistoryView (CycleModule.swift:457) |
-| Export de rapport | manquant | no report; CycleEntry absent from DataExporter.swift |
-| Même calcul partout (tracker, coach) | manquant | tracker uses manual cycleLengthDays (CycleModule.swift:44, CycleContext.swift:1… |
-| Moyenne observée affichée sur le suivi avec bouton « Utiliser X j » | présent, non testé | CycleModule.swift:114-118; aucun test (le calcul reste différent entre suivi et… |
+| Regroupement des jours de flux en règles | présent, test auto | CycleStatsTests testPeriodStartsGroupsConsecutiveDays; Lot7CycleTests testMidCy… |
+| Durée moyenne du cycle | présent, test auto | CycleStatsTests testDailyLoggingStillGivesAnAverage; Lot7CycleTests testRangeFi… |
+| Cycle le plus court / le plus long | présent, test auto | CycleStatsTests testShortestAndLongest |
+| Régularité (écart <= 7 j) | présent, test auto | CycleStatsTests testRegularWhenSpreadIsSmall |
+| Données insuffisantes (pas de moyenne sur 1 cycle) | présent, test auto | CycleStatsTests testSinglePeriodGivesNil; Lot7CycleTests testInsufficientDataIs… |
+| Exclusion des écarts implausibles | présent, test auto | CycleStatsTests testImplausibleGapIsIgnored; Lot7CycleTests testRangeFilterAndD… |
+| Liste des entrées de la période (200 max) | présent, non testé | CycleHistoryView section Entrées (CycleEntryRow avec intensités, humeur, note) |
+| Durée des règles | présent, test auto | CycleAnalysis.rangePeriodAverage, CycleRecord.periodDays; Lot7CycleTests testAv… |
+| Distribution des durées de cycle (graphe) | présent, test auto | CycleHistoryView Chart(a.distribution) BarMark; Lot7CycleTests testRangeFilterA… |
+| Superposition des tendances de symptômes | présent, test auto | CycleHistoryView trendSection (4 symptômes les plus fréquents, une courbe chacu… |
+| Filtre par période | présent, test auto | CycleRange (3, 6, 12 mois, tout), Picker segmenté; Lot7CycleTests testRangeFilt… |
+| Corriger / supprimer une entrée | présent, test auto | CycleHistoryView: toucher = CycleDayEditor, balayer = Supprimer (CycleEntryStor… |
+| Export de rapport | présent, test auto | CycleHistoryView menu Exporter (ShareLink texte + fichier CSV CycleCSVFile); Lo… |
+| Même calcul partout (tracker, stats, rapport, rappels, coach) | présent, test auto | CycleAnalytics.analyze unique, CycleContext.refresh l'utilise et écrit cyclePre… |
+| Moyenne observée affichée sur le suivi avec bouton « Utiliser X j » | présent, test auto | remplacé: les prévisions suivent la moyenne dès 2 cycles complets, la base est … |
 
 Défauts trouvés en lisant le code (1 corrigés sur 1) :
 
@@ -191,80 +203,83 @@ Défauts trouvés en lisant le code (1 corrigés sur 1) :
 
 
 ### Sleep Circle (Sleep Cycle)
-Résumé : présent, non testé 2, manquant 8
+Résumé : présent, test auto 7, présent, non testé 2, dépendance externe 2
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Heures de coucher pour 4/5/6 cycles avant un réveil | présent, non testé | SleepModule.swift:59 bedtimeRow |
-| Heures de réveil si coucher maintenant | présent, non testé | SleepModule.swift:64 wakeRow |
-| Session nocturne enregistrée (micro/mouvement) | manquant | BedtimeCalculatorView has no recording; sound events live in the separate Nuit … |
-| Acquisition sommeil HealthKit | manquant | HealthService.sleepHoursLastNight (HealthService.swift:207) is never called by … |
-| Hypnogramme / chronologie de la nuit | manquant | no timeline view in SleepModule.swift |
-| Tendances de qualité | manquant | not in this tool; only manual 7-night stats in SleepDashboard.swift:88 (categor… |
-| Notes de nuit et événements audio | manquant | not in this tool (SleepNight.note in dashboard, audio in Nuit sonore) |
-| Réveil intelligent en fenêtre de sommeil léger | manquant | explicitly not done, IntegrationNotice SleepModule.swift:51 |
-| Historique et export des nuits | manquant | BedtimeCalculatorView stores nothing |
-| Délai d'endormissement réglable | manquant | fallAsleep fixed at 15 min (SleepModule.swift:15) |
+| Heures de coucher pour 4/5/6 cycles avant un réveil | présent, test auto | LifeOSTests/Lot7SleepTests.swift testLatencyShiftsBedtime (SleepCycles.bedtime,… |
+| Heures de réveil si coucher maintenant | présent, test auto | LifeOSTests/Lot7SleepTests.swift testLatencyShiftsBedtime (SleepCycles.wakeTime… |
+| Délai d'endormissement réglable | présent, test auto | LifeOSTests/Lot7SleepTests.swift testLatencyShiftsBedtime; Stepper SleepDashboa… |
+| Acquisition sommeil HealthKit | présent, non testé | SleepDashboard.swift:768 loadHealth -> HealthService.sleepBreakdownLastNight (A… |
+| Nuits manuelles (saisie, jour choisi, modification, suppression) | présent, test auto | LifeOSTests/Lot7SleepTests.swift testLogRulesCrossMidnightAndPastDay, testSameD… |
+| Hypnogramme / chronologie de la nuit | présent, test auto | LifeOSTests/Lot7SleepTests.swift testTimelinePointsAndInvertedNightRefused (cou… |
+| Tendances de qualité | présent, test auto | LifeOSTests/Lot7SleepTests.swift testTrendOnePointPerDayInsideWindow; graphique… |
+| Notes de nuit et événements audio | présent, non testé | Note saisie/modifiée dans SleepLogSheet, affichée dernière nuit :778 et histori… |
+| Historique et export des nuits | présent, test auto | LifeOSTests/Lot7SleepTests.swift testCSVEscapesAndSorts; historique + ShareLink… |
+| Session nocturne enregistrée (micro/mouvement) | dépendance externe | Analyse micro des événements vit dans Nuit sonore; aucune analyse de mouvement … |
+| Réveil intelligent en fenêtre de sommeil léger | dépendance externe | Demande une analyse des mouvements la nuit sur l'appareil (CoreMotion + modèle … |
 
 ### Pzazz (Pzizz)
-Résumé : présent, test auto 3, présent, non testé 2, manquant 6
+Résumé : présent, test auto 6, présent, non testé 3, manquant 2, dépendance externe 1
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Durée 20 ou 90 min | présent, non testé | SleepModule.swift:100-104 |
+| Durée libre configurable | présent, test auto | LifeOSTests/Lot7SleepTests.swift testNapDurationIsFreeButBounded; Stepper 5 à 1… |
+| Durée 20 ou 90 min | présent, non testé | Raccourcis 10/20/26/45/90 SleepModule.swift:161, conseils testés LifeOSTests/Lo… |
 | Compte à rebours qui survit à une relance | présent, test auto | LifeOSTests/CountdownEngineTests.swift testSessionSurvivesProcessRestart |
 | Pause / reprise | présent, test auto | LifeOSTests/CountdownEngineTests.swift testPauseFreezesAndResumeRebasesTheDeadl… |
 | Arrêt | présent, test auto | LifeOSTests/CountdownEngineTests.swift testStopClearsPersistedState |
-| Réveil par notification programmée au démarrage | présent, non testé | SleepModule.swift:128 scheduleAfter (works locked) |
-| Durée libre configurable | manquant | Picker has only two tags 20/90 (SleepModule.swift:101-102) |
-| Programmes narrés / paysages sonores | manquant | no audio playback in PowerNapView (no AVAudioPlayer/sound asset) |
-| Mixage voix/son, fondu entrée/sortie | manquant | no audio engine in PowerNapView |
-| Alarme de réveil progressive | manquant | only a default-sound local notification |
-| Historique des siestes | manquant | no nap model; CountdownEngine state cleared on finish |
-| Modes sommeil / concentration | manquant | nap only |
+| Réveil par notification programmée au démarrage | présent, non testé | SleepModule.swift:272 scheduleWake au démarrage (marche écran verrouillé) |
+| Alarme de réveil progressive | présent, non testé | Son système iOS au choix (3 sons, écoute préalable), répété 3 fois espacé de 4 … |
+| Historique des siestes | présent, test auto | LifeOSTests/Lot7SleepTests.swift testNapCloseHappensOnlyOnce, testNapRecoveryAf… |
+| Paysage sonore pendant la sieste + fondu de sortie | présent, test auto | LifeOSTests/Lot7SleepTests.swift testSoundscapeFadesOutOverLastMinute; NoiseEng… |
+| Programmes narrés | dépendance externe | Aucune bibliothèque audio narrée originale ou sous licence |
+| Mixage voix/son, fondu d'entrée | manquant | Pas de voix; seul le fondu de sortie du bruit généré existe |
+| Modes sommeil / concentration | manquant | Sieste seulement; les sons de concentration sont dans l'outil Soundscape |
 
 Défauts trouvés en lisant le code (1 corrigés sur 1) :
 
 - [corrigé] `SleepModule.swift:142-146` : When the nap ends with the screen open, started stays true and the button shows 'Reprendre'; tapping it no-ops engine.resume() but still schedules a 'Réveil' n…
 
 ### Rize (Rise)
-Résumé : présent, non testé 2, manquant 7
+Résumé : présent, test auto 3, présent, non testé 6, manquant 1
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Rappel quotidien de décompression à heure choisie | présent, non testé | SleepModule.swift:184-188, schedule() :208 |
-| Conseils mode nuit (guidance, pas un faux interrupteur) | présent, non testé | SleepModule.swift:194 checklistRow Night Shift text |
-| Checklist du soir cochable | manquant | checklistRow (SleepModule.swift:214) is static text, no checked state |
-| Dette de sommeil / historique | manquant | not in WindDownView; only in SleepDashboard.swift:88 (category dashboard, manua… |
-| Horaire de coucher personnalisé calculé | manquant | reminder hour is a manual default 22:30 (SleepModule.swift:173-174) |
-| Fenêtres d'énergie (circadien) | manquant | no energy curve code in SleepModule.swift |
-| Intégration calendrier | manquant | no EventKit use in WindDownView |
-| Étiquetage des prédictions et couverture des données | manquant | no prediction shown |
-| Raccourcis / Focus système guidés | manquant | no Shortcuts/Focus integration, only a text line |
+| Rappel quotidien de décompression à heure choisie | présent, non testé | SleepModule.swift:470 reminderCard; permission demandée, refus affiché avec bou… |
+| Conseils mode nuit (guidance, pas un faux interrupteur) | présent, non testé | Élément de checklist Night Shift + IntegrationNotice Focus Sommeil SleepModule.… |
+| Checklist du soir cochable | présent, test auto | LifeOSTests/Lot7SleepTests.swift testEveningContinuesAfterMidnight, testCheckli… |
+| Historique de la routine | présent, non testé | EveningChecklistDay, soirs précédents x/y SleepModule.swift:621 |
+| Dette de sommeil / historique | présent, test auto | LifeOSTests/Lot7SleepTests.swift testDebtOverFourteenNightsIgnoresUnknown; cart… |
+| Horaire de coucher personnalisé calculé | présent, test auto | LifeOSTests/Lot7SleepTests.swift testBedtimeSuggestionRuleAndMidnight (réveil v… |
+| Étiquetage des prédictions et couverture des données | présent, non testé | Règle annoncée 'pas une prédiction' SleepModule.swift:453; couverture 'x nuits … |
+| Intégration calendrier | présent, non testé | Lecture seule du premier rendez-vous de demain SleepModule.swift:652, logique t… |
+| Fenêtres d'énergie (circadien) | manquant | Demande un modèle circadien validé; non inventé |
+| Raccourcis / Focus système guidés | présent, non testé | Texte guidé Focus Sommeil SleepModule.swift:425; pas d'intégration Raccourcis |
 
 Défauts trouvés en lisant le code (1 corrigés sur 1) :
 
 - [corrigé] `SleepDashboard.swift:90 + :192` : Sleep debt counts every unlogged night as 0 h slept (full debt), treating unknown as zero.
 
 ### Awaken (Awoken)
-Résumé : présent, test auto 1, présent, non testé 7, manquant 6
+Résumé : présent, test auto 5, présent, non testé 8, dépendance externe 1
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Rêve texte + titre | présent, non testé | SleepModule.swift:291 DreamEditor |
-| Note vocale enregistrée | présent, non testé | SleepModule.swift:307 -> AudioRecorder.start :342 |
-| Lecture de la note vocale | présent, non testé | SleepModule.swift:283 play |
-| Intensité 1-5 | présent, non testé | SleepModule.swift:317 |
-| Suppression d'un rêve | présent, test auto | LifeOSTests/AuditFixesHealthTests.swift testDreamAudioFileIsRemoved (AudioRecor… |
-| Modifier un rêve existant | manquant | DreamCard has no edit; DreamEditor always inserts |
-| Transcription de la voix | manquant | no Speech framework use in SleepModule.swift (grep 'transcri' 0 hits) |
-| Recherche et tags | manquant | DreamEntry has no tags; no search field in DreamJournalView |
-| Gestion de lecture (pause, position) | manquant | play() only starts AVAudioPlayer, no stop/scrub (SleepModule.swift:283-288) |
-| Rappels reality check | manquant | no notification scheduling in SleepModule dream code |
-| Exercices de rêve lucide et progression | manquant | none |
-| Export | présent, non testé | DataExporter.swift:39 (texte seulement, sans l'audio) |
-| Sauvegarde | présent, non testé | FullBackup (Documents + base) covers dream audio; no test seeds DreamEntry |
-| Fichiers audio gérés de façon transactionnelle | présent, non testé | Suppression du fichier à la suppression du rêve SleepModule.swift:288, au réenr… |
+| Rêve texte + titre | présent, non testé | SleepModule.swift:1140 DreamEditor |
+| Note vocale enregistrée | présent, non testé | SleepModule.swift:1182 -> AudioRecorder.start |
+| Modifier un rêve existant | présent, non testé | DreamEditor(dream:) titre, texte, intensité, tags, note remplacée/supprimée Sle… |
+| Lecture de la note vocale | présent, non testé | DreamPlayer.shared SleepModule.swift:870, erreur affichée si fichier absent |
+| Gestion de lecture (pause, position) | présent, test auto | LifeOSTests/Lot7SleepTests.swift testPlaybackPositionClampAndLabel; pause/repri… |
+| Intensité 1-5 | présent, non testé | SleepModule.swift Stepper Ressenti |
+| Suppression d'un rêve | présent, test auto | LifeOSTests/Lot7SleepTests.swift testDreamDetailsUpsertAndDelete + AuditFixesHe… |
+| Transcription de la voix | présent, non testé | Apple Speech sur l'appareil uniquement (requiresOnDeviceRecognition) SleepModul… |
+| Recherche et tags | présent, test auto | LifeOSTests/Lot7SleepTests.swift testTagsParsedWithoutDuplicates, testSearchIsA… |
+| Rappels reality check | présent, test auto | LifeOSTests/Lot7SleepTests.swift testRealityCheckHoursRespectQuietHours (8 h à … |
+| Exercices de rêve lucide et progression | dépendance externe | Demande un contenu d'exercices sourcé; non inventé |
+| Export | présent, non testé | DataExporter.swift:39 (texte seulement, sans audio ni tags: hook) |
+| Sauvegarde | présent, non testé | FullBackup (Documents + base) couvre audio et DreamDetails une fois le modèle e… |
+| Fichiers audio gérés de façon transactionnelle | présent, test auto | LifeOSTests/Lot7SleepTests.swift testAudioPlanIsTransactional (rien effacé avan… |
 
 Défauts trouvés en lisant le code (3 corrigés sur 3) :
 
@@ -273,21 +288,22 @@ Défauts trouvés en lisant le code (3 corrigés sur 3) :
 - [corrigé] `SleepModule.swift:354-357 + :314` : AVAudioRecorder creation errors are swallowed by try?, yet isRecording and filename are set, so the UI says 'Note vocale enregistrée' and the entry points to a…
 
 ### Whoosh (Whoop / AutoSleep)
-Résumé : présent, test auto 1, présent, non testé 2, manquant 6, dépendance externe 2
+Résumé : présent, test auto 5, présent, non testé 3, manquant 2, dépendance externe 2
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Lecture HRV (SDNN) Apple Santé | dépendance externe | HealthService.swift:196, needs HealthKit authorization + Apple Watch data |
-| Lecture FC repos Apple Santé | dépendance externe | HealthService.swift:191, needs Apple Watch data |
-| Score de récupération 0-100 | présent, non testé | SleepModule.swift:372 (fixed constants 80 ms / 40-90 bpm, weights 0.6/0.4) |
-| Conseil selon le score | présent, non testé | SleepModule.swift:419 |
-| Baseline personnelle longitudinale | manquant | score uses one latest sample vs population constants (SleepModule.swift:375-376) |
-| Vues sommeil / effort / stress | manquant | RecoveryScoreView shows only the score and two tiles |
-| Tendances | manquant | no history stored or charted |
-| Date et couverture des données | présent, test auto | LifeOSTests/AuditFixesHealthTests.swift testRecoveryScoreRefusesStaleSamples (R… |
-| Explication des contributions | manquant | weights not shown to the user |
-| Dette de sommeil, séances, journal: corrélations | manquant | no use of SleepNight/workouts in RecoveryScoreView |
-| Distinction modèle LifeOS vs score propriétaire | manquant | no label saying it is a LifeOS heuristic |
+| Lecture HRV (SDNN) Apple Santé | dépendance externe | HealthService.swift:193, demande l'autorisation HealthKit et des données Apple … |
+| Lecture FC repos Apple Santé | dépendance externe | HealthService.swift:198, demande des données Apple Watch |
+| Score de récupération 0-100 | présent, test auto | LifeOSTests/Lot7SleepTests.swift testPersonalScoreFollowsBaselineAndExplainsIts… |
+| Conseil selon le score | présent, non testé | SleepModule.swift advice |
+| Baseline personnelle longitudinale | présent, test auto | LifeOSTests/Lot7SleepTests.swift testBaselineNeedsSevenDistinctDays (30 jours, … |
+| État de calibration nouvel utilisateur | présent, test auto | LifeOSTests/Lot7SleepTests.swift testPersonalScoreFollowsBaselineAndExplainsIts… |
+| Tendances | présent, non testé | Graphiques VFC et FC repos 30 jours SleepModule.swift:1641 |
+| Date et couverture des données | présent, test auto | LifeOSTests/AuditFixesHealthTests.swift testRecoveryScoreRefusesStaleSamples + … |
+| Explication des contributions | présent, test auto | LifeOSTests/Lot7SleepTests.swift testPersonalScoreFollowsBaselineAndExplainsIts… |
+| Distinction modèle LifeOS vs score propriétaire | présent, non testé | Libellé permanent 'Modèle LifeOS, pas un score Whoop' SleepModule.swift:1557 |
+| Vues sommeil / effort / stress | manquant | Seul un contexte sommeil (nuit notée, dette 14 nuits) est affiché SleepModule.s… |
+| Dette de sommeil, séances, journal: corrélations | manquant | Dette affichée à côté du score sans calcul de corrélation; séances et journal n… |
 
 Défauts trouvés en lisant le code (2 corrigés sur 2) :
 
@@ -725,42 +741,49 @@ Défauts trouvés en lisant le code (1 corrigés sur 1) :
 
 
 ### Breathwerk (Breathwrk)
-Résumé : présent, non testé 4, manquant 8
+Résumé : présent, test auto 9, présent, non testé 4, dépendance externe 1
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| 3 techniques: Box 4-4-4-4, Cohérence 5-5, 4-7-8 | présent, non testé | MindModule.swift:12 Pattern |
-| Durée de séance 1 à 20 min | présent, non testé | MindModule.swift:44 Stepper |
-| Cercle animé + libellé de phase | présent, non testé | MindModule.swift:46-52 |
-| Vibration à chaque changement de phase | présent, non testé | MindModule.swift:78 Haptics.tap() |
-| Bibliothèque recherchable / programmes | manquant | 3 hardcoded enum cases MindModule.swift:13-15; no search |
-| Phases et rondes configurables | manquant | phases hardcoded in Pattern.phases MindModule.swift:18 |
-| Guidage audio / voix | manquant | grep 'AVSpeech/AVAudio' in MindModule.swift 0 hits |
-| Historique des séances | manquant | stop() saves nothing MindModule.swift:72 |
-| Rappels | manquant | grep scheduleDaily in BreathingView 0 hits |
-| Favoris | manquant | grep 'favori' in MindModule.swift 0 hits |
-| Progression / statistiques | manquant | no session record exists |
-| Respect de 'Réduire les animations' | manquant | grep accessibilityReduceMotion in MindModule.swift 0 hits; scale animation alwa… |
+| Bibliothèque: cohérence 5-5, carrée 4-4-4-4, 4-7-8, soupir physiologi… | présent, test auto | LifeOSTests/Lot7MindTests.swift testLibraryDescribesTheFourKnownTechniquesByThe… |
+| Recherche sans accents + favoris en tête | présent, test auto | LifeOSTests/Lot7MindTests.swift testSearchIgnoresAccentsAndPutsFavoritesFirst; … |
+| Techniques personnalisées: phases (type + secondes), rondes, modifier… | présent, test auto | LifeOSTests/Lot7MindTests.swift testCustomPatternAndHistoryPersist, testPhaseEn… |
+| Durée 1 à 30 min ou nombre de rondes, fin sur un cycle complet | présent, test auto | LifeOSTests/Lot7MindTests.swift testFreeDurationEndsOnAWholeCycle |
+| Pause / reprise sans sauter de phase (pause auto en quittant l'app) | présent, test auto | LifeOSTests/Lot7MindTests.swift testPauseAndResumeNeverSkipAPhase (BreathRun); … |
+| Fin de séance écrite une seule fois dans l'historique | présent, test auto | LifeOSTests/Lot7MindTests.swift testCompletionIsReportedExactlyOnce, testAbando… |
+| Cercle animé + libellé + secondes restantes de la phase | présent, non testé | MindModule.swift:386 runningView |
+| Vibration propre à chaque type de phase | présent, non testé | MindModule.swift:480 cue |
+| Consignes à voix haute (AVSpeechSynthesizer, option) | présent, non testé | MindModule.swift:125 MindSpeech, MindModule.swift:480 cue |
+| Respect de 'Réduire les animations' (cercle fixe, consignes gardées) … | présent, non testé | MindModule.swift:396 scaleEffect(reduceMotion…), MindModule.swift:490 UIAccessi… |
+| Historique des séances | présent, test auto | LifeOSTests/Lot7MindTests.swift testCustomPatternAndHistoryPersist (BreathSessi… |
+| Progression: minutes de la semaine, série de jours, séances terminées | présent, test auto | LifeOSTests/Lot7MindTests.swift testStreakEndsTodayOrYesterday (MindStats.strea… |
+| Rappel quotidien (heure, refus affiché avec lien Réglages, ouvre l'ou… | présent, test auto | LifeOSTests/Lot7MindTests.swift testDailyReminderOpensItsTool; MindModule.swift… |
+| Programmes sur plusieurs jours | dépendance externe | needs sourced/original programme content; none in repo |
 
 ### Headplace (Headspace / Calm)
-Résumé : présent, test auto 2, présent, non testé 1, manquant 7, dépendance externe 4
+Résumé : présent, test auto 8, présent, non testé 3, dépendance externe 8
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
 | Minuteur de méditation basé sur l'horloge | présent, test auto | LifeOSTests/CountdownEngineTests.swift testRemainingIsDerivedFromTheClockNotACo… |
-| Choix de durée 3/5/10/15/20 min | présent, non testé | MindModule.swift:98 |
+| Séance libre 3/5/10/15/20 min | présent, non testé | MindModule.swift:quickCard in MeditationView |
 | Notification de fin de séance | présent, test auto | LifeOSTests/AuditFixesMindTests.swift testMeditationEndAlertIsScheduledForTheRe… |
-| Méditations guidées audio | dépendance externe | needs a licensed narrated content catalogue; none in repo |
+| Minuteurs personnels: durée, cloche début, cloches intermédiaires, cl… | présent, test auto | LifeOSTests/Lot7MindTests.swift testIntervalBellsNeverDuplicateTheEndBell, test… |
+| Cloche de début / fin / intervalle (son synthétisé sur l'appareil; no… | présent, non testé | MindModule.swift:140 MindBell, MindModule.swift:1149 ringIntervalBellIfDue, Min… |
+| Mes propres audios importés depuis Fichiers, lecture en arrière-plan,… | présent, non testé | MindModule.swift:577 MindAudioFiles.importFile, MindModule.swift:614 Meditation… |
+| Séance finie app fermée inscrite une fois au retour | présent, test auto | LifeOSTests/Lot7MindTests.swift testRunFinishedWhileAppClosedIsDetectedOnce; Mi… |
+| Recherche par titre et durée dans ma bibliothèque, favoris | présent, test auto | LifeOSTests/Lot7MindTests.swift testLibrarySearchByTitleAndDurationWithFavorite… |
+| Recommandation du jour tirée de mon historique (rien sans historique) | présent, test auto | LifeOSTests/Lot7MindTests.swift testRecommendationComesOnlyFromOwnHistory; Mind… |
+| Historique / progression / série | présent, test auto | LifeOSTests/Lot7MindTests.swift testStreakEndsTodayOrYesterday; MindModule.swif… |
+| Rappel quotidien | présent, test auto | LifeOSTests/Lot7MindTests.swift testDailyReminderOpensItsTool; MindModule.swift… |
+| Méditations guidées audio | dépendance externe | needs a licensed narrated content catalogue; none in repo (UI says so, MindModu… |
 | Programmes / parcours | dépendance externe | needs content catalogue |
 | Histoires du soir | dépendance externe | needs licensed sleep story catalogue |
 | Musique | dépendance externe | needs licensed music catalogue |
-| Recherche par thème / niveau / durée | manquant | no catalogue, no search in MeditationView MindModule.swift:89 |
-| Métadonnées narrateur / langue | manquant | no content model |
-| Favoris | manquant | grep 'favori' in MindModule.swift 0 hits |
-| Téléchargements hors ligne / reprise de lecture | manquant | no audio playback in MeditationView |
-| Recommandation du jour | manquant | grep 'recommand' in MindModule.swift 0 hits |
-| Historique / progression / série | manquant | onFinish saves nothing MindModule.swift:106 |
-| Cloche de début / fin | manquant | no AVAudio in MindModule.swift; only a notification |
+| Recherche par thème / niveau | dépendance externe | theme/level metadata only exists with a catalogue |
+| Métadonnées narrateur / langue | dépendance externe | no content model without catalogue |
+| Téléchargements hors ligne d'un catalogue | dépendance externe | needs media CDN + catalogue; imported audios are already local |
+| Progression synchronisée téléphone / ordinateur | dépendance externe | no sync service (local SwiftData only) |
 
 Défauts trouvés en lisant le code (2 corrigés sur 2) :
 
@@ -768,24 +791,25 @@ Défauts trouvés en lisant le code (2 corrigés sur 2) :
 - [corrigé] `MindModule.swift:106` : The 'Séance terminée' notification is scheduled inside onFinish, which only runs from the in-app 1 s timer; with the phone locked no end signal is ever deliver…
 
 ### Endlo (Endel)
-Résumé : présent, test auto 1, présent, non testé 6, manquant 7
+Résumé : présent, test auto 7, présent, non testé 7, manquant 1
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| 4 sons générés sur l'appareil (blanc, rose, brun, océan) | présent, non testé | Soundscape.swift:58 NoiseEngine.nextSample; grep NoiseEngine LifeOSTests 0 hits |
-| Volume | présent, non testé | Soundscape.swift:257 Slider -> NoiseEngine.volume Soundscape.swift:40 |
-| Minuteur de sommeil 15/30/45/60 min | présent, non testé | Soundscape.swift:283 armTimer |
-| Changer de son sans couper | présent, non testé | Soundscape.swift:133 |
-| Lecture écran verrouillé | présent, non testé | Soundscape.swift:94 category .playback + Info.plist UIBackgroundModes audio |
-| Message si l'audio échoue | présent, non testé | Soundscape.swift:171 errorCard |
-| Lecture persistante en quittant l'écran | manquant | onDisappear stops the sound Soundscape.swift:168 |
-| Mix par mode (focus, sommeil, détente) à plusieurs couches | manquant | one NoiseKind at a time Soundscape.swift:41 |
-| Fondus d'entrée / de sortie | manquant | stop() calls engine.stop() at once Soundscape.swift:125 |
-| Programmation de séances | manquant | grep 'schedule' in Soundscape.swift 0 hits |
-| Préréglages enregistrés | manquant | selected/volume/timer are @State only Soundscape.swift:143-147 |
-| Entrées adaptatives (heure, activité, rythme) | manquant | grep 'Calendar/CMMotion/HealthKit' in Soundscape.swift 0 hits |
-| Contrôles 'À l'écoute' / écran verrouillé | manquant | grep MPNowPlayingInfoCenter/MPRemoteCommandCenter in LifeOS 0 hits |
-| Gestion des interruptions audio (appel) | présent, test auto | LifeOSTests/AuditFixesMindTests.swift testCallWhilePlayingPausesHonestly, testE… |
+| 4 sons générés sur l'appareil (blanc, rose, brun, océan) | présent, non testé | Soundscape.swift:85 NoiseLayerState |
+| Mélange de deux couches avec niveau par couche, sans saturation | présent, test auto | LifeOSTests/Lot7MindTests.swift testTwoLayerMixKeepsLevelsAndNeverClips; Sounds… |
+| Fondus d'entrée / de sortie réglables (0 à 30 s) | présent, test auto | LifeOSTests/Lot7MindTests.swift testFadeReachesTheTargetOnTimeWithoutOvershoot;… |
+| Lecture persistante en quittant l'écran, un seul moteur pour l'app | présent, test auto | LifeOSTests/Lot7MindTests.swift testControllerPersistsItsMixInDefaults; Soundsc… |
+| Volume général | présent, non testé | Soundscape.swift:fadeVolumeCard |
+| Minuteur de sommeil 15 à 90 min avec fondu final, échéance absolue | présent, non testé | Soundscape.swift:439 armTimer |
+| Changer de son sans couper | présent, non testé | Soundscape.swift:setMix |
+| Lecture écran verrouillé | présent, non testé | category .playback + Info.plist UIBackgroundModes audio (present, read only) |
+| Contrôles 'À l'écoute' / écran verrouillé (lecture, pause, stop) | présent, non testé | Soundscape.swift:463 updateNowPlaying, Soundscape.swift:474 setupRemoteCommands |
+| Réglages de départ par usage (focus, détente, sommeil) + préréglages … | présent, test auto | LifeOSTests/Lot7MindTests.swift testMixConfigSurvivesARelaunch; Soundscape.swif… |
+| Séance programmée chaque jour: notification qui ouvre Endlo et lance … | présent, test auto | LifeOSTests/Lot7MindTests.swift testScheduledSessionAutoStartsOnlyInItsWindowAn… |
+| Entrée adaptative: heure de la journée | présent, test auto | LifeOSTests/Lot7MindTests.swift testSuggestedModeFollowsTheClock; Soundscape.sw… |
+| Entrées adaptatives activité / rythme cardiaque | manquant | no CoreMotion / HealthKit input in Soundscape.swift |
+| Message si l'audio échoue | présent, non testé | Soundscape.swift:586 errorCard |
+| Gestion des interruptions audio (appel) + casque débranché | présent, test auto | LifeOSTests/AuditFixesMindTests.swift testCallWhilePlayingPausesHonestly, testE… |
 
 Défauts trouvés en lisant le code (2 corrigés sur 2) :
 
@@ -793,25 +817,26 @@ Défauts trouvés en lisant le code (2 corrigés sur 2) :
 - [corrigé] `Soundscape.swift:102` : The real-time render block reads self.kind and mutates filter state while the main thread writes kind (toggle line 133) with no synchronization: a data race on…
 
 ### Daylia (Daylio)
-Résumé : présent, test auto 1, présent, non testé 6, manquant 8
+Résumé : présent, test auto 11, présent, non testé 5
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Humeur 1-5 + note + gratitude | présent, non testé | MindModule.swift:136-149 MoodJournalView |
-| Plusieurs entrées par jour | présent, non testé | MindModule.swift:147 inserts a new MoodEntry each save |
-| Historique (20 dernières) + humeur moyenne | présent, non testé | MindModule.swift:170-171 |
-| Supprimer une entrée | présent, non testé | MindModule.swift:180 |
+| Humeur 1-5 + note + gratitude | présent, non testé | MindModule.swift:1252 MoodEntryForm |
+| Plusieurs entrées par jour, toutes comptées dans les moyennes | présent, test auto | LifeOSTests/Lot7MindTests.swift testSeveralEntriesOnOneDayAllCount, testEditing… |
+| Humeurs et activités personnalisées (ajouter, renommer, archiver, sup… | présent, non testé | MindModule.swift:1788 MoodManageSheet (MoodActivity, MoodCustomMood) |
+| Activités et photo sur une entrée | présent, test auto | LifeOSTests/Lot7MindTests.swift testEditingAPastEntryMovesItsExtraAndUpdatesAna… |
+| Saisie a posteriori (date choisie) et modification d'une entrée passée | présent, test auto | LifeOSTests/Lot7MindTests.swift testEditingAPastEntryMovesItsExtraAndUpdatesAna… |
+| Supprimer une entrée (confirmation, complément et photo retirés) | présent, test auto | LifeOSTests/Lot7MindTests.swift testEditingAPastEntryMovesItsExtraAndUpdatesAna… |
+| Historique + humeur moyenne (recalculée après modification) | présent, test auto | LifeOSTests/Lot7MindTests.swift testEditingAPastEntryMovesItsExtraAndUpdatesAna… |
+| Filtres: texte, activité, niveau, jour | présent, test auto | LifeOSTests/Lot7MindTests.swift testFiltersByActivityLevelAndText; MindModule.s… |
+| Vue mois (calendrier coloré, toucher un jour) et vue année | présent, non testé | MindModule.swift:1585 monthCard, MindModule.swift:1632 yearCard (MoodAnalytics.… |
+| Associations activité / humeur (avec contre sans, 3 entrées min de ch… | présent, test auto | LifeOSTests/Lot7MindTests.swift testAssociationsNeedEnoughDataAndCompareWithAnd… |
+| Objectif: jours notés par semaine | présent, test auto | LifeOSTests/Lot7MindTests.swift testWeeklyGoalCountsDistinctDays; MindModule.sw… |
+| Export CSV | présent, test auto | LifeOSTests/Lot7MindTests.swift testCSVEscapesCommasQuotesAndLineBreaks; MindMo… |
+| Rappel quotidien | présent, test auto | LifeOSTests/Lot7MindTests.swift testDailyReminderOpensItsTool; MindModule.swift… |
 | Saisie par Siri / Raccourcis | présent, non testé | LifeOSIntents.swift:105 LogMoodIntent |
 | Export JSON des humeurs | présent, non testé | DataExporter.swift:26, reached via ProfileView.swift:309 DataExportSheet |
 | Sauvegarde complète restaurable | présent, test auto | LifeOSTests/FullBackupTests.swift testBackupThenRestoreRebuildsEverything (gene… |
-| Humeurs et activités personnalisées | manquant | MoodEntry has only date/score/note/gratitude Models_Life.swift:30-37 |
-| Tags / photos | manquant | no tag or photo field on MoodEntry |
-| Modifier une entrée passée / choisir la date | manquant | no edit view; new entries always date .now MindModule.swift:147 |
-| Rappels quotidiens | manquant | grep 'scheduleDaily' with mood/humeur id in LifeOS 0 hits |
-| Vue calendrier / année | manquant | grep 'calendar/year' in MoodJournalView 0 hits; list only |
-| Filtres / recherche | manquant | no searchable/filter in MoodJournalView |
-| Corrélations activité ↔ humeur | manquant | no activity data; LifeBrain only computes a 3-day mood average Core/LifeBrain.s… |
-| Objectifs | manquant | grep 'goal/objectif' in MoodJournalView 0 hits |
 
 Défauts trouvés en lisant le code (2 corrigés sur 2) :
 
@@ -833,23 +858,23 @@ Résumé : présent, test auto 1, présent, non testé 2, manquant 1, dépendanc
 | Suivi manuel du temps d'écran | présent, non testé | MindModule.swift |
 
 ### Fabuleux (Fabulous)
-Résumé : présent, test auto 1, présent, non testé 2, manquant 10
+Résumé : présent, test auto 7, présent, non testé 4, dépendance externe 2
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Date + citation du jour | présent, non testé | MindModule.swift:263 (5 fixed quotes, rotated by day of month) |
-| Priorités du jour tirées des vraies tâches | présent, test auto | LifeOSTests/AuditFixesMindTests.swift testRecurringAndOverdueTasksAppearInToday… |
-| Rituel de démarrage | présent, non testé | MindModule.swift:283-288 (3 static labels, not checkable) |
-| Agenda du jour (événements) | manquant | @Query events MindModule.swift:255 is never displayed |
-| Un seul chemin de briefing | manquant | MorningBriefingView MindModule.swift:253 and Core/DailyBriefingView.swift:4 are… |
-| Briefing lu à voix haute | manquant | no speech in MorningBriefingView; audio only exists in the other path DailyBrie… |
-| Routines structurées cochables | manquant | ritual steps are plain Label views MindModule.swift:285-287 |
-| Onboarding / parcours (journeys) | manquant | grep 'journey/parcours' in MindModule.swift 0 hits |
-| Empilement d'habitudes | manquant | no link to Habit in MorningBriefingView |
-| Programmes coachés | manquant | no programme content in MindModule.swift |
-| Réflexion / bilan | manquant | no reflection input in MorningBriefingView (EveningSummaryView exists separatel… |
-| Progression / séries | manquant | nothing recorded by this view |
-| Préférences du briefing modifiables | manquant | no settings or AppStorage in MorningBriefingView |
+| Date + citation du jour (masquable) | présent, non testé | MindModule.swift:headerCard in MorningBriefingView |
+| Priorités du jour tirées des vraies tâches (dues, en retard, récurren… | présent, test auto | LifeOSTests/Lot7MindTests.swift testBriefingNeverInventsAgendaOrSleep; LifeOSTe… |
+| Agenda du jour (événements réels du jour seulement) | présent, test auto | LifeOSTests/Lot7MindTests.swift testBriefingNeverInventsAgendaOrSleep; MindModu… |
+| Habitudes du jour et nuit notée aujourd'hui (jamais celle d'hier) | présent, test auto | LifeOSTests/Lot7MindTests.swift testBriefingNeverInventsAgendaOrSleep, testEmpt… |
+| Un seul chemin de briefing (même constructeur pour les deux entrées) | présent, non testé | MindModule.swift:1930 DayBriefingStore + MindModule.swift:1965 DayBriefingFacts… |
+| Briefing lu à voix haute (bouton + option à l'ouverture) | présent, test auto | LifeOSTests/Lot7MindTests.swift testBriefingNeverInventsAgendaOrSleep, testEmpt… |
+| Routines matin / soir construites par l'utilisateur (ajouter, renomme… | présent, test auto | LifeOSTests/Lot7MindTests.swift testRoutineChecksPersistPerDay; MindModule.swif… |
+| Étapes cochées par jour, historique 14 jours, série de jours complets | présent, test auto | LifeOSTests/Lot7MindTests.swift testRoutineDayIsCompleteOnlyWhenEveryStepIsChec… |
+| Empilement d'habitudes (étape liée à une habitude, cochée avec elle) | présent, non testé | MindModule.swift:2228 toggle -> HabitSync.apply(HabitOp) |
+| Réflexion du jour enregistrée (une par jour, modifiable) + dernières … | présent, test auto | LifeOSTests/Lot7MindTests.swift testRoutineChecksPersistPerDay, testReflectionP… |
+| Préférences du briefing modifiables | présent, non testé | MindModule.swift:2306 prefsSheet (AppStorage) |
+| Onboarding / parcours (journeys) | dépendance externe | needs curated coaching content; UI says so MindModule.swift:2086 |
+| Programmes coachés | dépendance externe | needs curated coaching content |
 
 Défauts trouvés en lisant le code (1 corrigés sur 1) :
 
@@ -859,24 +884,24 @@ Défauts trouvés en lisant le code (1 corrigés sur 1) :
 
 
 ### Todoo (Todoist / Things)
-Résumé : présent, test auto 3, présent, non testé 4, manquant 7, dépendance externe 1
+Résumé : présent, test auto 10, présent, non testé 2, manquant 2, dépendance externe 1
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Créer une tâche (titre, projet, priorité, échéance) | présent, non testé | ProductivityModule.swift:183 TodoEditor insert |
-| Cocher et supprimer une tâche | présent, non testé | ProductivityModule.swift:38 toggle, :78 et :85 delete |
+| Créer une tâche (titre, notes, projet, section, étiquettes, priorité,… | présent, non testé | ProductivityModule.swift:792 TodoEditor.save |
+| Cocher, annuler le coche (5 s) et supprimer une tâche | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testRecurringCompletedLateAcrossDSTKeep… |
 | Tri par priorité puis échéance | présent, test auto | LifeOSTests/AuditFixesProductivityTests.swift testTodoSortPutsNearestDueFirstAt… |
-| Filtre À faire / Toutes | présent, non testé | ProductivityModule.swift:29 |
-| Modifier une tâche existante | manquant | TodoEditor ne fait qu'insérer (ProductivityModule.swift:183), aucune ouverture … |
-| Projets imbriqués et sections | manquant | project est une simple String (Models_Life.swift:48), aucun modèle Project/Sect… |
-| Sous-tâches / checklist | manquant | aucun champ parent ou checklist sur TodoItem (Models_Life.swift:42) |
-| Étiquettes, filtres, recherche | manquant | pas de .searchable ni de tags dans TodoView (ProductivityModule.swift:13-102) |
-| Vues Boîte de réception / Aujourd'hui / À venir | manquant | TodoView n'a que À faire/Toutes; seules les tâches datées du jour apparaissent … |
-| Saisie en langage naturel (dates, priorité dans le texte) | manquant | Siri (LifeOSIntents.swift:131) et coach (IntentExecutor.swift:256) créent une t… |
-| Récurrence par jours de semaine | présent, test auto | LifeOSTests/AuditFixesProductivityTests.swift testCheckingRecurringTodoRollsToN… |
-| Rappel de tâche | présent, non testé | seulement via l'ajout rapide AddAnythingSheet.swift:362 scheduleReminder; l'édi… |
-| Ajout au calendrier | présent, test auto | LifeOSTests/AuditFixesProductivityTests.swift testCalendarAddIsDeduplicated (Pr… |
-| Dépendances entre tâches | manquant | aucun champ de dépendance sur TodoItem |
+| Vues Boîte de réception / Aujourd'hui / À venir (chronologique) / Tou… | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testInboxTodayUpcomingViews (TodoFilter… |
+| Modifier une tâche existante (tap sur la ligne) | présent, non testé | ProductivityModule.swift:792 TodoEditor(task:) load/save, ouvert par TodoRow.on… |
+| Projets et sections (vue Projets, renommer/fusionner, déplacer une tâ… | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testProjectsSectionsAndRename; UI Produ… |
+| Projets imbriqués (sous-projets) | manquant | un seul niveau de projet + sections |
+| Sous-tâches / checklist | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testChecklistRoundTrip, testCheckingMon… |
+| Étiquettes, filtres (étiquette, priorité), recherche plein texte | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testSearchTagAndPriorityFilters, testTa… |
+| Saisie en langage naturel (« demain 18h #maison !2 », jours, dates, d… | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testCaptureTomorrowTimeProjectPriority,… |
+| Récurrence : tous les jours, en semaine, jours choisis, chaque mois | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testRecurrenceStorageRoundTrip, testMon… |
+| Rappel par tâche (aucun, à l'heure, 15 min, 1 h, la veille), annulé a… | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testTaskReminderFireDate (TaskReminderR… |
+| Ajout au calendrier (sans doublon, durée estimée) | présent, test auto | LifeOSTests/AuditFixesProductivityTests.swift testCalendarAddIsDeduplicated; Pr… |
+| Dépendances entre tâches | manquant | aucun champ de dépendance |
 | Collaboration / partage | dépendance externe | nécessite comptes et serveur de synchronisation, inexistants |
 
 Défauts trouvés en lisant le code (2 corrigés sur 3) :
@@ -886,49 +911,52 @@ Défauts trouvés en lisant le code (2 corrigés sur 3) :
 - [partiel] `ProductivityModule.swift:105` : Chaque Ajouter au calendrier crée un nouvel EKEvent sans garder son identifiant: doublons à chaque appui, et changer la tâche ne met jamais l'événement à jour. (reste : doublon évité ; mettre à jour l'ancien événement demande l'accès complet au calendrier)
 
 ### Structurd (Structured)
-Résumé : présent, non testé 9, manquant 6
+Résumé : présent, test auto 6, présent, non testé 9, manquant 1
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Générer la journée en créneaux d'1 h par priorité | présent, non testé | ProductivityModule.swift:399 generate() |
-| Bornes de journée réglables | présent, non testé | ProductivityModule.swift:337 steppers dayStart/dayEnd |
-| Pause déjeuner sautée | présent, non testé | ProductivityModule.swift:420 (13 h fixe) |
-| Créneaux enregistrés sur la tâche et rechargés | présent, non testé | ProductivityModule.swift:424 écriture blockStart/blockEnd, :391 loadSavedBlocks |
-| Débordement explicite (tâches sans créneau) | présent, non testé | ProductivityModule.swift:438 message |
-| Planifier demain si la journée est finie | présent, non testé | ProductivityModule.swift:410 |
-| Créneaux visibles sur la frise 24 h | présent, non testé | HabitTrackerTimelineView.swift:123 blockStart |
-| Durée estimée par tâche | manquant | durée fixe 1 h ProductivityModule.swift:423, aucun champ durée sur TodoItem |
-| Échéances et priorités combinées | présent, non testé | generate trie priorité puis échéance la plus proche ProductivityModule.swift:62… |
-| Import des plages occupées du calendrier | manquant | EventKit utilisé en écriture seule (ProductivityModule.swift:123), aucune lectu… |
-| Pauses et temps de trajet | manquant | aucun paramètre de pause ou trajet hors 13 h |
-| Frise glisser-déposer | manquant | HabitTrackerTimelineView.swift:267 ne gère qu'un tap pour ajouter, aucun drag |
+| Proposer un planning avec aperçu avant écriture (Appliquer / Annuler) | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testPlannerAvoidsMeetingWithoutOverlap … |
+| Bornes de journée réglables | présent, non testé | ProductivityModule.swift:1333 settingsCard (fenêtre du planificateur) |
+| Pause déjeuner (interrupteur, 13 h à 14 h) | présent, non testé | ProductivityModule.swift:1343, lunchSlot ajouté aux plages occupées |
+| Créneaux enregistrés sur la tâche et rechargés | présent, non testé | apply écrit blockStart/blockEnd ProductivityModule.swift:1476, frise relue depu… |
+| Débordement explicite avec raison (liste À placer) | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testPlannerExplainsOverflow; UI Product… |
+| Planifier aujourd'hui ou demain | présent, non testé | Picker Aujourd'hui/Demain, journée finie = raison « Ta journée est terminée. » … |
+| Créneaux visibles sur la frise 24 h | présent, non testé | HabitTrackerTimelineView.swift timelineItems blockStart |
+| Durée estimée par tâche | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testEstimatedDurationDefaultsToOneHour,… |
+| Échéances et priorités combinées | présent, non testé | candidats triés par ProductivityRules.todoPrecedes (testé seul) avant DayPlanne… |
+| Import des plages occupées du calendrier | présent, non testé | ProductivityModule.swift:1186 CalendarBusy lit EventKit dès que l'accès complet… |
+| Marge entre blocs (pauses, trajets) | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testPlannerBufferAndEarliest |
+| Frise de la journée, glisser-déposer pour replanifier | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testDragMoveSnapsAndStaysInWindow (DayP… |
+| Blocs verrouillés jamais écrasés, seuls les blocs touchés bougent | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testMovingMeetingOnlyMovesAffectedUnloc… |
+| Bloc fixe saisi à la main (rendez-vous) | présent, non testé | ProductivityModule.swift:1650 FixedBlockEditor |
 | Découper une tâche | manquant | aucune logique de découpe |
-| Blocs verrouillés et aperçu avant écriture | manquant | generate écrase les créneaux de toutes les tâches en attente ProductivityModule… |
-| Tâches récurrentes planifiées | présent, non testé | Tâche récurrente placée seulement les jours où elle revient ProductivityModule.… |
+| Tâches récurrentes planifiées | présent, non testé | candidats filtrés par TodoItem.applies(to: jour) |
 
 Défauts trouvés en lisant le code (1 corrigés sur 1) :
 
 - [corrigé] `ProductivityModule.swift:400` : generate trie seulement par priorité sur un @Query non trié: à priorité égale l'ordre est arbitraire, les échéances sont ignorées et les tâches récurrentes son…
 
 ### Habitly (Habitify)
-Résumé : présent, test auto 4, présent, non testé 6, manquant 5
+Résumé : présent, test auto 10, présent, non testé 5, manquant 2
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Créer / modifier une habitude (nom, icône, couleur) | présent, non testé | ProductivityModule.swift:943 HabitEditor.save, ouvert depuis HabitTrackerTimeli… |
-| Jours actifs (fréquence hebdomadaire) | présent, non testé | ProductivityModule.swift:765 + Models_Life.swift:125 isActive |
-| Heure prévue sur la frise 24 h | présent, non testé | HabitTrackerTimelineView.swift:87 timelineItems |
-| Cocher aujourd'hui | présent, non testé | HabitTrackerTimelineView.swift:617 toggleItemDone |
+| Créer / modifier une habitude (nom, icône, couleur) | présent, non testé | ProductivityModule.swift HabitEditor.save |
+| Jours actifs et liste du jour | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testWeeklyHabitLeavesTodaysListOnceTarg… |
+| Fréquence « x fois par semaine » | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testTwiceWeeklyHabitStreakCountsWeeks, … |
+| Objectifs de quantité ou de durée (8 verres, 20 min) | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testCountTargetCompletesOnlyAtTarget; é… |
+| Heure prévue sur la frise 24 h | présent, non testé | HabitTrackerTimelineView.swift timelineItems |
+| Cocher aujourd'hui | présent, non testé | HabitTrackerTimelineView.swift toggleItemDone, HabitDetailView todayCard |
 | Cocher depuis le widget interactif | présent, test auto | LifeOSTests/HabitSyncTests.swift testDoubleTapIsIdempotent |
 | Instantané widget (fait aujourd'hui, archivées exclues) | présent, test auto | LifeOSTests/HabitSyncTests.swift testPublishSkipsArchivedAndReflectsDoneToday |
-| Série (streak) | présent, test auto | LifeOSTests/AuditFixesProductivityTests.swift testStreakSkipsInactiveDays, test… |
-| Objectifs de quantité ou de durée | manquant | Habit n'a aucun champ cible/unité (Models_Life.swift:83) |
-| Sauter un jour / pause / gel de série | manquant | aucun état skip; softDelete/isArchived seulement dans du code non atteint Produ… |
+| Série (jours actifs; semaines pour x fois/semaine) | présent, test auto | LifeOSTests/AuditFixesProductivityTests.swift testStreakSkipsInactiveDays; Lot7… |
+| Sauter un jour / pause / gel de série | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testSkippedDayIsNeutralForStreak, testP… |
+| Rattraper un jour passé (calendrier) | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testBackfillPastDayButNeverFuture; UI P… |
+| Statistiques (série, meilleure série, réussite 30 j, total) et calend… | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testCompletionRateAndBestStreak; UI Pro… |
 | Domaines d'habitudes | manquant | moduleTag rempli par objectifs/défauts mais aucun écran pour le choisir ou filt… |
-| Statistiques et calendrier de complétion | manquant | aucune vue heatmap/stats d'habitude trouvée (grep heatmap, HabitStat, HabitDeta… |
-| Rappel par habitude | présent, non testé | HabitReminders.schedule ProductivityModule.swift:140-161 (un rappel hebdo par j… |
-| Complétion automatique HealthKit | manquant | aucun lien Habit/HealthKit trouvé |
-| Habitudes proposées à activer | présent, non testé | Bannière « N habitudes proposées à activer » ProductivityModule.swift:724-726 -… |
+| Rappel par habitude | présent, non testé | HabitReminders.schedule ProductivityModule.swift:149, silencieux en pause, repo… |
+| Complétion automatique HealthKit | manquant | aucun lien Habit/HealthKit |
+| Habitudes proposées à activer | présent, non testé | HabitTrackerView bannière + PendingHabitRow |
 | Sauvegarde et restauration | présent, test auto | LifeOSTests/FullBackupTests.swift testBackupThenRestoreRebuildsEverything |
 
 Défauts trouvés en lisant le code (5 corrigés sur 5) :
@@ -940,21 +968,20 @@ Défauts trouvés en lisant le code (5 corrigés sur 5) :
 - [corrigé] `ProductivityModule.swift:812` : L'éditeur titre HORAIRE DU RAPPEL mais save() (ligne 943) ne programme aucune notification: le rappel promis n'existe pas.
 
 ### Forêt (Forest)
-Résumé : présent, test auto 2, présent, non testé 3, manquant 6, dépendance externe 2
+Résumé : présent, test auto 8, présent, non testé 2, dépendance externe 2
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
 | Minuteur focus basé sur l'horloge, survit à l'arrêt | présent, test auto | LifeOSTests/CountdownEngineTests.swift testSessionSurvivesProcessRestart |
 | Pause / reprise | présent, test auto | LifeOSTests/CountdownEngineTests.swift testPauseFreezesAndResumeRebasesTheDeadl… |
-| Durée de focus réglable | présent, non testé | ProductivityModule.swift:981 stepper focusLen |
-| Durée de pause réglable | manquant | breakLen (ProductivityModule.swift:973) n'a aucun contrôle à l'écran ni ailleurs |
-| Enchaînement focus / pause automatique | présent, non testé | ProductivityModule.swift:1005 finishPhase |
-| Compteur de sessions | présent, non testé | ProductivityModule.swift:986 (état de vue non sauvegardé) |
-| Historique et tags de sessions | manquant | aucun modèle FocusSession; sessions est un @State (ProductivityModule.swift:970) |
-| Statistiques de concentration | manquant | aucune donnée de session persistée |
-| Règles d'interruption (abandon = échec) | manquant | Stop arrête simplement le moteur ProductivityModule.swift:992 |
-| Arbre qui pousse et collection | manquant | aucun visuel de croissance ni récompense, seulement TimerDial |
-| Alerte de fin app fermée | manquant | CountdownEngine ne programme aucune notification locale (CountdownTimer.swift:1… |
+| Cycles réglables : concentration, pause courte, pause longue, longueu… | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testFocusCycleWithLongBreak (FocusRules… |
+| Tag par session | présent, non testé | ProductivityModule.swift:2807 tagPicker (tags saisis par l'utilisateur) |
+| Historique des sessions (réussie, sortie de l'app, abandonnée) | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testFocusSessionPersists; modèle FocusS… |
+| Statistiques par tag et par période | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testFocusStatsPerTagAndDedupe; UI Produ… |
+| Règle d'interruption affichée : quitter l'app plus de 10 s fait échou… | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testLeavingTheAppBreaksTheSession; Prod… |
+| Arbre qui pousse pendant la session, forêt du jour (dessin SwiftUI) | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testTreeGrowthStages; ProductivityModul… |
+| Pas de session en double après relance | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testFocusStatsPerTagAndDedupe (FocusRul… |
+| Alerte de fin app fermée | présent, non testé | ProductivityModule.swift:2990 scheduleEndNotification, annulée en pause/arrêt |
 | Blocage des apps | dépendance externe | FamilyControls/DeviceActivity, entitlement Apple; IntegrationNotice Productivit… |
 | Multijoueur et vrais arbres plantés | dépendance externe | nécessite serveur et partenaire de plantation |
 
@@ -963,20 +990,20 @@ Défauts trouvés en lisant le code (1 corrigés sur 1) :
 - [corrigé] `ProductivityModule.swift:969` : isFocus, sessions et running sont des @State de vue: le moteur persiste après relance mais l'écran affiche Démarrer, onFinish est nil donc la pause ne démarre …
 
 ### Notio (Notion / Bear)
-Résumé : présent, non testé 4, manquant 10, dépendance externe 1
+Résumé : présent, test auto 7, présent, non testé 2, manquant 5, dépendance externe 1
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Créer / modifier une note (titre, texte, tags) | présent, non testé | ProductivityModule.swift:1074 NoteEditor.save |
-| Recherche plein texte (titre, texte, tags) | présent, non testé | ProductivityModule.swift:1018 filtered + .searchable |
-| Supprimer une note | présent, non testé | ProductivityModule.swift:1042 |
-| Étiquettes structurées (filtrer par tag) | manquant | tags est une String CSV (Models_Life.swift:139), affichée en puces mais aucun f… |
-| Markdown / texte enrichi | manquant | TextField texte brut ProductivityModule.swift:1065 |
+| Créer / modifier une note (titre, texte, dossier, tags), enregistrée … | présent, non testé | ProductivityModule.swift:3268 NoteEditor.save via NoteHistory.save |
+| Recherche plein texte (titre, texte, tags, dossier, sans accents) ave… | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testFoldersSearchAndSnippet |
+| Supprimer une note (confirmation) | présent, non testé | NotesView et NoteEditor confirmationDialog |
+| Étiquettes structurées (filtrer par tag) | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testTagListNormalizesAndDeduplicates; U… |
+| Markdown : rendu (titres, listes, gras, liens, cases cliquables) et é… | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testMarkdownBlocks, testToggleCheckboxF… |
+| Dossiers imbriqués (chemin « Travail/Clients ») | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testFoldersSearchAndSnippet, testNoteSa… |
+| Liens [[titre]] et liens retour (création de la note manquante) | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testLinksAndBacklinks, testInlineMarkdo… |
+| Export Markdown et PDF par note | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testExportMarkdownAndPDF; ShareLink Not… |
+| Historique des versions (20 dernières, restauration) | présent, test auto | LifeOSTests/Lot7ProductivityTests.swift testVersionHistoryKeepsLastN, testNoteS… |
 | Pièces jointes | manquant | aucun champ fichier/image sur Note |
-| Organisation imbriquée (dossiers, pages) | manquant | Note n'a ni parent ni dossier |
-| Liens retour (backlinks) | manquant | aucune analyse de liens entre notes |
-| Export | présent, non testé | export JSON global DataExporter.swift:78 via DataExportSheet (ProfileView.swift… |
-| Historique des versions | manquant | Note n'a que created, aucune version ni date de modification |
 | Bases de données typées et vues | manquant | aucun modèle de base/propriétés |
 | Relations et formules | manquant | aucun |
 | Modèles de pages | manquant | aucun |
@@ -2066,25 +2093,25 @@ Résumé : présent, test auto 4, présent, non testé 2, manquant 1
 
 
 ### Nuit sonore (SnoreLab / Sleep Cycle sound events)
-Résumé : présent, test auto 7, présent, non testé 5, manquant 3, dépendance externe 1
+Résumé : présent, test auto 10, présent, non testé 5, dépendance externe 1
 
 | Fonctionnalité | État | Preuve |
 |---|---|---|
-| Consentement explicite avant toute écoute | présent, non testé | NightSoundView.swift:34 consentCard + requestPermission |
-| Écoute micro + classifieur Apple sur l'appareil | dépendance externe | NightSounds.swift:187 start(); needs a real iPhone microphone (simulator refuse… |
+| Consentement explicite avant toute écoute | présent, non testé | NightSoundView.swift consentCard + requestPermission |
+| Écoute micro + classifieur Apple sur l'appareil | dépendance externe | NightSounds.swift start(); demande un vrai iPhone (simulateur refusé); jamais l… |
 | Regroupement des détections en événements | présent, test auto | LifeOSTests/NightSoundsTests.swift testContinuousSnoringIsOneEvent, testGapSpli… |
 | Rejet des détections faibles ou trop courtes | présent, test auto | LifeOSTests/NightSoundsTests.swift testWeakOrTooShortDetectionsAreDropped |
 | Résumé par catégorie (nombre, minutes) | présent, test auto | LifeOSTests/NightSoundsTests.swift testSummaryCountsAndMinutes |
 | Étiquettes Apple vers catégories françaises | présent, test auto | LifeOSTests/NightSoundsTests.swift testAppleLabelsMapToFrenchKinds |
 | Durée de conservation et purge (fichiers compris) | présent, test auto | LifeOSTests/NightSoundsTests.swift testRetentionDeletesOnlyOldNights |
 | Extraits audio autour des événements + lecture | présent, test auto | LifeOSTests/AuditFixesHealthTests.swift testSecondKindDuringOpenClipGetsThatCli… |
-| Supprimer un événement | présent, non testé | NightSounds.swift:133 deleteEvent via swipe NightSoundView.swift:138 (not teste… |
-| Supprimer une nuit | présent, non testé | NightSoundView.swift:142 -> NightStore.delete NightSounds.swift:127 (exercised … |
-| Coupures appel / autre app notées | présent, non testé | NightSounds.swift:242 interrupted, shown NightSoundView.swift:119 |
-| Garde stockage plein | présent, non testé | NightSounds.swift:192 |
-| Batterie faible | manquant | no batteryLevel/batteryState use in LifeOS; stop(reason:) never called with a r… |
-| Tendance des minutes de ronflement sur plusieurs nuits | manquant | summary is per night only (NightSounds.swift:77) |
-| Export des nuits | manquant | no export path for NightStore |
+| Supprimer un événement | présent, non testé | NightSounds.swift deleteEvent via swipe NightSoundView |
+| Supprimer une nuit | présent, non testé | NightSoundView -> NightStore.delete |
+| Coupures appel / autre app notées | présent, non testé | NightSounds.swift interrupted, affiché NightSoundView |
+| Garde stockage plein | présent, non testé | NightSounds.swift start() minimumFreeBytes |
+| Batterie faible | présent, test auto | LifeOSTests/Lot7SleepTests.swift testLowBatteryStopRule; suivi UIDevice batteri… |
+| Tendance des minutes de ronflement sur plusieurs nuits | présent, test auto | LifeOSTests/Lot7SleepTests.swift testSnoringTrendAcrossNights; graphique NightS… |
+| Export des nuits | présent, test auto | LifeOSTests/Lot7SleepTests.swift testNightExportSummaryAndClipList (CSV résumé … |
 | Nuit retrouvée après fermeture forcée de l'app (session close, extrai… | présent, test auto | LifeOSTests/AuditFixesHealthTests.swift testOpenNightIsClosedOnRelaunch, testCl… |
 
 Défauts trouvés en lisant le code (2 corrigés sur 2) :

@@ -1,5 +1,7 @@
 import SwiftUI
 import AVFoundation
+import Combine
+import Charts
 
 // MARK: - Ecoute nocturne (ecran)
 
@@ -21,8 +23,12 @@ struct NightSoundView: View {
                         NavigationLink { NightDetailView(session: s) } label: { nightRow(s) }.buttonStyle(.plain)
                     }
                 }
+                if store.sessions.filter({ $0.end != nil }).count >= 2 { trendCard }
+                if !store.sessions.filter({ $0.end != nil }).isEmpty { exportCard }
                 settingsCard
             }
+            .frame(maxWidth: 720)
+            .frame(maxWidth: .infinity)
             .padding(Theme.pad)
         }
         .background(Theme.background)
@@ -62,7 +68,7 @@ struct NightSoundView: View {
                     do { try listener.start() } catch { listener.error = error.localizedDescription }
                 } label: { Label("Commencer l'écoute", systemImage: "moon.fill").frame(maxWidth: .infinity) }
                     .buttonStyle(LifeOSGlassButtonStyle(prominent: true))
-                Text("Branche le téléphone : une nuit d'écoute consomme de la batterie.").font(.caption).foregroundStyle(.secondary)
+                Text("Branche le téléphone : une nuit d'écoute consomme de la batterie. Sous 10 %, l'écoute s'arrête toute seule.").font(.caption).foregroundStyle(.secondary)
             }
             if let e = listener.error { Label(e, systemImage: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(Theme.warning) }
         }
@@ -79,9 +85,51 @@ struct NightSoundView: View {
             if !sum.isEmpty {
                 Text(sum.prefix(3).map { "\($0.kind) ×\($0.count)" }.joined(separator: " · ")).font(.caption)
             }
+            if let r = s.stoppedReason {
+                Label(r, systemImage: "exclamationmark.triangle").font(.caption2).foregroundStyle(Theme.warning)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14).raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+    }
+
+    /// Ronflement nuit apres nuit, rapporte a la duree d'ecoute.
+    private var trendCard: some View {
+        let pts = NightSounds.trend(store.sessions)
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("Ronflement, nuit après nuit").font(.headline)
+            Chart(pts) { p in
+                BarMark(x: .value("Nuit", p.start, unit: .day), y: .value("Minutes", p.minutes))
+                    .foregroundStyle(Color.sleepTint)
+            }
+            .chartYAxisLabel("min")
+            .frame(height: 140)
+            if let last = pts.last {
+                Text("Dernière nuit : \(Int(last.minutes.rounded())) min sur \(String(format: "%.1f", last.hours)) h d'écoute.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Text("Minutes estimées par le classifieur, pas une mesure médicale.").font(.caption2).foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16).raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
+    }
+
+    private var exportCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Exporter").font(.headline)
+            ShareLink(item: SleepCSVFile(name: "LifeOS-nuits-sonores.csv", text: NightSounds.csvSummary(store.sessions)),
+                      preview: SharePreview("Résumé des nuits (CSV)")) {
+                Label("Résumé des nuits (CSV)", systemImage: "tablecells")
+            }
+            ShareLink(item: SleepCSVFile(name: "LifeOS-evenements-nocturnes.csv", text: NightSounds.csvClips(store.sessions)),
+                      preview: SharePreview("Événements et extraits (CSV)")) {
+                Label("Événements et extraits (CSV)", systemImage: "list.bullet")
+            }
+            Text("Les extraits audio restent sur ton téléphone : la liste donne leur nom dans le dossier Nuits.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16).raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 
     private var settingsCard: some View {

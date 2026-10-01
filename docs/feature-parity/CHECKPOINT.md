@@ -793,6 +793,44 @@ Matrice : testé 294, non testé 356, manquant 450, dépendance 109.
 **Pas fait** : rien vérifié sur un vrai iPhone (notifications, caméra, Santé) ; comptes ;
 Cal Eye sans clé ; Opale ; Envol ; passe visuelle des 4 apparences.
 
+## Lot 7 (2 oct.): Santé, Cycle, Sommeil, Mental, Productivité en profondeur
+
+Build 54. Suite 1 225 tests, 0 échec (1 053 avant), journal brut
+`docs/verification/test-runs/2026-10-02-lot7.log`. Nouveaux tests : `Lot7HealthTests` (27),
+`Lot7CycleTests` (33), `Lot7SleepTests` (33), `Lot7MindTests` (34), `Lot7ProductivityTests` (46).
+Matrice (23 outils) : testé auto 43 -> 183, manquant 152 -> 19. Ancienne matrice gardée dans
+`ledger.json` (`matrix_before_lot7`) parce que des lignes ont été reformulées.
+
+- **Santé** : rythmes de prise (heures précises, jours choisis, tous les N jours), journal des
+  prises (`DoseEvent`), proches (`MedicalPerson`), stock et renouvellement, RDV et vaccins plus
+  complets, source des mesures (`VitalSource`, "Apple Santé" sur l'import du poids).
+- **Cycle** : début et fin des règles explicites, intensité par jour, un seul calcul partout
+  (`CycleAnalytics`, `storedSnapshot`, ligne coach `coachLine`), corrélations symptômes / phase,
+  export avec bornes et intensités.
+- **Sommeil** : siestes, checklist du soir, détails de nuit et de rêve, lecture de récupération,
+  tableau de bord. Le réveil en sommeil léger reste NON fait (aucun capteur honnête).
+- **Mental** : motifs de respiration et journal, minuteurs et sons de méditation, mélanges sonores
+  enregistrés, humeurs et activités personnalisées, routines cochables, briefing du jour lu à voix
+  haute depuis les vraies données (`DayBriefingBuilder`).
+- **Productivité** : saisie rapide en langage naturel (`TaskCapture`), sections, étiquettes,
+  check-lists, rappels, estimation, blocs verrouillés; habitudes à quantité, objectif hebdo,
+  pause, jour sauté; sessions de focus; notes avec dossier et historique. Siri, le coach et
+  l'accueil créent maintenant les tâches par la même saisie, dans la Boîte de réception
+  (`TaskInbox.makeTodo`). Accès calendrier : clé `NSCalendarsFullAccessUsageDescription` ajoutée.
+
+**Mise à jour testée sur de vraies données du build 53** (simulateur 17782, installé PAR-DESSUS,
+sans désinstaller) : traitement, 3 tâches, 4 habitudes et 51 coches, note, rêve, vaccin,
+5 humeurs, 1 tension, tous gardés; les tâches ont reçu un identifiant stable; nouvelles colonnes
+(`ZCYCLEENTRY.ZINTENSITYCODES`, `ZISPERIODSTART`...) et tables (`ZDOSEEVENT`, `ZNAPSESSION`,
+`ZFOCUSSESSION`...) créées; `-routeSmoke` : 86 outils ouverts, 0 absent.
+Pas couvert : une ligne de cycle existante pendant la mise à jour (le build 53 n'en crée que par
+l'écran, impossible à taper au simulateur).
+
+**Pas fait, et pourquoi** : partage aidant et partage partenaire continu (serveur), interactions
+médicamenteuses (base de données médicale), actions Pris/Reporter dans la notification (prévu),
+catalogue guidé de méditations (contenu sous licence), réveil intelligent, projets imbriqués et
+collaboration Todoo. Rien de tout ça n'a été essayé sur un vrai iPhone.
+
 ## Resume here
 
 The inventory is complete (89/89, `MATRIX.md`). Do not redo it. The work now is to BUILD the
@@ -801,10 +839,12 @@ action, result, edit, delete, persistence, permissions, errors and offline, link
 modules, platforms. Each lot updates its matrix rows with proof.
 
 Plan, in order:
-1. Lot 6 done (see above). Next lot: Health, Sleep, Mental, Productivity depth.
+1. Lots 6 and 7 done (see above). Next lot: the families with the most missing rows: Career (39),
+   Money (37), Looks (36), Home (36), Travel (31), then Invest, Admin, Mobility, Social.
 2. Device journeys only a real iPhone can prove: alarm, microphone, night sounds, notifications,
    camera scan, interactive widget, kill and resume, Mac keyboard navigation.
-3. Health, Sleep, Mental, Productivity depth, then the other families.
+3. Lot 7 leftovers: medication Pris/Reporter actions, HealthKit reads (tension, glycémie, SpO2,
+   température, HRV 30 j), export of the new health / sleep / mind records.
 4. Accounts and sync: Theo asked for Apple, Google, Facebook and email. Needs his choice of
    backend (server and provider credentials); everything else can be prepared.
 5. Cal Eye keyless engine (server, App Privacy: Theo's choice), Opale (Family Controls from
