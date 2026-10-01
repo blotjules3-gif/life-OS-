@@ -1,15 +1,13 @@
 import XCTest
+import SwiftData
 @testable import LifeOS
 
-/// Remise a zero mensuelle d'une enveloppe de budget.
-///
-/// Le bug corrige: `spent` etait stocke sans marqueur de mois et sans remise
-/// a zero. Un budget dit MENSUEL cumulait donc depuis la creation, et un
-/// depassement en janvier laissait la barre rouge pour toujours.
-///
-/// Les bascules de date sont exactement le genre de logique qu'on ne peut pas
-/// verifier a la main: il faudrait attendre le mois suivant. La date est donc
-/// injectee.
+/// Budget par enveloppes (Ynabi), audit du build 52 : l'ancien `spent` etait remis a zero
+/// chaque mois et le mois precedent perdu. La depense d'un mois se calcule maintenant
+/// depuis des ecritures datees et les operations Bankino de la categorie : chaque mois
+/// reste consultable, une correction retroactive change le bon mois, le report est un
+/// choix. Les dates sont injectees (on ne peut pas attendre le mois suivant).
+@MainActor
 final class EnvelopeRolloverTests: XCTestCase {
 
     private var cal: Calendar {
@@ -17,80 +15,87 @@ final class EnvelopeRolloverTests: XCTestCase {
         c.timeZone = TimeZone(identifier: "Europe/Paris") ?? .current
         return c
     }
+    private func date(_ y: Int, _ m: Int, _ d: Int) -> Date {
+        cal.date(from: DateComponents(year: y, month: m, day: d, hour: 12)) ?? .distantPast
+    }
+    private func key(_ y: Int, _ m: Int) -> Int { EnvelopeMath.monthKey(date(y, m, 1), calendar: cal) }
 
-    private func date(_ y: Int, _ m: Int, _ d: Int, _ h: Int = 12) -> Date {
-        cal.date(from: DateComponents(year: y, month: m, day: d, hour: h)) ?? .distantPast
+    func testEachMonthKeepsItsOwnSpending() {
+        let entries = [(date: date(2026, 3, 5), cents: 12_000), (date: date(2026, 4, 2), cents: 3_000)]
+        XCTAssertEqual(EnvelopeMath.spentCents(month: key(2026, 3), entries: entries, txns: [], calendar: cal), 12_000,
+                       "mars reste consultable apres le passage en avril")
+        XCTAssertEqual(EnvelopeMath.spentCents(month: key(2026, 4), entries: entries, txns: [], calendar: cal), 3_000)
     }
 
-    func testSameMonthKeepsSpending() {
-        let e = Envelope(name: "Courses", monthlyBudget: 400, spent: 120,
-                         periodStart: date(2026, 3, 1))
-        let changed = e.rolloverIfNeeded(now: date(2026, 3, 28), calendar: cal)
-        XCTAssertFalse(changed)
-        XCTAssertEqual(e.spent, 120, "on ne remet pas a zero au milieu du mois")
-    }
-
-    func testNewMonthResetsSpending() {
-        let e = Envelope(name: "Courses", monthlyBudget: 400, spent: 380,
-                         periodStart: date(2026, 3, 1))
-        let changed = e.rolloverIfNeeded(now: date(2026, 4, 1), calendar: cal)
-        XCTAssertTrue(changed)
-        XCTAssertEqual(e.spent, 0)
-        XCTAssertEqual(e.remaining, 400, "le plafond doit redevenir entier")
-    }
-
-    /// Le cas qui rendait l'enveloppe rouge a vie.
-    func testOverspentEnvelopeRecoversNextMonth() {
-        let e = Envelope(name: "Loisirs", monthlyBudget: 100, spent: 250,
-                         periodStart: date(2026, 1, 15))
-        XCTAssertLessThan(e.remaining, 0)
-        e.rolloverIfNeeded(now: date(2026, 2, 1), calendar: cal)
-        XCTAssertEqual(e.spent, 0)
-        XCTAssertGreaterThan(e.remaining, 0, "l'enveloppe ne doit pas rester rouge le mois suivant")
-    }
-
-    /// Une app ouverte apres plusieurs mois d'absence ne doit pas rejouer
-    /// plusieurs remises a zero, juste repartir du mois courant.
-    func testLongAbsenceRollsOverOnce() {
-        let e = Envelope(name: "Abonnements", monthlyBudget: 60, spent: 55,
-                         periodStart: date(2025, 11, 3))
-        let changed = e.rolloverIfNeeded(now: date(2026, 4, 9), calendar: cal)
-        XCTAssertTrue(changed)
-        XCTAssertEqual(e.spent, 0)
-        XCTAssertEqual(e.periodStart, date(2026, 4, 1, 0), "on repart du 1er du mois courant")
-        // Deuxieme appel le meme mois: plus rien a faire.
-        XCTAssertFalse(e.rolloverIfNeeded(now: date(2026, 4, 20), calendar: cal))
-    }
-
-    /// Passage d'annee: decembre vers janvier est un nouveau mois.
     func testYearBoundary() {
-        let e = Envelope(name: "Cadeaux", monthlyBudget: 200, spent: 190,
-                         periodStart: date(2026, 12, 1))
-        XCTAssertTrue(e.rolloverIfNeeded(now: date(2027, 1, 1), calendar: cal))
-        XCTAssertEqual(e.spent, 0)
+        XCTAssertEqual(key(2026, 12) + 1, key(2027, 1))
+        let entries = [(date: date(2026, 12, 31), cents: 500), (date: date(2027, 1, 1), cents: 700)]
+        XCTAssertEqual(EnvelopeMath.spentCents(month: key(2027, 1), entries: entries, txns: [], calendar: cal), 700)
     }
 
-    /// Le dernier jour du mois est encore le meme mois, meme tard le soir.
-    func testLastDayOfMonthIsStillSameMonth() {
-        let e = Envelope(name: "Essence", monthlyBudget: 150, spent: 90,
-                         periodStart: date(2026, 1, 1))
-        XCTAssertFalse(e.rolloverIfNeeded(now: date(2026, 1, 31, 23), calendar: cal))
-        XCTAssertEqual(e.spent, 90)
+    func testBankExpensesOfTheCategoryCountButIncomeDoesNot() {
+        let txns = [(date: date(2026, 3, 10), cents: -4_550), (date: date(2026, 3, 11), cents: 10_000)]
+        XCTAssertEqual(EnvelopeMath.spentCents(month: key(2026, 3), entries: [], txns: txns, calendar: cal), 4_550)
     }
 
-    /// Fevrier d'une annee bissextile: le 29 existe et reste dans le mois.
-    func testLeapYearFebruary() {
-        let e = Envelope(name: "Test", monthlyBudget: 100, spent: 40,
-                         periodStart: date(2028, 2, 1))
-        XCTAssertFalse(e.rolloverIfNeeded(now: date(2028, 2, 29), calendar: cal))
-        XCTAssertTrue(e.rolloverIfNeeded(now: date(2028, 3, 1), calendar: cal))
+    func testRefundEntryLowersTheMonth() {
+        let entries = [(date: date(2026, 3, 5), cents: 8_000), (date: date(2026, 3, 20), cents: -2_000)]
+        XCTAssertEqual(EnvelopeMath.spentCents(month: key(2026, 3), entries: entries, txns: [], calendar: cal), 6_000)
     }
 
-    /// Une enveloppe qui vient d'etre creee ne doit pas se vider aussitot.
-    func testFreshEnvelopeDoesNotRollOverImmediately() {
-        let now = date(2026, 5, 10)
-        let e = Envelope(name: "Neuve", monthlyBudget: 300, spent: 25, periodStart: now)
-        XCTAssertFalse(e.rolloverIfNeeded(now: now, calendar: cal))
-        XCTAssertEqual(e.spent, 25)
+    func testWithoutCarryOverEveryMonthStartsFromTheBudget() {
+        let spent = [key(2026, 1): 25_000, key(2026, 2): 0]
+        let feb = EnvelopeMath.availableCents(month: key(2026, 2), firstMonth: key(2026, 1), budgetCents: 10_000,
+                                              carryOver: false) { spent[$0] ?? 0 }
+        XCTAssertEqual(feb, 10_000, "un dépassement de janvier ne rend pas février rouge")
+    }
+
+    func testCarryOverMovesLeftoverAndOverspendToNextMonths() {
+        let spent = [key(2026, 1): 6_000, key(2026, 2): 13_000, key(2026, 3): 2_000]
+        func avail(_ m: Int) -> Int {
+            EnvelopeMath.availableCents(month: m, firstMonth: key(2026, 1), budgetCents: 10_000, carryOver: true) { spent[$0] ?? 0 }
+        }
+        XCTAssertEqual(avail(key(2026, 1)), 4_000)
+        XCTAssertEqual(avail(key(2026, 2)), 1_000, "4 000 reportés + 10 000 - 13 000")
+        XCTAssertEqual(avail(key(2026, 3)), 9_000)
+        XCTAssertEqual(avail(key(2026, 6)), 39_000, "trois mois sans dépense après mars : le reste s'accumule")
+    }
+
+    // Migration : rien de ce qui existe n'est perdu, rien d'ancien n'est inventé.
+
+    private func container() throws -> ModelContainer {
+        try ModelContainer(for: Envelope.self, EnvelopeEntry.self, Txn.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    }
+
+    func testMigrationConvertsTheOldAmountOnceAndKeepsIt() throws {
+        let c = try container()
+        let ctx = ModelContext(c)
+        let old = Envelope(name: "Courses", monthlyBudget: 400, spent: 120, periodStart: date(2026, 3, 1))
+        old.uid = nil; old.createdAt = .distantPast; old.migratedSpent = false   // une enveloppe d'avant la mise à jour
+        ctx.insert(old)
+        XCTAssertTrue(EnvelopeMigration.run(ctx, now: date(2026, 3, 20)))
+        let entries = try ctx.fetch(FetchDescriptor<EnvelopeEntry>())
+        XCTAssertEqual(entries.count, 1)
+        XCTAssertEqual(entries.first?.amountCents, 12_000)
+        XCTAssertEqual(entries.first?.envelopeUID, old.uid)
+        XCTAssertTrue(entries.first!.note.contains("n'étaient pas enregistrés"))
+        XCTAssertEqual(old.spent, 0)
+        XCTAssertFalse(EnvelopeMigration.run(ctx, now: date(2026, 3, 21)), "une seule fois")
+        XCTAssertEqual(try ctx.fetch(FetchDescriptor<EnvelopeEntry>()).count, 1)
+    }
+
+    func testEditingAPastEntryChangesOnlyThatMonth() throws {
+        let c = try container()
+        let ctx = ModelContext(c)
+        let e = Envelope(name: "Loisirs", monthlyBudget: 100)
+        ctx.insert(e)
+        let march = EnvelopeEntry(envelopeUID: e.uid!, date: date(2026, 3, 10), amountCents: 5_000)
+        let april = EnvelopeEntry(envelopeUID: e.uid!, date: date(2026, 4, 10), amountCents: 2_000)
+        ctx.insert(march); ctx.insert(april)
+        march.amountCents = 9_000   // correction rétroactive
+        let all = try ctx.fetch(FetchDescriptor<EnvelopeEntry>())
+        let mine = all.map { (date: $0.date, cents: $0.amountCents) }
+        XCTAssertEqual(EnvelopeMath.spentCents(month: key(2026, 3), entries: mine, txns: [], calendar: cal), 9_000)
+        XCTAssertEqual(EnvelopeMath.spentCents(month: key(2026, 4), entries: mine, txns: [], calendar: cal), 2_000)
     }
 }

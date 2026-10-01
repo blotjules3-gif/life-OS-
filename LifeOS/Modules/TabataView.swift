@@ -774,6 +774,18 @@ struct TabataView: View {
     @State private var showResetDialog = false
     @State private var soundMuted = false
 
+    // Préréglages perso et historique (SwiftData).
+    @Environment(\.modelContext) private var ctx
+    @Query(sort: \TabataPreset.createdAt) private var customPresets: [TabataPreset]
+    @Query(sort: \TabataSessionLog.date, order: .reverse) private var tabataLogs: [TabataSessionLog]
+    @State private var creatingPreset = false
+    @State private var editingPreset: TabataPreset?
+    @State private var pendingPresetDelete: TabataPreset?
+    @State private var historyError: String?
+    /// Garde en mémoire : `onAppear` et `onChange` peuvent voir la même fin avant
+    /// que la requête SwiftData ne se rafraîchisse.
+    @State private var loggedSessionIDs: Set<UUID> = []
+
     @Query private var gymDays: [GymDay]
     private var programSessions: [TabataSession] {
         gymWeekOrder.compactMap { w -> TabataSession? in
@@ -786,12 +798,19 @@ struct TabataView: View {
     }
     private var availableSessions: [TabataSession] { programSessions + TabataPresets.all }
 
+    /// Un préréglage perso devient une séance sans exercices : ses intervalles
+    /// passent par les réglages libres, son nom suit la séance.
+    private func presetSession(_ p: TabataPreset) -> TabataSession {
+        TabataSession(id: "preset-\(p.id.uuidString)", name: p.name, icon: "timer", exercises: [],
+                      subtitle: nil, tag: "Mon préréglage", accentColorHex: 0x00D2FF)
+    }
+
     /// Séance affichée: celle que porte le moteur. Si elle ne figure plus dans
     /// la liste (programme modifié), on la reconstruit depuis le snapshot pour
     /// ne pas perdre le nom et les exercices en cours.
     private var chosenSession: TabataSession? {
         guard let key = engine.sessionKey else { return nil }
-        if let found = availableSessions.first(where: { $0.id == key }) { return found }
+        if let found = (availableSessions + customPresets.map(presetSession)).first(where: { $0.id == key }) { return found }
         return TabataSession(id: key, name: engine.sessionName ?? "Séance", icon: engine.sessionIcon ?? "timer",
                              exercises: engine.exercises, accentColorHex: engine.accentColorHex ?? 0x00F076)
     }
@@ -828,6 +847,56 @@ struct TabataView: View {
         keeper.persist()
         withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
             showChooser = false
+        }
+    }
+
+    /// Charge les intervalles du préréglage dans les réglages, puis le choisit
+    /// comme séance (mêmes règles que `pick`).
+    private func pickPreset(_ p: TabataPreset) {
+        let c = TabataPresetRules.sanitized(p.config)
+        prepare = c.prepare; work = c.work; rest = c.rest; rounds = c.rounds
+        cycles = c.cycles; restCycle = c.restCycle; cooldown = c.cooldown
+        pick(presetSession(p))
+    }
+
+    /// Journalise la séance finie, une fois par identifiant de séance. Appelé à la
+    /// fin ET à l'ouverture de l'écran : une séance finie écran fermé est
+    /// journalisée au retour.
+    private func logFinishedIfNeeded() {
+        guard engine.phase == .done else { return }
+        let id = engine.sessionID
+        guard !loggedSessionIDs.contains(id),
+              FitnessHistory.shouldRecord(id, existing: tabataLogs.map(\.sessionID)) else { return }
+        guard let log = FitnessHistory.tabataLog(sessionID: id, finishedAt: engine.finishedAt ?? Date(),
+                                                 name: engine.sessionName,
+                                                 completedRounds: engine.workStepsCompleted,
+                                                 totalRounds: engine.workStepsTotal,
+                                                 activeSeconds: engine.activeSeconds,
+                                                 workSeconds: engine.workSecondsDone) else { return }
+        ctx.insert(log)
+        do {
+            try ctx.save()
+            loggedSessionIDs.insert(id)
+            historyError = nil
+        } catch {
+            ctx.delete(log)
+            historyError = "Séance non ajoutée à l'historique : \(error.localizedDescription)"
+        }
+    }
+
+    private func deleteLog(_ log: TabataSessionLog) {
+        ctx.delete(log)
+        do { try ctx.save(); historyError = nil } catch {
+            ctx.rollback()
+            historyError = "Suppression impossible : \(error.localizedDescription)"
+        }
+    }
+
+    private func deletePreset(_ p: TabataPreset) {
+        ctx.delete(p)
+        do { try ctx.save(); historyError = nil } catch {
+            ctx.rollback()
+            historyError = "Suppression impossible : \(error.localizedDescription)"
         }
     }
 
@@ -914,6 +983,10 @@ struct TabataView: View {
             // (vivante ou relue du disque) garde sa propre config.
             applyConfigIfIdle()
             soundMuted = !TabataSound.shared.soundEnabled
+            logFinishedIfNeeded()
+        }
+        .onChange(of: engine.phase) { _, phase in
+            if phase == .done { logFinishedIfNeeded() }
         }
         .onDisappear {
             // Quitter l'écran n'est ni une pause ni un abandon: la séance continue
@@ -1741,9 +1814,130 @@ struct TabataView: View {
                         freeIntervalCard
                     }
                     .buttonStyle(PressableButtonStyle())
+
+                    customPresetsSection
+                    historySection
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 30)
+            }
+        }
+        .sheet(isPresented: $creatingPreset) {
+            TabataPresetEditor(initial: TabataConfig(prepare: prepare, work: work, rest: rest, rounds: rounds,
+                                                     cycles: cycles, restCycle: restCycle, cooldown: cooldown))
+        }
+        .sheet(item: $editingPreset) { p in TabataPresetEditor(initial: p.config, editing: p) }
+        .confirmationDialog("Supprimer ce préréglage ?",
+                            isPresented: Binding(get: { pendingPresetDelete != nil }, set: { if !$0 { pendingPresetDelete = nil } }),
+                            titleVisibility: .visible, presenting: pendingPresetDelete) { p in
+            Button("Supprimer", role: .destructive) { deletePreset(p) }
+            Button("Annuler", role: .cancel) {}
+        } message: { _ in Text("L'historique des séances faites avec reste intact.") }
+    }
+
+    // MARK: - Préréglages perso
+
+    private var customPresetsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("MES PRÉRÉGLAGES")
+                    .font(.system(size: 11, weight: .heavy)).kerning(0.8)
+                    .foregroundStyle(pal.ink.opacity(0.6))
+                Spacer()
+                Button {
+                    creatingPreset = true
+                } label: {
+                    Label("Nouveau", systemImage: "plus").font(.caption.bold())
+                }
+                .accessibilityLabel("Nouveau préréglage")
+            }
+            .padding(.top, 10)
+            if customPresets.isEmpty {
+                Text("Enregistre tes intervalles sous un nom pour les relancer d'un geste.")
+                    .font(.caption).foregroundStyle(pal.ink.opacity(0.55))
+            }
+            ForEach(customPresets) { p in
+                HStack(spacing: 10) {
+                    Button { pickPreset(p) } label: { presetCard(p) }
+                        .buttonStyle(PressableButtonStyle())
+                    Menu {
+                        Button("Modifier") { editingPreset = p }
+                        Button("Supprimer", role: .destructive) { pendingPresetDelete = p }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(pal.ink.opacity(0.7))
+                            .frame(width: 36, height: 36)
+                            .raisedSurface(Circle())
+                    }
+                    .accessibilityLabel("Options du préréglage")
+                }
+            }
+        }
+    }
+
+    private func presetCard(_ p: TabataPreset) -> some View {
+        let isChosen = chosenSession?.id == presetSession(p).id
+        let accent = Color(hex: 0x00D2FF)
+        let c = p.config
+        return HStack(spacing: 14) {
+            Image(systemName: "timer")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(pal.text(accent))
+                .frame(width: 44, height: 44)
+                .background(accent.opacity(0.15), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(p.name).font(.system(size: 15, weight: .bold)).foregroundStyle(pal.ink)
+                Text("\(c.work)s / \(c.rest)s · \(c.rounds) rounds × \(c.cycles) · \(formatHMS(TabataPresetRules.totalSeconds(c)))")
+                    .font(.system(size: 12, weight: .medium)).foregroundStyle(pal.ink.opacity(0.55)).lineLimit(1)
+            }
+            Spacer()
+            if isChosen {
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(pal.text(accent))
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(isChosen ? accent.opacity(0.08) : pal.ink.opacity(0.05)))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .stroke(isChosen ? accent.opacity(0.4) : pal.ink.opacity(0.08), lineWidth: 1))
+    }
+
+    // MARK: - Historique des séances
+
+    private var historySection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("HISTORIQUE")
+                .font(.system(size: 11, weight: .heavy)).kerning(0.8)
+                .foregroundStyle(pal.ink.opacity(0.6))
+                .padding(.top, 10)
+            if let historyError {
+                Text(historyError).font(.caption).foregroundStyle(Theme.warning)
+            }
+            if tabataLogs.isEmpty {
+                Text("Tes séances terminées apparaîtront ici, et comptent dans Streakz.")
+                    .font(.caption).foregroundStyle(pal.ink.opacity(0.55))
+            }
+            ForEach(tabataLogs.prefix(15)) { log in
+                HStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(log.name).font(.system(size: 14, weight: .semibold)).foregroundStyle(pal.ink)
+                        Text("\(log.date.formatted(.dateTime.day().month().hour().minute())) · \(log.completedRounds)/\(log.totalRounds) efforts")
+                            .font(.system(size: 12)).foregroundStyle(pal.ink.opacity(0.55))
+                    }
+                    Spacer()
+                    Text(formatHMS(log.activeSeconds))
+                        .font(.system(size: 14, weight: .bold)).monospacedDigit()
+                        .foregroundStyle(pal.text(Color(hex: 0x00F076)))
+                    Button(role: .destructive) { deleteLog(log) } label: {
+                        Image(systemName: "trash").font(.caption)
+                    }
+                    .foregroundStyle(Theme.danger.opacity(0.7))
+                    .accessibilityLabel("Supprimer la séance")
+                }
+                .padding(12)
+                .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(pal.ink.opacity(0.05)))
             }
         }
     }
@@ -1975,6 +2169,10 @@ struct TabataView: View {
                 .raisedSurface(Capsule())
                 .accessibilityElement(children: healthState == .failed ? .contain : .combine)
 
+                if let historyError {
+                    Text(historyError).font(.caption).foregroundStyle(Theme.warning).multilineTextAlignment(.center)
+                }
+
                 // Boutons d'action
                 VStack(spacing: 10) {
                     Button {
@@ -2122,5 +2320,85 @@ struct TabataSettings: View {
             Stepper("", value: value, in: (time ? 0 : 1)...3600, step: step).labelsHidden()
         }
         .padding(.vertical, 4)
+    }
+}
+
+
+// MARK: - Éditeur de préréglage perso
+
+struct TabataPresetEditor: View {
+    @Environment(\.modelContext) private var ctx
+    @Environment(\.dismiss) private var dismiss
+    @Query private var presets: [TabataPreset]
+    let initial: TabataConfig
+    var editing: TabataPreset? = nil
+    @State private var name = ""
+    @State private var cfg = TabataConfig(prepare: 10, work: 30, rest: 15, rounds: 8, cycles: 1, restCycle: 60, cooldown: 0)
+    @State private var error: String?
+    @State private var loaded = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("NOM") { TextField("Ex: Tabata du matin", text: $name) }
+                Section("INTERVALLES") {
+                    stepper("Préparation", $cfg.prepare, 0...3600, 5, time: true)
+                    stepper("Effort", $cfg.work, 5...3600, 5, time: true)
+                    stepper("Repos", $cfg.rest, 0...3600, 5, time: true)
+                    stepper("Rounds", $cfg.rounds, 1...100, 1, time: false)
+                    stepper("Cycles", $cfg.cycles, 1...50, 1, time: false)
+                    stepper("Récup entre cycles", $cfg.restCycle, 0...3600, 5, time: true)
+                    stepper("Retour au calme", $cfg.cooldown, 0...3600, 5, time: true)
+                }
+                Section {
+                    HStack { Text("Durée totale").bold(); Spacer(); Text(formatHMS(TabataPresetRules.totalSeconds(cfg))).bold() }
+                }
+                if let error { Text(error).font(.footnote).foregroundStyle(Theme.warning) }
+            }
+            .navigationTitle(editing == nil ? "Nouveau préréglage" : "Modifier le préréglage")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button("Enregistrer") { save() }.bold() }
+            }
+            .onAppear {
+                guard !loaded else { return }
+                loaded = true
+                cfg = TabataPresetRules.sanitized(initial)
+                name = editing?.name ?? ""
+            }
+        }
+    }
+
+    private func stepper(_ title: String, _ v: Binding<Int>, _ range: ClosedRange<Int>, _ step: Int, time: Bool) -> some View {
+        Stepper(value: v, in: range, step: step) {
+            HStack {
+                Text(title)
+                Spacer()
+                Text(time ? formatHMS(v.wrappedValue) : "\(v.wrappedValue)").monospacedDigit().foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func save() {
+        let others = presets.filter { $0.id != editing?.id }.map(\.name)
+        if let msg = TabataPresetRules.validate(name: name, existing: others, original: editing?.name) { error = msg; return }
+        let n = name.trimmingCharacters(in: .whitespaces)
+        let c = TabataPresetRules.sanitized(cfg)
+        if let p = editing {
+            let old = (p.name, p.config)
+            p.name = n; p.apply(c)
+            do { try ctx.save(); dismiss() } catch {
+                p.name = old.0; p.apply(old.1)
+                self.error = "Préréglage non enregistré : \(error.localizedDescription)"
+            }
+        } else {
+            let p = TabataPreset(name: n, config: c)
+            ctx.insert(p)
+            do { try ctx.save(); dismiss() } catch {
+                ctx.delete(p)
+                self.error = "Préréglage non enregistré : \(error.localizedDescription)"
+            }
+        }
     }
 }

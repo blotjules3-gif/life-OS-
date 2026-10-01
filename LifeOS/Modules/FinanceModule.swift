@@ -202,91 +202,219 @@ struct TxnEditor: View {
 
 struct BudgetView: View {
     @Environment(\.modelContext) private var ctx
-    @Query private var envelopes: [Envelope]
+    @Query(sort: \Envelope.name) private var envelopes: [Envelope]
+    @Query(sort: \EnvelopeEntry.date, order: .reverse) private var entries: [EnvelopeEntry]
+    @Query private var txns: [Txn]
+    @State private var month = EnvelopeMath.monthKey(.now)
     @State private var showAdd = false
+    @State private var editing: Envelope?
+    @State private var addingTo: Envelope?
+    @State private var editingEntry: EnvelopeEntry?
+    @State private var error: String?
+
+    private var monthTitle: String {
+        EnvelopeMath.startOfMonth(month).formatted(.dateTime.month(.wide).year())
+    }
+
     var body: some View {
         ZStack {
             Theme.background
             ScrollView {
                 VStack(spacing: 14) {
+                    monthBar
+                    if let error { Label(error, systemImage: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(Theme.warning) }
                     if envelopes.isEmpty {
-                        EmptyState(icon: "tray.2", title: "Aucune enveloppe", message: "Crée des enveloppes (Courses, Loisirs…) avec un plafond mensuel.")
+                        EmptyState(icon: "tray.2", title: "Aucune enveloppe", message: "Crée des enveloppes (Courses, Loisirs…) avec un plafond mensuel. Les dépenses Bankino de la même catégorie y sont comptées.")
                     } else {
-                        ForEach(envelopes) { e in
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Circle().fill(Color(hex: UInt(e.colorHex))).frame(width: 12, height: 12)
-                                    Text(e.name).font(.headline).foregroundStyle(Theme.textPrimary)
-                                    Spacer()
-                                    // Montants exacts: Int() tronquait (9,99 € affichait 9).
-                                    Text("\(e.spent, format: .currency(code: "EUR")) / \(e.monthlyBudget, format: .currency(code: "EUR"))").font(.subheadline.bold()).foregroundStyle(e.remaining < 0 ? Theme.danger : Theme.textPrimary)
-                                }
-                                ProgressView(value: e.progress).tint(e.remaining < 0 ? Theme.danger : Color(hex: UInt(e.colorHex)))
-                                HStack {
-                                    Text(e.remaining >= 0 ? "Reste \(e.remaining.formatted(.currency(code: "EUR")))" : "Dépassé de \((-e.remaining).formatted(.currency(code: "EUR")))").font(.caption).foregroundStyle(e.remaining < 0 ? Theme.danger : Theme.textSecondary)
-                                    Spacer()
-                                    Button { e.spent = max(0, e.spent-10) } label: {
-                                        Text("-10").font(.caption.bold())
-                                            .padding(.horizontal, 12).padding(.vertical, 6)
-                                            .raisedSurface(Capsule(), .nested)
-                                            .foregroundStyle(Theme.textPrimary)
-                                    }.buttonStyle(.plain)
-                                    Button { e.spent += 10 } label: {
-                                        Text("+10€").font(.caption.bold())
-                                            .padding(.horizontal, 12).padding(.vertical, 6)
-                                            .glassControl(Capsule())
-                                            .foregroundStyle(Theme.textPrimary)
-                                    }.buttonStyle(.plain)
-                                }
-                            }.card()
-                                .contextMenu { Button(role: .destructive) { ctx.delete(e) } label: { Label("Supprimer", systemImage: "trash") } }
-                        }
+                        ForEach(envelopes) { e in envelopeCard(e) }
                     }
                 }.padding(Theme.pad)
             }
         }
         .navigationTitle("Budget enveloppes").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
-        .sheet(isPresented: $showAdd) { EnvelopeEditor() }
-        // Un budget mensuel doit repartir de zero chaque mois, sinon le
-        // plafond ne veut plus rien dire des le premier depassement.
-        .onAppear { rolloverEnvelopes() }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Nouvelle enveloppe") } }
+        .sheet(isPresented: $showAdd) { EnvelopeEditor(envelope: nil) }
+        .sheet(item: $editing) { EnvelopeEditor(envelope: $0) }
+        .sheet(item: $addingTo) { e in EnvelopeEntryEditor(envelope: e, entry: nil, month: month) }
+        .sheet(item: $editingEntry) { entry in
+            if let e = envelopes.first(where: { $0.uid == entry.envelopeUID }) { EnvelopeEntryEditor(envelope: e, entry: entry, month: month) }
+        }
+        .onAppear {
+            if EnvelopeMigration.run(ctx) { save("migration des enveloppes") }
+        }
     }
 
-    private func rolloverEnvelopes() {
-        var changed = false
-        for e in envelopes where e.rolloverIfNeeded() { changed = true }
-        if changed { persistBudget() }
+    private var monthBar: some View {
+        HStack {
+            Button { month -= 1 } label: { Image(systemName: "chevron.left") }.accessibilityLabel("Mois précédent")
+            Spacer()
+            Text(monthTitle.capitalized).font(.headline).foregroundStyle(Theme.textPrimary)
+            Spacer()
+            Button { month += 1 } label: { Image(systemName: "chevron.right") }
+                .accessibilityLabel("Mois suivant")
+                .disabled(month >= EnvelopeMath.monthKey(.now))
+        }
+        .card()
     }
 
-    private func persistBudget() {
-        LifeOSTry(try ctx.save(), context: "nouveau mois budget", category: AppLog.data)
+    @ViewBuilder private func envelopeCard(_ e: Envelope) -> some View {
+        let spent = Double(EnvelopeBudget.spentCents(e, month: month, entries: entries, txns: txns)) / 100
+        let available = Double(EnvelopeBudget.availableCents(e, month: month, entries: entries, txns: txns)) / 100
+        let budgetForMonth = e.monthlyBudget + (e.carryOver ? available + spent - e.monthlyBudget : 0)
+        let progress = budgetForMonth > 0 ? min(1, max(0, spent / budgetForMonth)) : (spent > 0 ? 1 : 0)
+        let mine = entries.filter { $0.envelopeUID == e.uid && EnvelopeMath.monthKey($0.date) == month }
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Circle().fill(Color(hex: UInt(e.colorHex))).frame(width: 12, height: 12)
+                Text(e.name).font(.headline).foregroundStyle(Theme.textPrimary)
+                Spacer()
+                Text("\(spent, format: .currency(code: "EUR")) / \(budgetForMonth, format: .currency(code: "EUR"))")
+                    .font(.subheadline.bold()).foregroundStyle(available < 0 ? Theme.danger : Theme.textPrimary)
+            }
+            ProgressView(value: progress).tint(available < 0 ? Theme.danger : Color(hex: UInt(e.colorHex)))
+            HStack {
+                Text(available >= 0 ? "Reste \(available.formatted(.currency(code: "EUR")))" : "Dépassé de \((-available).formatted(.currency(code: "EUR")))")
+                    .font(.caption).foregroundStyle(available < 0 ? Theme.danger : Theme.textSecondary)
+                Spacer()
+                Button { addingTo = e } label: {
+                    Label("Dépense", systemImage: "plus").font(.caption.bold())
+                        .padding(.horizontal, 12).padding(.vertical, 6)
+                        .glassControl(Capsule()).foregroundStyle(Theme.textPrimary)
+                }.buttonStyle(.plain)
+            }
+            Text("Compte les opérations Bankino « \(e.countedCategory) »" + (e.carryOver ? " · report du reste activé" : ""))
+                .font(.caption2).foregroundStyle(Theme.textSecondary)
+            ForEach(mine) { entry in
+                Button { editingEntry = entry } label: {
+                    HStack {
+                        Text(entry.date, format: .dateTime.day().month(.abbreviated)).font(.caption).foregroundStyle(Theme.textSecondary)
+                        Text(entry.note.isEmpty ? "Dépense" : entry.note).font(.caption).foregroundStyle(Theme.textPrimary).lineLimit(1)
+                        Spacer()
+                        Text(entry.amount, format: .currency(code: "EUR")).font(.caption.monospacedDigit()).foregroundStyle(Theme.textPrimary)
+                    }
+                }.buttonStyle(.plain)
+                .contextMenu { Button(role: .destructive) { delete(entry) } label: { Label("Supprimer", systemImage: "trash") } }
+            }
+        }
+        .card()
+        .contextMenu {
+            Button { editing = e } label: { Label("Modifier", systemImage: "pencil") }
+            Button(role: .destructive) { delete(e) } label: { Label("Supprimer", systemImage: "trash") }
+        }
     }
 
+    private func delete(_ entry: EnvelopeEntry) {
+        ctx.delete(entry)
+        save("suppression d'une dépense")
+    }
+
+    /// Supprimer l'enveloppe supprime ses ecritures ; les operations Bankino restent.
+    private func delete(_ e: Envelope) {
+        for entry in entries where entry.envelopeUID == e.uid { ctx.delete(entry) }
+        ctx.delete(e)
+        save("suppression d'une enveloppe")
+    }
+
+    private func save(_ what: String) {
+        do { try ctx.save(); error = nil }
+        catch { ctx.rollback(); self.error = "Enregistrement impossible (\(what)), réessaie." }
+    }
 }
 
 struct EnvelopeEditor: View {
+    let envelope: Envelope?
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""; @State private var budget = ""; @State private var color = 0x2185FF
+    @State private var category = ""; @State private var carry = false
     @State private var error: String?
+    @State private var loaded = false
     private let colors = [0x2185FF, 0x47CC5C, 0xFF2E33, 0xFFB83D, 0xA852F5, 0x24C7CC]
+    private let cats = ["Courses","Restau","Transport","Logement","Loisirs","Santé","Shopping","Divers"]
     private var parsed: AmountInput.Parsed { AmountInput.parse(budget) }
     var body: some View {
         NavigationStack {
             Form {
                 TextField("Nom (ex: Courses)", text: $name)
                 AmountRow(title: "Plafond mensuel", text: $budget)
+                Picker("Opérations Bankino comptées", selection: $category) {
+                    Text("Catégorie du même nom").tag("")
+                    ForEach(cats, id: \.self) { Text($0).tag($0) }
+                }
+                Toggle("Reporter le reste au mois suivant", isOn: $carry)
                 HStack { ForEach(colors, id: \.self) { c in Circle().fill(Color(hex: UInt(c))).frame(width: 28, height: 28).overlay(color == c ? Circle().stroke(.white, lineWidth: 2) : nil).onTapGesture { color = c } } }
                 FormError(message: error)
             }
-            .navigationTitle("Nouvelle enveloppe").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(envelope == nil ? "Nouvelle enveloppe" : "Modifier l'enveloppe").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Créer") {
+                ToolbarItem(placement: .confirmationAction) { Button(envelope == nil ? "Créer" : "Enregistrer") {
                     guard let b = parsed.value else { return }
-                    ctx.insert(Envelope(name: name, monthlyBudget: b, colorHex: color)); commitForm(ctx, error: $error, dismiss: dismiss)
+                    let n = name.trimmingCharacters(in: .whitespaces)
+                    if let e = envelope {
+                        e.name = n; e.monthlyBudget = b; e.colorHex = color; e.linkedCategory = category; e.carryOver = carry
+                    } else {
+                        let e = Envelope(name: n, monthlyBudget: b, colorHex: color)
+                        e.linkedCategory = category; e.carryOver = carry
+                        ctx.insert(e)
+                    }
+                    commitForm(ctx, error: $error, dismiss: dismiss)
                 }.disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || parsed.value == nil) }
+            }
+            .onAppear {
+                guard !loaded, let e = envelope else { return }
+                loaded = true
+                name = e.name; budget = AmountInput.format(e.monthlyBudget); color = e.colorHex
+                category = e.linkedCategory; carry = e.carryOver
+            }
+        }
+    }
+}
+
+/// Ajouter ou corriger une depense d'enveloppe (montant, date, note).
+struct EnvelopeEntryEditor: View {
+    let envelope: Envelope
+    let entry: EnvelopeEntry?
+    let month: Int
+    @Environment(\.modelContext) private var ctx
+    @Environment(\.dismiss) private var dismiss
+    @State private var amount = ""; @State private var note = ""; @State private var date = Date.now
+    @State private var error: String?
+    @State private var loaded = false
+    // Negatif autorise : un remboursement diminue la depense du mois.
+    private var parsed: AmountInput.Parsed { AmountInput.parse(amount, rules: .init(allowNegative: true)) }
+    var body: some View {
+        NavigationStack {
+            Form {
+                AmountRow(title: "Montant", text: $amount, rules: .init(allowNegative: true))
+                DatePicker("Date", selection: $date, in: ...Date.now, displayedComponents: .date)
+                TextField("Note (facultatif)", text: $note)
+                Text("Un montant négatif est un remboursement.").font(.caption).foregroundStyle(Theme.textSecondary)
+                FormError(message: error)
+            }
+            .navigationTitle(entry == nil ? "Dépense · \(envelope.name)" : "Modifier la dépense").navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button("Enregistrer") {
+                    guard let v = parsed.value, let uid = envelope.uid else { return }
+                    let n = note.trimmingCharacters(in: .whitespaces)
+                    if let entry {
+                        entry.amountCents = EnvelopeBudget.cents(v); entry.date = date; entry.note = n
+                    } else {
+                        ctx.insert(EnvelopeEntry(envelopeUID: uid, date: date, amountCents: EnvelopeBudget.cents(v), note: n))
+                    }
+                    commitForm(ctx, error: $error, dismiss: dismiss)
+                }.disabled(parsed.value == nil || envelope.uid == nil) }
+            }
+            .onAppear {
+                guard !loaded else { return }
+                loaded = true
+                if let entry {
+                    amount = AmountInput.format(entry.amount); note = entry.note; date = entry.date
+                } else if month != EnvelopeMath.monthKey(.now) {
+                    // Saisie retroactive : on se place dans le mois affiche.
+                    date = min(.now, EnvelopeMath.startOfMonth(month))
+                }
             }
         }
     }

@@ -754,13 +754,63 @@ Comparer Yuko complète aussi le 2e produit. Le rappel Trilingo ouvre la leçon
 
 Suite : voir le journal `docs/verification/test-runs/2026-10-01-lot5.log`.
 
+## Audit du build 52 (AUDIT-GLOBAL-LIFEOS-BUILD52.md), lot 6
+
+**P1 corrigés, chacun avec un test de non-régression :**
+- **Ynabi** : la dépense d'un mois se calcule (écritures datées `EnvelopeEntry` + opérations
+  Bankino de la catégorie liée), plus de remise à zéro, chaque mois passé consultable, report
+  du reste au choix, édition rétroactive. Migration `EnvelopeMigration` : l'ancien montant
+  devient UNE écriture notée « les mois précédents n'étaient pas enregistrés ».
+  `EnvelopeRolloverTests` (8). **Vérifié sur une vraie base du build 52** (simulateur,
+  données de démo, nouveau build installé par-dessus) : 3 enveloppes converties, rien perdu,
+  les opérations Bankino « Courses » comptées. Capture `docs/verification/lot6/`.
+- **Finario** : devise, date et taux BCE du jour d'achat (Frankfurter) ; coût et plus-value
+  en euros ; positions d'avant « devise à confirmer », exclues de la plus-value et dites
+  comme telles. `FinarioCurrencyTests`.
+- **PetMerge** : composition auto jamais associée aux anciennes valeurs de la base ; même début
+  de recette n'applique plus rien sans validation. `PetMergeOverrideTests` (+2).
+- Registre : 84 lignes réconciliées avec le code (dont 2 baissées : fonctions retirées),
+  4 corrections marquées « partiel » avec leur reste.
+
+**Lot de fonctions (Nutrition, Sport, Apprentissage, journal alimentaire)** : 18 outils
+complétés, 18 nouveaux types de données (tous enregistrés, migrations sans perte) :
+- Nutrition : jeûne personnalisé + historique, frigo modifiable + alertes de péremption,
+  courses modifiables + quantités/rayons/suggestions, boissons, compléments (heures, jours,
+  stock, historique des prises, « Oui » de la notification compte la prise), allergènes perso.
+- Journal : jours passés, favoris, récents, aliments perso, repas enregistrés, copier la
+  veille, erreurs réseau distinctes, micronutriments jamais comptés à 0.
+- Sport : programme généré (objectif, jours, durée, matériel) avec aperçu et retour arrière,
+  filtre matériel, supersets jusque dans la séance (pas de repos entre les deux),
+  exercices perso, mensurations, export CSV, mobilité reprise après relance, préréglages et
+  historique Tabata, séries avec jours de repos et calendrier, historique de pas 90 jours.
+- Apprentissage : Anko (paquets, cartes inversées et à trous, recherche, suspendre,
+  annuler, CSV, stats), Coursia (programmes, modules, leçons, échéances), Blinklist
+  (chapitres, idées, surlignages, collections), Headwave (notions perso, pas de faux catalogue).
+
+Suite : 1 053 tests, 0 échec. Journal `docs/verification/test-runs/2026-10-01-lot6.log`.
+Passage des routes sur la base migrée : 86 outils ouverts, 0 absent, aucun plantage.
+Matrice : testé 294, non testé 356, manquant 450, dépendance 109.
+**Pas fait** : rien vérifié sur un vrai iPhone (notifications, caméra, Santé) ; comptes ;
+Cal Eye sans clé ; Opale ; Envol ; passe visuelle des 4 apparences.
+
 ## Resume here
 
-Read the two audit lot tables above first. Next, in the audit's order:
-1. **Accounts**: needs Theo's choice (Apple + iCloud without a server, or a server for Google/Facebook/email).
-2. **Opale**: the day Apple grants Family Controls, add the entitlement, then build the DeviceActivity monitor extension (scheduled blocks, end of session in background).
-3. **Visual pass of the four looks** on iPhone, iPad and Mac (light/dark x colour/neutral), including Tabata and charts; widgets reading `widget_palette`.
-4. **Widgets matrix** per tool (audit point 9) and real journeys on device (point 10).
-5. Extend MATRIX.md family by family (Sport and Nutrition done; next: Santé, Cycle, Sommeil, Mental), fixing gaps as found. Depth of the other tools, one by one, with the audit's method: entry, configuration, main action, result, edit, delete, relaunch, offline, permission refused, shared data, platforms.
+The inventory is complete (89/89, `MATRIX.md`). Do not redo it. The work now is to BUILD the
+missing features, lot by lot, each tool covered end to end: configuration, real data, main
+action, result, edit, delete, persistence, permissions, errors and offline, links to other
+modules, platforms. Each lot updates its matrix rows with proof.
 
-Test runs: use `-parallel-testing-enabled NO`. Shut simulators down between checks (disk and swap).
+Plan, in order:
+1. Lot 6 done (see above). Next lot: Health, Sleep, Mental, Productivity depth.
+2. Device journeys only a real iPhone can prove: alarm, microphone, night sounds, notifications,
+   camera scan, interactive widget, kill and resume, Mac keyboard navigation.
+3. Health, Sleep, Mental, Productivity depth, then the other families.
+4. Accounts and sync: Theo asked for Apple, Google, Facebook and email. Needs his choice of
+   backend (server and provider credentials); everything else can be prepared.
+5. Cal Eye keyless engine (server, App Privacy: Theo's choice), Opale (Family Controls from
+   Apple), Envol (Duffel key), as each becomes available.
+6. Visual pass of the four looks on iPhone, iPad and Mac; widgets per tool; video editor lot.
+
+Schema changes are allowed: additive fields with defaults, new tables, a one-time migration
+that loses nothing, and a test. Test runs: `-parallel-testing-enabled NO`; "runner hung" or
+"signal term" = boot the simulator first, then `test-without-building`.

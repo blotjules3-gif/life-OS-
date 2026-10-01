@@ -97,8 +97,13 @@ enum DataExporter {
             ["date": iso($0.date), "montant": $0.amount, "categorie": $0.category,
              "compte": $0.account, "note": $0.note]
         })
+        let envelopeNames = Dictionary(try ctx.fetch(FetchDescriptor<Envelope>()).compactMap { e in e.uid.map { ($0, e.name) } },
+                                       uniquingKeysWith: { a, _ in a })
         add("budgets", "Budgets", try ctx.fetch(FetchDescriptor<Envelope>()).map {
-            ["nom": $0.name, "budgetMensuel": $0.monthlyBudget, "depense": $0.spent]
+            ["nom": $0.name, "budgetMensuel": $0.monthlyBudget, "categorieComptee": $0.countedCategory, "report": $0.carryOver]
+        })
+        add("depenses_enveloppes", "Dépenses des enveloppes", try ctx.fetch(FetchDescriptor<EnvelopeEntry>()).map {
+            ["enveloppe": envelopeNames[$0.envelopeUID] ?? "?", "date": iso($0.date), "montant": $0.amount, "note": $0.note]
         })
         add("abonnements", "Abonnements", try ctx.fetch(FetchDescriptor<Subscription>()).map {
             ["nom": $0.name, "montant": $0.amount, "cycle": $0.cycle,

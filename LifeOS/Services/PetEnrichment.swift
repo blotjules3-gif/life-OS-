@@ -89,7 +89,10 @@ enum PetMerge {
         }
     }
 
-    /// Lecture automatique : ne remplit que les trous, sans melanger deux versions.
+    /// Lecture automatique : ne remplit que les trous, et ne MELANGE JAMAIS deux sources.
+    /// Composition et constituants vont ensemble seulement s'ils viennent de la meme
+    /// photo. Sinon rien n'est associe automatiquement : l'utilisateur relit et valide
+    /// (audit du build 52 : trois ingredients communs ne prouvent pas la meme version).
     private static func applyAutomatic(_ l: PetProfile.LabelReading, origin: String,
                                        to q: inout CatalogProduct, facts: inout CatalogProduct.PetFacts) {
         let check = "lue automatiquement, à vérifier"
@@ -97,8 +100,17 @@ enum PetMerge {
         facts.additivesText = facts.additivesText ?? l.additives
         if q.ingredientsText == nil, let c = l.composition {
             q.ingredientsText = c
-            if !l.analytics.isEmpty { q.petAnalysis = analysis(l.analytics) }
-            facts.provenance.append("Composition et constituants : \(origin) (\(l.source)), \(check).")
+            if !l.analytics.isEmpty {
+                q.petAnalysis = analysis(l.analytics)
+                facts.provenance.append("Composition et constituants : \(origin) (\(l.source)), \(check).")
+            } else {
+                let hadBaseValues = q.petAnalysis != nil
+                // Des valeurs de la base sans composition ne sont pas prouvees de la meme
+                // version que la composition lue : on ne les associe pas.
+                q.petAnalysis = nil
+                facts.provenance.append("Composition : \(origin) (\(l.source)), \(check)."
+                    + (hadBaseValues ? " Constituants de la base mis de côté : rien ne prouve qu'ils décrivent cette version. Relis l'étiquette pour les valider." : ""))
+            }
             return
         }
         guard q.petAnalysis == nil, !l.analytics.isEmpty else { return }
@@ -113,8 +125,7 @@ enum PetMerge {
         }
         switch recipeMatch(base, c) {
         case .same:
-            q.petAnalysis = analysis(l.analytics)
-            facts.provenance.append("Constituants : \(origin) (\(l.source)), \(check). Composition : base. Les 3 premiers ingrédients concordent (indice de même recette, pas une preuve de version).")
+            facts.provenance.append("Constituants trouvés sur l'étiquette, non appliqués : la composition de la base commence pareil (indice de même recette, pas une preuve de version). Relis et valide l'étiquette pour les utiliser.")
         case .different:
             facts.provenance.append("L'étiquette lue ne commence pas par les mêmes ingrédients que la base : valeurs non mélangées (peut-être une autre version de la recette). Relis et valide l'étiquette si c'est bien ton paquet.")
         case .unknown:

@@ -52,6 +52,8 @@ import SwiftData
     var start: Date
     var end: Date?
     var targetHours: Int
+    /// Note libre (ressenti, raison de l'arret). Ajoutee au lot 6.
+    var note: String = ""
     init(start: Date = .now, end: Date? = nil, targetHours: Int = 16) {
         self.start = start; self.end = end; self.targetHours = targetHours
     }
@@ -61,7 +63,13 @@ import SwiftData
 
 @Model final class WaterEntry {
     var date: Date
+    /// Millilitres COMPTES dans l'objectif (volume x part reglee pour la boisson).
+    /// Tous les ecrans additionnent ce champ, il garde donc son sens d'avant.
     var amountML: Int
+    /// Volume servi ; 0 = ancienne prise, le volume est alors `amountML`.
+    var volumeML: Int = 0
+    /// Boisson ("" = eau, anciennes prises).
+    var beverage: String = ""
     init(date: Date = .now, amountML: Int = 0) { self.date = date; self.amountML = amountML }
 }
 
@@ -89,6 +97,18 @@ import SwiftData
     /// Meme convention que CustomReminder.stableID.
     var stableID: String = ""
 
+    // Lot 6 : dose, plusieurs prises, jours choisis, stock.
+    var doseText: String = ""
+    /// "08:00,20:00" ; vide = une seule prise a `hour`/`minute` (anciennes lignes).
+    var timesRaw: String = ""
+    /// Jours lundi = 1 ... dimanche = 7, "1,3,5" ; vide = tous les jours.
+    var weekdaysRaw: String = ""
+    var trackStock: Bool = false
+    var stock: Int = 0
+    var unitsPerDose: Int = 1
+    /// Prevenir quand il reste ce nombre d'unites ou moins.
+    var refillThreshold: Int = 7
+
     init(name: String = "", hour: Int = 8, minute: Int = 0, active: Bool = true,
          moment: String = "matin", withFood: Bool = true, advice: String = "", confirm: Bool = true) {
         self.name = name; self.hour = hour; self.minute = minute; self.active = active
@@ -103,6 +123,11 @@ import SwiftData
     var category: String     // Légume, Protéine, Laitier, Épicerie...
     var location: String     // Frigo / Placard / Congélateur
     var expiry: Date?
+    /// Identifiant de notification stable, rempli paresseusement (meme convention que
+    /// Supplement.stableID : defaut vide, jamais UUID()).
+    var stableID: String = ""
+    /// Prevenir n jours avant la peremption.
+    var alertDaysBefore: Int = 1
     init(name: String = "", quantity: String = "1", category: String = "Épicerie", location: String = "Frigo", expiry: Date? = nil) {
         self.name = name; self.quantity = quantity; self.category = category
         self.location = location; self.expiry = expiry
@@ -114,6 +139,8 @@ import SwiftData
     var quantity: String
     var aisle: String
     var checked: Bool
+    /// Unite de la quantite ("" = piece). Ajoutee au lot 6.
+    var unit: String = ""
     init(name: String = "", quantity: String = "1", aisle: String = "Divers", checked: Bool = false) {
         self.name = name; self.quantity = quantity; self.aisle = aisle; self.checked = checked
     }
@@ -163,6 +190,8 @@ import SwiftData
     var exercisesJSON: String = ""
     /// Fin du repos en cours : le compte a rebours survit a la navigation et a la relance.
     var restEnd: Date? = nil
+    /// Paires de superset figees au demarrage (copie de `GymDay.supersetsJSON`).
+    var supersetsJSON: String = ""
     init(title: String = "", start: Date = .now) {
         self.id = UUID(); self.title = title; self.start = start
     }

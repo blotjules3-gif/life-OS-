@@ -197,6 +197,14 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             let action = response.actionIdentifier
             if action == "CONFIRM_YES" || action == UNNotificationDefaultActionIdentifier {
                 ConfirmationStore.shared.markDone(key)
+                // Complement : la prise compte aussi dans l'historique et le stock.
+                if action == "CONFIRM_YES" {
+                    await MainActor.run {
+                        if let ctx = SharedModelContextProvider.shared.context {
+                            SupplementDoseLog.logTaken(confirmKey: key, in: ctx)
+                        }
+                    }
+                }
             } else if action == "CONFIRM_NO" {
                 // Petit rappel dans 30 min.
                 NotificationManager.shared.scheduleAfter(
@@ -313,6 +321,7 @@ enum ToolRoute {
     static func target(for route: String) -> Target? {
         switch route {
         case "trilingo": return Target(category: .learning, tool: "Trilingo")
+        case "streakz": return Target(category: .fitness, tool: "Streakz")
         default: return nil
         }
     }

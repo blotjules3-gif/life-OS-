@@ -262,34 +262,50 @@ enum MemoryRetention: String {
 @Model final class Envelope {
     var name: String
     var monthlyBudget: Double
+    /// ANCIENNE colonne : un montant saisi a la main (+10 / -10), remis a zero chaque mois,
+    /// donc sans historique. Conservee pour la migration (`EnvelopeMigration`), qui la
+    /// convertit une fois en `EnvelopeEntry`. Plus lue par les ecrans.
     var spent: Double
     var colorHex: Int
-    /// Mois auquel `spent` se rapporte.
-    ///
-    /// Sans lui, un budget dit MENSUEL cumulait depuis la creation de
-    /// l'enveloppe: un depassement en janvier laissait l'enveloppe rouge pour
-    /// toujours, et le plafond ne voulait plus rien dire.
-    /// Valeur par defaut fournie pour que la migration reste legere.
+    /// Ancien marqueur de mois de `spent`. Sert seulement a dater l'ecriture de reprise.
     var periodStart: Date = Date.distantPast
+    /// Identifiant stable, pose a la migration (nil pour les enveloppes d'avant : une
+    /// valeur par defaut serait LA MEME pour toutes les lignes existantes).
+    var uid: UUID?
+    /// Categorie des operations bancaires (Bankino) comptees dans l'enveloppe. Vide = le nom.
+    var linkedCategory: String = ""
+    /// Le reste (ou le depassement) d'un mois passe au suivant, comme YNAB.
+    var carryOver: Bool = false
+    /// Premier mois de l'enveloppe (point de depart du report).
+    var createdAt: Date = Date.distantPast
+    /// L'ancien `spent` a deja ete converti en ecriture.
+    var migratedSpent: Bool = false
 
     init(name: String = "", monthlyBudget: Double = 0, spent: Double = 0,
          colorHex: Int = 0x618EF1, periodStart: Date = .now) {
         self.name = name; self.monthlyBudget = monthlyBudget; self.spent = spent
         self.colorHex = colorHex; self.periodStart = periodStart
+        self.uid = UUID(); self.createdAt = periodStart
+        // Une enveloppe neuve n'a pas d'ancien montant a convertir... sauf celles creees
+        // avec un `spent` (donnees de demonstration) : la migration s'en charge.
+        self.migratedSpent = spent == 0
     }
-    var remaining: Double { monthlyBudget - spent }
-    var progress: Double { monthlyBudget == 0 ? 0 : min(1, spent / monthlyBudget) }
 
-    /// Remet la depense a zero quand on change de mois.
-    /// Rend true si un nouveau mois a ete ouvert, pour pouvoir enregistrer.
-    @discardableResult
-    func rolloverIfNeeded(now: Date = .now, calendar: Calendar = .current) -> Bool {
-        let startOfThisMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
-        guard periodStart < startOfThisMonth else { return false }
-        spent = 0
-        periodStart = startOfThisMonth
-        return true
+    /// Categorie comptee : la categorie liee, sinon le nom de l'enveloppe.
+    var countedCategory: String { linkedCategory.isEmpty ? name : linkedCategory }
+}
+
+/// Une depense rangee dans une enveloppe, datee. Remplace les boutons +10 / -10 :
+/// chaque mois garde ses depenses, et une correction se fait sur l'ecriture elle-meme.
+@Model final class EnvelopeEntry {
+    var envelopeUID: UUID
+    var date: Date
+    var amountCents: Int
+    var note: String
+    init(envelopeUID: UUID, date: Date = .now, amountCents: Int, note: String = "") {
+        self.envelopeUID = envelopeUID; self.date = date; self.amountCents = amountCents; self.note = note
     }
+    var amount: Double { Double(amountCents) / 100 }
 }
 
 @Model final class Subscription {

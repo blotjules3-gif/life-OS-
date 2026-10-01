@@ -146,6 +146,9 @@ enum WeekdayMask {
     /// par le titre (deux jours peuvent porter le meme titre, un titre se renomme).
     /// Optionnel pour la migration des jours existants : attribue par `stableID`.
     var uid: UUID? = nil
+    /// Supersets du jour : paires de noms d'exercices (JSON `[[a, b]]`, voir
+    /// `FitbotSupersets`). A part de `focus`, dont le format est lu ailleurs.
+    var supersetsJSON: String = ""
     init(weekday: Int = 2, title: String = "", focus: String = "", isRest: Bool = false) {
         self.weekday = weekday; self.title = title; self.focus = focus; self.isRest = isRest
         self.uid = UUID()

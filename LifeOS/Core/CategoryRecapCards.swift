@@ -20,6 +20,8 @@ struct CategoryRecapCard: View {
     @Query private var holdings: [Holding]
     @Query private var jobs: [JobApplication]
     @Query private var envelopes: [Envelope]
+    @Query private var envelopeEntries: [EnvelopeEntry]
+    @Query private var txns: [Txn]
     @Query private var medications: [Medication]
     @Query private var deadlines: [Deadline]
     @Query private var packing: [PackingItem]
@@ -155,7 +157,8 @@ struct CategoryRecapCard: View {
         return HStack(spacing: 16) {
             recapMetric(title: "Actifs suivis", value: "\(count)", unit: "lignes", icon: "chart.line.uptrend.xyaxis", color: category.tint)
             Divider().frame(height: 36)
-            let over = envelopes.filter { $0.monthlyBudget > 0 && $0.spent > $0.monthlyBudget }.count
+            // Depense du mois calculee (ecritures + operations Bankino), plus l'ancien `spent`.
+            let over = EnvelopeBudget.overspentCount(envelopes, entries: envelopeEntries, txns: txns)
             recapMetric(title: "Enveloppes", value: "\(envelopes.count)",
                         unit: envelopes.isEmpty ? "aucune" : (over > 0 ? "\(over) dépassée\(over > 1 ? "s" : "")" : "dans le budget"),
                         icon: "eurosign.circle.fill", color: over > 0 ? Theme.warning : Theme.success)

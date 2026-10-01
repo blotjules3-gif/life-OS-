@@ -1,11 +1,13 @@
 import SwiftUI
 import SwiftData
 import VisionKit
+import AVFoundation
 
 /// Écran calories façon Cal AI : calories restantes + anneau, macros, bande de dates, streak, repas du jour.
 struct CalAIView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \FoodEntry.date, order: .reverse) private var foods: [FoodEntry]
+    @Query private var microRows: [FoodMicros]
 
     @AppStorage(AppStorageKeys.kcalGoal) private var kcalGoal = 2200
     @AppStorage(AppStorageKeys.proteinGoal) private var proteinGoal = 150
@@ -17,6 +19,12 @@ struct CalAIView: View {
     @State private var showScan = false
     /// Ligne ouverte en modification. Taper un repas l'ouvre.
     @State private var editing: FoodEntry?
+    @State private var showDayPicker = false
+    /// Repas a enregistrer comme modele (nom demande dans une alerte).
+    @State private var savingMeal: String?
+    @State private var savedMealName = ""
+    @State private var actionError: String?
+    @State private var actionDone: String?
 
     private let cal = Calendar.current
 
@@ -34,31 +42,55 @@ struct CalAIView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 header
+                dayNavigator
                 dateStrip
                 caloriesCard
                 quickActions
                 macrosRow
+                microsRow
                 mealsSection
                 historySection
             }
             .padding(Theme.pad)
+            // iPad et Mac: une colonne lisible au centre, pas des cartes etirees.
+            .frame(maxWidth: 760)
+            .frame(maxWidth: .infinity)
         }
         .background(Theme.bg)
         .navigationTitle("").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) {
             Button { showAdd = true } label: { Image(systemName: "plus.circle.fill").font(.title2) }.accessibilityLabel("Ajouter")
         } }
-        .sheet(isPresented: $showAdd) { FoodEditor() }
-        .sheet(isPresented: $showScan) { BarcodeAddSheet(defaultMeal: currentMeal) }
+        .sheet(isPresented: $showAdd) { JournalAddSheet(day: selectedDay, defaultMeal: currentMeal) }
+        .sheet(isPresented: $showScan) { BarcodeAddSheet(defaultMeal: currentMeal, day: selectedDay) }
         .sheet(item: $editing) { FoodEntryEditor(entry: $0) }
-        .task { syncNutritionToContext() }
+        .sheet(isPresented: $showDayPicker) { dayPickerSheet }
+        .alert("Enregistrer ce repas", isPresented: Binding(get: { savingMeal != nil }, set: { if !$0 { savingMeal = nil } })) {
+            TextField("Nom (ex : Petit-déj habituel)", text: $savedMealName)
+            Button("Enregistrer") { if let m = savingMeal { saveMeal(m) } }
+            Button("Annuler", role: .cancel) {}
+        } message: { Text("Tu pourras l'ajouter en un geste depuis Ajouter, onglet Repas.") }
+        .alert("Action impossible", isPresented: Binding(get: { actionError != nil }, set: { if !$0 { actionError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: { Text(actionError ?? "") }
+        .overlay(alignment: .bottom) {
+            if let actionDone {
+                Text(actionDone).font(.footnote.weight(.semibold)).padding(.horizontal, 14).padding(.vertical, 10)
+                    .raisedSurface(Capsule()).padding(.bottom, 24)
+                    .task { try? await Task.sleep(for: .seconds(2)); self.actionDone = nil }
+            }
+        }
+        .task { syncNutritionToContext(); purgeOrphanMicros() }
         .onChange(of: foods.prefix(200).map { "\($0.date.timeIntervalSince1970)|\($0.calories)|\($0.protein)" }) { _, _ in syncNutritionToContext() }
     }
 
     private func syncNutritionToContext() {
         guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return }
-        grp.set(totals.kcal, forKey: "today_kcal")
-        grp.set(Int(totals.p), forKey: "today_protein_g")
+        // Toujours AUJOURD'HUI: avant, regarder un jour passe envoyait ses totaux
+        // au widget et au coach comme si c'etait ceux du jour.
+        let today = FoodJournal.totals(foods, day: .now)
+        grp.set(today.kcal, forKey: "today_kcal")
+        grp.set(Int(today.protein), forKey: "today_protein_g")
     }
 
     // MARK: Actions rapides (Scanner code-barres + Ajouter)
@@ -103,6 +135,52 @@ struct CalAIView: View {
             .padding(.horizontal, 12).padding(.vertical, 7)
             .raisedSurface(Capsule())
         }
+    }
+
+    // MARK: Navigation par jour
+
+    private var isToday: Bool { cal.isDateInToday(selectedDay) }
+
+    private var dayNavigator: some View {
+        HStack(spacing: 12) {
+            Button { selectedDay = FoodJournal.shift(selectedDay, by: -1) } label: {
+                Image(systemName: "chevron.left").font(.headline).frame(width: 44, height: 44)
+            }
+            .accessibilityLabel("Jour précédent")
+            Button { showDayPicker = true } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "calendar")
+                    Text(FoodJournal.dayTitle(selectedDay)).font(.headline)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .accessibilityHint("Choisir un jour")
+            Button { selectedDay = FoodJournal.shift(selectedDay, by: 1) } label: {
+                Image(systemName: "chevron.right").font(.headline).frame(width: 44, height: 44)
+            }
+            .disabled(isToday)
+            .accessibilityLabel("Jour suivant")
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(Theme.textPrimary)
+    }
+
+    private var dayPickerSheet: some View {
+        NavigationStack {
+            DatePicker("Jour", selection: Binding(get: { selectedDay },
+                                                  set: { selectedDay = cal.startOfDay(for: $0); showDayPicker = false }),
+                       in: ...Date(), displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .padding()
+                .navigationTitle("Aller au jour").navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button("Fermer") { showDayPicker = false } }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Aujourd'hui") { selectedDay = cal.startOfDay(for: .now); showDayPicker = false }
+                    }
+                }
+        }
+        .presentationDetents([.medium, .large])
     }
 
     // MARK: Bande de dates
@@ -187,11 +265,59 @@ struct CalAIView: View {
         .raisedSurface(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
+    // MARK: Micronutriments (seulement ce que la base ou l'utilisateur donne)
+
+    private var microsRow: some View {
+        let idx = FoodJournal.microsIndex(microRows)
+        let values = dayFoods.map { idx[FoodJournal.microsKey($0)] ?? .unknown }
+        let rows: [(String, FoodJournal.MicroTotal)] = [
+            ("Fibres", FoodJournal.microTotal(values.map(\.fiber))),
+            ("Sucres", FoodJournal.microTotal(values.map(\.sugars))),
+            ("Sel", FoodJournal.microTotal(values.map(\.salt))),
+        ]
+        let unknown = rows.map(\.1.unknownCount).max() ?? 0
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                ForEach(rows, id: \.0) { label, total in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(total.label).font(.headline)
+                            .foregroundStyle(total.knownCount == 0 ? Theme.textSecondary : Theme.textPrimary)
+                        Text(label).font(.caption2).foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            if !dayFoods.isEmpty, unknown > 0 {
+                Text("\(unknown) aliment\(unknown > 1 ? "s" : "") sans valeur connue : pas compté\(unknown > 1 ? "s" : "") comme zéro.")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .raisedSurface(RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
     // MARK: Repas du jour
+
+    private var previousDay: Date { cal.date(byAdding: .day, value: -1, to: selectedDay) ?? selectedDay }
+    private var previousDayFoods: [FoodEntry] { foods.filter { cal.isDate($0.date, inSameDayAs: previousDay) } }
 
     private var mealsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Repas du jour").nikeTitle(20)
+            HStack {
+                Text(isToday ? "Repas du jour" : "Repas · \(FoodJournal.dayTitle(selectedDay))").nikeTitle(20)
+                Spacer()
+                if !previousDayFoods.isEmpty {
+                    Menu {
+                        Button { copy(meal: nil) } label: { Label("Toute la veille", systemImage: "doc.on.doc") }
+                        ForEach(Array(Set(previousDayFoods.map(\.meal))).sorted(), id: \.self) { m in
+                            Button { copy(meal: m) } label: { Label("\(m) de la veille", systemImage: "fork.knife") }
+                        }
+                    } label: {
+                        Label("Copier la veille", systemImage: "doc.on.doc").font(.caption.weight(.bold))
+                    }
+                }
+            }
             if dayFoods.isEmpty {
                 Button { showScan = true } label: {
                     HStack(spacing: 14) {
@@ -229,6 +355,17 @@ struct CalAIView: View {
                     .foregroundStyle(Theme.textSecondary)
                 Spacer()
                 Text("\(kcal) kcal").font(.system(size: 12, weight: .heavy)).foregroundStyle(Color.accentColor)
+                Menu {
+                    Button { savedMealName = meal; savingMeal = meal } label: {
+                        Label("Enregistrer ce repas", systemImage: "square.and.arrow.down")
+                    }
+                    if !isToday {
+                        Button { copyToToday(meal: meal) } label: { Label("Copier vers aujourd'hui", systemImage: "doc.on.doc") }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle").font(.subheadline).frame(width: 32, height: 28)
+                }
+                .accessibilityLabel("Actions du repas \(meal)")
             }
             .padding(.horizontal, 14).padding(.top, 12).padding(.bottom, 6)
             ForEach(items.sorted(by: { $0.date < $1.date })) { f in
@@ -316,15 +453,53 @@ struct CalAIView: View {
         ["D", "L", "M", "M", "J", "V", "S"][cal.component(.weekday, from: d) - 1]
     }
 
+    // MARK: Copier, enregistrer, nettoyer
+
+    /// Copie la veille du jour regarde (toute la journee ou un repas) sur ce jour.
+    private func copy(meal: String?) {
+        let lines = FoodJournal.copyLines(from: foods, micros: FoodJournal.microsIndex(microRows),
+                                          sourceDay: previousDay, toDay: selectedDay, meal: meal)
+        write(lines, done: meal == nil ? "Veille copiée" : "\(meal!) de la veille copié")
+    }
+
+    private func copyToToday(meal: String) {
+        let lines = FoodJournal.copyLines(from: foods, micros: FoodJournal.microsIndex(microRows),
+                                          sourceDay: selectedDay, toDay: cal.startOfDay(for: .now), meal: meal)
+        write(lines, done: "\(meal) copié vers aujourd'hui")
+    }
+
+    private func write(_ lines: [JournalLine], done: String) {
+        do { try FoodJournal.log(lines, in: ctx); Haptics.success(); actionDone = done }
+        catch { Haptics.warning(); actionError = error.localizedDescription }
+    }
+
+    private func saveMeal(_ meal: String) {
+        let items = FoodJournal.savedItems(from: dayFoods.filter { $0.meal == meal },
+                                           micros: FoodJournal.microsIndex(microRows))
+        let name = savedMealName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !items.isEmpty else { return }
+        let m = SavedMeal(name: name.isEmpty ? meal : name, items: items)
+        ctx.insert(m)
+        do { try ctx.save(); Haptics.success(); actionDone = "Repas « \(m.name) » enregistré" }
+        catch { ctx.delete(m); actionError = "Le repas n'a pas pu être enregistré. Réessaie." }
+        savingMeal = nil
+    }
+
+    /// Micros dont la ligne a ete supprimee par un autre ecran.
+    private func purgeOrphanMicros() {
+        let orphans = FoodJournal.orphanKeys(micros: microRows, entries: foods)
+        guard !orphans.isEmpty else { return }
+        microRows.filter { orphans.contains($0.entryKey) }.forEach { ctx.delete($0) }
+        try? ctx.save()
+    }
+
     // MARK: Données
 
     private var dayFoods: [FoodEntry] { foods.filter { cal.isDate($0.date, inSameDayAs: selectedDay) } }
     private var totals: (kcal: Int, p: Double, c: Double, f: Double) {
         dayFoods.reduce((0, 0.0, 0.0, 0.0)) { ($0.0 + $1.calories, $0.1 + $1.protein, $0.2 + $1.carbs, $0.3 + $1.fat) }
     }
-    private var weekDays: [Date] {
-        (0..<7).reversed().map { cal.date(byAdding: .day, value: -$0 + 1, to: cal.startOfDay(for: .now))! }
-    }
+    private var weekDays: [Date] { FoodJournal.stripDays(selected: selectedDay) }
     private var streak: Int {
         var c = 0
         var day = cal.startOfDay(for: .now)
@@ -345,8 +520,13 @@ struct BarcodeAddSheet: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     var defaultMeal: String = "Déjeuner"
+    /// Jour regarde dans le journal: le produit scanne y est ajoute par defaut.
+    var day: Date = .now
 
     @State private var product: FoodProduct?
+    @State private var chosenDay = Calendar.current.startOfDay(for: .now)
+    @State private var lookupError: String?
+    @State private var cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
     @State private var grams = "100"
     @State private var meal = "Déjeuner"
     @State private var saveError: String?
@@ -378,14 +558,42 @@ struct BarcodeAddSheet: View {
                 }
             }
         }
-        .onAppear { meal = defaultMeal }
+        .onAppear { meal = defaultMeal; chosenDay = Calendar.current.startOfDay(for: min(day, .now)) }
         .alert("Produit introuvable", isPresented: $notFound) {
             Button("OK", role: .cancel) {}
-        } message: { Text("Ce code-barres n'est pas dans OpenFoodFacts. Essaie « Rechercher » par nom.") }
+        } message: { Text("Ce code-barres n'est pas dans Open Food Facts. Essaie « Rechercher » par nom, ou crée-le dans Perso.") }
+        // Different de "introuvable": hors ligne, le produit existe peut-etre.
+        .alert("Recherche impossible", isPresented: Binding(get: { lookupError != nil }, set: { if !$0 { lookupError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: { Text(lookupError ?? "") }
     }
 
     @ViewBuilder private var scanner: some View {
-        if scannerAvailable {
+        if cameraStatus == .denied || cameraStatus == .restricted {
+            Form {
+                Section("Caméra refusée") {
+                    Text("LifeOS n'a pas accès à la caméra, donc le scan est coupé. Tu peux l'autoriser dans Réglages, ou entrer le code à la main.")
+                        .font(.callout).foregroundStyle(.secondary)
+                    Button("Ouvrir les Réglages") {
+                        if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                    }
+                }
+                manualCodeSection
+            }
+        } else if cameraStatus == .notDetermined && scannerAvailableIgnoringPermission {
+            Form {
+                Section("Scanner un code-barres") {
+                    Text("Le scan utilise la caméra, seulement pendant que cet écran est ouvert.")
+                        .font(.callout).foregroundStyle(.secondary)
+                    Button("Autoriser la caméra") {
+                        AVCaptureDevice.requestAccess(for: .video) { _ in
+                            Task { @MainActor in cameraStatus = AVCaptureDevice.authorizationStatus(for: .video) }
+                        }
+                    }
+                }
+                manualCodeSection
+            }
+        } else if scannerAvailable {
             ZStack {
                 BarcodeScanner { lookup($0) }.ignoresSafeArea()
                 VStack {
@@ -406,19 +614,35 @@ struct BarcodeAddSheet: View {
         } else {
             Form {
                 Section("Scanner indisponible ici") {
-                    Text("Le scan caméra marche sur un vrai iPhone. En attendant, entre un code-barres.")
+                    Text("Le scan caméra marche sur un iPhone ou un iPad avec caméra. En attendant, entre un code-barres.")
                         .font(.callout).foregroundStyle(.secondary)
                 }
-                Section("Code-barres") {
-                    TextField("Ex. 3017620422003 (Nutella)", text: $manual).keyboardType(.numberPad)
-                    Button("Chercher ce code") { lookup(manual) }.disabled(manual.count < 6)
-                }
+                manualCodeSection
             }
         }
     }
 
+    private var manualCodeSection: some View {
+        Section("Code-barres") {
+            TextField("Ex. 3017620422003 (Nutella)", text: $manual).keyboardType(.numberPad)
+            Button("Chercher ce code") { lookup(manual) }.disabled(manual.count < 6 || loadingCode != nil)
+            if loadingCode != nil { ProgressView() }
+        }
+    }
+
+    /// Le materiel sait scanner (la permission est demandee a part).
+    private var scannerAvailableIgnoringPermission: Bool {
+        #if targetEnvironment(macCatalyst)
+        return false
+        #else
+        return DataScannerViewController.isSupported
+        #endif
+    }
+
     private func confirm(_ p: FoodProduct) -> some View {
-        let kcal = Int(Double(p.kcal) * factor)
+        let line = FoodJournal.line(p.per100, grams: factor * 100, meal: meal,
+                                    date: FoodLogService.mealDate(day: chosenDay))
+        let kcal = line.draft.calories
         return Form {
             Section {
                 VStack(alignment: .leading, spacing: 8) {
@@ -456,8 +680,12 @@ struct BarcodeAddSheet: View {
                 macroRow("Protéines", "\(Int(p.protein * factor)) g")
                 macroRow("Glucides", "\(Int(p.carbs * factor)) g")
                 macroRow("Lipides", "\(Int(p.fat * factor)) g")
+                macroRow("Fibres", FoodJournal.microText(line.micros.fiber))
+                macroRow("Sucres", FoodJournal.microText(line.micros.sugars))
+                macroRow("Sel", FoodJournal.microText(line.micros.salt))
             }
             Section {
+                DatePicker("Jour", selection: $chosenDay, in: ...Date(), displayedComponents: .date)
                 Picker("Repas", selection: $meal) { ForEach(meals, id: \.self) { Text($0) } }
             }
             Section {
@@ -468,9 +696,8 @@ struct BarcodeAddSheet: View {
                     // Avant: insertion sans enregistrement, puis fermeture. La feuille se
                     // ferme maintenant SEULEMENT si le repas est vraiment ecrit.
                     do {
-                        try FoodLogService.log([.init(name: p.name, calories: kcal,
-                                                      protein: p.protein * factor, carbs: p.carbs * factor,
-                                                      fat: p.fat * factor, meal: meal)], in: ctx)
+                        var l = line; l.draft.meal = meal
+                        try FoodJournal.log([l], in: ctx)
                         Haptics.success(); dismiss()
                     } catch {
                         Haptics.warning()
@@ -491,11 +718,14 @@ struct BarcodeAddSheet: View {
         guard loadingCode == nil else { return }
         loadingCode = code
         Task {
-            let p = await FoodSearchService.product(barcode: code)
+            let r = await FoodSearchService.lookup(barcode: code)
             await MainActor.run {
                 loadingCode = nil
-                if let p { product = p; grams = "100"; Haptics.medium() }
-                else { notFound = true; Haptics.tap() }
+                switch r {
+                case .found(let p): product = p; grams = "100"; Haptics.medium()
+                case .notFound: notFound = true; Haptics.tap()
+                case .unavailable(let m): lookupError = m; Haptics.warning()
+                }
             }
         }
     }

@@ -21,6 +21,10 @@ struct FitnessSetupView: View {
     @State private var level = "Intermédiaire"
     @State private var freq = "4 jours"
     @State private var place = "Salle"
+    /// Matériel (libellés `FitbotEquipment`) et duree de seance : le meme generateur
+    /// que « Générer un programme » dans Fitbot, pour un seul moteur.
+    @State private var kit: Set<String> = [FitbotEquipment.gym.label]
+    @State private var minutes = "60 min"
     @State private var emphasis: Set<String> = []
 
     /// Le generateur de programme raisonne sur un seul objectif. On lui donne
@@ -61,14 +65,20 @@ struct FitnessSetupView: View {
             SetupPage {
                 VStack(spacing: 16) {
                     SetupHeader(icon: "calendar", title: "Combien de séances par semaine ?", accent: tint)
-                    SetupChoice(options: ["2 jours", "3 jours", "4 jours", "5 jours"], selection: $freq, accent: tint)
+                    SetupChoice(options: ["2 jours", "3 jours", "4 jours", "5 jours", "6 jours"], selection: $freq, accent: tint)
                 }
             },
             SetupPage {
                 VStack(spacing: 16) {
-                    SetupHeader(icon: "house", title: "Où t'entraînes-tu ?", accent: tint)
-                    SetupChoice(options: ["Salle", "Maison", "Les deux"], selection: $place, accent: tint,
-                                icons: ["dumbbell.fill", "house.fill", "figure.run"])
+                    SetupHeader(icon: "dumbbell", title: "Quel matériel as-tu ?",
+                                subtitle: "Seuls des exercices faisables avec lui seront proposés.", accent: tint)
+                    SetupMultiChoice(options: FitbotEquipment.allCases.map(\.label), selection: $kit, accent: tint)
+                }
+            },
+            SetupPage {
+                VStack(spacing: 16) {
+                    SetupHeader(icon: "clock", title: "Combien de temps par séance ?", accent: tint)
+                    SetupChoice(options: FitbotGenerator.sessionLengths.map { "\($0) min" }, selection: $minutes, accent: tint)
                 }
             },
             SetupPage {
@@ -93,49 +103,43 @@ struct FitnessSetupView: View {
 
     private var daysPerWeek: Int { Int(freq.prefix(1)) ?? 4 }
 
-    /// Titres des séances (jours d'entraînement) selon objectif/fréquence.
-    private var sessionTitles: [String] {
-        switch daysPerWeek {
-        case 2:
-            return ["Full body A", "Full body B"]
-        case 3:
-            if primaryGoal == "Force" { return ["Squat focus", "Bench focus", "Deadlift focus"] }
-            return ["Push", "Pull", "Legs"]
-        case 4:
-            return ["Haut du corps A", "Bas du corps A", "Haut du corps B", "Bas du corps B"]
-        default:
-            return ["Pecs + Triceps", "Dos + Biceps", "Jambes", "Épaules + Abdos", "Full / Faiblesses"]
-        }
+    private var equipment: Set<FitbotEquipment> {
+        let set = Set(FitbotEquipment.allCases.filter { kit.contains($0.label) })
+        return set.isEmpty ? [.gym] : set
     }
+    private var sessionMinutes: Int { Int(minutes.prefix { $0.isNumber }) ?? 60 }
 
-    /// (titre, détail) avec exercices réels issus de GymExercises.
-    private var sessions: [(String, String)] {
-        sessionTitles.map { ($0, GymExercises.focus(for: $0, goal: primaryGoal)) }
-    }
-
-    /// Map les séances sur les jours de la semaine (lun→dim), le reste = repos.
-    private var weekPlan: [(weekday: Int, title: String, focus: String, rest: Bool)] {
-        // Jours d'entraînement choisis selon la fréquence (indices dans gymWeekOrder lun..dim)
-        let trainIdx: [Int]
-        switch daysPerWeek {
-        case 2: trainIdx = [0, 3]            // lun, jeu
-        case 3: trainIdx = [0, 2, 4]         // lun, mer, ven
-        case 4: trainIdx = [0, 1, 3, 4]      // lun, mar, jeu, ven
-        default: trainIdx = [0, 1, 2, 3, 4]  // lun→ven
-        }
-        var s = 0
-        return gymWeekOrder.enumerated().map { i, wd in
-            if let pos = trainIdx.firstIndex(of: i) {
-                let sess = sessions[min(pos, sessions.count - 1)]
-                s += 1
-                return (wd, sess.0, sess.1, false)
+    /// Semaine generee (split selon la frequence, exercices selon le matériel), puis
+    /// volume ajoute sur les muscles priorises.
+    private var generated: FitbotGenerator.Week {
+        var week = FitbotGenerator.generate(goal: FitbotGoal.fromSetup(primaryGoal), daysPerWeek: daysPerWeek,
+                                            sessionMinutes: sessionMinutes, equipment: equipment,
+                                            excluded: FitbotSettings.parseExcluded(UserDefaults.standard.string(forKey: FitbotSettings.excludedKey) ?? ""))
+        if !emphasis.isEmpty {
+            for i in week.days.indices where !week.days[i].isRest {
+                week.days[i].focus = addEmphasis(to: week.days[i].focus, goal: week.goal)
             }
-            return (wd, "Repos", "Récupération · marche · étirements", true)
         }
+        return week
+    }
+
+    private var weekPlan: [(weekday: Int, title: String, focus: String, rest: Bool)] {
+        generated.days.map { ($0.weekday, $0.isRest ? "Repos" : $0.title,
+                              $0.isRest ? "Récupération · marche · étirements" : $0.focus, $0.isRest) }
     }
 
     private var programPreview: some View {
         VStack(spacing: 8) {
+            if !generated.uncoveredGroups.isEmpty {
+                Text("Aucun exercice du catalogue pour \(generated.uncoveredGroups.joined(separator: ", ")) avec ce matériel.")
+                    .font(.caption).foregroundStyle(Theme.warning)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            if !generated.isUsable {
+                Text("Une séance resterait vide avec ce matériel : ta semaine actuelle sera gardée. Ajoute du matériel.")
+                    .font(.caption).foregroundStyle(Theme.warning)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             ForEach(weekPlan, id: \.weekday) { p in
                 HStack(spacing: 12) {
                     Text(gymWeekdayName(p.weekday)).font(.subheadline.weight(.semibold))
@@ -185,6 +189,7 @@ struct FitnessSetupView: View {
     private enum Saved {
         static let level = "fitnessSetup.level", freq = "fitnessSetup.freq"
         static let place = "fitnessSetup.place", emphasis = "fitnessSetup.emphasis"
+        static let minutes = "fitnessSetup.minutes"
     }
 
     private func loadAnswers() {
@@ -195,6 +200,14 @@ struct FitnessSetupView: View {
         if let v = d.string(forKey: Saved.level), !v.isEmpty { level = v }
         if let v = d.string(forKey: Saved.freq), !v.isEmpty { freq = v }
         if let v = d.string(forKey: Saved.place), !v.isEmpty { place = v }
+        // Matériel : celui de Fitbot s'il a ete regle, sinon deduit de l'ancien
+        // « Où t'entraînes-tu ? » (maison = poids du corps, on ne suppose pas d'haltères).
+        if let raw = d.string(forKey: FitbotSettings.equipmentKey), !raw.isEmpty {
+            kit = Set(FitbotEquipment.parse(raw).map(\.label))
+        } else if place == "Maison" {
+            kit = [FitbotEquipment.bodyweight.label]
+        }
+        if let v = d.string(forKey: Saved.minutes), !v.isEmpty { minutes = v }
         if let v = d.string(forKey: Saved.emphasis) {
             emphasis = Set(v.split(separator: ",").map(String.init))
         }
@@ -204,44 +217,45 @@ struct FitnessSetupView: View {
         let d = UserDefaults.standard
         d.set(level, forKey: Saved.level); d.set(freq, forKey: Saved.freq)
         d.set(place, forKey: Saved.place)
+        d.set(minutes, forKey: Saved.minutes)
+        d.set(FitbotEquipment.serialize(equipment), forKey: FitbotSettings.equipmentKey)
         d.set(emphasis.sorted().joined(separator: ","), forKey: Saved.emphasis)
         userGoalFit = primaryGoal
         // La liste complete a part, pour ne pas casser ceux qui comparent
         // userGoalFit a une seule valeur exacte.
         UserDefaults.standard.set(goals.sorted().joined(separator: ","), forKey: "userGoalsFit")
-        // Efface l'ancien programme et réécrit le nouveau.
-        for d in gymDays { ctx.delete(d) }
-        for p in weekPlan {
-            var focus = p.focus
-            // Volume supplémentaire sur les muscles priorisés.
-            if !p.rest, !emphasis.isEmpty {
-                focus = addEmphasis(to: focus, title: p.title)
-            }
-            ctx.insert(GymDay(weekday: p.weekday, title: p.title, focus: focus, isRest: p.rest))
-        }
+        // Reecrit la semaine DANS les jours existants (memes identifiants, une seance en
+        // cours reste rattachee) et garde l'ancienne pour « Revenir à la semaine d'avant ».
+        let week = generated
+        d.set(week.goal.rawValue, forKey: "fitbot.lastGoal")
+        d.set(week.daysPerWeek, forKey: "fitbot.lastDays")
+        d.set(week.sessionMinutes, forKey: "fitbot.lastMinutes")
         // Défauts Tabata selon le niveau.
         tabataWork = level == "Débutant" ? 30 : (level == "Avancé" ? 45 : 40)
         tabataRest = level == "Avancé" ? 15 : 20
         gymOn = true
+        if week.isUsable {
+            do { try FitbotProgramService.apply(week, days: gymDays, in: ctx) }
+            catch { AppLog.data.error("FitnessSetup programme failed: \(error.localizedDescription, privacy: .public)") }
+        }
         do { try ctx.save() } catch { AppLog.data.error("FitnessSetup save failed: \(error.localizedDescription, privacy: .public)") }
         CategorySetup.markDone(.fitness)
         Haptics.success()
     }
 
-    /// Ajoute un exercice ciblé si la séance touche un muscle priorisé.
-    private func addEmphasis(to focus: String, title: String) -> String {
+    /// Ajoute un exercice ciblé si la séance touche déjà un muscle priorisé, avec le
+    /// matériel disponible.
+    private func addEmphasis(to focus: String, goal: FitbotGoal) -> String {
         let map: [String: String] = ["Pecs": "Pecs", "Dos": "Dos", "Épaules": "Épaules",
                                      "Bras": "Biceps", "Jambes": "Quadriceps", "Fessiers": "Ischios", "Abdos": "Abdos"]
         var f = focus
-        let reps = GymExercises.repScheme(goal: primaryGoal)
-        for e in emphasis {
-            guard let group = map[e], let pool = GymExercises.catalog[group] else { continue }
-            // si la séance contient déjà ce groupe, ajoute un exercice de plus
-            if GymExercises.templates[title]?.contains(group) == true {
-                let present = f.components(separatedBy: " · ")
-                if let extra = pool.first(where: { ex in !present.contains(where: { $0.hasPrefix(ex) }) }) {
-                    f += " · \(extra) \(reps)"
-                }
+        for e in emphasis.sorted() {
+            guard let group = map[e] else { continue }
+            let present = f.components(separatedBy: " · ")
+            guard present.contains(where: { GymExercises.group(of: $0) == group }) else { continue }
+            let bases = Set(present.map { GymExercises.baseName($0) })
+            if let extra = GymExercises.choices(group: group, equipment: equipment).first(where: { !bases.contains($0) }) {
+                f += " · \(extra) \(goal.target)"
             }
         }
         return f
@@ -255,6 +269,8 @@ struct FitnessSetupView: View {
             d.put("level", level)
             d.put("freq", freq)
             d.put("place", place)
+            d.put("kit", kit)
+            d.put("minutes", minutes)
             d.put("emphasis", emphasis)
             return d
         }, restore: { d in
@@ -262,6 +278,8 @@ struct FitnessSetupView: View {
             if let v = d.string("level") { level = v }
             if let v = d.string("freq") { freq = v }
             if let v = d.string("place") { place = v }
+            if let v = d.set("kit") { kit = v }
+            if let v = d.string("minutes") { minutes = v }
             if let v = d.set("emphasis") { emphasis = v }
         })
     }

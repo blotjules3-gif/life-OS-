@@ -8,14 +8,50 @@ import SwiftData
     var kind: String          // Action / Crypto / ETF
     var quantity: Double
     var buyPrice: Double
+    /// Toujours en EUROS (les cours sont convertis a la mise a jour, la saisie aussi).
     var currentPrice: Double
-    init(symbol: String = "", kind: String = "Action", quantity: Double = 0, buyPrice: Double = 0, currentPrice: Double = 0) {
+    /// Devise du prix d'achat. "" = inconnue : les positions d'avant la mise a jour
+    /// n'en avaient pas, et on ne la devine pas (un titre US saisi en dollars donnait une
+    /// fausse plus-value de change). A confirmer par l'utilisateur.
+    var buyCurrency: String = ""
+    var buyDate: Date?
+    /// Euros pour 1 unite de `buyCurrency` le jour de l'achat (BCE). 0 = pas encore connu.
+    var buyFXToEUR: Double = 0
+
+    init(symbol: String = "", kind: String = "Action", quantity: Double = 0, buyPrice: Double = 0, currentPrice: Double = 0,
+         buyCurrency: String = "EUR", buyDate: Date? = nil, buyFXToEUR: Double = 1) {
         self.symbol = symbol; self.kind = kind; self.quantity = quantity; self.buyPrice = buyPrice; self.currentPrice = currentPrice
+        self.buyCurrency = buyCurrency; self.buyDate = buyDate; self.buyFXToEUR = buyCurrency == "EUR" ? 1 : buyFXToEUR
     }
     var value: Double { quantity * currentPrice }
-    var cost: Double { quantity * buyPrice }
-    var pnl: Double { value - cost }
-    var pnlPct: Double { cost == 0 ? 0 : pnl / cost * 100 }
+    /// Cout d'achat en euros, ou nil si la devise ou son taux du jour d'achat manque.
+    var costEUR: Double? { HoldingMath.costEUR(quantity: quantity, buyPrice: buyPrice, currency: buyCurrency, fxToEUR: buyFXToEUR) }
+    var pnl: Double? { costEUR.map { value - $0 } }
+    var pnlPct: Double? { HoldingMath.pnlPct(value: value, cost: costEUR) }
+}
+
+/// Calculs de plus-value dans UNE unite (l'euro), sans jamais melanger les devises.
+enum HoldingMath {
+    static func costEUR(quantity: Double, buyPrice: Double, currency: String, fxToEUR: Double) -> Double? {
+        guard !currency.isEmpty else { return nil }
+        if currency == "EUR" { return quantity * buyPrice }
+        guard fxToEUR > 0 else { return nil }
+        return quantity * buyPrice * fxToEUR
+    }
+    static func pnlPct(value: Double, cost: Double?) -> Double? {
+        guard let cost, cost > 0 else { return nil }
+        return (value - cost) / cost * 100
+    }
+    /// Totaux du portefeuille : la plus-value ne compte que les positions au cout connu,
+    /// et dit combien sont exclues.
+    static func totals(_ items: [(value: Double, cost: Double?)]) -> (value: Double, pnl: Double, costKnown: Double, excluded: Int) {
+        var value = 0.0, pnl = 0.0, cost = 0.0, excluded = 0
+        for i in items {
+            value += i.value
+            if let c = i.cost { pnl += i.value - c; cost += c } else { excluded += 1 }
+        }
+        return (value, pnl, cost, excluded)
+    }
 }
 
 @Model final class NetWorthItem {
@@ -77,9 +113,30 @@ import SwiftData
     var due: Date
     var reps: Int
     var createdAt: Date
+    // Lot 6 (Anko): champs ajoutes avec une valeur par defaut pour les cartes existantes.
+    /// Identifiant stable: pose a l'init, et par `DeckMigration` pour les cartes d'avant
+    /// (une valeur par defaut serait LA MEME pour toutes les lignes existantes).
+    var uid: UUID?
+    /// Paquet (`CardDeck.uid`). `deck` garde son nom, recopie a chaque renommage.
+    var deckID: UUID?
+    /// Note d'origine: la carte inversee et les trous d'un meme texte partagent ce noteID.
+    var noteID: UUID?
+    /// "basic", "reverse" ou "cloze" (voir `CardKind`).
+    var kind: String = "basic"
+    var clozeIndex: Int = 0
+    /// Etiquettes separees par des espaces, comme Anki.
+    var tags: String = ""
+    /// Source saisie par l'utilisateur (livre, article, lien).
+    var source: String = ""
+    var suspended: Bool = false
+    var buriedUntil: Date?
+    var lapses: Int = 0
+    var lastReviewedAt: Date?
     init(front: String = "", back: String = "", deck: String = "Général", ease: Double = 2.5, intervalDays: Int = 0, due: Date = .now, reps: Int = 0, createdAt: Date = .now) {
         self.front = front; self.back = back; self.deck = deck; self.ease = ease
         self.intervalDays = intervalDays; self.due = due; self.reps = reps; self.createdAt = createdAt
+        let id = UUID()
+        self.uid = id; self.noteID = id
     }
 }
 
@@ -89,8 +146,14 @@ import SwiftData
     var keyIdeas: String
     var rating: Int
     var date: Date
+    // Lot 6 (Blinklist): uid pose a l'init et par `BookOps.migrate` pour les anciens resumes.
+    var uid: UUID?
+    /// Collections, une par ligne.
+    var collections: String = ""
+    var updatedAt: Date?
     init(title: String = "", author: String = "", keyIdeas: String = "", rating: Int = 4, date: Date = .now) {
         self.title = title; self.author = author; self.keyIdeas = keyIdeas; self.rating = rating; self.date = date
+        self.uid = UUID()
     }
 }
 

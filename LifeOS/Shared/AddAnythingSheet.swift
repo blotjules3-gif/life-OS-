@@ -278,7 +278,10 @@ struct AddAnythingSheet: View {
         case .water:
             ctx.insert(WaterEntry(amountML: Int(amount) ?? 0))
         case .supplement:
-            ctx.insert(Supplement(name: n, hour: cal.component(.hour, from: time), minute: cal.component(.minute, from: time), active: true, moment: moment))
+            let supp = Supplement(name: n, hour: cal.component(.hour, from: time), minute: cal.component(.minute, from: time), active: true, moment: moment)
+            ctx.insert(supp)
+            // Rappel pose tout de suite (avant : rien tant que SuppSafe n'etait pas ouvert).
+            SupplementScheduler.apply(supp)
         case .shopping:
             ctx.insert(ShoppingItem(name: n, quantity: quantity.isEmpty ? "1" : quantity))
         case .workout:

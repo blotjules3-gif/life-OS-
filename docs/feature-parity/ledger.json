@@ -61,8 +61,8 @@
       },
       {
         "feature": "Modifier un traitement existant",
-        "state": "missing",
-        "proof": "no edit path: medRow (MedicalModule.swift:51) only has Toggle + delete; MedicationEditor always inserts a new Medication"
+        "state": "present_untested",
+        "proof": "MedicalModule.swift:80 menu « Modifier » -> sheet :46 MedicationEditor(editing:) :104, chargé :161, enregistré sur la fiche existante :190-193 (rappels reprogrammés); aucun test"
       },
       {
         "feature": "Journal des prises pris/sauté/reporté/manqué avec annulation",
@@ -147,8 +147,8 @@
       },
       {
         "feature": "Rappel la veille du RDV",
-        "state": "present_untested",
-        "proof": "MedicalModule.swift:441 NotificationManager.schedule; ID stability tested in LifeOSTests/ReminderIDsTests.swift testAppointmentIsStable (ID only, not the scheduling)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesHealthTests.swift testAppointmentWithin24hStillGetsAReminder (MedicalReminderTiming.appointment: veille, sinon 2 h avant, sinon rien), utilisé MedicalModule.swift:492/:521"
       },
       {
         "feature": "Suppression qui annule le rappel",
@@ -162,8 +162,8 @@
       },
       {
         "feature": "Notes du RDV visibles / modifier un RDV",
-        "state": "missing",
-        "proof": "notes saved (MedicalModule.swift:438) but apptRow (:369) never shows them; no edit view"
+        "state": "present_untested",
+        "proof": "Notes affichées MedicalModule.swift:416; tap ou « Modifier » :427-429 -> AppointmentEditor(editing:) :444, save :511-521 (ancien rappel annulé); aucun test"
       },
       {
         "feature": "Annuaire et filtre de praticiens",
@@ -312,6 +312,11 @@
         "feature": "Documents cliniques, vues médicaments/cycle Apple Santé",
         "state": "dependency",
         "proof": "needs HealthKit clinical records entitlement + real health data"
+      },
+      {
+        "feature": "Couleur de tendance selon le sens (tension, glycémie, FC qui montent = rouge; diastolique comptée)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesHealthTests.swift testRisingBloodPressureIsNotGood (VitalTrend.tone), utilisé MedicalModule.swift:631"
       }
     ],
     "audit_bugs": [
@@ -373,8 +378,8 @@
       },
       {
         "feature": "Notification de rappel 30 jours avant",
-        "state": "present_untested",
-        "proof": "MedicalModule.swift:769-774; ID stability only tested in LifeOSTests/ReminderIDsTests.swift testVaccinationIsStable"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesHealthTests.swift testVaccineDueSoonStillGetsAReminder (MedicalReminderTiming.vaccine: J-30, sinon J-7, J-1, le jour même à 9 h; rien si passé), utilisé MedicalModule.swift:923/:940"
       },
       {
         "feature": "Numéro de lot",
@@ -466,8 +471,8 @@
       },
       {
         "feature": "Jour du cycle, phase, 'règles dans N jours'",
-        "state": "present_untested",
-        "proof": "CycleContext.swift:103 refresh, shown CycleModule.swift:66-87"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesHealthTests.swift testCycleDoesNotWrapPastItsLength, testCycleInsideLengthCountsDown (CycleMath.snapshot, plus de modulo; « règles attendues depuis N jours »), utilisé CycleContext.swift:112"
       },
       {
         "feature": "Saisie du jour: flux, symptômes, humeur",
@@ -501,8 +506,8 @@
       },
       {
         "feature": "Phases adaptées à la durée du cycle",
-        "state": "missing",
-        "proof": "phase thresholds fixed to days 1-5/6-13/14-16 (CycleContext.swift:115-121)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesHealthTests.swift testOvulationFollowsCycleLength (CycleMath.ovulationDay = durée - 14, CycleMath.phase), utilisé CycleContext.swift:135, LifeBrain.swift:86, NotificationManager.swift:312"
       },
       {
         "feature": "Objectifs et modes de vie (grossesse, fertilité, périménopause)",
@@ -526,8 +531,13 @@
       },
       {
         "feature": "Export des entrées de cycle",
-        "state": "missing",
-        "proof": "DataExporter.swift export has no CycleEntry section (grep 'Cycle' in DataExporter.swift 0 hits)"
+        "state": "present_untested",
+        "proof": "DataExporter.swift:44 section « cycle » (date, flux, symptômes, humeur, note); export global ProfileView DataExportSheet; aucun test"
+      },
+      {
+        "feature": "Des règles saisies (>= 15 j après le début connu) déplacent le début du cycle",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesHealthTests.swift testNewPeriodMovesCycleStart, testSamePeriodLoggedLaterKeepsStart, testFirstFlowSetsStart (CycleMath.updatedStart), utilisé CycleModule.swift:398; fin des règles toujours absente (ligne « Bornes explicites » reste missing)"
       }
     ],
     "audit_bugs": [
@@ -596,8 +606,8 @@
       },
       {
         "feature": "Liste de fréquence des symptômes récents",
-        "state": "present_untested",
-        "proof": "CycleModule.swift:367 CycleSymptomsView (counts last 3 entries)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesHealthTests.swift testRecentSymptomsOnlyLastThreeCalendarDays (CycleMath.recentSymptomCounts: 3 derniers jours calendaires), utilisé CycleModule.swift:418"
       },
       {
         "feature": "Intensité / durée par symptôme",
@@ -744,6 +754,11 @@
         "feature": "Même calcul partout (tracker, coach)",
         "state": "missing",
         "proof": "tracker uses manual cycleLengthDays (CycleModule.swift:44, CycleContext.swift:108) while history uses CycleStats"
+      },
+      {
+        "feature": "Moyenne observée affichée sur le suivi avec bouton « Utiliser X j »",
+        "state": "present_untested",
+        "proof": "CycleModule.swift:114-118; aucun test (le calcul reste différent entre suivi et historique, ligne « Même calcul partout » reste missing)"
       }
     ],
     "audit_bugs": [
@@ -1052,8 +1067,8 @@
       },
       {
         "feature": "Suppression d'un rêve",
-        "state": "present_untested",
-        "proof": "SleepModule.swift:277 (audio file not removed)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesHealthTests.swift testDreamAudioFileIsRemoved (AudioRecorder.removeFile), appelé à la suppression SleepModule.swift:288"
       },
       {
         "feature": "Modifier un rêve existant",
@@ -1097,8 +1112,8 @@
       },
       {
         "feature": "Fichiers audio gérés de façon transactionnelle",
-        "state": "missing",
-        "proof": "delete leaves file, re-record orphans previous file (see bugs)"
+        "state": "present_untested",
+        "proof": "Suppression du fichier à la suppression du rêve SleepModule.swift:288, au réenregistrement :394/:402, à la fermeture sans enregistrer :411; seule la suppression de fichier est testée (LifeOSTests/AuditFixesHealthTests.swift testDreamAudioFileIsRemoved)"
       }
     ],
     "audit_bugs": [
@@ -1187,8 +1202,8 @@
       },
       {
         "feature": "Date et couverture des données",
-        "state": "missing",
-        "proof": "sample date never read or shown (HealthService.swift:352-361)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesHealthTests.swift testRecoveryScoreRefusesStaleSamples (RecoveryScore.score refuse une mesure de plus de 36 h); dates relatives affichées SleepModule.swift:505-517 (affichage non testé)"
       },
       {
         "feature": "Explication des contributions",
@@ -1251,17 +1266,17 @@
       {
         "feature": "Protocole 16:8 / 18:6 / 20:4 / OMAD",
         "state": "present_untested",
-        "proof": "FastingView"
+        "proof": "LifeOS/Modules/NutritionModule.swift:93 protocolPicker"
       },
       {
-        "feature": "Démarrer / rompre, enregistrement vérifié (erreur affichée)",
+        "feature": "Démarrer / rompre, enregistrement vérifié (erreur affichée), une seule fin par jeûne",
         "state": "present_untested",
-        "proof": "FastingView.commit"
+        "proof": "LifeOS/Modules/NutritionModule.swift:29 FastingView.start / activeControls"
       },
       {
-        "feature": "Corriger l'heure de début (72 h max, pas dans le futur)",
+        "feature": "Corriger l'heure de début (72 h max, pas dans le futur, sans chevaucher)",
         "state": "tested_auto",
-        "proof": "LifeOSTests/NutritionLotTests.swift FastingStatsTests.testCorrectedStartIsNeverInTheFutureNorOlderThan72h"
+        "proof": "LifeOSTests/NutritionLotTests.swift FastingStatsTests.testCorrectedStartIsNeverInTheFutureNorOlderThan72h ; LifeOSTests/Lot6NutritionTests.swift Lot6FastingTests.testOverlapAndSecondActiveFastAreRefused"
       },
       {
         "feature": "Notification à l'objectif atteint",
@@ -1274,9 +1289,9 @@
         "proof": "LifeOSTests/NutritionLotTests.swift FastingStatsTests.testSummaryCountsReachedAndAverage"
       },
       {
-        "feature": "Supprimer une entrée",
+        "feature": "Supprimer une entrée (menu ou fiche, confirmation)",
         "state": "present_untested",
-        "proof": "appui long"
+        "proof": "LifeOS/Modules/NutritionModule.swift:221 FastingSessionEditor"
       },
       {
         "feature": "Widget jeûne avec le vrai début (corrigé 30 sept. : 14,5 h inventées avant)",
@@ -1284,19 +1299,34 @@
         "proof": "LifeOSTests/Build49DefectTests.swift WidgetDataTests"
       },
       {
-        "feature": "Durée personnalisée, zones métaboliques",
-        "state": "missing",
-        "proof": ""
+        "feature": "Durée personnalisée (12 à 72 h)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6FastingTests.testCustomTargetLabel ; LifeOS/Modules/NutritionModule.swift:93"
       },
       {
-        "feature": "Graphiques, série",
-        "state": "missing",
-        "proof": ""
+        "feature": "Modifier début/fin d'un jeûne terminé, saisir un jeûne passé, refus des chevauchements et deux jeûnes en cours",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6FastingTests.testOverlapAndSecondActiveFastAreRefused, testEditedTimesMustBeCoherent"
+      },
+      {
+        "feature": "Graphique des 14 derniers jeûnes, série de jours avec objectif atteint",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6FastingTests.testStreakCountsConsecutiveReachedDays ; LifeOS/Modules/NutritionModule.swift:137 historyCard"
+      },
+      {
+        "feature": "Notes par jeûne (en cours et passés)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6FastingTests.testNotePersists ; LifeOS/Modules/NutritionModule.swift:126"
+      },
+      {
+        "feature": "Zones métaboliques",
+        "state": "dependency",
+        "proof": "contenu sourcé sur les phases du jeûne (aucun texte médical inventé)"
       },
       {
         "feature": "Santé",
-        "state": "missing",
-        "proof": ""
+        "state": "dependency",
+        "proof": "HealthService n'expose aucune écriture de jeûne"
       }
     ]
   },
@@ -1351,14 +1381,19 @@
         "proof": "FoodLogServiceTests.testHistoricalMealDoesNotCountToday"
       },
       {
-        "feature": "Recherche OpenFoodFacts + portion",
-        "state": "present_untested",
-        "proof": "FoodEditor"
+        "feature": "Recherche OpenFoodFacts + portion (nouvelle feuille JournalAddSheet)",
+        "state": "tested_auto",
+        "proof": "FoodSearch.swift:196 JournalAddSheet, portionSection; FoodJournal.line tested in LifeOSTests/Lot6FoodLogTests.swift testLineForPastDayLandsOnThatDay (written, not run)"
       },
       {
-        "feature": "Scan code-barres → journal",
+        "feature": "Scan code-barres → journal (jour choisi, micros, hors ligne distinct de introuvable)",
         "state": "present_untested",
-        "proof": "CalAIView"
+        "proof": "CalAIView.swift:727 lookup outcome; FoodSearch.swift:95 FoodSearchService.lookup(barcode:)"
+      },
+      {
+        "feature": "Scan: caméra refusée = message + Ouvrir les Réglages + saisie du code",
+        "state": "present_untested",
+        "proof": "CalAIView.swift:572"
       },
       {
         "feature": "Objectifs, restant, anneaux, historique 7 jours",
@@ -1371,17 +1406,72 @@
         "proof": "CrossDomainToolsWireTests.testGetTodayNutrition_withFoodEntries_returnsAggregatedTotals"
       },
       {
-        "feature": "Hors ligne : écran sans message d'erreur réseau",
-        "state": "missing",
-        "proof": "FoodSearch renvoie [] (\"Aucun produit\")"
+        "feature": "Widget/coach: totaux d'AUJOURD'HUI même quand un jour passé est affiché (bug corrigé)",
+        "state": "present_untested",
+        "proof": "CalAIView.swift:87 syncNutritionToContext; Lot6FoodLogTests.testTodayTotalsIgnoreTheDayBeingViewed (written, not run)"
       },
       {
-        "feature": "Ajout direct sur un jour passé",
-        "state": "missing",
-        "proof": "FoodEditor écrit maintenant"
+        "feature": "Recherche: hors ligne / erreur serveur / aucun résultat / produits sans calories, chacun son message + Réessayer",
+        "state": "present_untested",
+        "proof": "FoodSearch.swift:72 classify, FoodSearch.swift:334; Lot6FoodLogTests.testSearchClassificationSeparatesOfflineServerAndEmpty, testOfflineSearchIsReportedAsOffline (stubbed URLSession; written, not run)"
       },
       {
-        "feature": "Favoris, récents, recettes, micronutriments, Santé",
+        "feature": "Ajout direct sur un jour passé (sélecteur de jour, part du jour affiché)",
+        "state": "present_untested",
+        "proof": "FoodSearch.swift:252, CalAIView.swift:688; Lot6FoodLogTests.testLineForPastDayLandsOnThatDay (written, not run)"
+      },
+      {
+        "feature": "Navigation par jour (précédent/suivant, calendrier, bande qui suit le jour)",
+        "state": "present_untested",
+        "proof": "CalAIView.swift:144 dayNavigator; Lot6FoodLogTests.testDayNavigationNeverGoesPastToday (written, not run)"
+      },
+      {
+        "feature": "Récents (un geste pour rajouter la dernière portion)",
+        "state": "present_untested",
+        "proof": "FoodSearch.swift:430; Lot6FoodLogTests.testRecentsAreDistinctAndMostRecentFirst (written, not run)"
+      },
+      {
+        "feature": "Favoris (étoile, depuis un récent ou une ligne du journal; un geste pour journaliser; suppression)",
+        "state": "present_untested",
+        "proof": "FoodSearch.swift:454, FoodSearch.swift:574, FoodEntryEditor.swift:120; Lot6FoodLogTests.testFavoritePersistsWithItsPortion (written, not run)"
+      },
+      {
+        "feature": "Aliments perso (nom, valeurs pour 100 g, micros facultatifs, portion habituelle; créer/modifier/supprimer)",
+        "state": "present_untested",
+        "proof": "FoodEntryEditor.swift:168 CustomFoodEditor, FoodSearch.swift:471; Lot6FoodLogTests.testCustomFoodPortionScalesAndKeepsUnknownMicros, testCustomFoodValidationAndParsing (written, not run)"
+      },
+      {
+        "feature": "Repas enregistrés (depuis un repas du journal, ajout en un geste, suppression)",
+        "state": "present_untested",
+        "proof": "CalAIView.swift:476 saveMeal, FoodSearch.swift:492; Lot6FoodLogTests.testSavedMealRoundTripsAndLogsEveryLine (written, not run)"
+      },
+      {
+        "feature": "Copier la veille (toute la journée ou un repas) et copier un repas vers aujourd'hui",
+        "state": "present_untested",
+        "proof": "CalAIView.swift:459, 465; Lot6FoodLogTests.testCopyPreviousDayKeepsTimeMealAndMicros (written, not run)"
+      },
+      {
+        "feature": "Micronutriments fibres/sucres/sel: seulement ce qu'Open Food Facts ou l'utilisateur donne, inconnu affiché inconnu, jamais 0",
+        "state": "present_untested",
+        "proof": "CalAIView.swift:270 microsRow, FoodEntryEditor micros fields; Lot6FoodLogTests.testDayMicroTotalNeverTurnsUnknownIntoZero, testFoodProductKeepsMicrosUnknownWhenTheBaseHasNone, testEditedLineKeepsItsMicrosAndDeleteCleansThem, testFailedJournalWriteLeavesNoLineAndNoMicros (written, not run)"
+      },
+      {
+        "feature": "Mise en page iPad/Mac (colonne centrée max 760, champs sans largeur fixe)",
+        "state": "present_untested",
+        "proof": "CalAIView.swift:56"
+      },
+      {
+        "feature": "Recettes (ingrédients + portions d'un plat)",
+        "state": "missing",
+        "proof": "a custom food with per-100 g values covers a home dish; nothing yet builds one from ingredients"
+      },
+      {
+        "feature": "Santé (HealthKit) pour la nutrition",
+        "state": "missing",
+        "proof": ""
+      },
+      {
+        "feature": "Objectifs ajustés au poids/activité, planning de repas",
         "state": "missing",
         "proof": ""
       }
@@ -1441,6 +1531,11 @@
         "feature": "Benchmark de vrais plats",
         "state": "present_untested",
         "proof": "tools/calai-bench (12 photos), pas relancé"
+      },
+      {
+        "feature": "Côté journal: lignes photo modifiables avec micros, mise en favori, copiables, rajoutables depuis Récents",
+        "state": "present_untested",
+        "proof": "FoodEntryEditor.swift micros + Garder en favori; FoodJournal.recents/copyLines read every FoodEntry whatever screen wrote it"
       }
     ]
   },
@@ -1506,8 +1601,8 @@
       },
       {
         "feature": "Relire et corriger l’étiquette (photo, OCR, validation)",
-        "state": "present_untested",
-        "proof": "PetLabelEditor dans Yuko.swift ; caméra seulement sur appareil"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/PetMergeOverrideTests.swift testFullJourneyFromEditorToDeletion, testValidatedLabelReplacesWrongCompositionAndValues, testAutomaticReadingNeverOverridesTheBase (ProductStore.saveLabel/removeLabel + PetMerge.apply, chemin utilisé par PetLabelEditor Yuko.swift:768/:1555); la vue elle-même et la caméra ne sont pas pilotées"
       },
       {
         "feature": "Corpus réel de 50 aliments chat, fiches non résolues avec cause",
@@ -1577,9 +1672,9 @@
     "observed_at": "",
     "matrix": [
       {
-        "feature": "Ajouter un article (quantité, catégorie, endroit, péremption)",
+        "feature": "Ajouter un article (quantité, catégorie, endroit, péremption), enregistrement vérifié",
         "state": "present_untested",
-        "proof": "PantryEditor"
+        "proof": "LifeOS/Modules/NutritionModule.swift:646 PantryEditor.save"
       },
       {
         "feature": "Badge J-n / Périmé",
@@ -1587,9 +1682,9 @@
         "proof": "ExpiryBadge"
       },
       {
-        "feature": "Supprimer (enregistrement vérifié)",
+        "feature": "Supprimer (enregistrement vérifié, alerte annulée)",
         "state": "present_untested",
-        "proof": "FridgeView"
+        "proof": "LifeOS/Modules/NutritionModule.swift:439 FridgeView.remove"
       },
       {
         "feature": "Envoyer vers la liste de courses sans doublon (ajouté 30 sept.)",
@@ -1608,21 +1703,21 @@
       },
       {
         "feature": "Modifier un article",
-        "state": "missing",
-        "proof": ""
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6PantryTests.testEditedItemKeepsNewValues ; LifeOS/Modules/NutritionModule.swift:646 PantryEditor(item:)"
       },
       {
-        "feature": "Alertes de péremption",
-        "state": "missing",
-        "proof": ""
-      },
-      {
-        "feature": "Ajout par code-barres / ticket",
-        "state": "missing",
-        "proof": ""
+        "feature": "Alertes de péremption (n jours avant, 9 h, refus affiché + Réglages)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6PantryTests.testAlertDateIsBeforeExpiryAndNeverInThePast ; LifeOS/Modules/NutritionModule.swift:589 rescheduleAlerts"
       },
       {
         "feature": "Tri / filtre par endroit ou catégorie",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6PantryTests.testFilterAndSortByExpiry ; LifeOS/Modules/NutritionModule.swift:504 filterBar"
+      },
+      {
+        "feature": "Ajout par code-barres / ticket",
         "state": "missing",
         "proof": ""
       }
@@ -1659,9 +1754,9 @@
         "proof": "LifeOSTests/NutritionLotTests.swift ShoppingListOpsTests.testAisleGuess"
       },
       {
-        "feature": "Pas de doublon d'un article à acheter",
+        "feature": "Pas de doublon d'un article à acheter (quantités compatibles additionnées)",
         "state": "tested_auto",
-        "proof": "LifeOSTests/NutritionLotTests.swift ShoppingListOpsTests.testNoDuplicateOfAnItemStillToBuy"
+        "proof": "LifeOSTests/NutritionLotTests.swift ShoppingListOpsTests.testNoDuplicateOfAnItemStillToBuy ; LifeOSTests/Lot6NutritionTests.swift Lot6ShoppingTests.testCompatibleQuantitiesMerge"
       },
       {
         "feature": "Cocher, supprimer (enregistrement vérifié)",
@@ -1671,10 +1766,10 @@
       {
         "feature": "Retirer les articles cochés (ajouté 30 sept.)",
         "state": "present_untested",
-        "proof": ""
+        "proof": "ShoppingListView.clearChecked"
       },
       {
-        "feature": "Articles cochés → frigo (ajouté 30 sept.)",
+        "feature": "Articles cochés → frigo, avec unité",
         "state": "present_untested",
         "proof": "moveCheckedToFridge"
       },
@@ -1684,19 +1779,29 @@
         "proof": ""
       },
       {
-        "feature": "Modifier un article",
-        "state": "missing",
-        "proof": ""
+        "feature": "Modifier un article (nom, quantité, unité, rayon perso, favori)",
+        "state": "present_untested",
+        "proof": "LifeOS/Modules/NutritionModule.swift:932 ShoppingItemEditor"
+      },
+      {
+        "feature": "Unités (g, kg, ml, cl, L, paquet…) et fusion g/kg, ml/L",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6ShoppingTests.testCompatibleQuantitiesMerge"
+      },
+      {
+        "feature": "Suggestions : favoris puis récents, sans ce qui est déjà à acheter, rayon retenu",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6ShoppingTests.testMemoryRecentsFavouritesAndPendingExcluded, testMemoryCapKeepsFavourites"
+      },
+      {
+        "feature": "Regroupé par rayon (rayons perso inclus)",
+        "state": "present_untested",
+        "proof": "ShoppingListView.groupedAisles"
       },
       {
         "feature": "Plusieurs listes, liste partagée",
         "state": "dependency",
         "proof": "partage = compte en ligne (non livré)"
-      },
-      {
-        "feature": "Suggestions / récents",
-        "state": "missing",
-        "proof": ""
       }
     ]
   },
@@ -1741,6 +1846,11 @@
         "proof": "HydrationView.remove"
       },
       {
+        "feature": "Modifier une prise (volume, boisson, heure), total et widget suivent",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6WaterTests.testEditedEntryChangesTodayTotal ; LifeOS/Modules/NutritionModule.swift:1277 WaterEntryEditor"
+      },
+      {
         "feature": "Historique 7 jours (ajouté 30 sept.)",
         "state": "present_untested",
         "proof": "graphique"
@@ -1761,19 +1871,24 @@
         "proof": "LogWaterIntent"
       },
       {
-        "feature": "Types de boissons",
+        "feature": "Types de boissons, part comptée réglée par l'utilisateur (100 % par défaut)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6WaterTests.testCountedFollowsUserPercentAndDefaultsAreFull ; LifeOS/Modules/NutritionModule.swift:1334 BeverageSettingsView"
+      },
+      {
+        "feature": "Objectif suggéré selon le poids (repère 30 à 35 ml/kg), seulement si un poids réel existe",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6WaterTests.testGoalSuggestionOnlyWithARealWeight ; LifeOS/Modules/NutritionModule.swift:1234 goalSuggestion"
+      },
+      {
+        "feature": "Objectif selon l'activité",
         "state": "missing",
-        "proof": ""
+        "proof": "pas de règle sourcée retenue"
       },
       {
         "feature": "Santé (eau)",
-        "state": "missing",
-        "proof": ""
-      },
-      {
-        "feature": "Objectif selon poids / activité",
-        "state": "missing",
-        "proof": ""
+        "state": "dependency",
+        "proof": "HealthService n'a ni type d'écriture dietaryWater ni fonction d'écriture (fichier non modifiable ici)"
       }
     ]
   },
@@ -1808,9 +1923,9 @@
         "proof": "SupplementAdvisor"
       },
       {
-        "feature": "Rappel quotidien, vérification « bien pris ? »",
-        "state": "present_untested",
-        "proof": "SupplementsView.reschedule"
+        "feature": "Rappels par identifiant stable, un par prise prévue, vérif « bien pris ? »",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6SupplementTests.testOneNotificationPerDoseAndChosenDays ; LifeOS/Modules/NutritionModule.swift:1385 SupplementScheduler"
       },
       {
         "feature": "Série de prises confirmées",
@@ -1818,34 +1933,34 @@
         "proof": "ConfirmationStore"
       },
       {
-        "feature": "Activer / pause, supprimer (notifications annulées)",
+        "feature": "Activer / pause, supprimer (notifications remplacées d'un coup, ancien rappel du questionnaire annulé)",
         "state": "present_untested",
-        "proof": ""
+        "proof": "LifeOS/Modules/NutritionModule.swift:1385 SupplementScheduler.apply ; LifeOS/Modules/NutritionSetup.swift:249"
       },
       {
-        "feature": "Refus des notifications affiché",
-        "state": "missing",
-        "proof": ""
+        "feature": "Refus des notifications affiché + Réglages",
+        "state": "present_untested",
+        "proof": "LifeOS/Modules/NutritionModule.swift:622 NotificationsDeniedNotice ; LifeOS/Modules/NutritionModule.swift:1689 askPermission"
       },
       {
-        "feature": "Modifier un complément",
-        "state": "missing",
-        "proof": ""
+        "feature": "Modifier un complément (nom, dose, heures, jours, stock)",
+        "state": "present_untested",
+        "proof": "LifeOS/Modules/NutritionModule.swift:1703 SupplementEditor"
       },
       {
-        "feature": "Dose, stock, réassort",
-        "state": "missing",
-        "proof": ""
+        "feature": "Dose, stock, réassort (jours restants, rappel)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6SupplementTests.testStockRefillAndAdherence"
       },
       {
         "feature": "Plusieurs prises / jours choisis",
-        "state": "missing",
-        "proof": ""
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6SupplementTests.testTimesParsingAndLegacyFallback, testOneNotificationPerDoseAndChosenDays, testDueDays"
       },
       {
-        "feature": "Historique des prises",
-        "state": "missing",
-        "proof": ""
+        "feature": "Historique des prises (prise / sautée, 14 jours, taux), nom gardé après renommage ou suppression",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6SupplementTests.testHistoryKeepsNameAfterRenameAndDelete ; LifeOS/Modules/NutritionModule.swift:1552 historyCard"
       },
       {
         "feature": "Interactions avec les médicaments (source réelle)",
@@ -1905,22 +2020,22 @@
         "proof": "Yuko.swift"
       },
       {
-        "feature": "Profil appliqué au journal Yumzio",
-        "state": "missing",
-        "proof": ""
+        "feature": "Profil appliqué au journal Yumzio (lecture seule : ajout de repas et 7 derniers jours)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6DietTests.testJournalEntriesAreFlaggedReadOnly ; LifeOS/Modules/NutritionModule.swift:1916 journalCard, LifeOS/Modules/NutritionModule.swift:292 FoodEditor.dietFindings"
       },
       {
         "feature": "Allergènes perso et gravité",
-        "state": "missing",
-        "proof": ""
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6DietTests.testPersonalAllergenWithSeverityAndPlural ; LifeOS/Modules/NutritionModule.swift:1886 personalCard"
+      },
+      {
+        "feature": "Traces possibles / contamination croisée (texte « peut contenir », signalé à part)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6NutritionTests.swift Lot6DietTests.testMayContainIsATraceNotAnIngredient"
       },
       {
         "feature": "Plusieurs profils (famille)",
-        "state": "missing",
-        "proof": ""
-      },
-      {
-        "feature": "Traces possibles / contamination croisée",
         "state": "missing",
         "proof": ""
       }
@@ -1954,7 +2069,7 @@
       {
         "feature": "Semaine éditable (séance, exercices, remplacement)",
         "state": "present_untested",
-        "proof": "GymProgram.swift, pas de test d'écran"
+        "proof": "GymProgram.swift:344 GymDayEditor (menu de remplaçants, ajout par groupe, exclure, superset), pas de test d'écran"
       },
       {
         "feature": "Démarrer une séance, prescription figée au démarrage",
@@ -1987,9 +2102,9 @@
         "proof": "LifeOSTests/Build48DefectTests.swift testFailedFinishLeavesSessionActive, testCancelCanEraseItsSetsAndNeverCountsAsDone"
       },
       {
-        "feature": "Minuteur de repos réglable",
+        "feature": "Minuteur de repos réglable (et réglé selon l'objectif du programme, au choix)",
         "state": "present_untested",
-        "proof": "GymSession.swift"
+        "proof": "GymSession.swift; GymProgram.swift:525 FitbotGeneratorSheet toggle « Régler le repos »"
       },
       {
         "feature": "Record personnel signalé",
@@ -2013,28 +2128,68 @@
       },
       {
         "feature": "Démonstrations d'exercices",
-        "state": "missing",
-        "proof": ""
+        "state": "dependency",
+        "proof": "contenu absent : une démonstration (vidéo ou image, licence claire) par exercice du catalogue GymExercises.catalog (58 exercices)"
       },
       {
-        "feature": "Filtre matériel disponible",
-        "state": "missing",
-        "proof": ""
+        "feature": "Filtre matériel disponible (salle, haltères, poids du corps, élastiques) sur ajout, remplacement et programme",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitbotTests.swift testRestrictedEquipmentNeverProposesAGymOnlyExercise, testBodyweightOnlyIsHonestAboutMissingContent; UI GymProgram.swift:223 equipmentSection"
       },
       {
-        "feature": "Supersets",
-        "state": "missing",
-        "proof": ""
+        "feature": "Remplacement : même groupe musculaire, liste des remplaçants faisables",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitbotTests.swift testSubstitutionKeepsTheMuscleGroupAndRespectsEquipment (échouait avant : matériel ignoré)"
       },
       {
-        "feature": "Générateur de programme selon fréquence, matériel, objectif",
+        "feature": "Exercice exclu ne revient jamais (ajout, remplacement, programme généré), réautorisable",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitbotTests.swift testExcludedExercisesNeverReappear; GymProgram.swift:487 exclude"
+      },
+      {
+        "feature": "Supersets dans le programme (paire stockée sur GymDay, voisins, nettoyée à la suppression)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitbotTests.swift FitbotSupersetTests; GymDay.supersetsJSON"
+      },
+      {
+        "feature": "Supersets enchaînés dans l'écran de séance (sans repos entre les deux)",
         "state": "missing",
-        "proof": ""
+        "proof": "hook dans GymSessionService/GymSession non modifiables, voir notDone"
+      },
+      {
+        "feature": "Générateur de programme selon objectif, fréquence 2 à 6, durée, matériel (split full body / haut-bas / PPL)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitbotTests.swift testSplitFollowsFrequency, testGoalSetsTargetReadByTheProgressionEngine, testSessionLengthDecidesHowManyExercises; GymExercises.swift:332 FitbotGenerator"
+      },
+      {
+        "feature": "Aperçu avant de remplacer la semaine, puis annulation (même après relance)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitbotTests.swift testApplyWritesIntoTheSameDaysAndUndoRestoresTheOldWeek; UI GymProgram.swift:525 FitbotGeneratorSheet + programSection"
+      },
+      {
+        "feature": "Échec d'enregistrement du programme : semaine inchangée, aucun programme fantôme",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitbotTests.swift testFailedSaveLeavesTheWeekUntouched, testUnusableWeekIsRefused"
+      },
+      {
+        "feature": "Historique par semaine de programme (semaine N, séances faites / prévues, programmes précédents)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitbotTests.swift FitbotHistoryTests; UI GymProgram.swift:180 historySection"
+      },
+      {
+        "feature": "Programme généré → séance → prochaine charge depuis l'historique réel ; nouveau programme garde les séances passées",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitbotTests.swift testGeneratedDayRunsAsASessionAndNewProgrammeKeepsThePast"
+      },
+      {
+        "feature": "Questionnaire Sport & fitness sur le même générateur (matériel, durée, 6 jours, jours réécrits en place)",
+        "state": "present_untested",
+        "proof": "FitnessSetup.swift:114 generated"
       },
       {
         "feature": "Parcours complet sur iPhone / iPad / Mac",
         "state": "missing",
-        "proof": "non fait"
+        "proof": "non fait (pas de simulateur dans ce lot) ; écrans en Form, aucune largeur fixe ajoutée"
       },
       {
         "feature": "Séance liée au jour de programme par identifiant, pas par titre (corrigé 30 sept.)",
@@ -2104,14 +2259,24 @@
         "proof": "FitnessModule.swift StepsView"
       },
       {
-        "feature": "Historique 7 jours, moyenne, objectif atteint x/7 (ajouté 30 sept.)",
-        "state": "present_untested",
-        "proof": "HealthService.stepsByDay ; sans données Santé au simulateur"
+        "feature": "Historique 7 / 30 / 90 jours (sélecteur), moyenne, objectif atteint x/n, meilleur jour de la période",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testStepSummaryAndBestDay ; FitnessModule.swift StepsView.historyCard (HealthService.stepsByDay(days: 90), non modifié)"
       },
       {
-        "feature": "Tirer pour rafraîchir (ajouté 30 sept.)",
+        "feature": "Record (plus haut jour vu par LifeOS), gardé même hors de la fenêtre lue",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testStepRecordKeepsHighestEverSeen ; StepsView.recordCard (@AppStorage steps.recordSteps/recordDay)"
+      },
+      {
+        "feature": "Notification d'objectif atteint, une par jour, quand l'app voit l'objectif (dit à l'écran : pas un déclencheur en arrière-plan) ; refus montré + Réglages",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testGoalNotificationOncePerDay ; StepsView.goalNoticeCard / notifyGoalIfNeeded"
+      },
+      {
+        "feature": "Tirer pour rafraîchir",
         "state": "present_untested",
-        "proof": ".refreshable"
+        "proof": ".refreshable -> load(fresh: true)"
       },
       {
         "feature": "Refus d'accès Santé : réessayer + Réglages",
@@ -2121,17 +2286,12 @@
       {
         "feature": "Distance et kcal",
         "state": "present_untested",
-        "proof": "estimations fixes, sans taille ni poids"
+        "proof": "estimations fixes, sans taille ni poids, marquées approx."
       },
       {
         "feature": "Distance réelle, étages, calories actives de Santé",
-        "state": "missing",
-        "proof": ""
-      },
-      {
-        "feature": "Historique long (mois, année, records)",
-        "state": "missing",
-        "proof": ""
+        "state": "dependency",
+        "proof": "HealthService ne lit ni distanceWalkingRunning ni flightsClimbed (readTypes) ; fichier hors de mon périmètre"
       },
       {
         "feature": "Widget de pas",
@@ -2139,9 +2299,9 @@
         "proof": ""
       },
       {
-        "feature": "Notification d'objectif atteint",
-        "state": "missing",
-        "proof": ""
+        "feature": "Notification en arrière-plan (sans ouvrir l'app)",
+        "state": "dependency",
+        "proof": "demande HKObserverQuery + background delivery dans HealthService"
       },
       {
         "feature": "Apple Watch",
@@ -2202,9 +2362,9 @@
         "proof": "StrengthProgressionTests"
       },
       {
-        "feature": "Records par exercice",
+        "feature": "Records par exercice (avec groupe musculaire)",
         "state": "present_untested",
-        "proof": "section Records"
+        "proof": "StrengthView section Records + ExerciseLibrary.group"
       },
       {
         "feature": "Routines réutilisables",
@@ -2212,19 +2372,34 @@
         "proof": "via le programme Fitbot (GymDay), pas de routine propre à Hevvy"
       },
       {
-        "feature": "Exercices personnalisés avec groupe musculaire",
-        "state": "missing",
-        "proof": "texte libre accepté, sans groupe ni matériel"
+        "feature": "Exercices perso avec groupe musculaire et matériel (créer, modifier, supprimer, doublons refusés, renommer met à jour les séries loggées)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testCustomExerciseNameValidation, testRenamingCustomExerciseRenamesItsLoggedSets, testGroupPrefersCustomExerciseThenCatalog, testMeasurementsPersistInStore ; FitnessModule.swift ExerciseLibraryView, CustomExerciseEditor"
       },
       {
-        "feature": "Mensurations corporelles",
-        "state": "missing",
-        "proof": ""
+        "feature": "Bibliothèque : catalogue existant par groupe + exercices perso, recherche, filtre ; proposés dans l'éditeur de série",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testSuggestionsMergeCustomAndLoggedWithoutDuplicates ; ExerciseLibraryView, WorkoutEditor (footer groupe · matériel)"
       },
       {
-        "feature": "Export",
-        "state": "missing",
-        "proof": ""
+        "feature": "Mensurations (poids, masse grasse, cou, épaules, poitrine, taille, hanches, bras, avant-bras, cuisses, mollets), unités au choix kg/lb et cm/in, courbe, historique, correction, suppression",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testUnitConversionsRoundTripAndRefuseMismatch, testMeasurementSeriesConvertsMixedUnitsAndSortsByDate, testMeasurementParsingAcceptsFrenchDecimalAndRejectsNonsense ; FitnessModule.swift BodyMeasurementsView, MeasurementEditor"
+      },
+      {
+        "feature": "Reprendre le dernier poids d'Apple Santé dans une mesure",
+        "state": "present_untested",
+        "proof": "MeasurementEditor.importWeight (HealthService.latestBodyMass)"
+      },
+      {
+        "feature": "Export CSV des séries (ShareLink)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testCSVExportEscapesAndOrdersRows ; StrengthView.exportCard, SetsCSVFile"
+      },
+      {
+        "feature": "Démonstrations vidéo des exercices",
+        "state": "dependency",
+        "proof": "contenu vidéo/animation original ou sous licence ; l'écran le dit"
       }
     ]
   },
@@ -2305,19 +2480,24 @@
         "proof": "TabataSound, UIBackgroundModes audio"
       },
       {
-        "feature": "Widget Tabata avec tes vrais réglages (corrigé 30 sept.)",
+        "feature": "Widget Tabata avec tes vrais réglages",
         "state": "tested_auto",
         "proof": "LifeOSTests/Build49DefectTests.swift WidgetDataTests"
       },
       {
-        "feature": "Préréglages perso nommés",
-        "state": "missing",
-        "proof": ""
+        "feature": "Préréglages perso nommés (créer depuis les réglages actuels, modifier, supprimer, noms uniques, bornes sûres, choisis comme séance)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testTabataPresetRulesAndRoundTrip ; TabataView.customPresetsSection, pickPreset, TabataPresetEditor"
       },
       {
-        "feature": "Historique des séances dans l'app",
-        "state": "missing",
-        "proof": ""
+        "feature": "Historique des séances (efforts faits / total, durée active, date), une fois par séance, suppression ; journalisée au retour si finie écran fermé",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testTabataLogNeedsRealEffortAndNamesFreeIntervals, testSessionsAreRecordedOncePerRun ; TabataView.logFinishedIfNeeded, historySection"
+      },
+      {
+        "feature": "Séances Tabata comptées dans Streakz",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testTabataAndMobilityDaysCountAsActive"
       },
       {
         "feature": "Annonces vocales / Live Activity",
@@ -2357,9 +2537,9 @@
     "observed_at": "2026-09-28",
     "matrix": [
       {
-        "feature": "3 routines de mobilité intégrées",
+        "feature": "3 routines de mobilité intégrées (identifiants stables)",
         "state": "present_untested",
-        "proof": "FitnessModule.swift"
+        "proof": "FitnessModule.swift MobilityRoutineView.builtIn"
       },
       {
         "feature": "Séance guidée, minuteur par exercice, enchaînement",
@@ -2372,49 +2552,54 @@
         "proof": "CountdownEngineTests"
       },
       {
-        "feature": "Minuteur séparé du minuteur de focus (corrigé 30 sept. : même clé de sauvegarde avant)",
+        "feature": "Minuteur séparé du minuteur de focus",
         "state": "present_untested",
         "proof": "CountdownEngine(key: \"mobility\")"
       },
       {
         "feature": "Pause / reprise dans la séance",
-        "state": "missing",
-        "proof": "le moteur sait, l'écran n'a pas de bouton"
+        "state": "present_untested",
+        "proof": "GuidedStretchView.togglePause (engine.pause/resume)"
       },
       {
-        "feature": "Reprise après relance (exercice en cours)",
-        "state": "missing",
-        "proof": "index en @State"
+        "feature": "Reprise après relance à l'exercice en cours (y compris exercice fini app fermée, et bandeau Reprendre sur la liste)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testMobilityResumePointAfterRelaunch, testMobilityProgressPersistsAcrossRelaunch ; GuidedStretchView.restore"
       },
       {
-        "feature": "Sons entre exercices",
-        "state": "missing",
-        "proof": ""
+        "feature": "Son entre exercices (son système, suit le bouton silencieux), réglable",
+        "state": "present_untested",
+        "proof": "GuidedStretchView.advance AudioServicesPlaySystemSound ; @AppStorage mobility.sound"
+      },
+      {
+        "feature": "Routines perso (créer, modifier, supprimer, étapes ordonnées avec durées, réordonner)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testMobilityRoutineValidationAndReorder, testMobilityRoutineStepsKeepOrderInStore ; MobilityRoutineEditor"
+      },
+      {
+        "feature": "Historique des séances (une fois par tentative, durée réellement faite, partielle possible), suppression",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testSessionsAreRecordedOncePerRun ; GuidedStretchView.finish, MobilityRoutineView.historyCard"
+      },
+      {
+        "feature": "Écriture Santé de la séance de mobilité",
+        "state": "dependency",
+        "proof": "HealthService.WorkoutKind n'a que strength/hiit ; il faut un cas flexibility (fichier hors périmètre)"
       },
       {
         "feature": "Démonstrations (vidéo / animation)",
-        "state": "missing",
-        "proof": ""
-      },
-      {
-        "feature": "Routines perso",
-        "state": "missing",
-        "proof": ""
+        "state": "dependency",
+        "proof": "contenu vidéo original ou sous licence"
       },
       {
         "feature": "Évaluation de mobilité / programme adaptatif",
-        "state": "missing",
-        "proof": ""
-      },
-      {
-        "feature": "Historique et écriture Santé",
-        "state": "missing",
-        "proof": ""
+        "state": "dependency",
+        "proof": "bibliothèque de mouvements structurée et tests d'évaluation validés"
       },
       {
         "feature": "Prise en compte dans Streakz",
-        "state": "missing",
-        "proof": ""
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testTabataAndMobilityDaysCountAsActive"
       }
     ]
   },
@@ -2444,47 +2629,52 @@
     "observed_at": "",
     "matrix": [
       {
-        "feature": "Série de jours d'entraînement consécutifs",
+        "feature": "Série en semaines selon un objectif hebdo réglable (1 à 7 jours) : les jours de repos ne cassent pas la série",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testWeeklyTargetKeepsStreakOverRestDays ; StreaksView"
+      },
+      {
+        "feature": "Série de jours consécutifs",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testTabataAndMobilityDaysCountAsActive"
+      },
+      {
+        "feature": "Meilleure série (jours et semaines)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testBestDayStreak, testWeeklyTargetKeepsStreakOverRestDays"
+      },
+      {
+        "feature": "Muscu, Tabata et mobilité comptés (avant : séries muscu seules)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testTabataAndMobilityDaysCountAsActive"
+      },
+      {
+        "feature": "Calendrier / heatmap 18 semaines, lundi en haut, intensité = types d'activité du jour",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testHeatmapShapeMondayFirstAndFutureFlag ; StreaksView.heatmapCard"
+      },
+      {
+        "feature": "Rappel quotidien à l'heure choisie, refus montré + Réglages",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Lot6FitnessTests.swift testReminderComponents ; StreaksView.scheduleReminder"
+      },
+      {
+        "feature": "Jours actifs, compteurs par type",
         "state": "present_untested",
         "proof": "StreaksView"
       },
       {
-        "feature": "Jours actifs, séries totales, 3 objectifs fixes",
-        "state": "present_untested",
-        "proof": "StreaksView"
+        "feature": "Santé comptée (workouts d'autres apps)",
+        "state": "missing",
+        "proof": "HealthService.workoutsThisWeek ne donne qu'un total, pas les dates"
       },
       {
-        "feature": "Calculé depuis les séries muscu (SwiftData)",
-        "state": "present_untested",
-        "proof": "@Query WorkoutSet"
-      },
-      {
-        "feature": "Habitudes perso",
+        "feature": "Habitudes perso (moteur Habitly partagé)",
         "state": "missing",
         "proof": "Habitly existe, pas relié"
       },
       {
-        "feature": "Tabata, mobilité et Santé comptés",
-        "state": "missing",
-        "proof": ""
-      },
-      {
-        "feature": "Calendrier / heatmap",
-        "state": "missing",
-        "proof": ""
-      },
-      {
-        "feature": "Meilleure série",
-        "state": "missing",
-        "proof": ""
-      },
-      {
-        "feature": "Fréquence souple, jours de repos",
-        "state": "missing",
-        "proof": ""
-      },
-      {
-        "feature": "Rappels, widget de série",
+        "feature": "Widget de série",
         "state": "missing",
         "proof": ""
       }
@@ -2580,6 +2770,11 @@
         "feature": "Plans et suivi de progression façon Umax",
         "state": "missing",
         "proof": "grep 'plan|programme|progress' in FaceAnalysis.swift 0 hits"
+      },
+      {
+        "feature": "Fichier illisible ou photo non chargée signalé comme tel (pas « aucun visage »)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesMindTests.swift testFileErrorsDoNotBlameTheFace (FaceAnalysisIssue), FaceAnalysis.swift:111/:239"
       }
     ],
     "audit_bugs": [
@@ -2626,13 +2821,13 @@
     "matrix": [
       {
         "feature": "Profil peau en 3 étapes (type, préoccupations, traitement)",
-        "state": "present_untested",
-        "proof": "LooksModule.swift:177 SkinProfileSetupView"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesMindTests.swift testSavedProfileRoundTripsThroughTheEditor (SkinRoutineEngine.encode/decode, rechargé dans l'éditeur LooksModule.swift:280, écrit :364); étapes de l'écran non pilotées"
       },
       {
         "feature": "Routine matin / soir générée selon le profil",
-        "state": "present_untested",
-        "proof": "LooksModule.swift:138 SkinRoutineEngine; grep SkinRoutineEngine LifeOSTests 0 hits"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesMindTests.swift testEveryConcernChangesTheRoutine, testTreatmentNameAppearsInEveningRoutine (SkinRoutineEngine.morningSteps/eveningSteps), utilisé LooksModule.swift:97/:103"
       },
       {
         "feature": "Étapes numérotées dans un ordre fixe",
@@ -2771,8 +2966,8 @@
       },
       {
         "feature": "Catégorie Visage / Peau / Corps",
-        "state": "missing",
-        "proof": "ProgressPhoto.category exists (Models_Life.swift:10) but no picker; insert at LooksModule.swift:352 always uses default 'Visage'"
+        "state": "present_untested",
+        "proof": "Picker Catégorie à l'ajout LooksModule.swift:456 (insert :419 avec la catégorie choisie), « Classer en … » dans le menu :443-444; aucun test"
       },
       {
         "feature": "Comparaison côte à côte / curseur avant-après",
@@ -2813,6 +3008,11 @@
         "feature": "Ouvrir une photo en plein écran",
         "state": "missing",
         "proof": "grid cells have no tap action LooksModule.swift:333-345"
+      },
+      {
+        "feature": "Date de prise de vue lue dans l'EXIF (repli date d'import, date future refusée)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesMindTests.swift testCaptureDateIsReadFromPhotoMetadata, testExifDateParsingRejectsFutureAndGarbage (captureDate/parseExifDate LooksModule.swift:391-404), utilisé :418-419"
       }
     ],
     "audit_bugs": [
@@ -3148,8 +3348,8 @@
       },
       {
         "feature": "Notification de fin de séance",
-        "state": "present_untested",
-        "proof": "MindModule.swift:106 (only fires when app is in foreground, see bugs)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesMindTests.swift testMeditationEndAlertIsScheduledForTheRealDeadline, testNoEndAlertWithoutRunningSessionOrPastDeadline (endAlertDelay), scheduleAfter au démarrage MindModule.swift:123-124 (sonne écran verrouillé / app fermée)"
       },
       {
         "feature": "Méditations guidées audio",
@@ -3316,8 +3516,8 @@
       },
       {
         "feature": "Gestion des interruptions audio (appel)",
-        "state": "missing",
-        "proof": "grep interruptionNotification in Soundscape.swift 0 hits (only NightSounds.swift:230)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesMindTests.swift testCallWhilePlayingPausesHonestly, testEndOfInterruptionResumesOnlyWhenAllowedAndPending (NoiseEngine.interruptionAction), observateur Soundscape.swift:84"
       }
     ],
     "audit_bugs": [
@@ -3554,8 +3754,8 @@
       },
       {
         "feature": "Priorités du jour tirées des vraies tâches",
-        "state": "present_untested",
-        "proof": "MindModule.swift:264 todayTodos (misses recurring/overdue, see bugs)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesMindTests.swift testRecurringAndOverdueTasksAppearInTodaysPriorities, testUnplannedDoneOrFutureTasksStayOut (MorningBriefingView.isPriorityToday), utilisé MindModule.swift:303"
       },
       {
         "feature": "Rituel de démarrage",
@@ -3660,8 +3860,8 @@
       },
       {
         "feature": "Tri par priorité puis échéance",
-        "state": "present_untested",
-        "proof": "ProductivityModule.swift:22 (ordre des échéances inversé, voir bugs)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesProductivityTests.swift testTodoSortPutsNearestDueFirstAtSamePriority, testTodoSortPutsUndatedLastAndPriorityFirst (ProductivityRules.todoPrecedes), utilisé ProductivityModule.swift:199"
       },
       {
         "feature": "Filtre À faire / Toutes",
@@ -3700,8 +3900,8 @@
       },
       {
         "feature": "Récurrence par jours de semaine",
-        "state": "present_untested",
-        "proof": "ProductivityModule.swift:262 + Models_Life.swift:73 applies(to:) (ne rouvre jamais la tâche, voir bugs)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesProductivityTests.swift testCheckingRecurringTodoRollsToNextOccurrence, testNextOccurrenceKeepsTimeOfDay, testRecurringTodoWithoutTimeGetsDateOnlyOccurrence (ProductivityRules.toggleDone), utilisé ProductivityModule.swift:215 et HabitTrackerTimelineView.swift:636"
       },
       {
         "feature": "Rappel de tâche",
@@ -3710,8 +3910,8 @@
       },
       {
         "feature": "Ajout au calendrier",
-        "state": "present_untested",
-        "proof": "ProductivityModule.swift:105 addToCalendar (doublons, voir bugs)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesProductivityTests.swift testCalendarAddIsDeduplicated (ProductivityRules.calendarDecision), utilisé ProductivityModule.swift:304; écriture EventKit non testée"
       },
       {
         "feature": "Dépendances entre tâches",
@@ -3743,9 +3943,10 @@
         "where": "ProductivityModule.swift:105",
         "why": "Chaque Ajouter au calendrier crée un nouvel EKEvent sans garder son identifiant: doublons à chaque appui, et changer la tâche ne met jamais l'événement à jour.",
         "found": "2026-10-01",
-        "status": "fixed",
+        "status": "partial",
         "note": "partiel : doublon évité ; mettre à jour l'ancien événement demande l'accès complet au calendrier",
-        "fixed": "2026-10-01"
+        "fixed": "2026-10-01",
+        "remaining": "doublon évité ; mettre à jour l'ancien événement demande l'accès complet au calendrier"
       }
     ]
   },
@@ -3816,8 +4017,8 @@
       },
       {
         "feature": "Échéances et priorités combinées",
-        "state": "missing",
-        "proof": "generate trie seulement par priorité ProductivityModule.swift:400, due ignoré"
+        "state": "present_untested",
+        "proof": "generate trie priorité puis échéance la plus proche ProductivityModule.swift:624-626 (ProductivityRules.todoPrecedes, testé seul dans LifeOSTests/AuditFixesProductivityTests.swift); generate lui-même non testé"
       },
       {
         "feature": "Import des plages occupées du calendrier",
@@ -3846,8 +4047,8 @@
       },
       {
         "feature": "Tâches récurrentes planifiées",
-        "state": "missing",
-        "proof": "recurringDays ignoré par generate ProductivityModule.swift:400"
+        "state": "present_untested",
+        "proof": "Tâche récurrente placée seulement les jours où elle revient ProductivityModule.swift:625 (applies(to: day)); aucun test de generate"
       }
     ],
     "audit_bugs": [
@@ -3917,8 +4118,8 @@
       },
       {
         "feature": "Série (streak)",
-        "state": "present_untested",
-        "proof": "HabitTrackerTimelineView.swift:93 (ignore les jours actifs, voir bugs)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesProductivityTests.swift testStreakSkipsInactiveDays, testStreakTodayNotDoneDoesNotBreakButMissedDayDoes (ProductivityRules.habitStreak), utilisé ProductivityModule.swift:851 et HabitTrackerTimelineView.swift:95"
       },
       {
         "feature": "Objectifs de quantité ou de durée",
@@ -3942,8 +4143,8 @@
       },
       {
         "feature": "Rappel par habitude",
-        "state": "missing",
-        "proof": "l'éditeur affiche HORAIRE DU RAPPEL (ProductivityModule.swift:812) mais rien ne programme de notification; seul un rappel global quotidien ContextualNotifications.swift:173"
+        "state": "present_untested",
+        "proof": "HabitReminders.schedule ProductivityModule.swift:140-161 (un rappel hebdo par jour actif, id habit.reminder.<uid>.<jour>), appelé par HabitEditor.save :1213, annulé :1138, nettoyage :777; aucun test"
       },
       {
         "feature": "Complétion automatique HealthKit",
@@ -3952,8 +4153,8 @@
       },
       {
         "feature": "Habitudes proposées à activer",
-        "state": "missing",
-        "proof": "unreachable: PendingHabitRow (ProductivityModule.swift:529) n'est instancié nulle part"
+        "state": "present_untested",
+        "proof": "Bannière « N habitudes proposées à activer » ProductivityModule.swift:724-726 -> feuille :743-750 qui instancie PendingHabitRow :746; aucun test"
       },
       {
         "feature": "Sauvegarde et restauration",
@@ -4362,18 +4563,18 @@
       },
       {
         "feature": "Reste / dépassement affiché",
-        "state": "present_untested",
-        "proof": "FinanceModule.swift:213-217 (euros tronqués, voir bugs)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/EnvelopeRolloverTests.swift testWithoutCarryOverEveryMonthStartsFromTheBudget, testCarryOverMovesLeftoverAndOverspendToNextMonths (EnvelopeMath.availableCents); affichage « Reste / Dépassé de » en devise FinanceModule.swift:276"
       },
       {
         "feature": "Remise à zéro chaque mois",
         "state": "tested_auto",
-        "proof": "LifeOSTests/EnvelopeRolloverTests.swift testNewMonthResetsSpending"
+        "proof": "Preuve mise à jour: testNewMonthResetsSpending n'existe plus; LifeOSTests/EnvelopeRolloverTests.swift testWithoutCarryOverEveryMonthStartsFromTheBudget (chaque mois repart du budget, sans report)"
       },
       {
         "feature": "Dépenses liées aux transactions",
-        "state": "missing",
-        "proof": "spent ne bouge que par les boutons -10/+10 FinanceModule.swift:219-225; Txn.category n'est jamais lu par Envelope"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/EnvelopeRolloverTests.swift testBankExpensesOfTheCategoryCountButIncomeDoesNot (EnvelopeMath.spentCents); filtre par catégorie Bankino Services/EnvelopeBudget.swift:57, choix de la catégorie FinanceModule.swift:340"
       },
       {
         "feature": "Argent à assigner (fonds réels)",
@@ -4382,8 +4583,8 @@
       },
       {
         "feature": "Report du disponible et du dépassement",
-        "state": "missing",
-        "proof": "rolloverIfNeeded remet spent à 0 (Models_Life.swift:287), rien n'est reporté"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/EnvelopeRolloverTests.swift testCarryOverMovesLeftoverAndOverspendToNextMonths; option « Reporter le reste » FinanceModule.swift:344, utilisée EnvelopeBudget.swift:61-63"
       },
       {
         "feature": "Objectifs d'enveloppe (targets)",
@@ -4402,8 +4603,8 @@
       },
       {
         "feature": "Historique des mois précédents",
-        "state": "missing",
-        "proof": "aucune trace par mois, spent écrasé au changement de mois"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/EnvelopeRolloverTests.swift testEachMonthKeepsItsOwnSpending, testYearBoundary; navigation mois précédent FinanceModule.swift:247-255 (EnvelopeEntry par date)"
       },
       {
         "feature": "Réaffectation entre enveloppes",
@@ -4412,8 +4613,8 @@
       },
       {
         "feature": "Modifier une enveloppe",
-        "state": "missing",
-        "proof": "seulement créer (FinanceModule.swift:279) et supprimer (:233)"
+        "state": "present_untested",
+        "proof": "Menu « Modifier » FinanceModule.swift:301 -> EnvelopeEditor(envelope:) :237/:324, écriture :355; aucun test de l'éditeur"
       },
       {
         "feature": "Rapports",
@@ -4424,6 +4625,11 @@
         "feature": "Supprimer une enveloppe",
         "state": "present_untested",
         "proof": "FinanceModule.swift:233"
+      },
+      {
+        "feature": "Dépenses d'enveloppe datées, modifiables, remboursement négatif",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/EnvelopeRolloverTests.swift testEditingAPastEntryChangesOnlyThatMonth, testRefundEntryLowersTheMonth, testMigrationConvertsTheOldAmountOnceAndKeepsIt; EnvelopeEntryEditor FinanceModule.swift:375-404"
       }
     ],
     "audit_bugs": [
@@ -4438,8 +4644,9 @@
         "where": "Models_Life.swift:287",
         "why": "rolloverIfNeeded écrase spent à 0 sans rien garder: la dépense du mois précédent est perdue.",
         "found": "2026-10-01",
-        "status": "open",
-        "note": "garder les dépenses du mois passé demande un champ stocké (changement de modèle)"
+        "status": "fixed",
+        "note": "écritures datées par enveloppe + opérations Bankino, report au choix, migration (EnvelopeRolloverTests)",
+        "fixed": "2026-10-01"
       }
     ]
   },
@@ -4495,13 +4702,13 @@
       },
       {
         "feature": "Signal « Oublié ? »",
-        "state": "present_untested",
-        "proof": "FinanceModule.swift:330 (repose sur une date jamais avancée, voir bugs)"
+        "state": "missing",
+        "proof": "Badge « Oublié ? » retiré (FinanceModule.swift:470-472, fix3): aucune donnée d'usage derrière lui. Baisse de statut, pas une montée"
       },
       {
         "feature": "Avancer la prochaine échéance",
-        "state": "missing",
-        "proof": "aucune écriture de nextDate après création (grep .nextDate)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesProductivityTests.swift testNextChargeDateAdvancesByCycleWithoutDrift (SubscriptionsView.nextChargeDate), appelé par advanceDueDates FinanceModule.swift:473-479 à l'ouverture / ajout / réactivation"
       },
       {
         "feature": "Détection depuis les transactions",
@@ -4612,8 +4819,8 @@
       },
       {
         "feature": "Gérer les membres",
-        "state": "missing",
-        "proof": "membersRaw en AppStorage (FinanceModule.swift:385), aucun écran pour le modifier"
+        "state": "present_untested",
+        "proof": "Carte « Membres » FinanceModule.swift:625 (ajout :576, retrait :582, membre utilisé non retirable); SplitView.members testé seul (LifeOSTests/AuditFixesProductivityTests.swift testSplitMembersHaveNoInventedPeople), ajout/retrait non testés"
       },
       {
         "feature": "Parts inégales / pourcentages",
@@ -4693,8 +4900,8 @@
       },
       {
         "feature": "Projection des mois restants",
-        "state": "present_untested",
-        "proof": "Models_Life.swift:316 monthsLeft (faux si effort = 0, voir bugs)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesProductivityTests.swift testSavingsWithoutMonthlyEffortIsNotReached (SavingsView.status: « ≈ 6 mois », effort 0 sans faux « atteint »), affiché FinanceModule.swift:729"
       },
       {
         "feature": "Versement manuel de l'effort",
@@ -4893,8 +5100,8 @@
       },
       {
         "feature": "Valeur totale et plus-value latente (globale et par ligne)",
-        "state": "present_untested",
-        "proof": "Models_Assets.swift:15-18 (value, pnl, pnlPct); InvestModule.swift:21-33"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Build52AuditTests.swift testMixedPortfolioTotalsOnlyCountKnownCosts, testLegacyHoldingHasUnknownCurrencyAndNoGain (HoldingMath.totals, Holding.pnl/pnlPct), utilisé InvestModule.swift:22"
       },
       {
         "feature": "Répartition en anneau par symbole",
@@ -4918,8 +5125,8 @@
       },
       {
         "feature": "Modifier une position existante",
-        "state": "missing",
-        "proof": "HoldingEditor n'insère que de nouvelles lignes (InvestModule.swift:179); aucune vue d'édition d'un Holding existant"
+        "state": "present_untested",
+        "proof": "Tap ou « Modifier » InvestModule.swift:72-74 -> HoldingEditor(holding:) :97/:174, écriture sur la position existante :255; aucun test de l'éditeur"
       },
       {
         "feature": "Lots de transactions (achats multiples, ventes)",
@@ -4955,6 +5162,11 @@
         "feature": "Import ou connexion courtier",
         "state": "dependency",
         "proof": "aucun import CSV ni agrégateur (grep -i 'courtier|broker' vide); demanderait une API courtier/agrégateur et un compte"
+      },
+      {
+        "feature": "Devise du prix d'achat, convertie en euros au taux BCE du jour d'achat (pas de plus-value si devise ou taux inconnus)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/Build52AuditTests.swift testCostIsConvertedAtThePurchaseDayRate, testUnknownCurrencyOrRateGivesNoGainRatherThanAWrongOne, testHistoricalRateParsingAndPence; LifeOSTests/AuditGlobalOct1Tests.swift testPenceQuotesAreConvertedToPounds; Picker InvestModule.swift:205, taux :243-244"
       }
     ],
     "audit_bugs": [
@@ -4969,8 +5181,9 @@
         "where": "InvestModule.swift:171",
         "why": "Le prix d'achat n'a pas de devise alors que le cours actuel est converti en euros: un titre américain saisi à son prix en dollars affiche une fausse plus ou moins-value due au change.",
         "found": "2026-10-01",
-        "status": "open",
-        "note": "prix d'achat sans devise : demande un champ devise sur Holding (changement de modèle)"
+        "status": "fixed",
+        "note": "devise, date et taux BCE du jour d'achat ; anciennes positions « à confirmer » (FinarioCurrencyTests)",
+        "fixed": "2026-10-01"
       },
       {
         "where": "InvestModule.swift:89",
@@ -5253,6 +5466,16 @@
         "feature": "Export ou partage du résultat",
         "state": "missing",
         "proof": "aucun ShareLink/export dans TaxSimulatorView (InvestModule.swift:518-604)"
+      },
+      {
+        "feature": "Enfants à charge -> parts (demi-part pour les 2 premiers, part entière dès le 3e)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditGlobalOct1Tests.swift testThirdChildCountsAWholePart (FrenchTax.parts), Stepper InvestModule.swift:648-650; case T, veuf, invalidité toujours absents"
+      },
+      {
+        "feature": "Tranche marginale quand le plafonnement s'applique (parts de base)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditGlobalOct1Tests.swift testMarginalRateFollowsBasePartsWhenTheCapApplies (FrenchTax.compute)"
       }
     ],
     "audit_bugs": [
@@ -5326,8 +5549,8 @@
       },
       {
         "feature": "Supprimer une candidature",
-        "state": "missing",
-        "proof": "ni contextMenu ni bouton supprimer dans ApplicationsView/ApplicationEditor (CareerModule.swift:11-81)"
+        "state": "present_untested",
+        "proof": "Balayage CareerModule.swift:53-54 et menu contextuel -> confirmation :70 -> ctx.delete :80; aucun test"
       },
       {
         "feature": "Vue tableau (kanban, glisser entre colonnes)",
@@ -5376,8 +5599,8 @@
       },
       {
         "feature": "Dédoublonnage des offres suivies",
-        "state": "missing",
-        "proof": "track() insère sans vérifier l'url (CareerModule.swift:670)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesCareerTests.swift testTrackKeyIgnoresUrlCosmetics (JobMatching.trackKey), utilisé CareerModule.swift:724-728 (bouton « Suivie » désactivé)"
       }
     ],
     "audit_bugs": [
@@ -5484,6 +5707,11 @@
         "feature": "Suite design type Canva (éditeur libre, banque d'éléments, collaboration)",
         "state": "missing",
         "proof": "aucun éditeur graphique; hors périmètre du générateur de CV"
+      },
+      {
+        "feature": "Réponse IA: mots-clés séparés du profil, seul le profil est appliqué",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesCareerTests.swift testKeywordsAreSplitOffTheProfile, testKeywordsHeaderWithoutAccentsOnSameLine, testReplyWithoutKeywordsIsKeptWhole (CVKeywords.split), utilisé CareerModule.swift:264-268/:307"
       }
     ],
     "audit_bugs": [
@@ -5543,8 +5771,8 @@
       },
       {
         "feature": "Compétences réutilisées pour trier les offres",
-        "state": "present_untested",
-        "proof": "CareerModule.swift:543-559"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesCareerTests.swift testOnlyAcquiredSkillsCount (JobMatching.acquiredSkills), utilisé CareerModule.swift:720"
       },
       {
         "feature": "Modifier une compétence existante",
@@ -5722,8 +5950,8 @@
       },
       {
         "feature": "Tri par correspondance avec les compétences suivies (étoile)",
-        "state": "present_untested",
-        "proof": "CareerModule.swift:556-559,634"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesCareerTests.swift testOnlyAcquiredSkillsCount, testWholeWordMatching (JobMatching.acquiredSkills / score), utilisé CareerModule.swift:720/:732"
       },
       {
         "feature": "Ouvrir l'offre",
@@ -5779,6 +6007,11 @@
         "feature": "Catalogue Welcome to the Jungle",
         "state": "dependency",
         "proof": "aucune API WTTJ; le flux Arbeitnow n'est pas leur catalogue"
+      },
+      {
+        "feature": "Message d'erreur selon la cause (réseau, code HTTP, format changé)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesCareerTests.swift testErrorMessagesNameTheRealCause (JobSearchService.describe, JobSearchError.badStatus), CareerModule.swift:610-634"
       }
     ],
     "audit_bugs": [
@@ -5932,9 +6165,10 @@
         "where": "Trilingo.swift:207",
         "why": "Les choix du placement ne filtrent que le tid, or les cours embarqués ont des phrases sources en double (47 en fra-eng, 428 en fra-heb): la bonne réponse peut apparaître deux fois, avec des id ForEach en double (ligne 189); même risque entre distracteurs en séance (TrilingoEngine.swift:196).",
         "found": "2026-10-01",
-        "status": "fixed",
+        "status": "partial",
         "note": "partiel : doublons retirés à l'écran ; le moteur peut encore en produire",
-        "fixed": "2026-10-01"
+        "fixed": "2026-10-01",
+        "remaining": "doublons retirés à l'écran ; le moteur peut encore en produire"
       },
       {
         "where": "Trilingo.swift:181",
@@ -5979,68 +6213,83 @@
     "matrix": [
       {
         "feature": "Créer une carte recto/verso dans un paquet",
-        "state": "present_untested",
-        "proof": "LearningModule.swift:51"
+        "state": "tested_auto",
+        "proof": "LearningModule.swift:262 FlashcardEditor; LifeOSTests/Lot6LearningTests.swift testNoteStore_editKeepsSchedulingOfKeptCards"
       },
       {
-        "feature": "Liste des paquets avec nombre de cartes",
+        "feature": "Liste des paquets avec nombre de cartes (total et à réviser, sous-paquets compris)",
         "state": "present_untested",
-        "proof": "LearningModule.swift:36"
+        "proof": "LearningModule.swift:176 deckRow"
       },
       {
-        "feature": "Compteur de cartes dues et lancement de révision",
-        "state": "present_untested",
-        "proof": "LearningModule.swift:17 et :29"
+        "feature": "Compteur de cartes dues et lancement de révision (global ou par paquet)",
+        "state": "tested_auto",
+        "proof": "Models_Learning.swift:305 CardScheduling.sessionCards; Lot6LearningTests testSuspendBuryAndSessionPicksOnePerNote"
       },
       {
-        "feature": "Révision avec planification SM-2 (À revoir / Correct / Facile)",
-        "state": "present_untested",
-        "proof": "LearningModule.swift:122; aucun test SM2 dans LifeOSTests"
+        "feature": "Révision avec planification SM-2 (À revoir / Correct / Facile), dates déterministes",
+        "state": "tested_auto",
+        "proof": "Models_Learning.swift:288 SM2 (now/calendar injectables); Lot6LearningTests testSM2_intervalsAreDeterministic"
       },
       {
         "feature": "Modifier, supprimer ou parcourir les cartes",
-        "state": "missing",
-        "proof": "aucun ctx.delete ni liste de cartes dans FlashcardsView (LearningModule.swift:11-49)"
+        "state": "tested_auto",
+        "proof": "LearningModule.swift:371 CardBrowserView (tap = modifier, glisser = supprimer la note); NoteStore Models_Learning.swift:521; Lot6LearningTests testNoteStore_editKeepsSchedulingOfKeptCards"
       },
       {
-        "feature": "Hiérarchie de paquets",
-        "state": "missing",
-        "proof": "deck est une simple chaîne (Models_Assets.swift:74)"
+        "feature": "Paquets: créer, renommer, supprimer (cartes déplacées vers Général ou supprimées, au choix)",
+        "state": "tested_auto",
+        "proof": "Models_Learning.swift:443 DeckOps; LearningModule.swift:240 commitDeck; Lot6LearningTests testDeckOps_createRenameDelete"
       },
       {
-        "feature": "Cartes texte à trous et inversées, types de notes",
-        "state": "missing",
-        "proof": "grep cloze/reversed: rien"
+        "feature": "Hiérarchie de paquets (Parent::Enfant, comme Anki)",
+        "state": "tested_auto",
+        "proof": "Models_Learning.swift:399 DeckTree; Lot6LearningTests testDeckTree_hierarchy"
+      },
+      {
+        "feature": "Migration unique des cartes existantes vers un paquet objet, sans perte",
+        "state": "tested_auto",
+        "proof": "Models_Learning.swift:498 DeckMigration (lancée à l'ouverture de FlashcardsView); Lot6LearningTests testDeckMigration_assignsDecksAndLosesNothing"
+      },
+      {
+        "feature": "Cartes texte à trous ({{c1::...}}) et inversées générées depuis une note",
+        "state": "tested_auto",
+        "proof": "Models_Learning.swift:138 Cloze, :178 NoteFactory, :218 CardFace; Lot6LearningTests testCloze_indicesQuestionAnswer, testNoteFactory_specsPerType, testCardFace_reverseSwapsAndClozeHides"
       },
       {
         "feature": "Images et audio sur les cartes",
         "state": "missing",
-        "proof": "Flashcard n'a que front/back texte"
+        "proof": "Flashcard reste texte seul; pas de stockage média par carte"
       },
       {
-        "feature": "Étiquettes et recherche",
-        "state": "missing",
-        "proof": "aucun champ tag ni searchable dans LearningModule.swift"
+        "feature": "Étiquettes et recherche (texte, tag:mot, is:suspendue)",
+        "state": "tested_auto",
+        "proof": "Models_Learning.swift:244 CardTags, :260 CardSearch; Lot6LearningTests testTagsAndSearch"
       },
       {
-        "feature": "Import/export (.apkg, CSV)",
-        "state": "missing",
-        "proof": "grep apkg/csv dans LearningModule: rien"
+        "feature": "Import/export CSV et texte tabulé (export Anki en texte brut), .apkg non pris en charge et dit à l'écran",
+        "state": "tested_auto",
+        "proof": "Models_Learning.swift:569 FlashcardCSV; LearningModule.swift:643 AnkoImportExportSheet (fileImporter + ShareLink); Lot6LearningTests testCSV_parseQuotesDelimitersAndAnkiHeader, testCSV_exportReimportRoundTripKeepsTypesWithoutDuplicates"
       },
       {
-        "feature": "Suspendre, enterrer, annuler, réapprendre dans la séance",
-        "state": "missing",
-        "proof": "ReviewSession avance toujours (LearningModule.swift:114), pas de file de réapprentissage ni d'annulation"
+        "feature": "Suspendre, enterrer jusqu'à demain, réapprendre dans la séance, annuler la dernière réponse (même après relance)",
+        "state": "tested_auto",
+        "proof": "Models_Learning.swift:348 ReviewQueue, :385 ReviewUndo, CardReview log; LearningModule.swift:567 bury, :583 undo; Lot6LearningTests testReviewQueue_relearnAndUndo, testAnswerAndUndoRestoresCardExactly"
       },
       {
-        "feature": "Réglages de planification et statistiques",
+        "feature": "Statistiques (dues aujourd'hui, révisions par jour sur 14 j, réussite sur 30 j)",
+        "state": "tested_auto",
+        "proof": "Models_Learning.swift:725 CardStats; LearningModule.swift:597 CardStatsView; Lot6LearningTests testStats_dueReviewsRetention"
+      },
+      {
+        "feature": "Réglages de planification (limites par jour, pas d'apprentissage)",
         "state": "missing",
-        "proof": "aucun écran de réglages ni stats"
+        "proof": "SM-2 fixe, aucun écran de réglages"
       },
       {
         "feature": "Synchronisation",
-        "state": "missing",
-        "proof": "aucun compte ni sync"
+        "state": "dependency",
+        "proof": "exige un compte et un service de synchronisation (ou CloudKit activé dans le store), absent"
       }
     ]
   },
@@ -6070,59 +6319,69 @@
     "observed_at": "",
     "matrix": [
       {
-        "feature": "Notion du jour (8 fiches en dur, rotation par jour)",
+        "feature": "Notion du jour (8 fiches en dur, rotation par jour, libellé honnête)",
         "state": "present_untested",
-        "proof": "LearningModule.swift:142-152"
+        "proof": "LearningModule.swift:799 todayCard"
+      },
+      {
+        "feature": "Mes notions: saisir titre, explication et source, modifier, supprimer",
+        "state": "tested_auto",
+        "proof": "LearningModule.swift:725 MicroLearningView + FlashcardEditor (mode notion); Models_Learning.swift:747 NotionStore; Lot6LearningTests testNotions_areFlashcardsWithTag"
+      },
+      {
+        "feature": "Garder la notion du jour dans mes notions",
+        "state": "tested_auto",
+        "proof": "LearningModule.swift:799 todayCard; NotionStore.exists testé dans testNotions_areFlashcardsWithTag"
+      },
+      {
+        "feature": "Répétition espacée des notions (même moteur et même progression qu'Anko)",
+        "state": "tested_auto",
+        "proof": "notions = Flashcard du paquet Notions, ReviewSession; Lot6LearningTests testSuspendBuryAndSessionPicksOnePerNote, testSM2_intervalsAreDeterministic"
+      },
+      {
+        "feature": "Historique des notions passées et recherche",
+        "state": "present_untested",
+        "proof": "LearningModule.swift:725 liste triée par date + searchable (CardSearch testé)"
+      },
+      {
+        "feature": "Écoute audio d'une notion (synthèse vocale)",
+        "state": "present_untested",
+        "proof": "LearningModule.swift:825 CoachSpeech.toggle"
+      },
+      {
+        "feature": "Sources par fiche",
+        "state": "present_untested",
+        "proof": "champ Flashcard.source saisi par l'utilisateur, affiché dans notionRow; les 8 fiches intégrées restent sans source"
       },
       {
         "feature": "Catalogue cherchable de contenus",
-        "state": "missing",
-        "proof": "8 tuples codés en dur, pas de recherche"
+        "state": "dependency",
+        "proof": "exige un contenu éditorial original ou sous licence"
       },
       {
         "feature": "Programmes structurés",
-        "state": "missing",
-        "proof": "aucun modèle de programme"
-      },
-      {
-        "feature": "Modes lecture et écoute audio",
-        "state": "missing",
-        "proof": "aucun AVSpeech/lecteur dans MicroLearningView"
+        "state": "dependency",
+        "proof": "exige un catalogue éditorial"
       },
       {
         "feature": "Surlignages enregistrés",
-        "state": "missing",
-        "proof": "aucun modèle de surlignage"
+        "state": "dependency",
+        "proof": "sans texte de leçon à surligner (catalogue absent); les surlignages de livres existent dans Blinklist"
       },
       {
         "feature": "Quiz et récapitulatifs",
-        "state": "missing",
-        "proof": "aucun quiz"
-      },
-      {
-        "feature": "Répétition espacée des notions",
-        "state": "missing",
-        "proof": "pas de lien avec Flashcard"
+        "state": "dependency",
+        "proof": "exige un contenu éditorial et des questions validées"
       },
       {
         "feature": "Recommandations personnalisées",
-        "state": "missing",
-        "proof": "aucune logique"
+        "state": "dependency",
+        "proof": "rien à recommander sans catalogue"
       },
       {
         "feature": "Téléchargements hors ligne",
-        "state": "missing",
-        "proof": "sans objet: rien à télécharger"
-      },
-      {
-        "feature": "Sources et qualité éditoriale par fiche",
-        "state": "missing",
-        "proof": "aucune source citée pour les 8 fiches"
-      },
-      {
-        "feature": "Historique des notions passées",
-        "state": "missing",
-        "proof": "seule la fiche du jour est visible"
+        "state": "dependency",
+        "proof": "sans objet sans catalogue; les notions sont locales donc hors ligne"
       }
     ],
     "audit_bugs": [
@@ -6161,54 +6420,74 @@
     "observed_at": "",
     "matrix": [
       {
-        "feature": "Saisir un résumé (titre, auteur, note, idées clés)",
+        "feature": "Saisir un résumé (titre, auteur, note, idées clés, collections)",
         "state": "present_untested",
-        "proof": "LearningModule.swift:299"
+        "proof": "LearningModule.swift:1213 BookEditor"
       },
       {
-        "feature": "Liste des résumés et suppression",
-        "state": "present_untested",
-        "proof": "LearningModule.swift:187 et :193"
+        "feature": "Liste des résumés et suppression (avec ses passages)",
+        "state": "tested_auto",
+        "proof": "LearningModule.swift:848 BookSummariesView; Models_Learning.swift:898 BookOps.delete; Lot6LearningTests testBooks_outlineSearchCollectionsMigration"
       },
       {
-        "feature": "Résumé généré par le coach IA",
+        "feature": "Résumé généré par ton coach",
         "state": "dependency",
-        "proof": "clé fournisseur IA requise (AIText.isConfigured), LearningModule.swift:225"
+        "proof": "clé fournisseur requise (AIText.isConfigured), LearningModule.swift:1134"
       },
       {
-        "feature": "Distinguer résumé IA et résumé vérifié",
-        "state": "missing",
-        "proof": "BookSummary n'a aucun champ source (Models_Assets.swift:86)"
+        "feature": "Distinguer résumé du coach et résumé de l'utilisateur (marque conservée après modification)",
+        "state": "tested_auto",
+        "proof": "BookSummaryOrigin; BookEditor.save remet la marque; Lot6LearningTests testCoachSummaryStaysMarkedAfterEdit, AuditFixesLearningTests"
       },
       {
         "feature": "Modifier un résumé existant",
-        "state": "missing",
-        "proof": "aucun éditeur pour un BookSummary existant"
+        "state": "present_untested",
+        "proof": "LearningModule.swift:1213 BookEditor(book:), ouvert depuis BookDetailView"
+      },
+      {
+        "feature": "Navigation par chapitre / idée clé (sommaire qui défile au chapitre)",
+        "state": "tested_auto",
+        "proof": "LearningModule.swift:960 BookDetailView; Models_Learning.swift:898 BookOps.outline; Lot6LearningTests testBooks_outlineSearchCollectionsMigration"
+      },
+      {
+        "feature": "Surlignages de l'utilisateur (avec page), modifier, réordonner, supprimer",
+        "state": "tested_auto",
+        "proof": "BookPassage + LearningModule.swift:1079 BookPassageEditor; BookOps.move testé dans testBooks_outlineSearchCollectionsMigration"
+      },
+      {
+        "feature": "Collections (filtre par puces)",
+        "state": "tested_auto",
+        "proof": "Models_Learning.swift:878 BookCollections; LearningModule.swift:911 collectionChips; Lot6LearningTests testBooks_outlineSearchCollectionsMigration"
+      },
+      {
+        "feature": "Recherche (titre, auteur, idées, passages)",
+        "state": "tested_auto",
+        "proof": "BookOps.matches; Lot6LearningTests testBooks_outlineSearchCollectionsMigration"
+      },
+      {
+        "feature": "Idée ou surlignage vers flashcard Anko (paquet Livres::Titre)",
+        "state": "present_untested",
+        "proof": "LearningModule.swift:1072 contextMenu Créer une flashcard"
       },
       {
         "feature": "Métadonnées sourcées (ISBN, couverture, éditeur)",
-        "state": "missing",
-        "proof": "aucun appel catalogue de livres"
+        "state": "dependency",
+        "proof": "exige une API de catalogue de livres"
       },
       {
         "feature": "Résumés édités et version audio",
-        "state": "missing",
-        "proof": "aucun contenu éditorial ni lecteur"
-      },
-      {
-        "feature": "Navigation par chapitre / idée clé",
-        "state": "missing",
-        "proof": "keyIdeas est un texte libre unique"
+        "state": "dependency",
+        "proof": "exige un catalogue éditorial sous licence et une production audio"
       },
       {
         "feature": "Découverte et catalogue",
-        "state": "missing",
-        "proof": "aucun catalogue"
+        "state": "dependency",
+        "proof": "exige un catalogue éditorial"
       },
       {
-        "feature": "Collections, surlignages, téléchargements",
-        "state": "missing",
-        "proof": "aucun modèle correspondant"
+        "feature": "Téléchargements",
+        "state": "dependency",
+        "proof": "sans objet sans catalogue; les notes sont locales"
       }
     ],
     "audit_bugs": [
@@ -6247,49 +6526,54 @@
     "observed_at": "",
     "matrix": [
       {
-        "feature": "Une compétence visée et des jalons cochables",
+        "feature": "Plusieurs programmes créés par l'utilisateur",
+        "state": "tested_auto",
+        "proof": "LearningModule.swift:1308 SkillPlanView, :1541 CourseEditor; Lot6LearningTests testCourses_progressNextReorderAndCascadeDelete"
+      },
+      {
+        "feature": "Hiérarchie programme / module / leçon avec lien et notes",
+        "state": "tested_auto",
+        "proof": "Course, CourseModule, CourseLesson; LearningModule.swift:1397 CourseDetailView, :1604 CourseLessonEditor; Lot6LearningTests testCourses_progressNextReorderAndCascadeDelete"
+      },
+      {
+        "feature": "Progression par programme et reprise de la prochaine leçon",
+        "state": "tested_auto",
+        "proof": "CourseOps.progress / next; Lot6LearningTests testCourses_progressNextReorderAndCascadeDelete"
+      },
+      {
+        "feature": "Échéances avec rappel (permission demandée, refus affiché avec accès aux Réglages)",
+        "state": "tested_auto",
+        "proof": "CourseOps.reminderDate/deadlineLabel; LearningModule.swift:21 LearningReminderToggle, :1291 LearningReminders; Lot6LearningTests testCourses_linksDeadlinesReminders"
+      },
+      {
+        "feature": "Supprimer ou réordonner programmes, modules et leçons",
+        "state": "tested_auto",
+        "proof": "CourseOps.moved/renumber/delete; LearningModule.swift:1331 et :1469 onMove; Lot6LearningTests testCourses_progressNextReorderAndCascadeDelete"
+      },
+      {
+        "feature": "Reprise unique de l'ancien plan (AppStorage) en programme, sans perte",
+        "state": "tested_auto",
+        "proof": "Models_Learning.swift:843 SkillPlanMigration; LearningModule.swift:1379; Lot6LearningTests testSkillPlanMigration_keepsStepsAndDoneState"
+      },
+      {
+        "feature": "Leçon vers flashcard Anko (paquet Cours::Titre)",
         "state": "present_untested",
-        "proof": "LearningModule.swift:322"
-      },
-      {
-        "feature": "Progression des jalons (barre)",
-        "state": "present_untested",
-        "proof": "LearningModule.swift:343"
-      },
-      {
-        "feature": "Supprimer ou réordonner un jalon",
-        "state": "missing",
-        "proof": "aucune action de suppression dans SkillPlanView"
-      },
-      {
-        "feature": "Plusieurs programmes",
-        "state": "missing",
-        "proof": "un seul plan en AppStorage (LearningModule.swift:323-325)"
-      },
-      {
-        "feature": "Hiérarchie cours / module / leçon et inscription",
-        "state": "missing",
-        "proof": "aucun modèle"
+        "proof": "LearningModule.swift:1517 contextMenu Créer une flashcard"
       },
       {
         "feature": "Lecture de médias (vidéo, lecture)",
         "state": "missing",
-        "proof": "aucun lecteur"
+        "proof": "le lien s'ouvre dans le navigateur (CourseOps.url testé), aucun lecteur intégré"
       },
       {
         "feature": "Évaluations et projets notés",
-        "state": "missing",
-        "proof": "aucun"
-      },
-      {
-        "feature": "Échéances",
-        "state": "missing",
-        "proof": "aucune date sur les jalons"
+        "state": "dependency",
+        "proof": "exige un système d'évaluation et de correction"
       },
       {
         "feature": "Discussion et retours",
-        "state": "missing",
-        "proof": "aucun"
+        "state": "dependency",
+        "proof": "exige un serveur et des comptes"
       },
       {
         "feature": "Certificats vérifiables",
@@ -6364,8 +6648,8 @@
       },
       {
         "feature": "Journal consommé / gaspillé",
-        "state": "missing",
-        "proof": "le bouton supprime; aucun modèle de journal"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesLearningTests.swift testAntiWasteLog_countsAndUndo (AntiWasteLog compte consommé / jeté, annulation); choix HomeModule.swift:46-47, record :70, annuler :81. Comptes seulement, pas de journal par article"
       },
       {
         "feature": "Scan code-barres à l'entrée en stock",
@@ -6430,8 +6714,8 @@
     "matrix": [
       {
         "feature": "Suggestions depuis le frigo",
-        "state": "present_untested",
-        "proof": "HomeModule.swift:48 via NutritionModule.swift:426"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesLearningTests.swift testRecipeMatching_wholeWordsAndLigature (RecipeEngine.suggest, mots entiers, ligatures); catalogue toujours de 8 recettes"
       },
       {
         "feature": "Pourcentage d'ingrédients disponibles",
@@ -6531,13 +6815,13 @@
       },
       {
         "feature": "Tri par échéance, retard en rouge",
-        "state": "present_untested",
-        "proof": "HomeModule.swift:80 et :86"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesLearningTests.swift testChoreDueLabel_usesCalendarDays (ChoresView.dueLabel « En retard / Aujourd'hui / Demain » en jours calendaires); tri non testé"
       },
       {
         "feature": "Tâches dues dans l'agenda du jour",
-        "state": "present_untested",
-        "proof": "TodayAgenda.swift:172"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesLearningTests.swift testMaintenanceNeverDone_isDue (TodayAgendaSection.isRecurringDue), utilisé pour les tâches TodayAgenda.swift:179"
       },
       {
         "feature": "Ajout rapide",
@@ -6684,6 +6968,16 @@
         "feature": "Lien avec la note des aliments (Yuko)",
         "state": "missing",
         "proof": "PetProfile de Yuko non relié à Pet"
+      },
+      {
+        "feature": "Supprimer un soin (rappel annulé)",
+        "state": "present_untested",
+        "proof": "Menu contextuel HomeModule.swift:248 -> removeEvent :266-268 (cancel ReminderIDs.petCare); aucun test. Modifier un soin reste absent"
+      },
+      {
+        "feature": "Date par défaut dans le futur, avertissement si le rappel ne peut pas sonner",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesLearningTests.swift testPetEventDefaultDate_isInTheFuture (PetEventEditor.defaultDate / canRemind)"
       }
     ],
     "audit_bugs": [
@@ -6733,8 +7027,8 @@
       },
       {
         "feature": "Entretiens dus dans l'agenda du jour",
-        "state": "present_untested",
-        "proof": "TodayAgenda.swift:186"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesLearningTests.swift testMaintenanceNeverDone_isDue (TodayAgendaSection.isRecurringDue, entretien jamais fait inclus), utilisé TodayAgenda.swift:194"
       },
       {
         "feature": "Note par entretien",
@@ -6829,8 +7123,8 @@
       },
       {
         "feature": "Consommation moyenne plein à plein (L/100 km)",
-        "state": "present_untested",
-        "proof": "MobilityModule.swift:39 avgConsumption, aucun test"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesAdminTests.swift testZeroOdometerFillDoesNotBreakAverage, testUnknownFillInsideRangeGivesNoAverage (FuelMath.averageConsumption), utilisé MobilityModule.swift:42"
       },
       {
         "feature": "Coût carburant du mois",
@@ -6886,6 +7180,16 @@
         "feature": "Prix des stations",
         "state": "dependency",
         "proof": "nécessite un flux de prix carburant (ex: prix-carburants.gouv.fr), rien de branché"
+      },
+      {
+        "feature": "Kilométrage obligatoire (vide ou 0 refusé)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesAdminTests.swift testEmptyOrZeroOdometerIsRejected (FuelMath.parseOdometer), MobilityModule.swift:116; ordre croissant toujours non vérifié"
+      },
+      {
+        "feature": "Rappels assurance / révision suivent le renommage du véhicule",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesAdminTests.swift testVehicleRenameCancelsOldNameReminders (ReminderIDs.vehicleIDs), VehicleReminders MobilityModule.swift:174, éditeur :100, suppression :54"
       }
     ],
     "audit_bugs": [
@@ -6893,9 +7197,10 @@
         "where": "MobilityModule.swift:118",
         "why": "Un kilométrage laissé vide devient 0 et est enregistré; trié par odomètre, ce plein devient le premier et la conso affichée (:43) est fausse, très basse.",
         "found": "2026-10-01",
-        "status": "fixed",
+        "status": "partial",
         "note": "partiel : kilométrage rendu obligatoire, un plein sans kilométrage ne peut pas être stocké",
-        "fixed": "2026-10-01"
+        "fixed": "2026-10-01",
+        "remaining": "kilométrage rendu obligatoire, un plein sans kilométrage ne peut pas être stocké"
       },
       {
         "where": "PoleSetups.swift:425",
@@ -6943,8 +7248,8 @@
       },
       {
         "feature": "Coût estimé par trajet",
-        "state": "present_untested",
-        "proof": "MobilityTools.swift:30 euroPerKm (tarifs fixés dans le code, non sourcés)"
+        "state": "missing",
+        "proof": "Tarifs €/km inventés supprimés (fix6, MobilityTools.swift:86 tuile « Distance ce mois »). Baisse de statut, pas une montée"
       },
       {
         "feature": "Totaux CO₂ et coût du mois",
@@ -6958,8 +7263,8 @@
       },
       {
         "feature": "Supprimer un trajet",
-        "state": "missing",
-        "proof": "unreachable: .swipeActions MobilityTools.swift:156 posé dans un VStack/ScrollView, ne marche que dans une List"
+        "state": "present_untested",
+        "proof": "Bouton poubelle visible MobilityTools.swift:148 + menu contextuel :154 -> remove; aucun test"
       },
       {
         "feature": "Recherche de lieux",
@@ -7178,8 +7483,8 @@
       },
       {
         "feature": "Notes sur la personne",
-        "state": "missing",
-        "proof": "unreachable: notes saisies SocialModule.swift:86 mais jamais affichées ni modifiables"
+        "state": "present_untested",
+        "proof": "Notes affichées dans la ligne SocialModule.swift:67, modifiables par le menu « Notes » -> ContactNotesEditor :52/:86; aucun test"
       },
       {
         "feature": "Modifier un contact existant",
@@ -7259,8 +7564,8 @@
       },
       {
         "feature": "Rappel annuel 3 jours avant à 10 h",
-        "state": "present_untested",
-        "proof": "SocialModule.swift:159 reschedule"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesAdminTests.swift testBirthdayReminderUsesNonLeapYear (BirthdayMath.reminderMonthDay, J-3), utilisé SocialModule.swift:190"
       },
       {
         "feature": "Idées cadeaux (texte)",
@@ -7279,8 +7584,8 @@
       },
       {
         "feature": "Règle du 29 février",
-        "state": "missing",
-        "proof": "aucune règle explicite; repli implicite de Calendar"
+        "state": "present_untested",
+        "proof": "Règle explicite SocialModule.swift:211-222: calcul sur 2001 non bissextile, un 29 février tombe au 1er mars; pas de test sur un 29 février"
       },
       {
         "feature": "Historique et budget cadeaux",
@@ -7306,6 +7611,11 @@
         "feature": "ID d'événement stable",
         "state": "missing",
         "proof": "ID bday.<nom>.<timestamp> SocialModule.swift:157, dérivé du nom"
+      },
+      {
+        "feature": "Supprimer un contact annule son rappel d'anniversaire",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesAdminTests.swift testBirthdayIdentifierKeepsLegacyShape (ReminderIDs.birthday, même forme qu'à la pose), annulation SocialModule.swift:78"
       }
     ],
     "audit_bugs": [
@@ -7484,8 +7794,8 @@
       },
       {
         "feature": "Suppression avec nettoyage des fichiers et du rappel",
-        "state": "present_untested",
-        "proof": "AdminModule.swift:53"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesAdminTests.swift testDeletingOneDocumentKeepsTheOthersReminder, testSameTitleDifferentDatesDoNotShareReminder (ReminderIDs.documentIDs / cancellable), utilisé AdminModule.swift:99-100; fichiers: ImageStore"
       },
       {
         "feature": "Import du fichier original (PDF) sans conversion",
@@ -7533,9 +7843,10 @@
         "where": "ReminderIDs.swift:33",
         "why": "Les IDs de rappel document/échéance/véhicule ne dépendent que du titre: deux documents de même titre partagent un rappel, le second écrase le premier et supprimer l'un annule celui de l'autre (AdminModule.swift:53, :151).",
         "found": "2026-10-01",
-        "status": "fixed",
+        "status": "partial",
         "note": "partiel : même titre ET même date partagent encore un identifiant",
-        "fixed": "2026-10-01"
+        "fixed": "2026-10-01",
+        "remaining": "même titre ET même date partagent encore un identifiant"
       }
     ]
   },
@@ -7576,8 +7887,8 @@
       },
       {
         "feature": "Compte à rebours J-x",
-        "state": "present_untested",
-        "proof": "AdminModule.swift:148 (calcul faux, voir bugs)"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesAdminTests.swift testTomorrowDeadlineIsJMinusOne (DeadlineMath.daysUntil en jours calendaires), utilisé AdminModule.swift:157"
       },
       {
         "feature": "Rappel 7 jours avant",
@@ -7800,8 +8111,8 @@
       },
       {
         "feature": "Classement auto + correction manuelle",
-        "state": "present_untested",
-        "proof": "DocScan.swift:31 DocClassifier, :192 Picker; aucun test"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesAdminTests.swift testUnknownTextIsNotClassified (DocClassifier.categorize renvoie nil sans mot-clé), utilisé DocScan.swift:385; correction manuelle non testée"
       },
       {
         "feature": "Indice de confiance du classement",
@@ -8213,6 +8524,16 @@
         "feature": "Traduction de documents",
         "state": "missing",
         "proof": "aucun fileImporter dans Translator.swift"
+      },
+      {
+        "feature": "Deux langues identiques refusées avant l'appel",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesTravelTests.swift testSameLanguageIsBlockedBeforeTheCall (TranslatorRules.blockReason), bouton désactivé Translator.swift:221-222"
+      },
+      {
+        "feature": "Retraduire avec la même paire de langues",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesTravelTests.swift testSamePairNeedsInvalidate (TranslatorRules.mustInvalidate), Translator.swift:208"
       }
     ],
     "audit_bugs": [
@@ -8299,8 +8620,8 @@
       },
       {
         "feature": "Heures à l'heure locale des aéroports",
-        "state": "missing",
-        "proof": "departure = Date de l'appareil (TravelModule.swift:157, :283), aucun fuseau d'aéroport"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesTravelTests.swift testChangingZoneKeepsTheTicketTime, testOldSavedFlightsStillDecode (TrackedFlight.keepingWallClock / departureTimeZoneID), Picker « Fuseau du départ » TravelModule.swift:327, affichage :262-265; fuseau choisi à la main, pas d'annuaire d'aéroports"
       },
       {
         "feature": "Import calendrier / mail",
@@ -8319,8 +8640,8 @@
       },
       {
         "feature": "Statut inconnu tant que non confirmé",
-        "state": "missing",
-        "proof": "statut par défaut 'À l'heure' TravelModule.swift:158, pas d'état inconnu"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesTravelTests.swift testNewFlightStatusIsUnknown (statut par défaut « Non confirmé »), TravelModule.swift:160-166"
       }
     ],
     "audit_bugs": [
@@ -8483,8 +8804,8 @@
       },
       {
         "feature": "Jours de répétition",
-        "state": "missing",
-        "proof": "unreachable: jours stockés (WakeUpView.swift:218) mais NotificationManager.swift:44-46 programme tous les jours, jours ignorés"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesTravelTests.swift testOnlyChosenDaysAreScheduled, testEveryDayKeepsTheSingleDailyIdentifier, testNoDayMeansNoAlarm, testPreviewCrossingMidnightFallsTheDayBefore, testStoredDaysDefaultToEveryDay (NotificationManager.alarmSlots), WakeUpView.swift:386-387 passe selectedDays"
       },
       {
         "feature": "Plusieurs alarmes",
@@ -8535,6 +8856,16 @@
         "feature": "Sonnerie fiable app fermée (AlarmKit / système)",
         "state": "dependency",
         "proof": "seulement notification time-sensitive (NotificationManager.swift:41); sonnerie in-app seulement au premier plan ou au toucher (AppDelegate.swift:119,147); à tester sur vrai iPhone"
+      },
+      {
+        "feature": "Sonnerie 10 min puis snooze automatique (jamais « réveillé » par défaut)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesTravelTests.swift testRingingLastsLongAndEndsInSnoozeNotSleepCheck, testTriggerStartsWithTheFullDuration, testSnoozeMinutesComeFromSettings (AlarmManager.swift:113-131)"
+      },
+      {
+        "feature": "Désactiver annule tous les jours, l'aperçu « dans 5 minutes » et le snooze",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesTravelTests.swift testCancelCoversThePreview (NotificationManager.cancelAlarm), WakeUpView.swift:396-398"
       }
     ],
     "audit_bugs": [
@@ -8660,6 +8991,11 @@
         "feature": "Génération d'images",
         "state": "missing",
         "proof": "aucun appel de génération d'image dans AICore"
+      },
+      {
+        "feature": "Routage dès qu'un fournisseur cloud avec clé est prêt, sans Apple Intelligence",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesTravelTests.swift testCloudProviderAloneIsEnoughToRoute (OnDeviceLLM.shouldUseRouter), OnDeviceLLM.swift:89"
       }
     ],
     "audit_bugs": [
@@ -8734,8 +9070,8 @@
       },
       {
         "feature": "Anneau 'Score du jour' des objectifs + semaine",
-        "state": "present_untested",
-        "proof": "DailyScoreRing.swift:153 (DailyScoreEngine :77), accueil ShortcutsHomeView.swift:1224; aucun test DailyScoreEngine"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesTravelTests.swift AuditFixesDailyScoreTests testOnlyHabitsPlannedTodayCount, testRestDayHasNoHabitLine, testLatestMoodOfTheDayIsUsed (DailyScoreEngine.metrics / plannedHabits DailyScoreRing.swift:118/:151)"
       },
       {
         "feature": "Widget score d'énergie",
@@ -8749,8 +9085,8 @@
       },
       {
         "feature": "Bilan de semaine + analyse du coach + partage",
-        "state": "present_untested",
-        "proof": "WeeklyBilanView.swift:28-60 et :300 loadAIBilan, ouvert ShortcutsHomeView.swift:454"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesTravelTests.swift AuditFixesWeeklyBilanTests testRestDaysDoNotLowerTheWeek, testLocalRulesReplyIsNotACoachAnalysis (WeeklyBilanMath), utilisé WeeklyBilanView.swift:57/:61/:345; partage non testé"
       },
       {
         "feature": "Récupération (VFC, FC repos) / effort / stress séparés",
@@ -8928,8 +9264,8 @@
       },
       {
         "feature": "Extraits audio autour des événements + lecture",
-        "state": "present_untested",
-        "proof": "NightSounds.swift:321 ClipRecorder.mark, NightSoundView.swift:151 play"
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesHealthTests.swift testSecondKindDuringOpenClipGetsThatClip, testUnreferencedClipsAreListedForDeletion (NightSounds.attach / unreferenced), utilisé NightSounds.swift:335/:363; lecture NightSoundView non testée"
       },
       {
         "feature": "Supprimer un événement",
@@ -8965,6 +9301,11 @@
         "feature": "Export des nuits",
         "state": "missing",
         "proof": "no export path for NightStore"
+      },
+      {
+        "feature": "Nuit retrouvée après fermeture forcée de l'app (session close, extraits rattachés)",
+        "state": "tested_auto",
+        "proof": "LifeOSTests/AuditFixesHealthTests.swift testOpenNightIsClosedOnRelaunch, testClipNameParsesKindAndStart (NightSounds.closeOrphans, clip(fromFileName:)), utilisé NightSounds.swift:170-175"
       }
     ],
     "audit_bugs": [

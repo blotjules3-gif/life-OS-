@@ -28,6 +28,11 @@ enum AmountInput {
 
     static let example = "Exemple : 12,50 ou 1 234,50"
 
+    /// Montant pre-rempli dans un champ (format francais, relu sans perte par `parse`).
+    static func format(_ v: Double) -> String {
+        v.formatted(.number.precision(.fractionLength(0...2)).grouping(.never).locale(Locale(identifier: "fr_FR")))
+    }
+
     static func parse(_ raw: String, rules: Rules = .positive) -> Parsed {
         // Espaces (y compris insecables et fines insecables) et symboles monetaires.
         var s = raw.trimmingCharacters(in: .whitespacesAndNewlines)

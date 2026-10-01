@@ -58,6 +58,7 @@ struct GymSessionView: View {
                 let frozen = GymSessionService.prescriptions(of: session)
                 ForEach(exercises, id: \.self) { label in
                     ExerciseBlock(label: label,
+                                  superset: GymSessionService.supersetPartner(of: label, in: session),
                                   prescription: frozen[GymExercises.baseName(label)],
                                   usesDefaultTarget: StrengthProgression.target(from: label) == nil,
                                   done: sessionSets(session, label),
@@ -165,7 +166,9 @@ struct GymSessionView: View {
         let history = StrengthProgression.completed(logged, doneSessions: doneIDs)
         do {
             let set = try GymSessionService.log(exercise: label, weightText: weight, reps: reps, rpe: rpe, kind: kind,
-                                                session: session, restSeconds: restSeconds, in: ctx)
+                                                session: session,
+                                                restSeconds: GymSessionService.restSeconds(after: label, in: session, default: restSeconds),
+                                                in: ctx)
             error = nil
             record = StrengthProgression.isPersonalRecord(set.logged, history: history)
                 ? "Record sur \(set.exercise) : \(StrengthProgression.fmt(set.weightKg)) kg × \(set.reps)" : nil
@@ -195,6 +198,8 @@ struct GymSessionView: View {
 
 private struct ExerciseBlock: View {
     let label: String
+    /// Exercice enchaine avec celui-ci (superset), s'il y en a un.
+    var superset: String? = nil
     let prescription: StrengthProgression.Prescription?
     let usesDefaultTarget: Bool
     let done: [WorkoutSet]
@@ -253,7 +258,11 @@ private struct ExerciseBlock: View {
                 .disabled(!canLog)
             }
         } header: {
-            Text(GymExercises.baseName(label))
+            if let superset {
+                Text("\(GymExercises.baseName(label)) · superset avec \(superset)")
+            } else {
+                Text(GymExercises.baseName(label))
+            }
         }
         .onAppear {
             if weight.isEmpty, let w = done.last?.weightKg ?? prescription?.weight { weight = StrengthProgression.fmt(w) }

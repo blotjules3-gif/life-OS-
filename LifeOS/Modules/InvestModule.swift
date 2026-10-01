@@ -18,8 +18,10 @@ struct PortfolioView: View {
     @State private var lastRefresh: Date?
     private var cryptoSymbols: [String] { holdings.filter { $0.kind == "Crypto" }.map(\.symbol) }
     private var stockSymbols: [String] { holdings.filter { $0.kind != "Crypto" }.map(\.symbol) }
-    private var total: Double { holdings.reduce(0) { $0 + $1.value } }
-    private var totalPnL: Double { holdings.reduce(0) { $0 + $1.pnl } }
+    private var totals: (value: Double, pnl: Double, costKnown: Double, excluded: Int) {
+        HoldingMath.totals(holdings.map { (value: $0.value, cost: $0.costEUR) })
+    }
+    @State private var editingHolding: Holding?
 
     var body: some View {
         ZStack {
@@ -28,9 +30,16 @@ struct PortfolioView: View {
                 VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Valeur du portefeuille").font(.caption).foregroundStyle(Theme.textSecondary)
-                        Text(total, format: .currency(code: "EUR")).font(.system(size: 34, weight: .bold)).foregroundStyle(Theme.textPrimary)
-                        Text("\(totalPnL >= 0 ? "+" : "")\(totalPnL, format: .currency(code: "EUR")) (\(total-totalPnL == 0 ? 0 : totalPnL/(total-totalPnL)*100, specifier: "%.1f")%)")
-                            .font(.subheadline.bold()).foregroundStyle(totalPnL >= 0 ? Theme.success : Theme.danger)
+                        let t = totals
+                        Text(t.value, format: .currency(code: "EUR")).font(.system(size: 34, weight: .bold)).foregroundStyle(Theme.textPrimary)
+                        if t.costKnown > 0 {
+                            Text("\(t.pnl >= 0 ? "+" : "")\(t.pnl, format: .currency(code: "EUR")) (\(t.pnl / t.costKnown * 100, specifier: "%.1f")%)")
+                                .font(.subheadline.bold()).foregroundStyle(t.pnl >= 0 ? Theme.success : Theme.danger)
+                        }
+                        if t.excluded > 0 {
+                            Text("\(t.excluded) position\(t.excluded > 1 ? "s" : "") sans coût en euros connu (devise ou taux d'achat à confirmer) : hors plus-value.")
+                                .font(.caption).foregroundStyle(Theme.warning)
+                        }
                     }.frame(maxWidth: .infinity, alignment: .leading).card()
 
                     if !holdings.isEmpty {
@@ -52,10 +61,19 @@ struct PortfolioView: View {
                                 Spacer()
                                 VStack(alignment: .trailing) {
                                     Text(h.value, format: .currency(code: "EUR")).bold().foregroundStyle(Theme.textPrimary)
-                                    Text("\(h.pnlPct >= 0 ? "+" : "")\(h.pnlPct, specifier: "%.1f")%").font(.caption).foregroundStyle(h.pnl >= 0 ? Theme.success : Theme.danger)
+                                    if let pct = h.pnlPct, let pnl = h.pnl {
+                                        Text("\(pct >= 0 ? "+" : "")\(pct, specifier: "%.1f")%").font(.caption).foregroundStyle(pnl >= 0 ? Theme.success : Theme.danger)
+                                    } else {
+                                        Text(h.buyCurrency.isEmpty ? "Devise d'achat à confirmer" : "Taux d'achat indisponible")
+                                            .font(.caption2).foregroundStyle(Theme.warning)
+                                    }
                                 }
                             }.card(padding: 12)
-                                .contextMenu { Button(role: .destructive) { ctx.delete(h) } label: { Label("Supprimer", systemImage: "trash") } }
+                                .onTapGesture { editingHolding = h }
+                                .contextMenu {
+                                    Button { editingHolding = h } label: { Label("Modifier", systemImage: "pencil") }
+                                    Button(role: .destructive) { ctx.delete(h) } label: { Label("Supprimer", systemImage: "trash") }
+                                }
                         }
                         priceStatus
                     }
@@ -76,6 +94,7 @@ struct PortfolioView: View {
             }
         }
         .sheet(isPresented: $showAdd) { HoldingEditor() }
+        .sheet(item: $editingHolding) { HoldingEditor(holding: $0) }
         .refreshable { await refreshPrices(force: true) }
         .task { await refreshPrices(force: false) }
     }
@@ -153,10 +172,19 @@ struct PortfolioView: View {
 }
 
 struct HoldingEditor: View {
+    /// nil = nouvelle position ; sinon on corrige celle-ci (devise, date, quantite...).
+    var holding: Holding? = nil
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     @State private var symbol = ""; @State private var kind = "Action"
     @State private var qty = ""; @State private var buy = ""; @State private var current = ""
+    @State private var currency = "EUR"
+    @State private var hasDate = false
+    @State private var buyDate = Date.now
+    @State private var saving = false
+    @State private var error: String?
+    @State private var loaded = false
+    static let currencies = ["EUR", "USD", "GBP", "CHF", "JPY", "CAD", "SEK", "DKK", "NOK"]
     // Quantite ou prix illisible: refuse avec explication. Avant, "abc" ou
     // "1 234,5" devenait 0 et creait une position a 0.
     private var q: AmountInput.Parsed { AmountInput.parse(qty) }
@@ -164,6 +192,7 @@ struct HoldingEditor: View {
     private var c: AmountInput.Parsed { AmountInput.parse(current, rules: .init(required: false)) }
     private var canSave: Bool {
         !symbol.trimmingCharacters(in: .whitespaces).isEmpty && q.value != nil && b.value != nil && c.message == nil
+            && (currency == "EUR" || hasDate) && !saving
     }
     var body: some View {
         NavigationStack {
@@ -171,18 +200,68 @@ struct HoldingEditor: View {
                 TextField("Symbole (AAPL, BTC…)", text: $symbol).textInputAutocapitalization(.characters)
                 Picker("Type", selection: $kind) { ForEach(["Action","ETF","Crypto"], id: \.self) { Text($0) } }
                 field("Quantité", $qty, q)
-                field("Prix d'achat", $buy, b)
-                field("Prix actuel (sinon prix d'achat)", $current, c)
+                Section {
+                    field("Prix d'achat (par unité)", $buy, b)
+                    Picker("Devise du prix d'achat", selection: $currency) {
+                        if currency.isEmpty { Text("À confirmer").tag("") }
+                        ForEach(Self.currencies, id: \.self) { Text($0).tag($0) }
+                    }
+                    Toggle("Date d'achat", isOn: $hasDate)
+                    if hasDate { DatePicker("Acheté le", selection: $buyDate, in: ...Date.now, displayedComponents: .date) }
+                } footer: {
+                    Text(currency == "EUR" || currency.isEmpty
+                         ? "Le cours actuel est en euros. La plus-value se calcule en euros."
+                         : "Prix en \(currency) : converti en euros au taux BCE du jour d'achat (date obligatoire), pour ne pas compter le change comme une plus-value.")
+                }
+                field("Prix actuel en euros (sinon mis à jour par le cours)", $current, c)
+                if let error { Text(error).font(.caption).foregroundStyle(Theme.warning) }
             }
-            .navigationTitle("Nouvelle position").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(holding == nil ? "Nouvelle position" : "Modifier la position").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
-                    guard let qv = q.value, let bv = b.value else { return }
-                    ctx.insert(Holding(symbol: symbol, kind: kind, quantity: qv, buyPrice: bv, currentPrice: c.value ?? bv)); dismiss()
+                ToolbarItem(placement: .confirmationAction) { Button(holding == nil ? "Ajouter" : "Enregistrer") {
+                    Task { await save() }
                 }.disabled(!canSave) }
             }
+            .onAppear(perform: load)
         }
+    }
+
+    private func load() {
+        guard !loaded else { return }
+        loaded = true
+        guard let h = holding else { return }
+        symbol = h.symbol; kind = h.kind; qty = AmountInput.format(h.quantity); buy = AmountInput.format(h.buyPrice)
+        current = AmountInput.format(h.currentPrice); currency = h.buyCurrency
+        if let d = h.buyDate { hasDate = true; buyDate = d }
+    }
+
+    private func save() async {
+        guard let qv = q.value, let bv = b.value, !currency.isEmpty else { error = "Choisis la devise du prix d'achat."; return }
+        saving = true; defer { saving = false }
+        var fx = 1.0
+        if currency != "EUR" {
+            do { fx = try await ExchangeRates.historicalEURPerUnit(currency, on: buyDate).eurPerUnit }
+            catch {
+                // Pas de taux : on enregistre quand meme, la plus-value reste « non calculée » et
+                // l'ecran le dit, au lieu d'inventer un taux.
+                fx = 0
+            }
+        }
+        let current = c.value
+        if let h = holding {
+            h.symbol = symbol; h.kind = kind; h.quantity = qv; h.buyPrice = bv
+            if let current { h.currentPrice = current }
+            h.buyCurrency = currency; h.buyDate = hasDate ? buyDate : nil; h.buyFXToEUR = fx
+        } else {
+            // Sans prix actuel : en euros, le prix d'achat converti ; le cours le remplacera.
+            let start = current ?? (fx > 0 ? bv * fx : bv)
+            ctx.insert(Holding(symbol: symbol, kind: kind, quantity: qv, buyPrice: bv, currentPrice: start,
+                               buyCurrency: currency, buyDate: hasDate ? buyDate : nil, buyFXToEUR: fx))
+        }
+        do { try ctx.save(); dismiss() }
+        catch { ctx.rollback(); self.error = "Enregistrement impossible, réessaie." }
+        if fx == 0 { AppLog.data.notice("taux BCE indisponible pour \(currency, privacy: .public)") }
     }
 
     private func field(_ title: String, _ text: Binding<String>, _ parsed: AmountInput.Parsed) -> some View {

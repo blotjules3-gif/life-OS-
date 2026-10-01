@@ -133,4 +133,34 @@ enum ExchangeRates {
     static func writeCache(_ t: Table) {
         try? enc.encode(t).write(to: cacheURL, options: .atomic)
     }
+
+    // MARK: Taux d'un jour passe (cout d'achat en euros)
+
+    /// Euros pour 1 unite de `code` au jour `date` (taux de reference BCE, via Frankfurter,
+    /// gratuit et sans cle). Un week-end ou jour ferie rend le dernier jour ouvre, et la
+    /// date reellement utilisee est rendue pour l'afficher.
+    static func historicalEURPerUnit(_ code: String, on date: Date) async throws -> (eurPerUnit: Double, day: String) {
+        if code == "EUR" { return (1, isoDay(date)) }
+        guard let url = URL(string: "https://api.frankfurter.dev/v1/\(isoDay(date))?base=EUR&symbols=\(code)") else { throw URLError(.badURL) }
+        var req = URLRequest(url: url, timeoutInterval: 20)
+        req.setValue("LifeOS/1.0", forHTTPHeaderField: "User-Agent")
+        let (data, response) = try await session.data(for: req)
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw URLError(.badServerResponse) }
+        guard let r = parseHistorical(data, code: code) else { throw URLError(.cannotParseResponse) }
+        return r
+    }
+
+    /// `{"base":"EUR","date":"2024-01-12","rates":{"USD":1.0942}}` -> (1/1.0942, "2024-01-12").
+    static func parseHistorical(_ data: Data, code: String) -> (eurPerUnit: Double, day: String)? {
+        guard let j = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let rates = j["rates"] as? [String: Any], let perEUR = (rates[code] as? NSNumber)?.doubleValue, perEUR > 0
+        else { return nil }
+        return (1 / perEUR, j["date"] as? String ?? "")
+    }
+
+    static func isoDay(_ d: Date) -> String {
+        var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: "Europe/Paris") ?? .current
+        let x = c.dateComponents([.year, .month, .day], from: d)
+        return String(format: "%04d-%02d-%02d", x.year ?? 0, x.month ?? 0, x.day ?? 0)
+    }
 }

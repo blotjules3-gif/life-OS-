@@ -140,4 +140,31 @@ final class PetMergeOverrideTests: XCTestCase {
         XCTAssertNil(ProductScore.evaluate(relaunched.enriched(raw)).value, "après suppression et relance : la fiche d'origine")
         XCTAssertNil(relaunched.petProfile(for: raw.barcode)?.label)
     }
+
+    // Audit du build 52, P1 : base avec valeurs mais sans composition + lecture auto
+    // avec composition seule. Avant, la composition lue restait associee aux anciennes
+    // valeurs, et la provenance disait que les deux venaient de la photo.
+    func testAutomaticCompositionAloneIsNotPairedWithOldBaseValues() {
+        var b = base()
+        b.petAnalysis = .init(protein: 30, fat: 12, fibre: 2, ash: 7, moisture: 8)
+        let p = merged(b, label(composition: labelComposition, values: PetLabel.Analytics(), validated: false))
+        XCTAssertEqual(p.ingredientsText, labelComposition)
+        XCTAssertNil(p.petAnalysis, "valeurs de la base non prouvées pour cette version")
+        let prov = p.petFacts!.provenance.first!
+        XCTAssertTrue(prov.hasPrefix("Composition :"), prov)
+        XCTAssertFalse(prov.contains("constituants :"), "la photo n'a fourni que les ingrédients")
+        XCTAssertTrue(prov.contains("mis de côté"))
+    }
+
+    // Audit du build 52, P2 : deux formules qui partagent leurs 3 premiers ingredients
+    // mais pas leurs valeurs ne doivent jamais etre melangees automatiquement.
+    func testTwoFormulasSharingTheirFirstThreeIngredientsAreNotMixed() {
+        let baseFormula = "Saumon 18 %, Protéines de volaille déshydratées, Blé 16 %, Maïs, Pulpe de betterave"
+        let otherFormula = "Saumon 26 %, Protéines de volaille déshydratées, Blé 12 %, Protéines de pois, Riz"
+        XCTAssertEqual(PetMerge.recipeMatch(baseFormula, otherFormula), .same, "même début : c'est bien le piège")
+        let otherValues = PetLabel.Analytics(protein: 34, fat: 15, ash: 7, fibre: 3, moisture: nil, taurine: 0.1)
+        let p = merged(base(composition: baseFormula), label(composition: otherFormula, values: otherValues, validated: false))
+        XCTAssertNil(p.petAnalysis)
+        XCTAssertEqual(p.ingredientsText, baseFormula)
+    }
 }

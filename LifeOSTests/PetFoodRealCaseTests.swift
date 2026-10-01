@@ -286,12 +286,15 @@ S. SANS AROMES NI CONSERVATEURS ARTIFICIELS AJOUTE ALINENT COMPLET POUR CHATONS.
         XCTAssertTrue(p.petFacts!.provenance.contains { $0.contains("valeurs non mélangées") })
     }
 
-    func testSameRecipeLetsTheLabelFillOnlyTheMissingValues() {
+    /// Audit du build 52 : la meme recette au debut ne suffit plus, il faut valider.
+    func testSameRecipeStartDoesNotFillValuesWithoutConfirmation() {
         var base = oneJunior()
         base.ingredientsText = PetLabel.sections(Self.sharpLabel).composition
         let p = PetMerge.apply(profile(Self.gtin, label: reading(Self.sharpLabel)), to: base)
-        XCTAssertEqual(p.petAnalysis?.protein, 41)
-        XCTAssertTrue(p.petFacts!.provenance.first!.contains("Composition : base"))
+        XCTAssertNil(p.petAnalysis)
+        XCTAssertTrue(p.petFacts!.provenance.first!.contains("Relis et valide"))
+        let confirmed = PetMerge.apply(profile(Self.gtin, label: reading(Self.sharpLabel, validated: true)), to: base)
+        XCTAssertEqual(confirmed.petAnalysis?.protein, 41)
     }
 
     // MARK: Choix et corrections de l'utilisateur

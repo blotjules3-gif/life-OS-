@@ -31,7 +31,7 @@ enum LocalStore {
         // Vie
         ProgressPhoto.self, WardrobeItem.self, MoodEntry.self, TodoItem.self,
         Habit.self, HabitCompletion.self, Note.self, MemoryEntry.self,
-        Account.self, Txn.self, Envelope.self, Subscription.self, SavingsGoal.self, SplitExpense.self,
+        Account.self, Txn.self, Envelope.self, EnvelopeEntry.self, Subscription.self, SavingsGoal.self, SplitExpense.self,
         // Patrimoine & reste
         Holding.self, NetWorthItem.self, Property.self, JobApplication.self, SkillGap.self,
         Flashcard.self, BookSummary.self, Chore.self, Pet.self, PetCare.self, Maintenance.self,
@@ -48,7 +48,12 @@ enum LocalStore {
         // Intelligent Profile Engine — Bloc A
         ProfileField.self, ProfileFieldRevision.self,
         // Objectifs unifiés (Loop 24 Goal-Plan-Partner)
-        UserGoal.self
+        UserGoal.self,
+        // Lot 6 (audit du build 52) : journal alimentaire, nutrition, sport, programme, apprentissage
+        FavoriteFood.self, CustomFood.self, SavedMeal.self, FoodMicros.self, SupplementDose.self,
+        CustomExercise.self, BodyMeasurement.self, MobilityRoutine.self, MobilitySession.self,
+        TabataPreset.self, TabataSessionLog.self, GymProgramPlan.self,
+        CardDeck.self, CardReview.self, Course.self, CourseModule.self, CourseLesson.self, BookPassage.self
     ]
 
     static let schema = Schema(modelTypes)

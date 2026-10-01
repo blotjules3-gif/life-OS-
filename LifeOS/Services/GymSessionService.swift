@@ -69,6 +69,7 @@ enum GymSessionService {
                       save: Saver = defaultSaver) throws -> TrainingSession {
         let session = TrainingSession(title: title, start: now)
         session.dayUID = day?.stableID
+        session.supersetsJSON = day?.supersetsJSON ?? ""
         let list = exercises.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         session.exercisesJSON = encode(list)
         let done = StrengthProgression.completed(history, doneSessions: doneSessions)
@@ -86,6 +87,19 @@ enum GymSessionService {
             throw GymError.saveFailed(error.localizedDescription)
         }
         return session
+    }
+
+    /// Repos apres une serie : aucun entre les deux exercices d'un superset (on enchaine
+    /// sur le second), le repos normal apres le second.
+    static func restSeconds(after exercise: String, in session: TrainingSession, default seconds: Int) -> Int {
+        let pairs = FitbotSupersets.decode(session.supersetsJSON)
+        let name = GymExercises.baseName(exercise)
+        return pairs.contains { $0.first == name } ? 0 : seconds
+    }
+
+    /// Partenaire de superset d'un exercice dans la seance, pour l'afficher.
+    static func supersetPartner(of exercise: String, in session: TrainingSession) -> String? {
+        FitbotSupersets.partner(of: exercise, in: FitbotSupersets.decode(session.supersetsJSON))
     }
 
     static func frozenExercises(of session: TrainingSession) -> [String] {

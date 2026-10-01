@@ -229,19 +229,25 @@ struct NutritionSetupView: View {
         let existingSupps = Set(((try? ctx.fetch(FetchDescriptor<Supplement>())) ?? []).map { $0.name.lowercased() })
         // Compléments recommandés (avec dosage en conseil) + ajouts.
         let recoByName = Dictionary(uniqueKeysWithValues: recommended.map { ($0.name, $0) })
+        var added: [Supplement] = []
         for name in chosenSupps.union(extraSupps) where !existingSupps.contains(name.lowercased()) {
             let r = SupplementAdvisor.reco(for: name)
             let dose = recoByName[name]?.dosage
             let advice = dose != nil ? "\(dose!) · \(r.advice)" : r.advice
-            ctx.insert(Supplement(name: name, hour: r.hour, minute: r.minute, active: true,
-                                  moment: r.moment, withFood: r.withFood, advice: advice, confirm: true))
-            NotificationManager.shared.scheduleDaily(
-                id: "supp.\(name)",
-                title: "\(name)\(dose != nil ? " · \(dose!)" : "")",
-                body: advice.isEmpty ? "\(r.momentLabel) · \(r.foodLabel)" : advice,
-                hour: r.hour, minute: r.minute)
+            let s = Supplement(name: name, hour: r.hour, minute: r.minute, active: true,
+                               moment: r.moment, withFood: r.withFood, advice: advice, confirm: true)
+            // La dose conseillee devient le champ dose : modifiable ensuite dans SuppSafe.
+            s.doseText = dose ?? ""
+            SupplementScheduler.ensureID(s)
+            ctx.insert(s)
+            added.append(s)
         }
-        do { try ctx.save() } catch { AppLog.data.error("NutritionSetup save failed: \(error.localizedDescription, privacy: .public)") }
+        do {
+            try ctx.save()
+            // Rappels par l'identifiant stable (avant : "supp.<nom>", impossible a annuler
+            // depuis SuppSafe, il sonnait encore apres suppression du complement).
+            added.forEach { SupplementScheduler.apply($0) }
+        } catch { AppLog.data.error("NutritionSetup save failed: \(error.localizedDescription, privacy: .public)") }
         CategorySetup.markDone(.nutrition)
         Haptics.success()
     }
