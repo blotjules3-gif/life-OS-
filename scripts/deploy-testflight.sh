@@ -83,7 +83,7 @@ const token = head + '.' + body + '.' + sig.toString('base64url');
 
 try {
   const res = await fetch('https://api.appstoreconnect.apple.com/v1/builds?filter[app]=6813532133&sort=-uploadedDate&limit=1', {
-    headers: { Authorization: 'Bearer ' + token }
+    signal: AbortSignal.timeout(30000), headers: { Authorization: 'Bearer ' + token }
   });
   const data = await res.json();
   const v = data.data?.[0]?.attributes?.version;
@@ -182,6 +182,15 @@ function getToken() {
   return head + '.' + body + '.' + sig.toString('base64url');
 }
 
+// Chaque appel a une limite de 30 s : sans elle, une connexion muette bloquait le script.
+const TIMEOUT = () => AbortSignal.timeout(30000);
+async function api(path) {
+  const res = await fetch('https://api.appstoreconnect.apple.com' + path, {
+    headers: { Authorization: 'Bearer ' + getToken() }, signal: TIMEOUT()
+  });
+  return res.ok ? res.json() : null;
+}
+
 async function run() {
   // 120 x 30 s = 60 minutes. L'ancienne valeur (25 x 15 s = 6 min 15) etait la VRAIE
   // cause des builds "perdus" : Apple a mis plus de 30 minutes a traiter le build 29,
@@ -192,7 +201,7 @@ async function run() {
     await new Promise(r => setTimeout(r, 30000));
     try {
       const res = await fetch('https://api.appstoreconnect.apple.com/v1/builds?filter[app]=6813532133&filter[version]=$BUILD_NUMBER', {
-        headers: { Authorization: 'Bearer ' + getToken() }
+        headers: { Authorization: 'Bearer ' + getToken() }, signal: TIMEOUT()
       });
       const data = await res.json();
       const b = data.data?.[0];
@@ -207,17 +216,19 @@ async function run() {
         await fetch('https://api.appstoreconnect.apple.com/v1/builds/' + buildId, {
           method: 'PATCH',
           headers: { Authorization: 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
-          body: JSON.stringify({ data: { type: 'builds', id: buildId, attributes: { usesNonExemptEncryption: false } } })
+          body: JSON.stringify({ data: { type: 'builds', id: buildId, attributes: { usesNonExemptEncryption: false } } }),
+          signal: TIMEOUT()
         });
         const grpRes = await fetch('https://api.appstoreconnect.apple.com/v1/apps/6813532133/betaGroups', {
-          headers: { Authorization: 'Bearer ' + getToken() }
+          headers: { Authorization: 'Bearer ' + getToken() }, signal: TIMEOUT()
         });
         const grpData = await grpRes.json();
         for (const grp of (grpData.data || [])) {
           await fetch('https://api.appstoreconnect.apple.com/v1/betaGroups/' + grp.id + '/relationships/builds', {
             method: 'POST',
             headers: { Authorization: 'Bearer ' + getToken(), 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: [{ type: 'builds', id: buildId }] })
+            body: JSON.stringify({ data: [{ type: 'builds', id: buildId }] }),
+            signal: TIMEOUT()
           });
           console.log('✓ Rattaché au groupe TestFlight:', grp.attributes.name);
         }
