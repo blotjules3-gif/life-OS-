@@ -64,7 +64,7 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
     func triggerAlarm() {
         guard !isRinging else { return }
         ringingActive = true
-        phase = .ringing(secondsLeft: 10)
+        phase = .ringing(secondsLeft: Self.ringDurationSeconds)
 
         let generator = UINotificationFeedbackGenerator()
         generator.prepare()
@@ -107,13 +107,34 @@ final class AlarmManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegat
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
-                if case .ringing(let s) = self.phase, s > 1 {
-                    self.phase = .ringing(secondsLeft: s - 1)
-                } else {
-                    self.stopAndShowBriefing()
+                guard case .ringing(let s) = self.phase else { return }
+                switch Self.tick(secondsLeft: s) {
+                case .keepRinging(let left): self.phase = .ringing(secondsLeft: left)
+                case .autoSnooze: self.snooze(minutes: Self.storedSnoozeMinutes())
                 }
             }
         }
+    }
+
+    /// Durée de sonnerie sans réaction. Avant: 10 s, puis passage au contrôle du
+    /// réveil comme si la personne était levée; quelqu'un qui dort n'était pas réveillé.
+    static let ringDurationSeconds = 10 * 60
+
+    enum RingTick: Equatable {
+        case keepRinging(secondsLeft: Int)
+        case autoSnooze
+    }
+
+    /// Une seconde de sonnerie de plus. Au bout, on ne suppose jamais que la personne
+    /// est réveillée: on relance un snooze, comme un vrai réveil.
+    static func tick(secondsLeft: Int) -> RingTick {
+        secondsLeft > 1 ? .keepRinging(secondsLeft: secondsLeft - 1) : .autoSnooze
+    }
+
+    /// Snooze réglé dans l'écran Réveil (5 à 30 min), 9 min par défaut comme l'écran.
+    static func storedSnoozeMinutes(_ ud: UserDefaults = .standard) -> Int {
+        let m = ud.integer(forKey: AppStorageKeys.snoozeMinutes)
+        return m > 0 ? min(max(m, 1), 60) : 9
     }
 
     // MARK: - Arrêt / snooze

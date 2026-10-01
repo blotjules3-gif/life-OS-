@@ -32,7 +32,7 @@ struct MemoryWidgetSyncer: View {
                 try? await Task.sleep(for: .milliseconds(300))
                 sync()
             }
-            .onChange(of: memories.count) { _, _ in sync() }
+            .onChange(of: memories.prefix(60).map { "\($0.content)|\($0.isPinned)|\($0.category)" }) { _, _ in sync() }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in sync() }
     }
 
@@ -69,7 +69,7 @@ struct MoodWidgetSyncer: View {
                 try? await Task.sleep(for: .milliseconds(300))
                 sync()
             }
-            .onChange(of: moods.count) { _, _ in sync() }
+            .onChange(of: moods.prefix(60).map { "\($0.date.timeIntervalSince1970)|\($0.score)" }) { _, _ in sync() }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in sync() }
     }
 
@@ -108,7 +108,7 @@ struct SleepWidgetSyncer: View {
                 try? await Task.sleep(for: .milliseconds(300))
                 sync()
             }
-            .onChange(of: nights.count) { _, _ in sync() }
+            .onChange(of: nights.prefix(60).map { "\($0.date.timeIntervalSince1970)|\($0.bedtime.timeIntervalSince1970)|\($0.wake.timeIntervalSince1970)|\($0.quality)" }) { _, _ in sync() }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in sync() }
     }
 
@@ -157,8 +157,10 @@ struct NutritionTodaySyncer: View {
                 try? await Task.sleep(for: .milliseconds(300))
                 sync()
             }
-            .onChange(of: foods.count) { _, _ in sync() }
-            .onChange(of: waters.count) { _, _ in sync() }
+            // Les VALEURS, pas le nombre : corriger les calories d'un repas ne change pas
+            // le nombre d'entrees, et le coach gardait l'ancien total (audit du 1er oct.).
+            .onChange(of: foods.prefix(200).map { "\($0.date.timeIntervalSince1970)|\($0.calories)|\($0.protein)" }) { _, _ in sync() }
+            .onChange(of: waters.prefix(200).map { "\($0.date.timeIntervalSince1970)|\($0.amountML)" }) { _, _ in sync() }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in sync() }
     }
 

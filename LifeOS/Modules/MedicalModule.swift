@@ -11,6 +11,7 @@ struct MedicationView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \Medication.name) private var meds: [Medication]
     @State private var showAdd = false
+    @State private var editing: Medication?
 
     private var active: [Medication] { meds.filter { $0.active } }
     private var inactive: [Medication] { meds.filter { !$0.active } }
@@ -42,6 +43,7 @@ struct MedicationView: View {
         .navigationTitle("Médicaments").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { MedicationEditor() }
+        .sheet(item: $editing) { med in MedicationEditor(editing: med) }
         // Remise a plat a chaque ouverture. C'est ce qui rattrape les
         // traitements enregistres avant que les rappels existent, ceux dont
         // la date de fin est passee, et une reinstallation de l'app.
@@ -61,6 +63,11 @@ struct MedicationView: View {
                     Text(med.dosage).font(.caption).foregroundStyle(.secondary)
                 }
                 Text(med.frequency).font(.caption).foregroundStyle(.secondary)
+                // Les notes (effets secondaires, consignes) etaient
+                // enregistrees puis jamais affichees nulle part.
+                if !med.notes.isEmpty {
+                    Text(med.notes).font(.caption).foregroundStyle(.secondary).lineLimit(3)
+                }
                 if let coverage = MedicationReminders.coverageText(for: med) {
                     Text(coverage).font(.caption2).foregroundStyle(.secondary)
                 }
@@ -70,6 +77,7 @@ struct MedicationView: View {
                 .labelsHidden()
         }
         .contextMenu {
+            Button { editing = med } label: { Label("Modifier", systemImage: "pencil") }
             Button(role: .destructive) { remove(med) } label: { Label("Supprimer", systemImage: "trash") }
         }
     }
@@ -92,6 +100,9 @@ struct MedicationView: View {
 struct MedicationEditor: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
+    /// Medicament a modifier; nil pour un ajout.
+    var editing: Medication? = nil
+    @State private var loaded = false
     @State private var name = ""
     @State private var dosage = ""
     @State private var frequency = "1x/jour"
@@ -135,14 +146,28 @@ struct MedicationEditor: View {
                     TextField("Effets secondaires, instructions…", text: $notes, axis: .vertical).lineLimit(2...4)
                 }
             }
-            .navigationTitle("Nouveau médicament").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(editing == nil ? "Nouveau médicament" : "Modifier").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Ajouter") { add() }.disabled(name.isEmpty)
+                    Button(editing == nil ? "Ajouter" : "Enregistrer") { add() }.disabled(name.isEmpty)
                 }
             }
+            .onAppear(perform: load)
         }
+    }
+
+    private func load() {
+        guard !loaded, let med = editing else { return }
+        loaded = true
+        name = med.name; dosage = med.dosage; notes = med.notes
+        // Valeur gardee telle quelle meme hors liste: l'ecraser par
+        // "1x/jour" changerait les rappels sans qu'on l'ait demande.
+        frequency = med.frequency
+        hourMorning = med.hourMorning ?? MedicationSchedule.defaultMorning
+        hourEvening = med.hourEvening ?? MedicationSchedule.defaultEvening
+        hasEndDate = med.endDate != nil
+        endDate = med.endDate ?? Date()
     }
 
     private var doses: [MedicationSchedule.Dose] {
@@ -162,6 +187,15 @@ struct MedicationEditor: View {
     }
 
     private func add() {
+        if let med = editing {
+            med.name = name; med.dosage = dosage; med.frequency = frequency
+            med.hourMorning = hourMorning; med.hourEvening = hourEvening
+            med.notes = notes; med.endDate = hasEndDate ? endDate : nil
+            LifeOSTry(try ctx.save(), context: "modification medicament", category: AppLog.data)
+            MedicationReminders.reschedule(med, ctx: ctx)
+            dismiss()
+            return
+        }
         let med = Medication(name: name, dosage: dosage, frequency: frequency,
                              hourMorning: hourMorning, hourEvening: hourEvening,
                              notes: notes, endDate: hasEndDate ? endDate : nil)
@@ -333,6 +367,7 @@ struct AppointmentsView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \MedicalAppointment.date) private var appointments: [MedicalAppointment]
     @State private var showAdd = false
+    @State private var editing: MedicalAppointment?
 
     private var upcoming: [MedicalAppointment] { appointments.filter { $0.date >= Calendar.current.startOfDay(for: .now) } }
     private var past: [MedicalAppointment] { appointments.filter { $0.date < Calendar.current.startOfDay(for: .now) }.reversed() }
@@ -364,6 +399,7 @@ struct AppointmentsView: View {
         .navigationTitle("Rendez-vous").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { AppointmentEditor() }
+        .sheet(item: $editing) { apt in AppointmentEditor(editing: apt) }
     }
 
     private func apptRow(_ apt: MedicalAppointment) -> some View {
@@ -376,6 +412,8 @@ struct AppointmentsView: View {
                 Text(apt.specialty).font(.subheadline.weight(.semibold))
                 if !apt.doctorName.isEmpty { Text(apt.doctorName).font(.caption).foregroundStyle(.secondary) }
                 if !apt.location.isEmpty { Label(apt.location, systemImage: "mappin").font(.caption).foregroundStyle(.secondary) }
+                // Motif, resultats, ordonnances: saisis puis jamais montres.
+                if !apt.notes.isEmpty { Text(apt.notes).font(.caption).foregroundStyle(.secondary).lineLimit(3) }
             }
             Spacer()
             if let next = apt.nextDate, next > .now {
@@ -385,7 +423,10 @@ struct AppointmentsView: View {
                 }
             }
         }
+        .contentShape(Rectangle())
+        .onTapGesture { editing = apt }
         .contextMenu {
+            Button { editing = apt } label: { Label("Modifier", systemImage: "pencil") }
             Button(role: .destructive) {
                 // Sans ca, le rappel de la veille sonnait pour un rendez
                 // vous annule, et rien ne permettait de le faire taire.
@@ -399,6 +440,9 @@ struct AppointmentsView: View {
 struct AppointmentEditor: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
+    /// Rendez-vous a modifier; nil pour un ajout.
+    var editing: MedicalAppointment? = nil
+    @State private var loaded = false
     @State private var date = Date()
     @State private var specialty = ""
     @State private var doctorName = ""
@@ -420,6 +464,10 @@ struct AppointmentEditor: View {
                     }
                     TextField("Médecin (optionnel)", text: $doctorName)
                     TextField("Lieu / Adresse", text: $location)
+                } footer: {
+                    // Un rendez-vous a moins de 24 h n'avait aucun rappel, en
+                    // silence. On dit ce qui va sonner, ou que rien ne sonnera.
+                    Text(reminderLine)
                 }
                 Section("Notes") {
                     TextField("Motif, résultats, ordonnances…", text: $notes, axis: .vertical).lineLimit(2...5)
@@ -429,26 +477,82 @@ struct AppointmentEditor: View {
                     if hasNext { DatePicker("Prochain RDV", selection: $nextDate, displayedComponents: .date) }
                 }
             }
-            .navigationTitle("Nouveau RDV").navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(editing == nil ? "Nouveau RDV" : "Modifier le RDV").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Ajouter") {
-                        let s = specialty.isEmpty ? "Généraliste" : specialty
-                        ctx.insert(MedicalAppointment(date: date, specialty: s, doctorName: doctorName,
-                                                       location: location, notes: notes,
-                                                       nextDate: hasNext ? nextDate : nil))
-                        NotificationManager.shared.schedule(
-                            id: ReminderIDs.appointment(date),
-                            title: "RDV \(s) demain",
-                            body: doctorName.isEmpty ? location : "\(doctorName) · \(location)",
-                            at: Calendar.current.date(byAdding: .day, value: -1, to: date) ?? date
-                        )
-                        dismiss()
-                    }
+                    Button(editing == nil ? "Ajouter" : "Enregistrer") { save() }
                 }
             }
+            .onAppear(perform: load)
         }
+    }
+
+    private var reminderLine: String {
+        guard let r = MedicalReminderTiming.appointment(date) else {
+            return "Pas de rappel : le rendez-vous est passé ou dans moins de 2 h."
+        }
+        return r.dayBefore
+            ? "Rappel la veille, le \(r.at.formatted(date: .abbreviated, time: .shortened))."
+            : "Rappel 2 h avant, à \(r.at.formatted(date: .omitted, time: .shortened))."
+    }
+
+    private func load() {
+        guard !loaded, let apt = editing else { return }
+        loaded = true
+        date = apt.date; specialty = apt.specialty; doctorName = apt.doctorName
+        location = apt.location; notes = apt.notes
+        hasNext = apt.nextDate != nil
+        nextDate = apt.nextDate ?? Date()
+    }
+
+    private func save() {
+        let s = specialty.isEmpty ? "Généraliste" : specialty
+        if let apt = editing {
+            // L'ancien rappel porte l'ancienne date dans son identifiant.
+            NotificationManager.shared.cancel(id: ReminderIDs.appointment(apt.date))
+            apt.date = date; apt.specialty = s; apt.doctorName = doctorName
+            apt.location = location; apt.notes = notes; apt.nextDate = hasNext ? nextDate : nil
+        } else {
+            ctx.insert(MedicalAppointment(date: date, specialty: s, doctorName: doctorName,
+                                          location: location, notes: notes,
+                                          nextDate: hasNext ? nextDate : nil))
+        }
+        if let r = MedicalReminderTiming.appointment(date) {
+            NotificationManager.shared.schedule(
+                id: ReminderIDs.appointment(date),
+                title: r.dayBefore ? "RDV \(s) demain" : "RDV \(s) dans 2 h",
+                body: doctorName.isEmpty ? location : "\(doctorName) · \(location)",
+                at: r.at
+            )
+        }
+        dismiss()
+    }
+}
+
+/// Quand faire sonner un rappel medical. Avant, le delai etait fixe (veille
+/// pour un RDV, 30 jours pour un vaccin): si ce moment etait deja passe,
+/// NotificationManager.schedule l'ignorait sans rien dire.
+enum MedicalReminderTiming {
+
+    /// La veille a la meme heure; sinon 2 h avant; sinon rien.
+    static func appointment(_ date: Date, now: Date = .now,
+                            calendar: Calendar = .current) -> (at: Date, dayBefore: Bool)? {
+        if let d = calendar.date(byAdding: .day, value: -1, to: date), d > now { return (d, true) }
+        if let h = calendar.date(byAdding: .hour, value: -2, to: date), h > now { return (h, false) }
+        return nil
+    }
+
+    /// 30 jours avant a 9 h; si c'est passe, 7 jours, la veille, puis le jour
+    /// meme. Rien si la date de rappel est deja passee.
+    static func vaccine(due: Date, now: Date = .now, calendar: Calendar = .current) -> Date? {
+        let dueDay = calendar.startOfDay(for: due)
+        for lead in [30, 7, 1, 0] {
+            guard let day = calendar.date(byAdding: .day, value: -lead, to: dueDay),
+                  let at = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: day) else { continue }
+            if at > now { return at }
+        }
+        return nil
     }
 }
 
@@ -507,14 +611,26 @@ struct VitalsView: View {
         Array(filtered.sorted { $0.date < $1.date }.suffix(30))
     }
 
+    private var isTension: Bool { selectedType == "tension" }
+
     private var trendCard: some View {
         let data = chartData
-        let values = data.map(\.value)
-        let minV = values.min() ?? 0
-        let maxV = values.max() ?? 1
+        let sys = data.map(\.value)
+        // La diastolique (value2) etait ignoree: graphe et ecart ne
+        // montraient que la systolique.
+        let dia = isTension ? data.compactMap(\.value2) : []
+        let all = sys + dia
+        let minV = all.min() ?? 0
+        let maxV = all.max() ?? 1
         let pad = Swift.max((maxV - minV) * 0.15, 0.5)
         let delta = (data.last?.value ?? 0) - (data.first?.value ?? 0)
+        let diaPairs = data.filter { $0.value2 != nil }
+        let deltaDia: Double? = isTension && diaPairs.count >= 2
+            ? (diaPairs.last?.value2 ?? 0) - (diaPairs.first?.value2 ?? 0) : nil
         let unit = data.last?.unit ?? ""
+        let tone = VitalTrend.tone(type: selectedType, deltas: [delta] + (deltaDia.map { [$0] } ?? []))
+        let deltaText = deltaDia.map { String(format: "%+.0f / %+.0f %@", delta, $0, unit) }
+            ?? String(format: "%+.1f %@", delta, unit)
 
         return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
@@ -523,30 +639,51 @@ struct VitalsView: View {
                     .foregroundStyle(.secondary)
                     .kerning(1.2)
                 Spacer()
-                Text(String(format: "%+.1f %@", delta, unit))
+                Text(deltaText)
                     .font(.system(size: 13, weight: .semibold))
                     .monospacedDigit()
-                    .foregroundStyle(delta == 0 ? Color.secondary
-                                     : trendIsPositive(delta) ? Color(hex: 0x4CC38A) : Color(hex: 0xF1746C))
+                    .foregroundStyle(tone == .better ? Color(hex: 0x4CC38A)
+                                     : tone == .worse ? Color(hex: 0xF1746C) : Color.secondary)
             }
             Chart(data) { r in
-                AreaMark(
-                    x: .value("Date", r.date),
-                    yStart: .value("Base", minV - pad),
-                    yEnd: .value("Valeur", r.value)
-                )
-                .interpolationMethod(.catmullRom)
-                .foregroundStyle(
-                    LinearGradient(colors: [Color.accentColor.opacity(0.22), Color.accentColor.opacity(0.02)],
-                                   startPoint: .top, endPoint: .bottom)
-                )
-                LineMark(
-                    x: .value("Date", r.date),
-                    y: .value("Valeur", r.value)
-                )
-                .interpolationMethod(.catmullRom)
-                .foregroundStyle(Color.accentColor)
-                .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                if isTension {
+                    LineMark(
+                        x: .value("Date", r.date),
+                        y: .value("Valeur", r.value),
+                        series: .value("Mesure", "Systolique")
+                    )
+                    .interpolationMethod(.catmullRom)
+                    .foregroundStyle(Color.accentColor)
+                    .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                    if let d = r.value2 {
+                        LineMark(
+                            x: .value("Date", r.date),
+                            y: .value("Valeur", d),
+                            series: .value("Mesure", "Diastolique")
+                        )
+                        .interpolationMethod(.catmullRom)
+                        .foregroundStyle(Color.accentColor.opacity(0.5))
+                        .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, dash: [4, 3]))
+                    }
+                } else {
+                    AreaMark(
+                        x: .value("Date", r.date),
+                        yStart: .value("Base", minV - pad),
+                        yEnd: .value("Valeur", r.value)
+                    )
+                    .interpolationMethod(.catmullRom)
+                    .foregroundStyle(
+                        LinearGradient(colors: [Color.accentColor.opacity(0.22), Color.accentColor.opacity(0.02)],
+                                       startPoint: .top, endPoint: .bottom)
+                    )
+                    LineMark(
+                        x: .value("Date", r.date),
+                        y: .value("Valeur", r.value)
+                    )
+                    .interpolationMethod(.catmullRom)
+                    .foregroundStyle(Color.accentColor)
+                    .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                }
             }
             .chartYScale(domain: (minV - pad)...(maxV + pad))
             .chartXAxis {
@@ -563,22 +700,27 @@ struct VitalsView: View {
             }
             .frame(height: 150)
             HStack {
-                Text(String(format: "Min %.1f", minV))
-                Spacer()
-                Text("\(data.count) mesures")
-                Spacer()
-                Text(String(format: "Max %.1f", maxV))
+                if isTension {
+                    Text(String(format: "Sys %.0f–%.0f", sys.min() ?? 0, sys.max() ?? 0))
+                    Spacer()
+                    Text("\(data.count) mesures")
+                    Spacer()
+                    if let lo = dia.min(), let hi = dia.max() {
+                        Text(String(format: "Dia %.0f–%.0f", lo, hi))
+                    }
+                } else {
+                    Text(String(format: "Min %.1f", minV))
+                    Spacer()
+                    Text("\(data.count) mesures")
+                    Spacer()
+                    Text(String(format: "Max %.1f", maxV))
+                }
             }
             .font(.caption2)
             .monospacedDigit()
             .foregroundStyle(.tertiary)
         }
         .card()
-    }
-
-    /// Pour le poids, une baisse est affichée en vert ; pour le reste, la couleur reste neutre-positive à la hausse.
-    private func trendIsPositive(_ delta: Double) -> Bool {
-        selectedType == "poids" ? delta < 0 : delta > 0
     }
 
     private func vitalRow(_ r: VitalRecord) -> some View {
@@ -595,6 +737,23 @@ struct VitalsView: View {
             Text(r.date, style: .date).font(.caption).foregroundStyle(.secondary)
         }
         .contextMenu { Button(role: .destructive) { ctx.delete(r) } label: { Label("Supprimer", systemImage: "trash") } }
+    }
+}
+
+/// Couleur de l'ecart d'une mesure. Avant, toute HAUSSE de tension, de
+/// glycemie ou de frequence cardiaque etait verte, comme une bonne nouvelle.
+enum VitalTrend {
+    enum Tone: Equatable { case better, worse, neutral }
+
+    static func tone(type: String, deltas: [Double]) -> Tone {
+        let moved = deltas.filter { $0 != 0 }
+        guard !moved.isEmpty else { return .neutral }
+        if type == "poids" {
+            return moved.allSatisfy { $0 < 0 } ? .better : .worse
+        }
+        // Tension, glycemie, cœur: une hausse est un signal a surveiller. Une
+        // baisse n'est pas forcement bonne (hypotension, hypoglycemie): neutre.
+        return moved.contains { $0 > 0 } ? .worse : .neutral
     }
 }
 
@@ -707,6 +866,9 @@ struct VaccinationView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(v.name).font(.subheadline.weight(.semibold))
                 Text("Fait le \(v.date.formatted(.dateTime.day().month(.wide).year()))").font(.caption).foregroundStyle(.secondary)
+                // Le lot n'apparaissait que dans l'export JSON.
+                if !v.lot.isEmpty { Text("Lot \(v.lot)").font(.caption).foregroundStyle(.secondary) }
+                if !v.notes.isEmpty { Text(v.notes).font(.caption).foregroundStyle(.secondary).lineLimit(2) }
             }
             Spacer()
             if let next = v.nextDueDate {
@@ -751,9 +913,19 @@ struct VaccinationEditor: View {
                     DatePicker("Date d'injection", selection: $date, displayedComponents: .date)
                     TextField("N° de lot (optionnel)", text: $lot)
                 }
-                Section("Rappel") {
+                Section {
                     Toggle("Date de rappel", isOn: $hasNext)
                     if hasNext { DatePicker("Prochain rappel", selection: $nextDate, displayedComponents: .date) }
+                } header: {
+                    Text("Rappel")
+                } footer: {
+                    if hasNext {
+                        if let at = MedicalReminderTiming.vaccine(due: nextDate) {
+                            Text("Notification le \(at.formatted(date: .abbreviated, time: .shortened)).")
+                        } else {
+                            Text("Pas de notification : cette date est déjà passée.")
+                        }
+                    }
                 }
                 Section {
                     TextField("Notes", text: $notes)
@@ -765,12 +937,12 @@ struct VaccinationEditor: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Ajouter") {
                         ctx.insert(Vaccination(name: name, date: date, nextDueDate: hasNext ? nextDate : nil, lot: lot, notes: notes))
-                        if hasNext {
+                        if hasNext, let at = MedicalReminderTiming.vaccine(due: nextDate) {
                             NotificationManager.shared.schedule(
                                 id: ReminderIDs.vaccination(name: name, nextDate: nextDate),
                                 title: "Rappel vaccin \(name)",
                                 body: "Le rappel est prévu pour le \(nextDate.formatted(.dateTime.day().month(.wide)))",
-                                at: Calendar.current.date(byAdding: .day, value: -30, to: nextDate) ?? nextDate
+                                at: at
                             )
                         }
                         dismiss()

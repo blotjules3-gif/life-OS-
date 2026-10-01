@@ -3,7 +3,8 @@ import XCTest
 
 /// Corpus reel (tools/yuko-bench/petfood/build_corpus.py) : fiches Open Pet Food Facts
 /// tirees SYSTEMATIQUEMENT (1 sur 20 des aliments chat vendus en France, 1 sur 7 des
-/// friandises, recherche "chaton", plus le produit de l'utilisateur). Chaque fiche passe
+/// friandises, recherche "chaton", 1 sur 2 des fiches SANS categorie chat ni chien, plus le
+/// produit de l'utilisateur). Chaque fiche passe
 /// dans le vrai code : decodage de la base, lecture d'etiquette (texte Vision deja lu sur
 /// Mac avec les memes reglages), fusion, identite, note.
 ///
@@ -34,7 +35,7 @@ final class PetFoodCorpusTests: XCTestCase {
     func testRealCorpusFollowsTheRules() throws {
         let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "petfood-corpus", withExtension: "json"))
         let corpus = try JSONDecoder().decode(Corpus.self, from: Data(contentsOf: url))
-        XCTAssertGreaterThanOrEqual(corpus.items.count, 30)
+        XCTAssertGreaterThanOrEqual(corpus.items.count, 60)
         var rows: [Row] = []
 
         for item in corpus.items {
@@ -120,6 +121,7 @@ final class PetFoodCorpusTests: XCTestCase {
 
     static func report(_ rows: [Row], built: String) -> String {
         func count(_ f: (Row) -> Bool) -> String { "\(rows.filter(f).count)/\(rows.count)" }
+        let vague = rows.filter { $0.why.hasPrefix("fiche sans catégorie") }
         var s = """
         # Corpus Yuko aliments chat (méthode \(ProductScore.petMethodVersion))
 
@@ -131,6 +133,13 @@ final class PetFoodCorpusTests: XCTestCase {
         - **Composition** disponible : \(count { $0.composition != "absente" }) (dont lue sur l'étiquette : \(count { $0.composition == "étiquette lue" }))
         - **Photo** : face \(count { $0.photo.contains("face") }), étiquette \(count { $0.photo.contains("étiquette") })
         - **Note /100** : \(count(\.scored))
+
+        Fiches SANS catégorie chat ni chien (comme « one junior ») : \(vague.count) tirées.
+        Espèce reconnue \(vague.filter { $0.identity.hasPrefix("chat") || $0.identity.hasPrefix("chien") }.count)
+        (chat \(vague.filter { $0.identity.hasPrefix("chat") }.count), chien \(vague.filter { $0.identity.hasPrefix("chien") }.count)),
+        ambiguë \(vague.filter { $0.identity.hasPrefix("ambigu") }.count), autre animal \(vague.filter { $0.identity.hasPrefix("autre") }.count),
+        notées \(vague.filter(\.scored).count). Ici l'identification se mesure vraiment : le reste du
+        corpus vient de la catégorie « aliment pour chat », donc l'espèce y est donnée par la base.
 
         | Code | Produit | Tirage | Identité | Composition | Photos | Note | Confiance |
         |---|---|---|---|---|---|---|---|

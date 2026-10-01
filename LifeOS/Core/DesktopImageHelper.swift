@@ -134,9 +134,74 @@ struct DesktopImageDropModifier: ViewModifier {
     }
 }
 
+// MARK: - Glisser-deposer d'un document multi-pages
+
+/// Variante pour les documents: un PDF glisse depuis le Finder passait par
+/// `loadImage`, qui ne rend que la page 1. Les autres pages etaient perdues
+/// sans message, alors que le bouton Fichier les gardait toutes.
+struct DesktopPagesDropModifier: ViewModifier {
+    let onPagesDropped: ([UIImage]) -> Void
+    /// Appele quand le fichier depose n'a pu etre lu ni comme image ni comme PDF.
+    let onFailure: () -> Void
+    @State private var isTargeted = false
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                if isTargeted {
+                    RoundedRectangle(cornerRadius: 16)
+                        .strokeBorder(Color.accentColor, style: StrokeStyle(lineWidth: 2.5, dash: [8]))
+                        .background(Color.accentColor.opacity(0.08))
+                        .allowsHitTesting(false)
+                }
+            }
+            .onDrop(of: [UTType.fileURL.identifier, UTType.image.identifier], isTargeted: $isTargeted) { providers in
+                guard let provider = providers.first else { return false }
+
+                // 1. Fichier (image ou PDF): toutes les pages. Teste AVANT l'image
+                // directe, sinon un PDF pourrait etre aplati en une seule image.
+                if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+                    provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
+                        var targetURL: URL?
+                        if let url = item as? URL {
+                            targetURL = url
+                        } else if let data = item as? Data,
+                                  let url = URL(dataRepresentation: data, relativeTo: nil) {
+                            targetURL = url
+                        }
+                        let pages = targetURL.map { DesktopImageHelper.loadPages(from: $0) } ?? []
+                        DispatchQueue.main.async {
+                            if pages.isEmpty { onFailure() } else { onPagesDropped(pages) }
+                        }
+                    }
+                    return true
+                }
+
+                // 2. Image directe (une page)
+                if provider.canLoadObject(ofClass: UIImage.self) {
+                    _ = provider.loadObject(ofClass: UIImage.self) { item, _ in
+                        let img = item as? UIImage
+                        DispatchQueue.main.async {
+                            if let img { onPagesDropped([img]) } else { onFailure() }
+                        }
+                    }
+                    return true
+                }
+
+                return false
+            }
+    }
+}
+
 extension View {
     /// Permet de glisser-déposer une image depuis le Finder directement sur la vue.
     func onDesktopImageDrop(perform action: @escaping (UIImage) -> Void) -> some View {
         modifier(DesktopImageDropModifier(onImageDropped: action))
+    }
+
+    /// Glisser-deposer d'un document: rend TOUTES les pages d'un PDF.
+    func onDesktopPagesDrop(perform action: @escaping ([UIImage]) -> Void,
+                            onFailure: @escaping () -> Void = {}) -> some View {
+        modifier(DesktopPagesDropModifier(onPagesDropped: action, onFailure: onFailure))
     }
 }

@@ -66,6 +66,7 @@ struct MacDesktopMainView: View {
 
     @State private var sidebarCollapsed = false
     @State private var selection: DesktopNavSection? = .dashboard
+    @State private var routedTool: CategoryTool?
     @Namespace private var sidebarNamespace
     @State private var showNewHabitModal = false
     @State private var showAssistantSheet = false
@@ -121,10 +122,12 @@ struct MacDesktopMainView: View {
             assistantPrefill = note.userInfo?["prefill"] as? String
             selection = .assistant
         }
+        .sheet(item: $routedTool) { t in NavigationStack { t.dest() } }
         .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenModule)) { notif in
             if let module = notif.userInfo?["module"] as? String,
                let cat = AppCategory(rawValue: module) {
                 selection = .category(cat)
+                if let name = notif.userInfo?["tool"] as? String, let t = ToolRoute.tool(name, in: cat) { routedTool = t }
             }
         }
     }

@@ -14,6 +14,7 @@ struct CRMView: View {
     @Query(sort: \Contact.name) private var contacts: [Contact]
     @State private var showAdd = false
     @State private var showImport = false
+    @State private var editingNotes: Contact?
     private var overdue: [Contact] { contacts.filter { $0.isOverdue } }
 
     var body: some View {
@@ -48,6 +49,7 @@ struct CRMView: View {
             }
         }
         .sheet(isPresented: $showAdd) { ContactEditor() }
+        .sheet(item: $editingNotes) { ContactNotesEditor(contact: $0) }
         .sheet(isPresented: $showImport) { ContactImportSheet(existingNames: Set(contacts.map(\.name))) { imported in
             for c in imported { ctx.insert(c) }
         }}
@@ -60,12 +62,38 @@ struct CRMView: View {
                 Text(c.name).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
                 if let last = c.lastSeen { Text("Vu \(last, style: .relative)").font(.caption).foregroundStyle(highlight ? Theme.warning : Theme.textSecondary) }
                 else { Text("Jamais marqué").font(.caption).foregroundStyle(Theme.warning) }
+                // Les notes etaient enregistrees puis jamais montrees: perdues
+                // pour l'utilisateur.
+                if !c.notes.isEmpty { Text(c.notes).font(.caption).foregroundStyle(Theme.textSecondary).lineLimit(2) }
             }
             Spacer()
             Button { c.lastSeen = Date(); Haptics.tap() } label: { Image(systemName: "checkmark.message.fill").foregroundStyle(.socialTint) }.accessibilityLabel("Marquer contacté")
         }
         .card(padding: 12)
-        .contextMenu { Button(role: .destructive) { ctx.delete(c) } label: { Label("Supprimer", systemImage: "trash") } }
+        .contextMenu {
+            Button { editingNotes = c } label: { Label("Notes", systemImage: "note.text") }
+            Button(role: .destructive) {
+                // Le rappel annuel d'anniversaire survivait au contact et
+                // sonnait chaque annee pour toujours.
+                NotificationManager.shared.cancel(id: ReminderIDs.birthday(name: c.name, birthday: c.birthday))
+                ctx.delete(c)
+            } label: { Label("Supprimer", systemImage: "trash") }
+        }
+    }
+}
+
+/// Lire et modifier les notes d'un contact existant.
+struct ContactNotesEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    @Bindable var contact: Contact
+    var body: some View {
+        NavigationStack {
+            Form {
+                TextField("Notes (enfants, taf, hobbies…)", text: $contact.notes, axis: .vertical).lineLimit(3...12)
+            }
+            .navigationTitle(contact.name).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("OK") { dismiss() } } }
+        }
     }
 }
 
@@ -150,20 +178,16 @@ struct BirthdaysView: View {
         }.card()
     }
 
-    private func bdayID(_ c: Contact) -> String {
-        // Jamais de `!` sur birthday : aujourd'hui tous les appels passent par
-        // `withBirthday`, mais un futur appel ailleurs ferait tomber l'app.
-        let stamp = Int(c.birthday?.timeIntervalSince1970 ?? 0)
-        return "bday.\(c.name.replacingOccurrences(of: " ", with: "_")).\(stamp)"
-    }
+    // Formule dans ReminderIDs: la suppression d'un contact (CRM) doit
+    // retrouver le meme identifiant pour annuler le rappel.
+    private func bdayID(_ c: Contact) -> String { ReminderIDs.birthday(name: c.name, birthday: c.birthday) }
     private func reschedule() {
         for c in withBirthday { NotificationManager.shared.cancel(id: bdayID(c)) }
         guard remindersOn else { return }
         let cal = Calendar.current
         for c in withBirthday {
-            let remindDate = cal.date(byAdding: .day, value: -3, to: c.birthday!) ?? c.birthday!
-            let m = cal.component(.month, from: remindDate)
-            let d = cal.component(.day, from: remindDate)
+            guard let bday = c.birthday else { continue }
+            let (m, d) = BirthdayMath.reminderMonthDay(birthday: bday, daysBefore: 3, calendar: cal)
             let body = c.giftIdeas.isEmpty ? "Pense à lui souhaiter" : "Idées : \(c.giftIdeas)"
             NotificationManager.shared.scheduleYearly(
                 id: bdayID(c),
@@ -180,6 +204,23 @@ struct BirthdaysView: View {
         var next = cal.date(from: comps) ?? now
         if next < now { comps.year! += 1; next = cal.date(from: comps) ?? now }
         return cal.dateComponents([.day], from: now, to: next).day ?? 0
+    }
+}
+
+/// Jour du rappel annuel d'anniversaire.
+enum BirthdayMath {
+    /// Le decalage etait calcule sur l'ANNEE DE NAISSANCE: ne le 2 mars 2000
+    /// (bissextile), le rappel tombait le 28 fevrier, soit 2 jours avant les
+    /// annees normales alors que le texte dit "dans 3 jours". Le calcul se
+    /// fait maintenant sur une annee non bissextile (3 annees sur 4 justes;
+    /// les annees bissextiles, le rappel arrive un jour plus tot, jamais en
+    /// retard). Un 29 fevrier est fete le 1er mars les annees normales.
+    static func reminderMonthDay(birthday: Date, daysBefore: Int, calendar: Calendar = .current) -> (month: Int, day: Int) {
+        var comps = calendar.dateComponents([.month, .day], from: birthday)
+        comps.year = 2001   // annee non bissextile de reference
+        let anchor = calendar.date(from: comps) ?? birthday
+        let remind = calendar.date(byAdding: .day, value: -daysBefore, to: anchor) ?? anchor
+        return (calendar.component(.month, from: remind), calendar.component(.day, from: remind))
     }
 }
 

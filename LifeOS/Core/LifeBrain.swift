@@ -81,11 +81,13 @@ enum LifeBrain {
             let start = Date(timeIntervalSince1970: startTS)
             let elapsed = cal.dateComponents([.day], from: cal.startOfDay(for: start), to: cal.startOfDay(for: .now)).day ?? 0
             let day = (elapsed % len + len) % len + 1
-            switch day {
-            case 1...5:   s.cyclePhase = "menstruelle"
-            case 6...11:  s.cyclePhase = "folliculaire"
-            case 12...16: s.cyclePhase = "ovulation"
-            default:      s.cyclePhase = "lutéale"
+            // Meme calcul que l'outil Cycle (CycleMath) : l'ovulation suit la duree du
+            // cycle. Avant, le coach la placait toujours aux jours 12 a 16.
+            switch CycleMath.phase(day: day, length: len) {
+            case .menstrual:  s.cyclePhase = "menstruelle"
+            case .follicular: s.cyclePhase = "folliculaire"
+            case .ovulatory:  s.cyclePhase = "ovulation"
+            case .luteal:     s.cyclePhase = "lutéale"
             }
         }
 

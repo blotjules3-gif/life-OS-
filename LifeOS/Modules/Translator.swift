@@ -26,6 +26,24 @@ private let transLangs: [TransLang] = [
     .init(code: "ar", flag: "🇸🇦", name: "Arabe"),
 ]
 
+/// Règles du bouton Traduire, sorties de l'écran pour être testées.
+enum TranslatorRules {
+    /// Raison pour laquelle on ne lance pas la traduction, ou nil si tout va bien.
+    /// Source = cible finissait toujours en erreur du framework: on le dit avant.
+    static func blockReason(input: String, source: String, target: String) -> String? {
+        if input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "Écris un texte à traduire." }
+        if source == target { return "Choisis deux langues différentes." }
+        return nil
+    }
+
+    /// Même paire que la dernière fois: la nouvelle Configuration serait égale à
+    /// l'ancienne et translationTask ne repartirait pas. Il faut alors invalidate().
+    static func mustInvalidate(previous: (source: String, target: String)?, source: String, target: String) -> Bool {
+        guard let previous else { return false }
+        return previous.source == source && previous.target == target
+    }
+}
+
 struct TranslationView: View {
     // Le framework Translation existe aussi sur Mac (Catalyst 26+). Avant, la
     // branche Mac etait exclue par un #if et affichait "iOS 18 requis" sur un
@@ -65,6 +83,8 @@ private struct TranslatorScreen: View {
     @State private var input = ""
     @State private var output = ""
     @State private var config: TranslationSession.Configuration?
+    /// Paire de la configuration en cours, pour savoir s'il faut l'invalider.
+    @State private var configPair: (source: String, target: String)?
     @State private var busy = false
     @State private var errorMsg: String?
     @FocusState private var focused: Bool
@@ -77,6 +97,11 @@ private struct TranslatorScreen: View {
             ScrollView {
                 VStack(spacing: 14) {
                     langBar
+                    if source == target {
+                        Text("Choisis deux langues différentes.")
+                            .font(.caption).foregroundStyle(Theme.warning)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                     inputCard
                     translateButton
                     if busy { ProgressView("Traduction…").padding(.top, 4) }
@@ -99,6 +124,7 @@ private struct TranslatorScreen: View {
             if let text = DebugLaunchFlags.value("-translateProbe") {
                 input = text
                 config = .init(source: lang("fr").language, target: lang("en").language)
+                configPair = ("fr", "en")
             }
         }
         #endif
@@ -179,15 +205,21 @@ private struct TranslatorScreen: View {
         Button {
             focused = false
             errorMsg = nil; output = ""
-            // (re)crée la configuration → déclenche translationTask
-            config = .init(source: lang(source).language, target: lang(target).language)
+            if TranslatorRules.mustInvalidate(previous: configPair, source: source, target: target), config != nil {
+                // Même paire: une Configuration égale ne relance pas translationTask.
+                config?.invalidate()
+            } else {
+                // Nouvelle paire → nouvelle configuration → translationTask démarre
+                config = .init(source: lang(source).language, target: lang(target).language)
+                configPair = (source, target)
+            }
         } label: {
             Label("Traduire", systemImage: "globe").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 14)
                 .background(Color.travelTint.gradient, in: RoundedRectangle(cornerRadius: Theme.radiusSmall)).foregroundStyle(.white)
         }
         .buttonStyle(.plain)
-        .disabled(input.trimmingCharacters(in: .whitespaces).isEmpty)
-        .opacity(input.trimmingCharacters(in: .whitespaces).isEmpty ? 0.5 : 1)
+        .disabled(TranslatorRules.blockReason(input: input, source: source, target: target) != nil)
+        .opacity(TranslatorRules.blockReason(input: input, source: source, target: target) != nil ? 0.5 : 1)
     }
 
     private var outputCard: some View {

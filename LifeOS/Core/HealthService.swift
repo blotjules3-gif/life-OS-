@@ -188,14 +188,16 @@ final class HealthService {
         }
     }
 
-    func restingHeartRate() async -> Double? {
-        guard let type = HKQuantityType.quantityType(forIdentifier: .restingHeartRate) else { return nil }
-        return await mostRecent(type, unit: HKUnit.count().unitDivided(by: .minute()))
+    /// VFC et FC au repos les plus recentes, AVEC leur date: sans date, une
+    /// mesure vieille de plusieurs mois passait pour celle du jour.
+    func hrvSample() async -> (value: Double, date: Date)? {
+        guard let type = HKQuantityType.quantityType(forIdentifier: .heartRateVariabilitySDNN) else { return nil }
+        return await mostRecentSample(type, unit: .secondUnit(with: .milli))
     }
 
-    func hrv() async -> Double? {
-        guard let type = HKQuantityType.quantityType(forIdentifier: .heartRateVariabilitySDNN) else { return nil }
-        return await mostRecent(type, unit: .secondUnit(with: .milli))
+    func restingHeartRateSample() async -> (value: Double, date: Date)? {
+        guard let type = HKQuantityType.quantityType(forIdentifier: .restingHeartRate) else { return nil }
+        return await mostRecentSample(type, unit: HKUnit.count().unitDivided(by: .minute()))
     }
 
     func activeCaloriesToday() async -> Double {
@@ -349,12 +351,15 @@ final class HealthService {
         }
     }
 
-    private func mostRecent(_ type: HKQuantityType, unit: HKUnit) async -> Double? {
+    private func mostRecentSample(_ type: HKQuantityType, unit: HKUnit) async -> (value: Double, date: Date)? {
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
         return await withCheckedContinuation { cont in
             let q = HKSampleQuery(sampleType: type, predicate: nil, limit: 1, sortDescriptors: [sort]) { _, samples, _ in
-                let value = (samples?.first as? HKQuantitySample)?.quantity.doubleValue(for: unit)
-                cont.resume(returning: value)
+                guard let sample = samples?.first as? HKQuantitySample else {
+                    cont.resume(returning: nil)
+                    return
+                }
+                cont.resume(returning: (sample.quantity.doubleValue(for: unit), sample.endDate))
             }
             store.execute(q)
         }

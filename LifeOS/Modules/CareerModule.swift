@@ -12,46 +12,84 @@ struct ApplicationsView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \JobApplication.date, order: .reverse) private var apps: [JobApplication]
     @State private var showAdd = false
+    /// Candidature a supprimer, en attente de confirmation: un glissement
+    /// trop rapide ne doit pas effacer une candidature sans retour possible.
+    @State private var pendingDelete: JobApplication?
     private let statuses = ["Repéré","Postulé","Entretien","Offre","Refusé"]
 
     var body: some View {
         ZStack {
             Theme.background
-            ScrollView {
-                VStack(spacing: 16) {
-                    HStack(spacing: 8) {
-                        ForEach(statuses, id: \.self) { s in
-                            VStack { Text("\(apps.filter { $0.status == s }.count)").font(.headline.bold()).foregroundStyle(.careerTint); Text(s).font(.caption2).foregroundStyle(Theme.textSecondary) }.frame(maxWidth: .infinity)
-                        }
-                    }.card()
+            // Une List (et plus une ScrollView): le glissement pour supprimer
+            // n'existe que dans une List. Avant, une erreur ou un doublon
+            // restait pour toujours dans le pipeline.
+            List {
+                HStack(spacing: 8) {
+                    ForEach(statuses, id: \.self) { s in
+                        VStack { Text("\(apps.filter { $0.status == s }.count)").font(.headline.bold()).foregroundStyle(.careerTint); Text(s).font(.caption2).foregroundStyle(Theme.textSecondary) }.frame(maxWidth: .infinity)
+                    }
+                }.card()
+                .listRowStyleClear()
 
-                    if apps.isEmpty {
-                        EmptyState(icon: "tray.full", title: "Aucune candidature", message: "Ajoute une offre que tu suis.")
-                    } else {
-                        ForEach(statuses, id: \.self) { status in
-                            let group = apps.filter { $0.status == status }
-                            if !group.isEmpty {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    SectionHeader(title: status)
-                                    ForEach(group) { a in
-                                        NavigationLink { ApplicationEditor(app: a) } label: {
-                                            HStack {
-                                                VStack(alignment: .leading) { Text(a.company).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary); Text(a.role).font(.caption).foregroundStyle(Theme.textSecondary) }
-                                                Spacer()
-                                                Text(a.date, style: .date).font(.caption2).foregroundStyle(Theme.textSecondary)
-                                            }.card(padding: 12)
-                                        }.buttonStyle(.plain)
-                                    }
+                if apps.isEmpty {
+                    EmptyState(icon: "tray.full", title: "Aucune candidature", message: "Ajoute une offre que tu suis.")
+                        .listRowStyleClear()
+                } else {
+                    ForEach(statuses, id: \.self) { status in
+                        let group = apps.filter { $0.status == status }
+                        if !group.isEmpty {
+                            SectionHeader(title: status).listRowStyleClear()
+                            ForEach(group) { a in
+                                ZStack {
+                                    // Lien invisible: garde la carte sans le chevron de List.
+                                    NavigationLink { ApplicationEditor(app: a) } label: { EmptyView() }.opacity(0)
+                                    HStack {
+                                        VStack(alignment: .leading) { Text(a.company).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary); Text(a.role).font(.caption).foregroundStyle(Theme.textSecondary) }
+                                        Spacer()
+                                        Text(a.date, style: .date).font(.caption2).foregroundStyle(Theme.textSecondary)
+                                    }.card(padding: 12)
+                                }
+                                .listRowStyleClear()
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button(role: .destructive) { pendingDelete = a } label: { Label("Supprimer", systemImage: "trash") }
+                                }
+                                .contextMenu {
+                                    Button(role: .destructive) { pendingDelete = a } label: { Label("Supprimer", systemImage: "trash") }
                                 }
                             }
                         }
                     }
-                }.padding(Theme.pad)
+                }
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
         }
         .navigationTitle("Candidatures").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { NavigationStack { ApplicationEditor(app: nil) } }
+        .confirmationDialog("Supprimer cette candidature ?",
+                            isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
+                            titleVisibility: .visible, presenting: pendingDelete) { a in
+            Button("Supprimer « \(a.company) »", role: .destructive) { delete(a) }
+        } message: { _ in
+            Text("Elle disparaît du suivi. Cette action est définitive.")
+        }
+    }
+
+    private func delete(_ a: JobApplication) {
+        ctx.delete(a)
+        do { try ctx.save() } catch { AppLog.data.error("delete JobApplication save failed: \(error.localizedDescription, privacy: .public)") }
+        pendingDelete = nil
+    }
+}
+
+private extension View {
+    /// Ligne de List qui garde le look carte de l'app (fond, separateur et
+    /// marges de List retires).
+    func listRowStyleClear() -> some View {
+        self.listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 6, leading: Theme.pad, bottom: 6, trailing: Theme.pad))
     }
 }
 
@@ -187,6 +225,9 @@ struct CVOptimiserSheet: View {
 
     @State private var offer = ""
     @State private var result = ""
+    /// Liste "Mots-clés à ajouter" du modele, gardee a part: c'est une
+    /// consigne pour l'utilisateur, pas du texte de CV.
+    @State private var keywords = ""
     @State private var busy = false
     @State private var error: String?
 
@@ -218,10 +259,22 @@ struct CVOptimiserSheet: View {
                     Section("Proposition") {
                         TextEditor(text: $result).frame(minHeight: 220)
                         Button("Remplacer mon profil par ce texte") {
-                            summary = result
+                            // Re-filtre au moment d'appliquer: la liste peut avoir
+                            // ete recollee dans le texte pendant l'edition.
+                            summary = CVKeywords.split(result).profile
                             dismiss()
                         }
                         .font(.footnote.weight(.semibold))
+                        .disabled(CVKeywords.split(result).profile.isEmpty)
+                    }
+                }
+                if !keywords.isEmpty {
+                    Section {
+                        Text(keywords).font(.subheadline).textSelection(.enabled)
+                    } header: {
+                        Text("Mots-clés de l'annonce absents du CV")
+                    } footer: {
+                        Text("Ils ne sont pas copiés dans ton profil. Ajoute-les seulement s'ils sont vrais pour toi.")
                     }
                 }
             }
@@ -250,9 +303,37 @@ struct CVOptimiserSheet: View {
         \(skills)
         """
         switch await AIText.ask(system: sys, user: ask, maxTokens: 600, temperature: 0.3) {
-        case .success(let t): result = t
+        case .success(let t):
+            let parts = CVKeywords.split(t)
+            result = parts.profile; keywords = parts.keywords
         case .failure(let e): error = e.message
         }
+    }
+}
+
+/// Coupe la reponse du modele en deux: le profil reecrit, et la liste
+/// "Mots-clés à ajouter" qu'on lui demande en fin de texte.
+///
+/// Avant, le bouton copiait toute la reponse dans le profil: la liste de
+/// mots-cles finissait dans le CV si l'utilisateur ne l'effacait pas.
+enum CVKeywords {
+    /// Tolere les variantes d'ecriture du modele: accents, tiret ou espace,
+    /// singulier, gras Markdown, et l'en-tete colle a la fin d'une phrase.
+    private static let header = #"mots?[\s\-‑]*cl[eé]s?\s+[aà]\s+ajouter"#
+
+    static func split(_ text: String) -> (profile: String, keywords: String) {
+        // Forme composee: un "é" decompose (e + accent) raterait l'en-tete.
+        let trimmed = text.precomposedStringWithCanonicalMapping.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let r = trimmed.range(of: header, options: [.regularExpression, .caseInsensitive]) else {
+            return (trimmed, "")
+        }
+        let decoration = CharacterSet.whitespacesAndNewlines.union(CharacterSet(charactersIn: "*#_-—:"))
+        // Le profil ne perd que la decoration qui precede l'en-tete ("**", "-"),
+        // jamais son propre debut.
+        var profile = Substring(trimmed[..<r.lowerBound])
+        while let last = profile.unicodeScalars.last, decoration.contains(last) { profile = profile.dropLast() }
+        let keywords = String(trimmed[r.upperBound...]).trimmingCharacters(in: decoration)
+        return (String(profile), keywords)
     }
 }
 
@@ -526,40 +607,134 @@ struct JobPosting: Identifiable, Decodable {
 
 private struct ArbeitnowResponse: Decodable { let data: [JobPosting] }
 
+enum JobSearchError: Error, Equatable {
+    /// Le serveur a repondu, mais pas avec un succes (404, 429, 500...).
+    case badStatus(Int)
+}
+
 enum JobSearchService {
     /// Flux public gratuit, sans clé (offres tech/remote, majoritairement Europe).
     static func fetch() async throws -> [JobPosting] {
         let url = URL(string: "https://www.arbeitnow.com/api/job-board-api")!
         var req = URLRequest(url: url)
         req.timeoutInterval = 15
-        let (data, _) = try await URLSession.shared.data(for: req)
+        let (data, response) = try await URLSession.shared.data(for: req)
+        // Sans ce controle, une page d'erreur HTML partait au decodage et
+        // ressortait en "erreur de format".
+        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+            throw JobSearchError.badStatus(http.statusCode)
+        }
         return try JSONDecoder().decode(ArbeitnowResponse.self, from: data).data
     }
+
+    /// Message honnete selon la vraie cause. Avant, tout etait "verifie ta
+    /// connexion": un changement de format de l'API se lisait comme une
+    /// panne reseau. `nil` = recherche annulee (tirer pour rafraichir), rien
+    /// a afficher.
+    static func describe(_ error: Error) -> (message: String, isNetwork: Bool)? {
+        if error is CancellationError { return nil }
+        if let e = error as? URLError {
+            if e.code == .cancelled { return nil }
+            if e.code == .timedOut {
+                return ("Le service d'offres ne répond pas. Vérifie ta connexion ou réessaie plus tard.", true)
+            }
+            return ("Impossible de joindre le service d'offres. Vérifie ta connexion.", true)
+        }
+        if case JobSearchError.badStatus(let code)? = error as? JobSearchError {
+            return ("Le service d'offres a répondu une erreur (code \(code)). Réessaie plus tard.", false)
+        }
+        if error is DecodingError {
+            return ("Le service d'offres a changé de format : l'app ne sait plus lire ses offres. Ce n'est pas ta connexion.", false)
+        }
+        return ("Impossible de charger les offres (\(error.localizedDescription)).", false)
+    }
+}
+
+/// Regles de correspondance entre les offres et les competences.
+enum JobMatching {
+    /// Seules les competences ACQUISES comptent: le hub promet des offres
+    /// "selon tes compétences", pas selon celles qui te manquent.
+    static func acquiredSkills(_ items: [(skill: String, acquired: Bool)]) -> [String] {
+        var seen = Set<String>()
+        var out: [String] = []
+        for item in items where item.acquired {
+            let s = item.skill.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard s.count > 1 else { continue }
+            let key = s.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
+            if seen.insert(key).inserted { out.append(s) }
+        }
+        return out
+    }
+
+    /// Mot entier, sans tenir compte de la casse ni des accents: "go" ne
+    /// doit pas compter pour "Google", ni "java" pour "JavaScript".
+    static func contains(skill: String, in text: String) -> Bool {
+        guard !skill.isEmpty else { return false }
+        var start = text.startIndex
+        while start < text.endIndex,
+              let r = text.range(of: skill, options: [.caseInsensitive, .diacriticInsensitive], range: start..<text.endIndex) {
+            let beforeOK = r.lowerBound == text.startIndex || !isWordChar(text[text.index(before: r.lowerBound)])
+            let afterOK = r.upperBound == text.endIndex || !isWordChar(text[r.upperBound])
+            if beforeOK && afterOK { return true }
+            start = text.index(after: r.lowerBound)
+        }
+        return false
+    }
+
+    static func score(title: String, tags: [String], skills: [String]) -> Int {
+        let text = ([title] + tags).joined(separator: " ")
+        return skills.reduce(0) { $0 + (contains(skill: $1, in: text) ? 1 : 0) }
+    }
+
+    /// Cle d'une offre suivie: l'url quand elle existe, sinon entreprise et
+    /// poste. Sert a ne pas creer un doublon a chaque appui sur "Suivre".
+    static func trackKey(url: String, company: String, role: String) -> String {
+        var u = url.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        for scheme in ["https://", "http://"] where u.hasPrefix(scheme) { u.removeFirst(scheme.count) }
+        if u.hasPrefix("www.") { u.removeFirst(4) }
+        while u.hasSuffix("/") { u.removeLast() }
+        if !u.isEmpty { return "url:" + u }
+        let c = company.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let r = role.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return "job:" + c + "|" + r
+    }
+
+    private static func isWordChar(_ c: Character) -> Bool { c.isLetter || c.isNumber }
 }
 
 struct JobMatchView: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.openURL) private var openURL
     @Query private var skills: [SkillGap]
+    @Query private var tracked: [JobApplication]
 
     @State private var query = ""
     @State private var remoteOnly = false
     @State private var all: [JobPosting] = []
     @State private var loading = false
     @State private var errorText: String?
+    @State private var errorIsNetwork = true
 
-    /// Compétences ciblées de l'utilisateur (module « Compétences manquantes »).
+    /// Compétences ACQUISES de l'utilisateur (module « Compétences manquantes »).
     private var mySkills: [String] {
-        Array(Set(skills.map { $0.skill.lowercased() }.filter { $0.count > 1 }))
+        JobMatching.acquiredSkills(skills.map { (skill: $0.skill, acquired: $0.acquired) })
     }
 
-    private func score(_ job: JobPosting) -> Int {
-        let hay = (job.title + " " + job.tags.joined(separator: " ")).lowercased()
-        return mySkills.reduce(0) { $0 + (hay.contains($1) ? 1 : 0) }
+    private var trackedKeys: Set<String> {
+        Set(tracked.map { JobMatching.trackKey(url: $0.url, company: $0.company, role: $0.role) })
+    }
+
+    private func key(_ job: JobPosting) -> String {
+        JobMatching.trackKey(url: job.url, company: job.company_name, role: job.title)
+    }
+
+    private func score(_ job: JobPosting, _ mine: [String]) -> Int {
+        JobMatching.score(title: job.title, tags: job.tags, skills: mine)
     }
 
     private var filtered: [JobPosting] {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+        let mine = mySkills
         return all
             .filter { !remoteOnly || $0.remote }
             .filter { job in
@@ -568,7 +743,10 @@ struct JobMatchView: View {
                     return hay.contains(q)
                 }()
             }
-            .sorted { score($0) > score($1) }
+            // Score calcule une fois par offre, pas a chaque comparaison du tri.
+            .map { job -> (JobPosting, Int) in (job, score(job, mine)) }
+            .sorted { $0.1 > $1.1 }
+            .map { $0.0 }
     }
 
     var body: some View {
@@ -581,7 +759,7 @@ struct JobMatchView: View {
                 } else if let errorText, all.isEmpty {
                     Spacer()
                     VStack(spacing: 10) {
-                        Image(systemName: "wifi.exclamationmark").font(.largeTitle).foregroundStyle(.secondary)
+                        Image(systemName: errorIsNetwork ? "wifi.exclamationmark" : "exclamationmark.triangle").font(.largeTitle).foregroundStyle(.secondary)
                         Text(errorText).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
                         Button("Réessayer") { Task { await load() } }.buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.careerTint)
                     }.padding(30)
@@ -614,7 +792,11 @@ struct JobMatchView: View {
             .padding(10).raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous))
             Toggle("Télétravail uniquement", isOn: $remoteOnly).font(.subheadline).tint(.careerTint)
             if !mySkills.isEmpty {
-                Text("★ = correspond à tes compétences suivies").font(.caption2).foregroundStyle(.secondary)
+                Text("★ = correspond à tes compétences acquises").font(.caption2).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else if !skills.isEmpty {
+                Text("Coche tes compétences acquises dans « Compétences manquantes » pour voir les offres qui te correspondent.")
+                    .font(.caption2).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
@@ -623,7 +805,8 @@ struct JobMatchView: View {
     }
 
     private func jobCard(_ job: JobPosting) -> some View {
-        let s = score(job)
+        let s = score(job, mySkills)
+        let isTracked = trackedKeys.contains(key(job))
         return VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 3) {
@@ -657,8 +840,9 @@ struct JobMatchView: View {
                     Label("Voir l'offre", systemImage: "arrow.up.right.square").font(.subheadline.weight(.semibold))
                 }.buttonStyle(LifeOSGlassButtonStyle(prominent: true)).tint(.careerTint)
                 Button { track(job) } label: {
-                    Label("Suivre", systemImage: "tray.and.arrow.down").font(.subheadline)
+                    Label(isTracked ? "Suivie" : "Suivre", systemImage: isTracked ? "checkmark" : "tray.and.arrow.down").font(.subheadline)
                 }.buttonStyle(LifeOSGlassButtonStyle()).tint(.careerTint)
+                .disabled(isTracked)
             }
         }
         .padding(14)
@@ -667,6 +851,8 @@ struct JobMatchView: View {
     }
 
     private func track(_ job: JobPosting) {
+        // Deja dans Huntly: un second appui ne cree pas de doublon.
+        guard !trackedKeys.contains(key(job)) else { return }
         ctx.insert(JobApplication(company: job.company_name, role: job.title, status: "Repéré", url: job.url))
         do { try ctx.save() } catch { AppLog.data.error("track JobApplication save failed: \(error.localizedDescription, privacy: .public)") }
         Haptics.soft()
@@ -675,7 +861,11 @@ struct JobMatchView: View {
     private func load() async {
         loading = true; errorText = nil
         do { all = try await JobSearchService.fetch() }
-        catch { errorText = "Impossible de charger les offres (vérifie ta connexion)." }
+        catch {
+            if let d = JobSearchService.describe(error) {
+                errorText = d.message; errorIsNetwork = d.isNetwork
+            }
+        }
         loading = false
     }
 }

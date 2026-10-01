@@ -1,6 +1,7 @@
 import SwiftUI
 import AVFoundation
 import CoreAudio
+import os
 
 // MARK: - Sons relaxants — générateur de bruit on-device (aucun fichier audio)
 
@@ -38,10 +39,74 @@ final class NoiseEngine: ObservableObject {
     @Published private(set) var isPlaying = false
     @Published private(set) var failed = false
     @Published var volume: Float = 0.7 { didSet { engine.mainMixerNode.outputVolume = volume } }
-    @Published private(set) var kind: NoiseKind = .pink
+    /// Le son choisi, cote interface. Chaque changement est recopie dans
+    /// `pendingKind`, seul pont vers le fil audio: lire `kind` (un @Published)
+    /// depuis le bloc temps reel pendant que le fil principal l'ecrit etait une
+    /// course de donnees.
+    @Published private(set) var kind: NoiseKind = .pink {
+        didSet { let k = kind; pendingKind.withLock { $0 = k } }
+    }
+    /// Vrai quand un appel (ou une autre app) a coupe le son. Le son reprend seul
+    /// si iOS l'autorise a la fin de l'interruption.
+    @Published private(set) var interrupted = false
 
     private let engine = AVAudioEngine()
     private var source: AVAudioSourceNode?
+    private let pendingKind = OSAllocatedUnfairLock(initialState: NoiseKind.pink)
+    /// Copie lue par le bloc temps reel uniquement.
+    private var renderKind: NoiseKind = .pink
+    private var observers: [NSObjectProtocol] = []
+
+    /// Ce que fait le moteur face a une notification d'interruption.
+    enum InterruptionAction: Equatable { case pause, resume, forget, ignore }
+
+    /// Decision pure, testable sans session audio.
+    /// Avant, aucune interruption n'etait observee: apres un appel iOS coupait
+    /// le moteur mais `isPlaying` restait vrai, l'ecran affichait "en lecture"
+    /// sur du silence et le minuteur de sommeil continuait a tourner.
+    static func interruptionAction(typeRaw: UInt?, optionsRaw: UInt?,
+                                   isPlaying: Bool, resumePending: Bool) -> InterruptionAction {
+        guard let typeRaw, let type = AVAudioSession.InterruptionType(rawValue: typeRaw) else { return .ignore }
+        switch type {
+        case .began:
+            return isPlaying ? .pause : .ignore
+        case .ended:
+            guard resumePending else { return .ignore }
+            let options = AVAudioSession.InterruptionOptions(rawValue: optionsRaw ?? 0)
+            return options.contains(.shouldResume) ? .resume : .forget
+        @unknown default:
+            return .ignore
+        }
+    }
+
+    init() {
+        let nc = NotificationCenter.default
+        observers.append(nc.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] n in
+            self?.handleInterruption(n)
+        })
+        // Changement de sortie (casque debranche...): AVAudioEngine s'arrete seul.
+        observers.append(nc.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
+            self?.handleConfigurationChange()
+        })
+    }
+
+    private func handleInterruption(_ n: Notification) {
+        let action = Self.interruptionAction(
+            typeRaw: n.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+            optionsRaw: n.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt,
+            isPlaying: isPlaying, resumePending: interrupted)
+        switch action {
+        case .pause:  tearDown(); interrupted = true
+        case .resume: interrupted = false; play(kind)
+        case .forget: interrupted = false
+        case .ignore: break
+        }
+    }
+
+    private func handleConfigurationChange() {
+        guard isPlaying, !engine.isRunning else { return }
+        do { try engine.start() } catch { tearDown(); failed = true }
+    }
 
     // État des générateurs (touché uniquement par le bloc temps réel)
     private var rng: UInt32 = 0x9E3779B9
@@ -87,6 +152,7 @@ final class NoiseEngine: ObservableObject {
     }
 
     func play(_ k: NoiseKind) {
+        interrupted = false
         kind = k
         if isPlaying { return }
         let session = AVAudioSession.sharedInstance()
@@ -99,7 +165,10 @@ final class NoiseEngine: ObservableObject {
         let node = AVAudioSourceNode { [weak self] _, _, frameCount, audioBufferList in
             guard let self else { return noErr }
             let abl = UnsafeMutableAudioBufferListPointer(audioBufferList)
-            let current = self.kind
+            // Jamais bloquant sur le fil audio: si le verrou est pris, on garde
+            // le son precedent pour ce tampon.
+            if let k = self.pendingKind.withLockIfAvailable({ $0 }) { self.renderKind = k }
+            let current = self.renderKind
             for frame in 0..<Int(frameCount) {
                 let v = self.nextSample(current)
                 for buffer in abl {
@@ -120,7 +189,14 @@ final class NoiseEngine: ObservableObject {
         } catch { failed = true }
     }
 
+    /// Arret voulu par l'utilisateur: oublie aussi une reprise en attente, sinon
+    /// la fin d'un appel relancerait un son qu'il a coupe.
     func stop() {
+        interrupted = false
+        tearDown()
+    }
+
+    private func tearDown() {
         guard isPlaying else { return }
         engine.stop()
         if let s = source { engine.detach(s); source = nil }
@@ -134,7 +210,10 @@ final class NoiseEngine: ObservableObject {
         else { play(k) }
     }
 
-    deinit { if isPlaying { engine.stop() } }
+    deinit {
+        observers.forEach { NotificationCenter.default.removeObserver($0) }
+        if isPlaying { engine.stop() }
+    }
 }
 
 // MARK: - Vue
@@ -156,6 +235,7 @@ struct SoundscapeView: View {
             ScrollView {
                 VStack(spacing: 18) {
                     if noise.failed { errorCard }
+                    if noise.interrupted { interruptedCard }
                     soundGrid
                     timerCard
                     volumeCard
@@ -166,6 +246,21 @@ struct SoundscapeView: View {
         }
         .navigationTitle("Sons relaxants").navigationBarTitleDisplayMode(.inline)
         .onDisappear { noise.stop(); cancelTimer() }
+        // Le son peut s'arreter sans bouton (appel, casque): le minuteur suit
+        // l'etat reel au lieu de compter sur du silence.
+        .onChange(of: noise.isPlaying) { _, playing in
+            if !playing { cancelTimer() }
+            else if timerMinutes > 0 && sleepTask == nil { armTimer() }
+        }
+    }
+
+    private var interruptedCard: some View {
+        Label("Son coupé par un appel ou une autre app. Il reprend seul si iOS le permet, sinon relance-le.",
+              systemImage: "phone.arrow.down.left")
+            .font(.subheadline).foregroundStyle(Theme.textSecondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(Theme.bg2, in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
     }
 
     private var errorCard: some View {

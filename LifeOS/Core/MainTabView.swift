@@ -117,6 +117,7 @@ struct MainTabView: View {
     #else
     @State private var catPath: [AppCategory] = []
     #endif
+    @State private var routedTool: CategoryTool?
     @AppStorage(AppStorageKeys.secondTab) private var secondTabRaw = SecondTab.wakeup.rawValue
     @State private var showAIAssistant = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -208,6 +209,8 @@ struct MainTabView: View {
         .fullScreenCover(isPresented: $showAIAssistant) {
             AIAssistantView(prefill: aiPrefill)
         }
+        // Outil ouvert par une notification (rappel Trilingo...).
+        .sheet(item: $routedTool) { t in NavigationStack { t.dest() } }
         #if DEBUG
         .onAppear {
             if let t = Self.shotTab { tab = t }
@@ -222,6 +225,7 @@ struct MainTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenModule)) { notif in
             if let module = notif.userInfo?["module"] as? String,
                let cat = AppCategory(rawValue: module) {
+                let tool = (notif.userInfo?["tool"] as? String).flatMap { ToolRoute.tool($0, in: cat) }
                 let isAIOpen = showAIAssistant
                 showAIAssistant = false
                 // Attendre la fin de l'animation de dismiss du fullScreenCover
@@ -230,6 +234,7 @@ struct MainTabView: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                     tab = .categories
                     catPath = [cat]
+                    if let tool { routedTool = tool }
                 }
             }
         }
@@ -355,7 +360,7 @@ private struct FitnessWidgetSyncer: View {
                 try? await Task.sleep(for: .milliseconds(300))
                 sync()
             }
-            .onChange(of: sets.count) { _, _ in sync() }
+            .onChange(of: sets.prefix(300).map { "\($0.date.timeIntervalSince1970)|\($0.exercise)|\($0.weightKg)|\($0.reps)|\($0.kind)" }) { _, _ in sync() }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in sync() }
     }
 

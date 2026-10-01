@@ -710,17 +710,9 @@ struct ProfileView: View {
         do { try ctx.save() } catch { AppLog.data.error("ProfileView toggleHabit save failed: \(error.localizedDescription, privacy: .public)") }
     }
 
-    private func habitStreak(_ habit: Habit) -> Int {
-        let cal = Calendar.current
-        var streak = 0
-        var date = cal.startOfDay(for: .now)
-        while habit.completions.contains(where: { cal.isDate($0.date, inSameDayAs: date) }) {
-            streak += 1
-            guard let prev = cal.date(byAdding: .day, value: -1, to: date) else { break }
-            date = prev
-        }
-        return streak
-    }
+    /// Une seule regle de serie pour tout l'app : les jours non actifs ne cassent pas
+    /// la serie (audit du 1er oct.). Ce calcul local la cassait chaque jour de repos.
+    private func habitStreak(_ habit: Habit) -> Int { ProductivityRules.habitStreak(habit) }
 
     private var habitsEmptyState: some View {
         VStack(spacing: 16) {

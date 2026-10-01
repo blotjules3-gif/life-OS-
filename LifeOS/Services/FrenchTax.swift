@@ -83,6 +83,14 @@ enum FrenchTax {
         let marginalRate: Double
     }
 
+    /// Parts pour un foyer : une demi-part pour chacun des deux premiers enfants, une
+    /// part entiere a partir du troisieme (art. 194 du CGI). Cas particuliers (parent
+    /// isole, invalidite) non couverts : le reglage manuel des parts reste disponible.
+    static func parts(status: Status, children: Int) -> Double {
+        let c = max(0, children)
+        return status.baseParts + 0.5 * Double(min(c, 2)) + Double(max(0, c - 2))
+    }
+
     /// Impot du, quotient familial plafonne et decote comprise.
     ///
     /// `parts` est le nombre TOTAL de parts, base comprise: 2 pour un couple
@@ -103,7 +111,8 @@ enum FrenchTax {
         let extraHalfParts = ((totalParts - base) / 0.5).rounded()
         let maxAdvantage = extraHalfParts * halfPartCap
         let advantage = max(0, atBase - withParts)
-        let capped = advantage > maxAdvantage ? atBase - maxAdvantage : withParts
+        let isCapped = advantage > maxAdvantage
+        let capped = isCapped ? atBase - maxAdvantage : withParts
         let capLoss = (capped - withParts).rounded()
 
         // Decote: elle efface une partie de l'impot des revenus modestes.
@@ -117,6 +126,8 @@ enum FrenchTax {
                       beforeDecote: capped.rounded(),
                       decote: decote.rounded(),
                       total: max(0, capped - decote).rounded(),
-                      marginalRate: marginalRate(perPartIncome: income / totalParts))
+                      // Plafonne : l'impot suit le bareme des parts de base, la tranche aussi
+                      // (couple, 3 parts, 250 000 EUR : 41 %, pas 30 %).
+                      marginalRate: marginalRate(perPartIncome: income / (isCapped ? base : totalParts)))
     }
 }

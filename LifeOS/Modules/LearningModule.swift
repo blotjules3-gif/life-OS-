@@ -149,7 +149,7 @@ struct MicroLearningView: View {
         ("Pic-fin", "On juge une expérience sur son pic émotionnel et sa fin, pas sa moyenne."),
         ("Dette technique", "Les raccourcis d'aujourd'hui sont les ralentissements de demain. Refactore tôt.")
     ]
-    private var todayFact: (String, String) { facts[Calendar.current.ordinality(of: .day, in: .era, for: .now)! % facts.count] }
+    private var todayFact: (String, String) { facts[(Calendar.current.ordinality(of: .day, in: .era, for: .now) ?? 0) % facts.count] }
     var body: some View {
         ZStack {
             Theme.background
@@ -160,7 +160,8 @@ struct MicroLearningView: View {
                     Text(todayFact.0).font(.title2.bold()).foregroundStyle(Theme.textPrimary).multilineTextAlignment(.center)
                     Text(todayFact.1).font(.body).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
                 }.card()
-                Text("Reviens demain pour une nouvelle notion.").font(.caption).foregroundStyle(Theme.textSecondary)
+                // Peu de fiches qui tournent en boucle: on ne promet pas du neuf chaque jour.
+                Text("Une notion par jour, parmi \(facts.count) qui reviennent en boucle.").font(.caption).foregroundStyle(Theme.textSecondary)
                 Spacer()
             }.padding()
         }
@@ -188,7 +189,8 @@ struct BookSummariesView: View {
                             VStack(alignment: .leading, spacing: 6) {
                                 HStack { Text(b.title).font(.headline).foregroundStyle(Theme.textPrimary); Spacer(); Text(String(repeating: "★", count: max(0, b.rating))).foregroundStyle(.learnTint).font(.caption) }
                                 if !b.author.isEmpty { Text(b.author).font(.caption).foregroundStyle(Theme.textSecondary) }
-                                if !b.keyIdeas.isEmpty { Text(b.keyIdeas).font(.subheadline).foregroundStyle(Theme.textPrimary.opacity(0.9)) }
+                                if BookSummaryOrigin.isAI(b.keyIdeas) { Label("Synthèse du coach, non vérifiée", systemImage: "infinity").font(.caption2).foregroundStyle(Theme.warning) }
+                                if !b.keyIdeas.isEmpty { Text(BookSummaryOrigin.body(b.keyIdeas)).font(.subheadline).foregroundStyle(Theme.textPrimary.opacity(0.9)) }
                             }.frame(maxWidth: .infinity, alignment: .leading).card()
                                 .contextMenu { Button(role: .destructive) { ctx.delete(b) } label: { Label("Supprimer", systemImage: "trash") } }
                         }
@@ -285,9 +287,11 @@ struct BookAISheet: View {
     }
 
     private func save() {
+        // Note 0 (aucune etoile): l'utilisateur n'a rien note. Et le texte porte la
+        // marque d'origine, sinon la synthese du modele passait pour son resume.
         let b = BookSummary(title: title.trimmingCharacters(in: .whitespaces),
                             author: author.trimmingCharacters(in: .whitespaces),
-                            keyIdeas: ideas)
+                            keyIdeas: BookSummaryOrigin.markAI(ideas), rating: 0)
         ctx.insert(b)
         do { try ctx.save() } catch {
             AppLog.data.error("resume livre non sauvegarde: \(error.localizedDescription, privacy: .public)")
@@ -324,6 +328,7 @@ struct SkillPlanView: View {
     @AppStorage(AppStorageKeys.skillPlanSteps) private var stepsRaw = ""
     @AppStorage(AppStorageKeys.skillPlanDone) private var doneRaw = ""
     @State private var newStep = ""
+    @State private var duplicateWarning = false
 
     private var steps: [String] { stepsRaw.split(separator: "\n").map(String.init) }
     private var done: Set<String> { Set(doneRaw.split(separator: "\n").map(String.init)) }
@@ -341,11 +346,15 @@ struct SkillPlanView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack { SectionHeader(title: "Jalons", subtitle: "\(done.count)/\(steps.count) faits"); Spacer() }
                         if !steps.isEmpty { ProgressView(value: Double(done.count), total: Double(max(1, steps.count))).tint(.learnTint) }
-                        ForEach(steps, id: \.self) { s in
+                        // Id = position: deux jalons au meme texte (anciennes donnees) ne
+                        // partagent plus l'id ForEach.
+                        ForEach(Array(steps.enumerated()), id: \.offset) { i, s in
                             Button { toggle(s) } label: {
                                 HStack { Image(systemName: done.contains(s) ? "checkmark.circle.fill" : "circle").foregroundStyle(done.contains(s) ? Theme.success : Theme.textSecondary); Text(s).strikethrough(done.contains(s)).foregroundStyle(Theme.textPrimary); Spacer() }
                             }
+                            .contextMenu { Button(role: .destructive) { removeStep(at: i) } label: { Label("Supprimer", systemImage: "trash") } }
                         }
+                        if duplicateWarning { Text("Ce jalon existe déjà.").font(.caption).foregroundStyle(Theme.warning) }
                         HStack {
                             TextField("Ajouter un jalon…", text: $newStep).textFieldStyle(.roundedBorder).onSubmit(addStep)
                             Button(action: addStep) { Image(systemName: "plus.circle.fill").foregroundStyle(.learnTint) }.disabled(newStep.isEmpty)
@@ -358,10 +367,55 @@ struct SkillPlanView: View {
         }
         .navigationTitle("Plan de compétence").navigationBarTitleDisplayMode(.inline)
     }
-    private func addStep() { guard !newStep.isEmpty else { return }; stepsRaw += (stepsRaw.isEmpty ? "" : "\n") + newStep; newStep = "" }
+    private func addStep() {
+        guard let next = SkillPlanSteps.adding(newStep, to: steps) else { duplicateWarning = !newStep.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty; return }
+        stepsRaw = next.joined(separator: "\n"); newStep = ""; duplicateWarning = false
+    }
+    private func removeStep(at i: Int) {
+        let r = SkillPlanSteps.removing(at: i, steps: steps, done: done)
+        stepsRaw = r.steps.joined(separator: "\n"); doneRaw = r.done.sorted().joined(separator: "\n")
+    }
     private func toggle(_ s: String) {
         var d = done
         if d.contains(s) { d.remove(s) } else { d.insert(s) }
         doneRaw = d.joined(separator: "\n")
+    }
+}
+
+/// Les jalons sont stockes en texte (AppStorage): l'etat fait est indexe par texte,
+/// donc on refuse les doublons et on nettoie l'etat a la suppression.
+enum SkillPlanSteps {
+    /// Nil si vide ou deja present (meme texte, sans tenir compte des espaces autour).
+    static func adding(_ raw: String, to steps: [String]) -> [String]? {
+        let t = raw.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "\n", with: " ")
+        guard !t.isEmpty, !steps.contains(t) else { return nil }
+        return steps + [t]
+    }
+
+    /// Retire le jalon a la position i; son etat fait ne part que si plus aucun jalon ne porte ce texte.
+    static func removing(at i: Int, steps: [String], done: Set<String>) -> (steps: [String], done: Set<String>) {
+        guard steps.indices.contains(i) else { return (steps, done) }
+        var s = steps
+        let removed = s.remove(at: i)
+        var d = done
+        if !s.contains(removed) { d.remove(removed) }
+        return (s, d)
+    }
+}
+
+/// Marque d'origine d'un resume genere par le coach, sans changer le modele SwiftData.
+enum BookSummaryOrigin {
+    static let aiMarker = "[Synthèse de ton coach, non vérifiée]"
+
+    static func markAI(_ ideas: String) -> String {
+        isAI(ideas) ? ideas : aiMarker + "\n" + ideas
+    }
+
+    static func isAI(_ keyIdeas: String) -> Bool { keyIdeas.hasPrefix(aiMarker) }
+
+    /// Texte affiche sans la marque (elle est rendue en badge a part).
+    static func body(_ keyIdeas: String) -> String {
+        guard isAI(keyIdeas) else { return keyIdeas }
+        return String(keyIdeas.dropFirst(aiMarker.count)).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

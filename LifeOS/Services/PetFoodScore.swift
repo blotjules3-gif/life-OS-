@@ -309,6 +309,15 @@ extension ProductScore {
             confidence = .init(level: .low, reason: "Il manque \(missingWhat) : note provisoire, nutrition comptée à mi-points.")
         }
         comps.append(additives)
+        if !complete {
+            // Une friandise a 100 n'est pas un bon repas : la note ne juge que ce qu'elle contient.
+            comps.append(Component(name: "Limites", points: nil, max: 0, details: [
+                id.kind == .treat
+                    ? "Friandise : note sur la composition et les additifs seulement. Ce n'est pas un aliment principal, elle ne couvre pas les besoins d'un repas."
+                    : "Aliment complémentaire : note sur la composition et les additifs seulement. Il ne couvre pas seul les besoins de l'animal.",
+                "Pas comparé aux repères FEDIAF d'un aliment complet.",
+            ]))
+        }
         var value = Int(total.rounded())
         if !toxic.isEmpty || flags.contains(where: { $0.level == .high }), value > highRiskCap {
             comps.append(Component(name: "Plafond", points: nil, max: 0, details: ["Ingrédient toxique ou additif à risque élevé : note plafonnée à \(highRiskCap)/100 au lieu de \(value)"]))
@@ -316,7 +325,8 @@ extension ProductScore {
         }
         let stage = id.lifeStage.map { $0 == .young ? (sp == .cat ? "chaton" : "chiot") : $0 == .senior ? "senior" : "adulte" }
         return Result(outcome: .scored(min(100, max(0, value))),
-                      method: "\(petMethodVersion) · \(sp.rawValue)\(stage.map { " · \($0)" } ?? "")",
+                      method: "\(petMethodVersion) · \(sp.rawValue)\(stage.map { " · \($0)" } ?? "")"
+                              + (id.kind == .treat ? " · friandise" : id.kind == .complementary ? " · complémentaire" : ""),
                       components: comps, flags: flags, missing: nutritionMissing.map { [$0] } ?? [], confidence: confidence)
     }
 

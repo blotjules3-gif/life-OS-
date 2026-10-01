@@ -114,12 +114,13 @@ struct PortfolioView: View {
         defer { refreshing = false }
         var problems: [String] = []
         var updated = 0
+        var notFound: [String] = []
 
         if !cryptoSymbols.isEmpty {
             switch await PriceService.cryptoPrices(symbols: cryptoSymbols, force: force) {
             case .success(let prices):
                 for h in holdings where h.kind == "Crypto" {
-                    if let p = prices[h.symbol.lowercased()] { h.currentPrice = p; updated += 1 }
+                    if let p = prices[h.symbol.lowercased()] { h.currentPrice = p; updated += 1 } else { notFound.append(h.symbol) }
                 }
             case .failure(let e):
                 problems.append("Crypto : \(e)")
@@ -130,7 +131,7 @@ struct PortfolioView: View {
             switch await StockService.pricesInEUR(symbols: stockSymbols, force: force) {
             case .success(let prices):
                 for h in holdings where h.kind != "Crypto" {
-                    if let p = prices[h.symbol.uppercased()] { h.currentPrice = p; updated += 1 }
+                    if let p = prices[h.symbol.uppercased()] { h.currentPrice = p; updated += 1 } else { notFound.append(h.symbol) }
                 }
             case .failure(let e):
                 problems.append("Actions : \(e)")
@@ -145,6 +146,8 @@ struct PortfolioView: View {
             }
             lastRefresh = .now
         }
+        // Un symbole introuvable garde son prix manuel : le dire, sinon sa ligne semble a jour.
+        if !notFound.isEmpty { problems.append("Cours introuvable, prix saisi gardé : \(notFound.joined(separator: ", "))") }
         priceError = problems.isEmpty ? nil : problems.joined(separator: " · ")
     }
 }
@@ -409,6 +412,14 @@ struct PropertyEditor: View {
         pricePerM2 = draft?.pricePerM2
     }
 
+    /// Premier montant illisible, ou nil.
+    private var propertyInputError: String? {
+        for (label, raw) in [("Valeur", value), ("Loyer", rent), ("Charges", charges), ("Capital restant", loanRemaining), ("Mensualité", loanPayment)] {
+            if let m = AmountInput.parse(raw, rules: .optional).message { return "\(label) : \(m)" }
+        }
+        return nil
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -422,6 +433,9 @@ struct PropertyEditor: View {
                 if let pricePerM2 {
                     LabeledContent("Prix au m²", value: "\(Int(pricePerM2.rounded())) €")
                 }
+                if let propertyInputError {
+                    Text(propertyInputError).font(.caption).foregroundStyle(Theme.warning)
+                }
                 if rent.isEmpty {
                     Text("L'annonce ne donne pas de loyer. Saisis-le toi-même : un loyer estimé fausserait le cashflow et le rendement.")
                         .font(.caption).foregroundStyle(Theme.textSecondary)
@@ -431,8 +445,11 @@ struct PropertyEditor: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
-                    ctx.insert(Property(name: name, value: Double(value) ?? 0, monthlyRent: Double(rent) ?? 0, monthlyCharges: Double(charges) ?? 0, loanRemaining: Double(loanRemaining) ?? 0, loanPayment: Double(loanPayment) ?? 0)); dismiss()
-                }.disabled(name.isEmpty) }
+                    // Montants lus comme partout ailleurs ("1 200", "1 234,50") : `Double(x) ?? 0`
+                    // transformait une saisie collee en 0 EUR sans rien dire.
+                    func v(_ s: String) -> Double { AmountInput.parse(s, rules: .optional).value ?? 0 }
+                    ctx.insert(Property(name: name, value: v(value), monthlyRent: v(rent), monthlyCharges: v(charges), loanRemaining: v(loanRemaining), loanPayment: v(loanPayment))); dismiss()
+                }.disabled(name.isEmpty || propertyInputError != nil) }
             }
         }
     }
@@ -518,6 +535,7 @@ struct ListingImportSheet: View {
 struct TaxSimulatorView: View {
     @State private var income = 35000.0
     @State private var parts = 1.0
+    @State private var children = 0
     @State private var status: FrenchTax.Status = .single
 
     /// Le nombre de parts ne peut pas descendre sous la base de la situation:
@@ -536,17 +554,26 @@ struct TaxSimulatorView: View {
                         }
                         .pickerStyle(.segmented)
                         VStack(alignment: .leading) {
-                            HStack { Text("Revenu net imposable"); Spacer()
-                                Text("\(Int(income)) €").bold().foregroundStyle(.investTint) }
-                            Slider(value: $income, in: 10000...200000, step: 1000).tint(.investTint)
+                            HStack {
+                                Text("Revenu net imposable"); Spacer()
+                                // Montant exact au clavier : le curseur seul n'allait que de
+                                // 10 000 a 200 000 EUR par pas de 1 000.
+                                TextField("Revenu", value: $income, format: .number.precision(.fractionLength(0)))
+                                    .keyboardType(.numberPad).multilineTextAlignment(.trailing)
+                                    .frame(maxWidth: 120).bold().foregroundStyle(.investTint)
+                                Text("€").foregroundStyle(.investTint)
+                            }
+                            Slider(value: Binding(get: { min(max(income, 0), 300_000) }, set: { income = $0 }),
+                                   in: 0...300_000, step: 500).tint(.investTint)
                         }
+                        Stepper("Enfants à charge : \(children)", value: $children, in: 0...10)
+                            .onChange(of: children) { _, c in parts = FrenchTax.parts(status: status, children: c) }
+                            .onChange(of: status) { _, s in parts = FrenchTax.parts(status: s, children: children) }
                         VStack(alignment: .leading) {
                             HStack { Text("Parts fiscales"); Spacer()
                                 Text(String(format: "%.1f", effectiveParts)).bold().foregroundStyle(.investTint) }
-                            Slider(value: $parts, in: 1...5, step: 0.5).tint(.investTint)
-                            Text(status == .couple
-                                 ? "2 parts pour le couple, puis une demi-part par enfant."
-                                 : "1 part, puis une demi-part par enfant.")
+                            Slider(value: $parts, in: 1...8, step: 0.5).tint(.investTint)
+                            Text("Une demi-part pour chacun des 2 premiers enfants, une part entière à partir du 3e. Ajuste les parts à la main pour un cas particulier (parent isolé, invalidité).")
                                 .font(.caption2).foregroundStyle(Theme.textSecondary)
                         }
                     }.card()

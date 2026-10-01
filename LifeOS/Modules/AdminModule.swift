@@ -50,7 +50,7 @@ struct DocVaultView: View {
                                     }.card(padding: 12)
                                         .contentShape(Rectangle())
                                         .onTapGesture { reading = d }
-                                        .contextMenu { Button(role: .destructive) { NotificationManager.shared.cancel(id: ReminderIDs.document(title: d.title)); for page in d.allPages { ImageStore.delete(page) }; ctx.delete(d) } label: { Label("Supprimer", systemImage: "trash") } }
+                                        .contextMenu { Button(role: .destructive) { cancelReminder(d); for page in d.allPages { ImageStore.delete(page) }; ctx.delete(d) } label: { Label("Supprimer", systemImage: "trash") } }
                                 }
                             }
                         }
@@ -92,6 +92,15 @@ struct DocVaultView: View {
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { DocEditor() }
     }
+
+    /// N'annule que les rappels qu'aucun autre document n'utilise encore:
+    /// supprimer un "Assurance" faisait taire le rappel de l'autre "Assurance".
+    private func cancelReminder(_ d: DocVault) {
+        let others = docs.filter { $0 !== d }.map { ReminderIDs.documentIDs(title: $0.title, expiry: $0.expiry) }
+        for id in ReminderIDs.cancellable(ReminderIDs.documentIDs(title: d.title, expiry: d.expiry), stillUsedBy: others) {
+            NotificationManager.shared.cancel(id: id)
+        }
+    }
 }
 
 struct DocEditor: View {
@@ -117,7 +126,7 @@ struct DocEditor: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
                     ctx.insert(DocVault(title: title, category: category, filename: filename, expiry: hasExpiry ? expiry : nil, note: note))
-                    if hasExpiry { NotificationManager.shared.schedule(id: ReminderIDs.document(title: title), title: "Document expire bientôt", body: "\(title) expire le \(expiry.formatted(date: .abbreviated, time: .omitted))", at: Calendar.current.date(byAdding: .day, value: -30, to: expiry) ?? expiry) }
+                    if hasExpiry { NotificationManager.shared.schedule(id: ReminderIDs.document(title: title, expiry: expiry), title: "Document expire bientôt", body: "\(title) expire le \(expiry.formatted(date: .abbreviated, time: .omitted))", at: Calendar.current.date(byAdding: .day, value: -30, to: expiry) ?? expiry) }
                     dismiss()
                 }.disabled(title.isEmpty) }
             }
@@ -145,10 +154,10 @@ struct DeadlinesView: View {
                                 Image(systemName: iconFor(d.kind)).foregroundStyle(Color.adminTint).frame(width: 30)
                                 VStack(alignment: .leading) { Text(d.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary); Text(d.kind).font(.caption).foregroundStyle(Theme.textSecondary) }
                                 Spacer()
-                                let days = Calendar.current.dateComponents([.day], from: .now, to: d.date).day ?? 0
+                                let days = DeadlineMath.daysUntil(d.date, from: .now)
                                 Text(days == 0 ? "Aujourd'hui" : "J-\(days)").font(.subheadline.bold()).foregroundStyle(days <= 7 ? Theme.warning : Theme.textSecondary)
                             }.card(padding: 12)
-                                .contextMenu { Button(role: .destructive) { NotificationManager.shared.cancel(id: ReminderIDs.deadline(title: d.title)); ctx.delete(d) } label: { Label("Supprimer", systemImage: "trash") } }
+                                .contextMenu { Button(role: .destructive) { cancelReminder(d); ctx.delete(d) } label: { Label("Supprimer", systemImage: "trash") } }
                         }
                     }
                 }.padding(Theme.pad)
@@ -157,6 +166,13 @@ struct DeadlinesView: View {
         .navigationTitle("Échéances").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { DeadlineEditor() }
+    }
+    /// Meme regle que le coffre: on garde le rappel d'une autre echeance au meme titre.
+    private func cancelReminder(_ d: Deadline) {
+        let others = deadlines.filter { $0 !== d }.map { ReminderIDs.deadlineIDs(title: $0.title, date: $0.date) }
+        for id in ReminderIDs.cancellable(ReminderIDs.deadlineIDs(title: d.title, date: d.date), stillUsedBy: others) {
+            NotificationManager.shared.cancel(id: id)
+        }
     }
     private func iconFor(_ k: String) -> String { switch k { case "Impôts": return "eurosign.circle.fill"; case "Assurance": return "shield.fill"; case "Abonnement": return "repeat.circle.fill"; default: return "calendar" } }
 }
@@ -178,11 +194,21 @@ struct DeadlineEditor: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
                     ctx.insert(Deadline(title: title, date: date, kind: kind))
-                    if remind { NotificationManager.shared.schedule(id: ReminderIDs.deadline(title: title), title: "Échéance : \(title)", body: "Dans 7 jours.", at: Calendar.current.date(byAdding: .day, value: -7, to: date) ?? date) }
+                    if remind { NotificationManager.shared.schedule(id: ReminderIDs.deadline(title: title, date: date), title: "Échéance : \(title)", body: "Dans 7 jours.", at: Calendar.current.date(byAdding: .day, value: -7, to: date) ?? date) }
                     dismiss()
                 }.disabled(title.isEmpty) }
             }
         }
+    }
+}
+
+/// Compte a rebours en JOURS DE CALENDRIER. Avant: de maintenant vers une
+/// date qui garde l'heure de creation, donc une echeance de demain affichait
+/// "Aujourd'hui" des que l'heure de creation etait passee.
+enum DeadlineMath {
+    static func daysUntil(_ date: Date, from now: Date, calendar: Calendar = .current) -> Int {
+        let a = calendar.startOfDay(for: now), b = calendar.startOfDay(for: date)
+        return calendar.dateComponents([.day], from: a, to: b).day ?? 0
     }
 }
 

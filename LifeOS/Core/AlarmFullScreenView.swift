@@ -51,7 +51,8 @@ struct AlarmFullScreenView: View {
                     .foregroundStyle(.white.opacity(0.55))
                     .padding(.top, 6)
 
-                Text("Briefing automatique dans \(alarm.secondsLeft)s")
+                // La sonnerie dure 10 min puis se met en répétition (plus de briefing auto après 10 s).
+                Text("Répétition automatique dans \(alarm.secondsLeft / 60):\(String(format: "%02d", alarm.secondsLeft % 60))")
                     .font(.system(size: briefingSize, weight: .medium).monospacedDigit())
                     .foregroundStyle(.white.opacity(0.35))
                     .padding(.top, 18)

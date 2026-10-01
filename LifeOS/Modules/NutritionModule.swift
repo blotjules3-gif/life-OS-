@@ -424,14 +424,37 @@ enum RecipeEngine {
         Recipe(name: "Wrap poulet", ingredients: ["tortilla","poulet","salade","tomate","fromage"])
     ]
     static func suggest(from have: [String]) -> [Recipe] {
-        let lower = have.map { $0.lowercased() }
+        let haveTokens = have.map(tokens)
         return db.map { r in
             var c = r
-            c.matched = r.ingredients.filter { ing in lower.contains(where: { $0.contains(ing) || ing.contains($0) }) }.count
+            c.matched = r.ingredients.filter { ing in
+                let need = tokens(ing)
+                return haveTokens.contains { containsPhrase(need, in: $0) }
+            }.count
             return c
         }
         .filter { $0.matched >= 2 }
         .sorted { Double($0.matched)/Double($0.ingredients.count) > Double($1.matched)/Double($1.ingredients.count) }
+    }
+
+    /// Mots entiers, sans accents ni ligatures, au singulier simple: la sous-chaine
+    /// dans les deux sens comptait "pomme" pour "pomme de terre", et "œuf" ne
+    /// correspondait pas a "oeuf".
+    static func tokens(_ text: String) -> [String] {
+        let folded = text.lowercased()
+            .replacingOccurrences(of: "œ", with: "oe").replacingOccurrences(of: "æ", with: "ae")
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: Locale(identifier: "fr_FR"))
+        return folded.split { !$0.isLetter }.map { part in
+            var word = String(part)
+            if word.count > 3, let last = word.last, last == "s" || last == "x" { word.removeLast() }
+            return word
+        }
+    }
+
+    /// Vrai si l'ingredient (suite de mots) apparait tel quel, mots consecutifs, dans l'article.
+    static func containsPhrase(_ need: [String], in have: [String]) -> Bool {
+        guard !need.isEmpty, need.count <= have.count else { return false }
+        return (0...(have.count - need.count)).contains { Array(have[$0..<($0 + need.count)]) == need }
     }
 }
 
@@ -690,7 +713,7 @@ struct HydrationView: View {
         }
         .navigationTitle("Hydratation").navigationBarTitleDisplayMode(.inline)
         .task { syncWaterToContext() }
-        .onChange(of: entries.count) { _, _ in syncWaterToContext() }
+        .onChange(of: entries.map { "\($0.date.timeIntervalSince1970)|\($0.amountML)" }) { _, _ in syncWaterToContext() }
     }
     /// Prises du jour, la plus recente en premier.
     private var todayEntries: [WaterEntry] {

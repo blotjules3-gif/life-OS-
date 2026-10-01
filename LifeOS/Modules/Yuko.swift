@@ -1048,7 +1048,9 @@ struct ComparePicker: View {
     var body: some View {
         NavigationStack {
             List(candidates) { p in
-                NavigationLink { CompareView(a: current, b: p) } label: { ProductRow(product: p) }
+                // `current` est deja la fiche completee ; le candidat vient de l'historique,
+                // brut : on le complete pareil (etiquette lue, espece choisie).
+                NavigationLink { CompareView(a: current, b: ProductStore.shared.enriched(p)) } label: { ProductRow(product: p) }
                     .listRowBackground(Color.clear).listRowSeparator(.hidden)
             }
             .listStyle(.plain)

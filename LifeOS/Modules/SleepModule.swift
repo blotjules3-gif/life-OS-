@@ -140,10 +140,16 @@ struct PowerNapView: View {
                                 NotificationManager.shared.cancel(id: "nap")
                             } else {
                                 engine.resume()
-                                NotificationManager.shared.scheduleAfter(
-                                    id: "nap", title: "Réveil",
-                                    body: "Ta sieste est terminée, debout en douceur !",
-                                    seconds: TimeInterval(max(1, engine.remaining)))
+                                // resume() ne fait rien si la sieste est deja finie:
+                                // reprogrammer quand meme posait un faux "Réveil" 1 s plus tard.
+                                if engine.isRunning {
+                                    NotificationManager.shared.scheduleAfter(
+                                        id: "nap", title: "Réveil",
+                                        body: "Ta sieste est terminée, debout en douceur !",
+                                        seconds: TimeInterval(max(1, engine.remaining)))
+                                } else {
+                                    started = false
+                                }
                             }
                         }
                         PrimaryButton(title: "Stop", icon: "stop.fill", tint: Theme.bg2) {
@@ -162,6 +168,9 @@ struct PowerNapView: View {
             // pendant une sieste en cours affichait "Demarrer la sieste" alors que le
             // compte a rebours tournait toujours, et le bouton en relancait une seconde.
             started = engine.isRunning || engine.remaining > 0
+            // Fin de sieste ecran ouvert: revenir a l'etat de depart au lieu de
+            // laisser un bouton "Reprendre" sur une sieste terminee.
+            engine.onFinish = { started = false }
             engine.refresh()
         }
     }
@@ -274,7 +283,11 @@ struct DreamCard: View {
                         .foregroundStyle(.sleepTint)
                 }
                 Spacer()
-                Button(role: .destructive) { ctx.delete(dream) } label: { Image(systemName: "trash") }
+                Button(role: .destructive) {
+                    // Le .m4a restait dans Documents pour toujours.
+                    AudioRecorder.removeFile(named: dream.audioFilename)
+                    ctx.delete(dream)
+                } label: { Image(systemName: "trash") }
                     .foregroundStyle(Theme.danger.opacity(0.8))
             }
         }
@@ -295,6 +308,7 @@ struct DreamEditor: View {
     @State private var text = ""
     @State private var mood = 3
     @State private var recorder = AudioRecorder()
+    @State private var saved = false
 
     var body: some View {
         NavigationStack {
@@ -305,13 +319,17 @@ struct DreamEditor: View {
                 }
                 Section("Note vocale") {
                     Button {
-                        recorder.isRecording ? recorder.stop() : recorder.start()
+                        if recorder.isRecording { recorder.stop() } else { Task { await recorder.start() } }
                     } label: {
                         Label(recorder.isRecording ? "Arrêter l'enregistrement" : "Enregistrer ma voix",
                               systemImage: recorder.isRecording ? "stop.circle.fill" : "mic.circle.fill")
                             .foregroundStyle(recorder.isRecording ? Theme.danger : .sleepTint)
                     }
-                    if recorder.filename != nil { Text("Note vocale enregistrée").font(.caption).foregroundStyle(Theme.success) }
+                    if let error = recorder.errorMessage {
+                        Text(error).font(.caption).foregroundStyle(Theme.danger)
+                    } else if recorder.filename != nil && !recorder.isRecording {
+                        Text("Note vocale enregistrée").font(.caption).foregroundStyle(Theme.success)
+                    }
                 }
                 Section("Ressenti") {
                     Stepper("Intensité : \(mood)/5", value: $mood, in: 1...5)
@@ -322,27 +340,42 @@ struct DreamEditor: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { recorder.cancel(); dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Enregistrer") {
+                        if recorder.isRecording { recorder.stop() }
+                        saved = true
                         ctx.insert(DreamEntry(title: title, text: text, mood: mood, audioFilename: recorder.filename))
                         dismiss()
                     }
                 }
             }
+            // Fermeture par glissement: sans ca, la note vocale restait sur
+            // le disque sans aucun reve pour la pointer.
+            .onDisappear { if !saved { recorder.cancel() } }
         }
     }
 }
 
 /// Enregistreur audio minimal pour le journal de rêves.
+@MainActor
 @Observable
 final class AudioRecorder {
     static var docsURL: URL { AppPaths.documents }
     private var recorder: AVAudioRecorder?
     var isRecording = false
     var filename: String?
+    /// Message montre a la place d'un faux "Note vocale enregistrée".
+    var errorMessage: String?
 
-    func start() {
-        let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.playAndRecord, mode: .default)
-        try? session.setActive(true)
+    /// Avant: permission jamais demandee, erreurs avalees par try?, et l'ecran
+    /// disait "enregistrée" pour un fichier qui n'existait pas.
+    func start() async {
+        errorMessage = nil
+        guard await AVAudioApplication.requestRecordPermission() else {
+            errorMessage = "Micro refusé. Autorise LifeOS dans Réglages › Confidentialité › Micro."
+            return
+        }
+        // Un second enregistrement remplace le premier: l'ancien fichier
+        // restait orphelin sur le disque.
+        discardCurrent()
         let name = "dream-\(Int(Date().timeIntervalSince1970)).m4a"
         let url = Self.docsURL.appendingPathComponent(name)
         let settings: [String: Any] = [
@@ -351,31 +384,73 @@ final class AudioRecorder {
             AVNumberOfChannelsKey: 1,
             AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue
         ]
-        recorder = try? AVAudioRecorder(url: url, settings: settings)
-        recorder?.record()
-        isRecording = true
-        filename = name
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playAndRecord, mode: .default)
+            try session.setActive(true)
+            let r = try AVAudioRecorder(url: url, settings: settings)
+            guard r.record() else {
+                errorMessage = "L'enregistrement n'a pas pu démarrer."
+                Self.removeFile(named: name)
+                return
+            }
+            recorder = r
+            isRecording = true
+            filename = name
+        } catch {
+            errorMessage = "L'enregistrement n'a pas pu démarrer : \(error.localizedDescription)"
+            Self.removeFile(named: name)
+        }
     }
     func stop() { recorder?.stop(); isRecording = false }
-    func cancel() {
-        recorder?.stop(); recorder?.deleteRecording(); isRecording = false; filename = nil
+    func cancel() { discardCurrent() }
+
+    private func discardCurrent() {
+        recorder?.stop()
+        recorder = nil
+        Self.removeFile(named: filename)
+        isRecording = false
+        filename = nil
+    }
+
+    /// Efface une note vocale du disque. Sans nom ou fichier absent: rien.
+    nonisolated static func removeFile(named name: String?, in dir: URL = AppPaths.documents) {
+        guard let name, !name.isEmpty else { return }
+        let url = dir.appendingPathComponent(name)
+        guard FileManager.default.fileExists(atPath: url.path) else { return }
+        try? FileManager.default.removeItem(at: url)
     }
 }
 
 // MARK: - Score de récupération
 
-struct RecoveryScoreView: View {
-    @State private var hrv: Double?
-    @State private var rhr: Double?
-    @State private var loading = true
+/// Score de recuperation, pur et testable.
+enum RecoveryScore {
+    /// Au-dela, la mesure n'est plus celle de ce matin: pas de score "du jour".
+    static let maxAge: TimeInterval = 36 * 3600
 
-    private var score: Int? {
-        guard let hrv, let rhr else { return nil }
-        // Heuristique simple : HRV élevée + FC repos basse => meilleure récup.
-        let hrvScore = min(100, max(0, (hrv / 80.0) * 100))
-        let rhrScore = min(100, max(0, (1 - (rhr - 40) / 50) * 100))
+    static func isFresh(_ date: Date, now: Date = .now) -> Bool {
+        now.timeIntervalSince(date) <= maxAge
+    }
+
+    /// Heuristique simple : HRV élevée + FC repos basse => meilleure récup.
+    /// Avant: la DERNIERE mesure, meme vieille de plusieurs mois, faisait le
+    /// score du jour. Une mesure perimee ne donne plus de score.
+    static func score(hrv: (value: Double, date: Date)?, rhr: (value: Double, date: Date)?,
+                      now: Date = .now) -> Int? {
+        guard let hrv, let rhr, isFresh(hrv.date, now: now), isFresh(rhr.date, now: now) else { return nil }
+        let hrvScore = min(100, max(0, (hrv.value / 80.0) * 100))
+        let rhrScore = min(100, max(0, (1 - (rhr.value - 40) / 50) * 100))
         return Int((hrvScore * 0.6 + rhrScore * 0.4).rounded())
     }
+}
+
+struct RecoveryScoreView: View {
+    @State private var hrv: (value: Double, date: Date)?
+    @State private var rhr: (value: Double, date: Date)?
+    @State private var loading = true
+
+    private var score: Int? { RecoveryScore.score(hrv: hrv, rhr: rhr) }
 
     var body: some View {
         ZStack {
@@ -395,13 +470,16 @@ struct RecoveryScoreView: View {
                         .frame(width: 220, height: 220).padding(.top, 10)
                         Text(advice(score)).font(.subheadline).foregroundStyle(Theme.textSecondary)
                             .multilineTextAlignment(.center).padding(.horizontal)
-                        HStack(spacing: 12) {
-                            StatTile(value: hrv.map { "\(Int($0)) ms" } ?? "—", label: "HRV (SDNN)", icon: "waveform.path.ecg")
-                            StatTile(value: rhr.map { "\(Int($0))" } ?? "—", label: "FC repos", icon: "heart.fill", tint: Theme.danger)
-                        }
+                        tiles
+                    } else if hrv != nil || rhr != nil {
+                        // Des mesures existent mais pas assez recentes (ou une
+                        // seule des deux): on les montre datees, sans score.
+                        EmptyState(icon: "clock.arrow.circlepath", title: "Pas de mesure récente",
+                                   message: "Le score demande la VFC et la FC au repos des dernières 36 h. Porte ton Apple Watch la nuit pour l'obtenir.")
+                        tiles
                     } else {
                         EmptyState(icon: "heart.slash", title: "Pas de données santé",
-                                   message: "Active la capability HealthKit dans Xcode et autorise l'accès à la HRV et la FC au repos (mesurées par une Apple Watch).")
+                                   message: "Autorise LifeOS à lire la VFC et la FC au repos dans l'app Santé (Partage › Apps › LifeOS). Ces mesures viennent d'une Apple Watch.")
                     }
                 }
                 .padding(Theme.pad)
@@ -410,10 +488,32 @@ struct RecoveryScoreView: View {
         .navigationTitle("Score de récupération").navigationBarTitleDisplayMode(.inline)
         .task {
             _ = await HealthService.shared.requestAuthorization()
-            hrv = await HealthService.shared.hrv()
-            rhr = await HealthService.shared.restingHeartRate()
+            hrv = await HealthService.shared.hrvSample()
+            rhr = await HealthService.shared.restingHeartRateSample()
             loading = false
         }
+    }
+
+    private var tiles: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 12) {
+                StatTile(value: hrv.map { "\(Int($0.value)) ms" } ?? "—", label: "HRV (SDNN)", icon: "waveform.path.ecg")
+                StatTile(value: rhr.map { "\(Int($0.value))" } ?? "—", label: "FC repos", icon: "heart.fill", tint: Theme.danger)
+            }
+            // Chaque valeur avec sa date: une mesure ancienne ne passe plus
+            // pour celle du jour.
+            Text(measuredLine)
+                .font(.caption).foregroundStyle(Theme.textSecondary)
+                .multilineTextAlignment(.center)
+        }
+    }
+
+    private var measuredLine: String {
+        func d(_ date: Date) -> String { date.formatted(.relative(presentation: .named)) }
+        var parts: [String] = []
+        if let hrv { parts.append("VFC mesurée \(d(hrv.date))") }
+        if let rhr { parts.append("FC repos \(d(rhr.date))") }
+        return parts.joined(separator: " · ")
     }
     private func scoreColor(_ s: Int) -> Color { s >= 66 ? Theme.success : (s >= 40 ? Theme.learning : Theme.danger) }
     private func advice(_ s: Int) -> String {

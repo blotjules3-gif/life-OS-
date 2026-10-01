@@ -89,6 +89,56 @@ enum NightSounds {
         return sessions.filter { ($0.end ?? $0.start) < limit }
     }
 
+    /// Rattache les extraits aux evenements: meme categorie a moins de 12 s,
+    /// sinon un extrait dont la fenetre couvre l'evenement (une 2e categorie
+    /// detectee pendant un extrait ouvert est enregistree dans CE fichier).
+    static func attach(clips: [ClipRecorder.Clip], to events: [NightEvent]) -> [NightEvent] {
+        var out = events
+        for i in out.indices where out[i].clip == nil {
+            let e = out[i]
+            out[i].clip = clips.first { $0.kind == e.kind && abs($0.start.timeIntervalSince(e.start)) < 12 }?.file
+                ?? clips.first { $0.start.addingTimeInterval(-5) <= e.start && e.start <= $0.end.addingTimeInterval(8) }?.file
+        }
+        return out
+    }
+
+    /// Extraits ecrits mais rattaches a aucun evenement (detection ecartee
+    /// ensuite par `events`): ils restaient sur le disque jusqu'a l'effacement
+    /// de la nuit entiere.
+    static func unreferenced(clipFiles: [String], events: [NightEvent]) -> [String] {
+        let used = Set(events.compactMap(\.clip))
+        return clipFiles.filter { !used.contains($0) }
+    }
+
+    /// Relit un extrait d'apres son nom ("<categorie>-<horodatage>.m4a"), pour
+    /// rattacher ceux d'une nuit coupee net. La fin exacte est perdue: on
+    /// prend la duree maximale d'un extrait (30 s).
+    static func clip(fromFileName name: String) -> ClipRecorder.Clip? {
+        guard name.hasSuffix(".m4a") else { return nil }
+        let base = String(name.dropLast(4))
+        guard let dash = base.lastIndex(of: "-"),
+              let ts = TimeInterval(base[base.index(after: dash)...]) else { return nil }
+        let kind = base[..<dash].replacingOccurrences(of: "-", with: " ")
+        let start = Date(timeIntervalSince1970: ts)
+        return ClipRecorder.Clip(kind: kind, start: start, end: start.addingTimeInterval(30), file: name)
+    }
+
+    static let orphanReason = "Écoute coupée : l'app a été fermée pendant la nuit."
+
+    /// Nuits restees ouvertes (app tuee avant "Arrêter"): elles gardaient
+    /// end = nil, donc la liste les cachait. On les ferme a la derniere trace
+    /// connue pour que la nuit et ses evenements sauvegardes reapparaissent.
+    static func closeOrphans(_ sessions: [NightSession]) -> [NightSession] {
+        sessions.map { s in
+            guard s.end == nil else { return s }
+            var c = s
+            let last = ([s.start] + s.events.map(\.end) + s.gaps.map(\.end)).max() ?? s.start
+            c.end = last
+            c.stoppedReason = orphanReason
+            return c
+        }
+    }
+
     /// Espace libre minimal pour lancer une nuit (extraits compresses, ~1 Mo / minute
     /// d'evenement au pire).
     static let minimumFreeBytes: Int64 = 300 * 1_024 * 1_024
@@ -108,6 +158,28 @@ final class NightStore: ObservableObject {
         try? FileManager.default.createDirectory(at: self.directory, withIntermediateDirectories: true)
         if let d = try? Data(contentsOf: self.directory.appendingPathComponent("nights.json")),
            let s = try? JSONDecoder().decode([NightSession].self, from: d) { sessions = s }
+        recoverOrphans()
+    }
+
+    /// Au lancement aucune ecoute ne tourne encore: toute nuit sans fin vient
+    /// d'une app tuee. On la ferme, on rattache les extraits restes sur le
+    /// disque et on efface ceux qui ne servent a rien.
+    private func recoverOrphans() {
+        let open = sessions.filter { $0.end == nil }
+        guard !open.isEmpty else { return }
+        var closed = NightSounds.closeOrphans(sessions)
+        let fm = FileManager.default
+        for i in closed.indices where open.contains(where: { $0.id == closed[i].id }) {
+            let dir = folder(closed[i])
+            let files = ((try? fm.contentsOfDirectory(atPath: dir.path)) ?? []).filter { $0.hasSuffix(".m4a") }
+            closed[i].events = NightSounds.attach(clips: files.compactMap(NightSounds.clip(fromFileName:)),
+                                                  to: closed[i].events)
+            for f in NightSounds.unreferenced(clipFiles: files, events: closed[i].events) {
+                try? fm.removeItem(at: dir.appendingPathComponent(f))
+            }
+        }
+        do { try write(closed); sessions = closed }
+        catch { AppLog.general.error("nuits orphelines non fermées: \(error.localizedDescription, privacy: .public)") }
     }
 
     var keepDays: Int {
@@ -131,7 +203,11 @@ final class NightStore: ObservableObject {
     }
 
     func deleteEvent(_ e: NightEvent, in s: NightSession) throws {
-        if let c = e.clip { try? FileManager.default.removeItem(at: folder(s).appendingPathComponent(c)) }
+        // Un extrait peut servir a deux evenements (voir `attach`): on ne
+        // l'efface que si plus personne ne le pointe.
+        if let c = e.clip, !s.events.contains(where: { $0.id != e.id && $0.clip == c }) {
+            try? FileManager.default.removeItem(at: folder(s).appendingPathComponent(c))
+        }
         var copy = s; copy.events.removeAll { $0.id == e.id }
         try save(copy)
     }
@@ -168,6 +244,7 @@ final class NightListener: NSObject, ObservableObject {
     private var recorder: ClipRecorder?
     private var observer: ResultsObserver?
     private var interruptionStart: Date?
+    private var checkpointPending = false
 
     var isRunning: Bool { session != nil }
 
@@ -237,6 +314,26 @@ final class NightListener: NSObject, ObservableObject {
         lastSound = kind
         detections.append(.init(time: Date(), kind: kind, confidence: confidence))
         recorder?.mark(kind: kind)
+        scheduleCheckpoint()
+    }
+
+    /// Les detections ne vivaient qu'en memoire jusqu'a stop(): app tuee la
+    /// nuit = tous les evenements perdus. Sauvegarde provisoire au plus 30 s
+    /// apres chaque detection.
+    private func scheduleCheckpoint() {
+        guard !checkpointPending else { return }
+        checkpointPending = true
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(30))
+            self?.checkpoint()
+        }
+    }
+
+    private func checkpoint() {
+        checkpointPending = false
+        guard var s = session else { return }
+        s.events = NightSounds.attach(clips: recorder?.closedClips() ?? [], to: NightSounds.events(from: detections))
+        try? NightStore.shared.save(s)
     }
 
     @objc private func interrupted(_ n: Notification) {
@@ -263,11 +360,13 @@ final class NightListener: NSObject, ObservableObject {
         NotificationCenter.default.removeObserver(self, name: AVAudioSession.interruptionNotification, object: nil)
         s.end = Date()
         s.stoppedReason = reason
-        var events = NightSounds.events(from: detections)
-        for i in events.indices {
-            events[i].clip = clips.first { $0.kind == events[i].kind && abs($0.start.timeIntervalSince(events[i].start)) < 12 }?.file
-        }
+        let events = NightSounds.attach(clips: clips, to: NightSounds.events(from: detections))
         s.events = events
+        let folder = NightStore.shared.folder(s)
+        for f in NightSounds.unreferenced(clipFiles: clips.map(\.file), events: events) {
+            try? FileManager.default.removeItem(at: folder.appendingPathComponent(f))
+        }
+        checkpointPending = false
         try? NightStore.shared.save(s)
         NightStore.shared.purge()
         session = nil; recorder = nil; analyzer = nil; observer = nil
@@ -288,7 +387,7 @@ final class ResultsObserver: NSObject, SNResultsObserving {
 /// Garde les ~5 dernieres secondes en memoire; a chaque evenement, ecrit un extrait
 /// (5 s avant, jusqu'a 8 s apres la derniere detection, 30 s au plus) en AAC.
 final class ClipRecorder: @unchecked Sendable {
-    struct Clip { let kind: String; let start: Date; let file: String }
+    struct Clip: Equatable { let kind: String; let start: Date; let end: Date; let file: String }
     private let format: AVAudioFormat
     private let folder: URL
     private var ring: [AVAudioPCMBuffer] = []
@@ -333,8 +432,15 @@ final class ClipRecorder: @unchecked Sendable {
     }
 
     private func close() {
-        if let cur = current { clips.append(Clip(kind: cur.kind, start: cur.start, file: cur.name)) }
+        if let cur = current { clips.append(Clip(kind: cur.kind, start: cur.start, end: Date(), file: cur.name)) }
         file = nil; current = nil
+    }
+
+    /// Extraits deja fermes, pour la sauvegarde provisoire (sans couper
+    /// l'extrait en cours).
+    func closedClips() -> [Clip] {
+        lock.lock(); defer { lock.unlock() }
+        return clips
     }
 
     func finish() -> [Clip] {

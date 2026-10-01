@@ -5,6 +5,28 @@ import UIKit
 
 // MARK: - Bilan de semaine
 
+/// Calculs du bilan, sortis de la vue pour être testés.
+enum WeeklyBilanMath {
+    /// nil quand rien n'était prévu ce jour: un jour de repos ne compte ni pour ni contre.
+    static func dayRatio(planned: Int, done: Int) -> Double? {
+        guard planned > 0 else { return nil }
+        return Double(min(done, planned)) / Double(planned)
+    }
+
+    /// Moyenne des jours où quelque chose était prévu (avant: divisé par 7 toujours).
+    static func weekScore(_ ratios: [Double?]) -> Double {
+        let known = ratios.compactMap { $0 }
+        guard !known.isEmpty else { return 0 }
+        return known.reduce(0, +) / Double(known.count)
+    }
+
+    /// Seule une réponse d'un vrai modèle est une analyse du coach.
+    @MainActor
+    static func isCoachAnalysis(_ source: OnDeviceLLM.Source) -> Bool {
+        source == .onDeviceLLM
+    }
+}
+
 struct WeeklyBilanView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var ctx
@@ -19,7 +41,8 @@ struct WeeklyBilanView: View {
     @AppStorage(AppStorageKeys.lastWeeklyBilanText) private var cachedBilan = ""
     @AppStorage(AppStorageKeys.lastWeeklyBilanDate) private var cachedBilanDate = 0.0
 
-    private var activeHabits: [Habit] { habits.filter { !$0.isPending } }
+    // Archivées exclues aussi: elles faisaient baisser le pourcentage de la semaine.
+    private var activeHabits: [Habit] { habits.filter { !$0.isPending && !$0.isArchived } }
     private var cal: Calendar { Calendar.current }
 
     private var weekDays: [Date] {
@@ -28,15 +51,15 @@ struct WeeklyBilanView: View {
     private func done(_ habit: Habit, on day: Date) -> Bool {
         habit.completions.contains { cal.isDate($0.date, inSameDayAs: day) }
     }
-    private func ratio(for day: Date) -> Double {
-        guard !activeHabits.isEmpty else { return 0 }
-        return Double(activeHabits.filter { done($0, on: day) }.count) / Double(activeHabits.count)
+    /// Part des habitudes PRÉVUES ce jour qui sont faites; nil = rien de prévu (repos).
+    private func dayRatio(for day: Date) -> Double? {
+        let planned = DailyScoreEngine.plannedHabits(habits, on: day)
+        return WeeklyBilanMath.dayRatio(planned: planned.count, done: planned.filter { done($0, on: day) }.count)
     }
-    private var weeklyScore: Double {
-        guard !activeHabits.isEmpty else { return 0 }
-        return weekDays.reduce(0.0) { $0 + ratio(for: $1) } / 7.0
-    }
-    private var perfectDays: Int { weekDays.filter { ratio(for: $0) >= 1 && !activeHabits.isEmpty }.count }
+    /// Pour les pastilles et le partage: un jour de repos s'affiche vide, pas raté.
+    private func ratio(for day: Date) -> Double { dayRatio(for: day) ?? 0 }
+    private var weeklyScore: Double { WeeklyBilanMath.weekScore(weekDays.map { dayRatio(for: $0) }) }
+    private var perfectDays: Int { weekDays.filter { (dayRatio(for: $0) ?? 0) >= 1 }.count }
     private var avgWater: Int {
         // Divisé par 7 (semaine entière) — jours sans données comptent comme 0
         let total = weekDays.reduce(0) { acc, d in
@@ -277,13 +300,13 @@ struct WeeklyBilanView: View {
                     .font(.system(size: 14))
                     .foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
-            } else if !bilanLoading && !cachedBilan.isEmpty {
+            } else if !bilanLoading && !cachedBilan.isEmpty && cachedIsToday {
                 Text(cachedBilan)
                     .font(.system(size: 14))
                     .foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
             } else if !bilanLoading {
-                Text("Connexion requise pour générer l'analyse.")
+                Text("Analyse indisponible : active Apple Intelligence ou ajoute la clé d’un fournisseur dans les réglages de ton coach.")
                     .font(.system(size: 14))
                     .foregroundStyle(.secondary)
             }
@@ -317,10 +340,20 @@ struct WeeklyBilanView: View {
         Instruction: Fais un bilan de semaine motivant en 2-3 phrases. Sois direct, précis, encourage sans être artificiel.
         """
         let reply = await OnDeviceLLM.respond(to: prompt, ctx: ctx)
-        aiBilan = reply.text
-        cachedBilan = reply.text
-        cachedBilanDate = today
+        // Les règles locales ne savent pas faire un bilan: leur réponse n'est pas une
+        // « Analyse du coach », on ne l'affiche pas et on ne la garde pas en cache.
+        if WeeklyBilanMath.isCoachAnalysis(reply.source) {
+            aiBilan = reply.text
+            cachedBilan = reply.text
+            cachedBilanDate = today
+        } else {
+            aiBilan = nil
+        }
         bilanLoading = false
+    }
+
+    private var cachedIsToday: Bool {
+        cachedBilanDate >= Calendar.current.startOfDay(for: .now).timeIntervalSince1970
     }
 
     private func statPill(_ icon: String, _ label: String, _ color: Color) -> some View {

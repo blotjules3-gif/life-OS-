@@ -89,7 +89,24 @@ struct BreathingView: View {
 struct MeditationView: View {
     @State private var minutes = 10
     @State private var engine = CountdownEngine(key: "meditation")
-    @State private var started = false
+    /// L'etat "en cours" vient du moteur, pas d'un @State local.
+    /// Avant, `started` repartait a faux en revenant sur l'ecran alors que le moteur
+    /// restaure tournait encore: bouton "Méditer" sur un cadran qui defile, et un
+    /// appui relancait la seance de zero.
+    private var started: Bool { engine.isRunning }
+
+    static let endNotificationID = "medi"
+
+    /// Delai avant la fin de seance, ou nil si rien n'est en cours.
+    /// La notification de fin est planifiee A L'AVANCE sur ce delai: l'ancienne
+    /// version la posait dans onFinish, qui ne tourne que dans le minuteur de
+    /// l'app au premier plan, donc telephone verrouille aucun signal n'arrivait.
+    static func endAlertDelay(deadline: Date?, now: Date = Date()) -> TimeInterval? {
+        guard let deadline else { return nil }
+        let d = deadline.timeIntervalSince(now)
+        return d > 0 ? d : nil
+    }
+
     var body: some View {
         ZStack {
             Theme.background
@@ -102,12 +119,17 @@ struct MeditationView: View {
                 TimerDial(engine: engine, tint: .mindTint, caption: started ? "Respire et observe" : "\(minutes) min")
                 if !started {
                     PrimaryButton(title: "Méditer", icon: "play.fill", tint: .mindTint) {
-                        started = true
-                        engine.onFinish = { NotificationManager.shared.scheduleAfter(id: "medi", title: "Séance terminée", body: "Reviens en douceur.", seconds: 1); started = false }
                         engine.start(seconds: minutes*60)
+                        if let delay = Self.endAlertDelay(deadline: engine.deadline) {
+                            NotificationManager.shared.scheduleAfter(id: Self.endNotificationID, title: "Séance terminée", body: "Reviens en douceur.", seconds: delay)
+                        }
                     }
                 } else {
-                    PrimaryButton(title: "Terminer", icon: "stop.fill", tint: Theme.bg2) { engine.stop(); started = false }
+                    PrimaryButton(title: "Terminer", icon: "stop.fill", tint: Theme.bg2) {
+                        engine.stop()
+                        // Arret avant la fin: la notification ne doit plus sonner.
+                        NotificationManager.shared.cancel(id: Self.endNotificationID)
+                    }
                 }
             }.padding()
         }
@@ -123,6 +145,7 @@ struct MoodJournalView: View {
     @State private var score = 3
     @State private var note = ""
     @State private var gratitude = ""
+    @State private var pendingDelete: MoodEntry?
 
     private let faces = ["😞","🙁","😐","🙂","😄"]
 
@@ -157,7 +180,8 @@ struct MoodJournalView: View {
                             Text("Suis ton humeur chaque jour")
                                 .font(.headline)
                                 .foregroundStyle(Theme.textPrimary)
-                            Text("En quelques semaines, tu verras des tendances : pic de moral le vendredi, baisse le lundi, lien avec tes habitudes ou ton sommeil.")
+                            // Aucune analyse de tendance n'existe: on ne promet que ce que l'ecran affiche.
+                            Text("Tes entrées apparaîtront ici avec la date, ta note et ta gratitude, ainsi que ton humeur moyenne.")
                                 .font(.subheadline)
                                 .foregroundStyle(Theme.textSecondary)
                                 .multilineTextAlignment(.center)
@@ -177,7 +201,7 @@ struct MoodJournalView: View {
                                         if !e.gratitude.isEmpty { Label(e.gratitude, systemImage: "infinity").font(.caption).foregroundStyle(.mindTint) }
                                     }
                                     Spacer()
-                                    Button(role: .destructive) { ctx.delete(e) } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(Theme.danger.opacity(0.6))
+                                    Button(role: .destructive) { pendingDelete = e } label: { Image(systemName: "trash").font(.caption) }.foregroundStyle(Theme.danger.opacity(0.6))
                                 }.padding(.vertical, 4)
                             }
                         }.card()
@@ -186,6 +210,18 @@ struct MoodJournalView: View {
             }
         }
         .navigationTitle("Humeur & gratitude").navigationBarTitleDisplayMode(.inline)
+        // Un seul appui sur la corbeille effacait l'entree, sans retour possible.
+        .confirmationDialog("Supprimer cette entrée ?",
+                            isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
+                            titleVisibility: .visible) {
+            Button("Supprimer", role: .destructive) {
+                if let e = pendingDelete { ctx.delete(e) }
+                pendingDelete = nil
+            }
+            Button("Annuler", role: .cancel) { pendingDelete = nil }
+        } message: {
+            Text("Cette action est définitive.")
+        }
     }
     private var avgMood: String {
         guard !entries.isEmpty else { return "—" }
@@ -261,7 +297,26 @@ struct MorningBriefingView: View {
         "Fais aujourd'hui ce que les autres ne veulent pas, vis demain comme les autres ne peuvent pas."
     ]
     private var quote: String { quotes[Calendar.current.component(.day, from: .now) % quotes.count] }
-    private var todayTodos: [TodoItem] { todos.filter { !$0.done && ($0.due.map { Calendar.current.isDateInToday($0) } ?? false) } }
+    private var todayTodos: [TodoItem] {
+        let now = Date()
+        return todos
+            .filter { Self.isPriorityToday(done: $0.done, due: $0.due, recurringDays: $0.recurringDays, now: now) }
+            .sorted { $0.priority > $1.priority }
+    }
+
+    /// Une tache compte aujourd'hui si elle est due aujourd'hui, en retard, ou
+    /// recurrente ce jour de la semaine. Avant, seules les taches datees du jour
+    /// sortaient: les recurrentes (sans date) et les retards etaient invisibles.
+    /// Une tache sans date ni recurrence n'est pas "planifiee": elle reste dehors.
+    static func isPriorityToday(done: Bool, due: Date?, recurringDays: Set<Int>,
+                                now: Date, calendar: Calendar = .current) -> Bool {
+        guard !done else { return false }
+        if !recurringDays.isEmpty {
+            return recurringDays.contains(calendar.component(.weekday, from: now))
+        }
+        guard let due else { return false }
+        return calendar.isDate(due, inSameDayAs: now) || due < now
+    }
 
     var body: some View {
         ZStack {

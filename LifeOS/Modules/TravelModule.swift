@@ -155,15 +155,35 @@ struct TrackedFlight: Identifiable, Codable, Equatable {
     var from = ""
     var to = ""
     var departure = Date()
-    var status = "À l'heure"
+    /// Aucun flux de statut n'est branché: un vol ajouté n'est PAS « À l'heure »,
+    /// son statut est inconnu tant que l'utilisateur ne le confirme pas lui-même.
+    var status = TrackedFlight.unknownStatus
+    /// Fuseau de l'aéroport de départ (identifiant IANA). nil = anciens vols, saisis
+    /// dans le fuseau de l'iPhone. Optionnel pour relire les vols déjà enregistrés.
+    var departureTimeZoneID: String?
 
-    static let statuses = ["À l'heure", "Embarquement", "Retardé", "Décollé", "Atterri", "Annulé"]
+    static let unknownStatus = "Non confirmé"
+    static let statuses = [unknownStatus, "À l'heure", "Embarquement", "Retardé", "Décollé", "Atterri", "Annulé"]
+
+    var departureTimeZone: TimeZone {
+        departureTimeZoneID.flatMap(TimeZone.init(identifier:)) ?? .current
+    }
+
+    /// Garde l'heure affichée (ex. 18:00) quand on change de fuseau: c'est l'heure
+    /// locale de l'aéroport que la personne a lue sur son billet, pas l'instant.
+    static func keepingWallClock(_ date: Date, from old: TimeZone, to new: TimeZone) -> Date {
+        var oldCal = Calendar(identifier: .gregorian); oldCal.timeZone = old
+        var newCal = Calendar(identifier: .gregorian); newCal.timeZone = new
+        let c = oldCal.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        return newCal.date(from: c) ?? date
+    }
     var statusColor: Color {
         switch status {
         case "Retardé":  return Theme.warning
         case "Annulé":   return Theme.danger
         case "Atterri":  return Theme.success
         case "Décollé", "Embarquement": return Theme.finance
+        case Self.unknownStatus: return .gray
         default:         return Color.travelTint
         }
     }
@@ -219,7 +239,8 @@ struct FlightTrackerView: View {
                     if !f.airline.isEmpty { Text(f.airline) }
                     if !f.number.isEmpty { Text(f.number).foregroundStyle(.travelTint) }
                     Spacer()
-                    Text(f.departure, format: .dateTime.day().month().hour().minute())
+                    // Heure locale de l'aéroport de départ, avec son fuseau.
+                    Text(Self.departureLabel(f))
                 }.font(.subheadline).foregroundStyle(.secondary)
                 TimelineView(.periodic(from: .now, by: 30)) { ctx in
                     Text(countdown(to: f.departure, now: ctx.date))
@@ -233,6 +254,15 @@ struct FlightTrackerView: View {
         }
         .buttonStyle(.plain)
         .contextMenu { Button(role: .destructive) { remove(f) } label: { Label("Supprimer", systemImage: "trash") } }
+    }
+
+    static func departureLabel(_ f: TrackedFlight) -> String {
+        let df = DateFormatter()
+        df.locale = Locale(identifier: "fr_FR")
+        df.timeZone = f.departureTimeZone
+        df.dateFormat = "d MMM HH:mm"
+        let zone = f.departureTimeZone.abbreviation(for: f.departure) ?? f.departureTimeZone.identifier
+        return "\(df.string(from: f.departure)) \(zone)"
     }
 
     private func countdown(to date: Date, now: Date) -> String {
@@ -270,6 +300,20 @@ private struct FlightEditor: View {
         self.onDelete = onDelete
     }
 
+    private static let zoneIDs = TimeZone.knownTimeZoneIdentifiers.sorted()
+
+    /// Changer de fuseau garde l'heure du billet et recalcule l'instant réel.
+    private var zoneBinding: Binding<String> {
+        Binding(
+            get: { flight.departureTimeZone.identifier },
+            set: { id in
+                guard let new = TimeZone(identifier: id) else { return }
+                flight.departure = TrackedFlight.keepingWallClock(flight.departure, from: flight.departureTimeZone, to: new)
+                flight.departureTimeZoneID = id
+            }
+        )
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -280,7 +324,13 @@ private struct FlightEditor: View {
                 Section("Vol") {
                     TextField("Compagnie (ex: Air France)", text: $flight.airline)
                     TextField("N° de vol (ex: AF008)", text: $flight.number).textInputAutocapitalization(.characters)
-                    DatePicker("Départ", selection: $flight.departure)
+                    Picker("Fuseau du départ", selection: zoneBinding) {
+                        ForEach(Self.zoneIDs, id: \.self) { Text($0.replacingOccurrences(of: "_", with: " ")).tag($0) }
+                    }
+                    .pickerStyle(.navigationLink)
+                    // L'heure saisie est celle de l'aéroport (billet), pas celle de l'iPhone.
+                    DatePicker("Départ (heure locale)", selection: $flight.departure)
+                        .environment(\.timeZone, flight.departureTimeZone)
                 }
                 Section("Statut") {
                     Picker("Statut", selection: $flight.status) {

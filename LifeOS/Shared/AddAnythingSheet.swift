@@ -304,16 +304,17 @@ struct AddAnythingSheet: View {
             guard let entered = AmountInput.parse(amount).value else { return }
             let value = -abs(entered)
             let accounts = (try? ctx.fetch(FetchDescriptor<Account>())) ?? []
-            if let target = accounts.first {
-                LedgerService.addTransaction(ctx, amount: value, category: txnCategory,
-                                             account: target, note: n)
-            } else {
-                // Aucun compte encore cree : on conserve l'operation plutot que de la
-                // perdre, elle sera rattachee des qu'un compte existe.
-                let t = Txn(category: txnCategory, note: n)
-                t.setAmount(value)
-                ctx.insert(t)
+            // Le compte courant d'abord, sinon le premier compte.
+            guard let target = accounts.first(where: { $0.kind == "Courant" }) ?? accounts.first else {
+                // Sans compte, l'operation partait sans rattachement (account "Courant",
+                // jamais retrouve par la reprise par nom): comptee dans les depenses du
+                // mois mais dans AUCUN solde. On refuse, comme l'ecran Finance.
+                Haptics.warning()
+                saveError = "Crée d'abord un compte dans Finances › Comptes : une dépense doit appartenir à un compte."
+                return
             }
+            LedgerService.addTransaction(ctx, amount: value, category: txnCategory,
+                                         account: target, note: n)
         case .subscription:
             guard let a = AmountInput.parse(amount).value else { return }
             ctx.insert(Subscription(name: n, amount: a, cycle: subCycle, nextDate: whenDate))

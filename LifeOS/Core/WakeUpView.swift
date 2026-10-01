@@ -383,7 +383,9 @@ struct WakeUpView: View {
     private func scheduleWakeupAlarm() {
         Task {
             guard await NotificationManager.shared.requestAuthorization() else { return }
-            NotificationManager.shared.scheduleAlarm(hour: wakeupHour, minute: wakeupMinute, userName: userName)
+            // Jours passés explicitement: sans eux, le réveil sonnait aussi les jours désactivés.
+            NotificationManager.shared.scheduleAlarm(hour: wakeupHour, minute: wakeupMinute,
+                                                     userName: userName, days: selectedDays)
             let timeString = String(format: "%02d:%02d", wakeupHour, wakeupMinute)
             if #available(iOS 16.1, *) {
                 await AlarmLiveActivityManager.shared.startScheduled(alarmTimeString: timeString)
@@ -392,7 +394,8 @@ struct WakeUpView: View {
     }
 
     private func cancelAlarm() {
-        NotificationManager.shared.cancel(id: "lifeos.wakeup")
+        // Tout le réveil: sonnerie de chaque jour, préavis « dans 5 minutes » et snooze.
+        NotificationManager.shared.cancelAlarm()
         if #available(iOS 16.1, *) {
             AlarmLiveActivityManager.shared.end()
         }

@@ -106,11 +106,28 @@ private extension CGRect { var area: CGFloat { width * height } }
 
 // MARK: - Vue
 
+/// Ce qui empeche une analyse. Un fichier illisible n'est pas un "visage non
+/// detecte": avant, toute erreur de lecture accusait le visage.
+enum FaceAnalysisIssue: Equatable {
+    case noFace, unreadableFile, photoLoadFailed
+
+    var message: String {
+        switch self {
+        case .noFace:
+            return "Aucun visage net détecté. Essaie une photo de face, bien éclairée, sans lunettes."
+        case .unreadableFile:
+            return "Impossible de lire ce fichier comme une image. Essaie un JPEG, PNG ou HEIC."
+        case .photoLoadFailed:
+            return "Impossible de charger cette photo. Si elle est dans iCloud, vérifie la connexion puis réessaie."
+        }
+    }
+}
+
 struct FaceAnalysisView: View {
     @State private var image: UIImage?
     @State private var metrics: [FaceMetric]?
     @State private var busy = false
-    @State private var noFace = false
+    @State private var issue: FaceAnalysisIssue?
     @State private var pickerItem: PhotosPickerItem?
     @State private var showFilePicker = false
 
@@ -149,7 +166,7 @@ struct FaceAnalysisView: View {
                     }
                     #endif
                     if busy { ProgressView("Analyse des points du visage…").padding() }
-                    if noFace { errorCard }
+                    if let issue { errorCard(issue) }
                     if let m = metrics, !busy { results(m) }
                     if image == nil && !busy { intro }
                     disclaimer
@@ -166,9 +183,9 @@ struct FaceAnalysisView: View {
             case .success(let url):
                 if let img = DesktopImageHelper.loadImage(from: url) {
                     Task { await run(img) }
-                } else { noFace = true }
+                } else { issue = .unreadableFile }
             case .failure:
-                noFace = true
+                issue = .unreadableFile
             }
         }
         .onChange(of: pickerItem) { _, item in
@@ -176,7 +193,12 @@ struct FaceAnalysisView: View {
             Task {
                 if let data = try? await item.loadTransferable(type: Data.self), let img = UIImage(data: data) {
                     await run(img)
+                } else {
+                    // Avant: aucun message, l'utilisateur touchait une photo et rien ne se passait.
+                    await MainActor.run { issue = .photoLoadFailed }
                 }
+                // Permet de rechoisir la meme photo (sinon onChange ne se declenche pas).
+                await MainActor.run { pickerItem = nil }
             }
         }
     }
@@ -214,9 +236,8 @@ struct FaceAnalysisView: View {
         .padding(16).raisedSurface(RoundedRectangle(cornerRadius: Theme.radius))
     }
 
-    private var errorCard: some View {
-        Label("Aucun visage net détecté. Essaie une photo de face, bien éclairée, sans lunettes.",
-              systemImage: "exclamationmark.triangle.fill")
+    private func errorCard(_ issue: FaceAnalysisIssue) -> some View {
+        Label(issue.message, systemImage: "exclamationmark.triangle.fill")
             .font(.subheadline).foregroundStyle(Theme.warning)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(14).background(Theme.warning.opacity(0.20), in: RoundedRectangle(cornerRadius: Theme.radiusSmall))
@@ -254,11 +275,11 @@ struct FaceAnalysisView: View {
     }
 
     private func run(_ img: UIImage) async {
-        await MainActor.run { image = img; metrics = nil; noFace = false; busy = true }
+        await MainActor.run { image = img; metrics = nil; issue = nil; busy = true }
         let result = await FaceAnalyzer.analyze(img)
         await MainActor.run {
             busy = false
-            if let result { metrics = result } else { noFace = true }
+            if let result { metrics = result } else { issue = .noFace }
             Haptics.soft()
         }
     }

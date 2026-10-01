@@ -52,7 +52,7 @@ struct CalAIView: View {
         .sheet(isPresented: $showScan) { BarcodeAddSheet(defaultMeal: currentMeal) }
         .sheet(item: $editing) { FoodEntryEditor(entry: $0) }
         .task { syncNutritionToContext() }
-        .onChange(of: foods.count) { _, _ in syncNutritionToContext() }
+        .onChange(of: foods.prefix(200).map { "\($0.date.timeIntervalSince1970)|\($0.calories)|\($0.protein)" }) { _, _ in syncNutritionToContext() }
     }
 
     private func syncNutritionToContext() {

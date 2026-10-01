@@ -96,11 +96,17 @@ final class TrilingoSpeech: NSObject, ObservableObject {
     static let shared = TrilingoSpeech()
     private let synth = AVSpeechSynthesizer()
     private var player: AVPlayer?
+    private var playerWatch: Task<Void, Never>?
     private let engine = AVAudioEngine()
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
+    // Suivi du tap: le retirer seulement quand le moteur tourne laissait un tap
+    // orphelin apres un start() rate, et le 2e installTap faisait planter AVAudioEngine.
+    private var tapInstalled = false
     @Published var heard = ""
     @Published var listening = false
+    /// Message honnete quand l'enregistrement humain ne peut pas etre lu.
+    @Published var audioNotice: String?
 
     static func hasVoice(_ bcp47: String) -> Bool {
         let lang = bcp47.split(separator: "-").first.map(String.init) ?? bcp47
@@ -112,15 +118,37 @@ final class TrilingoSpeech: NSObject, ObservableObject {
     }
 
     /// Enregistrement humain Tatoeba quand il existe (en ligne), sinon voix de l'appareil.
+    /// Hors ligne l'AVPlayer restait muet sans erreur: on surveille son etat et on
+    /// bascule sur la voix de l'appareil s'il echoue ou ne demarre pas, en le disant.
     func play(_ item: TrilingoItem, language: TrilingoLanguage, slow: Bool = false) {
+        playerWatch?.cancel(); playerWatch = nil
+        player?.pause(); player = nil
+        audioNotice = nil
         if item.audio == true, !slow, let url = URL(string: "https://audio.tatoeba.org/sentences/\(language.code)/\(item.tid).mp3") {
             try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
-            player = AVPlayer(url: url)
-            player?.play()
+            let p = AVPlayer(url: url)
+            player = p
+            p.play()
+            let text = item.t, bcp47 = language.bcp47
+            playerWatch = Task { @MainActor [weak self] in
+                // 4 s max pour que l'enregistrement commence a jouer.
+                for _ in 0..<20 {
+                    try? await Task.sleep(for: .milliseconds(200))
+                    if Task.isCancelled { return }
+                    if p.currentItem?.status == .failed { break }
+                    if p.currentItem?.status == .readyToPlay, p.timeControlStatus == .playing { return }
+                }
+                guard let self, self.player === p, !Task.isCancelled else { return }
+                p.pause(); self.player = nil
+                self.audioNotice = Self.offlineFallbackNotice
+                self.speak(text, bcp47: bcp47)
+            }
             return
         }
         speak(item.t, bcp47: language.bcp47, slow: slow)
     }
+
+    static let offlineFallbackNotice = "Enregistrement indisponible (hors ligne ?) : lu par la voix de l'appareil."
 
     func speak(_ text: String, bcp47: String, slow: Bool = false) {
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
@@ -155,9 +183,15 @@ final class TrilingoSpeech: NSObject, ObservableObject {
         if rec.supportsOnDeviceRecognition { req.requiresOnDeviceRecognition = true }
         request = req
         let input = engine.inputNode
+        if tapInstalled { input.removeTap(onBus: 0); tapInstalled = false }
         input.installTap(onBus: 0, bufferSize: 1024, format: input.outputFormat(forBus: 0)) { buf, _ in req.append(buf) }
+        tapInstalled = true
         engine.prepare()
-        try engine.start()
+        do { try engine.start() } catch {
+            // Remise a zero complete: sinon le prochain appui repose un tap sur le bus 0.
+            stopListening()
+            throw error
+        }
         listening = true
         task = rec.recognitionTask(with: req) { [weak self] result, error in
             Task { @MainActor in
@@ -168,7 +202,8 @@ final class TrilingoSpeech: NSObject, ObservableObject {
     }
 
     func stopListening() {
-        if engine.isRunning { engine.stop(); engine.inputNode.removeTap(onBus: 0) }
+        if engine.isRunning { engine.stop() }
+        if tapInstalled { engine.inputNode.removeTap(onBus: 0); tapInstalled = false }
         request?.endAudio(); request = nil
         task?.cancel(); task = nil
         listening = false

@@ -112,6 +112,13 @@ struct TodayAgendaSection: View {
 
     // MARK: - Agrégation
 
+    /// Tache recurrente due: jamais faite, ou echeance aujourd'hui ou passee.
+    nonisolated static func isRecurringDue(lastDone: Date?, nextDue: Date?, today: Date, calendar: Calendar) -> Bool {
+        guard lastDone != nil else { return true }
+        guard let d = nextDue else { return false }
+        return calendar.startOfDay(for: d) <= calendar.startOfDay(for: today)
+    }
+
     private func buildItems() -> [AgendaItem] {
         let cal = Calendar.current
         let now = Date()
@@ -169,7 +176,7 @@ struct TodayAgendaSection: View {
         }
 
         // Tâches ménagères dues
-        for c in chores.filter({ $0.lastDone == nil || isDueBy($0.nextDue) }) {
+        for c in chores.filter({ Self.isRecurringDue(lastDone: $0.lastDone, nextDue: $0.nextDue, today: today, calendar: cal) }) {
             out.append(.init(icon: "spray.and.wipe.fill",
                              title: c.name, detail: "À faire (\(c.assigneeShort))",
                              category: .home, sortKey: 24 * 60))
@@ -183,8 +190,9 @@ struct TodayAgendaSection: View {
         }
 
         // Entretien maison
-        for m in maintenances.filter({ isDueBy($0.nextDue) }) {
-            out.append(.init(icon: "wrench.and.screwdriver.fill", title: m.name, detail: "Entretien",
+        // Jamais fait = a faire, comme pour le menage: sinon il n'apparaissait jamais.
+        for m in maintenances.filter({ Self.isRecurringDue(lastDone: $0.lastDone, nextDue: $0.nextDue, today: today, calendar: cal) }) {
+            out.append(.init(icon: "wrench.and.screwdriver.fill", title: m.name, detail: m.lastDone == nil ? "Entretien jamais fait" : "Entretien",
                              category: .home, sortKey: 24 * 60))
         }
 

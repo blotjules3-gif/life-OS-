@@ -7,6 +7,7 @@ Echantillon SYSTEMATIQUE (pas trie a la main) dans Open Pet Food Facts :
 - categorie en:cat-food, vendus en France, tries par nombre de scans : 1 fiche sur 20 ;
 - en:cat-treats : 1 fiche sur 7 ;
 - recherche "chaton" (fiches souvent mal classees) : 1 sur 3 des 18 premieres ;
+- fiches SANS categorie chat ni chien (vendues en France) : 1 sur 2, 15 au plus ;
 - le produit de l'utilisateur, 8445290938091 ("one junior").
 
 Pour chaque fiche : le JSON brut de la base (memes champs que l'app) et, si la base n'a
@@ -69,6 +70,16 @@ def main():
     kit = get(f"{HOST}/cgi/search.pl?search_terms=chaton&json=1&page_size=18&fields=code") or {}
     kit = [p["code"] for p in kit.get("products", []) if p.get("code")]
     picks += [(c, f"recherche « chaton », rang {i + 1}") for i, c in enumerate(kit) if i % 3 == 0]
+    # Fiches MAL CLASSEES (aucune categorie chat ni chien), comme « one junior » : c'est la
+    # que l'identification se mesure vraiment. Elles peuvent etre pour chien ou autre.
+    vague = []
+    for page in (1, 2, 3, 4):
+        d = get(f"{HOST}/api/v2/search?categories_tags_en=open-pet-food-facts&countries_tags_en=france&sort_by=unique_scans_n&page_size=100&page={page}&fields=code,categories_tags")
+        for p in (d or {}).get("products", []):
+            tags = " ".join(p.get("categories_tags") or [])
+            if p.get("code") and not any(k in tags for k in ("cat-food", "dog-food", "cat-treat", "dog-treat")):
+                vague.append(p["code"])
+    picks += [(c, f"fiche sans catégorie chat/chien, rang {i + 1}/{len(vague)}") for i, c in enumerate(vague) if i % 2 == 0][:15]
     picks.append(("8445290938091", "produit de l'utilisateur (« one junior »)"))
     seen, corpus = set(), []
     tmp = os.path.join(HERE, ".img"); os.makedirs(tmp, exist_ok=True)

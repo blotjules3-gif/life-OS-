@@ -107,6 +107,11 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     private override init() { super.init() }
 
     private let alarmIds: Set<String> = ["lifeos.wakeup", "lifeos.wakeup.snooze"]
+    /// Réveil sur certains jours seulement : un déclencheur par jour (`lifeos.wakeup.dayN`).
+    /// Les annonces « dans 5 minutes » ont un autre préfixe et ne lancent pas la sonnerie.
+    private func isAlarm(_ id: String) -> Bool {
+        alarmIds.contains(id) || id.hasPrefix(NotificationManager.alarmDayPrefix)
+    }
 
     // App en FOREGROUND — notification arrive
     func userNotificationCenter(
@@ -115,7 +120,7 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     ) async -> UNNotificationPresentationOptions {
         let id = notification.request.identifier
 
-        if alarmIds.contains(id) {
+        if isAlarm(id) {
             await MainActor.run { AlarmManager.shared.triggerAlarm() }
             // Laisser le son système jouer aussi : assure que l'alarme sonne
             // même si l'app est en foreground sur un autre écran
@@ -143,7 +148,7 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse
     ) async {
         let id = response.notification.request.identifier
-        if alarmIds.contains(id) {
+        if isAlarm(id) {
             await MainActor.run { AlarmManager.shared.triggerAlarm() }
         }
         if id == "lifeos.weekly_bilan" {
@@ -176,6 +181,15 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
 
         // Réponse à une notif de CONFIRMATION (compléments, salle, etc.)
         let content = response.notification.request.content
+
+        // Rappel de cours Trilingo : ouvre la leçon elle-même, pas seulement l'accueil
+        // (audit du 1er oct. : le toucher n'ouvrait rien).
+        if let route = content.userInfo["route"] as? String, let target = ToolRoute.target(for: route) {
+            await MainActor.run {
+                NotificationCenter.default.post(name: .lifeOSOpenModule, object: nil,
+                                                userInfo: ["module": target.category.rawValue, "tool": target.tool])
+            }
+        }
         if content.categoryIdentifier == "LIFEOS_CONFIRM" {
             let info = content.userInfo
             let key = info["confirmKey"] as? String ?? id
@@ -290,4 +304,20 @@ extension Notification.Name {
     static let lifeOSOpenWeeklyBilan = Notification.Name("lifeOSOpenWeeklyBilan")
     static let lifeOSOpenModule      = Notification.Name("lifeOSOpenModule")
     static let lifeOSOpenFoodScan    = Notification.Name("lifeOSOpenFoodScan")
+}
+
+
+/// Routes portées par les notifications (`userInfo["route"]`) vers un outil précis.
+enum ToolRoute {
+    struct Target: Equatable { let category: AppCategory; let tool: String }
+    static func target(for route: String) -> Target? {
+        switch route {
+        case "trilingo": return Target(category: .learning, tool: "Trilingo")
+        default: return nil
+        }
+    }
+    /// L'outil d'une catégorie par son nom écrit dans le code (stable, contrairement au titre affiché).
+    static func tool(_ name: String, in category: AppCategory) -> CategoryTool? {
+        category.tools.first { $0.defaultTitle == name }
+    }
 }

@@ -11,6 +11,9 @@ extension ShapeStyle where Self == Color { static var homeTint: Color { AppCateg
 struct AntiWasteView: View {
     @Environment(\.modelContext) private var ctx
     @Query private var items: [PantryItem]
+    @State private var pending: PantryItem?
+    @State private var lastRemoved: (snapshot: AntiWasteLog.Snapshot, outcome: AntiWasteLog.Outcome)?
+    @State private var tally = AntiWasteLog.tally()
     private var withExpiry: [PantryItem] { items.filter { $0.expiry != nil }.sorted { ($0.expiry ?? .distantFuture) < ($1.expiry ?? .distantFuture) } }
 
     var body: some View {
@@ -26,15 +29,80 @@ struct AntiWasteView: View {
                                 VStack(alignment: .leading) { Text(it.name).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary); Text("\(it.quantity) · \(it.location)").font(.caption).foregroundStyle(Theme.textSecondary) }
                                 Spacer()
                                 if let e = it.expiry { ExpiryBadge(date: e) }
-                                Button(role: .destructive) { ctx.delete(it) } label: { Image(systemName: "checkmark.circle").font(.title3) }.foregroundStyle(Theme.success)
+                                Button { pending = it } label: { Image(systemName: "checkmark.circle").font(.title3) }.foregroundStyle(Theme.success)
+                                    .accessibilityLabel("Retirer \(it.name)")
                             }.card(padding: 12)
                         }
-                        Text("Coche pour marquer comme consommé. Astuce : cuisine d'abord ce qui est en haut.").font(.caption).foregroundStyle(Theme.textSecondary)
+                        Text("Coche pour dire si c'est consommé ou jeté. Astuce : cuisine d'abord ce qui est en haut.").font(.caption).foregroundStyle(Theme.textSecondary)
+                    }
+                    if tally.consumed + tally.wasted > 0 {
+                        Text("Bilan : \(tally.consumed) consommé(s), \(tally.wasted) jeté(s)").font(.caption.weight(.semibold)).foregroundStyle(Theme.textSecondary)
                     }
                 }.padding(Theme.pad)
             }
         }
         .navigationTitle("Anti-gaspi").navigationBarTitleDisplayMode(.inline)
+        .confirmationDialog(pending.map { "Retirer \($0.name)" } ?? "", isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }), titleVisibility: .visible) {
+            Button("Consommé") { remove(.consumed) }
+            Button("Jeté", role: .destructive) { remove(.wasted) }
+            Button("Annuler", role: .cancel) { pending = nil }
+        }
+        .overlay(alignment: .bottom) {
+            if let last = lastRemoved {
+                HStack(spacing: 12) {
+                    Text("\(last.snapshot.name) : \(last.outcome == .consumed ? "consommé" : "jeté")").font(.footnote.weight(.semibold))
+                    Button("Annuler") { undo() }.font(.footnote.bold())
+                }
+                .padding(.horizontal, 14).padding(.vertical, 10).raisedSurface(Capsule()).padding(.bottom, 24)
+                .task(id: last.snapshot.name) { try? await Task.sleep(for: .seconds(5)); lastRemoved = nil }
+            }
+        }
+    }
+
+    /// Avant: "Consommé" supprimait sans trace ni retour. On garde le compte
+    /// consommé / jeté (bilan anti-gaspi) et une annulation de quelques secondes.
+    private func remove(_ outcome: AntiWasteLog.Outcome) {
+        guard let it = pending else { return }
+        pending = nil
+        let snap = AntiWasteLog.Snapshot(it)
+        ctx.delete(it)
+        guard LifeOSTry(try ctx.save(), context: "anti-gaspi retrait", category: AppLog.data) != nil else { return }
+        AntiWasteLog.record(outcome)
+        tally = AntiWasteLog.tally()
+        lastRemoved = (snap, outcome)
+        Haptics.tap()
+    }
+
+    private func undo() {
+        guard let last = lastRemoved else { return }
+        lastRemoved = nil
+        ctx.insert(last.snapshot.makeItem())
+        guard LifeOSTry(try ctx.save(), context: "anti-gaspi annulation", category: AppLog.data) != nil else { return }
+        AntiWasteLog.record(last.outcome, delta: -1)
+        tally = AntiWasteLog.tally()
+    }
+}
+
+/// Compteurs consommé / jeté, dans les UserDefaults (pas de changement de modèle).
+enum AntiWasteLog {
+    enum Outcome { case consumed, wasted }
+    static let consumedKey = "antiWaste.consumedCount"
+    static let wastedKey = "antiWaste.wastedCount"
+
+    /// Copie des champs d'un article, pour pouvoir le remettre après une annulation.
+    struct Snapshot {
+        let name: String, quantity: String, category: String, location: String, expiry: Date?
+        init(_ it: PantryItem) { name = it.name; quantity = it.quantity; category = it.category; location = it.location; expiry = it.expiry }
+        func makeItem() -> PantryItem { PantryItem(name: name, quantity: quantity, category: category, location: location, expiry: expiry) }
+    }
+
+    static func record(_ outcome: Outcome, delta: Int = 1, defaults: UserDefaults = .standard) {
+        let key = outcome == .consumed ? consumedKey : wastedKey
+        defaults.set(max(0, defaults.integer(forKey: key) + delta), forKey: key)
+    }
+
+    static func tally(defaults: UserDefaults = .standard) -> (consumed: Int, wasted: Int) {
+        (defaults.integer(forKey: consumedKey), defaults.integer(forKey: wastedKey))
     }
 }
 
@@ -83,7 +151,7 @@ struct ChoresView: View {
                                     Text(c.name).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
                                     HStack(spacing: 6) {
                                         Text(c.assignee).font(.caption2).padding(.horizontal,6).padding(.vertical,2).background(Color.homeTint.opacity(0.2), in: Capsule()).foregroundStyle(.homeTint)
-                                        if let due = c.nextDue { Text(dueLabel(due)).font(.caption).foregroundStyle(due < .now ? Theme.danger : Theme.textSecondary) }
+                                        if let due = c.nextDue { Text(Self.dueLabel(due)).font(.caption).foregroundStyle(Self.dayGap(to: due) < 0 ? Theme.danger : Theme.textSecondary) }
                                         else { Text("Jamais faite").font(.caption).foregroundStyle(Theme.warning) }
                                     }
                                 }
@@ -100,7 +168,15 @@ struct ChoresView: View {
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { ChoreEditor() }
     }
-    private func dueLabel(_ d: Date) -> String { let days = Calendar.current.dateComponents([.day], from: .now, to: d).day ?? 0; return days < 0 ? "En retard" : days == 0 ? "Aujourd'hui" : "Dans \(days)j" }
+    /// Ecart en jours CALENDAIRES (debut de journee des deux cotes): depuis "maintenant",
+    /// un retard de moins de 24 h et une tache due demain matin affichaient "Aujourd'hui".
+    nonisolated static func dayGap(to d: Date, now: Date = .now, calendar: Calendar = .current) -> Int {
+        calendar.dateComponents([.day], from: calendar.startOfDay(for: now), to: calendar.startOfDay(for: d)).day ?? 0
+    }
+    nonisolated static func dueLabel(_ d: Date, now: Date = .now, calendar: Calendar = .current) -> String {
+        let days = dayGap(to: d, now: now, calendar: calendar)
+        return days < 0 ? "En retard" : days == 0 ? "Aujourd'hui" : days == 1 ? "Demain" : "Dans \(days)j"
+    }
 }
 
 struct ChoreEditor: View {
@@ -169,6 +245,7 @@ struct PetCard: View {
                     Spacer()
                     Text(e.date, style: .date).font(.caption).foregroundStyle(e.date < .now ? Theme.danger : Theme.textSecondary)
                 }
+                .contextMenu { Button(role: .destructive) { removeEvent(e) } label: { Label("Supprimer", systemImage: "trash") } }
             }
         }.card()
         .sheet(isPresented: $showAddEvent) { PetEventEditor(pet: pet) }
@@ -183,6 +260,13 @@ struct PetCard: View {
                 id: ReminderIDs.petCare(pet: pet.name, type: e.type, date: e.date))
         }
         ctx.delete(pet)
+    }
+    /// Supprimer un soin annule aussi son rappel (sinon il sonne pour rien).
+    private func removeEvent(_ e: PetCare) {
+        NotificationManager.shared.cancel(id: ReminderIDs.petCare(pet: pet.name, type: e.type, date: e.date))
+        pet.events.removeAll { $0.persistentModelID == e.persistentModelID }
+        ctx.delete(e)
+        _ = LifeOSTry(try ctx.save(), context: "suppression soin animal", category: AppLog.data)
     }
     private func iconFor(_ t: String) -> String { switch t { case "Vétérinaire": return "cross.case.fill"; case "Vaccin": return "syringe.fill"; case "Anti-puces": return "ant.fill"; default: return "fork.knife" } }
 }
@@ -209,26 +293,40 @@ struct PetEditor: View {
 struct PetEventEditor: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var pet: Pet
-    @State private var type = "Vétérinaire"; @State private var date = Date(); @State private var note = ""; @State private var remind = true
+    // Date par defaut dans le futur: "maintenant" + rappel active donnait un rappel
+    // ignore en silence (NotificationManager refuse les dates passees).
+    @State private var type = "Vétérinaire"; @State private var date = PetEventEditor.defaultDate(); @State private var note = ""; @State private var remind = true
     var body: some View {
         NavigationStack {
             Form {
                 Picker("Type", selection: $type) { ForEach(["Gamelle","Vétérinaire","Vaccin","Anti-puces"], id: \.self) { Text($0) } }
                 DatePicker("Date", selection: $date)
                 TextField("Note", text: $note)
-                Toggle("Me rappeler", isOn: $remind)
+                Section {
+                    Toggle("Me rappeler", isOn: $remind)
+                } footer: {
+                    if remind && !Self.canRemind(at: date) { Text("Date passée : aucun rappel ne sera programmé.").foregroundStyle(Theme.warning) }
+                }
             }
             .navigationTitle("Événement").navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
                     pet.events.append(PetCare(type: type, date: date, note: note))
-                    if remind { NotificationManager.shared.schedule(id: ReminderIDs.petCare(pet: pet.name, type: type, date: date), title: "\(pet.name) — \(type)", body: note.isEmpty ? "Rappel pour \(pet.name)" : note, at: date) }
+                    if remind && Self.canRemind(at: date) { NotificationManager.shared.schedule(id: ReminderIDs.petCare(pet: pet.name, type: type, date: date), title: "\(pet.name) — \(type)", body: note.isEmpty ? "Rappel pour \(pet.name)" : note, at: date) }
                     dismiss()
                 } }
             }
         }
     }
+
+    /// Heure pleine suivante: une date future par defaut, donc un rappel qui sonnera vraiment.
+    nonisolated static func defaultDate(now: Date = .now, calendar: Calendar = .current) -> Date {
+        let hourStart = calendar.dateInterval(of: .hour, for: now)?.start ?? now
+        return calendar.date(byAdding: .hour, value: 1, to: hourStart) ?? now.addingTimeInterval(3600)
+    }
+
+    nonisolated static func canRemind(at date: Date, now: Date = .now) -> Bool { date > now }
 }
 
 // MARK: - Maintenance

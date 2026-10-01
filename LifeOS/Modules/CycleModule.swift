@@ -32,7 +32,10 @@ struct CycleTrackerView: View {
     @Query(sort: \CycleEntry.date, order: .reverse) private var entries: [CycleEntry]
     @ObservedObject private var cycle = CycleContext.shared
 
-    @State private var selectedFlow = 1
+    // "Aucun" par defaut: un flux ne doit etre note que s'il est choisi.
+    // Avec "Léger" par defaut, noter un symptome au jour 20 enregistrait des
+    // regles et deplacait le debut du cycle.
+    @State private var selectedFlow = 0
     @State private var selectedSymptoms: Set<String> = []
     @State private var selectedMood = 0
     @State private var note = ""
@@ -51,6 +54,12 @@ struct CycleTrackerView: View {
     private var phaseColor: Color { Color(hex: UInt(cycle.currentPhase.colorHex)) }
     private var todayEntry: CycleEntry? {
         entries.first { Calendar.current.isDateInToday($0.date) }
+    }
+    /// Moyenne mesuree sur les regles notees (la meme que l'ecran Historique).
+    private var observedLength: Int? {
+        guard let s = CycleStats.summary(flowDays: entries.filter { $0.flow > 0 }.map(\.date)) else { return nil }
+        let avg = Int(s.averageDays.rounded())
+        return (21...45).contains(avg) ? avg : nil
     }
 
     var body: some View {
@@ -81,9 +90,9 @@ struct CycleTrackerView: View {
                                     Text(cycle.currentPhase.label)
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundStyle(phaseColor)
-                                    Text("Règles dans \(cycle.daysUntilPeriod) jour\(cycle.daysUntilPeriod > 1 ? "s" : "")")
+                                    Text(periodLine)
                                         .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(cycle.isLate ? Theme.warning : .secondary)
                                 }
                                 Spacer()
                                 Button {
@@ -96,6 +105,24 @@ struct CycleTrackerView: View {
                                         .background(phaseColor.opacity(0.1), in: Capsule())
                                 }
                                 .buttonStyle(.plain)
+                            }
+
+                            // La duree reglee et la moyenne observee pouvaient
+                            // se contredire d'un ecran a l'autre sans le dire.
+                            if let observed = observedLength, observed != cycleLengthDays {
+                                HStack {
+                                    Text("Moyenne observée : \(observed) j · prévisions sur \(cycleLengthDays) j")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                    Spacer()
+                                    Button("Utiliser \(observed) j") {
+                                        cycleLengthDays = observed
+                                        cycle.refresh()
+                                    }
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(phaseColor)
+                                    .buttonStyle(.plain)
+                                }
                             }
                         } else {
                             VStack(spacing: 12) {
@@ -309,6 +336,9 @@ struct CycleTrackerView: View {
                 .presentationDetents([.medium])
             }
             .onAppear {
+                // Le jour du cycle n'etait recalcule qu'a une action: rouvert
+                // le lendemain, l'ecran gardait le jour d'hier.
+                cycle.refresh()
                 loadTodayEntry()
                 pickedDate = cycleStartDateTS > 0 ? Date(timeIntervalSince1970: cycleStartDateTS) : Date()
             }
@@ -328,6 +358,15 @@ struct CycleTrackerView: View {
                 }
             }
         }
+    }
+
+    private var periodLine: String {
+        if cycle.isLate {
+            return cycle.lateDays == 0
+                ? "Règles attendues aujourd'hui · note le flux quand elles arrivent"
+                : "Règles attendues depuis \(cycle.lateDays) jour\(cycle.lateDays > 1 ? "s" : "") · note le flux ou modifie la date"
+        }
+        return "Règles dans \(cycle.daysUntilPeriod) jour\(cycle.daysUntilPeriod > 1 ? "s" : "")"
     }
 
     private func loadTodayEntry() {
@@ -350,8 +389,16 @@ struct CycleTrackerView: View {
             entry = CycleEntry(flow: selectedFlow, symptoms: Array(selectedSymptoms), mood: selectedMood, note: note)
             ctx.insert(entry)
         }
-        if selectedFlow > 0 && cycleStartDateTS == 0 {
-            cycleStartDateTS = Date.now.timeIntervalSince1970
+        if selectedFlow > 0 {
+            // Les regles notees font avancer le debut du cycle (avant: pose
+            // une seule fois, jamais deplace). @Query n'a pas encore l'entree
+            // inseree: on ajoute aujourd'hui a la main.
+            let flowDays = entries.filter { $0.flow > 0 }.map(\.date) + [entry.date]
+            let stored = cycleStartDateTS > 0 ? Date(timeIntervalSince1970: cycleStartDateTS) : nil
+            if let start = CycleMath.updatedStart(stored: stored, flowDays: flowDays), start != stored {
+                cycleStartDateTS = start.timeIntervalSince1970
+                pickedDate = start
+            }
         }
         cycle.refresh()
         Haptics.tap()
@@ -368,11 +415,7 @@ struct CycleSymptomsView: View {
     @Query(sort: \CycleEntry.date, order: .reverse) private var entries: [CycleEntry]
 
     private var recentSymptoms: [(String, Int)] {
-        var counts: [String: Int] = [:]
-        for e in entries.prefix(3) {
-            for s in e.symptoms { counts[s, default: 0] += 1 }
-        }
-        return counts.sorted { $0.value > $1.value }
+        CycleMath.recentSymptomCounts(entries.map { (date: $0.date, symptoms: $0.symptoms) })
     }
 
     var body: some View {
@@ -406,6 +449,7 @@ struct CycleSymptomsView: View {
 
 struct CycleHistoryView: View {
     @Query(sort: \CycleEntry.date, order: .reverse) private var entries: [CycleEntry]
+    @AppStorage(AppStorageKeys.cycleLengthDays) private var cycleLengthDays = 28
 
     /// Voir `CycleStats`. Le calcul precedent mesurait l'ecart entre deux
     /// entrees consecutives avec flux et ne gardait que les ecarts de plus de
@@ -432,6 +476,14 @@ struct CycleHistoryView: View {
                             Text("Plus court · plus long")
                             Spacer()
                             Text("\(stats.shortestDays) · \(stats.longestDays) jours").foregroundStyle(.secondary)
+                        }
+                        // Dit sur quelle duree tournent les previsions du
+                        // suivi, pour que les deux ecrans ne se contredisent
+                        // plus en silence.
+                        HStack {
+                            Text("Durée utilisée pour les prévisions")
+                            Spacer()
+                            Text("\(cycleLengthDays) jours").foregroundStyle(.secondary)
                         }
                         HStack {
                             Text("Régularité")

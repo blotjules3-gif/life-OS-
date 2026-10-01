@@ -422,8 +422,13 @@ struct MobilitySetupView: View {
     private func commit() {
         if hasCar == "Oui", !name.trimmingCharacters(in: .whitespaces).isEmpty {
             let v = vehicles.first ?? { let nv = Vehicle(); ctx.insert(nv); return nv }()
+            // Les identifiants de rappel derivent du nom et des dates: on annule
+            // avec les ANCIENNES valeurs avant de changer, puis on repose. Sinon
+            // l'ancien rappel survivait et la nouvelle date n'en avait aucun.
+            VehicleReminders.cancel(v, others: vehicles)
             v.name = name
             v.insuranceRenewal = setInsurance ? insurance : nil
+            VehicleReminders.schedule(v)
             do { try ctx.save() } catch { AppLog.data.error("MobilitySetup save failed: \(error.localizedDescription, privacy: .public)") }
         }
         CategorySetup.markDone(.mobility); Haptics.success()

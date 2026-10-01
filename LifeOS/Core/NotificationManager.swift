@@ -25,52 +25,101 @@ final class NotificationManager {
         }
     }
 
+    /// Identifiants du réveil. `lifeos.wakeup` reste celui du cas « tous les jours »,
+    /// celui que le délégué de notifications reconnaît pour lancer l'écran de sonnerie.
+    static let alarmBaseID = "lifeos.wakeup"
+    static let alarmPreviewID = "lifeos.wakeup.preview"
+    static let alarmSnoozeID = "lifeos.wakeup.snooze"
+    static let alarmDayPrefix = "lifeos.wakeup.day"
+    static let alarmPreviewDayPrefix = "lifeos.wakeup.preview.day"
+
+    /// Un déclencheur du réveil : la sonnerie et sa notification « dans 5 minutes ».
+    struct AlarmSlot: Equatable {
+        let id: String
+        let previewID: String
+        let alarm: DateComponents
+        let preview: DateComponents
+    }
+
+    /// Tous les identifiants que le réveil peut poser, pour tout annuler d'un coup.
+    static var allAlarmIDs: [String] {
+        [alarmBaseID, alarmPreviewID]
+            + (1...7).map { "\(alarmDayPrefix)\($0)" }
+            + (1...7).map { "\(alarmPreviewDayPrefix)\($0)" }
+    }
+
+    /// Jours stockés lundi = 1 … dimanche = 7 (format de WakeUpView). Sans valeur
+    /// enregistrée, l'écran affiche tous les jours actifs: même défaut ici.
+    static func storedWakeupDays(_ ud: UserDefaults = .standard) -> Set<Int> {
+        let raw = ud.string(forKey: AppStorageKeys.wakeupRepeatDays) ?? "1,2,3,4,5,6,7"
+        return Set(raw.split(separator: ",").compactMap { Int($0) }.filter { (1...7).contains($0) })
+    }
+
+    /// Calcule les déclencheurs. Avant, seuls heure + minute étaient programmés en
+    /// répétition quotidienne: le réveil sonnait aussi les jours désactivés. Ici un
+    /// déclencheur hebdomadaire par jour choisi (weekday Calendar: 1 = dimanche).
+    static func alarmSlots(hour: Int, minute: Int, mondayBasedDays days: Set<Int>) -> [AlarmSlot] {
+        let valid = days.filter { (1...7).contains($0) }
+        guard !valid.isEmpty else { return [] }
+        // Préavis 5 min avant; s'il passe avant minuit, il tombe la veille.
+        var previewTotal = hour * 60 + minute - 5
+        let previewIsDayBefore = previewTotal < 0
+        if previewIsDayBefore { previewTotal += 24 * 60 }
+        let pHour = previewTotal / 60, pMinute = previewTotal % 60
+
+        if valid.count == 7 {
+            return [AlarmSlot(id: alarmBaseID, previewID: alarmPreviewID,
+                              alarm: DateComponents(hour: hour, minute: minute),
+                              preview: DateComponents(hour: pHour, minute: pMinute))]
+        }
+        return valid.sorted().map { d in
+            let weekday = d % 7 + 1                       // lun 1 → 2 … dim 7 → 1
+            let previewWeekday = previewIsDayBefore ? (weekday + 5) % 7 + 1 : weekday
+            return AlarmSlot(id: "\(alarmDayPrefix)\(d)", previewID: "\(alarmPreviewDayPrefix)\(d)",
+                             alarm: DateComponents(hour: hour, minute: minute, weekday: weekday),
+                             preview: DateComponents(hour: pHour, minute: pMinute, weekday: previewWeekday))
+        }
+    }
+
     /// Alarme réveil — time-sensitive, perce le mode Ne pas déranger, déclenche l'app au tap.
-    func scheduleAlarm(hour: Int, minute: Int, userName: String) {
+    /// `days` nil = jours enregistrés par l'écran Réveil (les autres appelants ne les passent pas).
+    func scheduleAlarm(hour: Int, minute: Int, userName: String, days: Set<Int>? = nil) {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: Self.allAlarmIDs)
+
+        for slot in Self.alarmSlots(hour: hour, minute: minute, mondayBasedDays: days ?? Self.storedWakeupDays()) {
+            // Alarme principale
+            let content = UNMutableNotificationContent()
+            content.title = "Réveil LifeOS"
+            content.body = userName.isEmpty
+                ? "C'est l'heure. Lance ta journée."
+                : "Bonjour \(userName) ! C'est l'heure."
+            content.sound = .defaultCritical
+            content.interruptionLevel = .timeSensitive
+            content.categoryIdentifier = "LIFEOS_ALARM"
+            let trigger = UNCalendarNotificationTrigger(dateMatching: slot.alarm, repeats: true)
+            center.add(UNNotificationRequest(identifier: slot.id, content: content, trigger: trigger))
+
+            // Preview H-5 min — prépare le widget si l'app est ouverte, sinon montre une bannière
+            let previewContent = UNMutableNotificationContent()
+            previewContent.title = "Réveil dans 5 minutes"
+            previewContent.body = "Ton briefing du matin est prêt."
+            previewContent.sound = .default
+            previewContent.interruptionLevel = .timeSensitive
+            previewContent.categoryIdentifier = "LIFEOS_ALARM"
+            previewContent.userInfo = ["type": "wakeup_preview", "alarmHour": hour, "alarmMinute": minute,
+                                       "userName": userName]
+            let preTrigger = UNCalendarNotificationTrigger(dateMatching: slot.preview, repeats: true)
+            center.add(UNNotificationRequest(identifier: slot.previewID, content: previewContent, trigger: preTrigger))
+        }
+    }
+
+    /// Couper le réveil: sonnerie, préavis « dans 5 minutes » et rappel de snooze.
+    /// Avant, seul `lifeos.wakeup` était annulé et le préavis revenait chaque jour.
+    func cancelAlarm() {
         UNUserNotificationCenter.current().removePendingNotificationRequests(
-            withIdentifiers: ["lifeos.wakeup", "lifeos.wakeup.preview"]
+            withIdentifiers: Self.allAlarmIDs + [Self.alarmSnoozeID]
         )
-
-        // Alarme principale
-        let content = UNMutableNotificationContent()
-        content.title = "Réveil LifeOS"
-        content.body = userName.isEmpty
-            ? "C'est l'heure. Lance ta journée."
-            : "Bonjour \(userName) ! C'est l'heure."
-        content.sound = .defaultCritical
-        content.interruptionLevel = .timeSensitive
-        content.categoryIdentifier = "LIFEOS_ALARM"
-
-        var comps = DateComponents()
-        comps.hour = hour
-        comps.minute = minute
-        let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
-        let request = UNNotificationRequest(identifier: "lifeos.wakeup", content: content, trigger: trigger)
-        UNUserNotificationCenter.current().add(request)
-
-        // Preview H-5 min — prépare le widget si l'app est ouverte, sinon montre une bannière
-        let previewContent = UNMutableNotificationContent()
-        previewContent.title = "Réveil dans 5 minutes"
-        previewContent.body = "Ton briefing du matin est prêt."
-        previewContent.sound = .default
-        previewContent.interruptionLevel = .timeSensitive
-        previewContent.categoryIdentifier = "LIFEOS_ALARM"
-        previewContent.userInfo = ["type": "wakeup_preview", "alarmHour": hour, "alarmMinute": minute,
-                                   "userName": userName]
-
-        var alarmComps = DateComponents()
-        alarmComps.hour = hour
-        alarmComps.minute = minute
-        let alarmDate = Calendar.current.nextDate(after: .now, matching: alarmComps, matchingPolicy: .nextTime) ?? .now
-        let previewDate = Calendar.current.date(byAdding: .minute, value: -5, to: alarmDate) ?? alarmDate
-        let preComps = Calendar.current.dateComponents([.hour, .minute], from: previewDate)
-        let preTrigger = UNCalendarNotificationTrigger(dateMatching: preComps, repeats: true)
-        let preRequest = UNNotificationRequest(
-            identifier: "lifeos.wakeup.preview",
-            content: previewContent,
-            trigger: preTrigger
-        )
-        UNUserNotificationCenter.current().add(preRequest)
     }
 
     /// Notification ponctuelle à une date précise.
@@ -185,6 +234,9 @@ final class NotificationManager {
     }
 
     func cancel(id: String) {
+        // Couper « lifeos.wakeup » = couper tout le réveil (jours, préavis, snooze):
+        // ProfileView appelle encore cancel(id:) avec cet identifiant.
+        if id == Self.alarmBaseID { cancelAlarm(); return }
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [id])
     }
 
@@ -256,8 +308,8 @@ final class NotificationManager {
                      at: cal.date(bySettingHour: 9, minute: 0, second: 0, of: periodWarningDate) ?? periodWarningDate)
         }
 
-        // Fenêtre ovulation (~jour 14)
-        let ovulationDay = 14
+        // Fenêtre ovulation : 14 jours avant les règles (phase lutéale fixe), pas le jour 14.
+        let ovulationDay = CycleMath.ovulationDay(length: cycleDays)
         let daysToOvulation: Int
         if dayInCycle < ovulationDay {
             daysToOvulation = ovulationDay - dayInCycle

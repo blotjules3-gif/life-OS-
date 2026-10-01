@@ -373,13 +373,13 @@ struct FlightGroupCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            ForEach(Array(group.offers[0].slices.enumerated()), id: \.offset) { i, s in
+            ForEach(Array(Self.displaySlices(group).enumerated()), id: \.offset) { i, s in
                 let a = group.analysis.slices[safe: i]
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("\(FlightSearch.clock(s.segments.first!.departingAt)) → \(FlightSearch.clock(s.segments.last!.arrivingAt))")
+                        Text(Self.timesLabel(s))
                             .font(.title3.weight(.bold).monospacedDigit()).foregroundStyle(Theme.textPrimary)
-                        Text("\(s.origin.iata) → \(s.destination.iata) · \(s.segments.compactMap(\.marketingCarrier.name).first ?? s.segments[0].marketingCarrier.code ?? "")")
+                        Text("\(s.origin.iata) → \(s.destination.iata) · \(Self.carrierLabel(s))")
                             .font(.caption).foregroundStyle(Theme.textSecondary)
                     }
                     Spacer()
@@ -411,6 +411,25 @@ struct FlightGroupCard: View {
     }
 }
 
+extension FlightGroupCard {
+    /// Donnees serveur: un groupe sans offre ou un trajet sans segment ne doit
+    /// jamais faire planter l'app (avant: offers[0] et segments.first!).
+    static func displaySlices(_ group: FlightSearch.Group) -> [FlightSearch.Slice] {
+        group.offers.first?.slices ?? []
+    }
+
+    static func timesLabel(_ s: FlightSearch.Slice) -> String {
+        guard let first = s.segments.first, let last = s.segments.last else { return "Horaires inconnus" }
+        return "\(FlightSearch.clock(first.departingAt)) → \(FlightSearch.clock(last.arrivingAt))"
+    }
+
+    static func carrierLabel(_ s: FlightSearch.Slice) -> String {
+        s.segments.compactMap(\.marketingCarrier.name).first
+            ?? s.segments.compactMap(\.marketingCarrier.code).first
+            ?? "Compagnie inconnue"
+    }
+}
+
 extension Array { subscript(safe i: Int) -> Element? { indices.contains(i) ? self[i] : nil } }
 
 // MARK: - Detail
@@ -424,8 +443,9 @@ struct FlightDetailView: View {
             Theme.background
             ScrollView {
                 VStack(spacing: 14) {
-                    ForEach(Array(group.offers[0].slices.enumerated()), id: \.offset) { i, s in
-                        SliceTimeline(slice: s, analysis: group.analysis.slices[safe: i], index: i, total: group.offers[0].slices.count)
+                    let slices = FlightGroupCard.displaySlices(group)
+                    ForEach(Array(slices.enumerated()), id: \.offset) { i, s in
+                        SliceTimeline(slice: s, analysis: group.analysis.slices[safe: i], index: i, total: slices.count)
                     }
                     VStack(alignment: .leading, spacing: 6) {
                         SectionHeader(title: "Offres", subtitle: "\(group.offers.count) pour ce même itinéraire, triées par prix")
@@ -438,7 +458,7 @@ struct FlightDetailView: View {
                 }.padding(Theme.pad).frame(maxWidth: 820).frame(maxWidth: .infinity)
             }
         }
-        .navigationTitle(group.offers[0].slices.map { "\($0.origin.iata)→\($0.destination.iata)" }.joined(separator: " · "))
+        .navigationTitle(FlightGroupCard.displaySlices(group).map { "\($0.origin.iata)→\($0.destination.iata)" }.joined(separator: " · "))
         .navigationBarTitleDisplayMode(.inline)
     }
 }

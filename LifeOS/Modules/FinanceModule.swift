@@ -108,7 +108,7 @@ struct AccountsView: View {
         }
         .navigationTitle("Comptes & dépenses").navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showAddAccount) { AccountEditor() }
-        .sheet(isPresented: $showAddTxn) { TxnEditor(accounts: accounts.map { $0.name }) }
+        .sheet(isPresented: $showAddTxn) { TxnEditor(accounts: accounts) }
     }
     private func anomalyAlert() -> String? {
         if accounts.contains(where: { $0.balance < 0 }) { return "Un de tes comptes est à découvert." }
@@ -147,9 +147,11 @@ struct AccountEditor: View {
 struct TxnEditor: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
-    let accounts: [String]
+    /// Les comptes eux-memes, pas leurs noms: avec deux comptes du meme nom,
+    /// l'operation partait sur le premier trouve.
+    let accounts: [Account]
     @State private var amount = ""; @State private var isExpense = true
-    @State private var category = "Courses"; @State private var note = ""; @State private var account = ""
+    @State private var category = "Courses"; @State private var note = ""; @State private var accountID: UUID?
     @State private var error: String?
     private let cats = ["Courses","Restau","Transport","Logement","Loisirs","Santé","Shopping","Salaire","Divers"]
     private var parsed: AmountInput.Parsed { AmountInput.parse(amount) }
@@ -164,12 +166,18 @@ struct TxnEditor: View {
                 Picker("Type", selection: $isExpense) { Text("Dépense").tag(true); Text("Revenu").tag(false) }.pickerStyle(.segmented)
                 AmountRow(title: "Montant", text: $amount)
                 Picker("Catégorie", selection: $category) { ForEach(cats, id: \.self) { Text($0) } }
-                if !accounts.isEmpty { Picker("Compte", selection: $account) { ForEach(accounts, id: \.self) { Text($0) } } }
+                if !accounts.isEmpty {
+                    Picker("Compte", selection: $accountID) {
+                        ForEach(accounts, id: \.id) { a in
+                            Text("\(a.name.isEmpty ? a.kind : a.name) · \(a.kind)").tag(Optional(a.id))
+                        }
+                    }
+                }
                 TextField("Note", text: $note)
                 FormError(message: error)
             }
             .navigationTitle("Nouvelle opération").navigationBarTitleDisplayMode(.inline)
-            .onAppear { account = accounts.first ?? "Courant" }
+            .onAppear { if accountID == nil { accountID = accounts.first?.id } }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
@@ -178,8 +186,8 @@ struct TxnEditor: View {
                     // Passe par LedgerService : le solde est RECALCULE depuis les
                     // operations. L'ancien code faisait `acc.balance += v` ici, et rien
                     // ne le defaisait a la suppression ou a la modification.
-                    guard let acc = (try? ctx.fetch(FetchDescriptor<Account>()))?.first(where: { $0.name == account }) else {
-                        error = "Compte « \(account) » introuvable. Choisis un compte existant."
+                    guard let id = accountID, let acc = LedgerService.account(ctx, id: id) else {
+                        error = "Compte introuvable. Choisis un compte existant."
                         return
                     }
                     _ = LedgerService.addTransaction(ctx, amount: v, category: category, account: acc, note: note)
@@ -210,11 +218,12 @@ struct BudgetView: View {
                                     Circle().fill(Color(hex: UInt(e.colorHex))).frame(width: 12, height: 12)
                                     Text(e.name).font(.headline).foregroundStyle(Theme.textPrimary)
                                     Spacer()
-                                    Text("\(Int(e.spent)) / \(Int(e.monthlyBudget)) €").font(.subheadline.bold()).foregroundStyle(e.remaining < 0 ? Theme.danger : Theme.textPrimary)
+                                    // Montants exacts: Int() tronquait (9,99 € affichait 9).
+                                    Text("\(e.spent, format: .currency(code: "EUR")) / \(e.monthlyBudget, format: .currency(code: "EUR"))").font(.subheadline.bold()).foregroundStyle(e.remaining < 0 ? Theme.danger : Theme.textPrimary)
                                 }
                                 ProgressView(value: e.progress).tint(e.remaining < 0 ? Theme.danger : Color(hex: UInt(e.colorHex)))
                                 HStack {
-                                    Text(e.remaining >= 0 ? "Reste \(Int(e.remaining))€" : "Dépassé de \(Int(-e.remaining))€").font(.caption).foregroundStyle(e.remaining < 0 ? Theme.danger : Theme.textSecondary)
+                                    Text(e.remaining >= 0 ? "Reste \(e.remaining.formatted(.currency(code: "EUR")))" : "Dépassé de \((-e.remaining).formatted(.currency(code: "EUR")))").font(.caption).foregroundStyle(e.remaining < 0 ? Theme.danger : Theme.textSecondary)
                                     Spacer()
                                     Button { e.spent = max(0, e.spent-10) } label: {
                                         Text("-10").font(.caption.bold())
@@ -306,14 +315,13 @@ struct SubscriptionsView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             HStack {
                                 Text(s.name).font(.headline).foregroundStyle(s.active ? Theme.textPrimary : Theme.textSecondary)
-                                if forgotten(s) { Text("Oublié ?").font(.caption2.bold()).padding(.horizontal,6).padding(.vertical,2).background(Theme.warning.opacity(0.2), in: Capsule()).foregroundStyle(Theme.warning) }
                                 Spacer()
                                 Text("\(s.amount, format: .currency(code: "EUR"))/\(s.cycle == "Annuel" ? "an" : "mois")").bold().foregroundStyle(.finTint)
                             }
                             HStack {
                                 Text("Prochain : \(s.nextDate, style: .date)").font(.caption).foregroundStyle(Theme.textSecondary)
                                 Spacer()
-                                Toggle("Actif", isOn: Binding(get: { s.active }, set: { s.active = $0 })).labelsHidden().tint(.finTint)
+                                Toggle("Actif", isOn: Binding(get: { s.active }, set: { s.active = $0; advanceDueDates() })).labelsHidden().tint(.finTint)
                                 Link(destination: cancelURL(s.name)) { Text("Résilier").font(.caption.bold()).foregroundStyle(Theme.danger) }
                             }
                         }.card()
@@ -326,8 +334,35 @@ struct SubscriptionsView: View {
         .navigationTitle("Abonnements").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { SubscriptionEditor() }
+        .onAppear { advanceDueDates() }
+        .onChange(of: subs.count) { _, _ in advanceDueDates() }
     }
-    private func forgotten(_ s: Subscription) -> Bool { s.active && s.nextDate < Calendar.current.date(byAdding: .month, value: -2, to: .now)! }
+
+    /// `nextDate` n'avancait jamais: « Prochain » montrait une date passee, et le
+    /// badge « Oublié ? » (date + 2 mois) s'allumait sur tout abonnement actif, y
+    /// compris ceux du questionnaire crees avec la date du jour. Ce badge n'avait
+    /// aucune donnee d'usage derriere lui: il est retire. La date avance au cycle.
+    private func advanceDueDates() {
+        var changed = false
+        for s in subs where s.active {
+            let next = Self.nextChargeDate(from: s.nextDate, cycle: s.cycle)
+            if next != s.nextDate { s.nextDate = next; changed = true }
+        }
+        if changed { LifeOSTry(try ctx.save(), context: "prochain prelevement", category: AppLog.data) }
+    }
+
+    /// Premiere echeance a partir d'aujourd'hui, en comptant depuis la date de
+    /// depart (31 janv. donne 28 fev. puis 31 mars, sans glisser au 28).
+    static func nextChargeDate(from start: Date, cycle: String, now: Date = .now,
+                               calendar: Calendar = .current) -> Date {
+        let today = calendar.startOfDay(for: now)
+        guard start < today else { return start }
+        let unit: Calendar.Component = cycle == "Annuel" ? .year : .month
+        for k in 1...1200 {
+            if let d = calendar.date(byAdding: unit, value: k, to: start), d >= today { return d }
+        }
+        return start
+    }
     /// Recherche "resilier <abonnement>", sans jamais planter.
     ///
     /// L'ancienne version interpolait le nom saisi par l'utilisateur dans une
@@ -382,9 +417,42 @@ struct SplitView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \SplitExpense.date, order: .reverse) private var expenses: [SplitExpense]
     @State private var showAdd = false
-    @AppStorage(AppStorageKeys.splitMembers) private var membersRaw = "Moi,Alex,Sam"
+    // Plus de membres inventes (« Alex », « Sam ») dans les soldes: on part de
+    // l'utilisateur seul et il ajoute son groupe.
+    @AppStorage(AppStorageKeys.splitMembers) private var membersRaw = "Moi"
+    @State private var newMember = ""
 
-    private var members: [String] { membersRaw.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } }
+    /// Membres enregistres + toute personne deja presente dans une depense (sinon ses
+    /// dettes disparaitraient des soldes).
+    private var members: [String] {
+        Self.members(raw: membersRaw, expenseNames: expenses.flatMap { [$0.payer] + $0.participants.split(separator: ",").map(String.init) })
+    }
+
+    static func members(raw: String, expenseNames: [String]) -> [String] {
+        var out: [String] = []
+        for n in raw.split(separator: ",").map(String.init) + expenseNames {
+            let t = n.trimmingCharacters(in: .whitespaces)
+            if !t.isEmpty, !out.contains(t) { out.append(t) }
+        }
+        return out
+    }
+
+    private func usedInExpenses(_ m: String) -> Bool {
+        expenses.contains { $0.payer == m || $0.participants.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.contains(m) }
+    }
+
+    private func addMember() {
+        // Une virgule casserait la liste stockee en CSV.
+        let n = newMember.replacingOccurrences(of: ",", with: " ").trimmingCharacters(in: .whitespaces)
+        guard !n.isEmpty, !members.contains(n) else { newMember = ""; return }
+        membersRaw = (Self.members(raw: membersRaw, expenseNames: []) + [n]).joined(separator: ",")
+        newMember = ""
+    }
+
+    private func removeMember(_ m: String) {
+        guard !usedInExpenses(m) else { return }
+        membersRaw = Self.members(raw: membersRaw, expenseNames: []).filter { $0 != m }.joined(separator: ",")
+    }
 
     /// Solde de chacun : payé - sa part due.
     private var balances: [String: Double] {
@@ -425,7 +493,30 @@ struct SplitView: View {
                         Text(settlementHint).font(.caption).foregroundStyle(Theme.textSecondary).padding(.top, 4)
                     }.card()
 
-                    HStack { SectionHeader(title: "Dépenses"); Button { showAdd = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.finTint) }.accessibilityLabel("Ajouter") }
+                    VStack(alignment: .leading, spacing: 10) {
+                        SectionHeader(title: "Membres")
+                        if members.count < 2 {
+                            Text("Ajoute les personnes du groupe pour partager une dépense.").font(.caption).foregroundStyle(Theme.textSecondary)
+                        }
+                        ForEach(members, id: \.self) { m in
+                            HStack {
+                                Text(m).foregroundStyle(Theme.textPrimary)
+                                Spacer()
+                                if !usedInExpenses(m) && members.count > 1 {
+                                    Button { removeMember(m) } label: { Image(systemName: "minus.circle").foregroundStyle(Theme.danger) }
+                                        .buttonStyle(.plain).accessibilityLabel("Retirer \(m)")
+                                }
+                            }
+                        }
+                        HStack {
+                            TextField("Nom", text: $newMember).onSubmit(addMember)
+                            Button { addMember() } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.finTint) }
+                                .buttonStyle(.plain).accessibilityLabel("Ajouter un membre")
+                                .disabled(newMember.trimmingCharacters(in: .whitespaces).isEmpty)
+                        }
+                    }.card()
+
+                    HStack { SectionHeader(title: "Dépenses"); Button { showAdd = true } label: { Image(systemName: "plus.circle.fill").foregroundStyle(.finTint) }.accessibilityLabel("Ajouter").disabled(members.isEmpty) }
                     if expenses.isEmpty { Text("Aucune dépense partagée.").font(.footnote).foregroundStyle(Theme.textSecondary) }
                     ForEach(expenses) { e in
                         HStack {
@@ -504,17 +595,20 @@ struct SavingsView: View {
                     } else {
                         ForEach(goals) { g in
                             VStack(alignment: .leading, spacing: 8) {
-                                HStack { Text(g.name).font(.headline).foregroundStyle(Theme.textPrimary); Spacer(); Text("\(Int(g.current)) / \(Int(g.target)) €").bold().foregroundStyle(Theme.textPrimary) }
+                                HStack { Text(g.name).font(.headline).foregroundStyle(Theme.textPrimary); Spacer(); Text("\(g.current, format: .currency(code: "EUR")) / \(g.target, format: .currency(code: "EUR"))").bold().foregroundStyle(Theme.textPrimary) }
                                 ProgressView(value: g.progress).tint(Color.accentColor)
                                 HStack {
-                                    Text(g.monthsLeft > 0 ? "≈ \(g.monthsLeft) mois restants (\(Int(g.monthly))€/mois)" : "Objectif atteint").font(.caption).foregroundStyle(Theme.textSecondary)
+                                    Text(Self.status(target: g.target, current: g.current, monthly: g.monthly)).font(.caption).foregroundStyle(Theme.textSecondary)
                                     Spacer()
-                                    Button { g.current += g.monthly } label: {
-                                        Text("+\(Int(g.monthly))€").font(.caption.bold())
-                                            .padding(.horizontal, 12).padding(.vertical, 6)
-                                            .glassControl(Capsule())
-                                            .foregroundStyle(Theme.textPrimary)
-                                    }.buttonStyle(.plain)
+                                    // Sans effort mensuel, « +0€ » ne faisait rien: bouton masque.
+                                    if g.monthly > 0 {
+                                        Button { g.current += g.monthly } label: {
+                                            Text("+\(g.monthly, format: .currency(code: "EUR"))").font(.caption.bold())
+                                                .padding(.horizontal, 12).padding(.vertical, 6)
+                                                .glassControl(Capsule())
+                                                .foregroundStyle(Theme.textPrimary)
+                                        }.buttonStyle(.plain)
+                                    }
                                 }
                             }.card()
                                 .contextMenu { Button(role: .destructive) { ctx.delete(g) } label: { Label("Supprimer", systemImage: "trash") } }
@@ -526,6 +620,15 @@ struct SavingsView: View {
         .navigationTitle("Épargne").navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showAdd = true } label: { Image(systemName: "plus") }.accessibilityLabel("Ajouter") } }
         .sheet(isPresented: $showAdd) { SavingsEditor() }
+    }
+
+    /// « Objectif atteint » seulement quand l'epargne atteint la cible. Avant, un
+    /// effort mensuel a 0 donnait monthsLeft = 0, donc « Objectif atteint » a tort.
+    static func status(target: Double, current: Double, monthly: Double) -> String {
+        if current >= target { return "Objectif atteint" }
+        guard monthly > 0 else { return "Fixe un effort mensuel pour estimer la date." }
+        let months = Int(ceil((target - current) / monthly))
+        return "≈ \(months) mois restants (\(monthly.formatted(.currency(code: "EUR")))/mois)"
     }
 }
 

@@ -90,15 +90,9 @@ struct HabitTrackerTimelineView: View {
         // 1. Habitudes
         for h in activeHabits {
             let isDone = h.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: now) }
-            var streak = 0
-            var checkDay = Calendar.current.startOfDay(for: now)
-            if !isDone {
-                checkDay = Calendar.current.date(byAdding: .day, value: -1, to: checkDay) ?? checkDay
-            }
-            while h.completions.contains(where: { Calendar.current.isDate($0.date, inSameDayAs: checkDay) }) {
-                streak += 1
-                checkDay = Calendar.current.date(byAdding: .day, value: -1, to: checkDay) ?? checkDay
-            }
+            // Serie sur les jours ACTIFS: une habitude du lundi au vendredi ne
+            // retombe plus a 1 chaque lundi.
+            let streak = ProductivityRules.habitStreak(h, now: now)
 
             items.append(
                 TimelineItem(
@@ -123,10 +117,12 @@ struct HabitTrackerTimelineView: View {
             if let block = t.blockStart {
                 taskHour = Calendar.current.component(.hour, from: block)
                 taskMinute = Calendar.current.component(.minute, from: block)
-            } else if let due = t.due {
+            } else if let due = t.due, !(ProductivityRules.isDateOnly(due) && !t.recurringDays.isEmpty) {
                 taskHour = Calendar.current.component(.hour, from: due)
                 taskMinute = Calendar.current.component(.minute, from: due)
             } else {
+                // (Une occurrence de tache recurrente sans heure est datee a minuit:
+                // elle n'a pas plus d'heure qu'avant, on ne la place pas a 00:00.)
                 // Tâche non horodatée : on ne surcharge pas la frise
                 continue
             }
@@ -619,7 +615,10 @@ struct HabitTrackerTimelineView: View {
         switch item.kind {
         case .habit(let habit):
             if let idx = habit.completions.firstIndex(where: { Calendar.current.isDate($0.date, inSameDayAs: now) }) {
-                habit.completions.remove(at: idx)
+                // Retirer du tableau ne supprime pas la ligne: elle restait orpheline
+                // en base. Meme chemin que HabitRow.toggleToday.
+                let c = habit.completions.remove(at: idx)
+                ctx.delete(c)
             } else {
                 habit.completions.append(HabitCompletion(date: now))
             }
@@ -628,9 +627,13 @@ struct HabitTrackerTimelineView: View {
             } catch {
                 AppLog.data.error("save habit completion error: \(error.localizedDescription)")
             }
+            // Le coach lit la serie moyenne: elle suit la coche.
+            ProductivityRules.publishAverageStreak(allHabits, now: now)
 
         case .task(let todo):
-            todo.done.toggle()
+            // Une tache recurrente passe a sa prochaine occurrence au lieu de
+            // rester cochee pour toujours (meme regle que la To-do).
+            ProductivityRules.toggleDone(todo, now: now)
             do {
                 try ctx.save()
             } catch {

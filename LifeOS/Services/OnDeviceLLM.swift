@@ -82,26 +82,22 @@ enum OnDeviceLLM {
             )
         }
 
-        // Étape 2 — Apple Intelligence si dispo pour du vrai coaching.
-        #if canImport(FoundationModels)
-        if #available(iOS 26.0, *) {
-            let model = SystemLanguageModel.default
-            switch model.availability {
-            case .available:
-                if let result = await respondViaAppleIntelligence(
-                    message: message,
-                    ctx: ctx,
-                    moduleContext: moduleContext,
-                    injectContext: injectContext,
-                    recentUpdates: recentUpdates
-                ) {
-                    return Reply(text: result.text, source: .onDeviceLLM, providerID: result.providerID)
-                }
-            case .unavailable:
-                break // → fallback
+        // Étape 2 — un vrai modèle si au moins un est prêt: Apple Intelligence OU un
+        // fournisseur cloud configuré par clé. Avant, le routeur n'était appelé que si
+        // Apple Intelligence était dispo: sans elle, une clé OpenAI/Anthropic valide
+        // était ignorée et seules les règles locales répondaient.
+        if shouldUseRouter(availabilities: AIModelRouter.shared.registered.map { $0.availability }) {
+            if let result = await respondViaRouter(
+                message: message,
+                ctx: ctx,
+                moduleContext: moduleContext,
+                injectContext: injectContext,
+                recentUpdates: recentUpdates
+            ) {
+                // .onDeviceLLM = « un modèle a répondu »; providerID dit lequel.
+                return Reply(text: result.text, source: .onDeviceLLM, providerID: result.providerID)
             }
         }
-        #endif
 
         // Étape 3 — LocalCoach rule-based comme filet, sinon message générique.
         if let ctx {
@@ -234,9 +230,14 @@ enum OnDeviceLLM {
         let providerID: String?
     }
 
-    #if canImport(FoundationModels)
-    @available(iOS 26.0, *)
-    private static func respondViaAppleIntelligence(
+    /// Vrai si au moins un fournisseur (Apple Intelligence ou cloud avec clé) est prêt.
+    static func shouldUseRouter(availabilities: [AIAvailability]) -> Bool {
+        availabilities.contains { $0.isAvailable }
+    }
+
+    /// Le pipeline n'utilise aucune API iOS 26: il passe par AIModelRouter, qui
+    /// vérifie lui même la disponibilité d'Apple Intelligence.
+    private static func respondViaRouter(
         message: String,
         ctx: ModelContext?,
         moduleContext: String?,
@@ -329,7 +330,6 @@ enum OnDeviceLLM {
         }
         return RouterResult(text: processed.text, providerID: response.providerID)
     }
-    #endif
 
     // MARK: - System prompt
     // La construction du prompt système est maintenant déléguée à PromptAssembler.

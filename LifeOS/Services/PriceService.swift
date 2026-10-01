@@ -155,7 +155,19 @@ enum StockService {
               let price = meta["regularMarketPrice"] as? Double,
               let cur = meta["currency"] as? String
         else { return nil }
-        return Quote(price: price, currency: cur.uppercased())
+        return normalized(price: price, currency: cur)
+    }
+
+    /// Yahoo cote certaines places en sous-unites : "GBp" (pence, titres .L de Londres),
+    /// "ZAc" (cents sud-africains), "ILA" (agorot). `uppercased()` faisait de "GBp" des
+    /// livres, donc une action de Londres valait 100 fois trop.
+    static func normalized(price: Double, currency: String) -> Quote {
+        switch currency {
+        case "GBp", "GBX": return Quote(price: price / 100, currency: "GBP")
+        case "ZAc", "ZAC": return Quote(price: price / 100, currency: "ZAR")
+        case "ILA": return Quote(price: price / 100, currency: "ILS")
+        default: return Quote(price: price, currency: currency.uppercased())
+        }
     }
 
     /// Combien vaut 1 unite de `currency` en euros.

@@ -40,13 +40,17 @@ struct PetProfile: Codable, Equatable {
 // MARK: - Fusion base + appareil
 
 enum PetMerge {
+    /// Concordance entre deux listes d'ingredients. C'est un INDICE de meme recette,
+    /// jamais une preuve de version : deux formules peuvent partager leur debut.
+    enum RecipeMatch: Equatable { case same, different, unknown }
+
     /// Complete la fiche de la base avec le profil. Regles :
     /// - un choix de l'utilisateur (espece, stade) passe devant tout ;
-    /// - la base garde la main sur ce qu'elle a ; l'etiquette lue ne remplit que les trous ;
-    /// - composition et valeurs viennent de la MEME etiquette quand la base n'a pas de
-    ///   composition ; si la base a une composition mais pas de valeurs, les valeurs de
-    ///   l'etiquette ne sont prises que si les premiers ingredients concordent (sinon
-    ///   deux versions de la recette se melangeraient).
+    /// - une etiquette RELUE ET VALIDEE par l'utilisateur remplace la base pour chaque
+    ///   champ qu'elle porte (correction explicite, retirable avec "Retirer") ;
+    /// - une lecture AUTOMATIQUE ne fait que remplir les trous, et seulement si elle ne
+    ///   risque pas de melanger deux versions de la recette ; sinon elle n'est pas
+    ///   appliquee et la fiche dit pourquoi (a relire et valider).
     static func apply(_ profile: PetProfile?, to p: CatalogProduct) -> CatalogProduct {
         guard p.isPetFood, let profile else { return p }
         var q = p
@@ -54,29 +58,68 @@ enum PetMerge {
         facts.userSpecies = profile.species
         facts.userLifeStage = profile.lifeStage
         if let l = profile.label {
-            facts.declaration = facts.declaration ?? l.declaration
-            facts.additivesText = facts.additivesText ?? l.additives
             facts.labelDate = l.photoDate
             let origin = l.fromUserPhoto ? "ta photo" : "la photo de l'étiquette de la base"
-            let check = l.validated ? "relue par toi" : "lue automatiquement, à vérifier"
-            if q.ingredientsText == nil, let c = l.composition {
-                q.ingredientsText = c
-                if !l.analytics.isEmpty { q.petAnalysis = analysis(l.analytics) }
-                facts.provenance.append("Composition et constituants : \(origin) (\(l.source)), \(check).")
-            } else if q.petAnalysis == nil, !l.analytics.isEmpty {
-                if let base = q.ingredientsText, let c = l.composition, sameRecipe(base, c) {
-                    q.petAnalysis = analysis(l.analytics)
-                    facts.provenance.append("Constituants : \(origin) (\(l.source)), \(check). Composition : base.")
-                } else if l.composition == nil {
-                    q.petAnalysis = analysis(l.analytics)
-                    facts.provenance.append("Constituants : \(origin) (\(l.source)), \(check).")
-                } else {
-                    facts.provenance.append("L'étiquette lue ne commence pas par les mêmes ingrédients que la base : valeurs non mélangées (peut-être une autre version de la recette).")
-                }
-            }
+            if l.validated { applyValidated(l, origin: origin, to: &q, facts: &facts) }
+            else { applyAutomatic(l, origin: origin, to: &q, facts: &facts) }
         }
         q.petFacts = facts
         return q
+    }
+
+    /// Correction de l'utilisateur : elle gagne, avec sa provenance.
+    private static func applyValidated(_ l: PetProfile.LabelReading, origin: String,
+                                       to q: inout CatalogProduct, facts: inout CatalogProduct.PetFacts) {
+        let check = "relue par toi"
+        if let d = l.declaration { facts.declaration = d }
+        if let a = l.additives { facts.additivesText = a }
+        if let c = l.composition {
+            let replaced = q.ingredientsText != nil && q.ingredientsText != c
+            q.ingredientsText = c
+            // Les valeurs de la base decrivent peut-etre l'autre version : on ne les garde pas.
+            q.petAnalysis = l.analytics.isEmpty ? nil : analysis(l.analytics)
+            facts.provenance.append("Composition et constituants : \(origin) (\(l.source)), \(check)."
+                                    + (replaced ? " Remplace la composition de la base." : ""))
+        } else if !l.analytics.isEmpty {
+            let replaced = q.petAnalysis != nil
+            q.petAnalysis = analysis(l.analytics)
+            facts.provenance.append("Constituants : \(origin) (\(l.source)), \(check)."
+                                    + (replaced ? " Remplacent ceux de la base." : "")
+                                    + (q.ingredientsText != nil ? " Composition : base (même version confirmée par toi)." : ""))
+        }
+    }
+
+    /// Lecture automatique : ne remplit que les trous, sans melanger deux versions.
+    private static func applyAutomatic(_ l: PetProfile.LabelReading, origin: String,
+                                       to q: inout CatalogProduct, facts: inout CatalogProduct.PetFacts) {
+        let check = "lue automatiquement, à vérifier"
+        facts.declaration = facts.declaration ?? l.declaration
+        facts.additivesText = facts.additivesText ?? l.additives
+        if q.ingredientsText == nil, let c = l.composition {
+            q.ingredientsText = c
+            if !l.analytics.isEmpty { q.petAnalysis = analysis(l.analytics) }
+            facts.provenance.append("Composition et constituants : \(origin) (\(l.source)), \(check).")
+            return
+        }
+        guard q.petAnalysis == nil, !l.analytics.isEmpty else { return }
+        guard let base = q.ingredientsText else {
+            q.petAnalysis = analysis(l.analytics)
+            facts.provenance.append("Constituants : \(origin) (\(l.source)), \(check).")
+            return
+        }
+        guard let c = l.composition else {
+            facts.provenance.append("Constituants trouvés sur une photo sans composition : non appliqués, rien ne prouve qu'ils décrivent la même version que la composition de la base. Relis et valide l'étiquette pour les utiliser.")
+            return
+        }
+        switch recipeMatch(base, c) {
+        case .same:
+            q.petAnalysis = analysis(l.analytics)
+            facts.provenance.append("Constituants : \(origin) (\(l.source)), \(check). Composition : base. Les 3 premiers ingrédients concordent (indice de même recette, pas une preuve de version).")
+        case .different:
+            facts.provenance.append("L'étiquette lue ne commence pas par les mêmes ingrédients que la base : valeurs non mélangées (peut-être une autre version de la recette). Relis et valide l'étiquette si c'est bien ton paquet.")
+        case .unknown:
+            facts.provenance.append("Composition trop courte pour comparer les deux versions : valeurs non appliquées. Relis et valide l'étiquette pour les utiliser.")
+        }
     }
 
     static func analysis(_ a: PetLabel.Analytics) -> CatalogProduct.PetAnalysis {
@@ -85,14 +128,19 @@ enum PetMerge {
         return r
     }
 
-    /// Meme recette si au moins 2 des 3 premiers ingredients ont le meme nom.
-    static func sameRecipe(_ a: String, _ b: String) -> Bool {
+    /// Meme recette PROBABLE : les 3 premiers ingredients ont les memes noms, dans le meme
+    /// ordre. Moins de 3 ingredients d'un cote : on ne sait pas.
+    static func recipeMatch(_ a: String, _ b: String) -> RecipeMatch {
         func head(_ s: String) -> [String] {
             PetLabel.ingredients(s).prefix(3).map { PetLabel.fold($0.name).trimmingCharacters(in: .whitespaces) }
         }
         let x = head(a), y = head(b)
-        guard !x.isEmpty, !y.isEmpty else { return false }
-        return zip(x, y).filter { $0 == $1 || $0.contains($1) || $1.contains($0) }.count >= min(2, min(x.count, y.count))
+        guard x.count == 3, y.count == 3 else {
+            if let fx = x.first, let fy = y.first, !(fx == fy || fx.contains(fy) || fy.contains(fx)) { return .different }
+            return .unknown
+        }
+        let same = zip(x, y).allSatisfy { $0 == $1 || $0.contains($1) || $1.contains($0) }
+        return same ? .same : .different
     }
 }
 

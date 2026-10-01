@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import ImageIO
 
 extension ShapeStyle where Self == Color { static var looksTint: Color { AppCategory.looks.tint } }
 
@@ -16,6 +17,7 @@ struct SkincareView: View {
     @AppStorage(AppStorageKeys.skincareDonePM) private var donePMDate = ""
     @AppStorage(AppStorageKeys.skinType) private var skinType = ""
     @AppStorage(AppStorageKeys.skinConcernsRaw) private var skinConcernsRaw = ""
+    @AppStorage(AppStorageKeys.skinTreatment) private var skinTreatment = ""
 
     @State private var showProfile = false
     private var today: String { ISO8601DateFormatter().string(from: Calendar.current.startOfDay(for: .now)) }
@@ -56,15 +58,13 @@ struct SkincareView: View {
 
                     Toggle("Rappels matin (8h) & soir (22h)", isOn: $reminders)
                         .tint(.looksTint)
-                        .onChange(of: reminders) { _, on in
-                            if on {
-                                NotificationManager.shared.scheduleDaily(id: "skinAM", title: "Routine skincare matin", body: "Nettoyant + sérum + SPF", hour: 8, minute: 0)
-                                NotificationManager.shared.scheduleDaily(id: "skinPM", title: "Routine skincare soir", body: "Démaquille et hydrate avant de dormir", hour: 22, minute: 0)
-                            } else {
-                                NotificationManager.shared.cancel(id: "skinAM")
-                                NotificationManager.shared.cancel(id: "skinPM")
-                            }
-                        }.card()
+                        .onChange(of: reminders) { _, _ in syncReminders() }
+                        // Le texte du rappel reprend la routine affichee: s'il change
+                        // de profil, le rappel deja pose doit suivre.
+                        .onChange(of: skinType) { _, _ in if reminders { syncReminders() } }
+                        .onChange(of: skinConcernsRaw) { _, _ in if reminders { syncReminders() } }
+                        .onChange(of: skinTreatment) { _, _ in if reminders { syncReminders() } }
+                        .card()
 
                     NavigationLink { ProgressPhotoGalleryView() } label: {
                         Label("Photos avant/après", systemImage: "camera").foregroundStyle(.looksTint)
@@ -75,6 +75,18 @@ struct SkincareView: View {
         }
         .navigationTitle("Skincare").navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showProfile) { SkinProfileSetupView() }
+    }
+
+    /// Le corps du rappel etait fige sur "Nettoyant + sérum + SPF", meme quand la
+    /// routine generee etait autre (eau micellaire pour peau sensible...).
+    private func syncReminders() {
+        if reminders {
+            NotificationManager.shared.scheduleDaily(id: "skinAM", title: "Routine skincare matin", body: SkinRoutineEngine.reminderBody(steps: amSteps), hour: 8, minute: 0)
+            NotificationManager.shared.scheduleDaily(id: "skinPM", title: "Routine skincare soir", body: SkinRoutineEngine.reminderBody(steps: pmSteps), hour: 22, minute: 0)
+        } else {
+            NotificationManager.shared.cancel(id: "skinAM")
+            NotificationManager.shared.cancel(id: "skinPM")
+        }
     }
 
     // Routine adaptée au profil ou générique
@@ -88,7 +100,7 @@ struct SkincareView: View {
         guard !skinType.isEmpty else {
             return pmRaw.split(separator: "|").map(String.init)
         }
-        return SkinRoutineEngine.eveningSteps(skinType: skinType, concerns: skinConcernsRaw)
+        return SkinRoutineEngine.eveningSteps(skinType: skinType, concerns: skinConcernsRaw, treatment: skinTreatment)
     }
 
     private var skinProfileBadge: some View {
@@ -136,36 +148,74 @@ struct SkincareView: View {
 // MARK: - Moteur de routine skincare personnalisée
 
 enum SkinRoutineEngine {
+    /// Marqueur range avec les preoccupations quand un traitement est declare.
+    static let treatmentMarker = "traitement"
+
+    /// Lit la chaine sauvee ("acné,rides,traitement") en preoccupations + traitement.
+    static func decode(concernsRaw: String) -> (concerns: Set<String>, hasTreatment: Bool) {
+        var set = Set(concernsRaw.split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty })
+        let treat = set.remove(treatmentMarker) != nil
+        return (set, treat)
+    }
+
+    /// Inverse de `decode`. Trie pour que la meme saisie donne la meme chaine.
+    static func encode(concerns: Set<String>, hasTreatment: Bool) -> String {
+        var c = concerns.subtracting([treatmentMarker]).sorted()
+        if hasTreatment { c.append(treatmentMarker) }
+        return c.joined(separator: ",")
+    }
+
+    /// Texte du rappel = la routine reelle, pas un texte fige.
+    static func reminderBody(steps: [String]) -> String {
+        steps.isEmpty ? "C'est l'heure de ta routine." : steps.joined(separator: " + ")
+    }
+
+    // Avant, seules "acné" et "taches" etaient lues: cocher rides, pores, teint
+    // terne ou rougeurs ne changeait rien a la routine.
     static func morningSteps(skinType: String, concerns: String) -> [String] {
-        let hasAcne    = concerns.contains("acné")
-        let hasTaches  = concerns.contains("taches")
-        let isSensible = skinType == "sensible"
+        let (set, hasTreat) = decode(concernsRaw: concerns)
+        let hasAcne    = set.contains("acné")
+        let hasTaches  = set.contains("taches")
+        let hasRides   = set.contains("rides")
+        let hasPores   = set.contains("pores")
+        let hasTerne   = set.contains("teint terne")
+        // Rougeurs = peau reactive: on prend les versions douces.
+        let isSensible = skinType == "sensible" || set.contains("rougeurs")
         let isGrasse   = skinType == "grasse"
         let isSèche    = skinType == "sèche"
-        let hasTreat   = concerns.contains("traitement")
 
         var steps = [String]()
         steps.append(isGrasse || hasAcne ? "Nettoyant gel purifiant" : isSensible ? "Eau micellaire (sans rinçage)" : "Nettoyant doux")
-        if hasAcne && !hasTreat    { steps.append("Sérum niacinamide 10%") }
-        if hasTaches               { steps.append("Sérum vitamine C") }
-        if !hasAcne && !hasTaches  { steps.append("Sérum hydratant") }
+        let niacinamide = (hasAcne || hasPores) && !hasTreat
+        let vitaminC    = hasTaches || hasTerne || hasRides
+        if niacinamide             { steps.append("Sérum niacinamide 10%") }
+        if vitaminC                { steps.append("Sérum vitamine C") }
+        if !niacinamide && !vitaminC { steps.append("Sérum hydratant") }
         steps.append(isSèche ? "Crème riche hydratante" : isSensible ? "Crème barrière légère" : "Crème hydratante non comédogène")
         steps.append(isSensible ? "SPF 50 minéral" : "SPF 50")
         return steps
     }
 
-    static func eveningSteps(skinType: String, concerns: String) -> [String] {
-        let hasAcne    = concerns.contains("acné")
+    static func eveningSteps(skinType: String, concerns: String, treatment: String = "") -> [String] {
+        let (set, hasTreat) = decode(concernsRaw: concerns)
+        let hasAcne    = set.contains("acné")
+        let hasPores   = set.contains("pores")
         let isGrasse   = skinType == "grasse"
-        let isSensible = skinType == "sensible"
+        let isSensible = skinType == "sensible" || set.contains("rougeurs")
         let isSèche    = skinType == "sèche"
-        let hasTreat   = concerns.contains("traitement")
+        let name = treatment.trimmingCharacters(in: .whitespacesAndNewlines)
 
         var steps = [String]()
         steps.append("Démaquillant (huile ou baume)")
         steps.append(isGrasse || hasAcne ? "Nettoyant gel purifiant" : "Nettoyant doux")
-        if hasTreat                    { steps.append("Traitement prescrit (appliquer sur peau sèche)") }
-        else if hasAcne                { steps.append("Acide salicylique 1% (3× par semaine)") }
+        if hasTreat {
+            // Le nom saisi par l'utilisateur etait sauve puis jamais affiche.
+            steps.append(name.isEmpty ? "Traitement prescrit (appliquer sur peau sèche)"
+                                      : "Traitement prescrit : \(name) (appliquer sur peau sèche)")
+        }
+        else if hasAcne || hasPores    { steps.append("Acide salicylique 1% (3× par semaine)") }
         else if !isSensible            { steps.append("Rétinol 0,1% (2× par semaine)") }
         steps.append(isSèche ? "Crème de nuit riche" : isSensible ? "Crème barrière réparatrice" : "Crème de nuit légère")
         return steps
@@ -220,6 +270,17 @@ struct SkinProfileSetupView: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } }
             }
         }
+        // Repart du profil sauve: avant, l'editeur demarrait vide et "Modifier"
+        // puis Enregistrer effacait preoccupations et traitement non ressaisis.
+        .onAppear(perform: loadSaved)
+    }
+
+    private func loadSaved() {
+        selectedType = skinType
+        let saved = SkinRoutineEngine.decode(concernsRaw: skinConcernsRaw)
+        concerns = saved.concerns
+        hasTreatment = saved.hasTreatment
+        treatmentText = skinTreatment
     }
 
     private var typeStep: some View {
@@ -300,9 +361,7 @@ struct SkinProfileSetupView: View {
             Spacer()
             Button {
                 skinType = selectedType
-                var c = Array(concerns)
-                if hasTreatment { c.append("traitement") }
-                skinConcernsRaw = c.joined(separator: ",")
+                skinConcernsRaw = SkinRoutineEngine.encode(concerns: concerns, hasTreatment: hasTreatment)
                 skinTreatment = hasTreatment ? treatmentText : ""
                 dismiss()
             } label: {
@@ -320,7 +379,45 @@ struct SkinProfileSetupView: View {
 struct ProgressPhotoGalleryView: View {
     @Environment(\.modelContext) private var ctx
     @Query(sort: \ProgressPhoto.date, order: .reverse) private var photos: [ProgressPhoto]
+    /// Categorie des prochaines photos. Avant, tout partait en "Visage" (valeur
+    /// par defaut du modele), meme une photo du corps.
+    @State private var category = "Visage"
     private let cols = [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
+    static let categories = ["Visage", "Peau", "Corps"]
+
+    /// Date de prise de vue lue dans l'EXIF du fichier.
+    /// Avant, chaque photo prenait l'heure de l'import: une photo d'il y a trois
+    /// mois apparaissait datee d'aujourd'hui dans une galerie "avant / apres".
+    static func captureDate(of data: Data) -> Date? {
+        guard let src = CGImageSourceCreateWithData(data as CFData, nil),
+              let props = CGImageSourceCopyPropertiesAtIndex(src, 0, nil) as? [CFString: Any] else { return nil }
+        let exif = props[kCGImagePropertyExifDictionary] as? [CFString: Any]
+        let tiff = props[kCGImagePropertyTIFFDictionary] as? [CFString: Any]
+        let raw = (exif?[kCGImagePropertyExifDateTimeOriginal] as? String)
+            ?? (exif?[kCGImagePropertyExifDateTimeDigitized] as? String)
+            ?? (tiff?[kCGImagePropertyTIFFDateTime] as? String)
+        return raw.flatMap { parseExifDate($0) }
+    }
+
+    /// Format EXIF "yyyy:MM:dd HH:mm:ss", heure locale de l'appareil photo.
+    /// Une date dans le futur est rejetee (horloge d'appareil fausse).
+    static func parseExifDate(_ s: String, now: Date = Date(), timeZone: TimeZone = .current) -> Date? {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = timeZone
+        f.dateFormat = "yyyy:MM:dd HH:mm:ss"
+        guard let d = f.date(from: s.trimmingCharacters(in: .whitespacesAndNewlines)),
+              d <= now.addingTimeInterval(86_400) else { return nil }
+        return d
+    }
+
+    private func addPhoto(_ name: String) {
+        // Sans EXIF (capture d'ecran, image retouchee), seule la date d'import est connue.
+        let taken = ImageStore.url(for: name)
+            .flatMap { try? Data(contentsOf: $0) }
+            .flatMap { Self.captureDate(of: $0) }
+        ctx.insert(ProgressPhoto(date: taken ?? .now, filename: name, category: category))
+    }
 
     var body: some View {
         ZStack {
@@ -341,16 +438,29 @@ struct ProgressPhotoGalleryView: View {
                                     Text(p.category).font(.caption2.bold()).foregroundStyle(.looksTint)
                                 }
                             }
-                            .contextMenu { Button(role: .destructive) { ImageStore.delete(p.filename); ctx.delete(p) } label: { Label("Supprimer", systemImage: "trash") } }
+                            .contextMenu {
+                                // Reclasser les photos deja importees en "Visage" par erreur.
+                                ForEach(Self.categories.filter { $0 != p.category }, id: \.self) { c in
+                                    Button { p.category = c } label: { Label("Classer en \(c)", systemImage: "tag") }
+                                }
+                                Button(role: .destructive) { ImageStore.delete(p.filename); ctx.delete(p) } label: { Label("Supprimer", systemImage: "trash") }
+                            }
                         }
                     }.padding(Theme.pad)
                 }
             }
         }
         .navigationTitle("Avant / après").navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) {
-            PhotoPickerButton(label: "", prefix: "progress") { name in ctx.insert(ProgressPhoto(filename: name)) }
-        } }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Picker("Catégorie", selection: $category) {
+                    ForEach(Self.categories, id: \.self) { Text($0).tag($0) }
+                }.pickerStyle(.menu).tint(.looksTint)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                PhotoPickerButton(label: "", prefix: "progress") { name in addPhoto(name) }
+            }
+        }
     }
 }
 
@@ -359,7 +469,10 @@ struct ProgressPhotoGalleryView: View {
 struct MewingPostureView: View {
     @AppStorage(AppStorageKeys.postureReminder) private var posture = false
     @State private var engine = CountdownEngine(key: "mewing")
-    @State private var started = false
+    /// Derive du moteur: un @State local repartait a faux au retour sur l'ecran
+    /// alors que la seance restauree tournait encore ("Démarrer" sur un cadran
+    /// qui defile, et un appui relancait la seance).
+    private var started: Bool { engine.isRunning }
 
     var body: some View {
         ZStack {
@@ -375,10 +488,10 @@ struct MewingPostureView: View {
                     TimerDial(engine: engine, tint: .looksTint, caption: started ? "Maintiens la posture" : "3 min")
                     if !started {
                         PrimaryButton(title: "Démarrer 3 min", icon: "play.fill", tint: .looksTint) {
-                            started = true; engine.onFinish = { started = false }; engine.start(seconds: 180)
+                            engine.start(seconds: 180)
                         }
                     } else {
-                        PrimaryButton(title: "Stop", icon: "stop.fill", tint: Theme.bg2) { engine.stop(); started = false }
+                        PrimaryButton(title: "Stop", icon: "stop.fill", tint: Theme.bg2) { engine.stop() }
                     }
 
                     Toggle("Rappel posture toutes les 2h (9h-19h)", isOn: $posture)
@@ -476,6 +589,9 @@ struct WardrobeEditor: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""; @State private var category = "Haut"; @State private var color = "Noir"
     @State private var warmth = 2; @State private var filename: String?
+    /// Le fichier photo est ecrit des le choix. Sans ce drapeau, Annuler (ou un
+    /// balayage vers le bas) laissait un fichier orphelin dans Documents.
+    @State private var saved = false
     var body: some View {
         NavigationStack {
             Form {
@@ -484,7 +600,11 @@ struct WardrobeEditor: View {
                 Picker("Couleur", selection: $color) { ForEach(["Noir","Blanc","Gris","Bleu","Beige","Vert","Marron","Rouge"], id: \.self) { Text($0) } }
                 Picker("Chaleur", selection: $warmth) { Text("Léger").tag(1); Text("Moyen").tag(2); Text("Chaud").tag(3) }
                 Section("Photo") {
-                    PhotoPickerButton(label: "Choisir une photo", prefix: "wardrobe") { filename = $0 }
+                    PhotoPickerButton(label: "Choisir une photo", prefix: "wardrobe") { name in
+                        // Une 2e photo remplace la 1re: l'ancienne ne servira plus.
+                        if let old = filename, old != name { ImageStore.delete(old) }
+                        filename = name
+                    }
                     if filename != nil { Text("Photo ajoutée").foregroundStyle(Theme.success).font(.caption) }
                 }
             }
@@ -492,10 +612,12 @@ struct WardrobeEditor: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Annuler") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Ajouter") {
-                    ctx.insert(WardrobeItem(name: name, category: category, colorName: color, warmth: warmth, filename: filename)); dismiss()
+                    ctx.insert(WardrobeItem(name: name, category: category, colorName: color, warmth: warmth, filename: filename))
+                    saved = true; dismiss()
                 }.disabled(name.isEmpty) }
             }
         }
+        .onDisappear { if !saved, let f = filename { ImageStore.delete(f) } }
     }
 }
 

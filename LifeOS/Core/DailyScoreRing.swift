@@ -112,10 +112,14 @@ enum DailyScoreEngine {
                              value: didW ? "Séance" : "\(sc)/\(stepGoal) pas", fraction: af, color: Theme.fitness))
         }
 
-        if !habits.isEmpty && !hiddenGoalIDs.contains("habits") {
-            let d = habits.filter { h in h.completions.contains { here($0.date) } }.count
-            out.append(.init(label: "Habitudes", icon: "checkmark.seal.fill", value: "\(d)/\(habits.count)",
-                             fraction: Double(d) / Double(habits.count), color: Theme.mind))
+        // Seules les habitudes prévues ce jour comptent (ni archivées, ni en attente,
+        // ni hors de leurs jours actifs, ni créées après): un jour de repos ne baisse
+        // plus le score, comme dans EnergyScore.
+        let planned = plannedHabits(habits, on: day)
+        if !planned.isEmpty && !hiddenGoalIDs.contains("habits") {
+            let d = planned.filter { h in h.completions.contains { here($0.date) } }.count
+            out.append(.init(label: "Habitudes", icon: "checkmark.seal.fill", value: "\(d)/\(planned.count)",
+                             fraction: Double(d) / Double(planned.count), color: Theme.mind))
         }
         if !hiddenGoalIDs.contains("todos") && !hiddenGoalIDs.contains("tasks") {
             let due = todos.filter { if let dd = $0.due { return here(dd) } else { return false } }
@@ -125,7 +129,8 @@ enum DailyScoreEngine {
                                  fraction: Double(d) / Double(due.count), color: Theme.productivity))
             }
         }
-        if !hiddenGoalIDs.contains("mood"), let m = moods.first(where: { here($0.date) }) {
+        // La plus récente du jour: la @Query n'est pas triée, first(where:) prenait n'importe laquelle.
+        if !hiddenGoalIDs.contains("mood"), let m = moods.filter({ here($0.date) }).max(by: { $0.date < $1.date }) {
             out.append(.init(label: "Humeur", icon: "face.smiling", value: "\(m.score)/5",
                              fraction: Double(m.score) / 5, color: Theme.social))
         }
@@ -140,6 +145,15 @@ enum DailyScoreEngine {
             }
         }
         return out
+    }
+
+    /// Habitudes réellement prévues le jour donné.
+    static func plannedHabits(_ habits: [Habit], on day: Date) -> [Habit] {
+        let cal = Calendar.current
+        let dayStart = cal.startOfDay(for: day)
+        return habits.filter { h in
+            !h.isPending && !h.isArchived && h.isActive(on: day) && cal.startOfDay(for: h.createdAt) <= dayStart
+        }
     }
 
     static func score(_ m: [DayMetric]) -> Int {

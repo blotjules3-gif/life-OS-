@@ -203,9 +203,7 @@ struct TrilingoPlacementView: View {
     }
 
     private func options(for item: TrilingoItem) -> [String] {
-        var seeded = SeededRNG(seed: UInt64(item.tid))
-        let others = course.allItems.filter { $0.tid != item.tid }.shuffled(using: &seeded).prefix(3).map(\.s)
-        return ([item.s] + others).shuffled(using: &seeded)
+        TrilingoChoices.placementOptions(for: item, pool: course.allItems)
     }
 
     private func answer(_ o: String, _ item: TrilingoItem) {
@@ -216,8 +214,39 @@ struct TrilingoPlacementView: View {
     }
 
     private func commit(_ start: Int) {
-        try? store.update { $0.placementDone = true; $0.placementDay = start }
+        let perDay = course.days.first?.items.count ?? 12
+        // nextItem aussi: sinon un test refait plus bas annonce le jour X mais la
+        // seance repart au jour plus avance (le moteur prend le max des deux).
+        try? store.update {
+            $0.placementDone = true; $0.placementDay = start
+            $0.nextItem = TrilingoChoices.firstItemIndex(day: start, perDay: perDay)
+        }
     }
+}
+
+/// Logique pure des choix et du depart, testable sans vue.
+enum TrilingoChoices {
+    /// La bonne reponse + 3 distracteurs de textes DIFFERENTS: les cours ont des
+    /// phrases sources en double, filtrer le seul tid montrait la reponse deux fois.
+    static func placementOptions(for item: TrilingoItem, pool: [TrilingoItem]) -> [String] {
+        var seeded = SeededRNG(seed: UInt64(item.tid))
+        var seen: Set<String> = [item.s]
+        var others: [String] = []
+        for o in pool.shuffled(using: &seeded) where o.tid != item.tid && !seen.contains(o.s) {
+            seen.insert(o.s); others.append(o.s)
+            if others.count == 3 { break }
+        }
+        return ([item.s] + others).shuffled(using: &seeded)
+    }
+
+    /// Retire les doublons en gardant l'ordre (ids ForEach uniques en seance).
+    static func unique(_ options: [String]) -> [String] {
+        var seen: Set<String> = []
+        return options.filter { seen.insert($0).inserted }
+    }
+
+    /// Premier indice de phrase du jour `day` (1 = debut du cours).
+    static func firstItemIndex(day: Int, perDay: Int) -> Int { max(0, day - 1) * max(1, perDay) }
 }
 
 // MARK: - Accueil du cours
@@ -378,7 +407,7 @@ struct TrilingoSessionView: View {
                 Button { next(nil, e) } label: { Text("J'ai compris").frame(maxWidth: .infinity) }.buttonStyle(LifeOSGlassButtonStyle(prominent: true))
             case .chooseMeaning, .listenChoose:
                 if e.kind == .chooseMeaning { target(e.item.t) } else { audioButtons(e.item) }
-                ForEach(e.options, id: \.self) { o in
+                ForEach(TrilingoChoices.unique(e.options), id: \.self) { o in
                     Button { guard verdict == nil else { return }; chosen = o; verdict = (o == e.item.s) } label: {
                         HStack {
                             Text(o).frame(maxWidth: .infinity, alignment: .leading)
@@ -427,11 +456,14 @@ struct TrilingoSessionView: View {
     }
 
     private func audioButtons(_ item: TrilingoItem) -> some View {
-        HStack {
-            Button { speech.play(item, language: language) } label: { Label("Écouter", systemImage: "speaker.wave.2.fill") }
-            Button { speech.play(item, language: language, slow: true) } label: { Label("Lentement", systemImage: "tortoise.fill") }
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Button { speech.play(item, language: language) } label: { Label("Écouter", systemImage: "speaker.wave.2.fill") }
+                Button { speech.play(item, language: language, slow: true) } label: { Label("Lentement", systemImage: "tortoise.fill") }
+            }
+            .buttonStyle(LifeOSGlassButtonStyle())
+            if let n = speech.audioNotice { Text(n).font(.caption2).foregroundStyle(Theme.warning) }
         }
-        .buttonStyle(LifeOSGlassButtonStyle())
     }
 
     @ViewBuilder private func checkArea(_ e: TrilingoExercise) -> some View {
@@ -462,7 +494,7 @@ struct TrilingoSessionView: View {
             if c { correctCount += 1 }
             try? store.update { TrilingoEngine.record(&$0, exercise: e, correct: c, today: today) }
         }
-        built = []; typed = ""; chosen = nil; verdict = nil; speech.heard = ""
+        built = []; typed = ""; chosen = nil; verdict = nil; speech.heard = ""; speech.audioNotice = nil
         if index + 1 < exercises.count { index += 1 } else { finish() }
     }
 

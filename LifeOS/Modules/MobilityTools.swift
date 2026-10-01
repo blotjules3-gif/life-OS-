@@ -27,12 +27,9 @@ enum TripMode: String, CaseIterable, Codable, Identifiable {
         case .ter: return 30; case .tgv: return 3; case .bike: return 0; case .plane: return 230
         }
     }
-    var euroPerKm: Double {
-        switch self {
-        case .car: return 0.25; case .ev: return 0.08; case .moto: return 0.15; case .bus: return 0.10
-        case .ter: return 0.12; case .tgv: return 0.12; case .bike: return 0; case .plane: return 0.15
-        }
-    }
+    // Plus de cout en €/km: les tarifs etaient ecrits en dur, sans source,
+    // et le "Coût ce mois" s'affichait comme une valeur reelle. On montre la
+    // distance, qui est une donnee saisie.
 }
 
 private struct MobTrip: Codable, Identifiable {
@@ -41,7 +38,6 @@ private struct MobTrip: Codable, Identifiable {
     var km: Double
     var date: Double
     var co2kg: Double { mode.gPerKm * km / 1000 }
-    var cost: Double { mode.euroPerKm * km }
 }
 
 struct TripCO2View: View {
@@ -59,7 +55,7 @@ struct TripCO2View: View {
         trips.filter { Calendar.current.isDate(Date(timeIntervalSince1970: $0.date), equalTo: .now, toGranularity: .month) }
     }
     private var monthCO2: Double { monthTrips.reduce(0) { $0 + $1.co2kg } }
-    private var monthCost: Double { monthTrips.reduce(0) { $0 + $1.cost } }
+    private var monthKm: Double { monthTrips.reduce(0) { $0 + $1.km } }
 
     var body: some View {
         ZStack {
@@ -71,7 +67,7 @@ struct TripCO2View: View {
                     if trips.isEmpty {
                         EmptyStateCard(icon: "leaf.arrow.circlepath",
                                        title: "Aucun trajet",
-                                       message: "Ajoute un trajet pour estimer ton empreinte et ton budget mobilité.")
+                                       message: "Ajoute un trajet pour estimer ton empreinte CO₂.")
                     } else {
                         tripList
                     }
@@ -87,7 +83,7 @@ struct TripCO2View: View {
     private var summary: some View {
         HStack(spacing: 12) {
             StatCard(value: String(format: "%.1f kg", monthCO2), label: "CO₂ ce mois", icon: "carbon.dioxide.cloud.fill")
-            StatCard(value: String(format: "%.0f €", monthCost), label: "Coût ce mois", icon: "eurosign.circle.fill")
+            StatCard(value: String(format: "%.0f km", monthKm), label: "Distance ce mois", icon: "road.lanes")
         }
     }
 
@@ -127,7 +123,7 @@ struct TripCO2View: View {
                 .disabled((Double(kmText.replacingOccurrences(of: ",", with: ".")) ?? 0) <= 0)
             }
             if let km = Double(kmText.replacingOccurrences(of: ",", with: ".")), km > 0 {
-                Text("≈ \(String(format: "%.1f", mode.gPerKm * km / 1000)) kg CO₂ · \(String(format: "%.2f", mode.euroPerKm * km)) €")
+                Text("≈ \(String(format: "%.1f", mode.gPerKm * km / 1000)) kg CO₂")
                     .font(.caption).foregroundStyle(.mobTint)
             }
         }
@@ -146,14 +142,16 @@ struct TripCO2View: View {
                             .font(.caption2).foregroundStyle(Theme.textSecondary)
                     }
                     Spacer()
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text(String(format: "%.1f kg", t.co2kg)).font(.subheadline.weight(.semibold)).foregroundStyle(.mobTint)
-                        Text(String(format: "%.2f €", t.cost)).font(.caption2).foregroundStyle(Theme.textSecondary)
-                    }
+                    Text(String(format: "%.1f kg", t.co2kg)).font(.subheadline.weight(.semibold)).foregroundStyle(.mobTint)
+                    // .swipeActions ne marche que dans une List: ici (VStack dans
+                    // un ScrollView) aucun trajet ne pouvait etre supprime.
+                    Button { remove(t) } label: { Image(systemName: "trash").font(.caption) }
+                        .buttonStyle(.plain).foregroundStyle(Theme.danger.opacity(0.7))
+                        .accessibilityLabel("Supprimer le trajet")
                 }
                 .padding(.vertical, 11).padding(.horizontal, 14)
                 .contentShape(Rectangle())
-                .swipeActions { Button(role: .destructive) { remove(t) } label: { Label("Suppr", systemImage: "trash") } }
+                .contextMenu { Button(role: .destructive) { remove(t) } label: { Label("Supprimer", systemImage: "trash") } }
                 Divider().padding(.leading, 50)
             }
         }

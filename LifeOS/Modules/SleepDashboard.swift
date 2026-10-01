@@ -87,11 +87,14 @@ struct SleepDashboardView: View {
 
     private var debtCard: some View {
         let last7 = nightsByDay(7)
-        let debt = last7.reduce(0.0) { $0 + max(0, sleepGoal - $1.hours) }
+        // Une nuit non notee (0 h ici) n'est pas une nuit blanche: elle ne
+        // compte plus comme 8 h de dette.
+        let (debt, counted) = SleepDebt.compute(hours: last7.map { $0.hours > 0 ? $0.hours : nil }, goal: sleepGoal)
         let logged = last7.filter { $0.hours > 0 }
         let avg = logged.isEmpty ? 0 : logged.reduce(0.0) { $0 + $1.hours } / Double(logged.count)
         return HStack(spacing: 14) {
-            stat("Dette 7j", debt < 0.1 ? "à jour" : "-\(fmtH(debt))", debt > 3 ? Color(hex: 0xF0584B) : Theme.textPrimary)
+            stat(counted == 7 ? "Dette 7j" : "Dette · \(counted) nuit\(counted > 1 ? "s" : "")",
+                 debt < 0.1 ? "à jour" : "-\(fmtH(debt))", debt > 3 ? Color(hex: 0xF0584B) : Theme.textPrimary)
             Divider().frame(height: 40)
             stat("Moyenne", avg > 0 ? fmtH(avg) : "—", Theme.textPrimary)
             Divider().frame(height: 40)
@@ -207,6 +210,15 @@ struct SleepDashboardView: View {
         return "\(m / 60)h\(m % 60 == 0 ? "" : String(format: "%02d", m % 60))"
     }
     private func dayLetter(_ d: Date) -> String { ["D", "L", "M", "M", "J", "V", "S"][cal.component(.weekday, from: d) - 1] }
+}
+
+/// Dette de sommeil sur les nuits NOTEES seulement. `nil` = nuit inconnue,
+/// pas zero heure dormie.
+enum SleepDebt {
+    static func compute(hours: [Double?], goal: Double) -> (hours: Double, nights: Int) {
+        let known = hours.compactMap { $0 }
+        return (known.reduce(0.0) { $0 + max(0, goal - $1) }, known.count)
+    }
 }
 
 // MARK: - Enregistrer une nuit

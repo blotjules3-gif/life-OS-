@@ -2,8 +2,185 @@ import SwiftUI
 import SwiftData
 import EventKit
 import WidgetKit
+import UserNotifications
 
 extension ShapeStyle where Self == Color { static var prodTint: Color { AppCategory.productivity.tint } }
+
+// MARK: - Regles pures (testees dans AuditFixesProductivityTests)
+
+enum ProductivityRules {
+
+    /// Ordre des taches : priorite la plus haute d'abord, puis l'echeance la plus
+    /// PROCHE, les taches sans date en dernier. Avant, le tuple entier etait trie a
+    /// l'envers : a priorite egale l'echeance la plus lointaine passait devant.
+    static func todoPrecedes(priorityA: Int, dueA: Date?, priorityB: Int, dueB: Date?) -> Bool {
+        if priorityA != priorityB { return priorityA > priorityB }
+        switch (dueA, dueB) {
+        case let (a?, b?): return a < b
+        case (.some, nil): return true
+        default: return false
+        }
+    }
+
+    static func todoPrecedes(_ a: TodoItem, _ b: TodoItem) -> Bool {
+        todoPrecedes(priorityA: a.priority, dueA: a.due, priorityB: b.priority, dueB: b.due)
+    }
+
+    /// Une date pile a minuit = « ce jour-la, sans heure ». C'est ainsi qu'une tache
+    /// recurrente sans heure garde sa prochaine occurrence.
+    static func isDateOnly(_ d: Date, calendar: Calendar = .current) -> Bool {
+        let c = calendar.dateComponents([.hour, .minute, .second], from: d)
+        return c.hour == 0 && c.minute == 0 && c.second == 0
+    }
+
+    /// En retard ? Une date sans heure ne l'est qu'a partir du lendemain.
+    static func isLate(_ due: Date, now: Date = .now, calendar: Calendar = .current) -> Bool {
+        isDateOnly(due, calendar: calendar) ? due < calendar.startOfDay(for: now) : due < now
+    }
+
+    /// Prochaine occurrence STRICTEMENT apres `after` parmi les jours de semaine
+    /// (1=Dim … 7=Sam), a l'heure de `timeOf` (minuit si pas d'heure).
+    static func nextOccurrence(after: Date, weekdays: Set<Int>, timeOf: Date?,
+                               calendar: Calendar = .current) -> Date? {
+        guard !weekdays.isEmpty else { return nil }
+        let hm = timeOf.map { calendar.dateComponents([.hour, .minute], from: $0) }
+        let base = calendar.startOfDay(for: after)
+        for offset in 1...7 {
+            guard let day = calendar.date(byAdding: .day, value: offset, to: base),
+                  weekdays.contains(calendar.component(.weekday, from: day)) else { continue }
+            return calendar.date(bySettingHour: hm?.hour ?? 0, minute: hm?.minute ?? 0, second: 0, of: day)
+        }
+        return nil
+    }
+
+    /// Cocher une tache. Une tache recurrente n'a qu'un booleen `done` : la cocher
+    /// la cachait pour toujours. Elle reste donc ouverte et son echeance passe a la
+    /// prochaine occurrence. Une ancienne tache recurrente deja cochee se rouvre.
+    static func toggleDone(_ t: TodoItem, now: Date = .now) {
+        let days = t.recurringDays
+        guard !days.isEmpty else { t.done.toggle(); return }
+        if t.done { t.done = false; return }
+        // Depart : la plus tardive entre aujourd'hui et l'echeance (une tache cochee
+        // en avance ne revient pas le jour meme de son echeance).
+        let from = max(now, t.due ?? now)
+        if let next = nextOccurrence(after: from, weekdays: days, timeOf: t.due) {
+            t.due = next
+            t.blockStart = nil; t.blockEnd = nil
+        } else {
+            t.done = true
+        }
+    }
+
+    /// Serie d'une habitude, en ne comptant QUE ses jours actifs. Avant, chaque jour
+    /// calendaire comptait : une habitude du lundi au vendredi retombait a 1 chaque
+    /// lundi. Aujourd'hui non coche ne casse pas la serie (la journee n'est pas finie).
+    static func habitStreak(completions: [Date], activeDays: Set<Int>, now: Date = .now,
+                            calendar: Calendar = .current) -> Int {
+        let active = activeDays.isEmpty ? Set(1...7) : activeDays
+        let doneDays = Set(completions.map { calendar.startOfDay(for: $0) })
+        guard !doneDays.isEmpty else { return 0 }
+        let today = calendar.startOfDay(for: now)
+        var day = today
+        var streak = 0
+        // Borne : dix ans de jours suffisent, et la boucle ne peut pas tourner a vide.
+        for _ in 0..<3660 {
+            let isActive = active.contains(calendar.component(.weekday, from: day))
+            if isActive {
+                if doneDays.contains(day) { streak += 1 }
+                else if day != today { break }
+            }
+            guard let prev = calendar.date(byAdding: .day, value: -1, to: day) else { break }
+            day = prev
+        }
+        return streak
+    }
+
+    static func habitStreak(_ h: Habit, now: Date = .now) -> Int {
+        habitStreak(completions: h.completions.map(\.date), activeDays: h.activeDays, now: now)
+    }
+
+    /// Moyenne ARRONDIE des vraies series. L'ancienne valeur etait le nombre total de
+    /// completions divise par le nombre d'habitudes, affichee par le coach comme une
+    /// serie en jours.
+    static func averageStreak(_ streaks: [Int]) -> Int {
+        guard !streaks.isEmpty else { return 0 }
+        return Int((Double(streaks.reduce(0, +)) / Double(streaks.count)).rounded())
+    }
+
+    /// Ecrit la serie moyenne lue par le coach (UserContextBuilder, AIAssistantView).
+    static func publishAverageStreak(_ habits: [Habit], now: Date = .now) {
+        guard let defaults = LifeOSGroup.defaults else { return }
+        let live = habits.filter { !$0.isPending && !$0.isArchived }
+        defaults.set(averageStreak(live.map { habitStreak($0, now: now) }), forKey: "habits_avg_streak")
+    }
+
+    /// Signature d'un ajout au calendrier : meme titre et meme echeance = meme evenement.
+    static func calendarSignature(title: String, due: Date?) -> String {
+        "\(title.trimmingCharacters(in: .whitespacesAndNewlines))|\(due.map { String(Int($0.timeIntervalSince1970)) } ?? "sans-date")"
+    }
+
+    enum CalendarDecision: Equatable { case add, alreadyAdded, addAgainAfterChange }
+
+    static func calendarDecision(stored: String?, current: String) -> CalendarDecision {
+        guard let stored else { return .add }
+        return stored == current ? .alreadyAdded : .addAgainAfterChange
+    }
+
+    /// Jour (aaaa-mm-jj) d'un compteur quotidien.
+    static func dayKey(_ d: Date, calendar: Calendar = .current) -> String {
+        let c = calendar.dateComponents([.year, .month, .day], from: d)
+        return String(format: "%04d-%02d-%02d", c.year ?? 0, c.month ?? 0, c.day ?? 0)
+    }
+}
+
+// MARK: - Rappels d'habitude
+
+/// L'editeur titrait « HORAIRE DU RAPPEL » sans rien programmer. Un rappel hebdo par
+/// jour actif, identifie par l'uid stable de l'habitude (jamais son nom).
+enum HabitReminders {
+    static let prefix = "habit.reminder."
+
+    @MainActor
+    static func schedule(_ h: Habit) {
+        let uid = h.uid
+        guard !uid.isEmpty else { return }
+        let reqs: [UNNotificationRequest] = (h.isPending || h.isArchived) ? [] : h.activeDays.sorted().map { (wd: Int) -> UNNotificationRequest in
+            let content = UNMutableNotificationContent()
+            content.title = "Rappel habitude"
+            content.body = "C'est l'heure de ton habitude : \(h.name)."
+            content.sound = .default
+            content.categoryIdentifier = "LIFEOS_HABIT"
+            content.userInfo = ["habitID": uid, "habitName": h.name]
+            var comps = DateComponents()
+            comps.weekday = wd; comps.hour = h.scheduledHour; comps.minute = h.scheduledMinute
+            return UNNotificationRequest(identifier: "\(prefix)\(uid).\(wd)", content: content,
+                                         trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: true))
+        }
+        Task {
+            if !reqs.isEmpty { _ = await NotificationManager.shared.requestAuthorization() }
+            await NotificationManager.shared.replacePending(prefix: "\(prefix)\(uid).", with: reqs)
+        }
+    }
+
+    static func cancel(uid: String) {
+        guard !uid.isEmpty else { return }
+        NotificationManager.shared.cancelWithPrefix("\(prefix)\(uid).")
+    }
+
+    /// Retire les rappels d'habitudes supprimees, archivees ou en attente ailleurs
+    /// dans l'app (objectif archive, etc.), sinon ils sonneraient pour rien.
+    static func prune(keeping validUIDs: Set<String>) {
+        UNUserNotificationCenter.current().getPendingNotificationRequests { reqs in
+            let stale = reqs.map(\.identifier).filter { id in
+                guard id.hasPrefix(prefix) else { return false }
+                let rest = id.dropFirst(prefix.count)
+                guard let dot = rest.lastIndex(of: ".") else { return true }
+                return !validUIDs.contains(String(rest[..<dot]))
+            }
+            if !stale.isEmpty { UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: stale) }
+        }
+    }
+}
 
 // MARK: - Hub Productivité
 
@@ -19,7 +196,7 @@ struct TodoView: View {
 
     private var visible: [TodoItem] {
         let base = filter == 0 ? todos.filter { !$0.done } : todos
-        return base.sorted { ($0.priority, $0.due ?? .distantFuture) > ($1.priority, $1.due ?? .distantFuture) }
+        return base.sorted { ProductivityRules.todoPrecedes($0, $1) }
     }
 
     var body: some View {
@@ -35,7 +212,7 @@ struct TodoView: View {
                     List {
                         ForEach(visible) { t in
                             HStack(spacing: 12) {
-                                Button { withAnimation { t.done.toggle() } } label: {
+                                Button { withAnimation { ProductivityRules.toggleDone(t) } } label: {
                                     Image(systemName: t.done ? "checkmark.circle.fill" : "circle")
                                         .font(.title3).foregroundStyle(t.done ? Theme.success : priorityColor(t.priority))
                                 }
@@ -45,18 +222,25 @@ struct TodoView: View {
                                         Text(t.project).font(.caption2).padding(.horizontal,6).padding(.vertical,2)
                                             .raisedSurface(Capsule(), .nested).foregroundStyle(Theme.textSecondary)
                                         if let d = t.due {
-                                            if d < .now && !t.done {
+                                            // Une date sans heure (occurrence d'une tache recurrente)
+                                            // ne s'affiche pas « 00:00 » et n'est en retard qu'au lendemain.
+                                            let dateOnly = ProductivityRules.isDateOnly(d)
+                                            if ProductivityRules.isLate(d) && !t.done {
                                                 HStack(spacing: 3) {
                                                     Image(systemName: "clock.badge.exclamationmark")
-                                                    Text(d, format: .dateTime.hour().minute())
+                                                    if dateOnly { Text(d, format: .dateTime.day().month()) }
+                                                    else { Text(d, format: .dateTime.hour().minute()) }
                                                     Text("En retard")
                                                 }
                                                 .font(.caption2.bold())
                                                 .foregroundStyle(Theme.danger)
                                             } else {
-                                                Text(d, format: .dateTime.day().month().hour().minute())
-                                                    .font(.caption2)
-                                                    .foregroundStyle(Theme.textSecondary)
+                                                Group {
+                                                    if dateOnly { Text(d, format: .dateTime.weekday(.abbreviated).day().month()) }
+                                                    else { Text(d, format: .dateTime.day().month().hour().minute()) }
+                                                }
+                                                .font(.caption2)
+                                                .foregroundStyle(Theme.textSecondary)
                                             }
                                         }
                                         if !t.recurringDaysRaw.isEmpty {
@@ -102,19 +286,46 @@ struct TodoView: View {
     }
     private func priorityColor(_ p: Int) -> Color { p >= 2 ? Theme.danger : p == 1 ? Theme.warning : Theme.textSecondary }
 
+    /// Ajouts deja faits : [identifiant de la tache: signature titre|echeance].
+    /// L'app n'a que l'acces calendrier en ECRITURE (Info.plist) : elle ne peut ni
+    /// relire ni modifier un evenement. Sans cette trace, chaque appui creait un
+    /// doublon. Garde locale, une entree par tache.
+    private static let calendarLinksKey = "todo.calendarLinks"
+
+    private func todoKey(_ todo: TodoItem) -> String? {
+        guard let data = try? JSONEncoder().encode(todo.persistentModelID) else { return nil }
+        return data.base64EncodedString()
+    }
+
     private func addToCalendar(_ todo: TodoItem) {
+        let signature = ProductivityRules.calendarSignature(title: todo.title, due: todo.due)
+        let key = todoKey(todo)
+        let links = UserDefaults.standard.dictionary(forKey: Self.calendarLinksKey) as? [String: String] ?? [:]
+        let decision = ProductivityRules.calendarDecision(stored: key.flatMap { links[$0] }, current: signature)
+        if decision == .alreadyAdded {
+            calendarAlert = "Cette tâche est déjà dans ton calendrier."
+            return
+        }
         let store = EKEventStore()
         let requestAccess = {
             let event = EKEvent(eventStore: store)
             event.title = todo.title
             event.notes = todo.project.isEmpty ? nil : todo.project
-            let start = todo.due ?? Calendar.current.date(byAdding: .hour, value: 1, to: .now)!
+            let start = todo.due ?? Date().addingTimeInterval(3600)
             event.startDate = start
-            event.endDate   = Calendar.current.date(byAdding: .hour, value: 1, to: start)!
+            event.endDate   = start.addingTimeInterval(3600)
             event.calendar  = store.defaultCalendarForNewEvents
             do {
                 try store.save(event, span: .thisEvent)
-                calendarAlert = "Ajouté au calendrier pour \(start.formatted(.dateTime.day().month().hour().minute()))."
+                if let key {
+                    var saved = UserDefaults.standard.dictionary(forKey: Self.calendarLinksKey) as? [String: String] ?? [:]
+                    saved[key] = signature
+                    UserDefaults.standard.set(saved, forKey: Self.calendarLinksKey)
+                }
+                let when = "Ajouté au calendrier pour \(start.formatted(.dateTime.day().month().hour().minute()))."
+                calendarAlert = decision == .addAgainAfterChange
+                    ? when + " L'ancien événement de cette tâche reste dans ton calendrier : supprime-le à la main."
+                    : when
             } catch {
                 calendarAlert = "Impossible d'accéder au calendrier. Vérifie les autorisations dans Réglages."
             }
@@ -397,13 +608,6 @@ struct TimeBlockView: View {
     }
 
     private func generate() {
-        let pending = todos.filter { !$0.done }.sorted { $0.priority > $1.priority }
-        guard !pending.isEmpty else {
-            withAnimation { blocks = [] }
-            message = "Aucune tâche à placer. Ajoute des tâches dans la To-do."
-            return
-        }
-
         let cal = Calendar.current
         // Si la journee est deja finie, on planifie DEMAIN au lieu de ne rien
         // rendre. Generer le soir renvoyait une liste vide sans rien expliquer.
@@ -413,6 +617,18 @@ struct TimeBlockView: View {
             ? cal.date(byAdding: .day, value: 1, to: Date()) ?? Date()
             : Date()
         var hour = startsTomorrow ? dayStart : max(dayStart, nextHour)
+
+        // Meme ordre que la To-do (priorite puis echeance la plus proche): le
+        // @Query n'est pas trie, a priorite egale l'ordre etait arbitraire. Une tache
+        // recurrente n'est placee que les jours ou elle revient.
+        let pending = todos
+            .filter { !$0.done && ($0.recurringDays.isEmpty || $0.applies(to: day)) }
+            .sorted { ProductivityRules.todoPrecedes($0, $1) }
+        guard !pending.isEmpty else {
+            withAnimation { blocks = [] }
+            message = "Aucune tâche à placer. Ajoute des tâches dans la To-do."
+            return
+        }
 
         var result: [(Date, Date, TodoItem)] = []
         var placed = 0
@@ -429,7 +645,9 @@ struct TimeBlockView: View {
         }
         // Les taches qui n'ont pas trouve de place ne gardent pas un vieux
         // creneau de la veille, sinon l'ecran melange deux journees.
-        for t in pending.dropFirst(placed) {
+        // Idem pour une tache recurrente qui ne revient pas ce jour-la.
+        let placedIDs = Set(result.map { $0.2.persistentModelID })
+        for t in todos where t.blockStart != nil && !placedIDs.contains(t.persistentModelID) {
             t.blockStart = nil
             t.blockEnd = nil
         }
@@ -496,8 +714,43 @@ struct HabitTrackerView: View {
         pendingDeleteHabit = nil
     }
 
+    @State private var showPending = false
+
     var body: some View {
         HabitTrackerTimelineView()
+            // Les habitudes proposees n'etaient affichees nulle part alors qu'une
+            // notification hebdo annonce « N habitudes proposées t'attendent ».
+            .safeAreaInset(edge: .top) {
+                if !pendingHabits.isEmpty {
+                    Button { showPending = true } label: {
+                        Label("\(pendingHabits.count) habitude\(pendingHabits.count > 1 ? "s" : "") proposée\(pendingHabits.count > 1 ? "s" : "") à activer",
+                              systemImage: "sparkles")
+                            .font(.footnote.weight(.semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(Theme.warning.opacity(0.10), in: Capsule())
+                            .foregroundStyle(Theme.textPrimary)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 4)
+                }
+            }
+            .sheet(isPresented: $showPending) {
+                NavigationStack {
+                    ScrollView {
+                        VStack(spacing: 10) {
+                            if pendingHabits.isEmpty {
+                                EmptyState(icon: "checkmark.circle", title: "Tout est trié", message: "Plus aucune habitude proposée en attente.")
+                            }
+                            ForEach(pendingHabits) { PendingHabitRow(habit: $0) }
+                        }
+                        .padding(Theme.pad)
+                    }
+                    .navigationTitle("Habitudes proposées").navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("OK") { showPending = false } } }
+                }
+            }
             .navigationTitle("Habit tracker")
             .navigationBarTitleDisplayMode(.inline)
             .task {
@@ -518,9 +771,10 @@ struct HabitTrackerView: View {
         // Un seul ecrivain de l'instantane des habitudes: HabitSync.
         HabitSync.ensureIDs(ctx)
         HabitSync.publish(ctx)
-        guard let defaults = LifeOSGroup.defaults else { return }
-        let avgStreak = activeHabits.isEmpty ? 0 : activeHabits.map { $0.completions.count }.reduce(0, +) / max(1, activeHabits.count)
-        defaults.set(avgStreak, forKey: "habits_avg_streak")
+        // Vraie serie moyenne (jours actifs), plus un total de completions.
+        ProductivityRules.publishAverageStreak(activeHabits)
+        // Rappels d'habitudes supprimees ou archivees ailleurs: on les retire.
+        HabitReminders.prune(keeping: Set(activeHabits.map(\.uid).filter { !$0.isEmpty }))
 
         WidgetCenter.shared.reloadTimelines(ofKind: "HabitsWidget")
     }
@@ -593,15 +847,8 @@ struct HabitRow: View {
     private var doneToday: Bool {
         habit.completions.contains { Calendar.current.isDate($0.date, inSameDayAs: .now) }
     }
-    private var streak: Int {
-        var c = 0
-        var day = Calendar.current.startOfDay(for: .now)
-        if !doneToday { day = Calendar.current.date(byAdding: .day, value: -1, to: day)! }
-        while habit.completions.contains(where: { Calendar.current.isDate($0.date, inSameDayAs: day) }) {
-            c += 1; day = Calendar.current.date(byAdding: .day, value: -1, to: day)!
-        }
-        return c
-    }
+    // Serie sur les jours ACTIFS seulement (voir ProductivityRules.habitStreak).
+    private var streak: Int { ProductivityRules.habitStreak(habit) }
     private var timeLabel: String { String(format: "%02d:%02d", habit.scheduledHour, habit.scheduledMinute) }
 
     var body: some View {
@@ -888,6 +1135,7 @@ struct HabitEditor: View {
                     if editingHabit != nil {
                         Button(role: .destructive) {
                             if let h = editingHabit {
+                                HabitReminders.cancel(uid: h.uid)
                                 ctx.delete(h)
                                 do { try ctx.save() } catch { AppLog.data.error("delete habit failed: \(error.localizedDescription, privacy: .public)") }
                                 WidgetCenter.shared.reloadAllTimelines()
@@ -944,18 +1192,25 @@ struct HabitEditor: View {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         let daysRaw = selectedDays.sorted().map(String.init).joined(separator: ",")
+        let saved: Habit
         if let h = editingHabit {
             h.name = trimmed; h.icon = icon; h.colorHex = color
             h.scheduledHour = scheduledHour; h.scheduledMinute = scheduledMinute
             h.activeDaysRaw = daysRaw
+            saved = h
         } else {
-            ctx.insert(Habit(name: trimmed, icon: icon, colorHex: color, scheduledHour: scheduledHour, scheduledMinute: scheduledMinute, activeDaysRaw: daysRaw))
+            saved = Habit(name: trimmed, icon: icon, colorHex: color, scheduledHour: scheduledHour, scheduledMinute: scheduledMinute, activeDaysRaw: daysRaw)
+            ctx.insert(saved)
         }
         do {
             try ctx.save()
         } catch {
             AppLog.data.error("save habit failed: \(error.localizedDescription, privacy: .public)")
         }
+        // Le rappel promis par « HORAIRE DU RAPPEL » existe enfin. Une ancienne fiche
+        // sans uid en recoit un d'abord: le rappel est identifie par lui.
+        if saved.uid.isEmpty { HabitSync.ensureIDs(ctx) }
+        HabitReminders.schedule(saved)
         WidgetCenter.shared.reloadAllTimelines()
         Haptics.medium()
         dismiss()
@@ -966,11 +1221,23 @@ struct HabitEditor: View {
 
 struct FocusTimerView: View {
     @State private var engine = CountdownEngine(key: "focus")
-    @State private var isFocus = true
-    @State private var sessions = 0
-    @State private var running = false
+    // Phase, compteur et fin de phase PERSISTES. C'etaient des @State: le moteur
+    // survivait a une relance mais l'ecran affichait « Démarrer », la fin de phase
+    // n'etait plus suivie (onFinish nil) et le compteur repartait a 0.
+    @AppStorage("focus.isFocus") private var isFocus = true
+    @AppStorage("focus.sessionsCount") private var sessionsCount = 0
+    @AppStorage("focus.sessionsDay") private var sessionsDay = ""
+    /// Fin absolue de la phase en cours (0 = rien ne tourne). Permet de compter une
+    /// session finie pendant que l'app etait fermee.
+    @AppStorage("focus.phaseEnd") private var phaseEnd: Double = 0
     @AppStorage(AppStorageKeys.focusLen) private var focusLen = 25
     @AppStorage(AppStorageKeys.breakLen) private var breakLen = 5
+    @Environment(\.scenePhase) private var scenePhase
+
+    /// Sessions du JOUR: le compteur d'hier ne s'affiche pas aujourd'hui.
+    private var sessions: Int { sessionsDay == ProductivityRules.dayKey(.now) ? sessionsCount : 0 }
+    /// En cours = qui tourne OU en pause avec du temps restant.
+    private var running: Bool { engine.isRunning || engine.remaining > 0 }
 
     var body: some View {
         ZStack {
@@ -983,28 +1250,59 @@ struct FocusTimerView: View {
                 }
                 Text(isFocus ? "CONCENTRATION" : "PAUSE").font(.caption.bold()).foregroundStyle(isFocus ? .prodTint : Theme.success)
                 TimerDial(engine: engine, tint: isFocus ? Color.accentColor : Theme.success, caption: "Session \(sessions+1)")
-                Label("\(sessions) sessions terminées", systemImage: "checkmark.seal").font(.footnote).foregroundStyle(Theme.textSecondary)
+                Label("\(sessions) sessions terminées aujourd'hui", systemImage: "checkmark.seal").font(.footnote).foregroundStyle(Theme.textSecondary)
                 if !running {
                     PrimaryButton(title: "Démarrer le focus", icon: "play.fill", tint: .prodTint) { startFocus() }
                 } else {
                     HStack {
-                        PrimaryButton(title: engine.isRunning ? "Pause" : "Reprendre", icon: engine.isRunning ? "pause.fill" : "play.fill", tint: .prodTint) { engine.isRunning ? engine.pause() : engine.resume() }
-                        PrimaryButton(title: "Stop", icon: "stop.fill", tint: Theme.bg2) { engine.stop(); running = false }
+                        PrimaryButton(title: engine.isRunning ? "Pause" : "Reprendre", icon: engine.isRunning ? "pause.fill" : "play.fill", tint: .prodTint) {
+                            if engine.isRunning { engine.pause(); phaseEnd = 0 }
+                            else { engine.resume(); phaseEnd = engine.deadline?.timeIntervalSince1970 ?? 0 }
+                        }
+                        PrimaryButton(title: "Stop", icon: "stop.fill", tint: Theme.bg2) { engine.stop(); phaseEnd = 0; isFocus = true }
                     }
                 }
                 IntegrationNotice(text: "Le « bloqueur d'apps » façon Forest nécessite la Screen Time API (DeviceActivity + FamilyControls) qui requiert une autorisation spéciale Apple. Ici le minuteur de focus est pleinement fonctionnel ; le blocage dur des apps est l'étape à activer ensuite.")
             }.padding()
         }
         .navigationTitle("Focus").navigationBarTitleDisplayMode(.inline)
+        .onAppear { reattach() }
+        .onChange(of: scenePhase) { _, phase in if phase == .active { reattach() } }
     }
-    private func startFocus() {
-        running = true; isFocus = true
+
+    /// Rebranche l'ecran sur une phase lancee avant (relance, retour au premier plan).
+    private func reattach() {
         engine.onFinish = finishPhase
-        engine.start(seconds: focusLen*60)
+        if engine.isRunning {
+            engine.refresh()
+        } else if phaseEnd > 0, engine.remaining == 0, Date(timeIntervalSince1970: phaseEnd) <= .now {
+            // La phase s'est terminee app fermee: le moteur l'a effacee sans prevenir.
+            // Une session de focus terminee compte; on n'enchaine pas une pause passee.
+            if isFocus { countSession() }
+            isFocus = true
+            phaseEnd = 0
+        }
+    }
+
+    private func countSession() {
+        let today = ProductivityRules.dayKey(.now)
+        sessionsCount = (sessionsDay == today ? sessionsCount : 0) + 1
+        sessionsDay = today
+    }
+
+    private func startPhase(seconds: Int) {
+        engine.onFinish = finishPhase
+        engine.start(seconds: seconds)
+        phaseEnd = engine.deadline?.timeIntervalSince1970 ?? 0
+    }
+
+    private func startFocus() {
+        isFocus = true
+        startPhase(seconds: focusLen*60)
     }
     private func finishPhase() {
-        if isFocus { sessions += 1; isFocus = false; engine.onFinish = finishPhase; engine.start(seconds: breakLen*60) }
-        else { isFocus = true; engine.onFinish = finishPhase; engine.start(seconds: focusLen*60) }
+        if isFocus { countSession(); isFocus = false; startPhase(seconds: breakLen*60) }
+        else { isFocus = true; startPhase(seconds: focusLen*60) }
     }
 }
 
@@ -1069,10 +1367,26 @@ struct NoteEditor: View {
         .toolbar {
             ToolbarItem(placement: .confirmationAction) { Button("OK") { save(); dismiss() } }
         }
-        .onAppear { if let note { title = note.title; body_ = note.body; tags = note.tags } }
+        .onAppear {
+            if let note { title = note.title; body_ = note.body; tags = note.tags }
+            loaded = true
+        }
+        // Une note existante s'ouvre par un lien: le bouton retour jetait les
+        // modifications sans prevenir. On enregistre aussi en quittant l'ecran.
+        .onDisappear { if note != nil, loaded { save() } }
     }
+    /// Evite d'ecraser la note avec des champs vides si l'ecran disparait avant
+    /// d'avoir charge son contenu.
+    @State private var loaded = false
+
     private func save() {
-        if let note { note.title = title; note.body = body_; note.tags = tags }
-        else { ctx.insert(Note(title: title, body: body_, tags: tags)) }
+        if let note {
+            guard note.title != title || note.body != body_ || note.tags != tags else { return }
+            note.title = title; note.body = body_; note.tags = tags
+        } else {
+            ctx.insert(Note(title: title, body: body_, tags: tags))
+        }
+        do { try ctx.save() }
+        catch { AppLog.data.error("note non enregistree: \(error.localizedDescription, privacy: .public)") }
     }
 }

@@ -716,6 +716,44 @@ Proof:
   "poisson", "farine" counted as cereal, 0,15 shown as 0,1, value regex backtracking (91 s
   on the corpus, now 0,5 s).
 
+## Audit global du 1er oct. (AUDIT-GLOBAL-OBJECTIFS-LIFEOS-2026-10-01.md), lot 5
+
+**Inventaire complet : 89 outils sur 89 ont une matrice** (`docs/feature-parity/MATRIX.md`),
+faite en lisant le code et les tests de chaque outil (7 lectures en parallèle, preuve par
+ligne). Totaux : présent et testé 155, présent non testé 355, manquant 546, dépendance
+externe 86. **Aucune parité n'est revendiquée** : la majorité des fonctions des apps de
+référence manquent. Les lignes décrivent l'état AVANT les corrections ci-dessous (quelques
+fonctions ajoutées en corrigeant, comme supprimer une candidature Huntly ou modifier un
+médicament, sont encore marquées manquantes).
+
+**106 défauts trouvés en lisant le code, 104 corrigés** (4 en partie), listés par outil dans
+la matrice avec leur fichier. Ouverts : report du budget Ynabi (il faut un champ stocké) et
+devise du prix d'achat Finario (idem). Exemples corrigés : Impôts+ montrait 30 % au lieu de
+41 % sous plafonnement, le 3e enfant comptait une demi-part ; Londres valorisée 100 fois trop
+(pence) ; le début du cycle ne bougeait jamais et l'ovulation était fixée au jour 14 ; hausse
+de tension affichée en vert ; réveil qui sonnait tous les jours et s'arrêtait seul après
+10 s ; crash Trilingo au 2e essai du micro ; tâches récurrentes cochées pour toujours ;
+dépense rapide rattachée à aucun compte ; nuit sonore perdue si l'app était tuée ; contact
+supprimé dont l'anniversaire sonnait encore ; trajets impossibles à supprimer.
+
+**Fusion des étiquettes animales (5 risques de l'audit)** : une étiquette relue et validée
+remplace la base (retirable), une lecture automatique ne remplit que les trous, concordance
+de recette = 3 premiers ingrédients identiques et seulement un indice, valeurs lues sans
+composition jamais appliquées sur une base qui en a une, friandise et complémentaire
+étiquetées « Limites » dans la note. `PetMergeOverrideTests` (10, dont le parcours complet
+création → résultat → édition → suppression → relance).
+
+**Données reliées** : coach et widgets se recalculaient seulement à l'ajout ou la
+suppression (`.count`) ; corriger un repas, une série, une humeur ou une nuit gardait
+l'ancien total. Ils observent maintenant les valeurs (`AuditGlobalOct1Tests`).
+Comparer Yuko complète aussi le 2e produit. Le rappel Trilingo ouvre la leçon
+(`ToolRoute`), sur téléphone et bureau. Série d'habitude : une seule règle partout.
+
+**Corpus chat élargi à 63 fiches**, dont 15 SANS catégorie chat ni chien : espèce reconnue
+9/15, notées 6/15 (`tools/yuko-bench/petfood/REPORT.md`).
+
+Suite : voir le journal `docs/verification/test-runs/2026-10-01-lot5.log`.
+
 ## Resume here
 
 Read the two audit lot tables above first. Next, in the audit's order:

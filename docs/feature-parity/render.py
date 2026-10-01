@@ -54,5 +54,20 @@ for r in rows:
           "| Fonctionnalité | État | Preuve |", "|---|---|---|"]
     for f in r["matrix"]:
         m.append(f"| {short(f['feature'], 70)} | {LABEL[f['state']]} | {short(f.get('proof') or '', 80)} |")
+    bugs = r.get("audit_bugs") or []
+    if bugs:
+        fixed = sum(1 for b in bugs if b["status"] == "fixed")
+        m += ["", f"Défauts trouvés en lisant le code ({fixed} corrigés sur {len(bugs)}) :", ""]
+        for b in bugs:
+            tag = "corrigé" if b["status"] == "fixed" else ("écarté" if b["status"] == "skipped" else "ouvert")
+            extra = f" ({short(b.get('note') or '', 70)})" if b.get("note") else ""
+            m.append(f"- [{tag}] `{b['where']}` : {short(b['why'], 160)}{extra}")
+# Totaux, en tete : ce que la matrice dit vraiment.
+tot = collections.Counter(f["state"] for r in rows for f in r.get("matrix") or [])
+allbugs = [b for r in rows for b in r.get("audit_bugs") or []]
+summary = ["", "Fonctions inventoriées : " + ", ".join(f"{LABEL[k]} {tot[k]}" for k in LABEL if tot[k])
+           + f". Défauts trouvés : {len(allbugs)}, corrigés {sum(1 for b in allbugs if b['status'] == 'fixed')}.", ""]
+i = m.index(f"Inventoriés : {len(done_tools)} sur {len(rows)}.")
+m[i+1:i+1] = summary
 open(os.path.join(here, "MATRIX.md"), "w").write("\n".join(m) + "\n")
 print(f"MATRIX.md: {len(done_tools)} outils inventoriés")

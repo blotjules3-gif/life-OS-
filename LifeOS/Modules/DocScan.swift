@@ -20,8 +20,24 @@ enum DocOCR {
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
             request.recognitionLanguages = ["fr-FR", "en-US"]
-            let handler = VNImageRequestHandler(cgImage: cg, options: [:])
+            // Le cgImage n'a pas l'orientation de l'UIImage: sans elle, une photo
+            // portrait de la phototheque (orientation .right) etait lue de travers.
+            let handler = VNImageRequestHandler(cgImage: cg, orientation: cgOrientation(image.imageOrientation), options: [:])
             DispatchQueue.global(qos: .userInitiated).async { try? handler.perform([request]) }
+        }
+    }
+
+    static func cgOrientation(_ o: UIImage.Orientation) -> CGImagePropertyOrientation {
+        switch o {
+        case .up: return .up
+        case .down: return .down
+        case .left: return .left
+        case .right: return .right
+        case .upMirrored: return .upMirrored
+        case .downMirrored: return .downMirrored
+        case .leftMirrored: return .leftMirrored
+        case .rightMirrored: return .rightMirrored
+        @unknown default: return .up
         }
     }
 }
@@ -29,7 +45,10 @@ enum DocOCR {
 // MARK: - Classement par règles (texte → catégorie)
 
 enum DocClassifier {
-    static func categorize(_ text: String) -> String {
+    /// Categorie trouvee par mot-cle, ou nil si aucun ne correspond. Avant,
+    /// tout texte inconnu (OCR vide compris) devenait "Identité" et etait
+    /// presente comme "Classé automatiquement": un classement invente.
+    static func categorize(_ text: String) -> String? {
         let t = text.lowercased().folding(options: .diacriticInsensitive, locale: .current)
         func has(_ ks: String...) -> Bool { ks.contains { t.contains($0) } }
         if has("facture", "montant", " ttc", " tva", "total a payer", "invoice", "n° client") { return "Facture" }
@@ -38,18 +57,21 @@ enum DocClassifier {
         if has("carte d'identite", "passeport", "passport", "permis de conduire", "titre de sejour") { return "Identité" }
         if has("garantie", "warranty", "ticket de caisse", "bon d'achat") { return "Garantie" }
         if has("contrat", "bail", "police d'assurance", "conditions generales", "signature des parties") { return "Contrat" }
-        return "Identité"
+        return nil
     }
+
+    /// Categorie a ranger quand aucun mot-cle n'a ete reconnu.
+    static let unknownCategory = "Autre"
 
     static func suggestedTitle(_ text: String, category: String) -> String {
         let lines = text.split(separator: "\n")
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { $0.count >= 4 && $0.count <= 60 }
-        return lines.first ?? "Document \(category)"
+        return lines.first ?? (category.isEmpty ? "Document" : "Document \(category)")
     }
 }
 
-let docCategories = ["Identité", "Contrat", "Facture", "Garantie", "Santé", "Impôts"]
+let docCategories = ["Identité", "Contrat", "Facture", "Garantie", "Santé", "Impôts", DocClassifier.unknownCategory]
 
 // MARK: - Scan & classement
 
@@ -57,7 +79,10 @@ struct DocScanView: View {
     @Environment(\.modelContext) private var ctx
     @State private var image: UIImage?
     @State private var text = ""
-    @State private var category = "Identité"
+    @State private var category = DocClassifier.unknownCategory
+    /// Vrai seulement si un mot-cle a vraiment ete reconnu.
+    @State private var autoClassified = false
+    @State private var lastAutoCategory: String?
     @State private var title = ""
     @State private var busy = false
     @State private var analyzed = false
@@ -92,9 +117,12 @@ struct DocScanView: View {
                 }
                 .padding()
             }
-            .onDesktopImageDrop { img in
-                handle(img)
-            }
+            // Toutes les pages d'un PDF depose, comme le bouton Fichier.
+            .onDesktopPagesDrop(perform: { dropped in
+                saveError = nil; handle(dropped)
+            }, onFailure: {
+                saveError = "Ce fichier n'a pas pu être lu comme image ou PDF."
+            })
             if savedToast { toast }
         }
         .navigationTitle("Scan & classement").navigationBarTitleDisplayMode(.inline)
@@ -184,14 +212,25 @@ struct DocScanView: View {
     private var resultCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Image(systemName: "infinity").foregroundStyle(.adminTint)
-                Text("Classé automatiquement").font(.subheadline.weight(.semibold))
+                if autoClassified {
+                    Image(systemName: "infinity").foregroundStyle(.adminTint)
+                    Text("Classé automatiquement").font(.subheadline.weight(.semibold))
+                } else {
+                    // Pas de faux "classé": on dit qu'il faut choisir.
+                    Image(systemName: "questionmark.folder").foregroundStyle(Theme.warning)
+                    Text(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                         ? "Aucun texte lu : choisis la catégorie"
+                         : "Catégorie non reconnue : choisis-la")
+                        .font(.subheadline.weight(.semibold))
+                }
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text("Catégorie").font(.caption).foregroundStyle(Theme.textSecondary)
                 Picker("Catégorie", selection: $category) {
                     ForEach(docCategories, id: \.self) { Text($0).tag($0) }
                 }.pickerStyle(.menu).tint(.adminTint)
+                // Un choix a la main n'est plus "automatique".
+                .onChange(of: category) { _, new in autoClassified = lastAutoCategory != nil && new == lastAutoCategory }
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text("Titre").font(.caption).foregroundStyle(Theme.textSecondary)
@@ -343,8 +382,11 @@ struct DocScanView: View {
             await MainActor.run {
                 text = recognized
                 if !keepTitle || title.isEmpty {
-                    category = DocClassifier.categorize(recognized)
-                    title = DocClassifier.suggestedTitle(recognized, category: category)
+                    let found = DocClassifier.categorize(recognized)
+                    lastAutoCategory = found
+                    autoClassified = found != nil
+                    category = found ?? DocClassifier.unknownCategory
+                    title = DocClassifier.suggestedTitle(recognized, category: found ?? "")
                 }
                 busy = false; analyzed = true
             }
@@ -396,6 +438,7 @@ struct DocScanView: View {
 
     private func reset() {
         image = nil; pages = []; text = ""; analyzed = false; title = ""; pickerItem = nil; saveError = nil
+        category = DocClassifier.unknownCategory; autoClassified = false; lastAutoCategory = nil
     }
 }
 
