@@ -114,7 +114,7 @@ final class AIAssistantViewModel: ObservableObject {
     @AppStorage(AppStorageKeys.aiKnownModulesRaw) private var aiKnownModulesRaw = ""
     @AppStorage(AppStorageKeys.wakeupHour) private var wakeupHour = 7
     @AppStorage(AppStorageKeys.wakeupMinute) private var wakeupMinute = 0
-    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = AppTheme.defaultRaw
     @AppStorage(AppStorageKeys.habitModulesRaw) private var habitModulesRaw = ""
 
     var modelContext: ModelContext?
@@ -872,10 +872,10 @@ struct AIAssistantView: View {
     @Environment(\.modelContext) private var ctx
     @Environment(\.dismiss) private var dismiss
     @StateObject private var vm = AIAssistantViewModel()
-    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = AppTheme.defaultRaw
     @AppStorage(AppStorageKeys.coachDisclaimerAccepted) private var disclaimerAccepted = false
     @AppStorage(AppStorageKeys.coachOnboardingCompleted) private var coachOnboardingCompleted = false
-    private var accent: Color { (AppTheme(rawValue: appThemeRaw) ?? .classic).accent }
+    private var accent: Color { AppTheme.resolved(appThemeRaw).accent }
     @FocusState private var inputFocused: Bool
     @State private var showClearConfirm = false
     @State private var showServerConfig = false
@@ -2041,8 +2041,8 @@ private struct CoachHistoryDayView: View {
     let dayLabel: String
     let messages: [AIMessage]
 
-    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
-    private var accent: Color { (AppTheme(rawValue: appThemeRaw) ?? .classic).accent }
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = AppTheme.defaultRaw
+    private var accent: Color { AppTheme.resolved(appThemeRaw).accent }
 
     var body: some View {
         ScrollView {

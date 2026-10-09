@@ -1178,6 +1178,7 @@ struct HydrationView: View {
         .sheet(isPresented: $showBeverages) { BeverageSettingsView() }
         .task { syncWaterToContext() }
         .onChange(of: entries.map { "\($0.date.timeIntervalSince1970)|\($0.amountML)" }) { _, _ in syncWaterToContext() }
+        .onChange(of: goalML) { _, _ in syncWaterToContext() }
     }
     /// Prises du jour, la plus recente en premier.
     private var todayEntries: [WaterEntry] {
@@ -1194,12 +1195,10 @@ struct HydrationView: View {
 
     /// Memes cles que les widgets (`WidgetKeys`), avec le jour : une valeur d'hier ne
     /// s'affiche pas aujourd'hui.
+    /// Un seul ecrivain : `WidgetPublisher` (total du jour, objectif, jour), qui ne
+    /// recharge le widget que si la valeur change.
     private func syncWaterToContext() {
-        guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return }
-        grp.set(todayML, forKey: WidgetKeys.waterToday)
-        grp.set(WidgetKeys.dayStamp(), forKey: WidgetKeys.waterDay)
-        grp.set(goalML, forKey: WidgetKeys.waterGoal)
-        WidgetCenter.shared.reloadTimelines(ofKind: "HydrationWidget")
+        WidgetPublisher.shared.publishNow([.water, .energy], ctx: ctx)
     }
     private var beveragePicker: some View {
         HStack {

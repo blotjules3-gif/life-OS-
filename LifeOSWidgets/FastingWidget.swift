@@ -2,19 +2,15 @@ import SwiftUI
 import WidgetKit
 
 struct FastingWidget: Widget {
-    let kind: String = "FastingWidget"
+    let kind: String = WidgetKinds.fasting
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: FastingWidgetProvider()) { entry in
             FastingWidgetView(entry: entry)
         }
-        .configurationDisplayName("Jeûne Intermittent")
-        .description("Suis ton temps de jeûne écoulé et ta fenêtre d'alimentation.")
-        .supportedFamilies([
-            .systemSmall,
-            .accessoryCircular,
-            .accessoryRectangular
-        ])
+        .configurationDisplayName("Jeûne intermittent")
+        .description("Le temps écoulé de ton jeûne, ton objectif et ta fenêtre pour manger.")
+        .supportedFamilies([.systemSmall, .accessoryCircular, .accessoryRectangular])
         .contentMarginsDisabled()
     }
 }
@@ -23,54 +19,43 @@ struct FastingWidget: Widget {
 
 struct FastingWidgetEntry: TimelineEntry {
     let date: Date
-    let elapsedHours: Double
+    /// nil = pas de jeune en cours.
+    let start: Date?
     let targetHours: Int
-    let isFasting: Bool
 
-    var progress: Double {
-        guard targetHours > 0 else { return 0 }
-        return max(0.0, min(1.0, elapsedHours / Double(targetHours)))
-    }
-
-    var percentage: Int {
-        Int(progress * 100)
-    }
+    var isFasting: Bool { start != nil }
+    var elapsedHours: Double { start.map { max(0, date.timeIntervalSince($0)) / 3600 } ?? 0 }
+    var progress: Double { targetHours > 0 ? max(0, min(1, elapsedHours / Double(targetHours))) : 0 }
+    var eatingWindow: Int { FastingMath.eatingWindow(targetHours: targetHours) }
+    var end: Date? { start.map { $0.addingTimeInterval(Double(targetHours) * 3600) } }
 }
 
 struct FastingWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> FastingWidgetEntry {
-        FastingWidgetEntry(
-            date: .now,
-            elapsedHours: 14.5,
-            targetHours: 16,
-            isFasting: true
-        )
+        FastingWidgetEntry(date: .now, start: .now.addingTimeInterval(-10 * 3600), targetHours: 16)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (FastingWidgetEntry) -> Void) {
-        completion(read())
+        completion(context.isPreview ? placeholder(in: context) : read(at: .now))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<FastingWidgetEntry>) -> Void) {
-        let entry = read()
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: .now) ?? .now.addingTimeInterval(900)
-        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+        let first = read(at: .now)
+        guard first.isFasting else {
+            completion(Timeline(entries: [first], policy: .never))
+            return
+        }
+        // Une entree par quart d'heure sur 6 h : la duree avance sans reveiller l'app.
+        let entries = (0..<24).map { read(at: Date.now.addingTimeInterval(Double($0) * 900)) }
+        completion(Timeline(entries: entries, policy: .atEnd))
     }
 
-    private func read() -> FastingWidgetEntry {
-        let defs = WidgetAppGroup.defaults
+    private func read(at date: Date) -> FastingWidgetEntry {
+        let defs = LifeOSGroup.defaults
         let target = defs?.integer(forKey: WidgetKeys.fastTarget) ?? 0
         let startTs = defs?.double(forKey: WidgetKeys.fastStart) ?? 0
-        // Pas de debut ecrit = pas de jeune en cours (avant : 14,5 h inventees).
-        let fasting = startTs > 0
-        let elapsed = fasting ? max(0.0, Date().timeIntervalSince1970 - startTs) / 3600.0 : 0
-
-        return FastingWidgetEntry(
-            date: .now,
-            elapsedHours: elapsed,
-            targetHours: target > 0 ? target : 16,
-            isFasting: fasting
-        )
+        return FastingWidgetEntry(date: date, start: startTs > 0 ? Date(timeIntervalSince1970: startTs) : nil,
+                                  targetHours: target > 0 ? target : 16)
     }
 }
 
@@ -82,138 +67,80 @@ struct FastingWidgetView: View {
 
     var body: some View {
         Group {
-            if !entry.isFasting {
-                idleView
-            } else {
-                switch family {
-                case .systemSmall:
-                    smallView
-                case .accessoryCircular:
-                    circularView
-                case .accessoryRectangular:
-                    rectangularView
-                default:
-                    smallView
-                }
+            switch family {
+            case .accessoryCircular: circularView.lifeOSAccessoryBackground()
+            case .accessoryRectangular: rectangularView.lifeOSAccessoryBackground()
+            default: smallView.padding(14).lifeOSWidgetBackground()
             }
         }
-        .widgetURL(URL(string: "lifeos://fasting"))
+        .widgetURL(WidgetLink.fasting)
     }
 
-    /// Aucun jeune en cours : on le dit, au lieu d'un compteur invente.
-    private var idleView: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Image(systemName: "timer").font(.system(size: 14, weight: .bold))
-            Text("Pas de jeûne en cours").font(.system(size: 13, weight: .bold, design: .rounded))
-            if family == .systemSmall {
-                Text("Objectif \(entry.targetHours) h · touche pour commencer").font(.system(size: 10)).foregroundStyle(.secondary)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-    }
+    private var ratio: String { FastingMath.ratioLabel(targetHours: entry.targetHours) }
 
+    @ViewBuilder
     private var smallView: some View {
-        ZStack {
-            Color(widgetHex: 0x08090C)
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    ZStack {
-                        Circle()
-                            .fill(Color(widgetHex: 0xE07B3C).opacity(0.18))
-                            .frame(width: 32, height: 32)
-                        Image(systemName: "timer")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(Color(widgetHex: 0xE07B3C))
-                    }
-                    Spacer()
-                    Text("\(entry.targetHours)h:8h")
-                        .font(.system(size: 9, weight: .heavy, design: .rounded))
-                        .foregroundStyle(Color(widgetHex: 0xE07B3C))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(Color(widgetHex: 0xE07B3C).opacity(0.15), in: Capsule())
+        if entry.isFasting {
+            VStack(alignment: .leading, spacing: 6) {
+                WidgetHeader(icon: "timer", title: "JEÛNE", tint: WTint.fasting, trailing: ratio)
+                Spacer(minLength: 0)
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(Self.format(entry.elapsedHours))
+                        .font(.system(size: 24, weight: .black, design: .rounded))
+                        .monospacedDigit()
+                    Text("/ \(entry.targetHours) h")
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(.secondary)
                 }
-
-                Spacer()
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("JEÛNE EN COURS")
-                        .font(.system(size: 10, weight: .heavy, design: .rounded))
-                        .kerning(0.8)
-                        .foregroundStyle(.white.opacity(0.6))
-
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(formatElapsed(entry.elapsedHours))
-                            .font(.system(size: 24, weight: .black, design: .rounded))
-                            .foregroundStyle(.white)
-                        Text("/ \(entry.targetHours)h")
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.5))
-                    }
-
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(Color.white.opacity(0.12))
-                            Capsule().fill(
-                                LinearGradient(
-                                    colors: [Color(widgetHex: 0xE07B3C), Color(widgetHex: 0xFFB800)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .frame(width: max(4, geo.size.width * entry.progress))
-                        }
-                    }
-                    .frame(height: 6)
+                WidgetBar(progress: entry.progress, tint: WTint.fasting)
+                Text(FastingMath.phase(elapsedHours: entry.elapsedHours, targetHours: entry.targetHours))
+                    .font(.system(size: 11, weight: .bold))
+                    .wTint(WTint.fasting)
+                if let end = entry.end, entry.progress < 1 {
+                    Text("Fin prévue \(end.formatted(date: .omitted, time: .shortened))")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
                 }
-
-                HStack {
-                    Text(entry.elapsedHours >= 12.0 ? "🔥 Cétose active" : "Digestion terminée")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Color(widgetHex: 0xE07B3C))
-                    Spacer()
-                    Text("\(entry.percentage)%")
-                        .font(.system(size: 10, weight: .black, design: .rounded))
-                        .foregroundStyle(.white)
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 6)
-                .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
-            .padding(14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        } else {
+            // Aucun jeune en cours : on le dit, au lieu d'un compteur invente.
+            WidgetEmptyState(icon: "timer", title: "Pas de jeûne en cours",
+                             message: "Objectif \(entry.targetHours) h, fenêtre de \(entry.eatingWindow) h pour manger. Touche pour commencer.",
+                             tint: WTint.fasting)
         }
     }
 
     private var circularView: some View {
-        ZStack {
-            AccessoryWidgetBackground()
-            VStack(spacing: 2) {
-                Image(systemName: "timer")
-                    .font(.system(size: 13, weight: .bold))
-                Text("\(Int(entry.elapsedHours))h")
-                    .font(.system(size: 10, weight: .heavy, design: .rounded))
-            }
+        Gauge(value: entry.progress) {
+            Image(systemName: "timer")
+        } currentValueLabel: {
+            Text(entry.isFasting ? "\(Int(entry.elapsedHours)) h" : "0 h")
         }
+        .gaugeStyle(.accessoryCircularCapacity)
+        .widgetAccentable()
+        .accessibilityLabel(entry.isFasting ? "Jeûne : \(Int(entry.elapsedHours)) heures sur \(entry.targetHours)" : "Pas de jeûne en cours")
     }
 
     private var rectangularView: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "timer")
-                .font(.system(size: 18, weight: .bold))
+        HStack(spacing: 8) {
+            Image(systemName: "timer").font(.system(size: 18, weight: .bold))
             VStack(alignment: .leading, spacing: 2) {
-                Text("Jeûne • \(formatElapsed(entry.elapsedHours)) / \(entry.targetHours)h")
-                    .font(.system(size: 12, weight: .bold))
-                Text(entry.elapsedHours >= 12.0 ? "Zone de brûlage des graisses active 🔥" : "En cours")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
+                if entry.isFasting {
+                    Text("Jeûne \(Self.format(entry.elapsedHours)) / \(entry.targetHours) h")
+                        .font(.system(size: 12, weight: .bold))
+                    Text(FastingMath.phase(elapsedHours: entry.elapsedHours, targetHours: entry.targetHours))
+                        .font(.system(size: 10)).foregroundStyle(.secondary)
+                } else {
+                    Text("Pas de jeûne en cours").font(.system(size: 12, weight: .bold))
+                    Text("Objectif \(ratio)").font(.system(size: 10)).foregroundStyle(.secondary)
+                }
             }
         }
     }
 
-    private func formatElapsed(_ h: Double) -> String {
-        let hours = Int(h)
-        let mins = Int((h - Double(hours)) * 60)
-        return "\(hours)h\(String(format: "%02d", mins))"
+    static func format(_ h: Double) -> String {
+        let total = Int(h * 60)
+        return "\(total / 60)h\(String(format: "%02d", total % 60))"
     }
 }

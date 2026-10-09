@@ -91,6 +91,8 @@ struct AddAnythingSheet: View {
     @State private var time = Date()
     @State private var onceDate = Date().addingTimeInterval(3600)
     @State private var weekday = 2
+    /// Un seul ajout par appui, meme sur un double toucher rapide.
+    @State private var adding = false
 
     private let weekdays = [(2, "Lun"), (3, "Mar"), (4, "Mer"), (5, "Jeu"), (6, "Ven"), (7, "Sam"), (1, "Dim")]
     private let moods = ["😞", "😕", "😐", "🙂", "😄"]
@@ -150,8 +152,8 @@ struct AddAnythingSheet: View {
                             .background(Color.primary, in: Capsule())
                     }
                     .buttonStyle(LifeOSPressStyle(scale: 0.95))
-                    .disabled(!canAdd)
-                    .opacity(canAdd ? 1.0 : 0.35)
+                    .disabled(!canAdd || adding)
+                    .opacity(canAdd && !adding ? 1.0 : 0.35)
                 }
             }
             .onAppear { kind = initialKind; name = prefillName; remind = initialKind.reminderByDefault }
@@ -256,11 +258,19 @@ struct AddAnythingSheet: View {
     }
 
     private func add() {
+        guard !adding else { return }
+        adding = true
+        var succeeded = false
+        // En cas d'echec, le bouton redevient actif ; apres un succes la feuille se ferme.
+        defer { if !succeeded { adding = false } }
         let n = name.trimmingCharacters(in: .whitespaces)
         let cal = Calendar.current
         switch kind {
         case .task:
-            let t = TodoItem(title: n); if remind && recurrence == .once { t.due = onceDate }; ctx.insert(t)
+            // Meme lecture que Todoo (« demain 18h #projet !2 ») et un uid stable.
+            let t = TaskInbox.makeTodo(n)
+            if remind && recurrence == .once { t.due = onceDate }
+            ctx.insert(t)
         case .habit:
             ctx.insert(Habit(name: n, icon: "checkmark", colorHex: 0x4CF810))
         case .note:
@@ -343,6 +353,7 @@ struct AddAnythingSheet: View {
             return
         }
         saveError = nil
+        succeeded = true
         if remind { scheduleReminder(for: n.isEmpty ? kind.label : n) }
         Haptics.success()
         dismiss()

@@ -22,12 +22,31 @@ struct PortfolioView: View {
         HoldingMath.totals(holdings.map { (value: $0.value, cost: $0.costEUR) })
     }
     @State private var editingHolding: Holding?
+    /// Lien lifeos://stocks?symbol=&list= : ouvre la liste suivie et met le titre en avant.
+    @ObservedObject private var router = DeepLinkRouter.shared
+    @State private var showWatchlist = false
+    @State private var watchFocus: StockFocus?
 
     var body: some View {
         ZStack {
             Theme.background
             ScrollView {
                 VStack(spacing: 16) {
+                    NavigationLink { WatchlistView() } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "list.star").font(.title3).foregroundStyle(.investTint).accessibilityHidden(true)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Suivis").font(.headline).foregroundStyle(Theme.textPrimary)
+                                Text("Listes de titres à surveiller, aussi en widget").font(.caption).foregroundStyle(Theme.textSecondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(Theme.textSecondary).accessibilityHidden(true)
+                        }
+                        .frame(minHeight: 44)
+                        .card(padding: 12)
+                    }
+                    .buttonStyle(.plain)
+
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Valeur du portefeuille").font(.caption).foregroundStyle(Theme.textSecondary)
                         let t = totals
@@ -35,6 +54,16 @@ struct PortfolioView: View {
                         if t.costKnown > 0 {
                             Text("\(t.pnl >= 0 ? "+" : "")\(t.pnl, format: .currency(code: "EUR")) (\(t.pnl / t.costKnown * 100, specifier: "%.1f")%)")
                                 .font(.subheadline.bold()).foregroundStyle(t.pnl >= 0 ? Theme.success : Theme.danger)
+                        }
+                        let day = dayTotals
+                        if let pct = day.dayChangePct {
+                            Label("\(day.dayChange >= 0 ? "+" : "")\(day.dayChange, format: .currency(code: "EUR")) aujourd'hui (\(StockFormat.percent(pct)))",
+                                  systemImage: day.dayChange >= 0 ? "arrow.up.right" : "arrow.down.right")
+                                .font(.caption.bold()).foregroundStyle(day.dayChange >= 0 ? Theme.success : Theme.danger)
+                            if day.withoutChange > 0 {
+                                Text("Variation du jour inconnue pour \(day.withoutChange) position\(day.withoutChange > 1 ? "s" : "") (prix saisi ou cours introuvable).")
+                                    .font(.caption2).foregroundStyle(Theme.textSecondary)
+                            }
                         }
                         if t.excluded > 0 {
                             Text("\(t.excluded) position\(t.excluded > 1 ? "s" : "") sans coût en euros connu (devise ou taux d'achat à confirmer) : hors plus-value.")
@@ -57,10 +86,16 @@ struct PortfolioView: View {
                                 VStack(alignment: .leading) {
                                     HStack { Text(h.symbol).font(.headline).foregroundStyle(Theme.textPrimary); Text(h.kind).font(.caption2).padding(.horizontal,5).padding(.vertical,1).raisedSurface(Capsule(), .nested).foregroundStyle(Theme.textSecondary) }
                                     Text("\(h.quantity, specifier: "%.4g") × \(h.currentPrice, format: .currency(code: "EUR"))").font(.caption).foregroundStyle(Theme.textSecondary)
+                                    Text(Self.priceLine(h)).font(.caption2).foregroundStyle(Theme.textSecondary).lineLimit(2)
                                 }
                                 Spacer()
                                 VStack(alignment: .trailing) {
                                     Text(h.value, format: .currency(code: "EUR")).bold().foregroundStyle(Theme.textPrimary)
+                                    if let d = h.dayChangePct {
+                                        Label(StockFormat.percent(d) + (h.kind == "Crypto" ? " 24 h" : " jour"),
+                                              systemImage: d >= 0 ? "arrow.up.right" : "arrow.down.right")
+                                            .font(.caption2.bold().monospacedDigit()).foregroundStyle(d >= 0 ? Theme.success : Theme.danger)
+                                    }
                                     if let pct = h.pnlPct, let pnl = h.pnl {
                                         Text("\(pct >= 0 ? "+" : "")\(pct, specifier: "%.1f")%").font(.caption).foregroundStyle(pnl >= 0 ? Theme.success : Theme.danger)
                                     } else {
@@ -72,7 +107,9 @@ struct PortfolioView: View {
                                 .onTapGesture { editingHolding = h }
                                 .contextMenu {
                                     Button { editingHolding = h } label: { Label("Modifier", systemImage: "pencil") }
-                                    Button(role: .destructive) { ctx.delete(h) } label: { Label("Supprimer", systemImage: "trash") }
+                                    Button(role: .destructive) {
+                                        ctx.delete(h); try? ctx.save(); StockWidgetPublisher.publish(ctx)
+                                    } label: { Label("Supprimer", systemImage: "trash") }
                                 }
                         }
                         priceStatus
@@ -93,10 +130,47 @@ struct PortfolioView: View {
                 .accessibilityLabel("Actualiser les cours")
             }
         }
-        .sheet(isPresented: $showAdd) { HoldingEditor() }
-        .sheet(item: $editingHolding) { HoldingEditor(holding: $0) }
+        .sheet(isPresented: $showAdd, onDismiss: { StockWidgetPublisher.publish(ctx) }) { HoldingEditor() }
+        .sheet(item: $editingHolding, onDismiss: { StockWidgetPublisher.publish(ctx) }) { HoldingEditor(holding: $0) }
         .refreshable { await refreshPrices(force: true) }
-        .task { await refreshPrices(force: false) }
+        .navigationDestination(isPresented: $showWatchlist) {
+            WatchlistView(initialList: watchFocus?.list, focusSymbol: watchFocus?.symbol)
+        }
+        .onAppear(perform: consumeStockFocus)
+        .onChange(of: router.stockFocus) { _, _ in consumeStockFocus() }
+        .task {
+            StockWidgetPublisher.publish(ctx)
+            await refreshPrices(force: false)
+        }
+    }
+
+    /// Un lien vers un titre ou une liste ouvre "Suivis" ; un lien sans precision reste ici.
+    private func consumeStockFocus() {
+        guard let f = router.stockFocus else { return }
+        router.stockFocus = nil
+        guard f.symbol != nil || f.list != nil else { return }
+        watchFocus = f
+        showWatchlist = true
+    }
+
+    private var dayTotals: PortfolioSummary {
+        PortfolioSummary.make(holdings.map { .init(symbol: $0.symbol, kind: $0.kind, valueEUR: $0.value,
+                                                   dayChangePct: $0.dayChangePct, priceAt: $0.priceAt) })
+    }
+
+    /// Source et heure du prix affiche : "Différé · Yahoo Finance · 14:32", "Prix saisi".
+    static func priceLine(_ h: Holding, now: Date = Date()) -> String {
+        switch h.priceSource {
+        case "yahoo":
+            if let q = QuoteStore.shared.quote(h.symbol) { return StockFormat.statusLine(q, offline: QuoteStore.shared.isOffline, now: now) }
+            return h.priceAt.map { "Différé · \(StockFormat.source) · \(StockFormat.timeLabel($0, now: now))" } ?? "Différé · \(StockFormat.source)"
+        case "coingecko":
+            return h.priceAt.map { "CoinGecko · \(StockFormat.timeLabel($0, now: now))" } ?? "CoinGecko"
+        case "manual":
+            return "Prix saisi à la main"
+        default:
+            return "Pas encore mis à jour"
+        }
     }
 
     /// Etat de la synchro des cours, affiche a la place de l'ancienne notice.
@@ -106,7 +180,7 @@ struct PortfolioView: View {
                 Label(priceError, systemImage: "exclamationmark.triangle.fill")
                     .font(.caption).foregroundStyle(Theme.warning)
             } else if let lastRefresh {
-                Label("Cours à jour · \(lastRefresh, style: .time)", systemImage: "checkmark.circle.fill")
+                Label("Cours relus · \(lastRefresh, style: .time)", systemImage: "checkmark.circle.fill")
                     .font(.caption).foregroundStyle(Theme.success)
             }
             // On ne pretend pas suivre les actions: aucune API boursiere n'est
@@ -114,7 +188,7 @@ struct PortfolioView: View {
             if holdings.contains(where: { $0.kind != "Crypto" }) {
                 // Cours differes selon la place: on le dit plutot que de
                 // laisser croire a du temps reel.
-                Text("Actions et ETF : cours différés. Utilise le symbole de la place (MC.PA, AAPL, CW8.PA).")
+                Text("Actions et ETF : cours différés de Yahoo Finance (source non officielle), relus au plus toutes les 5 minutes. Utilise le symbole de la place (MC.PA, AAPL, CW8.PA).")
                     .font(.caption2).foregroundStyle(Theme.textSecondary)
             }
         }
@@ -136,10 +210,13 @@ struct PortfolioView: View {
         var notFound: [String] = []
 
         if !cryptoSymbols.isEmpty {
-            switch await PriceService.cryptoPrices(symbols: cryptoSymbols, force: force) {
-            case .success(let prices):
+            switch await PriceService.cryptoQuotes(symbols: cryptoSymbols, force: force) {
+            case .success(let quotes):
                 for h in holdings where h.kind == "Crypto" {
-                    if let p = prices[h.symbol.lowercased()] { h.currentPrice = p; updated += 1 } else { notFound.append(h.symbol) }
+                    if let q = quotes[h.symbol.lowercased()] {
+                        h.currentPrice = q.priceEUR; h.dayChangePct = q.change24hPct
+                        h.priceAt = .now; h.priceSource = "coingecko"; updated += 1
+                    } else { notFound.append(h.symbol) }
                 }
             case .failure(let e):
                 problems.append("Crypto : \(e)")
@@ -147,10 +224,13 @@ struct PortfolioView: View {
         }
 
         if !stockSymbols.isEmpty {
-            switch await StockService.pricesInEUR(symbols: stockSymbols, force: force) {
-            case .success(let prices):
+            switch await StockService.quotesInEUR(symbols: stockSymbols) {
+            case .success(let quotes):
                 for h in holdings where h.kind != "Crypto" {
-                    if let p = prices[h.symbol.uppercased()] { h.currentPrice = p; updated += 1 } else { notFound.append(h.symbol) }
+                    if let q = quotes[h.symbol.uppercased()] {
+                        h.currentPrice = q.priceEUR; h.dayChangePct = q.changePct
+                        h.priceAt = q.marketTime ?? q.quote.fetchedAt; h.priceSource = "yahoo"; updated += 1
+                    } else { notFound.append(h.symbol) }
                 }
             case .failure(let e):
                 problems.append("Actions : \(e)")
@@ -164,6 +244,7 @@ struct PortfolioView: View {
                 AppLog.data.error("cours non sauvegardes: \(error.localizedDescription, privacy: .public)")
             }
             lastRefresh = .now
+            StockWidgetPublisher.publish(ctx, quotesChanged: true)
         }
         // Un symbole introuvable garde son prix manuel : le dire, sinon sa ligne semble a jour.
         if !notFound.isEmpty { problems.append("Cours introuvable, prix saisi gardé : \(notFound.joined(separator: ", "))") }
@@ -250,14 +331,22 @@ struct HoldingEditor: View {
         }
         let current = c.value
         if let h = holding {
+            let symbolChanged = h.symbol != symbol
             h.symbol = symbol; h.kind = kind; h.quantity = qv; h.buyPrice = bv
-            if let current { h.currentPrice = current }
+            if let current, abs(current - h.currentPrice) > 0.000_001 {
+                // Prix change a la main : sa variation du jour et son heure ne valent plus.
+                h.currentPrice = current; h.priceSource = "manual"; h.priceAt = .now; h.dayChangePct = nil
+            } else if symbolChanged {
+                h.priceSource = ""; h.priceAt = nil; h.dayChangePct = nil
+            }
             h.buyCurrency = currency; h.buyDate = hasDate ? buyDate : nil; h.buyFXToEUR = fx
         } else {
             // Sans prix actuel : en euros, le prix d'achat converti ; le cours le remplacera.
             let start = current ?? (fx > 0 ? bv * fx : bv)
-            ctx.insert(Holding(symbol: symbol, kind: kind, quantity: qv, buyPrice: bv, currentPrice: start,
-                               buyCurrency: currency, buyDate: hasDate ? buyDate : nil, buyFXToEUR: fx))
+            let h = Holding(symbol: symbol, kind: kind, quantity: qv, buyPrice: bv, currentPrice: start,
+                            buyCurrency: currency, buyDate: hasDate ? buyDate : nil, buyFXToEUR: fx)
+            if current != nil { h.priceSource = "manual"; h.priceAt = .now }
+            ctx.insert(h)
         }
         do { try ctx.save(); dismiss() }
         catch { ctx.rollback(); self.error = "Enregistrement impossible, réessaie." }

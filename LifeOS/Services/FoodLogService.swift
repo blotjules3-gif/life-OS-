@@ -78,6 +78,7 @@ enum FoodLogService {
             AppLog.data.error("journal alimentaire: echec d'enregistrement \(error.localizedDescription, privacy: .public)")
             throw LogError.saveFailed(error.localizedDescription)
         }
+        WidgetPublisher.shared.schedule([.nutrition])
         return entries
     }
 
@@ -94,6 +95,7 @@ enum FoodLogService {
             apply(before, to: entry)
             throw LogError.saveFailed(error.localizedDescription)
         }
+        WidgetPublisher.shared.schedule([.nutrition])
     }
 
     /// Supprime une ligne. En cas d'echec, elle est remise en place.
@@ -106,6 +108,7 @@ enum FoodLogService {
             ctx.insert(entry)
             throw LogError.saveFailed(error.localizedDescription)
         }
+        WidgetPublisher.shared.schedule([.nutrition])
     }
 
     // MARK: - Regles

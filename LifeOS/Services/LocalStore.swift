@@ -63,7 +63,9 @@ enum LocalStore {
         // Lot 7 : santé
         DoseEvent.self, MedicalPerson.self,
         // Lot 7 : productivité
-        FocusSession.self
+        FocusSession.self,
+        // Lot 8 : bourse
+        WatchlistItem.self
     ]
 
     static let schema = Schema(modelTypes)

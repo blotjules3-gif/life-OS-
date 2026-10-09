@@ -9,13 +9,13 @@ import WidgetKit
 struct FoodScanWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(
-            kind: "com.blotjules.lifeos.foodscan.widget",
+            kind: WidgetKinds.foodScan,
             provider: FoodScanProvider()
         ) { _ in
             FoodScanWidgetView()
         }
         .configurationDisplayName("Scan repas")
-        .description("Raccourci vers la caméra Nutrition — kcal + protéines en un tap.")
+        .description("Raccourci vers la caméra Nutrition : calories et protéines en un appui.")
         .supportedFamilies([
             .systemSmall,
             .accessoryCircular,
@@ -51,7 +51,8 @@ private struct FoodScanProvider: TimelineProvider {
 private struct FoodScanWidgetView: View {
     @Environment(\.widgetFamily) private var family
 
-    private let deepLink = URL(string: "lifeos://scan-food")!
+    private let deepLink = WidgetLink.scanFood
+    @Environment(\.widgetRenderingMode) private var mode
 
     var body: some View {
         switch family {
@@ -65,33 +66,22 @@ private struct FoodScanWidgetView: View {
     }
 
     private var small: some View {
-        ZStack {
-            LinearGradient(
-                colors: [WidgetPalette.tone(0.26, 0.82, 0.42), WidgetPalette.tone(0.13, 0.68, 0.32)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Image(systemName: "fork.knife")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(.white)
-                    Spacer()
-                    Image(systemName: "camera.fill")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.85))
-                }
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "fork.knife").font(.system(size: 22, weight: .bold))
                 Spacer()
-                Text("Scan repas")
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                Text("Kcal · Protéines")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.85))
+                Image(systemName: "camera.fill").font(.system(size: 14, weight: .semibold)).opacity(0.85)
             }
-            .padding(14)
+            Spacer()
+            Text("Scan repas").font(.system(size: 15, weight: .bold, design: .rounded))
+            Text("Kcal · Protéines").font(.system(size: 11, weight: .medium)).opacity(0.85)
         }
-        .containerBackground(for: .widget) { Color.clear }
+        .foregroundStyle(mode == .fullColor ? AnyShapeStyle(Color.white) : AnyShapeStyle(.primary))
+        .padding(14)
+        .containerBackground(for: .widget) {
+            LinearGradient(colors: [WidgetPalette.tone(0.26, 0.82, 0.42), WidgetPalette.tone(0.13, 0.68, 0.32)],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
         .widgetURL(deepLink)
     }
 
@@ -101,6 +91,7 @@ private struct FoodScanWidgetView: View {
             Image(systemName: "fork.knife")
                 .font(.system(size: 20, weight: .bold))
         }
+        .lifeOSAccessoryBackground()
         .widgetURL(deepLink)
     }
 
@@ -117,6 +108,7 @@ private struct FoodScanWidgetView: View {
             }
             Spacer(minLength: 0)
         }
+        .lifeOSAccessoryBackground()
         .widgetURL(deepLink)
     }
 }

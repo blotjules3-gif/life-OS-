@@ -1,6 +1,7 @@
 import SwiftUI
 import WidgetKit
 import SwiftData
+import CoreSpotlight
 
 @main
 struct LifeOSApp: App {
@@ -21,8 +22,8 @@ struct LifeOSApp: App {
     @AppStorage(AppStorageKeys.isAuthenticated) private var isAuthenticated = false
     @AppStorage(AppStorageKeys.onboardingDone) private var onboardingDone = false
     @AppStorage(AppStorageKeys.recommendedModules) private var recommendedModulesRaw = ""
-    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "system"
-    @AppStorage(AppStorageKeys.appPalette) private var appPaletteRaw = AppPalette.color.rawValue
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = AppTheme.defaultRaw
+    @AppStorage(AppStorageKeys.appPalette) private var appPaletteRaw = AppPalette.defaultRaw
     private var appTheme: AppTheme {
         let t = AppTheme(rawValue: appThemeRaw) ?? .system
         return t.isSelectable ? t : .system   // thème archivé → Système
@@ -40,7 +41,10 @@ struct LifeOSApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
+        #if DEBUG
+        let _ = PerfProbe.mark("Scene body")
+        #endif
+        return WindowGroup {
             ZStack {
                 Theme.bg
                     .ignoresSafeArea()
@@ -69,6 +73,16 @@ struct LifeOSApp: App {
             }
             // Un peu plus lent que 0,3 s: le zoom du logo doit avoir le temps
             // de se lire, sinon on percoit une coupure et pas un mouvement.
+            // Tous les liens `lifeos://` passent par le routeur, pose sur la racine de la
+            // fenetre : un lien recu pendant le logo de lancement n'est plus perdu.
+            .onOpenURL { url in DeepLinkRouter.shared.open(url) }
+            // Outil choisi dans la recherche Spotlight de l'iPhone.
+            .onContinueUserActivity(CSSearchableItemActionType) { activity in
+                if let id = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
+                   let link = DeepLink(spotlightID: id) {
+                    DeepLinkRouter.shared.send(link)
+                }
+            }
             .animation(.easeInOut(duration: 0.55), value: container != nil)
             .animation(.easeInOut(duration: 0.25), value: appLock.isLocked)
             .onChange(of: scenePhase) { _, phase in
@@ -177,6 +191,10 @@ struct LifeOSApp: App {
             }
         }
         .onAppear {
+            #if DEBUG
+            PerfProbe.mark("appContent onAppear debut")
+            defer { PerfProbe.mark("appContent onAppear fin") }
+            #endif
             resetDailyValuesIfNeeded()
             EngagementTracker.shared.recordOpen()
             // Bootstrap du store profil (avant migration qui l'utilise).
@@ -194,6 +212,7 @@ struct LifeOSApp: App {
             CoachToolsBootstrap.registerAll()
             #if DEBUG
             DemoSeed.runIfAsked(container.mainContext)
+            YearSeed.runIfAsked(container.mainContext)
             GlassProbe.runIfAsked()
             #endif
             // Pas de demande de permission pendant l'onboarding : elle est faite
@@ -214,6 +233,10 @@ struct LifeOSApp: App {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            #if DEBUG
+            PerfProbe.mark("didBecomeActive debut")
+            defer { PerfProbe.mark("didBecomeActive fin") }
+            #endif
             resetDailyValuesIfNeeded()
             MorningReminder.checkAndArm()
             // Les traitements bornes ou futurs n'ont que quelques jours poses
@@ -269,17 +292,15 @@ struct LifeOSApp: App {
             }
         }
         #endif
-        .onOpenURL { url in
-            guard url.scheme == "lifeos" else { return }
-            switch url.host {
-            case "briefing":
-                showSleepCheckFromWidget = true
-            case "scan-food":
-                showFoodScan = true
-            case "tabata":
-                showTabata = true
-            default:
-                break
+        // Ecrans de fenetre demandes par un lien (briefing, scan repas, Tabata). Le
+        // routeur garde la demande : un abonnement tardif la recoit quand meme.
+        .onReceive(DeepLinkRouter.shared.$appLevel.compactMap { $0 }) { link in
+            DeepLinkRouter.shared.clearAppLevel()
+            switch link {
+            case .briefing: showSleepCheckFromWidget = true
+            case .scanFood: showFoodScan = true
+            case .tabata: showTabata = true
+            default: break
             }
         }
         .fullScreenCover(isPresented: $showTabata) {
@@ -331,7 +352,16 @@ struct LifeOSApp: App {
     // MARK: - Création container
 
     private func buildContainer() async {
-        let schema = LocalStore.schema
+        #if DEBUG
+        PerfProbe.mark("buildContainer debut")
+        defer { PerfProbe.mark("buildContainer fin") }
+        #endif
+        // Le schema decrit ~170 types: le construire prend ~1 s en Debug et bloquait
+        // l'ecran de lancement. Il se construit maintenant hors du fil principal.
+        let schema = await Task.detached(priority: .userInitiated) { LocalStore.schema }.value
+        #if DEBUG
+        PerfProbe.mark("schema pret")
+        #endif
         // Config CloudKit si l'user a opt-in ET si la capability Xcode iCloud
         // + relations SwiftData Optional sont prêtes (cf. CloudKitReadiness).
         // Si CloudKit foire au boot, on retombe automatiquement en local pur.

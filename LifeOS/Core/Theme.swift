@@ -139,8 +139,12 @@ enum Theme {
     static let card = Color(UIColor { trait in
         trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.05) : UIColor(red: 0.961, green: 0.961, blue: 0.969, alpha: 1.0) // #F5F5F7
     })
+    /// Contour fin. "Augmenter le contraste" le renforce (accessibilité).
     static let stroke = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.20) : UIColor(white: 0.0, alpha: 0.06)
+        let high = trait.accessibilityContrast == .high
+        return trait.userInterfaceStyle == .dark
+            ? UIColor(white: 1.0, alpha: high ? 0.45 : 0.20)
+            : UIColor(white: 0.0, alpha: high ? 0.30 : 0.06)
     })
     static let textPrimary = Color.primary
     // UIColor.secondaryLabel meets ≥3:1 on system backgrounds in both light and dark
@@ -167,38 +171,54 @@ enum Theme {
     static let fontCaption2  = AppFont.body(size: 10, weight: .medium)    // Inter Medium
 
     // MARK: - Palette sémantique (remplace les Color(hex:) éparpillés)
+    //
+    // Lot 8 : une couleur par domaine, et des statuts qui ne ressemblent a aucun domaine.
+    // Les valeurs vivent dans `DomainPalette` (une seule table, lue aussi par les tests).
+    //
+    // Chaque token a DEUX variantes : une plus profonde en clair, une plus vive en
+    // sombre. Avant, une seule valeur saturee servait aux deux, et l'or ou le vert vif
+    // tombaient sous 2:1 sur le blanc. Mesure : chaque variante tient au moins 3:1
+    // (seuil des icones et des textes larges) sur blanc et #F2F2F7 en clair, sur noir
+    // et #2C2C2E en sombre. Ces teintes servent aux icones, pastilles et petits
+    // accents, jamais au texte courant (qui reste `.primary` / `.secondary`).
+    //
+    // Toujours via `tone(...)` : la palette neutre les rend en gris de meme luminance.
 
-    // Catégories de modules (saturées comme la grille des catégories)
-    static var fitness: Color { tone(1.00, 0.18, 0.20) }   // sport (rouge vif saturé)
-    static var nutrition: Color { tone(0.28, 0.80, 0.36) }   // alimentation (vert vif saturé)
-    static var hydration: Color { tone(0.13, 0.52, 1.00) }   // eau, hydratation (bleu vif saturé)
-    static var sleep: Color { tone(0.42, 0.40, 0.95) }   // sommeil, repos (indigo vif)
-    static var mind: Color { tone(0.66, 0.32, 0.96) }   // méditation, mental (violet vif saturé)
-    static var energy: Color { tone(1.00, 0.72, 0.24) }   // énergie, ambre (vif saturé)
-    static var finance: Color { tone(0.13, 0.52, 1.00) }   // finance (bleu vif saturé)
-    static var invest: Color { tone(0.16, 0.80, 0.62) }   // investissement, bourse (émeraude/menthe vif)
-    static var career: Color { tone(1.00, 0.72, 0.24) }   // carrière, travail (ambre vif saturé)
-    static var looks: Color { tone(1.00, 0.54, 0.10) }   // beauté, bien-être (orange vif)
-    static var productivity: Color { tone(0.14, 0.78, 0.80) }   // productivité, tâches (cyan vif saturé)
-    static var learning: Color { tone(1.00, 0.80, 0.18) }   // apprentissage, éducation (or/jaune vif)
-    static var home: Color { tone(0.24, 0.56, 0.96) }   // maison (bleu vif)
-    static var social: Color { tone(1.00, 0.20, 0.55) }   // social (rose vif saturé)
-    static var admin: Color { tone(0.22, 0.58, 0.98) }   // documents (bleu vif)
-    static var mobility: Color { tone(0.16, 0.74, 0.78) }   // transport (cyan vif)
-    static var travel: Color { tone(0.20, 0.50, 1.00) }   // voyage (bleu cobalt vif)
-    static var cycle: Color { tone(0.96, 0.24, 0.58) }   // cycle menstruel (rose vif)
-    static var medical: Color { tone(1.00, 0.18, 0.20) }   // santé médicale (rouge vif)
+    // Catégories de modules
+    static var fitness: Color { tone(DomainPalette.fitness) }           // sport : orange
+    static var nutrition: Color { tone(DomainPalette.nutrition) }       // alimentation : vert feuille
+    static var hydration: Color { tone(DomainPalette.hydration) }       // eau (token secondaire, nutrition)
+    static var sleep: Color { tone(DomainPalette.sleep) }               // sommeil : violet
+    static var mind: Color { tone(DomainPalette.mind) }                 // mental & focus : vert anis
+    /// Alias de `fitness` : l'energie (performance) appartient au domaine sport. Elle
+    /// etait ambre, donc confondue avec l'avertissement.
+    static var energy: Color { fitness }
+    static var finance: Color { tone(DomainPalette.finance) }           // finances : turquoise
+    static var invest: Color { tone(DomainPalette.invest) }             // investissement : or
+    static var career: Color { tone(DomainPalette.career) }             // travail : bleu
+    static var looks: Color { tone(DomainPalette.looks) }               // apparence : terre cuite
+    static var productivity: Color { tone(DomainPalette.productivity) } // tâches : azur
+    static var learning: Color { tone(DomainPalette.learning) }         // apprentissage : indigo
+    static var home: Color { tone(DomainPalette.home) }                 // maison : ocre
+    static var social: Color { tone(DomainPalette.social) }             // social : rose
+    static var admin: Color { tone(DomainPalette.admin) }               // documents : gris lavande
+    static var mobility: Color { tone(DomainPalette.mobility) }         // transport : gris bleu-vert
+    static var travel: Color { tone(DomainPalette.travel) }             // voyage : bleu acier
+    static var cycle: Color { tone(DomainPalette.cycle) }               // cycle : magenta
+    static var medical: Color { tone(DomainPalette.medical) }           // santé médicale : framboise (pas le rouge d'erreur)
+    /// Identite du coach (bouton, bulle). Pas une catégorie : hors test d'unicite.
+    static var coach: Color { tone(DomainPalette.coach) }
 
-    // Statuts
-    static var success: Color { tone(0.28, 0.80, 0.36) }   // validé, objectif atteint (vert vif)
-    static var warning: Color { tone(1.00, 0.72, 0.24) }   // attention, moyen (ambre vif)
-    static var danger: Color { tone(1.00, 0.18, 0.20) }   // risque élevé, danger (rouge vif)
+    // Statuts : trois rôles distincts, aucun ne reprend la teinte d'un domaine.
+    static var success: Color { tone(DomainPalette.success) }   // validé, objectif atteint : émeraude
+    static var warning: Color { tone(DomainPalette.warning) }   // attention : ambre
+    static var danger: Color { tone(DomainPalette.danger) }     // erreur, risque élevé : rouge
     static var tealDark: Color { Color(hex: 0x008F6C) }   // potentiel fort (scores crypto)
 
     // Palette système fréquemment utilisée hors tokens sémantiques
-    static var systemOrange: Color { tone(1.00, 0.72, 0.24) } // ambre vif
-    static var systemPink: Color { tone(1.00, 0.20, 0.55) } // rose bulle (social)
-    static var systemRed: Color { tone(1.00, 0.18, 0.20) } // rouge vif
+    static var systemOrange: Color { warning }
+    static var systemPink: Color { social }
+    static var systemRed: Color { danger }
 
     /// Convertit les anciennes teintes pastel ternes en teintes riches et saturées identiques aux catégories
     static func saturateLegacyHex(_ hex: UInt) -> UInt {
@@ -224,7 +244,7 @@ enum Theme {
 
     /// Vrai quand l'utilisateur a choisi l'apparence neutre (Réglages > Apparence).
     static var neutralPalette: Bool {
-        UserDefaults.standard.string(forKey: AppStorageKeys.appPalette) == AppPalette.neutral.rawValue
+        AppPalette.resolved(UserDefaults.standard.string(forKey: AppStorageKeys.appPalette)) == .neutral
     }
 
     /// Couleur d'interface qui suit la palette : la couleur telle quelle, ou le gris de
@@ -237,6 +257,28 @@ enum Theme {
     /// les saisies en cours restent en place.
     static func tone(_ r: Double, _ g: Double, _ b: Double, alpha: Double = 1) -> Color {
         Color(uiColor: paletteUIColor(r, g, b, alpha: alpha))
+    }
+
+    /// Token a deux variantes (clair / sombre), qui suit aussi la palette neutre.
+    static func tone(_ pair: DomainPalette.Pair) -> Color {
+        Color(uiColor: toneUIColor(pair))
+    }
+
+    /// Meme couleur en UIColor dynamique : resolue selon le clair/sombre ET la palette.
+    /// Les tests la resolvent dans des `UITraitCollection` pour lire les vraies valeurs.
+    static func toneUIColor(_ pair: DomainPalette.Pair) -> UIColor {
+        let (lr, lg, lb) = DomainPalette.components(pair.light)
+        let (dr, dg, db) = DomainPalette.components(pair.dark)
+        let light = UIColor(red: lr, green: lg, blue: lb, alpha: 1)
+        let dark = UIColor(red: dr, green: dg, blue: db, alpha: 1)
+        let lv = neutralLevel(lr, lg, lb), dv = neutralLevel(dr, dg, db)
+        let lightGrey = UIColor(red: lv, green: lv, blue: lv, alpha: 1)
+        let darkGrey = UIColor(red: dv, green: dv, blue: dv, alpha: 1)
+        return UIColor { trait in
+            let isDark = trait.userInterfaceStyle == .dark
+            if trait.lifeOSNeutralPalette { return isDark ? darkGrey : lightGrey }
+            return isDark ? dark : light
+        }
     }
 
     static func paletteUIColor(_ r: Double, _ g: Double, _ b: Double, alpha: Double = 1) -> UIColor {
@@ -279,11 +321,16 @@ enum Theme {
     static let volt = Color(hex: 0x4CF810)
 
     // Liseré spéculaire discret + ombre douce (Liquid Glass iOS 27 / Apple Preview).
+    // "Augmenter le contraste" (accessibilité) : filets nettement plus marqués.
     static let hairline = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.25) : UIColor(red: 0.902, green: 0.902, blue: 0.910, alpha: 1.0) // #E6E6E8
+        let high = trait.accessibilityContrast == .high
+        if trait.userInterfaceStyle == .dark { return UIColor(white: 1.0, alpha: high ? 0.50 : 0.25) }
+        return high ? UIColor(white: 0.55, alpha: 1) : UIColor(red: 0.902, green: 0.902, blue: 0.910, alpha: 1.0) // #E6E6E8
     })
     static let line = Color(UIColor { trait in
-        trait.userInterfaceStyle == .dark ? UIColor(white: 1.0, alpha: 0.15) : UIColor(red: 0.831, green: 0.831, blue: 0.835, alpha: 1.0) // #D4D4D5
+        let high = trait.accessibilityContrast == .high
+        if trait.userInterfaceStyle == .dark { return UIColor(white: 1.0, alpha: high ? 0.40 : 0.15) }
+        return high ? UIColor(white: 0.45, alpha: 1) : UIColor(red: 0.831, green: 0.831, blue: 0.835, alpha: 1.0) // #D4D4D5
     })
     static let shadow = Color.black.opacity(0.04)
     static let shadowSoft = Color.black.opacity(0.02)
@@ -308,12 +355,13 @@ enum Theme {
     static let animDefault = Animation.spring(response: 0.35, dampingFraction: 0.80)
     static let animSlow    = Animation.spring(response: 0.45, dampingFraction: 0.90)
 
-    /// Thème Verre actif ? (lu depuis les réglages — sert aux fonds adaptatifs).
-    static var isGlassActive: Bool { UserDefaults.standard.string(forKey: "appTheme") == "glass" }
+    /// Thème Verre actif ? Le thème Verre est archivé : il se lit "Suivre l'appareil",
+    /// donc ceci reste faux. Conservé pour les appelants existants.
+    static var isGlassActive: Bool { currentTheme.isGlass }
 
-    /// Thème courant (lu depuis les réglages — même pattern que isGlassActive).
+    /// Thème courant, résolu comme partout ailleurs : absent ou archivé = défaut.
     static var currentTheme: AppTheme {
-        AppTheme(rawValue: UserDefaults.standard.string(forKey: "appTheme") ?? "classic") ?? .classic
+        AppTheme.resolved(UserDefaults.standard.string(forKey: AppStorageKeys.appTheme))
     }
 
     // MARK: - Matrice foreground — quand utiliser quoi
@@ -368,6 +416,7 @@ enum Theme {
 /// Aura ambiante fluide monochrome très tamisée se déplaçant très lentement à travers l'écran
 struct AmbientAuraBackdrop: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var phase: CGFloat = 0.0
 
     var body: some View {
@@ -427,13 +476,24 @@ struct AmbientAuraBackdrop: View {
                 }
             }
             .ignoresSafeArea()
-            .onAppear {
-                withAnimation(.easeInOut(duration: 22).repeatForever(autoreverses: true)) {
-                    phase = .pi * 2
-                }
-            }
+            .onAppear { startDrift() }
+            .onChange(of: reduceMotion) { _, _ in startDrift() }
+            .onChange(of: colorScheme) { _, _ in startDrift() }
         }
         .ignoresSafeArea()
+    }
+
+    /// Derive lente des halos, seulement en sombre (en clair il n'y a rien a bouger) et
+    /// jamais avec "Reduire les animations" : les halos restent alors poses, immobiles.
+    private func startDrift() {
+        guard !reduceMotion, colorScheme == .dark else {
+            var t = Transaction(); t.disablesAnimations = true
+            withTransaction(t) { phase = 0 }
+            return
+        }
+        withAnimation(.easeInOut(duration: 22).repeatForever(autoreverses: true)) {
+            phase = .pi * 2
+        }
     }
 }
 
@@ -541,8 +601,11 @@ struct RaisedSurface<S: Shape>: ViewModifier {
 
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
 
     func body(content: Content) -> some View {
+        // Sur iOS 26 le verre natif gere lui meme "Augmenter le contraste" : on n'y
+        // ajoute rien, sinon double contour.
         if level.isGlass, !reduceTransparency, #available(iOS 26.0, macCatalyst 26.0, *) {
             content.glassEffect(glassStyle, in: shape)
         } else {
@@ -554,6 +617,9 @@ struct RaisedSurface<S: Shape>: ViewModifier {
     }
 
     private var strokeColor: Color {
+        if contrast == .increased {
+            return colorScheme == .dark ? Color.white.opacity(0.45) : Color.black.opacity(0.35)
+        }
         if level == .nested || level == .inset {
             return colorScheme == .dark ? Color.white.opacity(0.08) : Color.primary.opacity(0.05)
         }
@@ -567,23 +633,25 @@ struct RaisedSurface<S: Shape>: ViewModifier {
     }
 
     /// Repli pour iOS 17 a 25, et pour "Reduire la transparence".
-    /// Volontairement sobre : un voile, pas un bloc blanc.
+    ///
+    /// Lot 8 : avant iOS 26 aussi, une surface reste du VERRE (un materiau translucide),
+    /// en clair comme en sombre. Elle etait blanc opaque en clair : sur un systeme sans
+    /// verre natif, l'app devenait le theme opaque classique, ce que le cahier des
+    /// charges exclut. Seul "Reduire la transparence" donne de l'opaque, a dessein.
     private var fallbackFill: AnyShapeStyle {
         if reduceTransparency {
-            // L'utilisateur a demande de l'opaque : on le lui donne, franchement.
+            // L'utilisateur a demande de l'opaque : on le lui donne, franchement. Texte
+            // net, rien ne transparait derriere.
+            if level == .nested || level == .inset {
+                return AnyShapeStyle(colorScheme == .dark ? Color(white: 0.20) : Color(white: 0.95))
+            }
             return AnyShapeStyle(colorScheme == .dark ? Color(white: 0.16) : Color.white)
         }
         if level == .nested || level == .inset {
-            // Boîtes et tuiles imbriquées dans une carte : teinte neutre douce (#F6F6F8 en light)
-            // pour contraster élégamment avec la carte sans projeter d'ombres parasites.
-            return AnyShapeStyle(colorScheme == .dark ? Color.white.opacity(0.06) : Color(red: 0.965, green: 0.965, blue: 0.972))
+            // Boîte posée DANS une carte : voile fin, pas un second verre epais.
+            return AnyShapeStyle(.thinMaterial)
         }
-        if colorScheme == .light {
-            // Sur fond blanc #FFFFFF, les cartes sont blanc pur net et lumineux,
-            // évitant le gris terne du matériau ultraThin et la transparence sur l'ombre.
-            return AnyShapeStyle(Color.white)
-        }
-        return AnyShapeStyle(.ultraThinMaterial)
+        return AnyShapeStyle(.regularMaterial)
     }
 
     private var shadowOpacity: Double {
@@ -640,8 +708,13 @@ struct GlassControl: ViewModifier {
                 content.modifier(RaisedSurface(shape: shape, level: .raised))
             }
         }
-        .opacity(isEnabled ? 1 : 0.45)
+        // Desactive : 0,55 et pas 0,45. Mesure : un libelle `.primary` a 0,45 tombe a
+        // 3,3:1 sur le verre clair, a 0,55 il garde 4,7:1 (clair) et ~5:1 (sombre).
+        // Le controle reste lisible, il dit juste qu'il n'est pas disponible.
+        .opacity(isEnabled ? 1 : Self.disabledOpacity)
     }
+
+    static let disabledOpacity: Double = 0.55
 
     /// Degrade interieur MESURE, pas decoratif.
     ///
@@ -685,19 +758,31 @@ struct NestedVeil<S: Shape>: ViewModifier {
     var strong: Bool = false
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
 
     func body(content: Content) -> some View {
         content
             .background(fill, in: shape)
-            .overlay(shape.stroke(LiquidGlass.hairline(colorScheme).opacity(0.35), lineWidth: 0.5))
+            .overlay(shape.stroke(edgeColor, lineWidth: contrast == .increased ? 1 : 0.5))
             .modifier(DrawnEdge(shape: shape))
     }
 
-    private var fill: Color {
-        if colorScheme == .dark {
-            return Color.white.opacity(reduceTransparency ? 0.14 : (strong ? 0.10 : 0.06))
+    private var edgeColor: Color {
+        if contrast == .increased {
+            return colorScheme == .dark ? Color.white.opacity(0.45) : Color.black.opacity(0.35)
         }
-        return Color.white.opacity(reduceTransparency ? 1.0 : (strong ? 0.55 : 0.38))
+        return LiquidGlass.hairline(colorScheme).opacity(0.35)
+    }
+
+    private var fill: Color {
+        if reduceTransparency {
+            // Opaque pour de vrai (avant : blanc a 14 % en sombre, donc encore translucide).
+            return colorScheme == .dark ? Color(white: 0.20) : Color(white: 0.95)
+        }
+        if colorScheme == .dark {
+            return Color.white.opacity(strong ? 0.10 : 0.06)
+        }
+        return Color.white.opacity(strong ? 0.55 : 0.38)
     }
 }
 
@@ -1263,11 +1348,23 @@ extension View {
     }
 
     /// Fondu + léger scale des cartes à l'entrée/sortie du viewport de scroll.
+    /// Avec "Réduire les animations", la carte reste telle quelle.
     func scrollFade() -> some View {
-        scrollTransition(axis: .vertical) { content, phase in
+        modifier(ScrollFadeModifier())
+    }
+}
+
+private struct ScrollFadeModifier: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    func body(content: Content) -> some View {
+        if reduceMotion {
             content
-                .opacity(phase.isIdentity ? 1 : 0.55)
-                .scaleEffect(phase.isIdentity ? 1 : 0.965)
+        } else {
+            content.scrollTransition(axis: .vertical) { content, phase in
+                content
+                    .opacity(phase.isIdentity ? 1 : 0.55)
+                    .scaleEffect(phase.isIdentity ? 1 : 0.965)
+            }
         }
     }
 }

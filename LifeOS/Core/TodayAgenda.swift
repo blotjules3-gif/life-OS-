@@ -11,30 +11,48 @@ struct AgendaItem: Identifiable {
     let sortKey: Int             // minutes depuis minuit ; 24*60 = toute la journée (fin de liste)
     var addKind: AddAnythingSheet.Kind? = nil   // action directe au tap (ajouter/logger) plutôt que le hub
     var tool: QuickTool? = nil   // ou ouvre directement l'outil dédié (séance, calories…)
+
+    /// Identifiant stable d'une reconstruction a l'autre (l'`id` change a chaque fois).
+    var key: String { "agenda.\(sortKey).\(title)" }
+    /// Une heure precise (pas « toute la journee »).
+    var hasTime: Bool { sortKey < 24 * 60 }
 }
 
 /// Section « AUJOURD'HUI » de l'accueil : rassemble TOUT ce qui a été enregistré dans
 /// les catégories et qui tombe aujourd'hui (séance de sport, compléments, rappels type
 /// shampoing, livraisons/échéances, ménage, renouvellements, événements, voyages…).
+///
+/// Lot 8 : plus de 12 @Query sans filtre (toutes les tables relues a chaque rendu de
+/// l'accueil). La liste est construite une fois par `TodayAgendaBuilder`, avec des
+/// filtres sur la date, puis relue a chaque enregistrement.
 struct TodayAgendaSection: View {
-    @Query private var gymDays: [GymDay]
-    @Query private var supplements: [Supplement]
-    @Query private var reminders: [CustomReminder]
-    @Query private var subscriptions: [Subscription]
-    @Query private var deadlines: [Deadline]
-    @Query private var chores: [Chore]
-    @Query private var petCares: [PetCare]
-    @Query private var maintenances: [Maintenance]
-    @Query private var vehicles: [Vehicle]
-    @Query private var events: [SocialEvent]
-    @Query private var trips: [Trip]
-    @Query private var contacts: [Contact]
+    @Environment(\.modelContext) private var ctx
+    @State private var items: [AgendaItem] = []
+    @State private var reloadTask: Task<Void, Never>?
 
     @State private var actionItem: AgendaItem?
 
-    private var items: [AgendaItem] { buildItems() }
-
     var body: some View {
+        // Conteneur toujours present : `onAppear` doit partir meme quand la liste est vide.
+        VStack(spacing: 0) { content }
+            .onAppear { reload() }
+            .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in scheduleReload() }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in reload() }
+    }
+
+    private func reload() { items = TodayAgendaBuilder.items(ctx: ctx) }
+
+    /// Plusieurs enregistrements rapproches = une seule relecture.
+    private func scheduleReload() {
+        reloadTask?.cancel()
+        reloadTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled else { return }
+            reload()
+        }
+    }
+
+    @ViewBuilder private var content: some View {
         if !items.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .firstTextBaseline) {
@@ -119,15 +137,36 @@ struct TodayAgendaSection: View {
         return calendar.startOfDay(for: d) <= calendar.startOfDay(for: today)
     }
 
-    private func buildItems() -> [AgendaItem] {
+}
+
+/// Construit l'agenda du jour avec des lectures filtrees (jour, semaine, actifs).
+/// Les petites tables de reference (menage, entretien, vehicules) restent lues en
+/// entier : leur echeance est calculee, pas stockee.
+@MainActor
+enum TodayAgendaBuilder {
+    static func items(ctx: ModelContext, now: Date = .now) -> [AgendaItem] {
         let cal = Calendar.current
-        let now = Date()
         let today = cal.startOfDay(for: now)
+        let tomorrow = cal.date(byAdding: .day, value: 1, to: today) ?? today
         let weekday = cal.component(.weekday, from: now)
         var out: [AgendaItem] = []
 
+        func fetch<T: PersistentModel>(_ d: FetchDescriptor<T>) -> [T] { (try? ctx.fetch(d)) ?? [] }
+        let gymDays = fetch(FetchDescriptor<GymDay>(predicate: #Predicate { $0.weekday == weekday }))
+        let supplements = fetch(FetchDescriptor<Supplement>(predicate: #Predicate { $0.active == true }))
+        let reminders = fetch(FetchDescriptor<CustomReminder>(predicate: #Predicate { $0.enabled == true }))
+        let subscriptions = fetch(FetchDescriptor<Subscription>(predicate: #Predicate { $0.nextDate >= today && $0.nextDate < tomorrow }))
+        let deadlines = fetch(FetchDescriptor<Deadline>(predicate: #Predicate { $0.date < tomorrow }))
+        let chores = fetch(FetchDescriptor<Chore>())
+        let petCares = fetch(FetchDescriptor<PetCare>(predicate: #Predicate { $0.date >= today && $0.date < tomorrow }))
+        let maintenances = fetch(FetchDescriptor<Maintenance>())
+        let vehicles = fetch(FetchDescriptor<Vehicle>())
+        let events = fetch(FetchDescriptor<SocialEvent>(predicate: #Predicate { $0.date >= today && $0.date < tomorrow }))
+        let trips = fetch(FetchDescriptor<Trip>(predicate: #Predicate { $0.start < tomorrow && $0.end >= today }))
+        let contacts = fetch(FetchDescriptor<Contact>(predicate: #Predicate { $0.birthday != nil || $0.lastSeen != nil }))
+
         func hm(_ h: Int, _ m: Int) -> String { String(format: "%02d:%02d", h, m) }
-        func isToday(_ d: Date) -> Bool { cal.isDateInToday(d) }
+        func isToday(_ d: Date) -> Bool { cal.isDate(d, inSameDayAs: now) }
         func isDueBy(_ d: Date?) -> Bool { guard let d else { return false }; return cal.startOfDay(for: d) <= today }
 
         // Séance de sport du jour
@@ -176,7 +215,7 @@ struct TodayAgendaSection: View {
         }
 
         // Tâches ménagères dues
-        for c in chores.filter({ Self.isRecurringDue(lastDone: $0.lastDone, nextDue: $0.nextDue, today: today, calendar: cal) }) {
+        for c in chores.filter({ TodayAgendaSection.isRecurringDue(lastDone: $0.lastDone, nextDue: $0.nextDue, today: today, calendar: cal) }) {
             out.append(.init(icon: "spray.and.wipe.fill",
                              title: c.name, detail: "À faire (\(c.assigneeShort))",
                              category: .home, sortKey: 24 * 60))
@@ -191,7 +230,7 @@ struct TodayAgendaSection: View {
 
         // Entretien maison
         // Jamais fait = a faire, comme pour le menage: sinon il n'apparaissait jamais.
-        for m in maintenances.filter({ Self.isRecurringDue(lastDone: $0.lastDone, nextDue: $0.nextDue, today: today, calendar: cal) }) {
+        for m in maintenances.filter({ TodayAgendaSection.isRecurringDue(lastDone: $0.lastDone, nextDue: $0.nextDue, today: today, calendar: cal) }) {
             out.append(.init(icon: "wrench.and.screwdriver.fill", title: m.name, detail: m.lastDone == nil ? "Entretien jamais fait" : "Entretien",
                              category: .home, sortKey: 24 * 60))
         }

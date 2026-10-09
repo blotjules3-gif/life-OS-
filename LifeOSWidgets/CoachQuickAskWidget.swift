@@ -10,12 +10,12 @@ import WidgetKit
 struct CoachQuickAskWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(
-            kind: "com.blotjules.lifeos.coach.quickask",
+            kind: WidgetKinds.coach,
             provider: CoachAskProvider()
         ) { _ in
             CoachAskWidgetView()
         }
-        .configurationDisplayName("Coach — accès rapide")
+        .configurationDisplayName("Coach, accès rapide")
         .description("Ouvre ton coach avec une question pré-remplie en un tap.")
         .supportedFamilies([
             .systemSmall,
@@ -62,15 +62,7 @@ private enum QuickAsk {
         }
     }
 
-    var url: URL {
-        var comps = URLComponents()
-        comps.scheme = "lifeos"
-        comps.host = "coach"
-        if let p = prefill {
-            comps.queryItems = [URLQueryItem(name: "prefill", value: p)]
-        }
-        return comps.url ?? URL(string: "lifeos://coach")!
-    }
+    var url: URL { WidgetLink.coach(prefill: prefill) }
 
     var label: String {
         switch self {
@@ -95,6 +87,13 @@ private enum QuickAsk {
 
 private struct CoachAskWidgetView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.widgetRenderingMode) private var mode
+
+    private var coachBackground: LinearGradient {
+        LinearGradient(colors: [WidgetPalette.tone(0.35, 0.55, 0.95), WidgetPalette.tone(0.20, 0.35, 0.85)],
+                       startPoint: .topLeading, endPoint: .bottomTrailing)
+    }
+    private var ink: AnyShapeStyle { mode == .fullColor ? AnyShapeStyle(Color.white) : AnyShapeStyle(.primary) }
 
     var body: some View {
         switch family {
@@ -107,61 +106,38 @@ private struct CoachAskWidgetView: View {
 
     // Small : bouton unique
     private var smallSingleTap: some View {
-        ZStack {
-            LinearGradient(
-                colors: [WidgetPalette.tone(0.35, 0.55, 0.95), WidgetPalette.tone(0.20, 0.35, 0.85)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(.white)
-                    Spacer()
-                    Image(systemName: "arrow.up.right")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.85))
-                }
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "sparkles").font(.system(size: 22, weight: .bold))
                 Spacer()
-                Text("Ton coach")
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                Text("Pose une question")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.85))
+                Image(systemName: "arrow.up.right").font(.system(size: 12, weight: .semibold)).opacity(0.85)
             }
-            .padding(14)
+            Spacer()
+            Text("Ton coach").font(.system(size: 15, weight: .bold, design: .rounded))
+            Text("Pose une question").font(.system(size: 11, weight: .medium)).opacity(0.85)
         }
-        .containerBackground(for: .widget) { Color.clear }
+        .foregroundStyle(ink)
+        .padding(14)
+        .containerBackground(for: .widget) { coachBackground }
         .widgetURL(QuickAsk.openBlank.url)
     }
 
     // Medium : 3 boutons de questions rapides
     private var mediumThreeQuestions: some View {
-        ZStack {
-            LinearGradient(
-                colors: [WidgetPalette.tone(0.35, 0.55, 0.95), WidgetPalette.tone(0.20, 0.35, 0.85)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 16, weight: .bold))
-                    Text("Ton coach")
-                        .font(.system(size: 13, weight: .bold))
-                    Spacer()
-                }
-                .foregroundStyle(.white)
-
-                quickRow(.morningBilan)
-                quickRow(.energyCheck)
-                quickRow(.dayRecap)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "sparkles").font(.system(size: 16, weight: .bold))
+                Text("Ton coach").font(.system(size: 13, weight: .bold))
+                Spacer()
             }
-            .padding(12)
+            quickRow(.morningBilan)
+            quickRow(.energyCheck)
+            quickRow(.dayRecap)
         }
-        .containerBackground(for: .widget) { Color.clear }
+        .foregroundStyle(ink)
+        .padding(12)
+        .containerBackground(for: .widget) { coachBackground }
+        .widgetURL(QuickAsk.openBlank.url)
     }
 
     private func quickRow(_ ask: QuickAsk) -> some View {
@@ -177,10 +153,9 @@ private struct CoachAskWidgetView: View {
                     .font(.system(size: 10, weight: .bold))
                     .opacity(0.6)
             }
-            .foregroundStyle(.white)
             .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .background(Color.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .frame(minHeight: 32)
+            .background(Color.primary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
     }
 
@@ -190,6 +165,7 @@ private struct CoachAskWidgetView: View {
             Image(systemName: "sparkles")
                 .font(.system(size: 20, weight: .bold))
         }
+        .lifeOSAccessoryBackground()
         .widgetURL(QuickAsk.openBlank.url)
     }
 
@@ -206,6 +182,7 @@ private struct CoachAskWidgetView: View {
             }
             Spacer(minLength: 0)
         }
+        .lifeOSAccessoryBackground()
         .widgetURL(QuickAsk.openBlank.url)
     }
 }

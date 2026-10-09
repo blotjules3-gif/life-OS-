@@ -98,14 +98,14 @@ struct CategoryHubView: View {
     @AppStorage(ToolNames.storageKey) private var toolNamesRaw = ""
 
     // Les sous-catégories sont verrouillées en bulles libres (voir `layout`).
-    @AppStorage(AppStorageKeys.appTheme)   private var appThemeRaw = "classic"
+    @AppStorage(AppStorageKeys.appTheme)   private var appThemeRaw = AppTheme.defaultRaw
     @AppStorage(AppStorageKeys.bubbleSize) private var bubbleSizeRaw = "medium"
     @State private var cover: CategoryTool?
     @State private var showSetup = false
 
     // Les sous-catégories restent TOUJOURS en bulles libres (choix verrouillé).
     private var layout: CatLayout { .organic }
-    private var theme: AppTheme   { AppTheme(rawValue: appThemeRaw) ?? .classic }
+    private var theme: AppTheme   { AppTheme.resolved(appThemeRaw) }
     private var tools: [CategoryTool] { category.tools }
     private var sizeFactor: CGFloat { BubbleSize(rawValue: bubbleSizeRaw)?.factor ?? 1.0 }
 
@@ -652,10 +652,10 @@ private var medicalTools: [CategoryTool] { [
     // menu contenant... Médicaments, plus les trois outils deja listes juste
     // en dessous. La liste des traitements etait donc a un cran de plus que
     // tout le reste de la categorie, et le sous-titre mentait.
-    .init("pills.fill", "MediSûr", "Traitements en cours et rappels", alias: "Médicaments",  tint: .init(hex: 0xE84C4C)) { MedicationView() },
-    .init("stethoscope", "Doctolink", "Agenda médical et suivi", alias: "Rendez-vous",          tint: .init(hex: 0xE84C4C)) { AppointmentsView() },
-    .init("waveform.path.ecg", "Maple Health", "Poids, tension, glycémie…", alias: "Carnet de santé",        tint: .init(hex: 0xE84C4C)) { VitalsView() },
-    .init("syringe.fill", "Mon Espace Vaccin", "Historique et rappels", alias: "Vaccinations",            tint: .init(hex: 0xE84C4C)) { VaccinationView() },
+    .init("pills.fill", "MediSûr", "Traitements en cours et rappels", alias: "Médicaments",  tint: AppCategory.medical.tint) { MedicationView() },
+    .init("stethoscope", "Doctolink", "Agenda médical et suivi", alias: "Rendez-vous",          tint: AppCategory.medical.tint) { AppointmentsView() },
+    .init("waveform.path.ecg", "Maple Health", "Poids, tension, glycémie…", alias: "Carnet de santé",        tint: AppCategory.medical.tint) { VitalsView() },
+    .init("syringe.fill", "Mon Espace Vaccin", "Historique et rappels", alias: "Vaccinations",            tint: AppCategory.medical.tint) { VaccinationView() },
 ] }
 
 private var cycleTools: [CategoryTool] { [

@@ -11,7 +11,7 @@ import WidgetKit
 struct InteractiveHabitsWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(
-            kind: "InteractiveHabitsWidget",
+            kind: WidgetKinds.interactiveHabits,
             provider: HabitsProvider()
         ) { entry in
             InteractiveHabitsView(entry: entry)
@@ -37,11 +37,19 @@ private struct InteractiveHabitsView: View {
         VStack(spacing: 0) {
             header
             Divider().opacity(0.15).padding(.horizontal, 14)
-            list
+            if entry.habits.isEmpty {
+                WidgetEmptyState(icon: "checklist", title: entry.data.appGroupWorking ? "Pas encore d'habitudes" : "Ouvre LifeOS une fois",
+                                 message: entry.data.appGroupWorking ? "Ajoute-en dans LifeOS, elles apparaîtront ici." : "Le widget se remplira ensuite.",
+                                 tint: entry.accent)
+                    .padding(14)
+            } else {
+                list
+            }
         }
         .containerBackground(for: .widget) {
             Color(.systemBackground)
         }
+        .widgetURL(WidgetLink.habits)
     }
 
     private var header: some View {
@@ -93,6 +101,8 @@ private struct InteractiveHabitsView: View {
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 6)
+                    .frame(minHeight: 36)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .tint(habit.color)

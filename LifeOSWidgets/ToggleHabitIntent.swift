@@ -36,8 +36,10 @@ struct SetHabitIntent: AppIntent {
             for (_, pendingOp) in HabitOps.pending() where pendingOp.day == snap.day { snap = snap.applying(pendingOp) }
             snap.write()
         }
-        WidgetCenter.shared.reloadTimelines(ofKind: "InteractiveHabitsWidget")
-        WidgetCenter.shared.reloadTimelines(ofKind: "HabitsWidget")
+        // L'app, si elle tourne, applique l'ordre tout de suite.
+        WidgetOpsSignal.post()
+        WidgetCenter.shared.reloadTimelines(ofKind: WidgetKinds.interactiveHabits)
+        WidgetCenter.shared.reloadTimelines(ofKind: WidgetKinds.habits)
         return .result()
     }
 }

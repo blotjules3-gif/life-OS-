@@ -27,6 +27,10 @@ enum HealthAutoSync {
         guard !Calendar.current.isDateInToday(lastCheck) else { return }
         guard let hours = await HealthService.shared.sleepHoursLastNight(), hours > 0.5 else { return }
         ud.set((hours * 10).rounded() / 10, forKey: "lastSleepHours")
+        // Jour de la valeur pour le widget Sommeil (jamais la nuit d'hier montree
+        // comme celle d'aujourd'hui).
+        ud.set(Date.now.timeIntervalSince1970, forKey: WidgetPublisher.lastSleepHoursAtKey)
+        WidgetPublisher.shared.publishSleep()
 
         // Loop 8 — publier le breakdown détaillé (deep/REM/awakenings/bedtime)
         // dans App Group pour lecture par UserContextBuilder au prochain send().

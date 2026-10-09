@@ -2,19 +2,15 @@ import SwiftUI
 import WidgetKit
 
 struct SleepWidget: Widget {
-    let kind: String = "SleepWidget"
+    let kind: String = WidgetKinds.sleep
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: SleepWidgetProvider()) { entry in
             SleepWidgetView(entry: entry)
         }
-        .configurationDisplayName("Sommeil & Réveil")
-        .description("Surveille ton heure de réveil, ton heure de coucher idéale et ton repos.")
-        .supportedFamilies([
-            .systemSmall,
-            .systemMedium,
-            .accessoryRectangular
-        ])
+        .configurationDisplayName("Sommeil et réveil")
+        .description("Ton heure de réveil, ton coucher conseillé et ta dernière nuit.")
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
         .contentMarginsDisabled()
     }
 }
@@ -23,54 +19,46 @@ struct SleepWidget: Widget {
 
 struct SleepWidgetEntry: TimelineEntry {
     let date: Date
-    let alarmTime: String
-    let targetHours: Double
-    let suggestedBedtime: String
-    let lastSleepHours: Double
+    let snapshot: SleepSnapshot?
+
+    /// Reveil regle dans LifeOS (sinon : etat vide, jamais 07:00 invente).
+    var wake: (hour: Int, minute: Int)? {
+        guard let s = snapshot, let h = s.wakeHour else { return nil }
+        return (h, s.wakeMinute ?? 0)
+    }
+    var alarm: String? { wake.map { WidgetTimeline.hm($0.hour, $0.minute) } }
+    var bedtime: String? {
+        guard let w = wake, let s = snapshot else { return nil }
+        let b = SleepSnapshot.bedtime(wakeHour: w.hour, wakeMinute: w.minute, targetHours: s.targetHours)
+        return WidgetTimeline.hm(b.hour, b.minute)
+    }
+    var lastNight: Double? { snapshot?.lastNight(now: date) }
+    var targetText: String {
+        guard let s = snapshot else { return "" }
+        let v = s.targetHours.formatted(.number.precision(.fractionLength(0...1)).locale(Locale(identifier: "fr_FR")))
+        return "\(v) h"
+    }
 }
 
 struct SleepWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> SleepWidgetEntry {
-        SleepWidgetEntry(
-            date: .now,
-            alarmTime: "07:00",
-            targetHours: 8.0,
-            suggestedBedtime: "23:00",
-            lastSleepHours: 7.5
-        )
+        SleepWidgetEntry(date: .now, snapshot: SleepSnapshot(day: WidgetDay.stamp(), updatedAt: .now, wakeHour: 7, wakeMinute: 0,
+                                                             wakeEnabled: true, targetHours: 8, targetIsDefault: false,
+                                                             lastSleepHours: 7.5, lastSleepDay: WidgetDay.stamp()))
     }
 
     func getSnapshot(in context: Context, completion: @escaping (SleepWidgetEntry) -> Void) {
-        completion(read())
+        completion(context.isPreview ? placeholder(in: context) : read(at: .now))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<SleepWidgetEntry>) -> Void) {
-        let entry = read()
-        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: .now) ?? .now.addingTimeInterval(3600)
-        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+        let midnight = WidgetTimeline.nextMidnight()
+        // A minuit la "derniere nuit" d'hier n'est plus montree comme celle du jour.
+        completion(Timeline(entries: [read(at: .now), read(at: midnight)], policy: .after(midnight)))
     }
 
-    private func read() -> SleepWidgetEntry {
-        let defs = WidgetAppGroup.defaults
-        let hour = defs?.integer(forKey: "wakeupHour") ?? 7
-        let min = defs?.integer(forKey: "wakeupMinute") ?? 0
-        let target = defs?.double(forKey: "sleepTargetHours") ?? 8.0
-        let last = defs?.double(forKey: "lastSleepHours") ?? 7.5
-
-        let effectiveTarget = target > 0 ? target : 8.0
-        let bedHour = (hour - Int(effectiveTarget) + 24) % 24
-        let bedMin = min
-
-        let alarmStr = String(format: "%02d:%02d", hour, min)
-        let bedStr = String(format: "%02d:%02d", bedHour, bedMin)
-
-        return SleepWidgetEntry(
-            date: .now,
-            alarmTime: alarmStr,
-            targetHours: effectiveTarget,
-            suggestedBedtime: bedStr,
-            lastSleepHours: last > 0 ? last : 7.5
-        )
+    private func read(at date: Date) -> SleepWidgetEntry {
+        SleepWidgetEntry(date: date, snapshot: WidgetSnapshotStore.read(SleepSnapshot.self, key: SleepSnapshot.key))
     }
 }
 
@@ -83,143 +71,97 @@ struct SleepWidgetView: View {
     var body: some View {
         Group {
             switch family {
-            case .systemSmall:
-                smallView
-            case .systemMedium:
-                mediumView
-            case .accessoryRectangular:
-                rectangularView
-            default:
-                smallView
+            case .systemMedium: mediumView.padding(14).lifeOSWidgetBackground()
+            case .accessoryRectangular: rectangularView.lifeOSAccessoryBackground()
+            default: smallView.padding(14).lifeOSWidgetBackground()
             }
         }
-        .widgetURL(URL(string: "lifeos://sleep"))
+        .widgetURL(WidgetLink.sleep)
     }
 
+    private var lastNightText: String {
+        guard let h = entry.lastNight else { return "Nuit pas encore notée" }
+        return "Dernière nuit : " + h.formatted(.number.precision(.fractionLength(1)).locale(Locale(identifier: "fr_FR"))) + " h"
+    }
+
+    private var alarmState: String? {
+        guard let s = entry.snapshot, entry.wake != nil else { return nil }
+        return s.wakeEnabled ? "RÉVEIL" : "RÉVEIL COUPÉ"
+    }
+
+    private var empty: some View {
+        WidgetEmptyState(icon: "alarm", title: "Pas de réveil", message: "Règle ton réveil dans LifeOS.", tint: WTint.sleep)
+    }
+
+    @ViewBuilder
     private var smallView: some View {
-        ZStack {
-            Color(widgetHex: 0x08090C)
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    ZStack {
-                        Circle()
-                            .fill(Color(widgetHex: 0x6C7BF1).opacity(0.18))
-                            .frame(width: 32, height: 32)
-                        Image(systemName: "alarm.fill")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(Color(widgetHex: 0x6C7BF1))
-                    }
-                    Spacer()
-                    Text("RÉVEIL")
-                        .font(.system(size: 9, weight: .heavy, design: .rounded))
-                        .foregroundStyle(Color(widgetHex: 0x6C7BF1))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(Color(widgetHex: 0x6C7BF1).opacity(0.15), in: Capsule())
-                }
-
-                Spacer()
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(entry.alarmTime)
-                        .font(.system(size: 28, weight: .black, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(.white)
-                    Text("Coucher conseillé : \(entry.suggestedBedtime)")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.6))
-                }
-
-                HStack {
-                    Text("Dernière nuit : \(String(format: "%.1fh", entry.lastSleepHours))")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Color(widgetHex: 0x6C7BF1))
-                    Spacer()
-                    Image(systemName: "moon.stars.fill")
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color(widgetHex: 0x6C7BF1))
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 6)
-                .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        if let alarm = entry.alarm, let bed = entry.bedtime {
+            VStack(alignment: .leading, spacing: 6) {
+                WidgetHeader(icon: "alarm.fill", title: alarmState ?? "RÉVEIL", tint: WTint.sleep)
+                Spacer(minLength: 0)
+                Text(alarm)
+                    .font(.system(size: 30, weight: .black, design: .rounded))
+                    .monospacedDigit()
+                Text("Coucher conseillé \(bed)")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                Text(lastNightText)
+                    .font(.system(size: 10, weight: .bold))
+                    .wTint(WTint.sleep)
+                    .lineLimit(1)
             }
-            .padding(14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        } else {
+            empty
         }
     }
 
+    @ViewBuilder
     private var mediumView: some View {
-        ZStack {
-            Color(widgetHex: 0x08090C)
-
+        if let alarm = entry.alarm, let bed = entry.bedtime {
             HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "moon.fill")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(Color(widgetHex: 0x6C7BF1))
-                        Text("SOMMEIL & RÉVEIL")
-                            .font(.system(size: 11, weight: .heavy, design: .rounded))
-                            .kerning(0.8)
-                            .foregroundStyle(.white.opacity(0.6))
-                        Spacer()
-                        Text("OBJECTIF \(String(format: "%.0fh", entry.targetHours))")
-                            .font(.system(size: 9, weight: .heavy, design: .rounded))
-                            .foregroundStyle(Color(widgetHex: 0x6C7BF1))
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 3)
-                            .background(Color(widgetHex: 0x6C7BF1).opacity(0.15), in: Capsule())
-                    }
-
+                VStack(alignment: .leading, spacing: 6) {
+                    WidgetHeader(icon: "moon.fill", title: "SOMMEIL ET RÉVEIL", tint: WTint.sleep,
+                                 trailing: "Objectif \(entry.targetText)" + ((entry.snapshot?.targetIsDefault ?? false) ? " par défaut" : ""))
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(entry.alarmTime)
-                            .font(.system(size: 32, weight: .black, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(.white)
-                        Text("prochain réveil")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.5))
+                        Text(alarm).font(.system(size: 32, weight: .black, design: .rounded)).monospacedDigit()
+                        Text((entry.snapshot?.wakeEnabled ?? false) ? "prochain réveil" : "réveil coupé")
+                            .font(.system(size: 12, weight: .bold)).foregroundStyle(.secondary)
                     }
-
-                    Text("Pour dormir \(String(format: "%.0fh", entry.targetHours)), couche-toi vers \(entry.suggestedBedtime).")
+                    Text("Pour dormir \(entry.targetText), couche-toi vers \(bed).")
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.65))
-
-                    Spacer()
+                        .foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
                 }
-
-                VStack(spacing: 6) {
-                    ZStack {
-                        Circle()
-                            .fill(Color(widgetHex: 0x6C7BF1).opacity(0.2))
-                            .frame(width: 54, height: 54)
-                        Image(systemName: "bed.double.fill")
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundStyle(Color(widgetHex: 0x6C7BF1))
+                VStack(spacing: 4) {
+                    Image(systemName: "bed.double.fill").font(.system(size: 24, weight: .bold)).wTint(WTint.sleep)
+                    if let h = entry.lastNight {
+                        Text(h.formatted(.number.precision(.fractionLength(1)).locale(Locale(identifier: "fr_FR"))) + " h")
+                            .font(.system(size: 14, weight: .black, design: .rounded))
+                        Text("CETTE NUIT").font(.system(size: 8, weight: .heavy, design: .rounded)).foregroundStyle(.secondary)
+                    } else {
+                        Text("Nuit pas\nnotée").font(.system(size: 10, weight: .semibold)).multilineTextAlignment(.center)
+                            .foregroundStyle(.secondary)
                     }
-                    Text("\(String(format: "%.1fh", entry.lastSleepHours))")
-                        .font(.system(size: 13, weight: .black, design: .rounded))
-                        .foregroundStyle(.white)
-                    Text("DERNIER")
-                        .font(.system(size: 8, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.5))
                 }
-                .frame(width: 65)
+                .frame(width: 72)
             }
-            .padding(16)
+        } else {
+            empty
         }
     }
 
     private var rectangularView: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "alarm.fill")
-                .font(.system(size: 18, weight: .bold))
+        HStack(spacing: 8) {
+            Image(systemName: "alarm.fill").font(.system(size: 18, weight: .bold))
             VStack(alignment: .leading, spacing: 2) {
-                Text("Réveil • \(entry.alarmTime)")
-                    .font(.system(size: 12, weight: .bold))
-                Text("Coucher conseillé : \(entry.suggestedBedtime) (obj. \(String(format: "%.0fh", entry.targetHours)))")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
+                if let alarm = entry.alarm, let bed = entry.bedtime {
+                    Text("Réveil \(alarm)").font(.system(size: 12, weight: .bold))
+                    Text("Coucher conseillé \(bed)").font(.system(size: 10)).foregroundStyle(.secondary)
+                } else {
+                    Text("Pas de réveil").font(.system(size: 12, weight: .bold))
+                    Text("Règle-le dans LifeOS").font(.system(size: 10)).foregroundStyle(.secondary)
+                }
             }
         }
     }

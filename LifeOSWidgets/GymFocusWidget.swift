@@ -2,19 +2,15 @@ import SwiftUI
 import WidgetKit
 
 struct GymFocusWidget: Widget {
-    let kind: String = "GymFocusWidget"
+    let kind: String = WidgetKinds.gym
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: GymFocusWidgetProvider()) { entry in
             GymFocusWidgetView(entry: entry)
         }
-        .configurationDisplayName("Programme Sport")
-        .description("Visualise ta séance de musculation ou ton focus du jour.")
-        .supportedFamilies([
-            .systemSmall,
-            .systemMedium,
-            .accessoryRectangular
-        ])
+        .configurationDisplayName("Programme sport")
+        .description("La séance du jour lue dans ton programme de la semaine.")
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular])
         .contentMarginsDisabled()
     }
 }
@@ -23,55 +19,39 @@ struct GymFocusWidget: Widget {
 
 struct GymFocusWidgetEntry: TimelineEntry {
     let date: Date
-    let weekdayName: String
-    let sessionTitle: String
-    let focus: String
-    let isRestDay: Bool
+    /// nil = programme jamais publie par l'app.
+    let week: GymWeekSnapshot?
+
+    var today: GymWeekSnapshot.Day? { week?.plan(for: date) }
+    var tomorrow: GymWeekSnapshot.Day? {
+        week?.plan(for: Calendar.current.date(byAdding: .day, value: 1, to: date) ?? date)
+    }
+    var weekdayName: String {
+        date.formatted(.dateTime.weekday(.wide).locale(Locale(identifier: "fr_FR"))).uppercased()
+    }
 }
 
 struct GymFocusWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> GymFocusWidgetEntry {
-        GymFocusWidgetEntry(
-            date: .now,
-            weekdayName: "LUNDI",
-            sessionTitle: "Séance du jour",
-            focus: "Développé couché · Dips · Écartés",
-            isRestDay: false
-        )
+        let wd = Calendar.current.component(.weekday, from: .now)
+        return GymFocusWidgetEntry(date: .now, week: GymWeekSnapshot(day: "", updatedAt: .now, days: [
+            .init(weekday: wd, title: "Haut du corps", focus: "Développé couché · Tractions · Dips", isRest: false)
+        ]))
     }
 
     func getSnapshot(in context: Context, completion: @escaping (GymFocusWidgetEntry) -> Void) {
-        completion(read())
+        completion(context.isPreview ? placeholder(in: context) : read(at: .now))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<GymFocusWidgetEntry>) -> Void) {
-        let entry = read()
-        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 3, to: .now) ?? .now.addingTimeInterval(10800)
-        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+        let midnight = WidgetTimeline.nextMidnight()
+        // Le programme est celui de la semaine : a minuit, la seance du lendemain
+        // s'affiche meme si l'app n'est pas ouverte.
+        completion(Timeline(entries: [read(at: .now), read(at: midnight)], policy: .after(midnight)))
     }
 
-    private func read() -> GymFocusWidgetEntry {
-        let defs = WidgetAppGroup.defaults
-        // Seance reelle du jour, ecrite par l'app. Rien d'ecrit aujourd'hui = rien de
-        // prevu (avant : une seance inventee s'affichait comme la tienne).
-        let today = defs?.string(forKey: WidgetKeys.gymDay) == WidgetKeys.dayStamp()
-        let rawTitle = today ? (defs?.string(forKey: WidgetKeys.gymTitle) ?? "") : ""
-        let title = rawTitle.isEmpty ? "Aucune séance prévue" : rawTitle
-        let focus = rawTitle.isEmpty ? "Définis ta semaine dans Fitbot" : (defs?.string(forKey: WidgetKeys.gymFocus) ?? "")
-        let isRest = today && (defs?.bool(forKey: WidgetKeys.gymRest) ?? false)
-
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "fr_FR")
-        formatter.dateFormat = "EEEE"
-        let dayName = formatter.string(from: Date()).uppercased()
-
-        return GymFocusWidgetEntry(
-            date: .now,
-            weekdayName: dayName,
-            sessionTitle: title,
-            focus: focus,
-            isRestDay: isRest
-        )
+    private func read(at date: Date) -> GymFocusWidgetEntry {
+        GymFocusWidgetEntry(date: date, week: WidgetSnapshotStore.read(GymWeekSnapshot.self, key: GymWeekSnapshot.key))
     }
 }
 
@@ -84,145 +64,78 @@ struct GymFocusWidgetView: View {
     var body: some View {
         Group {
             switch family {
-            case .systemSmall:
-                smallView
-            case .systemMedium:
-                mediumView
-            case .accessoryRectangular:
-                rectangularView
-            default:
-                smallView
+            case .systemMedium: mediumView.padding(14).lifeOSWidgetBackground()
+            case .accessoryRectangular: rectangularView.lifeOSAccessoryBackground()
+            default: smallView.padding(14).lifeOSWidgetBackground()
             }
         }
-        .widgetURL(URL(string: "lifeos://gym"))
+        .widgetURL(WidgetLink.gym)
+    }
+
+    private var title: String {
+        guard let d = entry.today else { return "Rien de prévu" }
+        return d.isRest ? "Jour de repos" : d.title
+    }
+
+    private var detail: String {
+        if entry.week == nil { return "Ouvre LifeOS pour charger ton programme." }
+        guard let d = entry.today else {
+            return (entry.week?.days.isEmpty ?? true) ? "Définis ta semaine dans Fitbot." : "Pas de séance ce jour dans ton programme."
+        }
+        return d.isRest ? "Récupération : étirements, eau, sommeil." : d.focus
     }
 
     private var smallView: some View {
-        ZStack {
-            Color(widgetHex: 0x08090C)
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    ZStack {
-                        Circle()
-                            .fill(Color(widgetHex: 0xFFB800).opacity(0.18))
-                            .frame(width: 32, height: 32)
-                        Image(systemName: "dumbbell.fill")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(Color(widgetHex: 0xFFB800))
-                    }
-                    Spacer()
-                    Text(entry.weekdayName)
-                        .font(.system(size: 9, weight: .heavy, design: .rounded))
-                        .foregroundStyle(Color(widgetHex: 0xFFB800))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(Color(widgetHex: 0xFFB800).opacity(0.15), in: Capsule())
-                }
-
-                Spacer()
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(entry.isRestDay ? "RÉCUPÉRATION" : "SÉANCE DU JOUR")
-                        .font(.system(size: 10, weight: .heavy, design: .rounded))
-                        .kerning(0.8)
-                        .foregroundStyle(.white.opacity(0.6))
-                    Text(entry.isRestDay ? "Jour de repos" : entry.sessionTitle)
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .lineLimit(2)
-                }
-
-                if !entry.isRestDay {
-                    Text(entry.focus)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.5))
-                        .lineLimit(1)
-                }
-
-                HStack {
-                    Text(entry.isRestDay ? "Récupérer" : "S'entraîner")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(.black)
-                    Spacer()
-                    Image(systemName: entry.isRestDay ? "bed.double.fill" : "arrow.right")
-                        .font(.system(size: 9, weight: .black))
-                        .foregroundStyle(.black)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(Color(widgetHex: 0xFFB800), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            }
-            .padding(14)
+        VStack(alignment: .leading, spacing: 6) {
+            WidgetHeader(icon: "dumbbell.fill", title: entry.weekdayName, tint: WTint.sport)
+            Spacer(minLength: 0)
+            Text(entry.today?.isRest == true ? "RÉCUPÉRATION" : "SÉANCE DU JOUR")
+                .font(.system(size: 10, weight: .heavy, design: .rounded)).kerning(0.6)
+                .foregroundStyle(.secondary)
+            Text(title)
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .lineLimit(2)
+            Text(detail)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
     private var mediumView: some View {
-        ZStack {
-            Color(widgetHex: 0x08090C)
-
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "dumbbell.fill")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(Color(widgetHex: 0xFFB800))
-                        Text("PROGRAMME MUSCU")
-                            .font(.system(size: 11, weight: .heavy, design: .rounded))
-                            .kerning(0.8)
-                            .foregroundStyle(.white.opacity(0.6))
-                        Spacer()
-                        Text(entry.weekdayName)
-                            .font(.system(size: 9, weight: .heavy, design: .rounded))
-                            .foregroundStyle(Color(widgetHex: 0xFFB800))
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 3)
-                            .background(Color(widgetHex: 0xFFB800).opacity(0.15), in: Capsule())
-                    }
-
-                    Text(entry.isRestDay ? "Jour de repos & Récupération" : entry.sessionTitle)
-                        .font(.system(size: 18, weight: .black, design: .rounded))
-                        .foregroundStyle(.white)
-
-                    Text(entry.isRestDay ? "Profite pour t'étirer, t'hydrater et bien dormir." : entry.focus)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.6))
-                        .lineLimit(2)
-
-                    Spacer()
+        HStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 6) {
+                WidgetHeader(icon: "dumbbell.fill", title: "PROGRAMME SPORT", tint: WTint.sport, trailing: entry.weekdayName)
+                Text(title)
+                    .font(.system(size: 18, weight: .black, design: .rounded))
+                    .lineLimit(1)
+                Text(detail)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                Spacer(minLength: 0)
+                if let t = entry.tomorrow {
+                    Text("Demain : \(t.isRest ? "repos" : t.title)")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
                 }
-
-                VStack(spacing: 6) {
-                    ZStack {
-                        Circle()
-                            .fill(Color(widgetHex: 0xFFB800).opacity(0.18))
-                            .frame(width: 54, height: 54)
-                        Image(systemName: entry.isRestDay ? "moon.stars.fill" : "figure.strengthtraining.traditional")
-                            .font(.system(size: 24, weight: .bold))
-                            .foregroundStyle(Color(widgetHex: 0xFFB800))
-                    }
-                    Text(entry.isRestDay ? "REPOS" : "GO !")
-                        .font(.system(size: 10, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.white)
-                }
-                .frame(width: 70)
             }
-            .padding(16)
+            Image(systemName: entry.today?.isRest == true ? "moon.stars.fill" : "figure.strengthtraining.traditional")
+                .font(.system(size: 30, weight: .bold))
+                .wTint(WTint.sport)
+                .frame(width: 60)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
     private var rectangularView: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "dumbbell.fill")
-                .font(.system(size: 18, weight: .bold))
+        HStack(spacing: 8) {
+            Image(systemName: "dumbbell.fill").font(.system(size: 18, weight: .bold))
             VStack(alignment: .leading, spacing: 2) {
-                Text("Sport • \(entry.sessionTitle)")
-                    .font(.system(size: 12, weight: .bold))
-                    .lineLimit(1)
-                Text(entry.focus)
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                Text("Sport · \(title)").font(.system(size: 12, weight: .bold)).lineLimit(1)
+                Text(detail).font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1)
             }
         }
     }

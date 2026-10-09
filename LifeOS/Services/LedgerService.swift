@@ -97,8 +97,9 @@ enum LedgerService {
     /// reconstruit les soldes d'ouverture pour que le solde affiche aujourd'hui soit
     /// conserve. Sans ca la correction changerait les soldes de l'utilisateur.
     static func migrateIfNeeded(_ ctx: ModelContext) {
-        let accounts = (try? ctx.fetch(FetchDescriptor<Account>())) ?? []
-        let all = (try? ctx.fetch(FetchDescriptor<Txn>())) ?? []
+        // Chaque etape ne lit QUE les lignes qui ont encore besoin d'etre reprises.
+        // Avant, toutes les operations etaient lues a chaque lancement (mesure:
+        // 1 100 operations pour un an d'usage), meme quand tout etait deja repris.
 
         // ETAPE 1 — convertir les anciens montants AVANT tout calcul.
         //
@@ -107,10 +108,12 @@ enum LedgerService {
         // remplie. Sans cette conversion, tous les historiques repartent a zero et les
         // soldes recalcules sont faux. C'est la premiere chose a faire, avant le
         // rattachement et avant le recalcul.
-        for t in all where t.amountCents == 0 && t.amount != 0 {
+        let unconverted = FetchDescriptor<Txn>(predicate: #Predicate { $0.amountCents == 0 && $0.amount != 0 })
+        for t in (try? ctx.fetch(unconverted)) ?? [] {
             t.amountCents = Int((t.amount * 100).rounded())
         }
 
+        let accounts = (try? ctx.fetch(FetchDescriptor<Account>())) ?? []
         guard !accounts.isEmpty else { return }
 
         // ETAPE 2 — rattacher par identifiant. Les doublons de nom sont explicites :
@@ -120,7 +123,8 @@ enum LedgerService {
         for a in accounts where byName[a.name] == nil { byName[a.name] = a }
 
         var orphans = 0
-        for t in all where t.accountID == nil {
+        let unlinked = FetchDescriptor<Txn>(predicate: #Predicate { $0.accountID == nil })
+        for t in (try? ctx.fetch(unlinked)) ?? [] {
             if let match = byName[t.account] { t.accountID = match.id }
             else { orphans += 1 }   // compte disparu : l'operation reste sans rattachement
         }
@@ -132,7 +136,7 @@ enum LedgerService {
         // garde `openingBalance = 0` (la valeur par defaut), et le premier recalcul
         // aurait ramene son solde a 0. Le solde affiche aujourd'hui fait foi.
         for a in accounts where a.openingBalanceMigrationVersion < 1 {
-            let cents = all.filter { $0.accountID == a.id }.reduce(0) { $0 + $1.amountCents }
+            let cents = transactions(ctx, accountID: a.id).reduce(0) { $0 + $1.amountCents }
             a.openingBalance = a.balance - Double(cents) / 100.0
             a.openingBalanceMigrationVersion = 1
         }
@@ -151,6 +155,9 @@ enum LedgerService {
     }
 
     static func transactions(_ ctx: ModelContext, accountID: UUID) -> [Txn] {
-        ((try? ctx.fetch(FetchDescriptor<Txn>())) ?? []).filter { $0.accountID == accountID }
+        // Filtre fait par la base: chaque ajout recalcule le solde, lire toutes les
+        // operations a chaque fois coutait de plus en plus cher avec l'historique.
+        let id: UUID? = accountID
+        return (try? ctx.fetch(FetchDescriptor<Txn>(predicate: #Predicate { $0.accountID == id }))) ?? []
     }
 }

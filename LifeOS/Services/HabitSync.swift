@@ -120,28 +120,44 @@ enum HabitSync {
     }
 
     /// Publie l'instantane lu par les widgets (habitudes actives aujourd'hui, non
-    /// archivees) et demande le rafraichissement des widgets concernes. Seul endroit
-    /// qui ecrit cet instantane.
-    static func publish(_ ctx: ModelContext, now: Date = Date(), timeZone: TimeZone = .current) {
-        guard let d = LifeOSGroup.defaults else { return }
-        let habits = ((try? ctx.fetch(FetchDescriptor<Habit>(sortBy: [SortDescriptor(\.createdAt)]))) ?? [])
+    /// archivees). Seul endroit qui ecrit cet instantane. N'ecrit et ne recharge les
+    /// widgets que si la VALEUR change (noms, icones, couleurs, coches, jour), pas
+    /// seulement le nombre d'habitudes. Rend `true` si l'instantane a change.
+    @discardableResult
+    static func publish(_ ctx: ModelContext, now: Date = Date(), timeZone: TimeZone = .current, reload: Bool = true) -> Bool {
+        guard let d = LifeOSGroup.defaults else { return false }
+        let snap = snapshot(ctx, now: now, timeZone: timeZone)
+        // Resume lu par le coach et l'accueil.
+        let done = snap.habits.filter(\.done).count
+        if d.object(forKey: "habits_done_today") as? Int != done { d.set(done, forKey: "habits_done_today") }
+        if d.object(forKey: "habits_total_today") as? Int != snap.habits.count { d.set(snap.habits.count, forKey: "habits_total_today") }
+        if let current = HabitSnapshot.read(from: d), sameValue(current, snap) { return false }
+        snap.write(to: d)
+        if reload { widgetKinds.forEach { WidgetCenter.shared.reloadTimelines(ofKind: $0) } }
+        return true
+    }
+
+    /// Instantane du jour, ordres encore en file appliques (app a peine ouverte).
+    static func snapshot(_ ctx: ModelContext, now: Date = Date(), timeZone: TimeZone = .current) -> HabitSnapshot {
+        let habits = ((try? ctx.fetch(FetchDescriptor<Habit>(predicate: #Predicate { !$0.isArchived },
+                                                             sortBy: [SortDescriptor(\.createdAt)]))) ?? [])
             // Meme liste du jour que l'app : sautees, en pause ou « x fois par semaine » deja
             // atteintes exclues ; une habitude faite aujourd'hui reste.
-            .filter { !$0.isArchived && !$0.uid.isEmpty && HabitRules.isDueToday($0, now: now) }
+            .filter { !$0.uid.isEmpty && HabitRules.isDueToday($0, now: now) }
         let today = HabitOps.businessDay(now, timeZone: timeZone)
         let entries = habits.map { h in
             HabitSnapshot.Entry(id: h.uid, name: h.name, icon: h.icon, colorHex: h.colorHex,
                                 done: h.completions.contains { HabitOps.businessDay($0.date, timeZone: timeZone) == today })
         }
-        // Ordres pas encore appliques (app a peine ouverte): l'instantane les montre deja.
         var snap = HabitSnapshot(day: today, timeZone: timeZone.identifier, generatedAt: now, habits: entries)
         for (_, op) in HabitOps.pending() where op.day == today { snap = snap.applying(op) }
-        snap.write(to: d)
-        // Resume lu par le coach et l'accueil.
-        let done = snap.habits.filter(\.done)
-        d.set(done.count, forKey: "habits_done_today")
-        d.set(snap.habits.count, forKey: "habits_total_today")
-        widgetKinds.forEach { WidgetCenter.shared.reloadTimelines(ofKind: $0) }
+        return snap
+    }
+
+    /// Meme contenu, horodatage ignore.
+    static func sameValue(_ a: HabitSnapshot, _ b: HabitSnapshot) -> Bool {
+        var x = a; x.generatedAt = b.generatedAt
+        return x == b
     }
 
     /// Ce qu'il faut faire au lancement et a chaque retour au premier plan.

@@ -96,30 +96,17 @@ enum HabitOps {
     /// renommage atomique). Echec = erreur remontee, jamais silencieuse.
     static func enqueue(_ op: HabitOp) throws {
         guard let dir = directory else { throw CocoaError(.fileNoSuchFile) }
-        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let enc = JSONEncoder(); enc.dateEncodingStrategy = .iso8601
-        let data = try enc.encode(op)
+        let data = try OpFileQueue.encoder().encode(op)
         let name = String(format: "%.6f", op.createdAt.timeIntervalSince1970) + "-" + op.opID + ".json"
-        let tmp = dir.appendingPathComponent("." + name + ".tmp")
-        try data.write(to: tmp, options: .atomic)
-        try FileManager.default.moveItem(at: tmp, to: dir.appendingPathComponent(name))
+        // Meme file de fichiers que `WidgetOps` (OpFileQueue) : ecriture atomique.
+        try OpFileQueue.write(data, name: name, in: dir)
     }
 
     /// Ordres en attente, dans l'ordre ou ils ont ete donnes. Un fichier illisible
     /// est mis de cote (renomme .bad), pas supprime ni rejoue a l'infini.
     static func pending() -> [(url: URL, op: HabitOp)] {
-        guard let dir = directory,
-              let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else { return [] }
-        let dec = JSONDecoder(); dec.dateDecodingStrategy = .iso8601
-        var out: [(URL, HabitOp)] = []
-        for url in files where url.pathExtension == "json" && !url.lastPathComponent.hasPrefix(".") {
-            if let data = try? Data(contentsOf: url), let op = try? dec.decode(HabitOp.self, from: data) {
-                out.append((url, op))
-            } else {
-                try? FileManager.default.moveItem(at: url, to: url.appendingPathExtension("bad"))
-            }
-        }
-        return out.sorted { $0.1.order != $1.1.order ? $0.1.order < $1.1.order : $0.1.opID < $1.1.opID }
+        OpFileQueue.pending(HabitOp.self, in: directory)
+            .sorted { $0.op.order != $1.op.order ? $0.op.order < $1.op.order : $0.op.opID < $1.op.opID }
     }
 
     /// Accuse de traitement: appele SEULEMENT apres une sauvegarde reussie.

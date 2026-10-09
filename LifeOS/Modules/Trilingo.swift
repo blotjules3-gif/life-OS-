@@ -255,8 +255,12 @@ struct TrilingoHomeView: View {
     let course: TrilingoCourse
     var onEdit: () -> Void
     @StateObject private var store = TrilingoStore.shared
-    @State private var session: [TrilingoExercise]?
-    @State private var mistakesOnly = false
+    /// Lecon ouverte en plein ecran (nouvelle ou reprise).
+    @State private var launch: TrilingoLessonLaunch?
+    /// Lecon interrompue (app fermee, ecran ferme) qu'on peut reprendre.
+    @State private var pending: TrilingoLessonSnapshot?
+    /// Nouvelle lecon demandee alors qu'une autre attend: on demande d'abord.
+    @State private var askReplace: TrilingoLessonLaunch?
 
     private var language: TrilingoLanguage? { TrilingoLanguages.named(course.target) }
     private var today: String { TrilingoEngine.dayKey(Date()) }
@@ -282,13 +286,15 @@ struct TrilingoHomeView: View {
                     .foregroundStyle(.secondary)
                 ProgressView(value: Double(currentDay), total: Double(course.days.count)).tint(Color.learnTint)
 
+                if let pending { resumeCard(pending) }
+
                 VStack(alignment: .leading, spacing: 10) {
                     Text(doneToday ? "Séance du jour faite" : "Séance du jour").font(.headline)
                     Text("\(min(due, TrilingoEngine.reviewLimit(store.profile?.dailyMinutes ?? 10))) révision(s) · \(TrilingoEngine.newPerSession(store.profile?.dailyMinutes ?? 10)) phrases nouvelles · environ \(store.profile?.dailyMinutes ?? 10) min")
                         .font(.subheadline).foregroundStyle(.secondary)
                     Button {
-                        mistakesOnly = false
-                        session = TrilingoEngine.session(course: course, progress: p, today: today, minutes: store.profile?.dailyMinutes ?? 10, caps: caps)
+                        open(TrilingoLessonLaunch(exercises: TrilingoEngine.session(course: course, progress: p, today: today, minutes: store.profile?.dailyMinutes ?? 10, caps: caps),
+                                                  countsAsDay: true))
                     } label: { Label(doneToday ? "Continuer quand même" : "Commencer", systemImage: "play.fill").frame(maxWidth: .infinity) }
                         .buttonStyle(LifeOSGlassButtonStyle(prominent: !doneToday))
                     if !caps.audio {
@@ -305,10 +311,10 @@ struct TrilingoHomeView: View {
                         Text("Carnet d'erreurs").font(.headline)
                         Text("\(p.mistakes.count) phrase(s) à retravailler.").font(.subheadline).foregroundStyle(.secondary)
                         Button {
-                            mistakesOnly = true
                             let items = course.allItems.filter { p.mistakes.contains($0.tid) }
                             var rng = SeededRNG(seed: 3)
-                            session = items.prefix(15).map { TrilingoEngine.exercise(for: .writing, item: $0, pool: course.allItems, review: true, noSpaces: course.noSpaces ?? false, caps: caps, rng: &rng) }
+                            open(TrilingoLessonLaunch(exercises: items.prefix(15).map { TrilingoEngine.exercise(for: .writing, item: $0, pool: course.allItems, review: true, noSpaces: course.noSpaces ?? false, caps: caps, rng: &rng) },
+                                                      countsAsDay: false))
                         } label: { Label("Revoir mes erreurs", systemImage: "arrow.counterclockwise").frame(maxWidth: .infinity) }
                             .buttonStyle(LifeOSGlassButtonStyle())
                     }
@@ -333,11 +339,68 @@ struct TrilingoHomeView: View {
             }
             .padding(Theme.pad)
         }
-        .fullScreenCover(isPresented: Binding(get: { session != nil }, set: { if !$0 { session = nil } })) {
-            if let s = session, let lang = language {
-                TrilingoSessionView(course: course, language: lang, exercises: s, countsAsDay: !mistakesOnly) { session = nil }
+        .fullScreenCover(item: $launch, onDismiss: refreshPending) { l in
+            if let lang = language {
+                TrilingoSessionView(course: course, language: lang, launch: l) { launch = nil }
             }
         }
+        .confirmationDialog("Une leçon est déjà commencée",
+                            isPresented: Binding(get: { askReplace != nil }, set: { if !$0 { askReplace = nil } }),
+                            titleVisibility: .visible, presenting: askReplace) { next in
+            Button("Reprendre la leçon") { resumePending() }
+            Button("Nouvelle leçon (abandonne l'autre)", role: .destructive) {
+                TrilingoLessonRestore.clear()
+                pending = nil
+                launch = next
+            }
+            Button("Annuler", role: .cancel) {}
+        } message: { _ in
+            Text("Tu peux la reprendre à l'étape où tu l'as laissée, ou en commencer une nouvelle.")
+        }
+        .onAppear(perform: refreshPending)
+    }
+
+    /// Relit la lecon interrompue. Une lecon d'une autre langue (parcours
+    /// modifie entre-temps) ou perimee est oubliee: la langue choisie passe
+    /// toujours avant une lecon.
+    private func refreshPending() {
+        guard let snap = TrilingoLessonRestore.load() else { pending = nil; return }
+        if snap.isResumable(forLanguage: course.target), snap.restoredExercises != nil {
+            pending = snap
+        } else {
+            TrilingoLessonRestore.clear()
+            pending = nil
+        }
+    }
+
+    private func open(_ next: TrilingoLessonLaunch) {
+        guard launch == nil else { return }
+        if pending != nil { askReplace = next } else { launch = next }
+    }
+
+    private func resumePending() {
+        guard launch == nil, let snap = pending, let list = snap.restoredExercises else { return }
+        launch = TrilingoLessonLaunch(id: snap.lessonID, exercises: list, countsAsDay: snap.countsAsDay, resume: snap)
+    }
+
+    private func resumeCard(_ snap: TrilingoLessonSnapshot) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Leçon en cours", systemImage: "pause.circle.fill").font(.headline)
+            Text("Étape \(snap.index + 1) sur \(snap.total) · \(snap.correctCount) réponse(s) juste(s)\(snap.countsAsDay ? "" : " · carnet d'erreurs")")
+                .font(.subheadline).foregroundStyle(.secondary)
+            Button { resumePending() } label: {
+                Label("Reprendre la leçon", systemImage: "play.fill").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(LifeOSGlassButtonStyle(prominent: true))
+            Button(role: .destructive) {
+                TrilingoLessonRestore.clear()
+                pending = nil
+            } label: { Text("Abandonner cette leçon").frame(maxWidth: .infinity) }
+            .buttonStyle(LifeOSGlassButtonStyle())
+            .accessibilityHint("Les réponses déjà validées restent comptées")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16).raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous))
     }
 
     private func skillsCard(_ p: TrilingoProgress) -> some View {
@@ -361,22 +424,65 @@ struct TrilingoHomeView: View {
 
 // MARK: - Seance
 
+/// Une lecon a ouvrir: nouvelle (liste tiree a l'instant) ou reprise depuis
+/// son instantane, avec le meme identifiant.
+struct TrilingoLessonLaunch: Identifiable {
+    var id = UUID()
+    let exercises: [TrilingoExercise]
+    let countsAsDay: Bool
+    var resume: TrilingoLessonSnapshot? = nil
+}
+
 struct TrilingoSessionView: View {
     let course: TrilingoCourse
     let language: TrilingoLanguage
     let exercises: [TrilingoExercise]
     let countsAsDay: Bool
+    let lessonID: UUID
     var onClose: () -> Void
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var store = TrilingoStore.shared
     @StateObject private var speech = TrilingoSpeech.shared
-    @State private var index = 0
-    @State private var built: [String] = []
-    @State private var typed = ""
+    @State private var index: Int
+    @State private var built: [String]
+    @State private var typed: String
     @State private var chosen: String?
     @State private var verdict: Bool?
-    @State private var correctCount = 0
+    @State private var correctCount: Int
     @State private var done = false
     @State private var micError: String?
+
+    init(course: TrilingoCourse, language: TrilingoLanguage, launch: TrilingoLessonLaunch, onClose: @escaping () -> Void) {
+        self.course = course
+        self.language = language
+        self.exercises = launch.exercises
+        self.countsAsDay = launch.countsAsDay
+        self.lessonID = launch.id
+        self.onClose = onClose
+        let r = launch.resume
+        let start = min(max(0, r?.index ?? 0), max(0, launch.exercises.count - 1))
+        _index = State(initialValue: start)
+        _built = State(initialValue: r?.built ?? [])
+        _typed = State(initialValue: r?.typed ?? "")
+        _chosen = State(initialValue: r?.chosen)
+        _verdict = State(initialValue: r?.verdict)
+        _correctCount = State(initialValue: r?.correctCount ?? 0)
+    }
+
+    /// Instantane de la lecon telle qu'elle est a l'ecran.
+    private var snapshot: TrilingoLessonSnapshot {
+        TrilingoLessonSnapshot(lessonID: lessonID, language: course.target, countsAsDay: countsAsDay,
+                               exercises: exercises.map(TrilingoLessonSnapshot.Exercise.init),
+                               index: index, correctCount: correctCount,
+                               built: built, typed: typed, chosen: chosen, verdict: verdict)
+    }
+
+    /// Ecrit l'instantane tant que la lecon n'est pas finie: tuer l'app la
+    /// rouvre a la meme etape, avec la reponse en cours.
+    private func persist() {
+        guard !done, !exercises.isEmpty else { return }
+        TrilingoLessonRestore.save(snapshot)
+    }
 
     private var today: String { TrilingoEngine.dayKey(Date()) }
     private var noSpaces: Bool { course.noSpaces ?? false }
@@ -390,9 +496,28 @@ struct TrilingoSessionView: View {
             }
             .padding(Theme.pad)
             .background(Theme.background)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fermer") { speech.stopListening(); onClose() } } }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Fermer") { speech.stopListening(); persist(); onClose() }
+                        .accessibilityHint(done ? "" : "La leçon est gardée, tu pourras la reprendre à cette étape")
+                }
+                if !done, exercises.count > 0 {
+                    ToolbarItem(placement: .principal) {
+                        Text("Étape \(min(index + 1, exercises.count)) sur \(exercises.count)")
+                            .font(.subheadline.weight(.semibold)).monospacedDigit()
+                    }
+                }
+            }
         }
         .environment(\.layoutDirection, .leftToRight)
+        .onAppear(perform: persist)
+        .onChange(of: index) { _, _ in persist() }
+        .onChange(of: correctCount) { _, _ in persist() }
+        .onChange(of: verdict) { _, _ in persist() }
+        .onChange(of: chosen) { _, _ in persist() }
+        .onChange(of: built) { _, _ in persist() }
+        .onChange(of: typed) { _, _ in persist() }
+        .onChange(of: scenePhase) { _, phase in if phase != .active { persist() } }
     }
 
     @ViewBuilder private func exerciseView(_ e: TrilingoExercise) -> some View {
@@ -490,6 +615,8 @@ struct TrilingoSessionView: View {
     }
 
     private func next(_ correct: Bool?, _ e: TrilingoExercise) {
+        // Double appui sur "Continuer": la seconde fois, l'etape a deja change.
+        guard !done, exercises.indices.contains(index), exercises[index].id == e.id else { return }
         if let c = correct {
             if c { correctCount += 1 }
             try? store.update { TrilingoEngine.record(&$0, exercise: e, correct: c, today: today) }
@@ -503,6 +630,7 @@ struct TrilingoSessionView: View {
             try? store.update { TrilingoEngine.finish(&$0, session: exercises, today: today, perDay: course.days.first?.items.count ?? 12) }
         }
         done = true
+        TrilingoLessonRestore.clear()
         let name = language.name
         let profile = store.profile
         Task { await TrilingoReminders.reschedule(profile, doneToday: true, languageName: name) }

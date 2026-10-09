@@ -1,5 +1,6 @@
 import XCTest
 import SwiftUI
+import UIKit
 @testable import LifeOS
 
 /// Vérifie que pour CHAQUE thème sélectionnable, la couleur `onAccent`
@@ -71,6 +72,37 @@ final class ThemeContrastTests: XCTestCase {
             selectableRaws, fixtureRaws,
             "Un thème sélectionnable n'a pas de fixture de contraste. Ajoute-le dans ThemeContrastTests.cases."
         )
+    }
+
+    // MARK: - Teintes de domaine sur le verre (lot 8)
+
+    /// Les teintes de domaine et de statut servent aux ICONES, pastilles et petits
+    /// accents graphiques (et a quelques libelles courts en gras), jamais au texte
+    /// courant. Seuil retenu : 3:1, celui de WCAG 1.4.11 (elements graphiques) et du
+    /// texte large. Mesure sur les fonds reels du verre : blanc et #F2F2F7 en clair,
+    /// noir et #2C2C2E en sombre (le verre sombre le plus clair qu'on rende).
+    func test_domainTints_reachIconContrast_onGlassBackgrounds() {
+        let iconLevel = 3.0
+        var colors: [(String, UIColor)] = AppCategory.allCases.map { ($0.rawValue, $0.tintUIColor) }
+        colors += [("success", UIColor(Theme.success)), ("warning", UIColor(Theme.warning)),
+                   ("danger", UIColor(Theme.danger)), ("hydration", UIColor(Theme.hydration)),
+                   ("coach", UIColor(Theme.coach))]
+        let lightBackgrounds: [ColorMath.RGB] = [(1, 1, 1), ColorMath.rgb(0xF2F2F7)]
+        let darkBackgrounds: [ColorMath.RGB] = [(0, 0, 0), ColorMath.rgb(0x2C2C2E)]
+        var failures: [String] = []
+        for (name, color) in colors {
+            for neutral in [false, true] {
+                let light = ColorMath.resolved(color, dark: false, neutral: neutral)
+                let dark = ColorMath.resolved(color, dark: true, neutral: neutral)
+                for bg in lightBackgrounds where ColorMath.contrast(light, bg) < iconLevel {
+                    failures.append("\(name) clair\(neutral ? " neutre" : "") \(String(format: "%.2f", ColorMath.contrast(light, bg))):1")
+                }
+                for bg in darkBackgrounds where ColorMath.contrast(dark, bg) < iconLevel {
+                    failures.append("\(name) sombre\(neutral ? " neutre" : "") \(String(format: "%.2f", ColorMath.contrast(dark, bg))):1")
+                }
+            }
+        }
+        XCTAssertTrue(failures.isEmpty, "Teintes sous \(iconLevel):1 sur le verre :\n  - " + failures.joined(separator: "\n  - "))
     }
 
     // MARK: - WCAG helpers

@@ -5,33 +5,56 @@ import WidgetKit
 
 // MARK: - Onglets
 
+/// Destinations de la barre du bas. L'ajout rapide (+) et le coach sont des
+/// boutons de la barre, pas des onglets : ils ouvrent une feuille par-dessus.
 enum AppTab: String, CaseIterable, Identifiable {
-    case wakeup, home, categories, profile
+    case home, spaces, profile
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .wakeup:     return SecondTab.current.label
-        case .home:       return "Accueil"
-        case .categories: return "Catégories"
-        case .profile:    return "Profil"
+        case .home:    return "Aujourd'hui"
+        case .spaces:  return "Mes espaces"
+        case .profile: return "Profil"
         }
     }
     var icon: String {
         switch self {
-        case .wakeup:     return SecondTab.current.icon
-        case .home:       return "house"
-        case .categories: return "square.grid.2x2"
-        case .profile:    return "person.crop.circle"
+        case .home:    return "house"
+        case .spaces:  return "square.grid.2x2"
+        case .profile: return "person.crop.circle"
         }
     }
     var iconFill: String {
         switch self {
-        case .wakeup:     return SecondTab.current.iconFill
-        case .home:       return "house.fill"
-        case .categories: return "square.grid.2x2.fill"
-        case .profile:    return "person.crop.circle.fill"
+        case .home:    return "house.fill"
+        case .spaces:  return "square.grid.2x2.fill"
+        case .profile: return "person.crop.circle.fill"
         }
     }
+    /// Position du panneau (glissement horizontal entre onglets).
+    var paneIndex: Int {
+        switch self {
+        case .home:    return 0
+        case .spaces:  return 1
+        case .profile: return 2
+        }
+    }
+
+    /// Valeur stockee par une ancienne version (`@SceneStorage("mainTab")`) :
+    /// l'ancien 2e onglet ("wakeup") et "categories" menent a Mes espaces, une
+    /// valeur inconnue a Aujourd'hui. Jamais d'onglet vide.
+    static func migrated(_ raw: String) -> AppTab {
+        switch raw {
+        case "home": return .home
+        case "spaces", "wakeup", "categories": return .spaces
+        case "profile": return .profile
+        default: return .home
+        }
+    }
+
+    /// Ancien nom du 2e onglet, garde pour le code qui le cite encore.
+    @available(*, deprecated, message: "Le 2e onglet est devenu Mes espaces")
+    static var wakeup: AppTab { .spaces }
 }
 
 // MARK: - Dégagement pour la barre d'onglets flottante
@@ -61,11 +84,11 @@ extension View {
     }
 }
 
-// MARK: - Deuxieme onglet personnalisable
+// MARK: - Ancien deuxieme onglet personnalisable
 
-/// Ce que montre le 2e onglet de la barre du bas. Le Reveil par defaut; sinon le hub
-/// d'une categorie. Une valeur inconnue (ancienne version, reglage abime) retombe sur
-/// le Reveil, jamais sur un onglet vide.
+/// Ancien reglage du 2e onglet (Reveil ou hub d'une categorie). Le 2e onglet est
+/// devenu Mes espaces ; ce choix sert encore a semer l'espace favori
+/// (`SpacesPreferences.favorite`). Une valeur inconnue retombe sur le Reveil.
 enum SecondTab: String, CaseIterable, Identifiable {
     case wakeup, nutrition, fitness, productivity, sleep, finance
 
@@ -108,25 +131,80 @@ enum SecondTab: String, CaseIterable, Identifiable {
 
 // MARK: - Conteneur principal
 
+/// Feuille ouverte par MainTabView (une seule a la fois).
+enum MainSheet: Identifiable {
+    case tool(AppCategory, CategoryTool)
+    case capture(String)
+    case search(String)
+    case task(TodoItem)
+    case record(SearchRecordRef)
+    case photoStudio(UUID?)
+
+    var id: String {
+        switch self {
+        case .tool(let c, let t): return "tool:\(c.rawValue):\(t.defaultTitle)"
+        case .capture: return "capture"
+        case .search: return "search"
+        case .task(let t): return "task:\(t.persistentModelID.hashValue)"
+        case .record(let r): return "record:\(r.id.hashValue)"
+        case .photoStudio(let id): return "photo:\(id?.uuidString ?? "new")"
+        }
+    }
+}
+
+/// Plein ecran ouvert par MainTabView : le coach, ou un outil plein ecran (Tabata).
+enum MainCover: Identifiable {
+    case coach(String?)
+    case tool(CategoryTool)
+
+    var id: String {
+        switch self {
+        case .coach: return "coach"
+        case .tool(let t): return "tool:\(t.defaultTitle)"
+        }
+    }
+}
+
 struct MainTabView: View {
-    // L'onglet survit a la reconstruction de la fenetre (changement de palette,
-    // voir LifeOSApp) : sinon choisir "Neutre" dans le Profil renvoyait a l'Accueil.
-    @SceneStorage("mainTab") private var tab: AppTab = .home
+    // L'onglet survit a la reconstruction de la fenetre (changement de palette) et
+    // a la relance. Stocke en texte pour relire les valeurs des anciennes versions.
+    @SceneStorage("mainTab") private var tabRaw: String = AppTab.home.rawValue
+    /// Espace ouvert dans Mes espaces ("nutrition"), restaure a la relance.
+    @SceneStorage("spacesPath") private var spacesPathRaw = ""
+    /// Outil ouvert en feuille ("categorie|nom"), restaure a la relance.
+    @SceneStorage("openTool") private var openToolRaw = ""
+
     #if DEBUG
     @State private var catPath: [AppCategory] = MainTabView.shotModule.map { [$0] } ?? []
     #else
     @State private var catPath: [AppCategory] = []
     #endif
-    @State private var routedTool: CategoryTool?
-    @AppStorage(AppStorageKeys.secondTab) private var secondTabRaw = SecondTab.wakeup.rawValue
-    @State private var showAIAssistant = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var aiPrefill: String?
+    @State private var visits = TabPaneVisits()
+    @State private var sheet: MainSheet?
+    @State private var cover: MainCover?
+    @State private var restored = false
+    @State private var isMobileLayout = true
+    @ObservedObject private var router = DeepLinkRouter.shared
 
-    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "classic"
-    /// Ouvrir l'assistant, c'est avoir compris le bandeau qui le presente.
+    @Environment(\.modelContext) private var ctx
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = AppTheme.defaultRaw
+    /// Ouvrir le coach, c'est avoir compris le bandeau qui le presente.
     @AppStorage(AppStorageKeys.tutorialDone) private var tutorialDone = false
-    private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
+    @AppStorage(SpacesPreferences.favoriteKey) private var favoriteRaw = ""
+    @AppStorage(SpacesPreferences.openFavoriteKey) private var openFavoriteDirectly = false
+    @AppStorage(SpacesPreferences.classicViewKey) private var classicBubbles = false
+    @AppStorage(SpacesPreferences.priorityKey) private var priorityRaw = ""
+    @AppStorage(AppStorageKeys.secondTab) private var secondTabRaw = ""
+    @AppStorage(AppStorageKeys.recommendedModules) private var recommendedRaw = ""
+
+    private var theme: AppTheme { AppTheme.resolved(appThemeRaw) }
+    private var tab: AppTab { AppTab.migrated(tabRaw) }
+    private var favorite: AppCategory {
+        SpacesPreferences.favorite(storedRaw: favoriteRaw, priorityRaw: priorityRaw,
+                                   secondTabRaw: secondTabRaw, recommendedRaw: recommendedRaw)
+    }
 
     #if DEBUG
     /// Le tableau de bord bureau ne s'affiche que sur Mac, et la capture d'ecran macOS
@@ -138,7 +216,7 @@ struct MainTabView: View {
     /// un ecran, pour les captures de la fiche App Store. Le simulateur ne sait pas
     /// cliquer, d'ou ce crochet. Absent des builds Release.
     private static var shotTab: AppTab? {
-        DebugLaunchFlags.value("-shotTab").flatMap(AppTab.init(rawValue:))
+        DebugLaunchFlags.value("-shotTab").map(AppTab.migrated)
     }
     private static var shotModule: AppCategory? {
         DebugLaunchFlags.value("-shotModule").flatMap(AppCategory.init(rawValue:))
@@ -157,6 +235,7 @@ struct MainTabView: View {
            let tool = AppCategory.allCases.lazy.flatMap(\.tools).first(where: { $0.title == name }) {
             return AnyView(NavigationStack { tool.dest() })
         }
+        if PerfProbe.enabled { return AnyView(realBody.onAppear { PerfProbe.shared.firstFrame() }) }
         #endif
         return AnyView(realBody)
     }
@@ -177,20 +256,31 @@ struct MainTabView: View {
                 if isMobile {
                     phoneLayout
                 } else {
-                    ZStack {
-                        HabitWidgetSyncer()
-                        FitnessWidgetSyncer()
-                        MoodWidgetSyncer()
-                        SleepWidgetSyncer()
-                        NutritionTodaySyncer()
-                        MemoryWidgetSyncer()
-                        WidgetDataSyncer()
-
-                        MacDesktopMainView(availableWidth: w, availableHeight: h)
-                    }
+                    MacDesktopMainView(availableWidth: w, availableHeight: h)
                 }
             }
             .animation(.easeInOut(duration: 0.25), value: isMobile)
+            .onAppear { isMobileLayout = isMobile }
+            .onChange(of: isMobile) { _, m in isMobileLayout = m }
+        }
+        // Les 7 synchroniseurs des widgets sont montes UNE fois, hors des onglets et
+        // hors du changement telephone/bureau : ils ne se reconstruisent plus.
+        .background(WidgetSyncersHost().equatable())
+        .sheet(item: $sheet) { sheetContent($0) }
+        .fullScreenCover(item: $cover) { coverContent($0) }
+        .onAppear(perform: restoreOnce)
+        // File du routeur : liens, notifications, App Intents, Spotlight. L'abonnement
+        // recoit la valeur courante, donc ce qui est arrive avant le montage est livre.
+        .onReceive(router.$revision) { _ in scheduleDrain() }
+        .onChange(of: catPath) { _, p in spacesPathRaw = p.map(\.rawValue).joined(separator: ",") }
+        .onChange(of: sheet?.id) { _, _ in
+            if case .tool(let c, let t)? = sheet { openToolRaw = "\(c.rawValue)|\(t.defaultTitle)" } else { openToolRaw = "" }
+        }
+        .onChange(of: tabRaw) { _, _ in visits.visit(tab) }
+        .task {
+            // Index Spotlight des outils, apres le lancement (jamais pendant).
+            try? await Task.sleep(for: .seconds(4))
+            await SpotlightToolIndexer.indexIfNeeded()
         }
     }
 
@@ -201,59 +291,53 @@ struct MainTabView: View {
                     Color.clear.frame(height: AnyView.floatingBarSpace)
                 }
             FloatingTabBar(
-                selected: $tab,
-                onOpenAssistant: openAIAssistant
+                selected: Binding(get: { tab }, set: { select($0) }),
+                onCapture: { present(sheet: .capture("")) },
+                onOpenAssistant: { openCoach(prefill: nil) }
             )
         }
         .ignoresSafeArea(.container, edges: .bottom)
-        .fullScreenCover(isPresented: $showAIAssistant) {
-            AIAssistantView(prefill: aiPrefill)
-        }
-        // Outil ouvert par une notification (rappel Trilingo...).
-        .sheet(item: $routedTool) { t in NavigationStack { t.dest() } }
         #if DEBUG
         .onAppear {
-            if let t = Self.shotTab { tab = t }
+            if let t = Self.shotTab { tabRaw = t.rawValue }
             // `-shotCoach` ouvre le coach pour la capture de la fiche App Store.
-            if DebugLaunchFlags.has("-shotCoach") { showAIAssistant = true }
+            if DebugLaunchFlags.has("-shotCoach") { openCoach(prefill: nil) }
         }
         #endif
+        // Ces deux avis restent ecoutes (assistant, bilan mensuel...) mais passent par
+        // la meme logique que les liens. Le bureau les ecoute lui-meme.
         .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenAIChat)) { note in
-            aiPrefill = note.userInfo?["prefill"] as? String
-            openAIAssistant()
+            guard (note.object as AnyObject?) !== router else { return }
+            handle(.coach(prefill: note.userInfo?["prefill"] as? String))
         }
-        .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenModule)) { notif in
-            if let module = notif.userInfo?["module"] as? String,
-               let cat = AppCategory(rawValue: module) {
-                let tool = (notif.userInfo?["tool"] as? String).flatMap { ToolRoute.tool($0, in: cat) }
-                let isAIOpen = showAIAssistant
-                showAIAssistant = false
-                // Attendre la fin de l'animation de dismiss du fullScreenCover
-                // avant de modifier la navigation, sinon conflit d'état UIKit/SwiftUI.
-                let delay: TimeInterval = isAIOpen ? 0.35 : 0
-                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                    tab = .categories
-                    catPath = [cat]
-                    if let tool { routedTool = tool }
-                }
+        .onReceive(NotificationCenter.default.publisher(for: .lifeOSOpenModule)) { note in
+            guard (note.object as AnyObject?) !== router,
+                  let module = note.userInfo?["module"] as? String, let cat = AppCategory(rawValue: module) else { return }
+            if let name = (note.userInfo?["tool"] as? String).flatMap({ DeepLink.toolName(matching: $0, in: cat) }) {
+                handle(.tool(cat, name))
+            } else {
+                handle(.space(cat))
             }
         }
     }
 
-    private func openAIAssistant() {
-        tutorialDone = true
-        // L'historique du chat est local : on ouvre toujours, l'état offline
-        // est géré à l'intérieur de la vue (bandeau), pas en barrage à l'entrée.
-        showAIAssistant = true
+    // MARK: Onglets
+
+    private func select(_ t: AppTab) {
+        if t == tab {
+            // Second appui sur Mes espaces : retour a la liste des espaces.
+            if t == .spaces, !catPath.isEmpty { catPath = [] }
+            return
+        }
+        if t == .spaces, openFavoriteDirectly, catPath.isEmpty { catPath = [favorite] }
+        tabRaw = t.rawValue
     }
 
-    private var currentTabIndex: Int {
-        switch tab {
-        case .home: return 0
-        case .wakeup: return 1
-        case .categories: return 2
-        case .profile: return 3
-        }
+    private func openCoach(prefill: String?) {
+        tutorialDone = true
+        // L'historique du chat est local : on ouvre toujours, l'etat hors ligne
+        // est gere a l'interieur de la vue (bandeau), pas en barrage a l'entree.
+        present(cover: .coach(prefill))
     }
 
     @ViewBuilder private var content: some View {
@@ -261,56 +345,218 @@ struct MainTabView: View {
             let w = geo.size.width
 
             ZStack {
-                HabitWidgetSyncer()
-                FitnessWidgetSyncer()
-                MoodWidgetSyncer()
-                SleepWidgetSyncer()
-                NutritionTodaySyncer()
-                MemoryWidgetSyncer()
-                WidgetDataSyncer()
                 ThemedBubbleBackground(theme: theme)
                     .ignoresSafeArea()
 
-                tabPane(ShortcutsHomeView(), index: 0, screenWidth: w)
-                tabPane(secondPane, index: 1, screenWidth: w)
-                tabPane(
-                    NavigationStack(path: $catPath) {
-                        BubbleCategoriesView(onSelect: { title in
-                            if let cat = AppCategory(bubbleTitle: title) { catPath.append(cat) }
-                        })
-                        .toolbar(.hidden, for: .navigationBar)
-                        .navigationDestination(for: AppCategory.self) { $0.destination }
-                    },
-                    index: 2,
-                    screenWidth: w
-                )
-                tabPane(ProfileView(), index: 3, screenWidth: w)
+                // Construction paresseuse : seul l'onglet visible et ceux deja visites
+                // existent. Un onglet visite garde son defilement et sa navigation.
+                if visits.shouldBuild(.home, current: tab) {
+                    tabPane(ShortcutsHomeView(), tab: .home, screenWidth: w)
+                }
+                if visits.shouldBuild(.spaces, current: tab) {
+                    tabPane(spacesStack, tab: .spaces, screenWidth: w)
+                }
+                if visits.shouldBuild(.profile, current: tab) {
+                    tabPane(ProfileView(), tab: .profile, screenWidth: w)
+                }
             }
             .animation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.82), value: tab)
         }
     }
 
-    /// Deuxieme onglet choisi dans le Profil : le Reveil ou le hub d'une categorie.
-    /// Le Reveil reste ouvrable depuis Sommeil quand il n'est plus un onglet.
-    @ViewBuilder private var secondPane: some View {
-        if let cat = (SecondTab(rawValue: secondTabRaw) ?? .wakeup).category {
-            NavigationStack { cat.destination }
-        } else {
-            WakeUpView()
+    /// Mes espaces : favori, priorites, tous les espaces. Le Reveil reste dans Sommeil.
+    private var spacesStack: some View {
+        NavigationStack(path: $catPath) {
+            Group {
+                if classicBubbles {
+                    BubbleCategoriesView(onSelect: { title in
+                        if let cat = AppCategory(bubbleTitle: title) { catPath.append(cat) }
+                    }, onShowSpaces: { classicBubbles = false })
+                } else {
+                    SpacesView(onOpen: { catPath.append($0) },
+                               onSearch: { present(sheet: .search("")) })
+                }
+            }
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(for: AppCategory.self) { $0.destination }
         }
     }
 
-    /// Onglet vivant : glisse horizontalement vers la section choisie avec animation fluide
-    private func tabPane(_ view: some View, index: Int, screenWidth: CGFloat) -> some View {
-        let isCurrent = currentTabIndex == index
-        let isAdjacent = abs(currentTabIndex - index) <= 1
-        let offset = CGFloat(index - currentTabIndex) * screenWidth
+    /// Onglet vivant : glisse horizontalement vers la section choisie.
+    private func tabPane(_ view: some View, tab pane: AppTab, screenWidth: CGFloat) -> some View {
+        let current = tab.paneIndex
+        let index = pane.paneIndex
+        let isCurrent = current == index
+        let isAdjacent = abs(current - index) <= 1
+        let offset = CGFloat(index - current) * screenWidth
 
         return view
             .offset(x: offset)
             .scaleEffect(isCurrent ? 1.0 : (isAdjacent ? 0.95 : 0.90))
             .opacity(isCurrent ? 1 : (isAdjacent ? 0.4 : 0))
             .allowsHitTesting(isCurrent)
+            .accessibilityHidden(!isCurrent)
+    }
+
+    // MARK: Feuilles
+
+    @ViewBuilder private func sheetContent(_ s: MainSheet) -> some View {
+        switch s {
+        case .tool(_, let t): NavigationStack { t.dest() }
+        case .capture(let text): UniversalCaptureSheet(prefill: text)
+        case .search(let q): GlobalSearchView(initialQuery: q)
+        case .task(let t): TodoEditor(task: t)
+        case .record(let ref): SearchRecordDestination(ref: ref)
+        case .photoStudio(let id): NavigationStack { PhotoWidgetStudioView(configID: id) }
+        }
+    }
+
+    @ViewBuilder private func coverContent(_ c: MainCover) -> some View {
+        switch c {
+        case .coach(let prefill): AIAssistantView(prefill: prefill)
+        case .tool(let t): t.dest()
+        }
+    }
+
+    /// Une seule presentation a la fois : si une feuille est ouverte, on la ferme
+    /// puis on ouvre la nouvelle apres l'animation (sinon conflit UIKit/SwiftUI).
+    private func present(sheet newSheet: MainSheet? = nil, cover newCover: MainCover? = nil) {
+        let busy = sheet != nil || cover != nil
+        let apply = {
+            if let newSheet { sheet = newSheet }
+            if let newCover { cover = newCover }
+        }
+        guard busy else { apply(); return }
+        sheet = nil
+        cover = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { apply() }
+    }
+
+    // MARK: Restauration et liens
+
+    private func restoreOnce() {
+        guard !restored else { return }
+        restored = true
+        visits.visit(tab)
+        if catPath.isEmpty, !spacesPathRaw.isEmpty {
+            catPath = SpacesPreferences.parse(spacesPathRaw)
+        }
+        // Outil ouvert en feuille avant la fermeture : rouvert, sauf si un lien attend
+        // (le lien gagne) ou si l'outil est plein ecran (camera, minuteur : pas au lancement).
+        if router.queue.isEmpty, sheet == nil, cover == nil {
+            let parts = openToolRaw.split(separator: "|", maxSplits: 1).map(String.init)
+            if parts.count == 2, let cat = AppCategory(rawValue: parts[0]),
+               let tool = DeepLink.resolveTool(cat, parts[1]), !tool.fullScreen {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    if sheet == nil && cover == nil { sheet = .tool(cat, tool) }
+                }
+            }
+        }
+    }
+
+    /// Vide la file au tour suivant (jamais pendant une mise a jour de vue). Au
+    /// premier montage, laisse la fenetre s'installer avant de presenter.
+    private func scheduleDrain() {
+        let delay: TimeInterval = restored ? 0 : 0.4
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            for link in router.drain() { handle(link) }
+        }
+    }
+
+    private func handle(_ link: DeepLink) {
+        guard isMobileLayout else { handleDesktop(link); return }
+        switch link {
+        case .briefing, .scanFood, .tabata:
+            router.send(link)                    // presente par LifeOSApp
+        case .today:
+            present(); tabRaw = AppTab.home.rawValue
+        case .spaces:
+            present(); tabRaw = AppTab.spaces.rawValue; catPath = []
+        case .space(let cat):
+            present(); tabRaw = AppTab.spaces.rawValue; catPath = [cat]
+        case .tool(let cat, let name):
+            guard let tool = DeepLink.resolveTool(cat, name) else { handle(.space(cat)); return }
+            if tool.fullScreen {
+                present(cover: .tool(tool))
+            } else {
+                tabRaw = AppTab.spaces.rawValue
+                catPath = [cat]
+                present(sheet: .tool(cat, tool))
+            }
+        case .coach(let prefill):
+            openCoach(prefill: prefill)
+        case .capture(let text):
+            present(sheet: .capture(text))
+        case .search(let q):
+            present(sheet: .search(q))
+        case .task(let uid):
+            if let t = fetchTask(uid) { present(sheet: .task(t)) }
+            else { handle(.tool(DeepLink.tasksTool.0, DeepLink.tasksTool.1)) }
+        case .stocks(let symbol, let list):
+            router.stockFocus = StockFocus(symbol: symbol, list: list)
+            handle(.tool(DeepLink.stocksTool.0, DeepLink.stocksTool.1))
+        case .photoWidget(let id):
+            present(sheet: .photoStudio(id))
+        case .record(let ref):
+            present(sheet: .record(ref))
+        }
+    }
+
+    /// Bureau : la barre laterale gere elle-meme espaces, outils et coach (avis
+    /// envoyes par le routeur, que le telephone ignore).
+    private func handleDesktop(_ link: DeepLink) {
+        func post(_ name: Notification.Name, _ info: [String: String]) {
+            NotificationCenter.default.post(name: name, object: router, userInfo: info)
+        }
+        switch link {
+        case .briefing, .scanFood, .tabata: router.send(link)
+        case .today, .spaces: break
+        case .space(let cat): post(.lifeOSOpenModule, ["module": cat.rawValue])
+        case .tool(let cat, let name): post(.lifeOSOpenModule, ["module": cat.rawValue, "tool": name])
+        case .coach(let prefill): post(.lifeOSOpenAIChat, prefill.map { ["prefill": $0] } ?? [:])
+        case .capture(let text): present(sheet: .capture(text))
+        case .search(let q): present(sheet: .search(q))
+        case .task(let uid):
+            if let t = fetchTask(uid) { present(sheet: .task(t)) }
+            else { post(.lifeOSOpenModule, ["module": DeepLink.tasksTool.0.rawValue, "tool": DeepLink.tasksTool.1]) }
+        case .stocks(let symbol, let list):
+            router.stockFocus = StockFocus(symbol: symbol, list: list)
+            post(.lifeOSOpenModule, ["module": DeepLink.stocksTool.0.rawValue, "tool": DeepLink.stocksTool.1])
+        case .photoWidget(let id): present(sheet: .photoStudio(id))
+        case .record(let ref): present(sheet: .record(ref))
+        }
+    }
+
+    private func fetchTask(_ uid: String) -> TodoItem? {
+        var d = FetchDescriptor<TodoItem>(predicate: #Predicate { $0.uid == uid })
+        d.fetchLimit = 1
+        do { return try ctx.fetch(d).first }
+        catch {
+            AppLog.data.error("tache du lien introuvable: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
+    }
+}
+
+// MARK: - Synchroniseurs des widgets (montes une fois)
+
+/// Vue vide qui porte les 7 synchroniseurs. Equatable sans etat : SwiftUI ne la
+/// reevalue jamais quand l'onglet ou la mise en page change.
+private struct WidgetSyncersHost: View, Equatable {
+    static func == (_: Self, _: Self) -> Bool { true }
+    var body: some View {
+        ZStack {
+            HabitWidgetSyncer()
+            FitnessWidgetSyncer()
+            MoodWidgetSyncer()
+            SleepWidgetSyncer()
+            NutritionTodaySyncer()
+            MemoryWidgetSyncer()
+            WidgetDataSyncer()
+        }
+        .frame(width: 0, height: 0)
+        .accessibilityHidden(true)
+        .allowsHitTesting(false)
     }
 }
 
@@ -400,7 +646,7 @@ private struct FitnessWidgetSyncer: View {
     }
 }
 
-// MARK: - Barre flottante : [2 onglets] [assistant] [2 onglets]
+// MARK: - Barre flottante : [Aujourd'hui] [Mes espaces] [+] [Coach] [Profil]
 
 // MARK: - Géométrie de la barre, adaptée à la taille de l'écran
 //
@@ -432,8 +678,11 @@ struct TabBarMetrics {
     }
 }
 
+/// Barre du bas : [Aujourd'hui] [Mes espaces] [ + ] [Coach] [Profil].
+/// Le + (ajout rapide) est au centre ; le coach garde sa place dans l'ilot.
 struct FloatingTabBar: View {
     @Binding var selected: AppTab
+    var onCapture: () -> Void = {}
     var onOpenAssistant: () -> Void = {}
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -441,11 +690,17 @@ struct FloatingTabBar: View {
     @State private var showServerConfig = false
     @Namespace private var ns
     @Environment(\.colorScheme) private var scheme
-    @AppStorage(AppStorageKeys.appTheme) private var themeRaw = "classic"
-    /// Lu ici pour redessiner le libelle et l'icone du 2e onglet quand il change.
-    @AppStorage(AppStorageKeys.secondTab) private var secondTabRaw = SecondTab.wakeup.rawValue
 
-    private let tabs: [AppTab] = [.home, .wakeup, .categories, .profile]
+    /// Les 5 cases de l'ilot, dans l'ordre affiche.
+    enum Slot: Equatable { case tab(AppTab), capture, coach }
+    static let slots: [Slot] = [.tab(.home), .tab(.spaces), .capture, .coach, .tab(.profile)]
+
+    /// Case sous le doigt pour une position x dans la barre (glisser pour changer d'onglet).
+    static func slot(atX x: CGFloat, usefulWidth: CGFloat) -> Slot? {
+        guard usefulWidth > 0 else { return nil }
+        let idx = max(0, min(Int(x / (usefulWidth / CGFloat(slots.count))), slots.count - 1))
+        return slots[idx]
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -454,10 +709,13 @@ struct FloatingTabBar: View {
             let barWidth = geo.size.width - (horizontalMargin * 2)
 
             HStack(spacing: 4) {
-                ForEach(tabs) { t in
-                    tabBtn(t, m: m)
+                ForEach(Array(Self.slots.enumerated()), id: \.offset) { _, slot in
+                    switch slot {
+                    case .tab(let t): tabBtn(t, m: m)
+                    case .capture:    captureBtn(m: m)
+                    case .coach:      assistantBtn(m: m)
+                    }
                 }
-                assistantBtn(m: m)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 6)
@@ -466,38 +724,23 @@ struct FloatingTabBar: View {
             .padding(.horizontal, horizontalMargin)
             .padding(.bottom, m.margin + 4)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-            .animation(.spring(response: 0.32, dampingFraction: 0.76), value: selected)
-            .animation(.easeInOut(duration: 0.3), value: serverStatus.isOnline)
+            .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.76), value: selected)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: serverStatus.isOnline)
             .simultaneousGesture(
                 DragGesture(minimumDistance: 4, coordinateSpace: .local)
                     .onChanged { value in
-                        let usefulWidth = barWidth - 16
-                        guard usefulWidth > 0 else { return }
-                        let x = value.location.x - 8
-                        let segW = usefulWidth / 5.0
-                        let rawIndex = Int(x / segW)
-                        let idx = max(0, min(rawIndex, 4))
-                        if idx < tabs.count {
-                            let target = tabs[idx]
-                            if selected != target {
-                                Haptics.soft()
-                                withAnimation(reduceMotion ? nil : .spring(duration: 0.28, bounce: 0.28)) {
-                                    selected = target
-                                }
-                            }
+                        guard case .tab(let target)? = Self.slot(atX: value.location.x - 8, usefulWidth: barWidth - 16),
+                              selected != target else { return }
+                        Haptics.soft()
+                        withAnimation(reduceMotion ? nil : .spring(duration: 0.28, bounce: 0.28)) {
+                            selected = target
                         }
                     }
                     .onEnded { value in
-                        let usefulWidth = barWidth - 16
-                        guard usefulWidth > 0 else { return }
-                        let x = value.location.x - 8
-                        let segW = usefulWidth / 5.0
-                        let rawIndex = Int(x / segW)
-                        let idx = max(0, min(rawIndex, 4))
-                        if idx == 4 {
-                            Haptics.tap()
-                            serverStatus.pingNow()
-                            onOpenAssistant()
+                        switch Self.slot(atX: value.location.x - 8, usefulWidth: barWidth - 16) {
+                        case .capture?: Haptics.tap(); onCapture()
+                        case .coach?: Haptics.tap(); serverStatus.pingNow(); onOpenAssistant()
+                        default: break
                         }
                     }
             )
@@ -514,7 +757,27 @@ struct FloatingTabBar: View {
         #endif
     }
 
-    /// L'assistant devient le 5e onglet intégré dans l'îlot
+    /// Ajout rapide : tache, depense ou note, avec apercu avant d'enregistrer.
+    private func captureBtn(m: TabBarMetrics) -> some View {
+        Button {
+            Haptics.medium()
+            onCapture()
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: m.icon + 2, weight: .bold))
+                .foregroundStyle(Color.primary)
+                .frame(width: m.height - 8, height: m.height - 8)
+                .raisedSurface(Circle(), .raised)
+                .frame(maxWidth: .infinity)
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(LifeOSPressStyle(scale: 0.9, opacity: 0.85))
+        .accessibilityLabel("Ajouter")
+        .accessibilityHint("Une tâche, une dépense ou une note")
+    }
+
+    /// Le coach, toujours a un appui.
     private func assistantBtn(m: TabBarMetrics) -> some View {
         Button {
             Haptics.tap()
@@ -534,7 +797,7 @@ struct FloatingTabBar: View {
                             .transition(.scale.combined(with: .opacity))
                     }
                 }
-                Text("Assistant")
+                Text("Coach")
                     .font(AppFont.body(size: m.label, weight: .medium))
                     .foregroundStyle(Color.primary.opacity(0.60))
                     .lineLimit(1).minimumScaleFactor(0.85)
@@ -544,7 +807,7 @@ struct FloatingTabBar: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(LifeOSPressStyle(scale: 0.92, opacity: 0.82))
-        .accessibilityLabel("Assistant")
+        .accessibilityLabel("Ton coach")
     }
 
     private func tabBtn(_ t: AppTab, m: TabBarMetrics) -> some View {
@@ -569,7 +832,7 @@ struct FloatingTabBar: View {
                         .symbolEffect(.bounce, value: isOn)
                     Text(t.label)
                         .font(AppFont.body(size: m.label, weight: isOn ? .bold : .medium))
-                        .lineLimit(1).minimumScaleFactor(0.85)
+                        .lineLimit(1).minimumScaleFactor(0.7)
                 }
                 .padding(.vertical, 4)
                 .foregroundStyle(isOn ? Color.primary : Color.primary.opacity(0.55))

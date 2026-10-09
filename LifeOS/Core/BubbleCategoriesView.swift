@@ -168,12 +168,14 @@ enum CatLayout: String, CaseIterable {
 
 struct BubbleCategoriesView: View {
     var onSelect: (String) -> Void = { print("tapped \($0)") }
+    /// Retour a la vue Mes espaces (cette vue en bulles est l'affichage classique).
+    var onShowSpaces: (() -> Void)? = nil
     var style: BubbleStyle = BubbleStyle()
 
     @AppStorage(AppStorageKeys.bubbleWeights) private var weightsRaw = ""   // compteur d'usage  "titre:count,…"
     @AppStorage(AppStorageKeys.hiddenCats)    private var hiddenRaw = ""    // bulles retirées (par titre)
     @AppStorage(AppStorageKeys.catLayout)     private var layoutRaw = "organic"
-    @AppStorage(AppStorageKeys.appTheme)      private var appThemeRaw = "classic"
+    @AppStorage(AppStorageKeys.appTheme)      private var appThemeRaw = AppTheme.defaultRaw
     @AppStorage(AppStorageKeys.catSizes)      private var catSizesRaw = ""    // "titre:s|m|l,…" — taille par catégorie
     @AppStorage(AppStorageKeys.catOffsets)    private var catOffsetsRaw = ""  // "titre:dx:dy,…" — (legacy, plus utilisé)
     @AppStorage(AppStorageKeys.catAnchors)    private var catAnchorsRaw = ""  // "titre:fx:fy,…" — position ancrée (fraction)
@@ -193,7 +195,7 @@ struct BubbleCategoriesView: View {
     @Environment(\.colorScheme) private var scheme
 
     private var layout: CatLayout { CatLayout(rawValue: layoutRaw) ?? .organic }
-    private var theme: AppTheme { AppTheme(rawValue: appThemeRaw) ?? .classic }
+    private var theme: AppTheme { AppTheme.resolved(appThemeRaw) }
     // Taille INDIVIDUELLE par catégorie. 3 classes exactes (petite/moyenne/grande).
     // Défaut = la classe codée dans sizeMul (1.5 grande / 1.0 moyenne / 0.7 petite) ;
     // l'appui long écrit un override qui prime.
@@ -304,8 +306,9 @@ struct BubbleCategoriesView: View {
         .overlay(alignment: .top) { if !theme.isModern { bubbleSearchButton } }
         .overlay(alignment: .topTrailing) { if !theme.isModern { editButton } }
         .overlay(alignment: .bottomTrailing) { if !theme.isModern && editing && (layout == .organic || layout == .tidy) { addButton } }
+        .overlay(alignment: .bottomLeading) { if !theme.isModern, onShowSpaces != nil { spacesButton } }
         .sheet(isPresented: $showAdd) { addSheet }
-        .sheet(isPresented: $showSearch) { ToolSearchView() }
+        .sheet(isPresented: $showSearch) { GlobalSearchView() }
         .sheet(isPresented: $showOrderSheet) { CategoryOrderSheet() }
         .sheet(item: $colorEditTarget) { target in
             CategoryColorSheet(
@@ -386,6 +389,8 @@ struct BubbleCategoriesView: View {
 
             Spacer()
 
+            if onShowSpaces != nil { spacesButton }
+
             Button {
                 showOrderSheet = true
             } label: {
@@ -421,6 +426,21 @@ struct BubbleCategoriesView: View {
         }
     }
 
+    /// Retour a Mes espaces (favori, priorites, recherche).
+    private var spacesButton: some View {
+        Button { Haptics.tap(); onShowSpaces?() } label: {
+            Label("Espaces", systemImage: "square.grid.2x2")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 12)
+                .frame(minHeight: 44)
+                .raisedSurface(Capsule())
+        }
+        .buttonStyle(LifeOSPressStyle(scale: 0.94))
+        .padding(theme.isModern ? 0 : 16)
+        .accessibilityLabel("Revenir à Mes espaces")
+    }
+
     // Bouton loupe pour les thèmes à bulles (pas de header défilant).
     private var bubbleSearchButton: some View {
         Button { Haptics.tap(); showSearch = true } label: {
@@ -438,7 +458,7 @@ struct BubbleCategoriesView: View {
         Button { Haptics.tap(); showSearch = true } label: {
             HStack(spacing: 9) {
                 Image(systemName: "magnifyingglass").font(.system(size: 15, weight: .semibold))
-                Text("Rechercher un outil").font(.system(size: 15, weight: .medium))
+                Text("Outil, tâche, note, contact…").font(.system(size: 15, weight: .medium))
                 Spacer()
             }
             .foregroundStyle(.secondary)
@@ -1061,82 +1081,3 @@ extension AppCategory {
     BubbleCategoriesView()
 }
 
-// MARK: - Recherche globale d'outils (tous les pôles)
-
-struct ToolSearchView: View {
-    @AppStorage(ToolNames.storageKey) private var toolNamesRaw = ""
-    @Environment(\.dismiss) private var dismiss
-    @State private var query = ""
-    @State private var coverTool: CategoryTool?
-
-    private struct Hit: Identifiable { let id = UUID(); let cat: AppCategory; let tool: CategoryTool }
-
-    private var allTools: [Hit] {
-        AppCategory.allCases.flatMap { c in c.tools.map { Hit(cat: c, tool: $0) } }
-    }
-
-    private var results: [Hit] {
-        let q = query.folding(options: .diacriticInsensitive, locale: .current)
-            .trimmingCharacters(in: .whitespaces).lowercased()
-        guard !q.isEmpty else { return [] }
-        func norm(_ s: String) -> String {
-            s.folding(options: .diacriticInsensitive, locale: .current).lowercased()
-        }
-        return allTools.filter {
-            norm($0.tool.title).contains(q) || norm($0.tool.defaultTitle).contains(q) || norm($0.tool.alias).contains(q) || norm($0.tool.subtitle).contains(q) || norm($0.cat.title).contains(q)
-        }
-    }
-
-    var body: some View {
-        NavigationStack {
-            Group {
-                if query.trimmingCharacters(in: .whitespaces).isEmpty {
-                    ContentUnavailableView("Rechercher un outil",
-                                           systemImage: "magnifyingglass",
-                                           description: Text("Tabata, hydratation, budget, sommeil, CV… parmi tous les pôles."))
-                } else if results.isEmpty {
-                    ContentUnavailableView.search(text: query)
-                } else {
-                    List(results) { hit in row(hit) }
-                        .listStyle(.plain)
-                }
-            }
-            .navigationTitle("Rechercher")
-            .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always),
-                        prompt: "Nom d'un outil…")
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Fermer") { dismiss() } } }
-            .fullScreenCover(item: $coverTool) { $0.dest() }
-        }
-    }
-
-    @ViewBuilder private func row(_ hit: Hit) -> some View {
-        if hit.tool.fullScreen {
-            Button { Haptics.tap(); coverTool = hit.tool } label: { rowLabel(hit) }
-                .buttonStyle(.plain)
-        } else {
-            NavigationLink { hit.tool.dest() } label: { rowLabel(hit) }
-        }
-    }
-
-    private func rowLabel(_ hit: Hit) -> some View {
-        HStack(spacing: 12) {
-            IconBadge(icon: hit.tool.icon, tint: hit.cat.tint, size: 40)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(hit.tool.title).font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Theme.textPrimary).lineLimit(1)
-                Text(hit.cat.title.uppercased()).font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Theme.textSecondary).lineLimit(1)
-            }
-            Spacer(minLength: 4)
-            // Les outils poussés ont déjà le chevron natif de la List ; on n'ajoute
-            // un indicateur QUE pour les outils plein écran (présentés en cover).
-            if hit.tool.fullScreen {
-                Image(systemName: "arrow.up.forward.square")
-                    .font(.system(size: 13, weight: .bold)).foregroundStyle(Theme.textSecondary.opacity(0.6))
-            }
-        }
-        .padding(.vertical, 4)
-        .contentShape(Rectangle())
-    }
-}

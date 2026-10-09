@@ -174,6 +174,9 @@ struct DailyScoreRing: View {
     @AppStorage(AppStorageKeys.sleepGoalHours) private var sleepGoalHours = 8.0
     @AppStorage(AppStorageKeys.hiddenGoalIDsRaw) private var hiddenGoalIDsRaw = ""
 
+    // Lot 8 : les 9 lectures etaient sans filtre (tables entieres a chaque rendu de
+    // l'accueil). Elles sont limitees aux 7 derniers jours, ce que montre la bande de
+    // la semaine (lundi est au plus 6 jours avant aujourd'hui).
     @Query private var foods: [FoodEntry]
     @Query private var waters: [WaterEntry]
     @Query private var habits: [Habit]
@@ -183,6 +186,30 @@ struct DailyScoreRing: View {
     @Query private var moods: [MoodEntry]
     @Query private var dreams: [DreamEntry]
     @Query private var nights: [SleepNight]
+
+    /// Nombre de jours lus (aujourd'hui compris).
+    static let windowDays = 7
+    private let windowStart: Date
+
+    init(now: Date = .now) {
+        let cal = Calendar.current
+        let start = cal.date(byAdding: .day, value: -(Self.windowDays - 1), to: cal.startOfDay(for: now)) ?? now
+        windowStart = start
+        let past = Date.distantPast
+        _foods = Query(filter: #Predicate<FoodEntry> { $0.date >= start })
+        _waters = Query(filter: #Predicate<WaterEntry> { $0.date >= start })
+        // Habitudes : petite table, seules les archivees sont ecartees ; leurs
+        // validations sont lues par relation.
+        _habits = Query(filter: #Predicate<Habit> { $0.isArchived == false })
+        _steps = Query(filter: #Predicate<StepEntry> { $0.day >= start })
+        // Taches de la fenetre, plus les taches ouvertes (une tache en retard compte
+        // aujourd'hui, quelle que soit sa date).
+        _todos = Query(filter: #Predicate<TodoItem> { $0.done == false || ($0.due ?? past) >= start })
+        _workouts = Query(filter: #Predicate<WorkoutSet> { $0.date >= start })
+        _moods = Query(filter: #Predicate<MoodEntry> { $0.date >= start })
+        _dreams = Query(filter: #Predicate<DreamEntry> { $0.date >= start })
+        _nights = Query(filter: #Predicate<SleepNight> { $0.date >= start })
+    }
 
     @State private var selected = Calendar.current.startOfDay(for: .now)
     @State private var showDetail = false
@@ -504,25 +531,29 @@ struct DailyScoreRing: View {
 
     // Série : jours consécutifs (jusqu'à aujourd'hui) avec un score « bonne journée ».
     // La journée en cours ne casse pas la série tant qu'elle n'est pas finie.
-    private func computeStreak(threshold: Int = 50) -> Int {
+    /// Serie comptee dans la fenetre lue. `reachedWindow` = la serie remonte plus loin
+    /// que les jours lus : on affiche « 7+ » plutot qu'un chiffre faux.
+    private func computeStreak(threshold: Int = 50) -> (days: Int, reachedWindow: Bool) {
         let cal = Calendar.current
         var day = cal.startOfDay(for: .now)
         if score(day) < threshold { day = cal.date(byAdding: .day, value: -1, to: day) ?? day }
         var n = 0
-        while score(day) >= threshold, n < 400 {
+        while day >= windowStart, score(day) >= threshold {
             n += 1
             day = cal.date(byAdding: .day, value: -1, to: day) ?? day
         }
-        return n
+        return (n, n > 0 && day < windowStart)
     }
 
     private var streakPill: some View {
-        let n = computeStreak()
+        let s = computeStreak()
+        let n = s.days
         let on = n > 0
+        let count = s.reachedWindow ? "\(n)+" : "\(n)"
         return HStack(spacing: 6) {
             Image(systemName: "flame.fill").font(.system(size: 13, weight: .bold))
                 .foregroundStyle(on ? Color.primary : Color.secondary.opacity(0.60))
-            Text(on ? "\(n) jour\(n > 1 ? "s" : "") de série" : "Démarre ta série aujourd'hui")
+            Text(on ? "\(count) jour\(n > 1 ? "s" : "") de série" : "Démarre ta série aujourd'hui")
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(on ? Color.primary : Color.secondary)
         }

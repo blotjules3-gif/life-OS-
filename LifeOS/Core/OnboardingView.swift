@@ -81,6 +81,8 @@ struct OnboardingView: View {
     @State private var lifeProfile: LifeProfile?
     @State private var goals: Set<OnboardingGoal> = []
     @State private var interests: Set<AppCategory> = []
+    /// Lot 8 : jusqu'a 3 domaines prioritaires, choisis parmi les interets.
+    @State private var priorities: [AppCategory] = []
     @State private var wakeHour = 7
     @State private var wakeMinute = 0
     @State private var showNotifPrePrompt = false
@@ -249,7 +251,7 @@ struct OnboardingView: View {
                         OnboardingGoalStep(selected: $goals) { advance(to: 5) }
                             .transition(stepTransition)
                     case 5:
-                        OnboardingInterests(selected: $interests) { advance(to: 6) }
+                        OnboardingInterests(selected: $interests, priorities: $priorities) { advance(to: 6) }
                             .transition(stepTransition)
                     case 6:
                         OnboardingModuleSetup(modules: Array(interests)) { moduleAnswers in
@@ -276,6 +278,11 @@ struct OnboardingView: View {
                             recommendations: recommendations,
                             onDone: { finalModules in
                                 recommendedModulesRaw = finalModules.map { $0.rawValue }.joined(separator: ",")
+                                // Domaines prioritaires : le choix explicite, sinon les 3 premiers
+                                // modules retenus (jamais une liste vide par oubli).
+                                PriorityDomains.save(priorities.isEmpty
+                                                     ? PriorityDomains.seed(recommendedRaw: recommendedModulesRaw)
+                                                     : priorities)
                                 onboardingGoalsRaw = Array(goals).map { $0.rawValue }.joined(separator: ",")
                                 if !finalModules.isEmpty { homeShortcuts = buildShortcuts(from: finalModules) }
                                 applyGenderDefaults(gender: savedGender)
@@ -803,7 +810,9 @@ struct GoalCard: View {
 
 struct OnboardingInterests: View {
     @Binding var selected: Set<AppCategory>
+    @Binding var priorities: [AppCategory]
     let onNext: () -> Void
+    @State private var refusedPriority = false
     private let cols = [
         GridItem(.flexible(), spacing: 10),
         GridItem(.flexible(), spacing: 10),
@@ -829,6 +838,7 @@ struct OnboardingInterests: View {
                         InterestChip(category: cat, isSelected: selected.contains(cat)) {
                             if selected.contains(cat) {
                                 selected.remove(cat)
+                                priorities.removeAll { $0 == cat }
                             } else {
                                 selected.insert(cat)
                             }
@@ -838,6 +848,8 @@ struct OnboardingInterests: View {
                 }
                 .padding(.horizontal, 22)
                 .padding(.bottom, 12)
+
+                if !selected.isEmpty { prioritiesPicker }
             }
 
             OnboardingButton(
@@ -849,6 +861,50 @@ struct OnboardingInterests: View {
             .padding(.bottom, 52)
             .animation(.spring(duration: 0.2), value: selected.count)
         }
+    }
+
+    /// Parmi les interets, les 3 domaines autour desquels l'accueil s'organise.
+    private var prioritiesPicker: some View {
+        let ordered = AppCategory.allCases.filter { selected.contains($0) }
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Tes 3 priorités")
+                    .font(.headline)
+                Spacer()
+                Text("\(priorities.count)/\(PriorityDomains.maxCount)")
+                    .font(.subheadline.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel("\(priorities.count) sur 3 choisies")
+            }
+            Text(refusedPriority
+                 ? "Tu as déjà 3 priorités. Retire-en une pour en choisir une autre."
+                 : "Touche l'étoile des domaines qui comptent le plus. L'accueil sera organisé autour d'eux, modifiable ensuite dans le Profil.")
+                .font(.caption)
+                .foregroundStyle(refusedPriority ? Theme.warning : .secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            FlowLayout(spacing: 8, lineSpacing: 8) {
+              ForEach(ordered) { cat in
+                let on = priorities.contains(cat)
+                Button {
+                    let r = PriorityDomains.toggle(cat, in: priorities)
+                    refusedPriority = r.refused
+                    if r.refused { Haptics.warning() } else { priorities = r.list; Haptics.tap() }
+                } label: {
+                    Label(PriorityDomains.shortTitle(cat), systemImage: on ? "star.fill" : "star")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(on ? cat.tint : .primary)
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 44)
+                        .glassControl(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(cat.title)
+                .accessibilityValue(on ? "Prioritaire" : "Non prioritaire")
+              }
+            }
+        }
+        .padding(.horizontal, 22)
+        .padding(.bottom, 16)
     }
 }
 

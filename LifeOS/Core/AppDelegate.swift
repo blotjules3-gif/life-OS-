@@ -170,13 +170,9 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             } else {
                 prefill = "Rappel : \(title). \(body). J'en fais quoi ?"
             }
-            await MainActor.run {
-                NotificationCenter.default.post(
-                    name: .lifeOSOpenAIChat,
-                    object: nil,
-                    userInfo: ["prefill": prefill]
-                )
-            }
+            // Par le routeur : a froid, l'interface n'est pas encore montee et un
+            // avis NotificationCenter serait perdu. Le routeur le garde en file.
+            await MainActor.run { DeepLinkRouter.shared.send(.coach(prefill: prefill)) }
         }
 
         // Réponse à une notif de CONFIRMATION (compléments, salle, etc.)
@@ -184,11 +180,10 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
 
         // Rappel de cours Trilingo : ouvre la leçon elle-même, pas seulement l'accueil
         // (audit du 1er oct. : le toucher n'ouvrait rien).
-        if let route = content.userInfo["route"] as? String, let target = ToolRoute.target(for: route) {
-            await MainActor.run {
-                NotificationCenter.default.post(name: .lifeOSOpenModule, object: nil,
-                                                userInfo: ["module": target.category.rawValue, "tool": target.tool])
-            }
+        // `route` accepte un nom d'outil connu ("trilingo") ou un lien complet
+        // ("lifeos://water"). Passe par la file du routeur : rien n'est perdu a froid.
+        if let route = content.userInfo["route"] as? String, let link = ToolRoute.link(for: route) {
+            await MainActor.run { DeepLinkRouter.shared.send(link) }
         }
         if content.categoryIdentifier == "LIFEOS_CONFIRM" {
             let info = content.userInfo
@@ -250,13 +245,7 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             let prefill = await MainActor.run { self.extractCoachPrefill(from: info) }
             await MainActor.run {
                 if let signal { AnalyticsEvents.coachProactiveOpened(signal: signal) }
-                var userInfo: [AnyHashable: Any] = [:]
-                if let prefill { userInfo["prefill"] = prefill }
-                NotificationCenter.default.post(
-                    name: .lifeOSOpenAIChat,
-                    object: nil,
-                    userInfo: userInfo
-                )
+                DeepLinkRouter.shared.send(.coach(prefill: prefill))
             }
         }
     }
@@ -333,5 +322,12 @@ enum ToolRoute {
     /// L'outil d'une catégorie par son nom écrit dans le code (stable, contrairement au titre affiché).
     static func tool(_ name: String, in category: AppCategory) -> CategoryTool? {
         category.tools.first { $0.defaultTitle == name }
+    }
+
+    /// Lien a ouvrir pour une route de notification : nom d'outil connu, ou URL `lifeos://`.
+    static func link(for route: String) -> DeepLink? {
+        if let t = target(for: route) { return .tool(t.category, t.tool) }
+        if let url = URL(string: route) { return DeepLink(url: url) }
+        return nil
     }
 }

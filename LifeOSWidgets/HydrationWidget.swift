@@ -1,20 +1,17 @@
+import AppIntents
 import SwiftUI
 import WidgetKit
 
 struct HydrationWidget: Widget {
-    let kind: String = "HydrationWidget"
+    let kind: String = WidgetKinds.hydration
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: HydrationWidgetProvider()) { entry in
             HydrationWidgetView(entry: entry)
         }
         .configurationDisplayName("Hydratation")
-        .description("Suis ton apport en eau quotidien et atteins ton objectif d'hydratation.")
-        .supportedFamilies([
-            .systemSmall,
-            .systemMedium,
-            .accessoryCircular
-        ])
+        .description("Ton eau du jour, ton objectif, et un appui pour ajouter un verre.")
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular])
         .contentMarginsDisabled()
     }
 }
@@ -26,43 +23,33 @@ struct HydrationWidgetEntry: TimelineEntry {
     let currentMl: Int
     let goalMl: Int
 
-    var progress: Double {
-        guard goalMl > 0 else { return 0 }
-        return max(0.0, min(1.0, Double(currentMl) / Double(goalMl)))
-    }
-
-    var percentage: Int {
-        Int(progress * 100)
-    }
+    var progress: Double { goalMl > 0 ? max(0, min(1, Double(currentMl) / Double(goalMl))) : 0 }
+    var percentage: Int { Int((progress * 100).rounded()) }
+    var remaining: Int { max(0, goalMl - currentMl) }
 }
 
 struct HydrationWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> HydrationWidgetEntry {
-        HydrationWidgetEntry(date: .now, currentMl: 1750, goalMl: 2500)
+        HydrationWidgetEntry(date: .now, currentMl: 1250, goalMl: 2500)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (HydrationWidgetEntry) -> Void) {
-        completion(read())
+        completion(context.isPreview ? placeholder(in: context) : read(at: .now))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<HydrationWidgetEntry>) -> Void) {
-        let entry = read()
-        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: .now) ?? .now.addingTimeInterval(3600)
-        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+        let midnight = WidgetTimeline.nextMidnight()
+        // A minuit le total repart a 0 meme si l'app n'est pas ouverte.
+        completion(Timeline(entries: [read(at: .now), read(at: midnight)], policy: .after(midnight)))
     }
 
-    private func read() -> HydrationWidgetEntry {
-        let defs = WidgetAppGroup.defaults
-        // Valeur reelle du jour ; une valeur d'un autre jour compte pour 0 (plus de valeur inventee).
+    private func read(at date: Date) -> HydrationWidgetEntry {
+        let defs = LifeOSGroup.defaults
+        // Valeur du jour ; une valeur d'un autre jour compte pour 0 (jamais celle d'hier).
         let current = WidgetKeys.waterForToday(value: defs?.integer(forKey: WidgetKeys.waterToday) ?? 0,
-                                               day: defs?.string(forKey: WidgetKeys.waterDay))
+                                               day: defs?.string(forKey: WidgetKeys.waterDay), now: date)
         let goal = defs?.integer(forKey: WidgetKeys.waterGoal) ?? 0
-
-        return HydrationWidgetEntry(
-            date: .now,
-            currentMl: current,
-            goalMl: goal > 0 ? goal : 2500   // objectif par defaut de l'app
-        )
+        return HydrationWidgetEntry(date: date, currentMl: current, goalMl: goal > 0 ? goal : 2500)
     }
 }
 
@@ -75,174 +62,101 @@ struct HydrationWidgetView: View {
     var body: some View {
         Group {
             switch family {
-            case .systemSmall:
-                smallView
-            case .systemMedium:
-                mediumView
-            case .accessoryCircular:
-                circularView
-            default:
-                smallView
+            case .systemMedium: mediumView.padding(14).lifeOSWidgetBackground()
+            case .accessoryCircular: circularView.lifeOSAccessoryBackground()
+            case .accessoryRectangular: rectangularView.lifeOSAccessoryBackground()
+            default: smallView.padding(14).lifeOSWidgetBackground()
             }
         }
-        .widgetURL(URL(string: "lifeos://water"))
+        .widgetURL(WidgetLink.water)
+    }
+
+    @ViewBuilder
+    private func addButton(_ ml: Int) -> some View {
+        if #available(iOS 17.0, *) {
+            Button(intent: AddWaterIntent(ml: ml, baseML: entry.currentMl, renderedAt: entry.date)) {
+                Label("+\(ml) ml", systemImage: "plus")
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .frame(maxWidth: .infinity, minHeight: 32)
+            }
+            .buttonStyle(.bordered)
+            .tint(WTint.water)
+            .accessibilityLabel("Ajouter \(ml) millilitres d'eau")
+        }
     }
 
     private var smallView: some View {
-        ZStack {
-            Color(widgetHex: 0x08090C)
-
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    ZStack {
-                        Circle()
-                            .fill(Color(widgetHex: 0x00D2FF).opacity(0.18))
-                            .frame(width: 32, height: 32)
-                        Image(systemName: "drop.fill")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(Color(widgetHex: 0x00D2FF))
-                    }
-                    Spacer()
-                    Text("\(entry.percentage)%")
-                        .font(.system(size: 13, weight: .black, design: .rounded))
-                        .foregroundStyle(Color(widgetHex: 0x00D2FF))
-                }
-
-                Spacer()
-
-                // Cercle ou barre de progression
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("HYDRATATION")
-                        .font(.system(size: 10, weight: .heavy, design: .rounded))
-                        .kerning(0.8)
-                        .foregroundStyle(.white.opacity(0.6))
-
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(formatLiters(entry.currentMl))
-                            .font(.system(size: 24, weight: .black, design: .rounded))
-                            .foregroundStyle(.white)
-                        Text("/ \(formatLiters(entry.goalMl))")
-                            .font(.system(size: 13, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.5))
-                    }
-
-                    // Jauge horizontale
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(Color.white.opacity(0.12))
-                            Capsule().fill(
-                                LinearGradient(
-                                    colors: [Color(widgetHex: 0x00D2FF), Color(widgetHex: 0x0A84FF)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .frame(width: max(4, geo.size.width * entry.progress))
-                        }
-                    }
-                    .frame(height: 6)
-                }
-
-                HStack {
-                    Text("+250 ml")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(.black)
-                    Spacer()
-                    Image(systemName: "plus")
-                        .font(.system(size: 10, weight: .black))
-                        .foregroundStyle(.black)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(Color(widgetHex: 0x00D2FF), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        VStack(alignment: .leading, spacing: 6) {
+            WidgetHeader(icon: "drop.fill", title: "HYDRATATION", tint: WTint.water, trailing: "\(entry.percentage) %")
+            Spacer(minLength: 0)
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(WidgetTimeline.liters(entry.currentMl))
+                    .font(.system(size: 24, weight: .black, design: .rounded))
+                    .minimumScaleFactor(0.7)
+                Text("/ \(WidgetTimeline.liters(entry.goalMl))")
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundStyle(.secondary)
             }
-            .padding(14)
+            WidgetBar(progress: entry.progress, tint: WTint.water)
+            addButton(250)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
     private var mediumView: some View {
-        ZStack {
-            Color(widgetHex: 0x08090C)
-
-            HStack(spacing: 18) {
-                // Anneau de progression circulaire
-                ZStack {
-                    Circle()
-                        .stroke(Color.white.opacity(0.1), lineWidth: 10)
-                        .frame(width: 82, height: 82)
-
-                    Circle()
-                        .trim(from: 0, to: entry.progress)
-                        .stroke(
-                            LinearGradient(
-                                colors: [Color(widgetHex: 0x00D2FF), Color(widgetHex: 0x0A84FF)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            style: StrokeStyle(lineWidth: 10, lineCap: .round)
-                        )
-                        .rotationEffect(.degrees(-90))
-                        .frame(width: 82, height: 82)
-
-                    VStack(spacing: 0) {
-                        Image(systemName: "drop.fill")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(Color(widgetHex: 0x00D2FF))
-                        Text("\(entry.percentage)%")
-                            .font(.system(size: 14, weight: .black, design: .rounded))
-                            .foregroundStyle(.white)
-                    }
-                }
-
-                // Colonne infos
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("OBJECTIF DU JOUR")
-                            .font(.system(size: 11, weight: .heavy, design: .rounded))
-                            .kerning(0.8)
-                            .foregroundStyle(.white.opacity(0.6))
-                        Spacer()
-                        Text("EAU PURIFIÉE")
-                            .font(.system(size: 9, weight: .heavy, design: .rounded))
-                            .foregroundStyle(Color(widgetHex: 0x00D2FF))
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 3)
-                            .background(Color(widgetHex: 0x00D2FF).opacity(0.15), in: Capsule())
-                    }
-
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text("\(entry.currentMl)")
-                            .font(.system(size: 26, weight: .black, design: .rounded))
-                            .foregroundStyle(.white)
-                        Text("ml / \(entry.goalMl) ml")
-                            .font(.system(size: 14, weight: .bold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.5))
-                    }
-
-                    Text(entry.progress >= 1.0 ? "🎉 Objectif quotidien atteint !" : "Encore \(entry.goalMl - entry.currentMl) ml pour être au top")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(entry.progress >= 1.0 ? Color(widgetHex: 0x00F076) : .white.opacity(0.7))
-                        .lineLimit(1)
+        HStack(spacing: 16) {
+            ZStack {
+                WidgetRing(progress: entry.progress, tint: WTint.water, lineWidth: 9)
+                VStack(spacing: 0) {
+                    Image(systemName: "drop.fill").font(.system(size: 14, weight: .bold)).wTint(WTint.water)
+                    Text("\(entry.percentage) %").font(.system(size: 14, weight: .black, design: .rounded))
                 }
             }
-            .padding(18)
+            .frame(width: 80, height: 80)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text("OBJECTIF DU JOUR")
+                    .font(.system(size: 10, weight: .heavy, design: .rounded)).kerning(0.6)
+                    .foregroundStyle(.secondary)
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("\(entry.currentMl)").font(.system(size: 24, weight: .black, design: .rounded))
+                    Text("ml / \(entry.goalMl) ml").font(.system(size: 12, weight: .bold, design: .rounded)).foregroundStyle(.secondary)
+                }
+                Text(entry.progress >= 1 ? "Objectif atteint" : "Encore \(entry.remaining) ml")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                HStack(spacing: 8) {
+                    addButton(250)
+                    addButton(500)
+                }
+            }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
     private var circularView: some View {
-        ZStack {
-            AccessoryWidgetBackground()
-            VStack(spacing: 2) {
-                Image(systemName: "drop.fill")
-                    .font(.system(size: 13, weight: .bold))
-                Text("\(entry.percentage)%")
-                    .font(.system(size: 10, weight: .heavy, design: .rounded))
-            }
+        Gauge(value: entry.progress) {
+            Image(systemName: "drop.fill")
+        } currentValueLabel: {
+            Text("\(entry.percentage)")
         }
+        .gaugeStyle(.accessoryCircularCapacity)
+        .widgetAccentable()
+        .accessibilityLabel("Eau : \(entry.currentMl) millilitres sur \(entry.goalMl)")
     }
 
-    private func formatLiters(_ ml: Int) -> String {
-        let l = Double(ml) / 1000.0
-        return String(format: "%.1fL", l)
+    private var rectangularView: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Label("Eau \(WidgetTimeline.liters(entry.currentMl)) / \(WidgetTimeline.liters(entry.goalMl))", systemImage: "drop.fill")
+                .font(.system(size: 12, weight: .bold))
+                .lineLimit(1)
+            Gauge(value: entry.progress) { EmptyView() }
+                .gaugeStyle(.accessoryLinearCapacity)
+                .widgetAccentable()
+            Text(entry.progress >= 1 ? "Objectif atteint" : "Encore \(entry.remaining) ml")
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
+        }
     }
 }

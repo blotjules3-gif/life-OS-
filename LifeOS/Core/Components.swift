@@ -52,31 +52,22 @@ struct SectionHeader: View {
     }
 }
 
-/// Pastille d'icône NIKE : carré NET monochrome haute intensité (encre + glyphe inverse).
-/// `tint` conservé pour compat mais l'app reste noir & blanc (accent volt réservé aux CTA).
+/// Pastille d'icône : petite tuile teintée à glyphe contrasté (façon Réglages d'iOS).
+/// Le thème Verre, qui la passait en verre, est archivé : il se lit "Suivre
+/// l'appareil" (voir `AppTheme.resolved`), donc la pastille reste teintée partout.
 struct IconBadge: View {
-    @AppStorage(AppStorageKeys.appTheme) private var themeRaw = "classic"
     let icon: String
     var tint: Color = Theme.accent
     var size: CGFloat = 44
     var body: some View {
-        let glass = themeRaw == "glass"
-        // Pastille de COULEUR pleine, glyphe blanc. C'est la tuile des Reglages
-        // d'iOS, et c'est lisible sur clair comme sur sombre.
-        //
-        // Avant: fond Color.primary, glyphe Color(uiColor: .systemBackground).
-        // Ces deux couleurs ne se resolvent pas au meme endroit. Color.primary
-        // suit le theme force par l'app, Color(uiColor:) suit l'apparence du
-        // TELEPHONE. Theme sombre sur telephone en clair, les deux tombaient sur
-        // blanc: un carre blanc avec un glyphe invisible dedans.
+        // Pastille de COULEUR pleine, glyphe noir ou blanc selon la teinte. Lisible sur
+        // clair comme sur sombre, et en palette neutre (la teinte devient un gris de
+        // même luminance, donc `readableInk` choisit toujours le bon contraste).
         Image(systemName: icon)
             .font(.system(size: size * 0.42, weight: .bold))
-            .foregroundStyle(glass ? Color.white : tint.readableInk)
+            .foregroundStyle(tint.readableInk)
             .frame(width: size, height: size)
-            // En verre, on laisse `raisedSurface` poser le materiau d'Apple : il apporte
-            // deja son liseré (`CASDFKeyFillHighlightEffect`). Le trait blanc a 0,45 et
-            // l'ombre qui etaient ici doublaient ce liseré et l'ecrasaient.
-            .modifier(GlassIconBackground(glass: glass, tint: tint, radius: size * 0.30))
+            .background(RoundedRectangle(cornerRadius: size * 0.30, style: .continuous).fill(tint))
     }
 }
 
@@ -215,21 +206,152 @@ func formatHoursMinutes(_ seconds: Int) -> String {
     return "\(h)h\(String(format: "%02d", m))"
 }
 
+// MARK: - Champs et sélections : une même famille (lot 8)
+//
+// Avant : 223 champs, 24 en `.roundedBorder` (cadre UIKit gris), le reste nu ; les
+// sélections étaient des pastilles dessinées à la main, chacune différente. Ces deux
+// styles posent la même matière que les cartes et boutons (`raisedSurface`,
+// `glassControl`), donc un champ, un menu et une sélection se reconnaissent comme de
+// la même famille sur iPhone, iPad et desktop.
 
-/// Fond d'une tuile d'icone : verre natif, ou aplat teinte avec son ombre.
-private struct GlassIconBackground: ViewModifier {
-    let glass: Bool
-    let tint: Color
-    let radius: CGFloat
+/// Habillage d'un champ : boîte encastrée (voile, pas un second verre posé sur la
+/// carte), hauteur tactile 44 pt minimum, icône facultative.
+struct GlassFieldChrome: ViewModifier {
+    var icon: String? = nil
+    @Environment(\.isEnabled) private var isEnabled
 
     func body(content: Content) -> some View {
-        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
-        if glass {
-            content.raisedSurface(shape)
-        } else {
+        HStack(spacing: 10) {
+            if let icon {
+                Image(systemName: icon)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Theme.textSecondary)
+                    .accessibilityHidden(true)
+            }
             content
-                .background(shape.fill(tint))
-                .shadow(color: tint.opacity(0.35), radius: 6, y: 3)
+                .font(AppFont.body(size: 15))
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .frame(minHeight: 44)
+        .raisedSurface(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous), .inset)
+        .opacity(isEnabled ? 1 : GlassControl.disabledOpacity)
+        .contentShape(RoundedRectangle(cornerRadius: Theme.radiusSmall, style: .continuous))
+    }
+}
+
+/// `TextField("…", text: $x).textFieldStyle(.glass)` : le champ partagé de LifeOS.
+struct GlassFieldStyle: TextFieldStyle {
+    var icon: String? = nil
+    // swiftlint:disable:next identifier_name
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration.modifier(GlassFieldChrome(icon: icon))
+    }
+}
+
+extension TextFieldStyle where Self == GlassFieldStyle {
+    static var glass: GlassFieldStyle { GlassFieldStyle() }
+    static func glass(icon: String) -> GlassFieldStyle { GlassFieldStyle(icon: icon) }
+}
+
+extension View {
+    /// Même habillage pour ce qui n'est pas un `TextField` (SecureField, TextEditor,
+    /// menu `Picker`, `DatePicker` compact…).
+    func glassField(icon: String? = nil) -> some View {
+        modifier(GlassFieldChrome(icon: icon))
+    }
+}
+
+/// Une pastille de sélection : verre interactif quand elle est choisie, nue sinon.
+/// Le choix se lit sans couleur (matière + graisse + coche), donc aussi en neutre.
+struct SelectionChip: View {
+    let title: String
+    var symbol: String? = nil
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if let symbol {
+                    Image(systemName: symbol).font(.subheadline.weight(.semibold))
+                        .accessibilityHidden(true)
+                }
+                Text(title)
+                    .font(AppFont.body(size: 13, weight: isSelected ? .semibold : .medium))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            .foregroundStyle(isSelected ? Theme.textPrimary : Theme.textSecondary)
+            .padding(.horizontal, 14)
+            .frame(minHeight: 44)
+            .background {
+                if isSelected { Color.clear.glassControl(Capsule()) }
+            }
+            .contentShape(Capsule())
+        }
+        .buttonStyle(LifeOSPressStyle())
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+/// Choix exclusif entre quelques options (2 à 4), dans une capsule encastrée.
+/// La pastille choisie glisse d'une option à l'autre, sauf avec "Réduire les
+/// animations" où elle change de place sans mouvement.
+struct GlassSegmented<Value: Hashable>: View {
+    struct Option: Identifiable {
+        let value: Value
+        let title: String
+        var symbol: String? = nil
+        var id: Value { value }
+    }
+
+    @Binding var selection: Value
+    let options: [Option]
+    var accessibilityTitle: String = ""
+
+    @Namespace private var ns
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(options) { option in
+                let selected = option.value == selection
+                Button {
+                    guard option.value != selection else { return }
+                    if reduceMotion { selection = option.value }
+                    else { withAnimation(Theme.animQuick) { selection = option.value } }
+                } label: {
+                    HStack(spacing: 6) {
+                        if let symbol = option.symbol {
+                            Image(systemName: symbol).font(.subheadline.weight(.semibold))
+                                .accessibilityHidden(true)
+                        }
+                        Text(option.title)
+                            .font(AppFont.body(size: 13, weight: selected ? .semibold : .medium))
+                            .lineLimit(2)
+                            .multilineTextAlignment(.center)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .foregroundStyle(selected ? Theme.textPrimary : Theme.textSecondary)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .padding(.horizontal, 6)
+                    .background {
+                        if selected {
+                            Color.clear.glassControl(Capsule())
+                                .matchedGeometryEffect(id: "glassSegmentedSelection", in: ns)
+                        }
+                    }
+                    .contentShape(Capsule())
+                }
+                .buttonStyle(LifeOSPressStyle())
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+        .padding(3)
+        .raisedSurface(Capsule(), .inset)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(accessibilityTitle)
     }
 }

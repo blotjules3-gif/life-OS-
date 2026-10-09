@@ -373,6 +373,8 @@ struct SleepCheckSheet: View {
         )
         ctx.insert(dream)
         do { try ctx.save() } catch { AppLog.data.error("saveDream failed: \(error.localizedDescription, privacy: .public)") }
+        // Widget Sommeil : nuit derniere datee d'aujourd'hui.
+        WidgetPublisher.shared.publishSleep()
     }
 
     private func submitAndReveal() {
@@ -390,9 +392,12 @@ struct SleepCheckSheet: View {
         let result = EnergyScore.today(ctx)
         todayEnergyScore = result?.score ?? 0
         todayEnergyLabel = result?.label ?? ""
-        // Publie pour EnergyScoreWidget + reload timelines widget.
-        EnergyScore.publishToAppGroup(result)
-        WidgetCenter.shared.reloadTimelines(ofKind: "EnergyScoreWidget")
+        // Score du jour (date du jour) et nuit derniere pour les widgets ; rechargement
+        // seulement si la valeur a change.
+        if EnergyScore.publishToAppGroup(result) {
+            WidgetCenter.shared.reloadTimelines(ofKind: WidgetKinds.energy)
+        }
+        WidgetPublisher.shared.schedule([.sleep], delay: 0)
         submitting = false
         withAnimation(.spring(duration: 0.35)) { step = 3 }
     }

@@ -30,18 +30,26 @@ struct LogWaterIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
+        guard (1...3000).contains(amountML) else {
+            return .result(dialog: "Indique une quantité entre 1 et 3000 ml.")
+        }
         let ctx = try LocalStore.container().mainContext
-        ctx.insert(WaterEntry(date: .now, amountML: amountML))
+        let e = WaterEntry(date: .now, amountML: amountML)
+        e.volumeML = amountML
+        ctx.insert(e)
         try ctx.save()
-        let start = Calendar.current.startOfDay(for: .now)
-        let today = try ctx.fetch(FetchDescriptor<WaterEntry>(
-            predicate: #Predicate { $0.date >= start }
-        ))
-        let total = today.reduce(0) { $0 + $1.amountML }
+        // Le processus peut s'arreter juste apres : on publie tout de suite (widget eau,
+        // total lu par le coach, score energie).
+        WidgetPublisher.shared.publishNow([.water, .energy], ctx: ctx)
+        let total = UserDefaults(suiteName: LifeOSGroup.id)?.integer(forKey: WidgetKeys.waterToday) ?? amountML
         return .result(dialog: "C'est noté : \(amountML) ml. Total du jour : \(total) ml.")
     }
 }
 
+/// Habitude exposee a Siri et Raccourcis. L'identifiant est l'identifiant stable
+/// (`Habit.uid`) : deux habitudes du meme nom ne se confondent plus. Un ancien
+/// raccourci enregistre avec le NOM comme identifiant est encore reconnu, s'il ne
+/// designe qu'une seule habitude.
 struct HabitEntity: AppEntity {
     static let typeDisplayRepresentation: TypeDisplayRepresentation = "Habitude"
     static let defaultQuery = HabitEntityQuery()
@@ -57,21 +65,25 @@ struct HabitEntity: AppEntity {
 struct HabitEntityQuery: EntityQuery {
     @MainActor
     func entities(for identifiers: [String]) async throws -> [HabitEntity] {
-        try activeHabits()
-            .filter { identifiers.contains($0.name) }
-            .map { HabitEntity(id: $0.name, name: $0.name) }
+        let habits = try activeHabits()
+        return identifiers.compactMap { id in
+            if let h = habits.first(where: { $0.uid == id }) { return HabitEntity(id: h.uid, name: h.name) }
+            let byName = habits.filter { $0.name == id }
+            return byName.count == 1 ? HabitEntity(id: byName[0].uid, name: byName[0].name) : nil
+        }
     }
 
     @MainActor
     func suggestedEntities() async throws -> [HabitEntity] {
-        try activeHabits().map { HabitEntity(id: $0.name, name: $0.name) }
+        try activeHabits().map { HabitEntity(id: $0.uid, name: $0.name) }
     }
 
     @MainActor
     private func activeHabits() throws -> [Habit] {
-        try LocalStore.container().mainContext.fetch(
-            FetchDescriptor<Habit>(predicate: #Predicate { !$0.isArchived && !$0.isPending })
-        )
+        let ctx = try LocalStore.container().mainContext
+        HabitSync.ensureIDs(ctx)
+        return try ctx.fetch(FetchDescriptor<Habit>(predicate: #Predicate { !$0.isArchived && !$0.isPending }))
+            .filter { !$0.uid.isEmpty }
     }
 }
 
@@ -85,17 +97,25 @@ struct CompleteHabitIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let ctx = try LocalStore.container().mainContext
-        let name = habit.name
-        guard let target = try ctx.fetch(
-            FetchDescriptor<Habit>(predicate: #Predicate { $0.name == name })
-        ).first else {
+        HabitSync.ensureIDs(ctx)
+        // Resolution par identifiant stable ; nom seulement s'il est unique.
+        let entity = try await HabitEntityQuery().entities(for: [habit.id]).first
+        guard let uid = entity?.id, !uid.isEmpty else {
             return .result(dialog: "Je n'ai pas trouvé cette habitude.")
         }
-        if target.completions.contains(where: { Calendar.current.isDateInToday($0.date) }) {
+        let name = entity?.name ?? habit.name
+        let today = HabitOps.businessDay(.now, timeZone: .current)
+        var fd = FetchDescriptor<Habit>(predicate: #Predicate { $0.uid == uid })
+        fd.fetchLimit = 1
+        if let h = try ctx.fetch(fd).first,
+           h.completions.contains(where: { HabitOps.businessDay($0.date, timeZone: .current) == today }) {
             return .result(dialog: "\(name) est déjà validée aujourd'hui.")
         }
-        target.completions.append(HabitCompletion(date: .now))
-        try ctx.save()
+        // Meme chemin que le widget : ordre explicite par identifiant, applique puis
+        // acquitte apres sauvegarde (un rejeu ne coche pas deux fois).
+        try HabitOps.enqueue(HabitOp(habitID: uid, action: .complete, source: "siri"))
+        HabitSync.drain(ctx)
+        WidgetPublisher.shared.publishNow([.habits, .energy], ctx: ctx)
         return .result(dialog: "\(name) validée. Bien joué.")
     }
 }
@@ -135,9 +155,12 @@ struct AddTodoIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let ctx = try LocalStore.container().mainContext
         let priority = urgent ? 2 : 0
-        ctx.insert(TaskInbox.makeTodo(title, priority: priority))
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return .result(dialog: "Dis-moi le texte de la tâche.") }
+        ctx.insert(TaskInbox.makeTodo(trimmed, priority: priority))
         try ctx.save()
-        return .result(dialog: "C'est noté : \(title).")
+        WidgetPublisher.shared.publishNow([.tasks, .agenda], ctx: ctx)
+        return .result(dialog: "C'est noté : \(trimmed).")
     }
 }
 

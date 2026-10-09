@@ -79,7 +79,7 @@ struct MacDesktopMainView: View {
     @AppStorage(AppStorageKeys.userName) private var userName = ""
     @AppStorage(AppStorageKeys.userDisplayName) private var userDisplayName = ""
     @AppStorage(AppStorageKeys.userEmail) private var userEmail = ""
-    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "system"
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = AppTheme.defaultRaw
 
     private var displayName: String {
         if !userDisplayName.isEmpty { return userDisplayName }
@@ -89,24 +89,25 @@ struct MacDesktopMainView: View {
     }
 
     var body: some View {
+        // Lot 8 : plus de panneaux opaques (ancien fond plein). Le bureau pose le MEME fond que le
+        // telephone (`Theme.screenBG`), la barre laterale flotte dessus en verre
+        // (`raisedSurface .floating`, comme les barres laterales d'iPadOS / macOS 26),
+        // et le detail laisse voir ce fond. Le verre natif dessine deja son arete : aucun
+        // trait de separation ajoute.
         HStack(spacing: 0) {
             if !sidebarCollapsed {
                 sidebarContent
                     .frame(width: 260)
-                    .background(Theme.bg.ignoresSafeArea())
+                    .raisedSurface(RoundedRectangle(cornerRadius: Theme.radius, style: .continuous), .floating)
+                    .padding(.leading, 8)
+                    .padding(.vertical, 8)
                     .transition(.move(edge: .leading).combined(with: .opacity))
-
-                Rectangle()
-                    .fill(Color.primary.opacity(0.08))
-                    .frame(width: 1)
-                    .ignoresSafeArea()
             }
 
             detailContent
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Theme.bg.ignoresSafeArea())
         }
-        .background(Theme.bg.ignoresSafeArea())
+        .background { Theme.screenBG.ignoresSafeArea() }
         .sheet(isPresented: $showNewHabitModal) {
             NavigationStack {
                 NewHabitQuickSheet()
@@ -175,13 +176,8 @@ struct MacDesktopMainView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            .background(Color.primary.opacity(0.02))
-            .overlay(
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundStyle(Color.primary.opacity(0.08)),
-                alignment: .bottom
-            )
+
+            Divider().opacity(0.5).padding(.horizontal, 12)
 
             // Navigation List fluide monochrome
             ScrollView(showsIndicators: false) {
@@ -282,18 +278,11 @@ struct MacDesktopMainView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .liquidGlassCard(cornerRadius: 12)
+                .raisedSurface(RoundedRectangle(cornerRadius: 12, style: .continuous), .nested)
             }
             .buttonStyle(.plain)
             .padding(10)
         }
-        .background(Color.primary.opacity(0.02))
-        .overlay(
-            Rectangle()
-                .frame(width: 1)
-                .foregroundStyle(Color.primary.opacity(0.07)),
-            alignment: .trailing
-        )
     }
 
     private func sidebarButton(_ section: DesktopNavSection) -> some View {
@@ -351,12 +340,13 @@ struct MacDesktopMainView: View {
                     }
                 )
             case .habits:
-                HabitTrackerView()
+                HabitTrackerView().readableWidth()
             case .wakeup:
-                WakeUpView()
+                WakeUpView().readableWidth()
             case .assistant:
-                AIAssistantView(prefill: assistantPrefill)
+                AIAssistantView(prefill: assistantPrefill).readableWidth()
             case .tabata:
+                // Minuteur : plein cadre volontaire (chiffres lisibles de loin).
                 TabataView()
             case .category(let cat):
                 // Sans conteneur de navigation, chaque NavigationLink du hub est MORT:
@@ -364,7 +354,9 @@ struct MacDesktopMainView: View {
                 // TabaTime marchait parce qu'il passe par un fullScreenCover. Mesure au
                 // simulateur le 28 septembre, en tapant chaque tuile. Le telephone, lui,
                 // enveloppe deja les categories dans NavigationStack(path:).
-                NavigationStack { cat.destination }
+                // Hub et outils (pousses dans la pile) dessines pour telephone : toute la
+                // pile tient dans une colonne lisible, rien n'est etire.
+                NavigationStack { cat.destination }.readableWidth()
             case .allCategories:
                 MacDesktopCategoriesOverview(
                     categories: categoryOrderManager.order,
@@ -378,9 +370,11 @@ struct MacDesktopMainView: View {
                     }
                 )
             case .profile:
-                ProfileView()
+                ProfileView().readableWidth()
             }
         }
+        // Reconstruit le detail quand la SECTION change (pas l'apparence : aucun `.id`
+        // ne depend du theme ou de la palette, voir Lot8AppearanceTests).
         .id(selection?.id ?? "dashboard")
         .transition(.asymmetric(
             insertion: .opacity.combined(with: .offset(y: 8)),
@@ -424,7 +418,7 @@ struct MacDesktopMainView: View {
                     selection = .assistant
                 } label: {
                     Label("Ton coach", systemImage: "sparkles")
-                        .foregroundStyle(Color(hex: 0x9B6CF1))
+                        .foregroundStyle(Theme.coach)
                 }
                 .help("Discuter avec le Coach")
             }

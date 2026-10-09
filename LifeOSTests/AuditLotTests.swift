@@ -37,7 +37,7 @@ final class SecondTabTests: XCTestCase {
     func testUnknownValueFallsBackToWakeUp() {
         UserDefaults.standard.set("n'importe quoi", forKey: AppStorageKeys.secondTab)
         XCTAssertEqual(SecondTab.current, .wakeup)
-        XCTAssertEqual(AppTab.wakeup.label, "Réveil")
+        XCTAssertEqual(SecondTab.current.label, "Réveil")
     }
 
     func testEveryChoiceIsAValidDestination() {
@@ -45,8 +45,10 @@ final class SecondTabTests: XCTestCase {
             XCTAssertNotNil(t.category, "\(t) doit ouvrir une vraie catégorie")
         }
         UserDefaults.standard.set("nutrition", forKey: AppStorageKeys.secondTab)
-        XCTAssertEqual(AppTab.wakeup.label, "Nutrition")
-        XCTAssertEqual(AppTab.wakeup.icon, "fork.knife")
+        XCTAssertEqual(SecondTab.current.label, "Nutrition")
+        XCTAssertEqual(SecondTab.current.icon, "fork.knife")
+        // Lot 8 : le 2e onglet est toujours Mes espaces, le choix sert d'espace favori.
+        XCTAssertEqual(AppTab.wakeup.label, "Mes espaces")
     }
 
     func testWakeUpStaysReachableFromSleep() throws {

@@ -5,9 +5,7 @@ import Foundation
 /// CoinGecko, endpoint public: pas de cle API, pas de compte. C'est le seul
 /// fournisseur serieux utilisable sans credentials, donc c'est celui-la.
 ///
-/// Les ACTIONS ne sont pas couvertes: aucune API boursiere gratuite ne donne de
-/// cours sans cle. Elles restent en saisie manuelle, et l'ecran le dit au lieu
-/// d'afficher un chiffre faux.
+/// Les actions et ETF passent par `StockService` (Yahoo Finance, differe), plus bas.
 enum PriceService {
 
     enum Failure: Error, CustomStringConvertible {
@@ -27,7 +25,13 @@ enum PriceService {
     private struct MarketRow: Decodable {
         let symbol: String
         let current_price: Double?
+        let price_change_percentage_24h: Double?
     }
+
+    /// Cours et variation sur 24 h (une crypto n'a pas de cloture : c'est la seule
+    /// variation honnete).
+    struct CryptoQuote: Equatable { let priceEUR: Double; let change24hPct: Double? }
+    private static var changeCache: [String: Double] = [:]
 
     /// Dernier appel, pour ne pas marteler l'API quand la vue se recharge.
     private static var lastFetch: Date = .distantPast
@@ -70,12 +74,24 @@ enum PriceService {
             var out: [String: Double] = [:]
             for r in rows where r.current_price != nil {
                 out[r.symbol.lowercased()] = r.current_price!
+                if let c = r.price_change_percentage_24h { changeCache[r.symbol.lowercased()] = c }
             }
             lastFetch = .now
             cache.merge(out) { _, new in new }
             return .success(out)
         } catch {
             return .failure(.network(error.localizedDescription))
+        }
+    }
+
+    /// Meme appel que `cryptoPrices`, avec la variation sur 24 h quand CoinGecko la donne.
+    static func cryptoQuotes(symbols: [String], force: Bool = false) async -> Result<[String: CryptoQuote], Failure> {
+        switch await cryptoPrices(symbols: symbols, force: force) {
+        case .failure(let e): return .failure(e)
+        case .success(let prices):
+            var out: [String: CryptoQuote] = [:]
+            for (k, p) in prices { out[k] = CryptoQuote(priceEUR: p, change24hPct: changeCache[k]) }
+            return .success(out)
         }
     }
 }
@@ -98,8 +114,14 @@ enum StockService {
         let currency: String
     }
 
-    private static var lastFetch: Date = .distantPast
-    private static var cache: [String: Double] = [:]
+    /// Cours converti en euros, avec ce qu'il faut pour l'afficher honnetement.
+    struct EURQuote: Equatable {
+        let priceEUR: Double
+        let currency: String
+        let changePct: Double?
+        let marketTime: Date?
+        let quote: StockQuote
+    }
 
     /// Cours convertis en EUROS, par symbole tel que saisi par l'utilisateur.
     ///
@@ -107,73 +129,45 @@ enum StockService {
     /// symboles americains rendent des dollars: on convertit, sinon on
     /// additionnerait des devises differentes dans le total du portefeuille,
     /// ce qui donnerait un chiffre faux sans que rien ne le signale.
+    ///
+    /// Passe par le cache partage (`QuoteStore`) : au plus une demande par titre toutes
+    /// les 5 minutes, meme quand `force` est vrai.
+    @MainActor
     static func pricesInEUR(symbols: [String], force: Bool = false) async -> Result<[String: Double], PriceService.Failure> {
-        let wanted = Set(symbols.map { $0.trimmingCharacters(in: .whitespaces).uppercased() })
-            .filter { !$0.isEmpty }
-        guard !wanted.isEmpty else { return .success([:]) }
-
-        if !force, Date().timeIntervalSince(lastFetch) < 60, !cache.isEmpty {
-            return .success(cache.filter { wanted.contains($0.key) })
+        switch await quotesInEUR(symbols: symbols) {
+        case .success(let q): return .success(q.mapValues(\.priceEUR))
+        case .failure(let e): return .failure(e)
         }
-
-        var raw: [String: Quote] = [:]
-        for sym in wanted.sorted() {
-            if let q = await quote(sym) { raw[sym] = q }
-        }
-        guard !raw.isEmpty else { return .failure(.network("aucun cours trouvé")) }
-
-        // Un seul appel de change par devise rencontree.
-        var rates: [String: Double] = ["EUR": 1]
-        for cur in Set(raw.values.map(\.currency)) where cur != "EUR" {
-            if let r = await eurRate(for: cur) { rates[cur] = r }
-        }
-
-        var out: [String: Double] = [:]
-        for (sym, q) in raw {
-            guard let rate = rates[q.currency] else { continue }   // devise inconnue: on n'invente pas
-            out[sym] = q.price * rate
-        }
-        lastFetch = .now
-        cache.merge(out) { _, new in new }
-        return .success(out)
     }
 
-    private static func quote(_ symbol: String) async -> Quote? {
-        guard let enc = symbol.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),
-              let url = URL(string: "https://query1.finance.yahoo.com/v8/finance/chart/\(enc)?interval=1d&range=1d")
-        else { return nil }
-        var req = URLRequest(url: url)
-        req.timeoutInterval = 15
-        // Sans en-tete d'agent, le point renvoie une page de refus.
-        req.setValue("Mozilla/5.0", forHTTPHeaderField: "User-Agent")
-        guard let (data, resp) = try? await URLSession.shared.data(for: req),
-              let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let chart = json["chart"] as? [String: Any],
-              let results = chart["result"] as? [[String: Any]],
-              let meta = results.first?["meta"] as? [String: Any],
-              let price = meta["regularMarketPrice"] as? Double,
-              let cur = meta["currency"] as? String
-        else { return nil }
-        return normalized(price: price, currency: cur)
+    /// Cours en euros + variation du jour + heure du cours. Un symbole introuvable ou sans
+    /// taux de change connu est absent du resultat (on n'invente pas).
+    @MainActor
+    static func quotesInEUR(symbols: [String]) async -> Result<[String: EURQuote], PriceService.Failure> {
+        let wanted = Array(Set(symbols.map { $0.trimmingCharacters(in: .whitespaces).uppercased() }.filter { !$0.isEmpty })).sorted()
+        guard !wanted.isEmpty else { return .success([:]) }
+        let store = QuoteStore.shared
+        let report = await store.refresh(symbols: wanted, period: .day1, convertToEUR: true)
+        var out: [String: EURQuote] = [:]
+        let rates = store.cache.eurRates
+        for s in wanted {
+            guard let q = store.cache.quotes[s],
+                  let eur = StockMath.convert(q.price, from: q.currency, to: .eur, eurPerUnit: rates) else { continue }
+            out[s] = EURQuote(priceEUR: eur.value, currency: q.currency, changePct: q.changePercent, marketTime: q.marketTime, quote: q)
+        }
+        if out.isEmpty {
+            if report.offline { return .failure(.network("Hors ligne")) }
+            if report.rateLimited { return .failure(.rateLimited) }
+            return .failure(.network("aucun cours trouvé"))
+        }
+        return .success(out)
     }
 
     /// Yahoo cote certaines places en sous-unites : "GBp" (pence, titres .L de Londres),
     /// "ZAc" (cents sud-africains), "ILA" (agorot). `uppercased()` faisait de "GBp" des
     /// livres, donc une action de Londres valait 100 fois trop.
     static func normalized(price: Double, currency: String) -> Quote {
-        switch currency {
-        case "GBp", "GBX": return Quote(price: price / 100, currency: "GBP")
-        case "ZAc", "ZAC": return Quote(price: price / 100, currency: "ZAR")
-        case "ILA": return Quote(price: price / 100, currency: "ILS")
-        default: return Quote(price: price, currency: currency.uppercased())
-        }
-    }
-
-    /// Combien vaut 1 unite de `currency` en euros.
-    private static func eurRate(for currency: String) async -> Double? {
-        // EURUSD=X donne des dollars par euro: on inverse.
-        guard let q = await quote("EUR\(currency)=X"), q.price > 0 else { return nil }
-        return 1 / q.price
+        let n = StockMath.normalizedCurrency(currency)
+        return Quote(price: price / n.divisor, currency: n.code)
     }
 }

@@ -10,8 +10,9 @@ struct OrbitSatellite: Identifiable {
 }
 
 struct ProfileView: View {
-    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = "system"
-    @AppStorage(AppStorageKeys.appPalette) private var appPaletteRaw = AppPalette.color.rawValue
+    @AppStorage(AppStorageKeys.appTheme) private var appThemeRaw = AppTheme.defaultRaw
+    @AppStorage(AppStorageKeys.appPalette) private var appPaletteRaw = AppPalette.defaultRaw
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage(AppStorageKeys.secondTab) private var secondTabRaw = SecondTab.wakeup.rawValue
     @AppStorage(AppStorageKeys.userName) private var name = ""
     @AppStorage(AppStorageKeys.stepGoal) private var stepGoal = 10000
@@ -51,6 +52,8 @@ struct ProfileView: View {
     @State private var steps = 0
     @State private var healthConnected = false
     @State private var showGoalEditor = false
+    @State private var showPriorityDomains = false
+    @State private var showPhotoStudio = false
     @State private var showNotificationSettings = false
     @State private var showSoundHaptics = false
     @State private var showCustomReminders = false
@@ -267,6 +270,12 @@ struct ProfileView: View {
                 let explained = EnergyScore.todayExplained(ctx)
                 energyScore = explained?.result
                 energyParts = explained?.parts ?? []
+            }
+            .sheet(isPresented: $showPriorityDomains) {
+                NavigationStack { PriorityDomainsEditor() }
+            }
+            .sheet(isPresented: $showPhotoStudio) {
+                NavigationStack { PhotoWidgetStudioView() }
             }
             .sheet(isPresented: $showGoalEditor) {
                 GoalEditorSheet(
@@ -941,6 +950,18 @@ struct ProfileView: View {
                 } action: {
                     showGoalEditor = true
                 }
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
+                settingsRow(icon: "star.circle.fill", iconColor: Color.accentColor, label: "Mes 3 domaines prioritaires") {
+                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
+                } action: {
+                    showPriorityDomains = true
+                }
+                Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
+                settingsRow(icon: "photo.on.rectangle.angled", iconColor: Color.accentColor, label: "Widgets photo") {
+                    Image(systemName: "chevron.right").font(.system(size: 10, weight: .bold)).foregroundStyle(.tertiary)
+                } action: {
+                    showPhotoStudio = true
+                }
                 #if DEBUG
                 Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 1).padding(.leading, 50)
                 settingsRow(icon: "text.magnifyingglass", iconColor: Color(hex: 0x9B6CF1), label: "Coach — inspecter contexte") {
@@ -1071,70 +1092,67 @@ struct ProfileView: View {
         }
     }
 
+    // MARK: Apparence
+    //
+    // Deux choix independants (luminosite, palette) et leurs quatre combinaisons en
+    // apercu vivant. Changer d'apparence ne reconstruit aucune vue : les couleurs sont
+    // dynamiques (trait clair/sombre + trait palette), donc la navigation, les
+    // formulaires ouverts et les seances en cours restent en place.
+
+    private var themeSelection: Binding<AppTheme> {
+        Binding(get: { AppTheme.resolved(appThemeRaw) }, set: { applyTheme($0) })
+    }
+
+    private var paletteSelection: Binding<AppPalette> {
+        Binding(get: { AppPalette.resolved(appPaletteRaw) },
+                set: { appPaletteRaw = $0.rawValue })   // widgets : synchronises par LifeOSApp
+    }
+
+    private func applyTheme(_ theme: AppTheme) {
+        guard appThemeRaw != theme.rawValue else { return }   // archive -> reecrit proprement
+        appThemeRaw = theme.rawValue
+        UserDefaults(suiteName: "group.com.chifandco.lifeos")?
+            .set(theme.accentHex, forKey: "widget_accent_hex")
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
     private var appearanceSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let followsDevice = AppTheme.resolved(appThemeRaw) == .system
+        let current = AppearanceLook.current(themeRaw: appThemeRaw, paletteRaw: appPaletteRaw,
+                                             deviceScheme: colorScheme)
+        return VStack(alignment: .leading, spacing: 12) {
             Text("Apparence")
                 .font(.system(size: 20, weight: .black))
                 .textCase(.uppercase)
                 .kerning(-0.3)
                 .padding(.horizontal, 4)
-            VStack(spacing: 12) {
-                HStack(spacing: 10) {
-                    ForEach(AppTheme.selectable) { th in
-                        let selected = appThemeRaw == th.rawValue
-                        Button {
-                            withAnimation(.spring(duration: 0.38, bounce: 0.1)) { appThemeRaw = th.rawValue }
-                            UserDefaults(suiteName: "group.com.chifandco.lifeos")?
-                                .set(th.accentHex, forKey: "widget_accent_hex")
-                            WidgetCenter.shared.reloadAllTimelines()
-                        } label: {
-                            VStack(spacing: 6) {
-                                ZStack {
-                                    Circle().fill(th.previewFill)
-                                        .frame(width: 42, height: 42)
-                                        .shadow(color: selected ? Color.black.opacity(0.18) : .clear, radius: 6, x: 0, y: 3)
-                                    Image(systemName: th.symbol)
-                                        .font(.system(size: 16, weight: .semibold))
-                                        .foregroundStyle(th.previewIcon)
-                                }
-                                .overlay(
-                                    Circle()
-                                        .stroke(selected ? Color.accentColor : Theme.hairline, lineWidth: selected ? 2.5 : 1)
-                                        .animation(.spring(duration: 0.38, bounce: 0.15), value: selected)
-                                )
-                                .padding(2)
-                                Text(th.label)
-                                    .font(.system(size: 11, weight: .medium))
-                                    .foregroundStyle(selected ? .primary : .secondary)
-                                    .lineLimit(1).minimumScaleFactor(0.7)
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(LifeOSPressStyle())
-                    }
+            VStack(alignment: .leading, spacing: 12) {
+                AppearanceLookPreviewGrid(current: current, followsDevice: followsDevice) { look in
+                    applyTheme(look.theme)
+                    appPaletteRaw = look.palette.rawValue
                 }
                 Divider().opacity(0.4)
-                HStack(spacing: 10) {
-                    ForEach(AppPalette.allCases) { pal in
-                        let selected = appPaletteRaw == pal.rawValue
-                        Button {
-                            appPaletteRaw = pal.rawValue   // widgets : synchronises par LifeOSApp
-                        } label: {
-                            Label(pal.label, systemImage: pal.symbol)
-                                .font(.system(size: 13, weight: .semibold))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 10)
-                                .overlay(Capsule().stroke(selected ? Color.accentColor : Theme.hairline,
-                                                          lineWidth: selected ? 2 : 1))
-                                .foregroundStyle(selected ? .primary : .secondary)
-                        }
-                        .buttonStyle(LifeOSPressStyle())
-                        .accessibilityAddTraits(selected ? .isSelected : [])
-                    }
-                }
-                Text("Luminosité et couleurs se règlent séparément : quatre apparences. Neutre retire les couleurs de l'interface, pas celles de tes photos.")
+                Text("Luminosité")
+                    .font(AppFont.body(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.textSecondary)
+                GlassSegmented(selection: themeSelection,
+                               options: AppTheme.selectable.map { .init(value: $0, title: $0.brightnessLabel, symbol: $0.symbol) },
+                               accessibilityTitle: "Luminosité")
+                Text("Couleurs")
+                    .font(AppFont.body(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.textSecondary)
+                GlassSegmented(selection: paletteSelection,
+                               options: AppPalette.allCases.map { .init(value: $0, title: $0.label, symbol: $0.symbol) },
+                               accessibilityTitle: "Couleurs")
+                Text("Luminosité et couleurs se règlent séparément : quatre apparences. Neutre retire les couleurs de l'interface, pas celles de tes photos. Toucher une vignette fixe le clair ou le sombre ; « Suivre l'appareil » rend la main au réglage de l'appareil.")
                     .font(.caption).foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                Label("Réglé sur cet appareil. La synchronisation entre appareils arrivera avec les comptes.",
+                      systemImage: "iphone")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
                 Divider().opacity(0.4)
                 Picker("Deuxième onglet", selection: $secondTabRaw) {
                     ForEach(SecondTab.allCases) { t in
@@ -1511,7 +1529,7 @@ struct AccountDetailSheet: View {
                             Spacer()
                             if isEditingName {
                                 TextField("Ton prénom", text: $editedName)
-                                    .textFieldStyle(.roundedBorder)
+                                    .textFieldStyle(.glass(icon: "person"))
                                     .frame(maxWidth: 160)
                                     .onSubmit {
                                         if !editedName.trimmingCharacters(in: .whitespaces).isEmpty {

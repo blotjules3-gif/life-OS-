@@ -129,6 +129,81 @@ enum TabataStepStatus: Equatable {
     case past, current, future
 }
 
+/// Règles de navigation entre étapes, sans état: testables seules.
+///
+/// - Suivant / précédent avancent d'UNE étape. Précédent sur la première étape
+///   la recommence; suivant sur la dernière termine la séance (sautée, pas faite).
+/// - Toucher une étape lointaine pendant que le chrono tourne demande une
+///   confirmation dès qu'on sauterait plus d'une étape.
+/// - Le temps restant total se recalcule depuis la séquence: l'étape courante
+///   (temps restant réel) plus la durée pleine de chaque étape suivante.
+enum TabataStepNav {
+    enum Move: Equatable {
+        /// Se placer sur l'étape, chrono remis à sa durée pleine.
+        case select(Int)
+        /// Recommencer l'étape courante (précédent sur la première).
+        case restart(Int)
+        /// Terminer la séance (suivant sur la dernière étape).
+        case finish
+        /// Rien à faire (au repos ou séance finie).
+        case none
+    }
+
+    static func next(current: Int?, count: Int) -> Move {
+        guard count > 0, let cur = current, cur >= 0, cur < count else { return .none }
+        return cur + 1 < count ? .select(cur + 1) : .finish
+    }
+
+    static func previous(current: Int?, count: Int) -> Move {
+        guard count > 0, let cur = current, cur >= 0, cur < count else { return .none }
+        return cur > 0 ? .select(cur - 1) : .restart(0)
+    }
+
+    /// Étapes laissées sans les finir en allant de `current` à `target`.
+    /// L'étape courante compte (on la quitte avant la fin). Revenir en arrière
+    /// ne saute rien. Au repos, toutes les étapes avant la cible comptent.
+    static func skippedCount(current: Int?, target: Int) -> Int {
+        max(0, target - (current ?? 0))
+    }
+
+    static func needsConfirmation(current: Int?, target: Int, running: Bool) -> Bool {
+        running && skippedCount(current: current, target: target) > 1
+    }
+
+    /// Temps restant sur toute la séance, en secondes.
+    static func remainingTotal(durations: [Int], current: Int, remainingInStep: Int) -> Int {
+        guard current >= 0 else { return durations.reduce(0, +) }
+        guard current < durations.count else { return 0 }
+        return max(0, remainingInStep) + durations.dropFirst(current + 1).reduce(0, +)
+    }
+
+    static func status(index: Int, current: Int?) -> TabataStepStatus {
+        guard let current else { return .future }
+        if index == current { return .current }
+        return index < current ? .past : .future
+    }
+
+    /// Libellé VoiceOver: « Étape 3 sur 24, effort, Squats, round 1, 30 secondes, en cours ».
+    static func accessibilityLabel(index: Int, count: Int, phase: TabataEngine.Phase,
+                                   exercise: String?, round: Int?, duration: Int,
+                                   status: TabataStepStatus, done: Bool) -> String {
+        var parts = ["Étape \(index + 1) sur \(count)", phase.spokenName]
+        if let exercise, !exercise.isEmpty { parts.append(exercise) }
+        if let round { parts.append("round \(round)") }
+        parts.append("\(duration) seconde\(duration > 1 ? "s" : "")")
+        parts.append(statusText(status, done: done))
+        return parts.joined(separator: ", ")
+    }
+
+    static func statusText(_ status: TabataStepStatus, done: Bool) -> String {
+        switch status {
+        case .current: return "en cours"
+        case .future:  return "à venir"
+        case .past:    return done ? "faite" : "sautée"
+        }
+    }
+}
+
 // MARK: - Moteur
 
 @Observable
@@ -166,17 +241,32 @@ final class TabataEngine {
             case .done:           return "trophy.fill"
             }
         }
-        /// Palette sportive néon haut de gamme (Nike / Apple Fitness+)
-        var color: Color {
+        /// Nom dit par VoiceOver, en minuscules.
+        var spokenName: String {
             switch self {
-            case .idle, .prepare: return Color(hex: 0xFFB800)   // or solaire
-            case .work:           return Color(hex: 0x00F076)   // volt / vert néon électrique
-            case .rest:           return Color(hex: 0xFF5252)   // corail éclatant
-            case .restCycle:      return Color(hex: 0x00D2FF)   // cyan givré
-            case .cooldown:       return Color(hex: 0x7E72F2)   // indigo doux
-            case .done:           return Color(hex: 0x00F076)
+            case .idle:      return "prêt"
+            case .prepare:   return "préparation"
+            case .work:      return "effort"
+            case .rest:      return "repos"
+            case .restCycle: return "récupération entre séries"
+            case .cooldown:  return "retour au calme"
+            case .done:      return "terminé"
             }
         }
+        /// Teinte de la phase (palette sportive néon). Une seule source: la
+        /// couleur et la version lisible en clair (`TabataPalette.text`) en partent.
+        var hex: UInt {
+            switch self {
+            case .idle, .prepare: return 0xFFB800   // or solaire
+            case .work:           return 0x00F076   // volt / vert néon électrique
+            case .rest:           return 0xFF5252   // corail éclatant
+            case .restCycle:      return 0x00D2FF   // cyan givré
+            case .cooldown:       return 0x7E72F2   // indigo doux
+            case .done:           return 0x00F076
+            }
+        }
+        /// Palette sportive néon haut de gamme (Nike / Apple Fitness+)
+        var color: Color { Color(hex: hex) }
         var gradientColors: [Color] {
             switch self {
             case .idle, .prepare: return [Color(hex: 0xFFCA28), Color(hex: 0xFF9800)]
@@ -311,9 +401,7 @@ final class TabataEngine {
     }
 
     func status(of step: TabataStep) -> TabataStepStatus {
-        guard let cur = currentStepIndex else { return .future }
-        if step.index == cur { return .current }
-        return step.index < cur ? .past : .future
+        TabataStepNav.status(index: step.index, current: currentStepIndex)
     }
 
     func isCompleted(_ step: TabataStep) -> Bool { completedSteps.contains(step.index) }
@@ -372,13 +460,32 @@ final class TabataEngine {
 
     private var fullCycle: Int { cfg.rounds * cfg.work + max(0, cfg.rounds - 1) * cfg.rest }
 
-    /// Durée totale de toute la séance.
+    /// Durée totale de toute la séance: la somme des étapes affichées.
     var totalDuration: Int {
+        steps.isEmpty ? formulaDuration : steps.reduce(0) { $0 + $1.duration }
+    }
+
+    private var formulaDuration: Int {
         cfg.prepare + cfg.cycles * fullCycle + max(0, cfg.cycles - 1) * cfg.restCycle + cfg.cooldown
     }
 
-    /// Temps restant sur TOUTE la séance (intervalle courant + tout ce qui suit).
+    /// Temps restant sur TOUTE la séance (intervalle courant + tout ce qui suit),
+    /// recalculé depuis la séquence: juste après un saut comme en cours d'étape.
     var totalRemaining: Int {
+        switch phase {
+        case .idle: return totalDuration
+        case .done: return 0
+        default:
+            if let cur = currentStepIndex {
+                return TabataStepNav.remainingTotal(durations: steps.map(\.duration),
+                                                    current: cur, remainingInStep: remaining)
+            }
+            return formulaRemaining
+        }
+    }
+
+    /// Ancien calcul par phase, gardé si l'étape courante est introuvable.
+    private var formulaRemaining: Int {
         switch phase {
         case .idle:    return totalDuration
         case .done:    return 0
@@ -608,6 +715,28 @@ final class TabataEngine {
         }
     }
 
+    /// Navigation étape par étape (boutons Précédent / Suivant de l'écran).
+    var canNavigateSteps: Bool { phase != .idle && phase != .done && !steps.isEmpty }
+
+    func goToNextStep() {
+        apply(TabataStepNav.next(current: currentStepIndex, count: steps.count))
+    }
+
+    func goToPreviousStep() {
+        apply(TabataStepNav.previous(current: currentStepIndex, count: steps.count))
+    }
+
+    private func apply(_ move: TabataStepNav.Move) {
+        switch move {
+        case .select(let i), .restart(let i): select(stepIndex: i)
+        case .finish:
+            guard phase != .done else { return }
+            Haptics.tap()
+            finish()
+        case .none: break
+        }
+    }
+
     func adjustSeconds(_ delta: Int) {
         Haptics.tap()
         let newRemaining = max(1, remaining + delta)
@@ -719,33 +848,43 @@ enum TabataPresets {
 /// Couleurs neutres de Tabata, qui suivent le theme choisi.
 ///
 /// L'ecran forcait `.preferredColorScheme(.dark)` et peignait tout en blanc sur
-/// `#07080A`: en theme clair on ouvrait un minuteur noir. Les accents neon restent
-/// (ils portent la phase: effort, repos, recup), mais le fond, les textes et les
-/// filets suivent le theme. En clair, les accents servant de TEXTE prennent une
-/// teinte plus profonde: un vert volt sur blanc tombe a 1,4:1 de contraste.
+/// `#07080A`: en theme clair on ouvrait un minuteur noir. Le fond est maintenant
+/// celui de l'app (`Theme.bg`, blanc en clair), les panneaux sont les surfaces de
+/// verre partagees (`raisedSurface`). Les accents neon restent (ils portent la
+/// phase: effort, repos, recup), toujours accompagnes d'une icone et d'un mot pour
+/// rester lisibles en palette neutre.
+///
+/// En clair, un accent servant de TEXTE prend une teinte plus profonde: un vert
+/// volt sur blanc tombe a 1,4:1 de contraste. La correspondance se fait par
+/// valeur hexa, jamais en comparant deux `Color`: ce sont des couleurs dynamiques
+/// (palette neutre) et `==` entre elles ne repond jamais vrai.
 struct TabataPalette {
     let scheme: ColorScheme
     var dark: Bool { scheme == .dark }
     /// Encre principale: textes, icones, filets (a opacite reduite).
-    var ink: Color { dark ? .white : Color(hex: 0x0B0C0E) }
-    var background: Color { dark ? Color(hex: 0x07080A) : Color(hex: 0xF3F4F6) }
-    var sheet: Color { dark ? Color(hex: 0x111318) : Color(hex: 0xF7F8FA) }
-    var panel: Color { dark ? Color(hex: 0x12141A) : .white }
-    var card: Color { dark ? Color(hex: 0x13151D) : .white }
+    var ink: Color { Theme.textPrimary }
+    /// Fond de l'ecran: celui de l'app, blanc en clair, noir en sombre.
+    var background: Color { Theme.bg }
     /// Couleur du voile qui assourdit le fond derriere un element.
-    var scrim: Color { dark ? .black : .white }
-    var shadowOpacity: Double { dark ? 0.6 : 0.12 }
+    var scrim: Color { Theme.bg }
 
-    /// Accent utilise comme texte: teinte profonde en clair pour rester lisible.
-    func text(_ accent: Color) -> Color {
-        guard !dark else { return accent }
-        switch accent {
-        case Color(hex: 0x00F076): return Color(hex: 0x008A43)
-        case Color(hex: 0x00D2FF): return Color(hex: 0x0078A8)
-        case Color(hex: 0xFFB800): return Color(hex: 0xA86F00)
-        case Color(hex: 0xFF5252): return Color(hex: 0xC62828)
-        case Color(hex: 0x7E72F2): return Color(hex: 0x4F43C9)
-        default: return accent
+    /// Accent utilise comme texte ou icone: teinte profonde en clair.
+    func text(hex: UInt) -> Color { Color(hex: Self.textHex(hex, dark: dark)) }
+    func text(_ phase: TabataEngine.Phase) -> Color { text(hex: phase.hex) }
+
+    /// Valeur hexa lisible pour un accent donne. Sombre: l'accent tel quel.
+    /// Clair: la teinte profonde connue, sinon l'accent assombri de 40 %.
+    static func textHex(_ hex: UInt, dark: Bool) -> UInt {
+        guard !dark else { return hex }
+        switch hex {
+        case 0x00F076: return 0x008A43
+        case 0x00D2FF: return 0x0078A8
+        case 0xFFB800: return 0xA86F00
+        case 0xFF5252: return 0xC62828
+        case 0x7E72F2: return 0x4F43C9
+        default:
+            func ch(_ shift: UInt) -> UInt { UInt(Double((hex >> shift) & 0xFF) * 0.6) }
+            return (ch(16) << 16) | (ch(8) << 8) | ch(0)
         }
     }
 }
@@ -755,6 +894,7 @@ struct TabataView: View {
     private var pal: TabataPalette { TabataPalette(scheme: colorScheme) }
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AppStorage(AppStorageKeys.tabPrepare) private var prepare = 10
     @AppStorage(AppStorageKeys.tabWork) private var work = 30
     @AppStorage(AppStorageKeys.tabRest) private var rest = 15
@@ -773,6 +913,9 @@ struct TabataView: View {
     @State private var showSequence = false
     @State private var showResetDialog = false
     @State private var soundMuted = false
+    /// Saut lointain demandé pendant que le chrono tourne, en attente de confirmation.
+    @State private var pendingJump: Int?
+    @State private var pendingSheetJump: Int?
 
     // Préréglages perso et historique (SwiftData).
     @Environment(\.modelContext) private var ctx
@@ -845,7 +988,7 @@ struct TabataView: View {
         engine.cfg = config
         engine.remaining = prepare
         keeper.persist()
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+        withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.85)) {
             showChooser = false
         }
     }
@@ -939,7 +1082,7 @@ struct TabataView: View {
 
             if engine.phase == .done {
                 completionCelebrationView
-                    .transition(.scale.combined(with: .opacity))
+                    .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
                     .zIndex(20)
             }
         }
@@ -951,13 +1094,19 @@ struct TabataView: View {
             chooserSheetContent
                 .presentationDetents([.fraction(0.85), .large])
                 .presentationDragIndicator(.visible)
-                .presentationBackground(pal.sheet)
         }
         .sheet(isPresented: $showSequence) {
             sequenceSheetContent
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
-                .presentationBackground(pal.sheet)
+        }
+        .confirmationDialog("Sauter plusieurs étapes ?",
+                            isPresented: Binding(get: { pendingJump != nil }, set: { if !$0 { pendingJump = nil } }),
+                            titleVisibility: .visible, presenting: pendingJump) { index in
+            Button("Aller à l'étape \(index + 1)") { engine.select(stepIndex: index) }
+            Button("Annuler", role: .cancel) {}
+        } message: { index in
+            Text(jumpMessage(index))
         }
         .confirmationDialog("Que veux-tu faire de cette séance ?", isPresented: $showResetDialog, titleVisibility: .visible) {
             Button("Recommencer depuis le début") {
@@ -984,6 +1133,15 @@ struct TabataView: View {
             applyConfigIfIdle()
             soundMuted = !TabataSound.shared.soundEnabled
             logFinishedIfNeeded()
+            #if DEBUG
+            // `-tabataStep N` : séance lancée puis mise en pause sur l'étape N,
+            // pour capturer les états passé / en cours / à venir sans taper.
+            if let v = DebugLaunchFlags.value("-tabataStep"), let n = Int(v), engine.phase == .idle {
+                engine.begin()
+                engine.select(stepIndex: min(max(0, n), max(0, engine.steps.count - 1)))
+                engine.startOrPause()
+            }
+            #endif
         }
         .onChange(of: engine.phase) { _, phase in
             if phase == .done { logFinishedIfNeeded() }
@@ -1015,8 +1173,9 @@ struct TabataView: View {
                 endRadius: 320
             )
             .blur(radius: 60)
-            .animation(.easeInOut(duration: 0.6), value: engine.phase)
+            .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: engine.phase)
             .ignoresSafeArea()
+            .accessibilityHidden(true)
 
             // Grille sportive très subtile
             Rectangle()
@@ -1039,9 +1198,8 @@ struct TabataView: View {
                 Image(systemName: "chevron.down")
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(pal.ink)
-                    .frame(width: 40, height: 40)
+                    .frame(width: 44, height: 44)
                     .raisedSurface(Circle())
-                    .overlay(Circle().stroke(pal.ink.opacity(0.12), lineWidth: 1))
             }
             .accessibilityLabel(sessionActive ? "Quitter l'écran, la séance continue" : "Fermer")
             .keyboardShortcut(.cancelAction)
@@ -1049,14 +1207,14 @@ struct TabataView: View {
             Spacer()
 
             Button {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.85)) {
                     showChooser = true
                 }
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: chosenSession?.icon ?? "timer")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(pal.text(engine.phase.color))
+                        .foregroundStyle(pal.text(engine.phase))
 
                     Text(chosenSession?.name ?? "Intervalles libres")
                         .font(.system(size: 14, weight: .bold))
@@ -1070,7 +1228,6 @@ struct TabataView: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
                 .raisedSurface(Capsule())
-                .overlay(Capsule().stroke(pal.ink.opacity(0.12), lineWidth: 1))
             }
 
             Spacer()
@@ -1085,9 +1242,8 @@ struct TabataView: View {
                     Image(systemName: soundMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(soundMuted ? pal.ink.opacity(0.4) : engine.phase.color)
-                        .frame(width: 40, height: 40)
+                        .frame(width: 44, height: 44)
                         .raisedSurface(Circle())
-                        .overlay(Circle().stroke(pal.ink.opacity(0.12), lineWidth: 1))
                 }
 
                 // Bouton Réglages
@@ -1097,9 +1253,8 @@ struct TabataView: View {
                     Image(systemName: "slider.horizontal.3")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(pal.ink)
-                        .frame(width: 40, height: 40)
+                        .frame(width: 44, height: 44)
                         .raisedSurface(Circle())
-                        .overlay(Circle().stroke(pal.ink.opacity(0.12), lineWidth: 1))
                 }
             }
         }
@@ -1166,7 +1321,7 @@ struct TabataView: View {
                     Image(systemName: "target")
                         .font(.system(size: 10, weight: .bold))
                 }
-                .foregroundStyle(engine.phase == .work ? pal.text(engine.phase.color) : pal.ink.opacity(0.75))
+                .foregroundStyle(engine.phase == .work ? pal.text(engine.phase) : pal.ink.opacity(0.75))
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
                 .background(engine.phase == .work ? engine.phase.color.opacity(0.15) : pal.ink.opacity(0.06), in: Capsule())
@@ -1181,9 +1336,9 @@ struct TabataView: View {
                     showSequence = true
                 } label: {
                     Image(systemName: "list.bullet")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(pal.ink)
-                        .frame(width: 30, height: 30)
+                        .frame(width: 44, height: 44)
                         .raisedSurface(Circle())
                 }
                 .accessibilityLabel("Voir la séquence complète")
@@ -1192,15 +1347,19 @@ struct TabataView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(pal.ink.opacity(0.08), lineWidth: 1))
     }
 
     // MARK: - Bande des étapes (une pastille par étape, défilement horizontal)
+    //
+    // Trois états lisibles sans la couleur:
+    // - passée: pastille pâle, coche si faite, barre oblique si sautée;
+    // - en cours: pastille pleine à l'encre du thème, icône de la phase;
+    // - à venir: contour de la couleur de phase, lettre de la phase.
 
     private var stepStrip: some View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 5) {
+                HStack(spacing: 4) {
                     ForEach(engine.steps) { step in
                         stepChip(step)
                             .id(step.index)
@@ -1208,10 +1367,14 @@ struct TabataView: View {
                 }
                 .padding(.horizontal, 2)
             }
-            .frame(height: 30)
+            .frame(height: 44)
             .onChange(of: engine.currentStepIndex) { _, idx in
                 guard let idx, engine.steps.indices.contains(idx) else { return }
-                withAnimation(.easeInOut(duration: 0.25)) { proxy.scrollTo(idx, anchor: .center) }
+                if reduceMotion {
+                    proxy.scrollTo(idx, anchor: .center)
+                } else {
+                    withAnimation(.easeInOut(duration: 0.25)) { proxy.scrollTo(idx, anchor: .center) }
+                }
             }
             .onAppear {
                 if let idx = engine.currentStepIndex, engine.steps.indices.contains(idx) {
@@ -1226,37 +1389,43 @@ struct TabataView: View {
         let done = engine.isCompleted(step)
         let accent = step.phase.color
         return Button {
-            engine.select(stepIndex: step.index)
+            requestJump(to: step.index)
         } label: {
             ZStack {
-                Capsule()
-                    .fill(status == .current ? accent : accent.opacity(status == .past ? 0.18 : 0.10))
-                Capsule()
-                    .stroke(status == .future ? accent.opacity(0.45) : Color.clear, lineWidth: 1)
-                if done && status == .past {
-                    Image(systemName: "checkmark")
+                switch status {
+                case .current:
+                    Capsule().fill(pal.ink)
+                    Capsule().stroke(accent, lineWidth: 2).padding(-2)
+                    Image(systemName: step.phase.icon)
+                        .font(.system(size: 11, weight: .black))
+                        .foregroundStyle(pal.background)
+                case .past:
+                    Capsule().fill(pal.ink.opacity(0.08))
+                    Image(systemName: done ? "checkmark" : "forward.fill")
                         .font(.system(size: 9, weight: .black))
-                        .foregroundStyle(pal.text(accent))
-                } else {
+                        .foregroundStyle(pal.ink.opacity(done ? 0.6 : 0.35))
+                case .future:
+                    Capsule().stroke(accent.opacity(0.7), lineWidth: 1.5)
                     Text(stepShortLabel(step))
-                        .font(.system(size: 9, weight: .black))
-                        .foregroundStyle(status == .current ? Color.black : (status == .past ? pal.ink.opacity(0.45) : pal.text(accent)))
+                        .font(.system(size: 10, weight: .black))
+                        .foregroundStyle(pal.text(step.phase))
                 }
             }
-            .frame(width: step.phase == .work ? 30 : 22, height: 22)
-            .opacity(status == .past && !done ? 0.55 : 1)
+            .frame(width: step.phase == .work ? 32 : 24, height: 26)
+            .frame(height: 44)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(stepAccessibilityLabel(step, status: status, done: done))
         .accessibilityAddTraits(status == .current ? .isSelected : [])
-        .accessibilityHint("Se placer sur cette étape")
+        .accessibilityHint(status == .current ? "" : "Se placer sur cette étape")
     }
 
     private func stepShortLabel(_ step: TabataStep) -> String {
         switch step.phase {
         case .prepare:   return "P"
         case .work:      return "E\(step.round)"
-        case .rest:      return "r"
+        case .rest:      return "R"
         case .restCycle: return "S"
         case .cooldown:  return "C"
         default:         return ""
@@ -1274,23 +1443,34 @@ struct TabataView: View {
     }
 
     private func stepDetail(_ step: TabataStep) -> String {
-        var parts: [String] = []
+        var parts: [String] = ["Étape \(step.index + 1)/\(engine.steps.count)"]
         if engine.cfg.cycles > 1 { parts.append("Série \(step.cycle)") }
         if step.phase == .work || step.phase == .rest { parts.append("Round \(step.round)") }
         parts.append("\(step.duration) s")
         return parts.joined(separator: " · ")
     }
 
-    private func stepStatusText(_ status: TabataStepStatus, done: Bool) -> String {
-        switch status {
-        case .current: return "en cours"
-        case .future:  return "à venir"
-        case .past:    return done ? "fait" : "sauté"
+    private func stepAccessibilityLabel(_ step: TabataStep, status: TabataStepStatus, done: Bool) -> String {
+        TabataStepNav.accessibilityLabel(index: step.index, count: engine.steps.count, phase: step.phase,
+                                         exercise: step.phase == .work ? exercise(forRound: step.round) : nil,
+                                         round: (step.phase == .work || step.phase == .rest) ? step.round : nil,
+                                         duration: step.duration, status: status, done: done)
+    }
+
+    /// Saut vers une étape: direct, sauf si le chrono tourne et qu'on sauterait
+    /// plus d'une étape (confirmation d'abord).
+    private func requestJump(to index: Int, fromSheet: Bool = false) {
+        if TabataStepNav.needsConfirmation(current: engine.currentStepIndex, target: index, running: engine.running) {
+            if fromSheet { pendingSheetJump = index } else { pendingJump = index }
+        } else {
+            engine.select(stepIndex: index)
+            if fromSheet { showSequence = false }
         }
     }
 
-    private func stepAccessibilityLabel(_ step: TabataStep, status: TabataStepStatus, done: Bool) -> String {
-        "\(stepTitle(step)), \(stepDetail(step)), \(stepStatusText(status, done: done))"
+    private func jumpMessage(_ index: Int) -> String {
+        let n = TabataStepNav.skippedCount(current: engine.currentStepIndex, target: index)
+        return "Tu vas sauter \(n) étapes. Elles ne compteront pas comme faites. Le chrono repart au début de l'étape choisie."
     }
 
     // MARK: - Feuille de la séquence complète
@@ -1302,7 +1482,7 @@ struct TabataView: View {
                     Text("Séquence de la séance")
                         .font(AppFont.sans(size: 22, weight: .bold))
                         .foregroundStyle(pal.ink)
-                    Text("\(engine.workStepsCompleted) effort\(engine.workStepsCompleted > 1 ? "s" : "") fait\(engine.workStepsCompleted > 1 ? "s" : "") sur \(engine.workStepsTotal) · \(formatHMS(engine.totalDuration)) au total")
+                    Text("\(engine.workStepsCompleted) effort\(engine.workStepsCompleted > 1 ? "s" : "") fait\(engine.workStepsCompleted > 1 ? "s" : "") sur \(engine.workStepsTotal) · \(formatHMS(engine.totalRemaining)) restant sur \(formatHMS(engine.totalDuration))")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(pal.ink.opacity(0.6))
                 }
@@ -1313,8 +1493,8 @@ struct TabataView: View {
                     Image(systemName: "xmark")
                         .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(pal.ink.opacity(0.8))
-                        .frame(width: 32, height: 32)
-                        .raisedSurface(Circle())
+                        .frame(width: 44, height: 44)
+                        .glassControl(Circle())
                 }
                 .accessibilityLabel("Fermer la séquence")
             }
@@ -1324,14 +1504,14 @@ struct TabataView: View {
 
             Text("Toucher une étape s'y place tout de suite. Sauter une étape ne la compte pas comme faite.")
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(pal.ink.opacity(0.55))
+                .foregroundStyle(pal.ink.opacity(0.6))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 10)
 
             ScrollViewReader { proxy in
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 8) {
+                    LazyVStack(spacing: 8) {
                         ForEach(engine.steps) { step in
                             sequenceRow(step)
                                 .id("row-\(step.index)")
@@ -1347,6 +1527,17 @@ struct TabataView: View {
                 }
             }
         }
+        .confirmationDialog("Sauter plusieurs étapes ?",
+                            isPresented: Binding(get: { pendingSheetJump != nil }, set: { if !$0 { pendingSheetJump = nil } }),
+                            titleVisibility: .visible, presenting: pendingSheetJump) { index in
+            Button("Aller à l'étape \(index + 1)") {
+                engine.select(stepIndex: index)
+                showSequence = false
+            }
+            Button("Annuler", role: .cancel) {}
+        } message: { index in
+            Text(jumpMessage(index))
+        }
     }
 
     private func sequenceRow(_ step: TabataStep) -> some View {
@@ -1354,15 +1545,15 @@ struct TabataView: View {
         let done = engine.isCompleted(step)
         let accent = step.phase.color
         return Button {
-            engine.select(stepIndex: step.index)
-            showSequence = false
+            requestJump(to: step.index, fromSheet: true)
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: step.phase.icon)
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(pal.text(accent))
+                    .foregroundStyle(status == .current ? pal.background : pal.text(step.phase))
                     .frame(width: 36, height: 36)
-                    .background(accent.opacity(status == .current ? 0.28 : 0.12), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+                    .background(status == .current ? AnyShapeStyle(pal.ink) : AnyShapeStyle(accent.opacity(0.14)),
+                                in: RoundedRectangle(cornerRadius: 11, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(stepTitle(step))
@@ -1371,40 +1562,38 @@ struct TabataView: View {
                         .lineLimit(1)
                     Text(stepDetail(step))
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(pal.ink.opacity(0.55))
+                        .foregroundStyle(pal.ink.opacity(0.6))
                 }
 
                 Spacer()
 
                 HStack(spacing: 5) {
-                    if status == .current {
+                    switch status {
+                    case .current:
                         Image(systemName: engine.running ? "play.fill" : "pause.fill")
                             .font(.system(size: 10, weight: .bold))
-                    } else if done {
-                        Image(systemName: "checkmark")
+                    case .past:
+                        Image(systemName: done ? "checkmark" : "forward.fill")
                             .font(.system(size: 10, weight: .black))
+                    case .future:
+                        EmptyView()
                     }
-                    Text(stepStatusText(status, done: done))
+                    Text(TabataStepNav.statusText(status, done: done))
                         .font(.system(size: 11, weight: .heavy))
                 }
-                .foregroundStyle(status == .current ? pal.text(accent) : pal.ink.opacity(0.5))
+                .foregroundStyle(status == .current ? pal.ink : pal.ink.opacity(status == .past ? 0.45 : 0.6))
             }
             .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(status == .current ? accent.opacity(0.10) : pal.ink.opacity(0.05))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(status == .current ? accent.opacity(0.45) : pal.ink.opacity(0.08), lineWidth: 1)
-            )
-            .opacity(status == .past ? 0.7 : 1)
+            .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+            .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous),
+                           status == .current ? .raised : .inset,
+                           tint: status == .current ? accent : nil)
+            .opacity(status == .past ? 0.65 : 1)
         }
         .buttonStyle(PressableButtonStyle())
         .accessibilityLabel(stepAccessibilityLabel(step, status: status, done: done))
         .accessibilityAddTraits(status == .current ? .isSelected : [])
-        .accessibilityHint("Se placer sur cette étape")
+        .accessibilityHint(status == .current ? "" : "Se placer sur cette étape")
     }
 
     // MARK: - Anneau central Ultra-Fluide à 60/120 fps
@@ -1425,7 +1614,7 @@ struct TabataView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "pause.circle.fill")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(pal.text(Color(hex: 0xFFB800)))
+                        .foregroundStyle(pal.text(hex: 0xFFB800))
                     Text("En pause après \(max(1, Int(gap / 60))) min d'absence. Reprends quand tu veux.")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(pal.ink)
@@ -1434,8 +1623,7 @@ struct TabataView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 7)
-                .background(pal.scrim.opacity(0.5), in: Capsule())
-                .overlay(Capsule().stroke(Color(hex: 0xFFB800).opacity(0.4), lineWidth: 1))
+                .raisedSurface(Capsule(), tint: Color(hex: 0xFFB800))
                 .accessibilityElement(children: .combine)
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
@@ -1444,7 +1632,7 @@ struct TabataView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "arrow.right.circle.fill")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(pal.text(Color(hex: 0x00D2FF)))
+                        .foregroundStyle(pal.text(hex: 0x00D2FF))
 
                     Text("À SUIVRE :")
                         .font(.system(size: 11, weight: .heavy))
@@ -1457,8 +1645,7 @@ struct TabataView: View {
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 7)
-                .background(pal.scrim.opacity(0.5), in: Capsule())
-                .overlay(Capsule().stroke(pal.ink.opacity(0.12), lineWidth: 1))
+                .raisedSurface(Capsule())
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
             } else {
                 // Espace réservé pour éviter les sauts de mise en page
@@ -1475,7 +1662,7 @@ struct TabataView: View {
                 HStack(spacing: 12) {
                     Image(systemName: exerciseSymbol(current))
                         .font(.system(size: 26, weight: .bold))
-                        .foregroundStyle(pal.text(engine.phase.color))
+                        .foregroundStyle(pal.text(engine.phase))
                         .frame(width: 44, height: 44)
                         .background(engine.phase.color.opacity(0.16), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
 
@@ -1483,7 +1670,7 @@ struct TabataView: View {
                         Text("EXERCICE EN COURS")
                             .font(.system(size: 10, weight: .heavy))
                             .kerning(0.8)
-                            .foregroundStyle(pal.text(engine.phase.color))
+                            .foregroundStyle(pal.text(engine.phase))
                         Text(current)
                             .font(AppFont.sans(size: 20, weight: .bold))
                             .foregroundStyle(pal.ink)
@@ -1493,13 +1680,12 @@ struct TabataView: View {
                 }
                 .padding(.horizontal, 18)
                 .padding(.vertical, 10)
-                .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(engine.phase.color.opacity(0.3), lineWidth: 1))
+                .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous), tint: engine.phase.color)
             } else {
                 HStack(spacing: 10) {
                     Image(systemName: engine.phase.icon)
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(pal.text(engine.phase.color))
+                        .foregroundStyle(pal.text(engine.phase))
 
                     VStack(alignment: .center, spacing: 2) {
                         Text(engine.phase.title)
@@ -1516,7 +1702,6 @@ struct TabataView: View {
                 .padding(.horizontal, 18)
                 .padding(.vertical, 10)
                 .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(pal.ink.opacity(0.08), lineWidth: 1))
             }
         }
         .frame(height: 64)
@@ -1585,7 +1770,7 @@ struct TabataView: View {
                         .font(.system(size: 11, weight: .heavy))
                         .kerning(0.8)
                 }
-                .foregroundStyle(pal.text(engine.phase.color))
+                .foregroundStyle(pal.text(engine.phase))
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
                 .background(engine.phase.color.opacity(0.18), in: Capsule())
@@ -1603,7 +1788,7 @@ struct TabataView: View {
                     Text("DONNE TOUT !")
                         .font(.system(size: 12, weight: .heavy))
                         .kerning(1)
-                        .foregroundStyle(pal.text(engine.phase.color))
+                        .foregroundStyle(pal.text(engine.phase))
                 } else if engine.phase == .rest || engine.phase == .restCycle {
                     Text("RÉCUPÈRE")
                         .font(.system(size: 12, weight: .heavy))
@@ -1613,7 +1798,7 @@ struct TabataView: View {
                     Text("PRÉPARE-TOI")
                         .font(.system(size: 12, weight: .heavy))
                         .kerning(1)
-                        .foregroundStyle(pal.text(Color(hex: 0xFFB800)))
+                        .foregroundStyle(pal.text(hex: 0xFFB800))
                 }
             }
         }
@@ -1636,8 +1821,8 @@ struct TabataView: View {
                             .font(.system(size: 12, weight: .bold))
                     }
                     .foregroundStyle(pal.ink.opacity(0.75))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
+                    .padding(.horizontal, 14)
+                    .frame(minHeight: 44)
                     .raisedSurface(Capsule())
                 }
 
@@ -1652,9 +1837,9 @@ struct TabataView: View {
                         Text("Recommencer")
                             .font(.system(size: 11, weight: .bold))
                     }
-                    .foregroundStyle(pal.ink.opacity(sessionActive ? 0.6 : 0.3))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
+                    .foregroundStyle(pal.ink.opacity(sessionActive ? 0.7 : 0.3))
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 44)
                     .raisedSurface(Capsule())
                 }
                 .disabled(!sessionActive)
@@ -1672,8 +1857,8 @@ struct TabataView: View {
                             .font(.system(size: 12, weight: .bold))
                     }
                     .foregroundStyle(pal.ink.opacity(0.75))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
+                    .padding(.horizontal, 14)
+                    .frame(minHeight: 44)
                     .raisedSurface(Capsule())
                 }
             }
@@ -1681,23 +1866,25 @@ struct TabataView: View {
 
             // Barre principale : Précédent / Play-Pause Géant / Suivant
             HStack(spacing: 24) {
-                // Série / Round précédent
+                // Étape précédente (sur la première: la recommencer)
                 Button {
-                    engine.skipBackward()
+                    engine.goToPreviousStep()
                 } label: {
                     VStack(spacing: 3) {
                         Image(systemName: "backward.end.fill")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundStyle(pal.ink)
-                        Text("Préc.")
+                        Text("Étape")
                             .font(.system(size: 9, weight: .heavy))
-                            .foregroundStyle(pal.ink.opacity(0.5))
+                            .foregroundStyle(pal.ink.opacity(0.6))
                     }
                     .frame(width: 58, height: 58)
                     .raisedSurface(Circle())
-                    .overlay(Circle().stroke(pal.ink.opacity(0.12), lineWidth: 1))
                 }
                 .buttonStyle(PressableButtonStyle())
+                .disabled(!engine.canNavigateSteps)
+                .opacity(engine.canNavigateSteps ? 1 : 0.4)
+                .accessibilityLabel(engine.currentStepIndex == 0 ? "Recommencer l'étape" : "Étape précédente")
 
                 // Bouton PLAY / PAUSE CENTRAL GÉANT
                 Button {
@@ -1729,37 +1916,33 @@ struct TabataView: View {
                     }
                 }
                 .buttonStyle(PressableButtonStyle())
+                .accessibilityLabel(engine.running ? "Pause" : (sessionActive ? "Reprendre" : "Démarrer"))
 
-                // Série / Round suivant
+                // Étape suivante (sur la dernière: terminer la séance)
                 Button {
-                    engine.skipForward()
+                    engine.goToNextStep()
                 } label: {
                     VStack(spacing: 3) {
                         Image(systemName: "forward.end.fill")
                             .font(.system(size: 18, weight: .bold))
                             .foregroundStyle(pal.ink)
-                        Text("Suiv.")
+                        Text("Étape")
                             .font(.system(size: 9, weight: .heavy))
-                            .foregroundStyle(pal.ink.opacity(0.5))
+                            .foregroundStyle(pal.ink.opacity(0.6))
                     }
                     .frame(width: 58, height: 58)
                     .raisedSurface(Circle())
-                    .overlay(Circle().stroke(pal.ink.opacity(0.12), lineWidth: 1))
                 }
                 .buttonStyle(PressableButtonStyle())
+                .disabled(!engine.canNavigateSteps)
+                .opacity(engine.canNavigateSteps ? 1 : 0.4)
+                .accessibilityLabel(engine.currentStepIndex == engine.steps.count - 1 ? "Terminer la séance" : "Étape suivante")
             }
         }
-        .padding(.vertical, 16)
-        .padding(.horizontal, 20)
-        .background(
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .fill(pal.panel.opacity(0.92))
-                .shadow(color: Color.black.opacity(pal.shadowOpacity), radius: 20, x: 0, y: 10)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .stroke(pal.ink.opacity(0.12), lineWidth: 1)
-        )
+        // Pas de panneau opaque derrière: chaque commande est en verre, posée
+        // directement sur le fond de l'écran (clair en clair, sombre en sombre).
+        .padding(.vertical, 8)
+        .padding(.horizontal, 8)
     }
 
     // MARK: - Écran de choix de séance (Native Modal Sheet)
@@ -1878,12 +2061,13 @@ struct TabataView: View {
 
     private func presetCard(_ p: TabataPreset) -> some View {
         let isChosen = chosenSession?.id == presetSession(p).id
-        let accent = Color(hex: 0x00D2FF)
+        let accentHex: UInt = 0x00D2FF
+        let accent = Color(hex: accentHex)
         let c = p.config
         return HStack(spacing: 14) {
             Image(systemName: "timer")
                 .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(pal.text(accent))
+                .foregroundStyle(pal.text(hex: accentHex))
                 .frame(width: 44, height: 44)
                 .background(accent.opacity(0.15), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             VStack(alignment: .leading, spacing: 3) {
@@ -1893,15 +2077,13 @@ struct TabataView: View {
             }
             Spacer()
             if isChosen {
-                Image(systemName: "checkmark.circle.fill").foregroundStyle(pal.text(accent))
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(pal.text(hex: accentHex))
             }
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(isChosen ? accent.opacity(0.08) : pal.ink.opacity(0.05)))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .stroke(isChosen ? accent.opacity(0.4) : pal.ink.opacity(0.08), lineWidth: 1))
+        .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous),
+                       isChosen ? .raised : .inset, tint: isChosen ? accent : nil)
     }
 
     // MARK: - Historique des séances
@@ -1929,7 +2111,7 @@ struct TabataView: View {
                     Spacer()
                     Text(formatHMS(log.activeSeconds))
                         .font(.system(size: 14, weight: .bold)).monospacedDigit()
-                        .foregroundStyle(pal.text(Color(hex: 0x00F076)))
+                        .foregroundStyle(pal.text(hex: 0x00F076))
                     Button(role: .destructive) { deleteLog(log) } label: {
                         Image(systemName: "trash").font(.caption)
                     }
@@ -1937,7 +2119,7 @@ struct TabataView: View {
                     .accessibilityLabel("Supprimer la séance")
                 }
                 .padding(12)
-                .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(pal.ink.opacity(0.05)))
+                .raisedSurface(RoundedRectangle(cornerRadius: 14, style: .continuous), .inset)
             }
         }
     }
@@ -1955,7 +2137,7 @@ struct TabataView: View {
             Text(label)
                 .font(.system(size: 10, weight: .heavy))
                 .kerning(0.8)
-                .foregroundStyle(Color(hex: color))
+                .foregroundStyle(pal.text(hex: color))
 
             HStack(spacing: 8) {
                 Button {
@@ -1990,21 +2172,20 @@ struct TabataView: View {
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity)
         .raisedSurface(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(pal.ink.opacity(0.08), lineWidth: 1))
     }
 
     private func sessionCard(_ s: TabataSession) -> some View {
         let isChosen = chosenSession?.id == s.id
-        let accent = Color(hex: s.accentColorHex)
+        let accentHex = s.accentColorHex
+        let accent = Color(hex: accentHex)
 
         return HStack(spacing: 14) {
             // Icône stylisée
             Image(systemName: s.icon)
                 .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(pal.text(accent))
+                .foregroundStyle(pal.text(hex: accentHex))
                 .frame(width: 52, height: 52)
                 .background(accent.opacity(0.15), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(accent.opacity(0.3), lineWidth: 1))
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
@@ -2015,7 +2196,7 @@ struct TabataView: View {
                     if let tag = s.tag {
                         Text(tag)
                             .font(.system(size: 9, weight: .heavy))
-                            .foregroundStyle(pal.text(accent))
+                            .foregroundStyle(pal.text(hex: accentHex))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(accent.opacity(0.15), in: Capsule())
@@ -2033,7 +2214,7 @@ struct TabataView: View {
             if isChosen {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(pal.text(accent))
+                    .foregroundStyle(pal.text(hex: accentHex))
             } else {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .bold))
@@ -2042,14 +2223,8 @@ struct TabataView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(isChosen ? accent.opacity(0.08) : pal.ink.opacity(0.05))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(isChosen ? accent.opacity(0.4) : pal.ink.opacity(0.08), lineWidth: 1)
-        )
+        .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous),
+                       isChosen ? .raised : .inset, tint: isChosen ? accent : nil)
     }
 
     private var freeIntervalCard: some View {
@@ -2057,10 +2232,9 @@ struct TabataView: View {
         return HStack(spacing: 14) {
             Image(systemName: "timer")
                 .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(pal.text(Color(hex: 0x00D2FF)))
+                .foregroundStyle(pal.text(hex: 0x00D2FF))
                 .frame(width: 52, height: 52)
                 .background(Color(hex: 0x00D2FF).opacity(0.15), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color(hex: 0x00D2FF).opacity(0.3), lineWidth: 1))
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("Intervalles Libres")
@@ -2076,7 +2250,7 @@ struct TabataView: View {
             if isChosen {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(pal.text(Color(hex: 0x00D2FF)))
+                    .foregroundStyle(pal.text(hex: 0x00D2FF))
             } else {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .bold))
@@ -2085,14 +2259,8 @@ struct TabataView: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(isChosen ? Color(hex: 0x00D2FF).opacity(0.08) : pal.ink.opacity(0.05))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(isChosen ? Color(hex: 0x00D2FF).opacity(0.4) : pal.ink.opacity(0.08), lineWidth: 1)
-        )
+        .raisedSurface(RoundedRectangle(cornerRadius: 18, style: .continuous),
+                       isChosen ? .raised : .inset, tint: isChosen ? Color(hex: 0x00D2FF) : nil)
     }
 
     // MARK: - Vue de célébration / Séance terminée
@@ -2204,8 +2372,7 @@ struct TabataView: View {
                 .padding(.top, 10)
             }
             .padding(26)
-            .background(pal.card, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).stroke(pal.ink.opacity(0.12), lineWidth: 1))
+            .raisedSurface(RoundedRectangle(cornerRadius: 28, style: .continuous), .floating)
             .padding(.horizontal, 24)
         }
     }
@@ -2222,7 +2389,7 @@ struct TabataView: View {
         VStack(spacing: 4) {
             Image(systemName: icon)
                 .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(pal.text(Color(hex: 0x00F076)))
+                .foregroundStyle(pal.text(hex: 0x00F076))
             Text(value)
                 .font(AppFont.sans(size: 20, weight: .bold))
                 .foregroundStyle(pal.ink)
@@ -2287,7 +2454,7 @@ struct TabataSettings: View {
                     HStack {
                         Text("Durée totale").bold()
                         Spacer()
-                        Text(formatHMS(totalSeconds)).bold().foregroundStyle(pal.text(Color(hex: 0x00F076)))
+                        Text(formatHMS(totalSeconds)).bold().foregroundStyle(pal.text(hex: 0x00F076))
                     }
                 }
             }

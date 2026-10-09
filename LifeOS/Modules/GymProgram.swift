@@ -29,6 +29,8 @@ struct GymProgramView: View {
     @State private var generating = false
     @State private var confirmUndo = false
     @State private var programError: String?
+    /// Seance ouverte en plein ecran (reprise ou demarrage du jour).
+    @State private var openSession: GymSessionTarget?
 
     private var equipment: Set<FitbotEquipment> { FitbotEquipment.parse(equipmentRaw) }
     private var excluded: Set<String> { FitbotSettings.parseExcluded(excludedRaw) }
@@ -56,12 +58,28 @@ struct GymProgramView: View {
             // (commencee hier, jour renomme ou devenu repos entre-temps).
             if let open = GymSessionService.anyActive(sessions) {
                 Section("Séance en cours") {
-                    NavigationLink {
-                        GymSessionView(day: nil, sessionID: open.id)
+                    Button {
+                        openSession = GymSessionTarget(sessionID: open.id)
                     } label: {
-                        Label("Reprendre : \(open.title) (commencée \(open.start.formatted(.relative(presentation: .named))))",
-                              systemImage: "arrow.clockwise.circle.fill")
+                        HStack(spacing: 14) {
+                            Image(systemName: "play.circle.fill")
+                                .font(.system(size: 34))
+                                .foregroundStyle(Color.fitTint)
+                                .accessibilityHidden(true)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("Reprendre la séance").font(.headline).foregroundStyle(.primary)
+                                Text("\(open.title.isEmpty ? "Séance" : open.title) · commencée \(open.start.formatted(.relative(presentation: .named)))")
+                                    .font(.subheadline).foregroundStyle(.secondary)
+                            }
+                            Spacer(minLength: 0)
+                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                .font(.footnote.weight(.bold)).foregroundStyle(.secondary)
+                                .accessibilityHidden(true)
+                        }
+                        .frame(minHeight: 56)
+                        .contentShape(Rectangle())
                     }
+                    .accessibilityLabel("Reprendre la séance \(open.title), en plein écran")
                 }
             } else if let today = day(Calendar.current.component(.weekday, from: .now)) {
                 Section("Aujourd'hui") {
@@ -69,8 +87,8 @@ struct GymProgramView: View {
                         Text(today.isRest ? "Repos. La récupération fait aussi progresser." : "Pas de séance définie aujourd'hui.")
                             .foregroundStyle(.secondary)
                     } else {
-                        NavigationLink {
-                            GymSessionView(day: today)
+                        Button {
+                            openSession = GymSessionTarget(day: today)
                         } label: {
                             Label("Commencer : \(today.title)", systemImage: "play.circle.fill")
                         }
@@ -133,6 +151,9 @@ struct GymProgramView: View {
         }
         .sheet(item: $editing) { d in
             GymDayEditor(day: d) { reschedule() }
+        }
+        .fullScreenCover(item: $openSession) { target in
+            GymSessionScreen(target: target)
         }
         .sheet(isPresented: $generating) {
             FitbotGeneratorSheet(days: days) { reschedule() }

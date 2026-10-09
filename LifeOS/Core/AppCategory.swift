@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Les 17 pôles de LifeOS (16 pour tous + `cycle` conditionnel). Pilotent la
 /// grille du tableau de bord et la navigation.
@@ -58,27 +59,35 @@ enum AppCategory: String, CaseIterable, Identifiable {
         }
     }
 
-    var tint: Color {
+    /// Couleur du domaine, depuis la table unique `DomainPalette` (clair / sombre).
+    var palettePair: DomainPalette.Pair {
         switch self {
-        case .sleep:        return Theme.sleep
-        case .nutrition:    return Theme.nutrition
-        case .fitness:      return Theme.fitness
-        case .looks:        return Theme.looks
-        case .mind:         return Theme.mind
-        case .productivity: return Theme.productivity
-        case .finance:      return Theme.finance
-        case .invest:       return Theme.invest
-        case .career:       return Theme.career
-        case .learning:     return Theme.learning
-        case .home:         return Theme.home
-        case .mobility:     return Theme.mobility
-        case .social:       return Theme.social
-        case .admin:        return Theme.admin
-        case .travel:       return Theme.travel
-        case .cycle:        return Theme.cycle
-        case .medical:      return Theme.medical
+        case .sleep:        return DomainPalette.sleep
+        case .nutrition:    return DomainPalette.nutrition
+        case .fitness:      return DomainPalette.fitness
+        case .looks:        return DomainPalette.looks
+        case .mind:         return DomainPalette.mind
+        case .productivity: return DomainPalette.productivity
+        case .finance:      return DomainPalette.finance
+        case .invest:       return DomainPalette.invest
+        case .career:       return DomainPalette.career
+        case .learning:     return DomainPalette.learning
+        case .home:         return DomainPalette.home
+        case .mobility:     return DomainPalette.mobility
+        case .social:       return DomainPalette.social
+        case .admin:        return DomainPalette.admin
+        case .travel:       return DomainPalette.travel
+        case .cycle:        return DomainPalette.cycle
+        case .medical:      return DomainPalette.medical
         }
     }
+
+    /// La couleur dynamique (clair / sombre / palette neutre) que `tint` affiche.
+    var tintUIColor: UIColor { Theme.toneUIColor(palettePair) }
+
+    /// Petits accents et icones sur verre. Jamais le seul porteur du sens : l'icone et
+    /// le titre de la catégorie restent lisibles en palette neutre.
+    var tint: Color { Color(uiColor: tintUIColor) }
 
     var subtitle: String {
         switch self {

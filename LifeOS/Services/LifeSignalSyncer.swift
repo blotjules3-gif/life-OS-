@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import WidgetKit
 
 /// Syncers agrégats — publient des signaux résumés dans l'App Group pour :
 ///   • Alimenter le contexte coach (UserContextBuilder.build) sans requête SwiftData
@@ -144,83 +143,38 @@ struct SleepWidgetSyncer: View {
 
 // MARK: - Nutrition (kcal + eau du jour)
 
-/// Publie les totaux nutritionnels du jour sous `today_kcal`, `today_protein_g`,
-/// `today_water_ml` — clés déjà lues par UserContextBuilder.
+/// Les totaux du jour (`today_kcal`, `today_protein_g`, `today_water_ml`, lus par le
+/// coach) sont publies par `WidgetPublisher`, a chaque sauvegarde d'un repas ou d'une
+/// prise d'eau (valeurs, pas nombre d'entrees). Vue gardee vide pour ne pas changer
+/// l'arbre de `MainTabView`.
 struct NutritionTodaySyncer: View {
-    @Query(sort: \FoodEntry.date, order: .reverse) private var foods: [FoodEntry]
-    @Query(sort: \WaterEntry.date, order: .reverse) private var waters: [WaterEntry]
-
-    var body: some View {
-        Color.clear.frame(width: 0, height: 0)
-            .onAppear { sync() }
-            .task {
-                try? await Task.sleep(for: .milliseconds(300))
-                sync()
-            }
-            // Les VALEURS, pas le nombre : corriger les calories d'un repas ne change pas
-            // le nombre d'entrees, et le coach gardait l'ancien total (audit du 1er oct.).
-            .onChange(of: foods.prefix(200).map { "\($0.date.timeIntervalSince1970)|\($0.calories)|\($0.protein)" }) { _, _ in sync() }
-            .onChange(of: waters.prefix(200).map { "\($0.date.timeIntervalSince1970)|\($0.amountML)" }) { _, _ in sync() }
-            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in sync() }
-    }
-
-    private func sync() {
-        guard let defaults = UserDefaults(suiteName: appGroup) else { return }
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: .now)
-        let foodsToday = foods.filter { cal.isDate($0.date, inSameDayAs: today) }
-        let watersToday = waters.filter { cal.isDate($0.date, inSameDayAs: today) }
-
-        let kcal = foodsToday.reduce(0) { $0 + $1.calories }
-        let protein = Int(foodsToday.reduce(0.0) { $0 + $1.protein }.rounded())
-        let waterML = watersToday.reduce(0) { $0 + $1.amountML }
-
-        defaults.set(kcal, forKey: "today_kcal")
-        defaults.set(protein, forKey: "today_protein_g")
-        defaults.set(waterML, forKey: "today_water_ml")
-    }
+    var body: some View { Color.clear.frame(width: 0, height: 0) }
 }
 
 // MARK: - Donnees reelles des widgets (eau, jeune, seance du jour, Tabata)
 
-/// Publie pour les widgets les VRAIES valeurs, sous les cles partagees `WidgetKeys`.
-/// Remplace les valeurs de demonstration ecrites au lancement (1800 ml, 14,5 h de
-/// jeune, une seance "Pectoraux & Triceps") que les widgets affichaient comme reelles.
+/// Vue hote de `WidgetPublisher` (montee une fois dans `MainTabView`) : demarre
+/// l'ecoute des sauvegardes, applique les ordres des widgets et publie tout au retour
+/// au premier plan. `snapshot(...)` reste la regle pure des cles plates (eau, jeune,
+/// seance du jour), testee.
 struct WidgetDataSyncer: View {
-    @Query(sort: \WaterEntry.date, order: .reverse) private var waters: [WaterEntry]
-    @Query(sort: \FastingSession.start, order: .reverse) private var fasts: [FastingSession]
-    @Query private var gymDays: [GymDay]
+    @Environment(\.modelContext) private var ctx
+    @Environment(\.scenePhase) private var phase
 
     var body: some View {
         Color.clear.frame(width: 0, height: 0)
-            .task { sync() }
-            .onChange(of: waters.map(\.amountML)) { _, _ in sync() }
-            .onChange(of: fasts.map { $0.end == nil }) { _, _ in sync() }
-            .onChange(of: gymDays.map { "\($0.weekday)|\($0.title)|\($0.focus)|\($0.isRest)" }) { _, _ in sync() }
-            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in sync() }
-    }
-
-    private func sync() {
-        guard let group = UserDefaults(suiteName: appGroup) else { return }
-        let values = Self.snapshot(waters: waters.map { ($0.date, $0.amountML) },
-                                   activeFastStart: fasts.first { $0.end == nil }?.start,
-                                   gymDays: gymDays.map { ($0.weekday, $0.title, $0.focus, $0.isRest) },
-                                   settings: .standard)
-        var changed = false
-        for (k, v) in values where !Self.same(group.object(forKey: k), v) {
-            group.set(v, forKey: k); changed = true
-        }
-        if changed { WidgetCenter.shared.reloadAllTimelines() }
-    }
-
-    private static func same(_ a: Any?, _ b: Any) -> Bool {
-        switch (a, b) {
-        case let (x as Int, y as Int): return x == y
-        case let (x as Double, y as Double): return x == y
-        case let (x as String, y as String): return x == y
-        case let (x as Bool, y as Bool): return x == y
-        default: return false
-        }
+            .task {
+                // Point de depart unique : ecoute des sauvegardes et des reglages, puis
+                // ordres des widgets et publication complete.
+                WidgetPublisher.shared.start(container: ctx.container)
+                WidgetPublisher.shared.foreground(ctx)
+            }
+            .onChange(of: phase) { _, p in
+                if p == .active { WidgetPublisher.shared.foreground(ctx) }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                WidgetPublisher.shared.foreground(ctx)
+            }
     }
 
     /// Valeurs a publier, calculees sans effet de bord (testees).
@@ -243,13 +197,7 @@ struct WidgetDataSyncer: View {
         out[WidgetKeys.gymTitle] = today?.title ?? ""
         out[WidgetKeys.gymFocus] = today?.focus ?? ""
         out[WidgetKeys.gymRest] = today?.isRest ?? false
-        out[WidgetKeys.tabataName] = "Ton Tabata"
-        let work = settings.integer(forKey: AppStorageKeys.tabWork)
-        let rest = settings.integer(forKey: AppStorageKeys.tabRest)
-        let rounds = settings.integer(forKey: AppStorageKeys.tabRounds)
-        out[WidgetKeys.tabataWork] = work > 0 ? work : 30
-        out[WidgetKeys.tabataRest] = rest > 0 ? rest : 15
-        out[WidgetKeys.tabataSets] = rounds > 0 ? rounds : 8
+        // Tabata : `TabataSnapshot` (vrai nom de seance et nombre d'exercices).
         return out
     }
 }

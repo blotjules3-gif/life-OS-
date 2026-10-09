@@ -30,6 +30,7 @@ struct RouteSmokeView: View {
     @State private var cursor = 0
     @State private var lines: [String] = []
     @State private var appeared: Set<Int> = []
+    @State private var appearedAt: [Int: Date] = [:]
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -51,7 +52,7 @@ struct RouteSmokeView: View {
 
     private func tool(_ item: Item) -> some View {
         item.category.tools[item.index].dest()
-            .onAppear { appeared.insert(key(item)) }
+            .onAppear { appeared.insert(key(item)); appearedAt[key(item)] = Date() }
     }
 
     private func key(_ i: Item) -> Int { i.category.hashValue &* 31 &+ i.index }
@@ -62,11 +63,18 @@ struct RouteSmokeView: View {
         for (n, item) in items.enumerated() {
             cursor = n
             write("OUVERTURE \(item.category.rawValue) / \(item.title)")
+            let t0 = Date()
+            if PerfProbe.enabled { PerfProbe.shared.start(); PerfProbe.shared.resetWindow() }
             if item.fullScreen { cover = item } else { path = [item] }
             // Laisser le temps a la vue de s'installer et a son onAppear de tourner.
             try? await Task.sleep(nanoseconds: 1_200_000_000)
             let ok = appeared.contains(key(item))
             lines[lines.count - 1] += ok ? "  OK" : "  ABSENTE"
+            if PerfProbe.enabled {
+                let open = appearedAt[key(item)].map { $0.timeIntervalSince(t0) * 1000 } ?? -1
+                PerfProbe.shared.log(String(format: "OUTIL %@ / %@ | ouverture %.0f ms | ",
+                                            item.category.rawValue, item.title, open) + PerfProbe.shared.window())
+            }
             flush()
             cover = nil; path = []
             try? await Task.sleep(nanoseconds: 500_000_000)

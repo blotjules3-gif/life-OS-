@@ -13,6 +13,8 @@ struct GymSessionView: View {
     var day: GymDay?
     /// Seance a reprendre, quel que soit le jour (commencee la veille, jour renomme...).
     var sessionID: UUID? = nil
+    /// Appele apres une fin ou une annulation reussie (plein ecran: on ferme).
+    var onEnded: (() -> Void)? = nil
     @Environment(\.modelContext) private var ctx
     @Query(sort: \WorkoutSet.date, order: .reverse) private var sets: [WorkoutSet]
     @Query(sort: \TrainingSession.start, order: .reverse) private var sessions: [TrainingSession]
@@ -186,13 +188,50 @@ struct GymSessionView: View {
     }
 
     private func finish(_ s: TrainingSession) {
-        do { try GymSessionService.finish(s, in: ctx); error = nil; scheduleRestNotification(nil); Haptics.success() }
+        do { try GymSessionService.finish(s, in: ctx); error = nil; scheduleRestNotification(nil); Haptics.success(); onEnded?() }
         catch let e { error = e.localizedDescription; Haptics.warning() }
     }
 
     private func cancel(_ s: TrainingSession, deleteSets: Bool) {
-        do { try GymSessionService.cancel(s, deleteSets: deleteSets, sets: sets, in: ctx); error = nil; scheduleRestNotification(nil) }
+        do { try GymSessionService.cancel(s, deleteSets: deleteSets, sets: sets, in: ctx); error = nil; scheduleRestNotification(nil); onEnded?() }
         catch let e { error = e.localizedDescription; Haptics.warning() }
+    }
+}
+
+// MARK: - Seance en plein ecran
+
+/// Seance a ouvrir en plein ecran: une seance en cours par son identifiant, ou
+/// le jour de programme a demarrer.
+struct GymSessionTarget: Identifiable {
+    var day: GymDay? = nil
+    var sessionID: UUID? = nil
+    var id: String {
+        if let sessionID { return "session-\(sessionID.uuidString)" }
+        return "day-\(day?.weekday ?? 0)"
+    }
+}
+
+/// La seance occupe tout l'ecran: pas de barre d'onglets ni de liste derriere.
+/// Fermer ne termine ni n'annule rien: la seance vit dans SwiftData et se
+/// reprend depuis le programme, avec ses series et son repos en cours.
+struct GymSessionScreen: View {
+    let target: GymSessionTarget
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            GymSessionView(day: target.day, sessionID: target.sessionID, onEnded: { dismiss() })
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button { dismiss() } label: {
+                            Label("Fermer", systemImage: "chevron.down")
+                                .labelStyle(.titleAndIcon)
+                        }
+                        .accessibilityLabel("Fermer, la séance reste ouverte")
+                        .keyboardShortcut(.cancelAction)
+                    }
+                }
+        }
     }
 }
 

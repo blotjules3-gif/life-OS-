@@ -170,9 +170,10 @@ struct ShortcutsHomeView: View {
     @Query private var waters: [WaterEntry]
     @Query private var foodsYesterday: [FoodEntry]
     @Query private var watersYesterday: [WaterEntry]
-    @Query private var fasts: [FastingSession]
-    @Query private var habits: [Habit]
-    @Query(sort: \TodoItem.due) private var todos: [TodoItem]
+    // Lot 8 : plus aucune lecture sans filtre sur l'accueil.
+    @Query(filter: #Predicate<FastingSession> { $0.end == nil }) private var fasts: [FastingSession]
+    @Query(filter: #Predicate<Habit> { $0.isArchived == false }) private var habits: [Habit]
+    @Query(filter: #Predicate<TodoItem> { $0.done == false }, sort: \TodoItem.due) private var todos: [TodoItem]
     @Query(sort: \MoodEntry.date, order: .reverse) private var moods: [MoodEntry]
     @Environment(\.modelContext) private var ctx
 
@@ -188,6 +189,30 @@ struct ShortcutsHomeView: View {
         _watersYesterday = Query(filter: #Predicate<WaterEntry> { $0.date >= yesterdayStart && $0.date < todayStart })
         _moods  = Query(filter: #Predicate<MoodEntry>  { $0.date >= fourteenDaysAgo },
                         sort: \MoodEntry.date, order: .reverse)
+        // Reprise de l'ancien accueil (v1) ou accueil par defaut des domaines, une fois.
+        HomeLayoutStore.ensure()
+    }
+
+    // MARK: Lot 8 : donnees et reglages des nouveaux blocs
+    @State private var dayModel = HomeTodayModel()
+    @AppStorage("homeNowSkipped") private var nowSkippedRaw = ""
+    @AppStorage(HomePriorityEngine.pinnedKey) private var pinnedRaw = ""
+    @AppStorage(HomePriorityEngine.ignoredKey) private var ignoredRaw = ""
+    @AppStorage(HomeIndicator.storageKey) private var indicatorsRaw = ""
+    @AppStorage(HomeRecommendationEngine.dismissedKey) private var recoDismissedRaw = ""
+    @AppStorage(PriorityDomains.storageKey) private var priorityDomainsRaw = ""
+    @State private var captureRequest: CaptureRequest?
+
+    private struct CaptureRequest: Identifiable {
+        let id = UUID()
+        let prefill: String
+    }
+
+    private var domains: [AppCategory] { PriorityDomains.parse(priorityDomainsRaw) }
+    private var pinnedUIDs: [String] { DayScopedList.read(pinnedRaw, today: .now).ids }
+
+    private func refreshToday() {
+        dayModel.refresh(ctx, pinnedUIDs: pinnedUIDs)
     }
 
     @State private var editingMetrics = false
@@ -215,7 +240,7 @@ struct ShortcutsHomeView: View {
     @State private var editingHome = false
     @State private var draggedWidget: HomeWidget?
     @State private var showWidgetGallery = false
-    private var layout: HomeLayout { HomeLayout.parse(layoutRaw) }
+    private var layout: HomeLayout { HomeLayout.parse(layoutRaw, domains: domains) }
     @State private var homeAppeared = false
 
     private let cols = [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)]
@@ -310,6 +335,8 @@ struct ShortcutsHomeView: View {
 
                     // Boutons capsules style Apple Aperçu ("Nouveau document" / "Scanner")
                     VStack(spacing: 12) {
+                        // La capture rapide fait deja ce travail quand elle est sur l'accueil.
+                        if !layout.visible.contains(.capture) {
                         Button {
                             showAllTasks = true
                         } label: {
@@ -324,6 +351,7 @@ struct ShortcutsHomeView: View {
                             .applePreviewPill(height: 48)
                         }
                         .buttonStyle(LifeOSPressStyle(scale: 0.96))
+                        }
 
                         Button {
                             editingShortcuts = true
@@ -371,7 +399,7 @@ struct ShortcutsHomeView: View {
                             // a l'appui long, les deux se marcheraient dessus.
                             .simultaneousGesture(
                                 LongPressGesture(minimumDuration: 0.5).onEnded { _ in enterHomeEditing() },
-                                including: widget == .tasks || editingHome ? .subviews : .all)
+                                including: [.tasks, .today, .capture, .now].contains(widget) || editingHome ? .subviews : .all)
                     }
 
                     if layout.visible.isEmpty {
@@ -401,6 +429,14 @@ struct ShortcutsHomeView: View {
             }
             .floatingBarClearance()       // le dernier bloc ne passe pas sous la barre flottante
             .sheet(isPresented: $showWidgetGallery) { HomeWidgetGallery(raw: $layoutRaw) }
+            .sheet(item: $captureRequest) { r in UniversalCaptureSheet(prefill: r.prefill) }
+            // Donnees du jour : relues a chaque enregistrement (une valeur modifiee
+            // compte, pas seulement le nombre d'elements), au retour et au changement de jour.
+            .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in
+                dayModel.scheduleRefresh(ctx) { pinnedUIDs }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in refreshToday() }
+            .onChange(of: pinnedRaw) { _, _ in refreshToday() }
             // Changer d'onglet quitte l'edition: revenir sur un accueil qui
             // tremble encore, sans savoir pourquoi, serait deroutant.
             .onDisappear { exitHomeEditing() }
@@ -442,6 +478,7 @@ struct ShortcutsHomeView: View {
                     _ = await HealthService.shared.requestAuthorization()
                 }
                 await refreshSteps()
+                await dayModel.refreshSteps(ctx)
                 reengageMessage    = EngagementTracker.shared.reengagementMessage
                 reengageSuggestion = EngagementTracker.shared.simplificationSuggestion
                 weeklyModuleSuggestion = WeeklyModuleSuggester.shared.currentSuggestion()
@@ -450,6 +487,8 @@ struct ShortcutsHomeView: View {
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                 // Au retour au premier plan on relit, sans re-demander l'acces.
                 Task { await refreshSteps() }
+                refreshToday()
+                Task { await dayModel.refreshSteps(ctx) }
             }
             .sheet(isPresented: $showBilan) { WeeklyBilanView() }
             .fullScreenCover(item: $fullScreenTool) { tool in
@@ -462,6 +501,13 @@ struct ShortcutsHomeView: View {
                 }
             }
             .onAppear {
+                refreshToday()
+                #if DEBUG
+                // Captures d'ecran : `-homeCapture -capturePrefill "café 3 € hier"`.
+                if DebugLaunchFlags.has("-homeCapture"), captureRequest == nil {
+                    captureRequest = CaptureRequest(prefill: DebugLaunchFlags.value("-capturePrefill") ?? "")
+                }
+                #endif
                 // Le fondu en cascade doit commencer APRES l'ecran d'ouverture.
                 // L'accueil est construit pendant que le logo est encore
                 // affiche, donc l'animation se jouait derriere lui et on
@@ -867,9 +913,12 @@ struct ShortcutsHomeView: View {
         HStack(spacing: 12) {
             Button {
                 withAnimation(.spring(duration: 0.25)) {
-                    task.done = true
+                    // Meme regle que Todoo : une tache recurrente passe a sa prochaine
+                    // occurrence au lieu de disparaitre pour toujours.
+                    ProductivityRules.toggleDone(task)
                     saveTasks("cocher")
                 }
+                if task.done { TaskReminders.cancel(task) } else { TaskReminders.schedule(task) }
                 Haptics.soft()
             } label: {
                 Image(systemName: task.done ? "checkmark.circle.fill" : "circle")
@@ -1213,6 +1262,15 @@ struct ShortcutsHomeView: View {
     @ViewBuilder
     private func homeWidget(_ w: HomeWidget) -> some View {
         switch w {
+        case .now:
+            HomeNowBlock(model: dayModel, skippedRaw: $nowSkippedRaw, onChanged: refreshToday)
+        case .capture:
+            HomeCaptureBlock { text in captureRequest = CaptureRequest(prefill: text) }
+        case .today:
+            HomeTodayBlock(model: dayModel, pinnedRaw: $pinnedRaw, ignoredRaw: $ignoredRaw, onChanged: refreshToday)
+        case .watch:
+            HomeWatchBlock(model: dayModel, indicatorsRaw: $indicatorsRaw, shortcutsRaw: $enabledRaw,
+                           dismissedRaw: $recoDismissedRaw, domains: domains)
         case .score:
             DailyScoreRing()
                 .padding(.vertical, 10)

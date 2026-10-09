@@ -219,6 +219,7 @@ struct HabitsWidgetView: View {
                 Color(uiColor: .systemBackground)
             }
         }
+        .widgetURL(WidgetLink.habits)
     }
 
     // MARK: Rangée habitude
@@ -374,10 +375,11 @@ struct HabitsWidgetView: View {
     private var lockCircularView: some View {
         ZStack {
             Circle()
-                .stroke(Color.white.opacity(0.25), lineWidth: 4)
+                .stroke(Color.primary.opacity(0.25), lineWidth: 4)
             Circle()
                 .trim(from: 0, to: CGFloat(entry.progress))
-                .stroke(.white, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .stroke(Color.primary, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .widgetAccentable()
                 .rotationEffect(.degrees(-90))
             VStack(spacing: 0) {
                 Text("\(entry.doneCount)")
@@ -402,7 +404,8 @@ struct HabitsWidgetView: View {
                     .lineLimit(1)
             }
             ProgressView(value: entry.progress)
-                .tint(.white)
+                .tint(.primary)
+                .widgetAccentable()
             if entry.allDone {
                 Text("Journée parfaite")
                     .font(.system(size: 10, weight: .medium))
@@ -436,7 +439,7 @@ struct HabitsWidgetView: View {
             Image(systemName: "plus.circle.fill")
                 .font(.system(size: 28))
                 .foregroundStyle(accent)
-            Text("Pas encore\nd'habitudes")
+            Text("Pas encore d'habitudes\nAjoute-en dans LifeOS")
                 .font(.system(size: 11, weight: .semibold))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
@@ -448,7 +451,7 @@ struct HabitsWidgetView: View {
 // MARK: - Widget config
 
 struct HabitsWidget: Widget {
-    let kind = "HabitsWidget"
+    let kind = WidgetKinds.habits
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: HabitsProvider()) { entry in

@@ -2,20 +2,15 @@ import SwiftUI
 import WidgetKit
 
 struct TabataWidget: Widget {
-    let kind: String = "TabataWidget"
+    let kind: String = WidgetKinds.tabata
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: TabataWidgetProvider()) { entry in
             TabataWidgetView(entry: entry)
         }
-        .configurationDisplayName("HIIT & Tabata")
-        .description("Lance ta séance par intervalles et visualise ton programme du jour.")
-        .supportedFamilies([
-            .systemSmall,
-            .systemMedium,
-            .accessoryCircular,
-            .accessoryRectangular
-        ])
+        .configurationDisplayName("HIIT et Tabata")
+        .description("Ta séance d'intervalles : nom, exercices, effort et repos. Un appui pour la lancer.")
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular])
         .contentMarginsDisabled()
     }
 }
@@ -24,51 +19,29 @@ struct TabataWidget: Widget {
 
 struct TabataWidgetEntry: TimelineEntry {
     let date: Date
-    let sessionName: String
-    let workSeconds: Int
-    let restSeconds: Int
-    let setsCount: Int
-    let exercisesCount: Int
+    /// nil = l'app n'a encore rien publie (jamais ouverte depuis la mise a jour).
+    let snapshot: TabataSnapshot?
+
+    var title: String { snapshot?.name.flatMap { $0.isEmpty ? nil : $0 } ?? "Intervalles libres" }
 }
 
 struct TabataWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> TabataWidgetEntry {
-        TabataWidgetEntry(
-            date: .now,
-            sessionName: "Cardio HIIT",
-            workSeconds: 30,
-            restSeconds: 15,
-            setsCount: 4,
-            exercisesCount: 6
-        )
+        TabataWidgetEntry(date: .now, snapshot: TabataSnapshot(day: "", updatedAt: .now, name: "Cardio HIIT", exercises: 6,
+                                                               work: 30, rest: 15, rounds: 6, cycles: 4, inProgress: false, lastDone: nil))
     }
 
     func getSnapshot(in context: Context, completion: @escaping (TabataWidgetEntry) -> Void) {
-        completion(read())
+        completion(context.isPreview ? placeholder(in: context) : read())
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<TabataWidgetEntry>) -> Void) {
-        let entry = read()
-        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 2, to: .now) ?? .now.addingTimeInterval(7200)
-        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+        // Rien ne change avec l'heure : l'app recharge le widget quand la seance change.
+        completion(Timeline(entries: [read()], policy: .never))
     }
 
     private func read() -> TabataWidgetEntry {
-        let defs = WidgetAppGroup.defaults
-        // Reglages reels de ton Tabata (ecrits par l'app) ; a defaut, ceux de l'app.
-        let session = defs?.string(forKey: WidgetKeys.tabataName) ?? "Tabata"
-        let work = defs?.integer(forKey: WidgetKeys.tabataWork) ?? 30
-        let rest = defs?.integer(forKey: WidgetKeys.tabataRest) ?? 15
-        let sets = defs?.integer(forKey: WidgetKeys.tabataSets) ?? 8
-
-        return TabataWidgetEntry(
-            date: .now,
-            sessionName: session,
-            workSeconds: work > 0 ? work : 30,
-            restSeconds: rest > 0 ? rest : 15,
-            setsCount: sets > 0 ? sets : 8,
-            exercisesCount: 6
-        )
+        TabataWidgetEntry(date: .now, snapshot: WidgetSnapshotStore.read(TabataSnapshot.self, key: TabataSnapshot.key))
     }
 }
 
@@ -81,184 +54,110 @@ struct TabataWidgetView: View {
     var body: some View {
         Group {
             switch family {
-            case .systemSmall:
-                smallView
-            case .systemMedium:
-                mediumView
-            case .accessoryCircular:
-                circularView
-            case .accessoryRectangular:
-                rectangularView
-            default:
-                smallView
+            case .systemMedium: content(medium: true).padding(14).lifeOSWidgetBackground()
+            case .accessoryCircular: circularView.lifeOSAccessoryBackground()
+            case .accessoryRectangular: rectangularView.lifeOSAccessoryBackground()
+            default: content(medium: false).padding(14).lifeOSWidgetBackground()
             }
         }
-        .widgetURL(URL(string: "lifeos://tabata"))
+        .widgetURL(WidgetLink.tabata)
     }
 
-    private var smallView: some View {
-        ZStack {
-            Color(widgetHex: 0x08090C)
+    @ViewBuilder
+    private func content(medium: Bool) -> some View {
+        if let s = entry.snapshot {
+            if medium { mediumView(s) } else { smallView(s) }
+        } else {
+            WidgetEmptyState(icon: "flame.fill", title: "Tabata",
+                             message: "Ouvre Tabata dans LifeOS pour afficher ta séance ici.", tint: WTint.sport)
+        }
+    }
 
+    private func badge(_ s: TabataSnapshot) -> String? {
+        if s.inProgress { return "EN COURS" }
+        return s.exercises > 0 ? "\(s.exercises) EXERCICE\(s.exercises > 1 ? "S" : "")" : nil
+    }
+
+    private func smallView(_ s: TabataSnapshot) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            WidgetHeader(icon: "flame.fill", title: "TABATA", tint: WTint.sport, trailing: badge(s))
+            Spacer(minLength: 0)
+            Text(entry.title)
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .lineLimit(2)
+            Text("\(s.work) s effort · \(s.rest) s repos")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            Label(s.inProgress ? "Reprendre" : "Démarrer", systemImage: "play.fill")
+                .font(.system(size: 12, weight: .bold))
+                .wTint(WTint.sport)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    }
+
+    private func mediumView(_ s: TabataSnapshot) -> some View {
+        HStack(spacing: 14) {
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    ZStack {
-                        Circle()
-                            .fill(Color(widgetHex: 0x00F076).opacity(0.18))
-                            .frame(width: 32, height: 32)
-                        Image(systemName: "flame.fill")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(Color(widgetHex: 0x00F076))
-                    }
-                    Spacer()
-                    Text("\(entry.setsCount) SÉRIES")
-                        .font(.system(size: 9, weight: .heavy, design: .rounded))
-                        .foregroundStyle(Color(widgetHex: 0x00F076))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(Color(widgetHex: 0x00F076).opacity(0.15), in: Capsule())
+                WidgetHeader(icon: "flame.fill", title: "HIIT ET TABATA", tint: WTint.sport, trailing: badge(s))
+                Text(entry.title)
+                    .font(.system(size: 19, weight: .black, design: .rounded))
+                    .lineLimit(1)
+                HStack(spacing: 8) {
+                    chip("EFFORT", "\(s.work) s")
+                    chip("REPOS", "\(s.rest) s")
+                    chip("TOURS", "\(s.rounds)")
+                    if s.cycles > 1 { chip("SÉRIES", "\(s.cycles)") }
                 }
-
-                Spacer()
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("HIIT / TABATA")
-                        .font(.system(size: 10, weight: .heavy, design: .rounded))
-                        .kerning(0.5)
-                        .foregroundStyle(.white.opacity(0.6))
-                    Text(entry.sessionName)
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                }
-
-                HStack(spacing: 6) {
-                    Text("\(entry.workSeconds)s effort")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Color(widgetHex: 0x00F076))
-                    Text("•")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.white.opacity(0.3))
-                    Text("\(entry.restSeconds)s repos")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Color(widgetHex: 0xFF5252))
-                }
-
-                HStack {
-                    Text("Démarrer")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(.black)
-                    Spacer()
-                    Image(systemName: "play.fill")
-                        .font(.system(size: 9, weight: .black))
-                        .foregroundStyle(.black)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(Color(widgetHex: 0x00F076), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                Spacer(minLength: 0)
             }
-            .padding(14)
+            VStack(spacing: 4) {
+                Image(systemName: "play.circle.fill")
+                    .font(.system(size: 40, weight: .bold))
+                    .wTint(WTint.sport)
+                Text(s.inProgress ? "Reprendre" : "Lancer")
+                    .font(.system(size: 11, weight: .heavy, design: .rounded))
+            }
+            .frame(width: 70)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
-    private var mediumView: some View {
-        ZStack {
-            Color(widgetHex: 0x08090C)
-
-            HStack(spacing: 16) {
-                // Colonne gauche : infos séance
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "flame.fill")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(Color(widgetHex: 0x00F076))
-                        Text("HIIT & TABATA")
-                            .font(.system(size: 11, weight: .heavy, design: .rounded))
-                            .kerning(0.8)
-                            .foregroundStyle(.white.opacity(0.7))
-                        Spacer()
-                        Text("6 EXERCICES")
-                            .font(.system(size: 9, weight: .heavy, design: .rounded))
-                            .foregroundStyle(Color(widgetHex: 0x00F076))
-                            .padding(.horizontal, 7)
-                            .padding(.vertical, 3)
-                            .background(Color(widgetHex: 0x00F076).opacity(0.15), in: Capsule())
-                    }
-
-                    Text(entry.sessionName)
-                        .font(.system(size: 20, weight: .black, design: .rounded))
-                        .foregroundStyle(.white)
-
-                    HStack(spacing: 12) {
-                        chip(label: "EFFORT", val: "\(entry.workSeconds)s", colorHex: 0x00F076)
-                        chip(label: "REPOS", val: "\(entry.restSeconds)s", colorHex: 0xFF5252)
-                        chip(label: "SÉRIES", val: "\(entry.setsCount)", colorHex: 0xFFB800)
-                    }
-
-                    Spacer()
-                }
-
-                // Colonne droite : bouton lancer
-                VStack(spacing: 8) {
-                    ZStack {
-                        Circle()
-                            .fill(Color(widgetHex: 0x00F076).opacity(0.2))
-                            .frame(width: 58, height: 58)
-                        Image(systemName: "play.fill")
-                            .font(.system(size: 24, weight: .black))
-                            .foregroundStyle(Color(widgetHex: 0x00F076))
-                            .offset(x: 2)
-                    }
-                    Text("LANCER")
-                        .font(.system(size: 11, weight: .heavy, design: .rounded))
-                        .foregroundStyle(.white)
-                }
-                .frame(width: 80)
-            }
-            .padding(16)
+    private func chip(_ label: String, _ value: String) -> some View {
+        VStack(spacing: 1) {
+            Text(value).font(.system(size: 13, weight: .black, design: .rounded))
+            Text(label).font(.system(size: 8, weight: .heavy, design: .rounded)).foregroundStyle(.secondary)
         }
-    }
-
-    private func chip(label: String, val: String, colorHex: UInt) -> some View {
-        VStack(spacing: 2) {
-            Text(val)
-                .font(.system(size: 13, weight: .black, design: .rounded))
-                .foregroundStyle(Color(widgetHex: colorHex))
-            Text(label)
-                .font(.system(size: 8, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white.opacity(0.5))
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
-        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .padding(.horizontal, 8).padding(.vertical, 4)
+        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private var circularView: some View {
         ZStack {
             AccessoryWidgetBackground()
-            VStack(spacing: 1) {
-                Image(systemName: "flame.fill")
-                    .font(.system(size: 13, weight: .bold))
-                Text("HIIT")
-                    .font(.system(size: 10, weight: .heavy, design: .rounded))
-                Text("\(entry.setsCount)s")
-                    .font(.system(size: 8, weight: .semibold))
+            VStack(spacing: 0) {
+                Image(systemName: "flame.fill").font(.system(size: 13, weight: .bold))
+                if let s = entry.snapshot {
+                    Text("\(s.work)/\(s.rest)").font(.system(size: 11, weight: .heavy, design: .rounded))
+                    Text("\(s.rounds) tours").font(.system(size: 8, weight: .semibold))
+                } else {
+                    Text("Tabata").font(.system(size: 9, weight: .heavy, design: .rounded))
+                }
             }
         }
+        .widgetAccentable()
     }
 
     private var rectangularView: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "flame.fill")
-                .font(.system(size: 20, weight: .bold))
+        HStack(spacing: 8) {
+            Image(systemName: "flame.fill").font(.system(size: 18, weight: .bold))
             VStack(alignment: .leading, spacing: 2) {
-                Text("HIIT • \(entry.sessionName)")
-                    .font(.system(size: 12, weight: .bold))
-                    .lineLimit(1)
-                Text("\(entry.workSeconds)s effort / \(entry.restSeconds)s repos • \(entry.setsCount) séries")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                Text(entry.title).font(.system(size: 12, weight: .bold)).lineLimit(1)
+                if let s = entry.snapshot {
+                    Text("\(s.work) s / \(s.rest) s · \(s.rounds) tours").font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1)
+                } else {
+                    Text("Ouvre Tabata dans LifeOS").font(.system(size: 10)).foregroundStyle(.secondary)
+                }
             }
         }
     }

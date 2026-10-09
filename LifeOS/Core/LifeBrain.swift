@@ -242,11 +242,35 @@ enum LocalEnergy {
 struct LifeBrainCard: View {
     @Environment(\.modelContext) private var ctx
 
-    private var insights: [BrainInsight] { LifeBrain.insights(ctx: ctx) }
+    /// Calcule UNE fois puis relu a chaque enregistrement. Avant, `LifeBrain.snapshot`
+    /// (eau, repas, seances, habitudes, humeurs, taches, evenements : tables entieres)
+    /// tournait dans `body`, donc a chaque rendu de l'accueil.
+    @State private var insights: [BrainInsight] = []
+    @State private var reloadTask: Task<Void, Never>?
 
     var body: some View {
+        card
+            .onAppear(perform: reload)
+            .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in scheduleReload() }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in reload() }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in reload() }
+    }
+
+    private func reload() { insights = LifeBrain.insights(ctx: ctx) }
+
+    /// Plusieurs enregistrements rapproches = un seul calcul, une demi-seconde apres.
+    private func scheduleReload() {
+        reloadTask?.cancel()
+        reloadTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            guard !Task.isCancelled else { return }
+            reload()
+        }
+    }
+
+    private var card: some View {
         let top = Array(insights.prefix(3))
-        VStack(alignment: .leading, spacing: 12) {
+        return VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "brain.head.profile").font(.system(size: 15, weight: .bold))
                     .foregroundStyle(Theme.textPrimary).frame(width: 30, height: 30)

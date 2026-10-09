@@ -84,7 +84,7 @@ struct HomeDropDelegate: DropDelegate {
 
     func dropEntered(info: DropInfo) {
         guard let d = dragged, d != target else { return }
-        var layout = HomeLayout.parse(raw)
+        var layout = HomeLayout.parse(raw, domains: PriorityDomains.current())
         layout.move(d, to: target)
         withAnimation(.spring(duration: 0.3)) { raw = layout.raw }
         Haptics.soft()
@@ -147,7 +147,7 @@ struct HomeWidgetGallery: View {
     @Binding var raw: String
     @Environment(\.dismiss) private var dismiss
 
-    private var layout: HomeLayout { HomeLayout.parse(raw) }
+    private var layout: HomeLayout { HomeLayout.parse(raw, domains: PriorityDomains.current()) }
 
     var body: some View {
         NavigationStack {
@@ -169,7 +169,10 @@ struct HomeWidgetGallery: View {
                                         .frame(width: 32, height: 32)
                                         .background(Theme.accent.gradient,
                                                     in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                    Text(w.label).foregroundStyle(.primary)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(w.label).foregroundStyle(.primary)
+                                        Text(w.blurb).font(.caption).foregroundStyle(.secondary)
+                                    }
                                     Spacer()
                                     Image(systemName: "plus.circle.fill").font(.title3).foregroundStyle(Theme.success)
                                 }
@@ -182,8 +185,10 @@ struct HomeWidgetGallery: View {
                     }
                 }
                 Section {
-                    Button("Revenir à l'ordre d'origine", role: .destructive) {
-                        withAnimation(.spring(duration: 0.3)) { raw = "" }
+                    // L'accueil par defaut des domaines prioritaires actuels, ecrit tel
+                    // quel : un texte vide relancerait la reprise de l'ancien accueil.
+                    Button("Revenir à l'accueil par défaut", role: .destructive) {
+                        withAnimation(.spring(duration: 0.3)) { raw = HomeLayoutStore.resetRaw() }
                         dismiss()
                     }
                 }

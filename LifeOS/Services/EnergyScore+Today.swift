@@ -119,6 +119,8 @@ extension EnergyScore {
         let hours = ud.double(forKey: "lastSleepHours")
         let quality = ud.integer(forKey: "lastSleepQuality")
         let at = ud.double(forKey: "lastSleepCheckDate")
+        let dayStart = Calendar.current.startOfDay(for: now)
+        let dayEnd = Calendar.current.date(byAdding: .day, value: 1, to: dayStart) ?? now
         let habits = ((try? ctx.fetch(FetchDescriptor<Habit>())) ?? [])
             .filter { !$0.isPending && !$0.isArchived }
             .map { h in HabitDay(plannedToday: h.isActive(on: now),
@@ -127,8 +129,11 @@ extension EnergyScore {
             sleepHours: hours > 0 ? hours : nil,
             sleepQuality: quality > 0 ? quality : nil,
             sleepRecordedAt: at > 0 ? Date(timeIntervalSince1970: at) : nil,
-            moods: ((try? ctx.fetch(FetchDescriptor<MoodEntry>())) ?? []).map { ($0.date, $0.score) },
-            waters: ((try? ctx.fetch(FetchDescriptor<WaterEntry>())) ?? []).map { ($0.date, $0.amountML) },
+            // Le score n'utilise que la journee: on ne lit plus tout l'historique.
+            moods: ((try? ctx.fetch(FetchDescriptor<MoodEntry>(predicate: #Predicate { $0.date >= dayStart && $0.date < dayEnd }))) ?? [])
+                .map { ($0.date, $0.score) },
+            waters: ((try? ctx.fetch(FetchDescriptor<WaterEntry>(predicate: #Predicate { $0.date >= dayStart && $0.date < dayEnd }))) ?? [])
+                .map { ($0.date, $0.amountML) },
             habits: habits,
             fatigue: fatigue)
     }

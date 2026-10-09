@@ -90,17 +90,32 @@ enum EnergyScore {
     ///   `EnergyScore.publishToAppGroup(EnergyScore.today(ctx))`
     /// puis `WidgetCenter.shared.reloadTimelines(ofKind: "EnergyScoreWidget")`
     /// pour forcer le refresh visuel.
-    static func publishToAppGroup(_ result: Result?) {
-        guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return }
+    /// Ecrit seulement si la valeur ou le jour change, avec le jour metier : le
+    /// widget n'affiche jamais le score d'hier comme celui d'aujourd'hui. Rend `true`
+    /// si quelque chose a ete ecrit (le widget est alors a recharger).
+    @discardableResult
+    static func publishToAppGroup(_ result: Result?, now: Date = .now) -> Bool {
+        guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") else { return false }
+        let day = WidgetDay.stamp(now)
         if let r = result {
-            grp.set(r.score, forKey: "energyScore.value")
-            grp.set(r.label, forKey: "energyScore.label")
-            grp.set(r.colorHex, forKey: "energyScore.colorHex")
-            grp.set(Date().timeIntervalSince1970, forKey: "energyScore.updatedAt")
+            let same = grp.object(forKey: EnergyKeys.value) as? Int == r.score
+                && grp.string(forKey: EnergyKeys.label) == r.label
+                && grp.string(forKey: EnergyKeys.colorHex) == r.colorHex
+                && grp.string(forKey: EnergyKeys.day) == day
+            if same { return false }
+            grp.set(r.score, forKey: EnergyKeys.value)
+            grp.set(r.label, forKey: EnergyKeys.label)
+            grp.set(r.colorHex, forKey: EnergyKeys.colorHex)
+            grp.set(now.timeIntervalSince1970, forKey: EnergyKeys.updatedAt)
+            grp.set(day, forKey: EnergyKeys.day)
+            return true
         } else {
-            grp.removeObject(forKey: "energyScore.value")
-            grp.removeObject(forKey: "energyScore.label")
-            grp.removeObject(forKey: "energyScore.colorHex")
+            guard grp.object(forKey: EnergyKeys.value) != nil else { return false }
+            grp.removeObject(forKey: EnergyKeys.value)
+            grp.removeObject(forKey: EnergyKeys.label)
+            grp.removeObject(forKey: EnergyKeys.colorHex)
+            grp.removeObject(forKey: EnergyKeys.day)
+            return true
         }
     }
 

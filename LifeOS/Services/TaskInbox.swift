@@ -7,8 +7,14 @@ import Foundation
 enum TaskInbox {
     static func makeTodo(_ text: String, priority fallback: Int = 0, now: Date = .now) -> TodoItem {
         let p = TaskCapture.parse(text, now: now)
-        let t = TodoItem(title: p.title.isEmpty ? text : p.title, due: p.due,
-                         priority: p.priority ?? fallback, project: p.project ?? "")
+        return makeTodo(parsed: p, title: p.title.isEmpty ? text : p.title, due: p.due, priority: fallback)
+    }
+
+    /// Meme fabrication, a partir d'une lecture deja faite puis corrigee a l'ecran
+    /// (capture universelle) : titre et echeance viennent de l'apercu, le reste
+    /// (projet, etiquettes, priorite, recurrence) de la lecture.
+    static func makeTodo(parsed p: ParsedTask, title: String, due: Date?, priority fallback: Int = 0) -> TodoItem {
+        let t = TodoItem(title: title, due: due, priority: p.priority ?? fallback, project: p.project ?? "")
         t.tagsRaw = TagList.serialize(p.tags)
         p.recurrence.apply(to: t)
         t.uid = UUID().uuidString

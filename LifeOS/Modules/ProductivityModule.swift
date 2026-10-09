@@ -621,6 +621,8 @@ struct TodoView: View {
     private func save() {
         do { try ctx.save() }
         catch { AppLog.data.error("tache non enregistree: \(error.localizedDescription, privacy: .public)") }
+        // Creation, modification, coche, report, suppression : widgets taches et agenda.
+        WidgetPublisher.shared.schedule([.tasks, .agenda])
     }
 
     /// Ajouts deja faits : [identifiant de la tache: signature titre|echeance].
@@ -1812,8 +1814,7 @@ struct HabitTrackerView: View {
         ProductivityRules.publishAverageStreak(activeHabits)
         // Rappels d'habitudes supprimees ou archivees ailleurs: on les retire.
         HabitReminders.prune(keeping: Set(activeHabits.map(\.uid).filter { !$0.isEmpty }))
-
-        WidgetCenter.shared.reloadTimelines(ofKind: "HabitsWidget")
+        // HabitSync.publish recharge deja les widgets d'habitudes quand la valeur change.
     }
 }
 
@@ -1965,7 +1966,8 @@ struct HabitRow: View {
             habit.completions.append(HabitCompletion())
         }
         Haptics.tap()
-        WidgetCenter.shared.reloadTimelines(ofKind: "HabitsWidget")
+        // Sauvegarde explicite + instantane des widgets (valeur, pas nombre).
+        HabitStore.commit(ctx)
     }
 }
 
@@ -1987,6 +1989,9 @@ struct HabitEditor: View {
     @State private var targetKind = 0
     @State private var targetValue: Double = 8
     @State private var targetUnit = ""
+    /// Garde contre le double appui sur « Créer » et message si l'enregistrement echoue.
+    @State private var saving = false
+    @State private var saveError: String?
 
     private let colors = [0x47CC5C, 0x2185FF, 0xFF2E33, 0xFFB83D, 0xA852F5, 0x24C7CC, 0xFF338C, 0x29BDC7]
     private let minutes = [0, 15, 30, 45]
@@ -2024,7 +2029,7 @@ struct HabitEditor: View {
                         .background(Color.primary, in: Capsule())
                 }
                 .buttonStyle(LifeOSPressStyle(scale: 0.95))
-                .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(saving || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 .opacity(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.35 : 1.0)
             }
             .padding(.horizontal, 20)
@@ -2245,6 +2250,11 @@ struct HabitEditor: View {
         #if targetEnvironment(macCatalyst)
         .frame(minWidth: 460, minHeight: 560)
         #endif
+        .alert("Habitude non enregistrée", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(saveError ?? "")
+        }
         .onAppear {
             if let h = editingHabit {
                 name = h.name; icon = h.icon; color = h.colorHex
@@ -2277,7 +2287,8 @@ struct HabitEditor: View {
 
     private func save() {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+        guard !trimmed.isEmpty, !saving else { return }
+        saving = true
         // « x fois par semaine »: l'habitude est proposee chaque jour jusqu'a ce que
         // l'objectif de la semaine soit atteint.
         let daysRaw = freqMode == 1 ? "1,2,3,4,5,6,7" : selectedDays.sorted().map(String.init).joined(separator: ",")
@@ -2295,16 +2306,25 @@ struct HabitEditor: View {
         saved.targetKind = targetKind
         saved.targetValue = targetKind == 0 ? 0 : targetValue
         saved.targetUnit = targetKind == 1 ? targetUnit.trimmingCharacters(in: .whitespaces) : ""
+        // Une ancienne fiche sans uid en recoit un d'abord: le rappel et le widget
+        // l'identifient par lui.
+        if saved.uid.isEmpty { saved.uid = UUID().uuidString }
         do {
             try ctx.save()
         } catch {
+            // Avant : l'editeur se fermait comme si tout allait bien. On garde la saisie,
+            // on annule ce qui n'est pas enregistre et on le dit.
             AppLog.data.error("save habit failed: \(error.localizedDescription, privacy: .public)")
+            ctx.rollback()
+            saving = false
+            saveError = "L'enregistrement a échoué. Ta saisie est conservée, réessaie."
+            Haptics.warning()
+            return
         }
-        // Le rappel promis par « HORAIRE DU RAPPEL » existe enfin. Une ancienne fiche
-        // sans uid en recoit un d'abord: le rappel est identifie par lui.
-        if saved.uid.isEmpty { HabitSync.ensureIDs(ctx) }
         HabitReminders.schedule(saved)
-        WidgetCenter.shared.reloadAllTimelines()
+        // Avant : rechargement de tous les widgets SANS republier l'instantane (nom,
+        // icone ou couleur modifies restaient anciens). Un seul ecrivain : HabitSync.
+        HabitStore.commit(ctx)
         Haptics.medium()
         dismiss()
     }

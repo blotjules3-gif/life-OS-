@@ -13,13 +13,13 @@ import WidgetKit
 struct EnergyScoreWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(
-            kind: "EnergyScoreWidget",
+            kind: WidgetKinds.energy,
             provider: EnergyProvider()
         ) { entry in
             EnergyView(entry: entry)
         }
         .configurationDisplayName("Score énergie")
-        .description("Ton score du jour, calculé on-device — sommeil × humeur × eau × habitudes.")
+        .description("Ton score du jour, calculé sur ton téléphone : sommeil, humeur, eau et habitudes.")
         .supportedFamilies([
             .systemSmall,
             .accessoryCircular,
@@ -37,37 +37,42 @@ private struct EnergyEntry: TimelineEntry {
     let label: String
     let colorHex: String
     let updatedAt: Date?
+    /// Score calcule aujourd'hui. Sinon : "Pas encore calcule aujourd'hui", jamais
+    /// le score d'hier affiche comme celui du jour.
+    let isToday: Bool
+
+    var link: URL { isToday ? WidgetLink.url("today") : WidgetLink.briefing }
 }
 
 private struct EnergyProvider: TimelineProvider {
     func placeholder(in context: Context) -> EnergyEntry {
-        EnergyEntry(date: .now, score: 72, label: "Bon", colorHex: "#30D158", updatedAt: .now)
+        EnergyEntry(date: .now, score: 72, label: "Bon", colorHex: "#30D158", updatedAt: .now, isToday: true)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (EnergyEntry) -> Void) {
-        completion(read())
+        completion(context.isPreview ? placeholder(in: context) : read())
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<EnergyEntry>) -> Void) {
-        let entry = read()
-        // Refresh à chaque heure pleine — plus si l'app publie une update
-        // (via WidgetCenter.reloadTimelines).
-        let next = Calendar.current.date(byAdding: .hour, value: 1, to: .now) ?? .now.addingTimeInterval(3600)
-        completion(Timeline(entries: [entry], policy: .after(next)))
+        let midnight = WidgetTimeline.nextMidnight()
+        // L'app recharge le widget a chaque nouveau score ; a minuit, le score d'hier
+        // n'est plus montre.
+        completion(Timeline(entries: [read(), read(at: midnight)], policy: .after(midnight)))
     }
 
-    private func read() -> EnergyEntry {
-        guard let grp = UserDefaults(suiteName: "group.com.chifandco.lifeos") else {
-            return EnergyEntry(date: .now, score: nil, label: "—", colorHex: "#8A7C6E", updatedAt: nil)
+    private func read(at date: Date = .now) -> EnergyEntry {
+        guard let grp = LifeOSGroup.defaults, grp.object(forKey: EnergyKeys.value) != nil else {
+            return EnergyEntry(date: date, score: nil, label: "", colorHex: "#8A7C6E", updatedAt: nil, isToday: false)
         }
-        // `object(forKey:) != nil` évite de retourner 0 quand la clé n'a jamais été set.
-        let hasScore = grp.object(forKey: "energyScore.value") != nil
-        let score = hasScore ? grp.integer(forKey: "energyScore.value") : nil
-        let label = grp.string(forKey: "energyScore.label") ?? "—"
-        let colorHex = grp.string(forKey: "energyScore.colorHex") ?? "#8A7C6E"
-        let ts = grp.double(forKey: "energyScore.updatedAt")
+        let ts = grp.double(forKey: EnergyKeys.updatedAt)
         let updatedAt: Date? = ts > 0 ? Date(timeIntervalSince1970: ts) : nil
-        return EnergyEntry(date: .now, score: score, label: label, colorHex: colorHex, updatedAt: updatedAt)
+        // Jour ecrit par l'app ; a defaut (ancienne version), jour de la mise a jour.
+        let day = grp.string(forKey: EnergyKeys.day) ?? updatedAt.map { WidgetDay.stamp($0) }
+        let today = WidgetDay.isToday(day, now: date)
+        return EnergyEntry(date: date, score: today ? grp.integer(forKey: EnergyKeys.value) : nil,
+                           label: today ? (grp.string(forKey: EnergyKeys.label) ?? "") : "",
+                           colorHex: grp.string(forKey: EnergyKeys.colorHex) ?? "#8A7C6E",
+                           updatedAt: updatedAt, isToday: today)
     }
 }
 
@@ -78,52 +83,54 @@ private struct EnergyView: View {
     @Environment(\.widgetFamily) private var family
 
     var body: some View {
-        switch family {
-        case .accessoryCircular:
-            circular
-        case .accessoryRectangular:
-            rectangular
-        default:
-            small
+        Group {
+            switch family {
+            case .accessoryCircular: circular.lifeOSAccessoryBackground()
+            case .accessoryRectangular: rectangular.lifeOSAccessoryBackground()
+            default: small
+            }
         }
+        .widgetURL(entry.link)
     }
+
+    @Environment(\.widgetRenderingMode) private var mode
 
     private var color: Color { Color(hex: entry.colorHex) }
 
     private var scoreText: String {
-        entry.score.map(String.init) ?? "—"
+        entry.score.map(String.init) ?? "?"
     }
 
+    @ViewBuilder
     private var small: some View {
-        ZStack(alignment: .topLeading) {
-            LinearGradient(
-                colors: [color.opacity(0.9), color.opacity(0.55)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+        if entry.score != nil {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Image(systemName: "bolt.fill")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(.white)
+                    Image(systemName: "bolt.fill").font(.system(size: 14, weight: .bold))
                     Spacer()
                     Text(entry.label.uppercased())
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.85))
-                        .kerning(0.8)
+                        .font(.system(size: 10, weight: .bold)).kerning(0.8)
+                        .opacity(0.85)
                 }
                 Spacer()
                 Text(scoreText)
                     .font(.system(size: 56, weight: .heavy, design: .rounded).monospacedDigit())
-                    .foregroundStyle(.white)
                     .minimumScaleFactor(0.6)
                 Text("sur 100 · énergie")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.85))
+                    .opacity(0.85)
             }
+            .foregroundStyle(mode == .fullColor ? AnyShapeStyle(Color.white) : AnyShapeStyle(.primary))
             .padding(14)
+            .containerBackground(for: .widget) {
+                LinearGradient(colors: [color.opacity(0.9), color.opacity(0.55)], startPoint: .topLeading, endPoint: .bottomTrailing)
+            }
+        } else {
+            WidgetEmptyState(icon: "bolt.fill", title: "Pas encore calculé aujourd'hui",
+                             message: "Fais ton bilan du matin pour voir ton score.", tint: color)
+                .padding(14)
+                .lifeOSWidgetBackground()
         }
-        .containerBackground(for: .widget) { Color.clear }
     }
 
     private var circular: some View {
@@ -137,10 +144,9 @@ private struct EnergyView: View {
             VStack(spacing: 0) {
                 Text(scoreText)
                     .font(.system(size: 22, weight: .heavy, design: .rounded).monospacedDigit())
-                Text("nrj")
+                Image(systemName: "bolt.fill")
                     .font(.system(size: 8, weight: .semibold))
                     .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
             }
         }
     }
@@ -160,7 +166,7 @@ private struct EnergyView: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text("Énergie")
                     .font(.system(size: 13, weight: .semibold))
-                Text(entry.label)
+                Text(entry.score == nil ? "Pas encore calculé" : entry.label)
                     .font(.system(size: 11, weight: .medium))
                     .opacity(0.75)
             }

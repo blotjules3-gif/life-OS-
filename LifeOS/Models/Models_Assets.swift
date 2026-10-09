@@ -17,6 +17,13 @@ import SwiftData
     var buyDate: Date?
     /// Euros pour 1 unite de `buyCurrency` le jour de l'achat (BCE). 0 = pas encore connu.
     var buyFXToEUR: Double = 0
+    // Lot 8 : etat du dernier cours, pose a chaque mise a jour automatique.
+    /// Heure du cours (heure de marche pour une action, de lecture pour une crypto). nil = jamais lu.
+    var priceAt: Date?
+    /// Variation du jour en % (sur 24 h pour une crypto). nil = inconnue ou prix saisi a la main.
+    var dayChangePct: Double?
+    /// "yahoo", "coingecko", "manual", ou "" (ancienne position, jamais mise a jour).
+    var priceSource: String = ""
 
     init(symbol: String = "", kind: String = "Action", quantity: Double = 0, buyPrice: Double = 0, currentPrice: Double = 0,
          buyCurrency: String = "EUR", buyDate: Date? = nil, buyFXToEUR: Double = 1) {

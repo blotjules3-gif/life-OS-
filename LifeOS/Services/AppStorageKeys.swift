@@ -7,7 +7,11 @@ import Foundation
 ///
 /// Migration progressive :
 ///   ✗ `@AppStorage("appTheme") private var themeRaw = "classic"`
-///   ✓ `@AppStorage(AppStorageKeys.appTheme) private var themeRaw = "classic"`
+///   ✓ `@AppStorage(AppStorageKeys.appTheme) private var themeRaw = AppTheme.defaultRaw`
+///
+/// Apparence : jamais de defaut ecrit a la main. `AppTheme.defaultRaw` /
+/// `AppPalette.defaultRaw` pour la valeur initiale, `AppTheme.resolved(_:)` /
+/// `AppPalette.resolved(_:)` pour la lecture (voir Core/AppearanceDefaults.swift).
 ///
 /// Règle : **ne JAMAIS changer les valeurs String de cet enum** — elles sont
 /// écrites dans le UserDefaults des utilisateurs actuels. Renommer une clé =
@@ -47,6 +51,8 @@ enum AppStorageKeys {
     static let appLanguage = "appLanguage"
 
     // MARK: - Thème & UI
+    /// "system" (defaut, suit l'appareil), "classic" (clair) ou "dark". Les anciens
+    /// themes archives se lisent "system" (`AppTheme.resolved`).
     static let appTheme = "appTheme"
     /// "color" (defaut) ou "neutral" : second axe de l'apparence, independant du clair/sombre.
     static let appPalette = "appPalette"
